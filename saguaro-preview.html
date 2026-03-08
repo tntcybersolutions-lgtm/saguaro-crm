@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Saguaro CIP — Interactive Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/site-nav.css">
+<style>
+:root {
+  --sag-void:       #0A0D12;
+  --sag-canvas:     #0F1318;
+  --sag-surface:    #161C24;
+  --sag-raised:     #1D2530;
+  --sag-border:     #252E3D;
+  --sag-muted:      #2E3A4D;
+  --sag-blue:       #1B6FBF;
+  --sag-blue-mid:   #2580D9;
+  --sag-blue-light: #3B96F5;
+  --sag-blue-glow:  rgba(37,128,217,0.15);
+  --sag-clay:       #C2703A;
+  --sag-clay-light: #E08A50;
+  --sag-sand:       #D4A96A;
+  --sag-green:      #22A56E;
+  --sag-yellow:     #E0A020;
+  --sag-red:        #D94040;
+  --sag-critical:   #FF3B3B;
+  --sag-text:       #E8EDF5;
+  --sag-text-dim:   #8A9AB5;
+  --sag-text-mute:  #4E5F78;
+  --font-display:   'Syne', sans-serif;
+  --font-body:      'DM Sans', sans-serif;
+  --nav-width:      232px;
+  --topbar-h:       52px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 13px; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-body); background: var(--sag-canvas); color: var(--sag-text); line-height: 1.5; min-height: 100vh; overflow: hidden; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--sag-surface); }
+::-webkit-scrollbar-thumb { background: var(--sag-muted); border-radius: 3px; }
+
+/* ── SHELL ── */
+.shell { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--nav-width); min-height: 100vh;
+  background: var(--sag-void); border-right: 1px solid var(--sag-border);
+  display: flex; flex-direction: column; position: fixed;
+  left: 0; top: 0; bottom: 0; z-index: 40; overflow-y: auto;
+}
+.sidebar-logo { padding: 18px 16px 14px; border-bottom: 1px solid var(--sag-border); display: flex; align-items: center; gap: 10px; }
+.logo-hex { width: 32px; height: 32px; background: var(--sag-blue-mid); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 16px; font-weight: 800; color: white; flex-shrink: 0; }
+.logo-text { font-family: var(--font-display); font-size: 15px; font-weight: 800; letter-spacing: -0.3px; color: var(--sag-text); }
+.logo-sub { font-size: 9px; color: var(--sag-text-mute); letter-spacing: 1.4px; text-transform: uppercase; margin-top: 1px; }
+.sidebar-nav { flex: 1; padding: 8px 0; }
+.nav-section { margin-bottom: 6px; }
+.nav-section-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sag-text-mute); padding: 10px 16px 4px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 7px 16px; color: var(--sag-text-dim); font-size: 12.5px; font-weight: 500; cursor: pointer; border-left: 2px solid transparent; transition: all 0.1s; text-decoration: none; }
+.nav-item:hover { background: var(--sag-surface); color: var(--sag-text); border-left-color: var(--sag-blue); }
+.nav-item.active { background: var(--sag-blue-glow); color: var(--sag-blue-light); border-left-color: var(--sag-blue-light); font-weight: 600; }
+.nav-item-icon { font-size: 13px; opacity: 0.75; }
+.nav-badge { margin-left: auto; background: var(--sag-red); color: white; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 10px; }
+.sidebar-footer { padding: 10px 0; border-top: 1px solid var(--sag-border); }
+.master-badge { margin: 6px 12px 8px; padding: 5px 10px; background: rgba(201,102,60,0.14); border-radius: 6px; border: 1px solid rgba(201,102,60,0.3); }
+.master-badge span { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sag-clay-light); }
+
+/* ── MAIN ── */
+.main { margin-left: var(--nav-width); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar { height: var(--topbar-h); background: var(--sag-canvas); border-bottom: 1px solid var(--sag-border); display: flex; align-items: center; padding: 0 20px; gap: 12px; position: sticky; top: 0; z-index: 30; }
+.topbar-search { flex: 1; max-width: 320px; }
+.search-input { width: 100%; padding: 6px 12px; background: var(--sag-raised); border: 1px solid var(--sag-border); border-radius: 6px; font-size: 12px; color: var(--sag-text); outline: none; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.topbar-btn { width: 30px; height: 30px; border-radius: 6px; background: var(--sag-raised); border: 1px solid var(--sag-border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; position: relative; }
+.notif-dot { position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--sag-clay); }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--sag-blue-mid); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; cursor: pointer; }
+.content { flex: 1; padding: 20px; overflow-y: auto; max-height: calc(100vh - var(--topbar-h)); }
+
+/* ── PAGE HEADER ── */
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.page-title-wrap .breadcrumb { font-size: 11px; color: var(--sag-text-mute); margin-bottom: 4px; }
+.page-title { font-family: var(--font-display); font-size: 20px; font-weight: 800; letter-spacing: -0.3px; }
+.page-subtitle { font-size: 12px; color: var(--sag-text-dim); margin-top: 3px; }
+.page-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ── BUTTONS ── */
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; transition: all 0.1s; font-family: var(--font-body); }
+.btn-primary { background: var(--sag-blue-mid); color: white; }
+.btn-primary:hover { background: var(--sag-blue-light); }
+.btn-secondary { background: var(--sag-raised); color: var(--sag-text); border: 1px solid var(--sag-border); }
+.btn-secondary:hover { border-color: var(--sag-blue); color: var(--sag-blue-light); }
+.btn-ghost { background: transparent; color: var(--sag-text-dim); border: 1px solid transparent; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.btn-danger { background: rgba(217,64,64,0.2); color: var(--sag-red); border: 1px solid rgba(217,64,64,0.3); }
+
+/* ── KPI STRIP ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.kpi-card { background: var(--sag-surface); border: 1px solid var(--sag-border); border-radius: 8px; padding: 16px 18px; position: relative; overflow: hidden; }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent, var(--sag-blue)); }
+.kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: var(--sag-text-dim); margin-bottom: 8px; }
+.kpi-value { font-family: var(--font-display); font-size: 26px; font-weight: 800; line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--sag-text-dim); margin-top: 5px; }
+
+/* ── CARDS ── */
+.card { background: var(--sag-surface); border: 1px solid var(--sag-border); border-radius: 8px; padding: 18px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.card-title { font-family: var(--font-display); font-weight: 700; font-size: 13px; }
+
+/* ── TABLES ── */
+.table-wrap { overflow-x: auto; border: 1px solid var(--sag-border); border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead tr { background: var(--sag-raised); border-bottom: 1px solid var(--sag-border); }
+th { padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: var(--sag-text-dim); white-space: nowrap; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--sag-border); color: var(--sag-text); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--sag-raised); }
+
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
+.badge-blue { background: rgba(37,128,217,0.15); color: var(--sag-blue-light); }
+.badge-green { background: rgba(34,165,110,0.15); color: #3DD68C; }
+.badge-yellow { background: rgba(224,160,32,0.15); color: #F5C53A; }
+.badge-red { background: rgba(217,64,64,0.15); color: #FF6B6B; }
+.badge-critical { background: rgba(255,59,59,0.20); color: var(--sag-critical); }
+.badge-clay { background: rgba(194,112,58,0.15); color: var(--sag-clay-light); }
+.badge-muted { background: var(--sag-muted); color: var(--sag-text-dim); }
+
+/* ── SEVERITY DOTS ── */
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+.dot-green { background: var(--sag-green); }
+.dot-yellow { background: var(--sag-yellow); }
+.dot-orange { background: var(--sag-clay-light); }
+.dot-red { background: var(--sag-red); }
+.dot-critical { background: var(--sag-critical); box-shadow: 0 0 5px var(--sag-critical); }
+.dot-blue { background: var(--sag-blue-light); }
+.dot-muted { background: var(--sag-muted); }
+
+/* ── SCREEN SWITCHER ── */
+.screen-switcher { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(13,18,26,0.95); border: 1px solid var(--sag-border); border-radius: 40px; padding: 6px 8px; display: flex; gap: 4px; z-index: 200; backdrop-filter: blur(12px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.sw-btn { padding: 6px 14px; border-radius: 30px; border: none; font-size: 11px; font-weight: 600; font-family: var(--font-body); cursor: pointer; color: var(--sag-text-dim); background: transparent; transition: all 0.15s; white-space: nowrap; }
+.sw-btn:hover { color: var(--sag-text); background: var(--sag-raised); }
+.sw-btn.active { background: var(--sag-blue-mid); color: white; }
+
+/* ── ALERT CARDS ── */
+.alert-card { background: var(--sag-raised); border: 1px solid var(--sag-border); border-radius: 7px; padding: 14px 16px; margin-bottom: 8px; }
+.alert-card.critical { border-left: 3px solid var(--sag-critical); }
+.alert-card.high { border-left: 3px solid var(--sag-clay-light); }
+.alert-card.medium { border-left: 3px solid var(--sag-yellow); }
+.alert-card.low { border-left: 3px solid var(--sag-blue-light); }
+
+/* ── HEALTH BAR ── */
+.health-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.health-bar { flex: 1; height: 5px; background: var(--sag-muted); border-radius: 3px; overflow: hidden; }
+.health-bar-fill { height: 100%; border-radius: 3px; }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--sag-border); margin-bottom: 18px; overflow-x: auto; }
+.tab { padding: 9px 14px; font-size: 12px; font-weight: 500; color: var(--sag-text-dim); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: all 0.1s; }
+.tab:hover { color: var(--sag-text); }
+.tab.active { color: var(--sag-blue-light); border-bottom-color: var(--sag-blue-light); font-weight: 600; }
+
+/* ── PROGRESS BAR ── */
+.progress-bar { height: 4px; background: var(--sag-muted); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 2px; background: var(--sag-blue-light); }
+
+/* ── AUTOPILOT PANEL ── */
+.autopilot-panel { background: rgba(255,59,59,0.04); border: 1px solid rgba(255,59,59,0.15); border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; }
+.ap-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ap-title { font-family: var(--font-display); font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+.ap-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--sag-critical); animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.ap-alert-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.ap-alert-row:last-child { border-bottom: none; }
+.ap-alert-text { flex: 1; font-size: 12px; }
+.ap-alert-title { font-weight: 600; margin-bottom: 2px; }
+.ap-alert-meta { font-size: 10px; color: var(--sag-text-mute); }
+.ap-actions { display: flex; gap: 4px; }
+
+/* ── LOGIN ── */
+.login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--sag-void); position: relative; overflow: hidden; }
+.login-screen::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 20% 80%, rgba(27,111,191,0.12) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 80% 20%, rgba(194,112,58,0.08) 0%, transparent 50%); }
+.login-card { position: relative; z-index: 1; background: var(--sag-surface); border: 1px solid var(--sag-border); border-radius: 12px; padding: 36px; width: 360px; box-shadow: 0 24px 60px rgba(0,0,0,0.5); }
+.login-logo { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+.login-sub { font-size: 12px; color: var(--sag-text-dim); margin-bottom: 28px; }
+.form-label { display: block; font-size: 11px; font-weight: 600; color: var(--sag-text-dim); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input { width: 100%; padding: 8px 12px; background: var(--sag-raised); border: 1px solid var(--sag-border); border-radius: 6px; font-size: 13px; color: var(--sag-text); font-family: var(--font-body); outline: none; margin-bottom: 14px; }
+.portal-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.portal-chip { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid var(--sag-border); color: var(--sag-text-dim); background: transparent; transition: all 0.12s; }
+.portal-chip.active-chip { background: var(--sag-blue-mid); color: white; border-color: var(--sag-blue-mid); }
+
+/* ── CLIENT PORTAL ── */
+.client-header { background: #0f172a; color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e3a5f; }
+.client-content { max-width: 920px; margin: 0 auto; padding: 28px 24px; }
+.project-card { background: white; border-radius: 12px; padding: 22px; border: 1px solid #e5e7eb; cursor: pointer; transition: box-shadow 0.15s; }
+.project-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+
+/* ── TRADE PORTAL ── */
+.trade-header { background: #7c2d12; color: white; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+.trade-content { max-width: 920px; margin: 0 auto; padding: 28px 24px; }
+
+/* ── MOBILE ── */
+.mobile-wrap { min-height: 100vh; background: #f5f5f4; display: flex; flex-direction: column; max-width: 390px; margin: 0 auto; }
+.mobile-header { background: var(--sag-blue); color: white; padding: 14px 18px; display: flex; align-items: center; gap: 12px; }
+.mobile-header-title { font-weight: 700; font-size: 16px; }
+.mobile-header-sub { font-size: 11px; opacity: 0.8; }
+.mobile-actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 16px; }
+.mobile-action { background: white; border-radius: 12px; padding: 16px 12px; text-align: center; cursor: pointer; border: 1px solid #e5e7eb; }
+.mobile-action-icon { font-size: 24px; margin-bottom: 6px; }
+.mobile-action-label { font-size: 12px; font-weight: 600; color: #374151; }
+.mobile-bottom-nav { background: var(--sag-void); border-top: 1px solid var(--sag-border); display: flex; padding: 0; }
+.mobile-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 4px; color: var(--sag-text-mute); font-size: 10px; gap: 3px; cursor: pointer; }
+.mobile-nav-item.active { color: var(--sag-blue-light); }
+
+/* SCREEN VISIBILITY */
+.screen { display: none; }
+.screen.visible { display: flex; flex-direction: column; min-height: 100vh; }
+.screen-inner { display: none; }
+.screen-inner.visible { display: block; }
+
+/* ── MISC ── */
+.divider { height: 1px; background: var(--sag-border); margin: 14px 0; }
+.section-gap { margin-bottom: 14px; }
+.stat-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; background: var(--sag-raised); border: 1px solid var(--sag-border); border-radius: 20px; font-size: 11px; }
+.project-hub-bar { background: var(--sag-surface); border: 1px solid var(--sag-border); border-radius: 8px; padding: 16px 20px; margin-bottom: 18px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+a { color: var(--sag-blue-light); text-decoration: none; }
+/* screen-reader only helper */
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════ */
+/* RESPONSIVE DESIGN — Mobile-First Optimization for All Devices */
+/* ═══════════════════════════════════════════════════════════════════════════════════ */
+
+/* Touch targets — 44-48px minimum on touch devices (phones, tablets) */
+@media (hover: none) and (pointer: coarse) {
+  button, a, .btn, .nav-item, .portal-chip, .topbar-btn, .hamburger, .mobile-nav-item { min-height: 48px; }
+  .site-nav .hamburger { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .topbar-btn { min-width: 44px; min-height: 44px; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* SMALL PHONES (up to 568px width) — Portrait orientation */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 568px) {
+  html { font-size: 12px; }
+  :root { --nav-width: 0; --topbar-h: 48px; }
+  .sidebar { display: none !important; }
+  .main { margin-left: 0 !important; }
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 8px 10px; height: auto; }
+  .topbar-search { max-width: 100%; order: 3; width: 100%; flex-basis: 100%; margin-top: 6px; }
+  .topbar-actions { order: 2; margin-left: auto; gap: 6px; }
+  .search-input { font-size: 16px; }
+  .content { padding: 12px; overflow-y: auto; max-height: calc(100vh - 56px); }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+  .page-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+  .page-title { font-size: 16px; margin-bottom: 6px; }
+  .page-actions { flex-direction: column; width: 100%; gap: 6px; }
+  .btn { padding: 6px 12px; font-size: 11px; min-height: 40px; }
+  .two-col, .three-col { grid-template-columns: 1fr; gap: 12px; }
+  table { font-size: 11px; width: 100%; }
+  th, td { padding: 6px 8px; }
+  .table-wrap { overflow-x: auto; }
+  thead { position: sticky; top: 0; z-index: 10; }
+  .login-card { width: 90%; max-width: 360px; padding: 24px; }
+  .mobile-wrap { max-width: 100%; border-radius: 0; }
+  .nav-item { padding: 8px 12px; font-size: 12px; }
+  .portal-chips { gap: 4px; }
+  .portal-chip { padding: 4px 10px; font-size: 10px; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* TABLETS & MEDIUM PHONES (569px – 880px) — iPad, Galaxy Tab, larger phones */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 569px) and (max-width: 880px) {
+  html { font-size: 12.5px; }
+  :root { --nav-width: 0; --topbar-h: 48px; }
+  .sidebar { display: none !important; }
+  .main { margin-left: 0 !important; }
+  .topbar { padding: 10px 14px; height: 48px; }
+  .topbar-search { max-width: 200px; }
+  .topbar-actions { gap: 8px; }
+  .content { padding: 14px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .two-col { grid-template-columns: 1fr; }
+  .page-title { font-size: 18px; }
+  .btn { min-height: 42px; }
+  .site-nav .hamburger { min-width: 48px; min-height: 48px; }
+  table { font-size: 12px; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* iPAD SPECIFIC (768px – 1024px) */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .page-title { font-size: 20px; }
+  .two-col { grid-template-columns: 1fr 1fr; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* DESKTOP & LARGE TABLETS (881px and up) */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 881px) {
+  html { font-size: 13px; }
+  .sidebar { display: flex !important; }
+  .main { margin-left: var(--nav-width) !important; }
+  .topbar { padding: 0 20px; height: var(--topbar-h); }
+  .content { padding: 20px; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* LARGE DESKTOPS (1200px+) */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 1200px) {
+  .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+  .three-col { grid-template-columns: repeat(3, 1fr); }
+  .content { padding: 24px; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* LANDSCAPE ORIENTATION (phones in landscape mode) */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media (max-height: 600px) and (orientation: landscape) {
+  :root { --topbar-h: 44px; }
+  .topbar { padding: 6px 12px; height: 44px; }
+  .content { max-height: calc(100vh - 44px); overflow-y: auto; }
+  .page-header { margin-bottom: 10px; }
+  .kpi-grid { gap: 8px; margin-bottom: 10px; }
+  .sidebar { max-height: 100vh; overflow-y: auto; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* HIGH DPI / RETINA SCREENS (2x pixel density and higher) */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* iOS SAFARI SPECIFIC FIXES */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select, button { font-size: 16px; }
+  .topbar-btn { min-height: 44px; min-width: 44px; }
+  .hamburger { min-height: 48px; min-width: 48px; }
+  body { -webkit-user-select: none; -webkit-touch-callout: none; }
+  input[readonly], input[disabled] { opacity: 1; -webkit-text-fill-color: currentColor; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* ANDROID WEBVIEW FIXES */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media (orientation: portrait) and (max-width: 600px) {
+  .mobile-wrap { max-width: 100% !important; border-radius: 0; }
+  body { margin: 0; padding: 0; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────────── */
+/* PRINT STYLES (when user prints page) */
+/* ────────────────────────────────────────────────────────────────────────────────── */
+@media print {
+  .topbar, .sidebar, .screen-switcher, .mobile-bottom-nav { display: none !important; }
+  body { background: white; color: black; }
+  .content { padding: 20px; }
+  a { color: black; text-decoration: underline; }
+  .btn { border: 1px solid black; }
+}
+</style>
+</head>
+<body>
+
+<!-- Site-level navigation placeholder (loaded asynchronously) -->
+<div id="site-nav-placeholder"></div>
+
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SCREEN: LOGIN -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="screen-login" class="screen visible" style="background: var(--sag-void); align-items: center; justify-content: center;">
+  <div class="login-card">
+    <div style="text-align:center; margin-bottom: 28px;">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;background:var(--sag-blue-mid);border-radius:10px;margin-bottom:12px;">
+        <span style="font-family:var(--font-display);font-size:22px;font-weight:800;color:white;">S</span>
+      </div>
+      <div class="login-logo">SAGUARO</div>
+      <div class="login-sub">Construction Intelligence Platform</div>
+    </div>
+    <div class="portal-chips">
+      <div class="portal-chip active-chip">Internal</div>
+      <div class="portal-chip">Client Portal</div>
+      <div class="portal-chip">Trade / Sub</div>
+    </div>
+    <label class="form-label" for="login-email">Email</label>
+    <input id="login-email" class="form-input" value="robert@saguarobuild.com" readonly />
+    <label class="form-label" for="login-password">Password</label>
+    <input id="login-password" class="form-input" type="password" value="••••••••" readonly />
+    <button class="btn btn-primary" style="width:100%;padding:10px;font-size:13px;border-radius:7px;justify-content:center;margin-top:2px;" onclick="switchScreen('dashboard')">
+      Sign In → Dashboard
+    </button>
+    <p style="text-align:center;font-size:11px;color:var(--sag-text-mute);margin-top:14px;">
+      <a href="#" style="color:var(--sag-text-dim)">Request Portal Access</a>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SCREEN: MAIN APP (dashboard, projects, rfis, etc.) -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="screen-app" class="screen">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-hex">S</div>
+      <div>
+        <div class="logo-text">SAGUARO</div>
+        <div class="logo-sub">Construction Intel</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Operations</div>
+        <div class="nav-item active" id="nav-dashboard" onclick="showPane('dashboard')">
+          <span class="nav-item-icon">◈</span> Dashboard
+        </div>
+        <div class="nav-item" id="nav-portfolio" onclick="showPane('portfolio')">
+          <span class="nav-item-icon">⬡</span> Portfolio
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Project</div>
+        <div class="nav-item" id="nav-rfis" onclick="showPane('rfis')">
+          <span class="nav-item-icon">◳</span> RFIs
+          <span class="nav-badge">4</span>
+        </div>
+        <div class="nav-item" id="nav-invoices" onclick="showPane('invoices')">
+          <span class="nav-item-icon">◉</span> Invoices
+        </div>
+        <div class="nav-item" id="nav-schedule" onclick="showPane('schedule')">
+          <span class="nav-item-icon">◷</span> Schedule
+        </div>
+        <div class="nav-item" id="nav-financials" onclick="showPane('financials')">
+          <span class="nav-item-icon">⊕</span> Financials
+        </div>
+        <div class="nav-item" id="nav-bidleveling" onclick="showPane('bidleveling')">
+          <span class="nav-item-icon">⬦</span> Bid Leveling
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Field</div>
+        <div class="nav-item" id="nav-fieldissues" onclick="showPane('fieldissues')">
+          <span class="nav-item-icon">⚑</span> Field Issues
+          <span class="nav-badge">3</span>
+        </div>
+        <div class="nav-item" id="nav-autopilot" onclick="showPane('autopilot')">
+          <span class="nav-item-icon">◎</span> Autopilot Alerts
+          <span class="nav-badge" style="background:var(--sag-critical)">2</span>
+        </div>
+        <div class="nav-item" id="nav-compliance" onclick="showPane('compliance')">
+          <span class="nav-item-icon">◑</span> Compliance
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Business</div>
+        <div class="nav-item" id="nav-admin" onclick="showPane('admin')">
+          <span class="nav-item-icon">⚙</span> Admin
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="master-badge">
+        <span>★ Master Control — Robert</span>
+      </div>
+      <div class="nav-item" onclick="switchScreen('login')">
+        <span class="nav-item-icon">→</span> Sign Out
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main id="main-content" class="main">
+    <header class="topbar">
+      <div class="topbar-search">
+        <label for="top-search" class="sr-only">Search</label>
+        <input id="top-search" class="search-input" placeholder="Search projects, RFIs, documents…" aria-label="Search projects and documents" />
+      </div>
+      <div class="topbar-actions">
+        <div class="topbar-btn">🔔<div class="notif-dot"></div></div>
+        <div class="topbar-btn">⚡</div>
+        <div class="avatar">RB</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- ── PANE: DASHBOARD ── -->
+      <div id="pane-dashboard" class="screen-inner visible">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="page-title">Executive Dashboard</div>
+            <div class="page-subtitle">Portfolio overview · Robert Barker, Master Admin</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm">↓ Export PDF</button>
+            <button class="btn btn-primary btn-sm">+ New Project</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--accent: var(--sag-blue-light)">
+            <div class="kpi-label">Active Projects</div>
+            <div class="kpi-value">12</div>
+            <div class="kpi-sub">15 total in portfolio</div>
+          </div>
+          <div class="kpi-card" style="--accent: var(--sag-sand)">
+            <div class="kpi-label">Portfolio Value</div>
+            <div class="kpi-value">$84.3M</div>
+            <div class="kpi-sub">Contract value</div>
+          </div>
+          <div class="kpi-card" style="--accent: var(--sag-critical)">
+            <div class="kpi-label">Autopilot Alerts</div>
+            <div class="kpi-value" style="color:var(--sag-red)">9</div>
+            <div class="kpi-sub">2 critical · 4 high</div>
+          </div>
+          <div class="kpi-card" style="--accent: var(--sag-yellow)">
+            <div class="kpi-label">At-Risk Projects</div>
+            <div class="kpi-value" style="color:var(--sag-yellow)">3</div>
+            <div class="kpi-sub">Health score &lt; 60</div>
+          </div>
+        </div>
+
+        <!-- Autopilot Quick Panel -->
+        <div class="autopilot-panel">
+          <div class="ap-header">
+            <div class="ap-title"><div class="ap-pulse"></div> Autopilot — 2 Critical Actions Required</div>
+            <button class="btn btn-secondary btn-sm" onclick="showPane('autopilot')">View All →</button>
+          </div>
+          <div class="ap-alert-row">
+            <span class="dot dot-critical" style="margin-top:3px;"></span>
+            <div class="ap-alert-text">
+              <div class="ap-alert-title">RFI-042 overdue 14 days — Pima County Medical Pavilion</div>
+              <div class="ap-alert-meta">structural clarification · schedule impact: YES · triggered 2h ago</div>
+            </div>
+            <div class="ap-actions">
+              <button class="btn btn-sm btn-secondary">ACK</button>
+              <button class="btn btn-sm btn-primary">Resolve</button>
+            </div>
+          </div>
+          <div class="ap-alert-row">
+            <span class="dot dot-critical" style="margin-top:3px;"></span>
+            <div class="ap-alert-text">
+              <div class="ap-alert-title">Invoice INV-0038 overdue $248,500 — Scottsdale HQ</div>
+              <div class="ap-alert-meta">pay app pending owner approval · 21 days past due</div>
+            </div>
+            <div class="ap-actions">
+              <button class="btn btn-sm btn-secondary">ACK</button>
+              <button class="btn btn-sm btn-danger">Flag</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projects Table -->
+        <div class="card-header">
+          <div class="card-title">Active Projects</div>
+          <button class="btn btn-ghost btn-sm" onclick="showPane('portfolio')">View All →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Project #</th><th>Name</th><th>Status</th><th>Contract Value</th><th>Completion</th><th>Health</th><th>Alerts</th>
+            </tr></thead>
+            <tbody>
+              <tr onclick="showPane('project')" style="cursor:pointer">
+                <td style="font-family:monospace;font-size:11px;color:var(--sag-text-dim)">SAG-2025-001</td>
+                <td style="font-weight:600">Pima County Medical Pavilion</td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td>$18,400,000</td>
+                <td style="font-size:11px">Sep 2025</td>
+                <td>
+                  <div class="health-bar-wrap">
+                    <div class="health-bar" style="width:80px"><div class="health-bar-fill" style="width:52%;background:var(--sag-yellow)"></div></div>
+                    <span style="font-size:11px;color:var(--sag-yellow)">52</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-critical">2 CRIT</span></td>
+              </tr>
+              <tr onclick="showPane('project')" style="cursor:pointer">
+                <td style="font-family:monospace;font-size:11px;color:var(--sag-text-dim)">SAG-2025-002</td>
+                <td style="font-weight:600">Scottsdale Corporate HQ</td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td>$24,750,000</td>
+                <td style="font-size:11px">Jan 2026</td>
+                <td>
+                  <div class="health-bar-wrap">
+                    <div class="health-bar" style="width:80px"><div class="health-bar-fill" style="width:78%;background:var(--sag-green)"></div></div>
+                    <span style="font-size:11px;color:var(--sag-green)">78</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-yellow">1 HIGH</span></td>
+              </tr>
+              <tr onclick="showPane('project')" style="cursor:pointer">
+                <td style="font-family:monospace;font-size:11px;color:var(--sag-text-dim)">SAG-2025-003</td>
+                <td style="font-weight:600">Mesa Logistics Center Ph.2</td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td>$11,200,000</td>
+                <td style="font-size:11px">Mar 2026</td>
+                <td>
+                  <div class="health-bar-wrap">
+                    <div class="health-bar" style="width:80px"><div class="health-bar-fill" style="width:88%;background:var(--sag-green)"></div></div>
+                    <span style="font-size:11px;color:var(--sag-green)">88</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-muted">0</span></td>
+              </tr>
+              <tr onclick="showPane('project')" style="cursor:pointer">
+                <td style="font-family:monospace;font-size:11px;color:var(--sag-text-dim)">SAG-2024-018</td>
+                <td style="font-weight:600">Tucson Arts District Mixed-Use</td>
+                <td><span class="badge badge-blue">Bidding</span></td>
+                <td>$9,600,000</td>
+                <td style="font-size:11px">—</td>
+                <td>
+                  <div class="health-bar-wrap">
+                    <div class="health-bar" style="width:80px"><div class="health-bar-fill" style="width:40%;background:var(--sag-red)"></div></div>
+                    <span style="font-size:11px;color:var(--sag-red)">40</span>
+                  </div>
+                </td>
+                <td><span class="badge badge-clay">3 MED</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PANE: PORTFOLIO ── -->
+      <div id="pane-portfolio" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Operations</div>
+            <div class="page-title">Project Portfolio</div>
+            <div class="page-subtitle">15 total · 12 active · $84.3M portfolio value</div>
+          </div>
+          <div class="page-actions">
+            <select style="padding:5px 10px;background:var(--sag-raised);border:1px solid var(--sag-border);border-radius:5px;font-size:12px;color:var(--sag-text);cursor:pointer">
+              <option>All Statuses</option><option>Active</option><option>Bidding</option><option>Closeout</option>
+            </select>
+            <button class="btn btn-primary btn-sm">+ New Project</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Project #</th><th>Name</th><th>Type</th><th>Status</th><th>Contract $</th><th>Start</th><th>Completion</th><th>PM</th><th>Health</th><th>In Portfolio</th>
+            </tr></thead>
+            <tbody>
+              <tr onclick="showPane('project')" style="cursor:pointer">
+                <td style="font-family:monospace;font-size:11px;color:var(--sag-text-dim)">SAG-2025-001</td>
+                <td style="font-weight:600">Pima County Medical Pavilion</td>
+                <td><span class="badge badge-blue">GC</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td>$18,400,000</td><td style="font-size:11px">Jan 2025</td><td style="font-size:11px">Sep 2025</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">J. Reyes</td>
+                <td><div class="health-bar-wrap"><div class="health-bar" style="width:60px"><div class="health-bar-fill" style="width:52%;background:var(--sag-yellow)"></div></div><span style="font-size:11px;color:var(--sag-yellow)">52</span></div></td>
+                <td><span style="color:var(--sag-green);font-size:12px">✓</span></td>
+              </tr>
+              <tr onclick="showPane('project')" style="cursor:pointer">
+                <td style="font-family:monospace;font-size:11px;color:var(--sag-text-dim)">SAG-2025-002</td>
+                <td style="font-weight:600">Scottsdale Corporate HQ</td>
+                <td><span class="badge badge-clay">CM</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td>$24,750,000</td><td style="font-size:11px">Mar 2025</td><td style="font-size:11px">Jan 2026</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">A. Chen</td>
+                <td><div class="health-bar-wrap"><div class="health-bar" style="width:60px"><div class="health-bar-fill" style="width:78%;background:var(--sag-green)"></div></div><span style="font-size:11px;color:var(--sag-green)">78</span></div></td>
+                <td><span style="color:var(--sag-green);font-size:12px">✓</span></td>
+              </tr>
+              <tr onclick="showPane('project')" style="cursor:pointer">
+                <td style="font-family:monospace;font-size:11px;color:var(--sag-text-dim)">SAG-2025-003</td>
+                <td style="font-weight:600">Mesa Logistics Center Ph.2</td>
+                <td><span class="badge badge-blue">GC</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td>$11,200,000</td><td style="font-size:11px">Jun 2025</td><td style="font-size:11px">Mar 2026</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">R. Torres</td>
+                <td><div class="health-bar-wrap"><div class="health-bar" style="width:60px"><div class="health-bar-fill" style="width:88%;background:var(--sag-green)"></div></div><span style="font-size:11px;color:var(--sag-green)">88</span></div></td>
+                <td><span style="color:var(--sag-green);font-size:12px">✓</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PANE: PROJECT HUB ── -->
+      <div id="pane-project" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Portfolio → Projects</div>
+            <div class="page-title">Pima County Medical Pavilion</div>
+            <div class="page-subtitle">SAG-2025-001 · General Contractor · $18,400,000</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm">Edit Project</button>
+            <button class="btn btn-primary btn-sm">+ New RFI</button>
+          </div>
+        </div>
+
+        <!-- Project meta strip -->
+        <div class="project-hub-bar">
+          <div style="display:flex;gap:28px;flex-wrap:wrap">
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--sag-text-mute);margin-bottom:3px">Owner</div><div style="font-size:13px;font-weight:600">Pima County Health Dept.</div></div>
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--sag-text-mute);margin-bottom:3px">Contract</div><div style="font-size:13px;font-weight:600">GC · Lump Sum</div></div>
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--sag-text-mute);margin-bottom:3px">Planned Start</div><div style="font-size:13px;font-weight:600">Jan 15, 2025</div></div>
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--sag-text-mute);margin-bottom:3px">Planned Completion</div><div style="font-size:13px;font-weight:600">Sep 30, 2025</div></div>
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--sag-text-mute);margin-bottom:3px">Project Manager</div><div style="font-size:13px;font-weight:600">J. Reyes</div></div>
+            <div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--sag-text-mute);margin-bottom:3px">Health Score</div><div style="font-size:13px;font-weight:600;color:var(--sag-yellow)">52 / 100 ⚠</div></div>
+          </div>
+        </div>
+
+        <!-- Module KPIs -->
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px">
+          <div class="kpi-card" style="--accent:var(--sag-red);padding:12px 14px" onclick="showPane('rfis')" style="cursor:pointer">
+            <div class="kpi-label">Open RFIs</div>
+            <div class="kpi-value" style="font-size:22px;color:var(--sag-red)">8</div>
+            <div class="kpi-sub">4 overdue</div>
+          </div>
+          <div class="kpi-card" style="--accent:var(--sag-yellow);padding:12px 14px" onclick="showPane('invoices')">
+            <div class="kpi-label">Invoices Due</div>
+            <div class="kpi-value" style="font-size:22px;color:var(--sag-yellow)">$248K</div>
+            <div class="kpi-sub">3 pending</div>
+          </div>
+          <div class="kpi-card" style="--accent:var(--sag-green);padding:12px 14px" onclick="showPane('schedule')">
+            <div class="kpi-label">Schedule</div>
+            <div class="kpi-value" style="font-size:22px;color:var(--sag-green)">67%</div>
+            <div class="kpi-sub">2 delayed tasks</div>
+          </div>
+          <div class="kpi-card" style="--accent:var(--sag-clay);padding:12px 14px" onclick="showPane('fieldissues')">
+            <div class="kpi-label">Field Issues</div>
+            <div class="kpi-value" style="font-size:22px;color:var(--sag-clay-light)">11</div>
+            <div class="kpi-sub">3 high severity</div>
+          </div>
+          <div class="kpi-card" style="--accent:var(--sag-critical);padding:12px 14px" onclick="showPane('autopilot')">
+            <div class="kpi-label">Autopilot</div>
+            <div class="kpi-value" style="font-size:22px;color:var(--sag-critical)">2</div>
+            <div class="kpi-sub">critical alerts</div>
+          </div>
+        </div>
+
+        <!-- Mini autopilot panel -->
+        <div class="autopilot-panel">
+          <div class="ap-header">
+            <div class="ap-title"><div class="ap-pulse"></div> Autopilot Watching This Project</div>
+            <button class="btn btn-secondary btn-sm" onclick="showPane('autopilot')">All Alerts →</button>
+          </div>
+          <div class="ap-alert-row">
+            <span class="dot dot-critical" style="margin-top:2px"></span>
+            <div class="ap-alert-text">
+              <div class="ap-alert-title">RFI-042 overdue 14 days — structural clarification</div>
+              <div class="ap-alert-meta">Assigned to designer J. Park · schedule impact confirmed</div>
+            </div>
+            <div class="ap-actions"><button class="btn btn-sm btn-secondary">ACK</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PANE: RFIs ── -->
+      <div id="pane-rfis" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Pima Medical → RFIs</div>
+            <div class="page-title">RFIs</div>
+            <div class="page-subtitle">8 open · 12 total</div>
+          </div>
+          <div class="page-actions">
+            <select style="padding:5px 10px;background:var(--sag-raised);border:1px solid var(--sag-border);border-radius:5px;font-size:12px;color:var(--sag-text)">
+              <option>All Statuses</option><option>Open</option><option>Answered</option><option>Closed</option>
+            </select>
+            <button class="btn btn-primary btn-sm">+ New RFI</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Subject</th><th>Status</th><th>Priority</th><th>Due Date</th><th>Spec Section</th><th>Schedule Impact</th><th>Cost Impact</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">042</td>
+                <td style="font-weight:600">Structural beam connection detail at Grid C-4</td>
+                <td><span class="badge badge-red">OVERDUE</span></td>
+                <td><span class="badge badge-critical">URGENT</span></td>
+                <td style="color:var(--sag-red);font-size:11px">Feb 21, 2025</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">§ 05 12 00</td>
+                <td><span class="badge badge-yellow">Yes</span></td>
+                <td><span class="badge badge-clay">TBD</span></td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">041</td>
+                <td style="font-weight:600">MEP coordination — ceiling plenum conflict Level 3</td>
+                <td><span class="badge badge-yellow">UNDER REVIEW</span></td>
+                <td><span class="badge badge-red">HIGH</span></td>
+                <td style="font-size:11px">Mar 14, 2025</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">§ 23 00 00</td>
+                <td><span class="badge badge-yellow">Yes</span></td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">No</td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">040</td>
+                <td style="font-weight:600">Plumbing fixture substitution request — Room 214</td>
+                <td><span class="badge badge-blue">SUBMITTED</span></td>
+                <td><span class="badge badge-muted">NORMAL</span></td>
+                <td style="font-size:11px">Mar 21, 2025</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">§ 22 40 00</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">No</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">No</td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">039</td>
+                <td style="font-weight:600">Curtainwall system anchorage detail clarification</td>
+                <td><span class="badge badge-green">ANSWERED</span></td>
+                <td><span class="badge badge-muted">NORMAL</span></td>
+                <td style="font-size:11px">Feb 28, 2025</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">§ 08 44 13</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">No</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">No</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PANE: INVOICES ── -->
+      <div id="pane-invoices" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Pima Medical → Invoices</div>
+            <div class="page-title">Invoices</div>
+            <div class="page-subtitle">$248,500 pending approval · 3 invoices</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm">↓ Export</button>
+            <button class="btn btn-primary btn-sm">+ New Invoice</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Invoice #</th><th>Type</th><th>Status</th><th>Period</th><th>Amount</th><th>Retainage</th><th>Net Due</th><th>Lien Waiver</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">INV-0041</td>
+                <td><span class="badge badge-blue">Pay App</span></td>
+                <td><span class="badge badge-yellow">PENDING</span></td>
+                <td style="font-size:11px">Feb 2025</td>
+                <td style="font-weight:600">$248,500</td>
+                <td style="font-size:11px">$24,850</td>
+                <td style="font-weight:600;color:var(--sag-blue-light)">$223,650</td>
+                <td><span class="badge badge-green">On File</span></td>
+                <td><button class="btn btn-sm btn-primary" style="margin-right:4px">✓ Approve</button><button class="btn btn-sm btn-danger">✗ Reject</button></td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">INV-0038</td>
+                <td><span class="badge badge-clay">Owner</span></td>
+                <td><span class="badge badge-red">OVERDUE</span></td>
+                <td style="font-size:11px">Jan 2025</td>
+                <td style="font-weight:600">$312,000</td>
+                <td style="font-size:11px">$31,200</td>
+                <td style="font-weight:600;color:var(--sag-red)">$280,800</td>
+                <td><span class="badge badge-red">MISSING</span></td>
+                <td><button class="btn btn-sm btn-secondary">Request Waiver</button></td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">INV-0035</td>
+                <td><span class="badge badge-blue">Pay App</span></td>
+                <td><span class="badge badge-green">PAID</span></td>
+                <td style="font-size:11px">Dec 2024</td>
+                <td style="font-weight:600">$198,000</td>
+                <td style="font-size:11px">$19,800</td>
+                <td style="font-weight:600">$178,200</td>
+                <td><span class="badge badge-green">On File</span></td>
+                <td style="color:var(--sag-text-mute);font-size:11px">Paid 01/15/2025</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PANE: SCHEDULE ── -->
+      <div id="pane-schedule" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Pima Medical → Schedule</div>
+            <div class="page-title">Schedule</div>
+            <div class="page-subtitle">14 tasks · 2 delayed · CP: 3 tasks</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm">🗓 Gantt View</button>
+            <button class="btn btn-primary btn-sm">+ Add Task</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Task</th><th>Phase</th><th>Trade</th><th>Status</th><th>Progress</th><th>Planned Start</th><th>Planned Finish</th><th>Float (days)</th><th>CP</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:600">Foundation — Grid A-D</td>
+                <td style="font-size:11px">Civil</td><td style="font-size:11px">Concrete</td>
+                <td><span class="badge badge-green">Complete</span></td>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:100%;background:var(--sag-green)"></div></div><span style="font-size:11px;color:var(--sag-green)">100%</span></div></td>
+                <td style="font-size:11px">Jan 15</td><td style="font-size:11px">Feb 28</td>
+                <td style="font-size:11px">0</td><td style="font-size:11px;color:var(--sag-red);font-weight:700">★ CP</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">Structural Steel Erection — L1–L3</td>
+                <td style="font-size:11px">Structure</td><td style="font-size:11px">Steel</td>
+                <td><span class="badge badge-clay">DELAYED</span></td>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:62%;background:var(--sag-clay)"></div></div><span style="font-size:11px;color:var(--sag-clay-light)">62%</span></div></td>
+                <td style="font-size:11px">Mar 1</td><td style="color:var(--sag-red);font-size:11px">Apr 15 ↑+12d</td>
+                <td style="font-size:11px;color:var(--sag-red)">0</td><td style="font-size:11px;color:var(--sag-red);font-weight:700">★ CP</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">Exterior Curtainwall — East Wing</td>
+                <td style="font-size:11px">Envelope</td><td style="font-size:11px">Glass</td>
+                <td><span class="badge badge-blue">IN PROGRESS</span></td>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:35%;background:var(--sag-blue-light)"></div></div><span style="font-size:11px;color:var(--sag-blue-light)">35%</span></div></td>
+                <td style="font-size:11px">Mar 15</td><td style="font-size:11px">Jun 1</td>
+                <td style="font-size:11px;color:var(--sag-green)">14</td><td style="font-size:11px;color:var(--sag-text-mute)">—</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">MEP Rough-In — Level 1</td>
+                <td style="font-size:11px">MEP</td><td style="font-size:11px">Multi-trade</td>
+                <td><span class="badge badge-muted">NOT STARTED</span></td>
+                <td><div style="display:flex;align-items:center;gap:8px"><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:0%;"></div></div><span style="font-size:11px;color:var(--sag-text-mute)">0%</span></div></td>
+                <td style="font-size:11px">Apr 20</td><td style="font-size:11px">Jun 30</td>
+                <td style="font-size:11px">7</td><td style="font-size:11px;color:var(--sag-text-mute)">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PANE: FINANCIALS ── -->
+      <div id="pane-financials" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Pima Medical → Financials</div>
+            <div class="page-title">Cost Codes</div>
+            <div class="page-subtitle">$18.4M contract · $12.1M committed · 67% complete</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm">↓ Cost Report</button>
+            <button class="btn btn-primary btn-sm">+ Add Cost Code</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Code</th><th>Description</th><th>Budget</th><th>Committed</th><th>Actuals</th><th>EAC</th><th>Variance</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">01-1000</td>
+                <td style="font-weight:600">General Conditions</td>
+                <td>$850,000</td><td>$820,000</td><td>$640,000</td><td>$855,000</td>
+                <td style="color:var(--sag-red);font-weight:600">-$5,000</td>
+                <td><span class="badge badge-yellow">Over</span></td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">03-3000</td>
+                <td style="font-weight:600">Cast-in-Place Concrete</td>
+                <td>$2,400,000</td><td>$2,380,000</td><td>$2,100,000</td><td>$2,390,000</td>
+                <td style="color:var(--sag-green);font-weight:600">+$10,000</td>
+                <td><span class="badge badge-green">On Track</span></td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">05-1200</td>
+                <td style="font-weight:600">Structural Steel</td>
+                <td>$3,100,000</td><td>$3,200,000</td><td>$2,450,000</td><td>$3,380,000</td>
+                <td style="color:var(--sag-red);font-weight:600">-$280,000</td>
+                <td><span class="badge badge-red">Over Budget</span></td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">23-0000</td>
+                <td style="font-weight:600">HVAC</td>
+                <td>$1,800,000</td><td>$1,750,000</td><td>$1,100,000</td><td>$1,770,000</td>
+                <td style="color:var(--sag-green);font-weight:600">+$30,000</td>
+                <td><span class="badge badge-green">On Track</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PANE: FIELD ISSUES ── -->
+      <div id="pane-fieldissues" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Pima Medical → Field Issues</div>
+            <div class="page-title">Field Issues</div>
+            <div class="page-subtitle">11 open · 3 high severity · 2 NCRs</div>
+          </div>
+          <div class="page-actions">
+            <select style="padding:5px 10px;background:var(--sag-raised);border:1px solid var(--sag-border);border-radius:5px;font-size:12px;color:var(--sag-text)"><option>All Categories</option></select>
+            <button class="btn btn-primary btn-sm">+ Log Issue</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Title</th><th>Category</th><th>Severity</th><th>Status</th><th>Location</th><th>Due Date</th><th>Assigned</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">FI-031</td>
+                <td style="font-weight:600">Concrete spalling at column base C-4</td>
+                <td><span class="badge badge-red">NCR</span></td>
+                <td style="display:flex;align-items:center;gap:6px;padding:9px 12px"><span class="dot dot-critical"></span> Critical</td>
+                <td><span class="badge badge-clay">Open</span></td>
+                <td style="font-size:11px">Level 1, Grid C-4</td>
+                <td style="font-size:11px;color:var(--sag-red)">Mar 8, 2025</td>
+                <td style="font-size:11px">M. Davis</td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">FI-030</td>
+                <td style="font-weight:600">Curtainwall anchor spacing non-conformance</td>
+                <td><span class="badge badge-red">NCR</span></td>
+                <td style="display:flex;align-items:center;gap:6px;padding:9px 12px"><span class="dot dot-orange"></span> High</td>
+                <td><span class="badge badge-clay">Open</span></td>
+                <td style="font-size:11px">East Wing Façade</td>
+                <td style="font-size:11px">Mar 12, 2025</td>
+                <td style="font-size:11px">T. Lee</td>
+              </tr>
+              <tr>
+                <td style="font-family:monospace;font-size:11px">FI-028</td>
+                <td style="font-weight:600">MEP pipe insulation missing — Level 3 corridor</td>
+                <td><span class="badge badge-yellow">Deficiency</span></td>
+                <td style="display:flex;align-items:center;gap:6px;padding:9px 12px"><span class="dot dot-yellow"></span> Medium</td>
+                <td><span class="badge badge-blue">In Review</span></td>
+                <td style="font-size:11px">Level 3, Corridor A</td>
+                <td style="font-size:11px">Mar 20, 2025</td>
+                <td style="font-size:11px">K. Patel</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PANE: AUTOPILOT ── -->
+      <div id="pane-autopilot" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Pima Medical → Autopilot Alerts</div>
+            <div class="page-title">Autopilot Alerts</div>
+            <div class="page-subtitle">AI-driven construction monitoring · 9 open · 2 critical</div>
+          </div>
+          <div class="page-actions">
+            <select style="padding:5px 10px;background:var(--sag-raised);border:1px solid var(--sag-border);border-radius:5px;font-size:12px;color:var(--sag-text)"><option>All Severities</option></select>
+            <button class="btn btn-secondary btn-sm">▶ Run Scan</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+          <div class="kpi-card" style="--accent:var(--sag-critical)"><div class="kpi-label">Critical</div><div class="kpi-value" style="font-size:22px;color:var(--sag-critical)">2</div></div>
+          <div class="kpi-card" style="--accent:var(--sag-clay)"><div class="kpi-label">High</div><div class="kpi-value" style="font-size:22px;color:var(--sag-clay-light)">4</div></div>
+          <div class="kpi-card" style="--accent:var(--sag-yellow)"><div class="kpi-label">Medium</div><div class="kpi-value" style="font-size:22px;color:var(--sag-yellow)">3</div></div>
+          <div class="kpi-card" style="--accent:var(--sag-text-dim)"><div class="kpi-label">Acknowledged</div><div class="kpi-value" style="font-size:22px">5</div></div>
+        </div>
+        <div>
+          <div class="alert-card critical">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+              <div style="display:flex;gap:10px;flex:1">
+                <span class="dot dot-critical" style="margin-top:4px;flex-shrink:0"></span>
+                <div>
+                  <div style="font-weight:700;font-size:13px;margin-bottom:3px">RFI_OVERDUE: RFI-042 — 14 days past response due date</div>
+                  <div style="font-size:11px;color:var(--sag-text-dim);margin-bottom:6px">Structural beam connection at Grid C-4 · Schedule impact: YES · Cost impact: TBD</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <span style="background:rgba(255,59,59,0.1);color:var(--sag-critical);font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;text-transform:uppercase">Critical</span>
+                    <span style="font-size:10px;color:var(--sag-text-mute)">RFI_OVERDUE · triggered 2h ago · fingerprint: rfi-042-overdue</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button class="btn btn-sm btn-secondary">ACK</button>
+                <button class="btn btn-sm btn-primary">Resolve</button>
+              </div>
+            </div>
+          </div>
+          <div class="alert-card critical">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+              <div style="display:flex;gap:10px;flex:1">
+                <span class="dot dot-critical" style="margin-top:4px;flex-shrink:0"></span>
+                <div>
+                  <div style="font-weight:700;font-size:13px;margin-bottom:3px">INVOICE_OVERDUE: INV-0038 — $312,000 owner payment 21 days past due</div>
+                  <div style="font-size:11px;color:var(--sag-text-dim);margin-bottom:6px">Pay App #8 · Lien waiver missing from contractor · Retainage: $31,200</div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    <span style="background:rgba(255,59,59,0.1);color:var(--sag-critical);font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px;text-transform:uppercase">Critical</span>
+                    <span style="font-size:10px;color:var(--sag-text-mute)">INVOICE_OVERDUE · triggered 6h ago</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button class="btn btn-sm btn-secondary">ACK</button>
+                <button class="btn btn-sm btn-danger">Flag</button>
+              </div>
+            </div>
+          </div>
+          <div class="alert-card high">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+              <div style="display:flex;gap:10px;flex:1">
+                <span class="dot dot-orange" style="margin-top:4px;flex-shrink:0"></span>
+                <div>
+                  <div style="font-weight:700;font-size:13px;margin-bottom:3px">SCHEDULE_SLIPPAGE: Structural Steel Erection slipped 12 days on critical path</div>
+                  <div style="font-size:11px;color:var(--sag-text-dim)">Original finish: Apr 3 · Current forecast: Apr 15 · Float: 0 days</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0">
+                <button class="btn btn-sm btn-secondary">ACK</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PANE: BID LEVELING ── -->
+      <div id="pane-bidleveling" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Pima Medical → Bid Leveling</div>
+            <div class="page-title">Bid Leveling</div>
+            <div class="page-subtitle">3 packages · 9 bids received</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary btn-sm">+ New Package</button>
+          </div>
+        </div>
+        <!-- Package 1 -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header">
+            <div class="card-title">BP-001 — Mechanical HVAC</div>
+            <span class="badge badge-green">3 Bids Received</span>
+          </div>
+          <div class="table-wrap" style="border:none;margin-top:0">
+            <table>
+              <thead><tr><th>Subcontractor</th><th>Base Bid</th><th>vs Low Bid</th><th>Qualifications</th><th>License</th><th>Bond</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr style="background:rgba(34,165,110,0.06)">
+                  <td style="font-weight:700">Desert Air Systems <span class="badge badge-green" style="margin-left:6px">LOW</span></td>
+                  <td style="font-weight:700;color:var(--sag-green)">$1,248,000</td>
+                  <td style="font-size:11px;color:var(--sag-text-mute)">—</td>
+                  <td><span class="badge badge-green">Complete</span></td>
+                  <td><span class="dot dot-green"></span></td>
+                  <td><span class="dot dot-green"></span></td>
+                  <td><button class="btn btn-sm btn-primary">Award</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">AZ Climate Control</td>
+                  <td style="font-weight:600">$1,312,000</td>
+                  <td style="font-size:11px;color:var(--sag-yellow)">+$64K (+5.1%)</td>
+                  <td><span class="badge badge-yellow">Pending</span></td>
+                  <td><span class="dot dot-green"></span></td>
+                  <td><span class="dot dot-yellow"></span></td>
+                  <td><button class="btn btn-sm btn-secondary">Award</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">SunState Mechanical</td>
+                  <td style="font-weight:600">$1,480,000</td>
+                  <td style="font-size:11px;color:var(--sag-red)">+$232K (+18.6%)</td>
+                  <td><span class="badge badge-yellow">Pending</span></td>
+                  <td><span class="dot dot-green"></span></td>
+                  <td><span class="dot dot-red"></span></td>
+                  <td><button class="btn btn-sm btn-secondary">Award</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PANE: COMPLIANCE ── -->
+      <div id="pane-compliance" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Business</div>
+            <div class="page-title">Compliance Center</div>
+            <div class="page-subtitle">COI tracking, licenses, and document gates</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary btn-sm">Request Documents</button>
+          </div>
+        </div>
+        <div class="kpi-grid" style="margin-bottom:18px">
+          <div class="kpi-card" style="--accent:var(--sag-red)"><div class="kpi-label">Expired</div><div class="kpi-value" style="font-size:22px;color:var(--sag-red)">3</div><div class="kpi-sub">docs expired</div></div>
+          <div class="kpi-card" style="--accent:var(--sag-yellow)"><div class="kpi-label">Expiring Soon</div><div class="kpi-value" style="font-size:22px;color:var(--sag-yellow)">7</div><div class="kpi-sub">within 30 days</div></div>
+          <div class="kpi-card" style="--accent:var(--sag-green)"><div class="kpi-label">Compliant</div><div class="kpi-value" style="font-size:22px;color:var(--sag-green)">24</div><div class="kpi-sub">current</div></div>
+          <div class="kpi-card" style="--accent:var(--sag-clay)"><div class="kpi-label">Pay Gates Blocked</div><div class="kpi-value" style="font-size:22px;color:var(--sag-clay-light)">2</div><div class="kpi-sub">lien waiver missing</div></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Vendor</th><th>Doc Type</th><th>Project</th><th>Expiry</th><th>Status</th><th>Pay Gate</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:600">Desert Air Systems</td>
+                <td style="font-size:11px">COI General Liability</td>
+                <td style="font-size:11px">Pima Medical</td>
+                <td style="color:var(--sag-red);font-size:11px">EXPIRED Feb 28, 2025</td>
+                <td><span class="badge badge-red">Expired</span></td>
+                <td><span class="badge badge-red">BLOCKED</span></td>
+                <td><button class="btn btn-sm btn-primary">Request</button></td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">SunState Electrical</td>
+                <td style="font-size:11px">Contractor License</td>
+                <td style="font-size:11px">Scottsdale HQ</td>
+                <td style="color:var(--sag-yellow);font-size:11px">Expires Mar 31, 2025</td>
+                <td><span class="badge badge-yellow">Expiring</span></td>
+                <td><span class="badge badge-yellow">Warning</span></td>
+                <td><button class="btn btn-sm btn-secondary">Remind</button></td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">Mesa Concrete LLC</td>
+                <td style="font-size:11px">Workers Comp</td>
+                <td style="font-size:11px">Mesa Logistics</td>
+                <td style="color:var(--sag-green);font-size:11px">Dec 31, 2025</td>
+                <td><span class="badge badge-green">Current</span></td>
+                <td><span class="badge badge-green">Clear</span></td>
+                <td style="color:var(--sag-text-mute);font-size:11px">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── PANE: ADMIN ── -->
+      <div id="pane-admin" class="screen-inner">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <div class="breadcrumb">Business</div>
+            <div class="page-title">Admin — User Management</div>
+            <div class="page-subtitle">8 users across 3 portals</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary btn-sm">Audit Log</button>
+            <button class="btn btn-primary btn-sm">+ Invite User</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Portal</th><th>Master</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:700">Robert Barker</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">robert@saguarobuild.com</td>
+                <td><span class="badge badge-clay">Master</span></td>
+                <td><span class="badge badge-blue">Internal</span></td>
+                <td><span style="color:var(--sag-clay-light);font-weight:700">★</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">Now</td>
+                <td style="font-size:11px;color:var(--sag-text-mute)">—</td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">Jessica Reyes</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">jreyes@saguarobuild.com</td>
+                <td><span class="badge badge-blue">PM</span></td>
+                <td><span class="badge badge-blue">Internal</span></td>
+                <td><span style="color:var(--sag-text-mute)">—</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">Today</td>
+                <td><button class="btn btn-sm btn-ghost">Edit</button></td>
+              </tr>
+              <tr>
+                <td style="font-weight:600">Tom Rodriguez</td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">trodriguez@pimahealth.gov</td>
+                <td><span class="badge badge-muted">Owner</span></td>
+                <td><span class="badge badge-green">Client</span></td>
+                <td><span style="color:var(--sag-text-mute)">—</span></td>
+                <td><span class="badge badge-green">Active</span></td>
+                <td style="font-size:11px;color:var(--sag-text-dim)">Mar 5</td>
+                <td><button class="btn btn-sm btn-ghost">Edit</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SCREEN: CLIENT PORTAL -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="screen-client" class="screen" style="background:#f8f7f5;flex-direction:column;">
+  <div class="client-header">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;letter-spacing:-0.3px">⬡ Saguaro Client Portal</div>
+    <div style="display:flex;gap:16px;align-items:center">
+      <span style="font-size:12px;opacity:0.7">trodriguez@pimahealth.gov</span>
+      <button onclick="switchScreen('login')" style="font-size:12px;color:#fca5a5;background:none;border:none;cursor:pointer">Sign out</button>
+    </div>
+  </div>
+  <div class="client-content">
+    <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#0f172a;margin-bottom:22px">Your Projects</h1>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:28px">
+      <div class="project-card" onclick="showClientProject()">
+        <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">SAG-2025-001</div>
+        <div style="font-weight:800;font-size:15px;color:#0f172a;margin-bottom:5px">Pima County Medical Pavilion</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:14px">5340 N. Oracle Rd, Tucson AZ</div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="background:#dcfce7;color:#16a34a;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Active</span>
+          <span style="font-size:12px;color:#9ca3af">View →</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Project Detail (shown on click) -->
+    <div id="client-project-detail" style="display:none">
+      <div style="background:white;border-radius:12px;padding:22px;margin-bottom:18px;border-left:4px solid #1e3a5f;">
+        <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:#0f172a;margin-bottom:4px">Pima County Medical Pavilion</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:16px">SAG-2025-001 · GC · 5340 N. Oracle Rd, Tucson AZ</div>
+        <div style="display:flex;gap:24px;flex-wrap:wrap">
+          <div><div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:2px">Status</div><div style="font-size:13px;font-weight:600">Active</div></div>
+          <div><div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:2px">Contract</div><div style="font-size:13px;font-weight:600">$18,400,000</div></div>
+          <div><div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:2px">Planned Completion</div><div style="font-size:13px;font-weight:600">Sep 30, 2025</div></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div style="background:white;border-radius:12px;padding:18px;border:1px solid #e5e7eb">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#0f172a;margin-bottom:12px">💰 Recent Invoices</div>
+          <div style="padding:8px 0;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between">
+            <div><div style="font-size:12px;font-weight:600">INV-0041</div><div style="font-size:10px;color:#9ca3af">Feb 2025</div></div>
+            <div style="text-align:right"><div style="font-weight:700;font-size:13px">$248,500</div><span style="background:#fef3c7;color:#ca8a04;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px">Pending</span></div>
+          </div>
+          <div style="padding:8px 0;display:flex;justify-content:space-between">
+            <div><div style="font-size:12px;font-weight:600">INV-0035</div><div style="font-size:10px;color:#9ca3af">Dec 2024</div></div>
+            <div style="text-align:right"><div style="font-weight:700;font-size:13px">$198,000</div><span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px">Paid</span></div>
+          </div>
+        </div>
+        <div style="background:white;border-radius:12px;padding:18px;border:1px solid #e5e7eb">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:#0f172a;margin-bottom:12px">📋 Change Orders</div>
+          <div style="padding:8px 0;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between">
+            <div><div style="font-size:12px;font-weight:600">CO-004: Extra steel reinf.</div><span style="background:#dcfce7;color:#16a34a;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px">Approved</span></div>
+            <div style="font-weight:700;color:#16a34a;font-size:13px">+$42,000</div>
+          </div>
+          <div style="padding:8px 0;display:flex;justify-content:space-between">
+            <div><div style="font-size:12px;font-weight:600">CO-005: Curtainwall upgrade</div><span style="background:#fef3c7;color:#ca8a04;font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px">Pending Client</span></div>
+            <div style="font-weight:700;color:#ca8a04;font-size:13px">+$78,500</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SCREEN: TRADE PORTAL -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="screen-trade" class="screen" style="background:#fef7f4;flex-direction:column;">
+  <div class="trade-header">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:17px">⬡ Trade Portal — Desert Air Systems</div>
+    <div style="display:flex;gap:14px;align-items:center">
+      <span style="font-size:12px;opacity:0.75">foreman@desertair.com</span>
+      <button onclick="switchScreen('login')" style="font-size:12px;color:#fca5a5;background:none;border:none;cursor:pointer">Sign out</button>
+    </div>
+  </div>
+  <div class="trade-content">
+    <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#7c2d12;margin-bottom:20px">My Assigned Projects</h1>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px">
+      <div class="project-card" style="border-left:4px solid #7c2d12">
+        <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px">SAG-2025-001 — HVAC Package</div>
+        <div style="font-weight:800;font-size:15px;color:#7c2d12;margin-bottom:5px">Pima County Medical Pavilion</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px">5340 N. Oracle Rd, Tucson AZ</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">3 Open Submittals</span>
+          <span style="background:#fef2f2;color:#991b1b;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">1 Open RFI</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:22px;background:white;border-radius:12px;padding:20px;border:1px solid #e5e7eb">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:#7c2d12;margin-bottom:14px">◷ My Active Schedule Tasks</div>
+      <div style="padding:10px 0;border-bottom:1px solid #f3f4f6;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:13px;font-weight:600">HVAC Rough-In — Level 1</div><div style="font-size:11px;color:#9ca3af">Apr 20 → Jun 30</div></div>
+        <div style="font-weight:700;color:#2563b0">0%</div>
+      </div>
+      <div style="padding:10px 0;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:13px;font-weight:600">Ductwork Installation — Penthouse</div><div style="font-size:11px;color:#9ca3af">May 15 → Jul 15</div></div>
+        <div style="font-weight:700;color:#2563b0">0%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SCREEN: MOBILE -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="screen-mobile" class="screen" style="background:#111827;align-items:center;justify-content:center;">
+  <div class="mobile-wrap" style="box-shadow:0 0 60px rgba(0,0,0,0.6);border-radius:24px;overflow:hidden;max-height:90vh;">
+    <div class="mobile-header">
+      <div>
+        <div class="mobile-header-title">Pima Medical Pavilion</div>
+        <div class="mobile-header-sub">SAG-2025-001 · Field View</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:13px">👷</div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;background:#f5f5f4;">
+      <!-- Daily summary -->
+      <div style="background:white;margin:12px;border-radius:12px;padding:14px;display:flex;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+        <div style="flex:1;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase">Weather</div>
+          <div style="font-size:18px;margin:4px 0">☀️</div>
+          <div style="font-size:11px;color:#374151;font-weight:600">Clear 72–88°F</div>
+        </div>
+        <div style="width:1px;background:#f3f4f6"></div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase">Workers</div>
+          <div style="font-size:24px;font-weight:800;color:#1e4d8c;margin:4px 0">34</div>
+          <div style="font-size:11px;color:#374151">on site today</div>
+        </div>
+        <div style="width:1px;background:#f3f4f6"></div>
+        <div style="flex:1;text-align:center">
+          <div style="font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase">Issues</div>
+          <div style="font-size:24px;font-weight:800;color:#c9663c;margin:4px 0">3</div>
+          <div style="font-size:11px;color:#374151">open today</div>
+        </div>
+      </div>
+      <!-- Action grid -->
+      <div style="padding:4px 12px 8px;font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em">Quick Actions</div>
+      <div class="mobile-actions-grid" style="padding:4px 12px 12px">
+        <div class="mobile-action">
+          <div class="mobile-action-icon">📋</div>
+          <div class="mobile-action-label">Daily Log</div>
+        </div>
+        <div class="mobile-action">
+          <div class="mobile-action-icon">📷</div>
+          <div class="mobile-action-label">Photos</div>
+        </div>
+        <div class="mobile-action" style="background:#fff5f2;border-color:#fed7aa">
+          <div class="mobile-action-icon">⚑</div>
+          <div class="mobile-action-label" style="color:#c9663c">Field Issue</div>
+        </div>
+        <div class="mobile-action">
+          <div class="mobile-action-icon">◷</div>
+          <div class="mobile-action-label">Schedule</div>
+        </div>
+        <div class="mobile-action">
+          <div class="mobile-action-icon">✓</div>
+          <div class="mobile-action-label">Inspection</div>
+        </div>
+        <div class="mobile-action">
+          <div class="mobile-action-icon">◳</div>
+          <div class="mobile-action-label">RFI</div>
+        </div>
+      </div>
+      <!-- Active alerts -->
+      <div style="margin:0 12px 12px;background:rgba(255,59,59,0.06);border:1px solid rgba(255,59,59,0.2);border-radius:10px;padding:12px">
+        <div style="font-size:11px;font-weight:700;color:#dc2626;margin-bottom:8px">⚡ 2 Active Alerts</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:3px">RFI-042 overdue 14 days</div>
+        <div style="font-size:11px;color:#6b7280">Structural beam detail → J. Park</div>
+      </div>
+    </div>
+    <div class="mobile-bottom-nav">
+      <div class="mobile-nav-item active">
+        <span style="font-size:18px">🏠</span>
+        <span>Home</span>
+      </div>
+      <div class="mobile-nav-item">
+        <span style="font-size:18px">⬡</span>
+        <span>Projects</span>
+      </div>
+      <div class="mobile-nav-item">
+        <span style="font-size:18px">📬</span>
+        <span>Inbox</span>
+      </div>
+      <div class="mobile-nav-item">
+        <span style="font-size:18px">👷</span>
+        <span>Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SCREEN SWITCHER BAR -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="screen-switcher">
+  <button class="sw-btn active" id="sw-login" onclick="switchScreen('login')">Login</button>
+  <button class="sw-btn" id="sw-dashboard" onclick="switchScreen('dashboard')">Dashboard</button>
+  <button class="sw-btn" id="sw-project" onclick="switchScreen('project')">Project Hub</button>
+  <button class="sw-btn" id="sw-autopilot" onclick="switchScreen('autopilot')">Autopilot</button>
+  <button class="sw-btn" id="sw-bidleveling" onclick="switchScreen('bidleveling')">Bid Leveling</button>
+  <button class="sw-btn" id="sw-client" onclick="switchScreen('client')">Client Portal</button>
+  <button class="sw-btn" id="sw-trade" onclick="switchScreen('trade')">Trade Portal</button>
+  <button class="sw-btn" id="sw-mobile" onclick="switchScreen('mobile')">📱 Mobile</button>
+</div>
+
+<script>
+const SCREENS = ['login','app','client','trade','mobile'];
+const PANES = ['dashboard','portfolio','project','rfis','invoices','schedule','financials','fieldissues','autopilot','bidleveling','compliance','admin'];
+
+// Map switcher buttons to screen + pane
+const SW_MAP = {
+  login: { screen: 'login' },
+  dashboard: { screen: 'app', pane: 'dashboard' },
+  project: { screen: 'app', pane: 'project' },
+  autopilot: { screen: 'app', pane: 'autopilot' },
+  bidleveling: { screen: 'app', pane: 'bidleveling' },
+  client: { screen: 'client' },
+  trade: { screen: 'trade' },
+  mobile: { screen: 'mobile' },
+};
+
+function switchScreen(key) {
+  const m = SW_MAP[key] || { screen: key };
+  // Hide all screens
+  SCREENS.forEach(s => {
+    const el = document.getElementById('screen-' + s);
+    if (el) el.classList.remove('visible');
+  });
+  // Show target
+  const target = document.getElementById('screen-' + m.screen);
+  if (target) target.classList.add('visible');
+  // Show pane if applicable
+  if (m.pane) showPane(m.pane);
+  // Update switcher
+  document.querySelectorAll('.sw-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('sw-' + key);
+  if (btn) btn.classList.add('active');
+}
+
+function showPane(pane) {
+  PANES.forEach(p => {
+    const el = document.getElementById('pane-' + p);
+    if (el) el.classList.remove('visible');
+  });
+  const target = document.getElementById('pane-' + pane);
+  if (target) target.classList.add('visible');
+  // Update sidebar nav
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.getElementById('nav-' + pane);
+  if (navItem) navItem.classList.add('active');
+}
+
+function showClientProject() {
+  const detail = document.getElementById('client-project-detail');
+  if (detail) detail.style.display = 'block';
+}
+
+// Default state
+switchScreen('login');
+</script>
+</script>
+<script src="assets/js/site-nav.js"></script>
+</body>
+</html>
