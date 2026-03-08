@@ -1,0 +1,69 @@
+Saguaro CRM Replit Master Package Manifest
+
+FOUNDATION
+- app/layout.tsx
+- app/globals.css
+- lib/supabaseClient.ts
+- lib/supabaseAdmin.ts
+- lib/useTenantRole.ts
+- lib/serverAuth.ts
+- lib/audit.ts
+- middleware.ts
+
+COMPONENTS
+- components/AppShell.tsx
+- components/PageHeader.tsx
+- components/EmptyState.tsx
+- components/ProjectSidebar.tsx
+- components/AutopilotPanel.tsx
+- components/MobileFieldShell.tsx
+
+PUBLIC/AUTH
+- app/setup/page.tsx
+- app/api/provision-tenant/route.ts
+- app/[tenantSlug]/page.tsx
+- app/[tenantSlug]/login/page.tsx
+- app/[tenantSlug]/logout/page.tsx
+- app/[tenantSlug]/request-access/page.tsx
+- app/[tenantSlug]/request-invite/[token]/page.tsx
+
+ADMIN/REPORTING
+- app/[tenantSlug]/app/page.tsx
+- app/[tenantSlug]/app/projects/page.tsx
+- app/[tenantSlug]/app/admin/page.tsx
+- app/[tenantSlug]/app/admin/invites/page.tsx
+- app/[tenantSlug]/app/admin/audit/page.tsx
+- app/[tenantSlug]/app/reports/page.tsx
+- app/[tenantSlug]/app/onboarding/page.tsx
+
+PROJECT MODULES
+- Project home
+- Autopilot
+- Drawings list/detail
+- Photos list/detail
+- RFIs list/detail
+- Files list/detail
+- Invoices list/detail
+- Change Orders list/detail
+- Bid Packages list/detail
+- Schedule list/detail
+- Permits list/detail
+- Inspections list/detail
+- Daily Logs list/detail
+- Field Issues list/detail
+
+MOBILE
+- Mobile shell
+- Mobile project home
+- Mobile photos
+- Mobile daily logs
+- Mobile field issues
+- Mobile schedule
+- Mobile inspections
+
+SQL ROLLOUT
+1. Core tables
+2. Core modules
+3. Production upgrade tables
+4. Gap-closer tables
+5. Optional access requests

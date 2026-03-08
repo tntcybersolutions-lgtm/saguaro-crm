@@ -1,0 +1,67 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "preserve",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "outDir": "./.next/static",
+    "noEmit": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": true,
+    "maxNodeModuleJsDepth": 1,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@/lib/*": [
+        "lib/*"
+      ],
+      "@/hooks/*": [
+        "src/hooks/*"
+      ],
+      "@/components/*": [
+        "src/components/*"
+      ],
+      "@/app/*": [
+        "src/app/*"
+      ]
+    },
+    "incremental": true,
+    "tsBuildInfoFile": ".next/cache/build-info.json",
+    "allowJs": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "dist",
+    "build"
+  ]
+}
