@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xxd)",
+      "Bash(for f in app/api/documents/*/route.ts)",
+      "Bash(do sed -i 's/\\\\\\\\!/!/g' \"$f\")",
+      "Bash(echo \"Fixed: $f\")",
+      "Bash(done)",
+      "Bash(node -e \"require\\(''puppeteer''\\); require\\(''mustache''\\); require\\(''date-fns''\\); console.log\\(''All packages verified''\\)\")"
+    ]
+  }
+}

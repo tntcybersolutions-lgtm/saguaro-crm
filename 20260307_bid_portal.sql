@@ -24,10 +24,6 @@ create table if not exists public.bid_packages (
   updated_at timestamptz not null default now()
 );
 
-alter table public.bid_packages add column if not exists awarded_submission_id uuid;
-alter table public.bid_packages add column if not exists code text not null default '';
-alter table public.bid_packages add column if not exists updated_at timestamptz not null default now();
-
 create table if not exists public.bid_package_items (
   id uuid primary key default gen_random_uuid(),
   bid_package_id uuid not null references public.bid_packages(id) on delete cascade,
@@ -66,8 +62,7 @@ create table if not exists public.bid_submissions (
   submitted_at timestamptz,
   awarded_at timestamptz,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (bid_package_id, subcontractor_company_id)
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists public.subcontractor_invites (
@@ -123,6 +118,16 @@ create index if not exists idx_subcontractor_invites_lookup on public.subcontrac
 create index if not exists idx_bid_submissions_package on public.bid_submissions (tenant_id, bid_package_id, status);
 create index if not exists idx_bid_submission_documents_submission on public.bid_submission_documents (submission_id, created_at desc);
 
+-- Enforce one submission per (package, subcontractor) when subcontractor is known.
+create unique index if not exists uidx_bid_submissions_package_company
+  on public.bid_submissions (bid_package_id, subcontractor_company_id)
+  where subcontractor_company_id is not null;
+
+-- Prevent more than one anonymous (no subcontractor) draft per package per invite.
+create unique index if not exists uidx_bid_submissions_package_invite_null_company
+  on public.bid_submissions (bid_package_id, invite_id)
+  where subcontractor_company_id is null and invite_id is not null;
+
 do $$ begin
   alter table public.bid_submissions
     add constraint bid_submissions_invite_fk
@@ -166,3 +171,69 @@ drop trigger if exists trg_bid_submission_items_updated_at on public.bid_submiss
 create trigger trg_bid_submission_items_updated_at
 before update on public.bid_submission_items
 for each row execute function public.set_updated_at();
+
+-- ────────────────────────────────────────────────────────────
+-- Row-Level Security
+-- ────────────────────────────────────────────────────────────
+
+alter table public.bid_packages enable row level security;
+alter table public.bid_package_items enable row level security;
+alter table public.subcontractor_companies enable row level security;
+alter table public.bid_submissions enable row level security;
+alter table public.subcontractor_invites enable row level security;
+alter table public.bid_submission_items enable row level security;
+alter table public.bid_submission_documents enable row level security;
+
+-- Tenant members can read and manage their own bid packages.
+create policy if not exists "tenant members manage own bid packages"
+  on public.bid_packages for all
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)
+  with check (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+-- Items belong to packages; access is controlled via the parent package's tenant.
+create policy if not exists "tenant members manage own bid package items"
+  on public.bid_package_items for all
+  using (
+    bid_package_id in (
+      select id from public.bid_packages
+      where tenant_id = (auth.jwt() ->> 'tenant_id')::uuid
+    )
+  );
+
+-- Tenant members can manage their own subcontractor companies.
+create policy if not exists "tenant members manage own subcontractor companies"
+  on public.subcontractor_companies for all
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)
+  with check (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+-- Tenant members can manage their own bid submissions.
+create policy if not exists "tenant members manage own bid submissions"
+  on public.bid_submissions for all
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)
+  with check (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+-- Tenant members can manage their own subcontractor invites.
+create policy if not exists "tenant members manage own invites"
+  on public.subcontractor_invites for all
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)
+  with check (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+-- Submission items are accessible via the parent submission's tenant.
+create policy if not exists "tenant members manage own submission items"
+  on public.bid_submission_items for all
+  using (
+    submission_id in (
+      select id from public.bid_submissions
+      where tenant_id = (auth.jwt() ->> 'tenant_id')::uuid
+    )
+  );
+
+-- Submission documents are accessible via the parent submission's tenant.
+create policy if not exists "tenant members manage own submission documents"
+  on public.bid_submission_documents for all
+  using (
+    submission_id in (
+      select id from public.bid_submissions
+      where tenant_id = (auth.jwt() ->> 'tenant_id')::uuid
+    )
+  );

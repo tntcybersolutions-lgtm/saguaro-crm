@@ -77,36 +77,43 @@ const HANDLED_RULES: RuleCode[] = [
 ];
 
 const DEFAULTS: RuleConfig = {
+  // RFI SLA: AIA A201 standard is 10 days; we escalate earlier to prevent slippage.
+  // Industry reality: 1 day = informational, 4 days = follow up, 7 days = schedule risk.
   RFI_OVERDUE: {
     enabled: true,
-    medium_after_days: 1,
-    high_after_days: 4,
-    critical_after_days: 8,
+    medium_after_days: 3,   // 3 days: send friendly follow-up
+    high_after_days: 7,     // 7 days: matches most contract SLAs — urgent
+    critical_after_days: 14, // 14 days: likely blocking work, critical path impact
   },
+  // Invoice SLA: Net 30 is standard. Escalate at 7/14/30 days past due.
   INVOICE_OVERDUE: {
     enabled: true,
-    medium_after_days: 1,
-    high_after_days: 7,
-    critical_after_days: 14,
-    high_balance: 25000,
-    critical_balance: 50000,
+    medium_after_days: 7,   // 7 days past due: send reminder
+    high_after_days: 14,    // 14 days: send demand letter, consider lien
+    critical_after_days: 30, // 30 days: lien rights, legal action
+    high_balance: 25000,    // Any invoice >$25K is high priority regardless of days
+    critical_balance: 100000, // >$100K unpaid is always critical
   },
+  // Schedule: Only flag tasks that are ON the critical path or consuming float.
+  // Non-critical tasks with float don't need alerts until float is consumed.
   SCHEDULE_SLIPPAGE: {
     enabled: true,
-    medium_after_days: 1,
-    high_after_days: 5,
-    critical_after_days: 10,
+    medium_after_days: 3,   // 3 days slippage on critical path: monitor
+    high_after_days: 7,     // 1 week: real project impact, re-plan required
+    critical_after_days: 14, // 2 weeks: milestone at risk, owner notification
   },
+  // Field issues: Severity drives escalation more than time.
+  // Critical/high severity issues escalate faster.
   FIELD_ISSUE_UNRESOLVED: {
     enabled: true,
-    medium_after_days: 2,
-    high_after_days: 5,
-    critical_after_days: 10,
+    medium_after_days: 5,   // 5 days: reasonable time to resolve minor issue
+    high_after_days: 10,    // 10 days: approaching inspection risk
+    critical_after_days: 21, // 3 weeks: blocking work or code compliance risk
   },
   PROJECT_RISK_ROLLUP: {
     enabled: true,
-    high_open_alerts: 3,
-    critical_open_alerts: 6,
+    high_open_alerts: 5,    // 5+ open alerts = high project risk
+    critical_open_alerts: 10, // 10+ open alerts = project in trouble
     force_critical_if_any_critical: true,
   },
 };
@@ -127,7 +134,7 @@ function numberOrZero(value: unknown): number {
 
 function dateOnlyTimestamp(dateLike: string | Date): number {
   const d = new Date(dateLike);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 }
 
 function daysPast(dateLike: string | Date, now: Date): number {
@@ -217,16 +224,34 @@ async function loadRuleConfig(tenantId: string): Promise<RuleConfig> {
   return merged;
 }
 
-async function fetchRows(table: string, scope: AutopilotScope) {
-  let query = supabaseAdmin.from(table).select('*').eq('tenant_id', scope.tenantId);
+const FETCH_PAGE_SIZE = 1000;
 
-  if (scope.projectId) {
-    query = query.eq('project_id', scope.projectId);
+async function fetchRows(table: string, scope: AutopilotScope) {
+  const allRows: Record<string, unknown>[] = [];
+  let from = 0;
+
+  while (true) {
+    let query = supabaseAdmin
+      .from(table)
+      .select('*')
+      .eq('tenant_id', scope.tenantId)
+      .range(from, from + FETCH_PAGE_SIZE - 1);
+
+    if (scope.projectId) {
+      query = query.eq('project_id', scope.projectId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const page = data ?? [];
+    allRows.push(...page);
+
+    if (page.length < FETCH_PAGE_SIZE) break;
+    from += FETCH_PAGE_SIZE;
   }
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return data ?? [];
+  return allRows;
 }
 
 function buildRfiAlerts(rows: any[], tenantId: string, now: Date, nowIso: string, config: RuleConfig['RFI_OVERDUE']) {
@@ -345,10 +370,23 @@ function buildScheduleAlerts(
     if (row.actual_finish_date || row.completed_at) return [];
 
     const delayDays = daysPast(baselineDate, now);
-    const severity = severityFromDays(delayDays, config);
+    if (delayDays <= 0) return [];
+
+    // Only flag non-critical-path tasks when delay is significant (≥ high threshold).
+    // Critical path tasks get alerted at the normal thresholds.
+    const isCriticalPath = Boolean(row.is_critical_path ?? row.critical_path ?? false);
+    const effectiveConfig = isCriticalPath
+      ? config
+      : { ...config, medium_after_days: config.high_after_days, high_after_days: config.critical_after_days };
+
+    const severity = severityFromDays(delayDays, effectiveConfig);
     if (!severity) return [];
 
     const taskName = row.name ?? row.title ?? row.task_name ?? `Task ${row.id}`;
+    const pct = numberOrZero(row.percent_complete);
+    const criticalContext = isCriticalPath
+      ? ' ⚠️ CRITICAL PATH — project end date at risk.'
+      : ` (${pct}% complete, non-critical path)`;
 
     return [
       makeAlert({
@@ -357,16 +395,17 @@ function buildScheduleAlerts(
         entityType: 'schedule_task',
         entityId: row.id,
         ruleCode: 'SCHEDULE_SLIPPAGE',
-        title: `Schedule slippage: ${taskName}`,
-        summary: `${taskName} is ${delayDays} day(s) behind its planned finish date and is still ${status || 'open'}.`,
+        title: `${isCriticalPath ? '⚠️ Critical path delay' : 'Schedule slippage'}: ${taskName}`,
+        summary: `${taskName} is ${delayDays} day(s) behind baseline (${pct}% complete).${criticalContext}`,
         severity,
         metadata: {
           taskName,
           baselineDate,
           delayDays,
-          percentComplete: numberOrZero(row.percent_complete),
-          isCriticalPath: Boolean(row.is_critical_path ?? row.critical_path ?? false),
+          percentComplete: pct,
+          isCriticalPath,
           predecessorIds: row.predecessor_ids ?? row.predecessors ?? [],
+          phase: row.phase ?? null,
         },
         nowIso,
       }),
@@ -427,20 +466,49 @@ function buildFieldIssueAlerts(
   });
 }
 
+type PersistedAlertSummary = {
+  project_id: string | null;
+  rule_code: string;
+  severity: Severity;
+  fingerprint: string;
+};
+
 function buildProjectRollupAlerts(
-  alerts: CandidateAlert[],
+  currentAlerts: CandidateAlert[],
+  persistedAlerts: PersistedAlertSummary[],
   tenantId: string,
   nowIso: string,
   config: RuleConfig['PROJECT_RISK_ROLLUP'],
 ) {
   if (!config.enabled) return [] as CandidateAlert[];
 
-  const grouped = new Map<string, CandidateAlert[]>();
+  // Start from the current run's fingerprints so we know which persisted ones
+  // are still active (not stale) vs. newly generated.
+  const currentFingerprints = new Set(currentAlerts.map((a) => a.fingerprint));
 
-  for (const alert of alerts) {
-    if (!alert.project_id) continue;
-    if (!grouped.has(alert.project_id)) grouped.set(alert.project_id, []);
-    grouped.get(alert.project_id)?.push(alert);
+  // Build a unified alert view: current-run alerts + persisted alerts that are
+  // still open/acknowledged but not regenerated this run (acknowledged alerts,
+  // for example). Exclude PROJECT_RISK_ROLLUP itself to avoid double-counting.
+  const unified = new Map<string, { project_id: string; rule_code: string; severity: Severity }>();
+
+  for (const a of currentAlerts) {
+    if (!a.project_id || a.rule_code === 'PROJECT_RISK_ROLLUP') continue;
+    unified.set(a.fingerprint, { project_id: a.project_id, rule_code: a.rule_code, severity: a.severity });
+  }
+
+  for (const p of persistedAlerts) {
+    if (!p.project_id || p.rule_code === 'PROJECT_RISK_ROLLUP') continue;
+    // Only include persisted alerts not regenerated this run (e.g. acknowledged).
+    if (!currentFingerprints.has(p.fingerprint)) {
+      unified.set(p.fingerprint, { project_id: p.project_id, rule_code: p.rule_code, severity: p.severity });
+    }
+  }
+
+  const grouped = new Map<string, Array<{ rule_code: string; severity: Severity }>>();
+
+  for (const entry of unified.values()) {
+    if (!grouped.has(entry.project_id)) grouped.set(entry.project_id, []);
+    grouped.get(entry.project_id)!.push(entry);
   }
 
   const results: CandidateAlert[] = [];
@@ -449,6 +517,8 @@ function buildProjectRollupAlerts(
     const criticalCount = projectAlerts.filter((a) => a.severity === 'critical').length;
     const highCount = projectAlerts.filter((a) => a.severity === 'high').length;
     const openCount = projectAlerts.length;
+    // satisfy TS — childRuleCodes still derived from the unified entries
+    const childRuleCodes = [...new Set(projectAlerts.map((a) => a.rule_code))];
 
     let severity: Severity | null = null;
 
@@ -476,7 +546,7 @@ function buildProjectRollupAlerts(
           openCount,
           highCount,
           criticalCount,
-          childRuleCodes: [...new Set(projectAlerts.map((a) => a.rule_code))],
+          childRuleCodes,
         },
         nowIso,
       }),
@@ -544,6 +614,23 @@ function summarizeBySeverity(alerts: CandidateAlert[]) {
   );
 }
 
+async function fetchPersistedOpenAlerts(scope: AutopilotScope): Promise<PersistedAlertSummary[]> {
+  let query = supabaseAdmin
+    .from('autopilot_alerts')
+    .select('project_id, rule_code, severity, fingerprint')
+    .eq('tenant_id', scope.tenantId)
+    .in('status', ['open', 'acknowledged'])
+    .neq('rule_code', 'PROJECT_RISK_ROLLUP');
+
+  if (scope.projectId) {
+    query = query.eq('project_id', scope.projectId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as PersistedAlertSummary[];
+}
+
 export async function runAutopilot(scope: AutopilotScope) {
   const now = new Date();
   const nowIso = now.toISOString();
@@ -564,11 +651,12 @@ export async function runAutopilot(scope: AutopilotScope) {
   try {
     const config = await loadRuleConfig(scope.tenantId);
 
-    const [rfis, invoices, tasks, fieldIssues] = await Promise.all([
+    const [rfis, invoices, tasks, fieldIssues, persistedOpenAlerts] = await Promise.all([
       fetchRows('rfis', scope),
       fetchRows('invoices', scope),
       fetchRows('schedule_tasks', scope),
       fetchRows('field_issues', scope),
+      fetchPersistedOpenAlerts(scope),
     ]);
 
     const alerts = [
@@ -578,7 +666,7 @@ export async function runAutopilot(scope: AutopilotScope) {
       ...buildFieldIssueAlerts(fieldIssues, scope.tenantId, now, nowIso, config.FIELD_ISSUE_UNRESOLVED),
     ];
 
-    const rollups = buildProjectRollupAlerts(alerts, scope.tenantId, nowIso, config.PROJECT_RISK_ROLLUP);
+    const rollups = buildProjectRollupAlerts(alerts, persistedOpenAlerts, scope.tenantId, nowIso, config.PROJECT_RISK_ROLLUP);
     const allAlerts = [...alerts, ...rollups];
     const persistSummary = await persistAlerts(scope, allAlerts, nowIso);
 
@@ -613,14 +701,16 @@ export async function runAutopilot(scope: AutopilotScope) {
     return summary;
   } catch (error) {
     const finishedAt = new Date().toISOString();
-    await supabaseAdmin
-      .from('autopilot_runs')
-      .update({
-        status: 'failed',
-        finished_at: finishedAt,
-        error: error instanceof Error ? error.message : 'Unknown autopilot error',
-      })
-      .eq('id', runRecord.id);
+    if (runRecord?.id) {
+      await supabaseAdmin
+        .from('autopilot_runs')
+        .update({
+          status: 'failed',
+          finished_at: finishedAt,
+          error: error instanceof Error ? error.message : 'Unknown autopilot error',
+        })
+        .eq('id', runRecord.id);
+    }
 
     throw error;
   }

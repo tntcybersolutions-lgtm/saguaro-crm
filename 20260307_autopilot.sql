@@ -84,6 +84,38 @@ create trigger trg_autopilot_alerts_updated_at
 before update on public.autopilot_alerts
 for each row execute function public.set_updated_at();
 
+-- ────────────────────────────────────────────────────────────
+-- Row-Level Security
+-- ────────────────────────────────────────────────────────────
+
+alter table public.autopilot_rule_settings enable row level security;
+alter table public.autopilot_runs enable row level security;
+alter table public.autopilot_alerts enable row level security;
+
+-- autopilot_rule_settings: tenant members can read their own settings;
+-- only service-role (admin) can write (engine uses service role).
+create policy if not exists "tenant members read own rule settings"
+  on public.autopilot_rule_settings for select
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+-- autopilot_runs: tenant members can read their own run history.
+create policy if not exists "tenant members read own runs"
+  on public.autopilot_runs for select
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+-- autopilot_alerts: tenant members can read their own alerts and
+-- acknowledge/dismiss (update status) on their own alerts.
+create policy if not exists "tenant members read own alerts"
+  on public.autopilot_alerts for select
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+create policy if not exists "tenant members update own alert status"
+  on public.autopilot_alerts for update
+  using (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)
+  with check (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
+
+-- ────────────────────────────────────────────────────────────
+
 create or replace view public.autopilot_project_risk_summary as
 select
   tenant_id,

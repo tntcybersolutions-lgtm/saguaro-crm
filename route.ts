@@ -8,7 +8,7 @@ function extractToken(request: NextRequest): string | null {
     return bearer.slice(7);
   }
 
-  return request.headers.get('x-cron-secret') ?? request.nextUrl.searchParams.get('token');
+  return request.headers.get('x-cron-secret');
 }
 
 function isAuthorized(request: NextRequest): boolean {
