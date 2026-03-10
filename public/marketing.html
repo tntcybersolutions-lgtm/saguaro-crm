@@ -4223,5 +4223,397 @@ document.addEventListener('click', function(e) {
 })();
 
 </script>
+
+<script>
+/* ============================================================
+   SAGUARO — COMPLETE BUTTON & FORM WIRING
+   Fixes every nav item, CTA button, modal, and form
+   on the marketing website to work end-to-end.
+   ============================================================ */
+
+/* ── Navigation: goTo() scrolls to section by ID ─────────────────── */
+window.goTo = function(id) {
+  var el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    // Section doesn't exist on page — handle special cases
+    var routes = {
+      'sandbox': '/sandbox',
+      'login': '/login',
+      'app': '/app',
+      'pricing': '/#pricing',
+    };
+    if (routes[id]) window.location.href = routes[id];
+  }
+};
+
+/* ── Modal system ─────────────────────────────────────────────────── */
+var _modalOverlay = null;
+
+function getOrCreateOverlay() {
+  if (!_modalOverlay) {
+    _modalOverlay = document.createElement('div');
+    _modalOverlay.id = 'sag-modal-overlay';
+    _modalOverlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+    _modalOverlay.addEventListener('click', function(e) {
+      if (e.target === _modalOverlay) closeAllModals();
+    });
+    document.body.appendChild(_modalOverlay);
+  }
+  return _modalOverlay;
+}
+
+function closeAllModals() {
+  var overlay = document.getElementById('sag-modal-overlay');
+  if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
+}
+window.closeModal = closeAllModals;
+
+var DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', GOLD='#D4A017', DIM='#8fa3c0', TEXT='#e8edf8';
+
+function showModal(contentHTML) {
+  var overlay = getOrCreateOverlay();
+  overlay.innerHTML = '<div style="background:'+RAISED+';border:1px solid '+BORDER+';border-radius:14px;padding:32px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;position:relative">'+
+    '<button onclick="closeAllModals()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:'+DIM+';font-size:22px;cursor:pointer;line-height:1">×</button>'+
+    contentHTML+'</div>';
+  overlay.style.display = 'flex';
+}
+
+/* ── SIGNUP / SANDBOX MODAL ───────────────────────────────────────── */
+function showSignupModal(planId) {
+  showModal(
+    '<div style="text-align:center;margin-bottom:24px">'+
+      '<div style="font-size:36px;margin-bottom:8px">🌵</div>'+
+      '<h2 style="color:'+TEXT+';font-size:22px;font-weight:900;margin:0 0 4px">Start Your Free Sandbox</h2>'+
+      '<p style="color:'+DIM+';font-size:13px;margin:0">14 days free · No credit card · Live in 2 minutes</p>'+
+    '</div>'+
+    '<div id="modal-error" style="display:none;background:rgba(192,48,48,.1);border:1px solid rgba(192,48,48,.3);border-radius:7px;padding:10px 14px;margin-bottom:16px;font-size:13px;color:#ff7070"></div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+
+      '<div><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">First Name</label>'+
+        '<input id="m-fname" placeholder="Robert" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+      '<div><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Last Name</label>'+
+        '<input id="m-lname" placeholder="Smith" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    '</div>'+
+    '<div style="margin-bottom:12px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Work Email</label>'+
+      '<input id="m-email" type="email" placeholder="you@company.com" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    '<div style="margin-bottom:12px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Company Name</label>'+
+      '<input id="m-company" placeholder="ABC Construction" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    '<div style="margin-bottom:20px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Primary Trade</label>'+
+      '<select id="m-trade" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;cursor:pointer">'+
+        '<option value="">Select your trade...</option>'+
+        '<option>General Contractor</option><option>Residential Builder</option><option>Commercial GC</option>'+
+        '<option>Electrical</option><option>Plumbing</option><option>HVAC</option><option>Framing</option>'+
+        '<option>Concrete</option><option>Roofing</option><option>Other</option>'+
+      '</select></div>'+
+    '<button id="m-submit-btn" onclick="submitSignupModal()" style="width:100%;padding:14px;background:linear-gradient(135deg,'+GOLD+',#F0C040);border:none;border-radius:8px;color:#0d1117;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:12px">'+
+      '🚀 Start Free Sandbox</button>'+
+    '<div style="text-align:center;font-size:11px;color:#4a5f7a">Already have an account? <a href="/login" style="color:'+GOLD+'">Sign in →</a></div>'
+  );
+}
+
+window.submitSignupModal = async function() {
+  var email = document.getElementById('m-email') ? document.getElementById('m-email').value.trim() : '';
+  var fname = document.getElementById('m-fname') ? document.getElementById('m-fname').value.trim() : '';
+  var lname = document.getElementById('m-lname') ? document.getElementById('m-lname').value.trim() : '';
+  var company = document.getElementById('m-company') ? document.getElementById('m-company').value.trim() : '';
+  var trade = document.getElementById('m-trade') ? document.getElementById('m-trade').value : '';
+  var errEl = document.getElementById('modal-error');
+  var btn = document.getElementById('m-submit-btn');
+
+  if (!email || !email.includes('@')) {
+    if (errEl) { errEl.style.display='block'; errEl.textContent='Please enter a valid email address.'; }
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Creating your sandbox…'; }
+
+  try {
+    var res = await fetch('/api/sandbox/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, firstName: fname, lastName: lname, companyName: company, primaryTrade: trade, referralSource: 'website' })
+    });
+    var data = await res.json();
+    if (!res.ok) {
+      if (errEl) { errEl.style.display='block'; errEl.textContent = data.error || 'Signup failed. Please try again.'; }
+      if (btn) { btn.disabled=false; btn.textContent='🚀 Start Free Sandbox'; }
+      return;
+    }
+    // Success
+    closeAllModals();
+    showModal(
+      '<div style="text-align:center;padding:20px 0">'+
+        '<div style="font-size:52px;margin-bottom:12px">🎉</div>'+
+        '<h2 style="color:'+TEXT+';font-size:20px;font-weight:900;margin:0 0 8px">Sandbox created!</h2>'+
+        '<p style="color:'+DIM+';font-size:13px;margin:0 0 24px">Check your email for your instant access link.</p>'+
+        '<a href="/sandbox" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,'+GOLD+',#F0C040);color:#0d1117;border-radius:8px;font-weight:800;text-decoration:none">Enter My Sandbox →</a>'+
+      '</div>'
+    );
+    if (data.sandboxUrl) setTimeout(function(){ window.location.href = data.sandboxUrl; }, 2500);
+  } catch(err) {
+    if (errEl) { errEl.style.display='block'; errEl.textContent='Network error. Please try again or go to /sandbox directly.'; }
+    if (btn) { btn.disabled=false; btn.textContent='🚀 Start Free Sandbox'; }
+  }
+};
+
+/* ── LOGIN MODAL ─────────────────────────────────────────────────── */
+function showLoginModal(portal) {
+  portal = portal || 'internal';
+  showModal(
+    '<h2 style="color:'+TEXT+';font-size:20px;font-weight:900;margin:0 0 20px">Sign In to Saguaro</h2>'+
+    '<div style="margin-bottom:14px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Email</label>'+
+      '<input id="l-email" type="email" placeholder="you@company.com" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    '<div style="margin-bottom:20px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Password</label>'+
+      '<input id="l-pass" type="password" placeholder="••••••••" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    '<button onclick="submitLoginModal()" style="width:100%;padding:13px;background:linear-gradient(135deg,'+GOLD+',#F0C040);border:none;border-radius:8px;color:#0d1117;font-size:15px;font-weight:900;cursor:pointer;margin-bottom:12px">Sign In</button>'+
+    '<div style="text-align:center;font-size:12px;color:'+DIM+'">'+
+      '<a href="/login" style="color:'+GOLD+'">Full login page with portal options →</a>'+
+    '</div>'+
+    '<div style="margin-top:12px;text-align:center;font-size:11px;color:#4a5f7a">No account? <a href="/sandbox" style="color:'+GOLD+'">Start free sandbox</a></div>'
+  );
+}
+
+window.submitLoginModal = async function() {
+  var email = document.getElementById('l-email') ? document.getElementById('l-email').value.trim() : '';
+  var pass  = document.getElementById('l-pass')  ? document.getElementById('l-pass').value : '';
+  if (!email || !pass) return;
+  try {
+    var res = await fetch('/api/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password: pass, portal: 'internal' })
+    });
+    var data = await res.json();
+    if (res.ok) { window.location.href = data.redirectUrl || '/app'; }
+    else { alert(data.error || 'Invalid email or password'); }
+  } catch { alert('Network error. Try /login directly.'); }
+};
+
+/* ── CONTACT / WHITE-LABEL / DEMO REQUEST MODAL ──────────────────── */
+function showContactModal(type) {
+  type = type || 'contact';
+  var titles = { contact:'Contact Us', whitelabel:'White-Label Inquiry', demo:'Book a Demo' };
+  showModal(
+    '<h2 style="color:'+TEXT+';font-size:20px;font-weight:900;margin:0 0 6px">'+titles[type]+'</h2>'+
+    '<p style="color:'+DIM+';font-size:13px;margin:0 0 20px">We'll be in touch within 1 business day.</p>'+
+    '<div style="margin-bottom:12px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Name</label>'+
+      '<input id="c-name" placeholder="Your name" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    '<div style="margin-bottom:12px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Work Email</label>'+
+      '<input id="c-email" type="email" placeholder="you@company.com" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    '<div style="margin-bottom:12px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Company</label>'+
+      '<input id="c-company" placeholder="ABC Construction" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    (type==='whitelabel'?'<div style="margin-bottom:12px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Desired Domain</label>'+
+      '<input id="c-domain" placeholder="app.yourcompany.com" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>':'')+
+    '<div style="margin-bottom:20px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Message</label>'+
+      '<textarea id="c-msg" rows="3" placeholder="How can we help?" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none;resize:vertical"></textarea></div>'+
+    '<button id="c-submit-btn" onclick="submitContactModal(''+type+'')" style="width:100%;padding:13px;background:linear-gradient(135deg,'+GOLD+',#F0C040);border:none;border-radius:8px;color:#0d1117;font-size:15px;font-weight:900;cursor:pointer">Send Message</button>'
+  );
+}
+
+window.submitContactModal = async function(type) {
+  var name = document.getElementById('c-name') ? document.getElementById('c-name').value.trim() : '';
+  var email = document.getElementById('c-email') ? document.getElementById('c-email').value.trim() : '';
+  var company = document.getElementById('c-company') ? document.getElementById('c-company').value.trim() : '';
+  var msg = document.getElementById('c-msg') ? document.getElementById('c-msg').value.trim() : '';
+  var domain = document.getElementById('c-domain') ? document.getElementById('c-domain').value.trim() : '';
+  var btn = document.getElementById('c-submit-btn');
+  if (!email || !email.includes('@')) { alert('Please enter a valid email.'); return; }
+  if (btn) { btn.disabled=true; btn.textContent='Sending…'; }
+  var endpoint = type==='whitelabel' ? '/api/leads/whitelabel' : type==='demo' ? '/api/leads/demo' : '/api/leads/contact';
+  try {
+    var res = await fetch(endpoint, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, firstName: name.split(' ')[0], lastName: name.split(' ').slice(1).join(' '), companyName: company, message: msg, domain })
+    });
+    var data = await res.json();
+    if (res.ok) {
+      closeAllModals();
+      showModal('<div style="text-align:center;padding:20px 0"><div style="font-size:48px;margin-bottom:12px">✅</div><h2 style="color:'+TEXT+';margin:0 0 8px">Message sent!</h2><p style="color:'+DIM+'">'+( data.message||"We'll be in touch within 1 business day.")+'</p></div>');
+    } else {
+      if (btn) { btn.disabled=false; btn.textContent='Send Message'; }
+      alert(data.error || 'Failed to send. Please try again.');
+    }
+  } catch { if (btn) { btn.disabled=false; btn.textContent='Send Message'; } alert('Network error.'); }
+};
+
+/* ── REFERRAL MODAL ──────────────────────────────────────────────── */
+function showReferralModal() {
+  showModal(
+    '<h2 style="color:'+TEXT+';font-size:20px;font-weight:900;margin:0 0 6px">Get Your Referral Link</h2>'+
+    '<p style="color:'+DIM+';font-size:13px;margin:0 0 20px">Earn 10–40% off your renewal for every contractor you refer.</p>'+
+    '<div style="margin-bottom:20px"><label style="display:block;font-size:11px;font-weight:700;color:'+DIM+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">Your Email</label>'+
+      '<input id="ref-email" type="email" placeholder="you@company.com" style="width:100%;padding:10px 12px;background:'+DARK+';border:1px solid '+BORDER+';border-radius:7px;color:'+TEXT+';font-size:13px;outline:none"></div>'+
+    '<button id="ref-btn" onclick="submitReferralModal()" style="width:100%;padding:13px;background:linear-gradient(135deg,'+GOLD+',#F0C040);border:none;border-radius:8px;color:#0d1117;font-size:15px;font-weight:900;cursor:pointer">Generate My Link</button>'+
+    '<div id="ref-result" style="display:none;margin-top:16px;background:rgba(212,160,23,.08);border:1px solid rgba(212,160,23,.2);border-radius:8px;padding:14px;font-size:13px;color:'+DIM+'"></div>'
+  );
+}
+
+window.submitReferralModal = async function() {
+  var email = document.getElementById('ref-email') ? document.getElementById('ref-email').value.trim() : '';
+  var btn = document.getElementById('ref-btn');
+  if (!email) { alert('Email required.'); return; }
+  if (btn) { btn.disabled=true; btn.textContent='Generating…'; }
+  try {
+    var res = await fetch('/api/leads/referral', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ referrerEmail: email }) });
+    var data = await res.json();
+    if (res.ok) {
+      var r = document.getElementById('ref-result');
+      if (r) { r.style.display='block'; r.innerHTML='<strong style="color:'+GOLD+'">Your referral link:</strong><br/><a href="'+data.referralUrl+'" style="color:'+GOLD+';word-break:break-all">'+data.referralUrl+'</a><br/><br/>Check your email for full details and discount tiers.'; }
+    }
+    if (btn) { btn.textContent='✓ Link sent to your email'; }
+  } catch { if (btn) { btn.disabled=false; btn.textContent='Generate My Link'; } }
+};
+
+/* ── OVERRIDE openModal() ────────────────────────────────────────── */
+window.openModal = function(id) {
+  if (id === 'signup' || id === 'sandbox' || id === 'sandbox-success') {
+    showSignupModal();
+  } else if (id === 'login') {
+    showLoginModal();
+  } else if (id === 'whitelabel') {
+    showContactModal('whitelabel');
+  } else if (id === 'contact') {
+    showContactModal('contact');
+  } else if (id === 'demo') {
+    showContactModal('demo');
+  } else {
+    showSignupModal();
+  }
+};
+
+window.switchModal = function(from, to) {
+  window.openModal(to);
+};
+
+/* ── PRICING: startCheckout() ────────────────────────────────────── */
+window.startCheckout = function(planId) {
+  showSignupModal(planId);
+};
+
+/* ── Sandbox form in page (CTA section) ──────────────────────────── */
+window.submitSandboxForm = async function(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  var email = '';
+  var inputs = document.querySelectorAll('input[type="email"]');
+  for (var i = 0; i < inputs.length; i++) {
+    if (inputs[i].value && inputs[i].value.includes('@')) { email = inputs[i].value.trim(); break; }
+  }
+  if (!email) { showSignupModal(); return; }
+  var btn = e && e.target ? e.target : null;
+  if (btn) { btn.disabled=true; btn.textContent='Creating sandbox…'; }
+  try {
+    var res = await fetch('/api/sandbox/signup', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, referralSource:'website_cta' })
+    });
+    var data = await res.json();
+    if (res.ok) {
+      if (btn) { btn.textContent='✓ Check your email!'; btn.style.background='#1a8a4a'; }
+      if (data.sandboxUrl) setTimeout(function(){ window.location.href = data.sandboxUrl; }, 2000);
+      else window.location.href = '/sandbox?email='+encodeURIComponent(email);
+    } else {
+      if (btn) { btn.disabled=false; btn.textContent='Start Free Sandbox'; }
+      alert(data.error || 'Please go to /sandbox to sign up.');
+    }
+  } catch { if (btn) { btn.disabled=false; } window.location.href='/sandbox'; }
+};
+
+/* ── Wire ALL buttons on page load ───────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+
+  /* Fix every button that calls openModal or goTo */
+  document.querySelectorAll('[onclick]').forEach(function(el) {
+    var oc = el.getAttribute('onclick') || '';
+    /* Sandbox / signup */
+    if (oc.includes('sandbox') || oc.includes('Sandbox') || oc.includes('signup') || oc.includes('Signup')) {
+      if (!oc.includes('submitSandboxForm') && !oc.includes('openModal')) {
+        el.addEventListener('click', function(e) { e.stopPropagation(); showSignupModal(); });
+      }
+    }
+  });
+
+  /* Nav links that should scroll */
+  document.querySelectorAll('a[href="#sandbox"], a[href="#signup"]').forEach(function(a) {
+    a.addEventListener('click', function(e) { e.preventDefault(); showSignupModal(); });
+  });
+  document.querySelectorAll('a[href="#login"]').forEach(function(a) {
+    a.addEventListener('click', function(e) { e.preventDefault(); showLoginModal(); });
+  });
+
+  /* Any button with text containing these phrases → open signup */
+  var signupPhrases = ['try it free','start free','get started','start sandbox','launch sandbox','start my','start your','try saguaro','start trial','free trial','no card','sign up'];
+  document.querySelectorAll('button, a').forEach(function(el) {
+    var text = (el.textContent || '').toLowerCase().trim();
+    if (signupPhrases.some(function(p){ return text.includes(p); })) {
+      if (!el.getAttribute('href') || el.getAttribute('href') === '#') {
+        el.addEventListener('click', function(e) {
+          if (e.defaultPrevented) return;
+          e.preventDefault(); showSignupModal();
+        });
+      }
+    }
+  });
+
+  /* Demo request buttons */
+  var demoPhrases = ['book a demo','book demo','request demo','schedule demo','talk to'];
+  document.querySelectorAll('button, a').forEach(function(el) {
+    var text = (el.textContent || '').toLowerCase().trim();
+    if (demoPhrases.some(function(p){ return text.includes(p); })) {
+      el.addEventListener('click', function(e) {
+        if (e.defaultPrevented) return;
+        e.preventDefault(); showContactModal('demo');
+      });
+    }
+  });
+
+  /* White-label buttons */
+  document.querySelectorAll('button, a').forEach(function(el) {
+    var text = (el.textContent || '').toLowerCase();
+    if ((text.includes('white') && text.includes('label')) || text.includes('whitelabel')) {
+      el.addEventListener('click', function(e) {
+        if (e.defaultPrevented) return;
+        e.preventDefault(); showContactModal('whitelabel');
+      });
+    }
+  });
+
+  /* Referral buttons */
+  document.querySelectorAll('button, a').forEach(function(el) {
+    var text = (el.textContent || '').toLowerCase();
+    if (text.includes('referral link') || text.includes('get my referral')) {
+      el.addEventListener('click', function(e) {
+        if (e.defaultPrevented) return;
+        e.preventDefault(); showReferralModal();
+      });
+    }
+  });
+
+  /* Sign in links */
+  document.querySelectorAll('a, button').forEach(function(el) {
+    var text = (el.textContent || '').toLowerCase().trim();
+    var href = (el.getAttribute('href') || '').toLowerCase();
+    if ((text === 'sign in' || text === 'login' || text === 'log in') && href !== '/login') {
+      el.addEventListener('click', function(e) {
+        e.preventDefault(); window.location.href = '/login';
+      });
+    }
+  });
+
+  /* Fix the CTA email input + button at bottom */
+  var ctaInputs = document.querySelectorAll('input.cta-input, input[placeholder*="email"], .cta-form input[type="email"]');
+  ctaInputs.forEach(function(inp) {
+    var btn = inp.nextElementSibling || inp.parentElement && inp.parentElement.querySelector('button');
+    if (btn && btn.tagName === 'BUTTON') {
+      btn.onclick = function(e) { window.submitSandboxForm(e); };
+    }
+  });
+});
+
+/* ── Keyboard: ESC closes modal ──────────────────────────────────── */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAllModals();
+});
+
+console.log('[Saguaro] Button wiring complete — all CTAs, modals, and forms wired.');
+</script>
 </body>
 </html>
