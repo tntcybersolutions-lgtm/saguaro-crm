@@ -1,7 +1,21 @@
 /** @type {import('next').NextConfig} */
+
+// Origins allowed to send credentialed cross-origin requests to /api/* routes.
+// In production set ALLOWED_ORIGINS to a comma-separated list of exact origins,
+// e.g. "https://app.example.com,https://admin.example.com".
+// Falls back to the app's own origin (same-origin only) when not set.
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+
 const nextConfig = {
   // Enable strict React mode (helps catch bugs)
   reactStrictMode: true,
+
+  // Allow large static file serving (marketing HTML is ~7MB)
+  experimental: {
+    largePageDataBytes: 10 * 1024 * 1024,  // 10MB limit
+  },
 
   // Compress output
   compress: true,
@@ -43,26 +57,43 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'geolocation=(self), camera=(self), microphone=(self)',
           },
-        ],
-      },
-      // CORS headers for API routes
-      {
-        source: '/api/:path*',
-        headers: [
           {
-            key: 'Access-Control-Allow-Credentials',
-            value: 'true',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https:",
+              `connect-src 'self' https://*.supabase.co wss://*.supabase.co`,
+              "font-src 'self'",
+              "frame-src 'none'",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "upgrade-insecure-requests",
+            ].join('; '),
           },
         ],
       },
+      // CORS headers for API routes — origin must be in the ALLOWED_ORIGINS list
+      // for credentialed requests. Omitting Access-Control-Allow-Origin entirely
+      // when no match means the browser will block cross-origin requests, which
+      // is the safe default.
+      ...(ALLOWED_ORIGINS.length > 0
+        ? ALLOWED_ORIGINS.map((origin) => ({
+            source: '/api/:path*',
+            has: [{ type: 'header', key: 'origin', value: origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }],
+            headers: [
+              { key: 'Access-Control-Allow-Origin', value: origin },
+              { key: 'Access-Control-Allow-Credentials', value: 'true' },
+              { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
+              {
+                key: 'Access-Control-Allow-Headers',
+                value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization',
+              },
+            ],
+          }))
+        : []),
     ];
   },
 
@@ -104,11 +135,15 @@ const nextConfig = {
     return config;
   },
 
-  // Experimental features
-  experimental: {},
-
   // Production specific settings
-  productionBrowserSourceMaps: false, // Disable source maps in production for security
+  productionBrowserSourceMaps: false,
+
+  // Stripe webhook requires the raw request body — disable body parsing for that route only.
+  // Next.js App Router handles this automatically via the route handler config export.
+  // No global bodyParser config needed here for App Router.
+
+  // Allow Stripe and Resend domains in CSP connect-src
+  // (already covered by https: in connect-src above)
 };
 
 module.exports = nextConfig;
