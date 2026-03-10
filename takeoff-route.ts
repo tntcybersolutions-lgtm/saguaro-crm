@@ -306,9 +306,14 @@ export async function runTakeoffSSE(
           }
         }
       } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Takeoff failed';
+        const isTimeout = msg.toLowerCase().includes('timeout') || msg.toLowerCase().includes('timed');
+        const userMsg = isTimeout
+          ? 'Processing timed out — upgrade to Vercel Pro for full AI takeoff (300s timeout). Current plan: 10s max.'
+          : msg;
         controller.enqueue(sseEvent({
           type: 'error',
-          message: err instanceof Error ? err.message : 'Takeoff failed',
+          message: userMsg,
         }));
       } finally {
         controller.close();

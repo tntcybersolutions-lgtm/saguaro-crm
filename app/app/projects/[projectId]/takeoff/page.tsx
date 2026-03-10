@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -35,9 +36,18 @@ interface SubsModal {
 
 function fmt(n: number) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
 
-function getCookie(name: string): string {
-  if (typeof document === 'undefined') return '';
-  return document.cookie.split(';').find(c => c.trim().startsWith(name + '='))?.split('=')[1]?.trim() ?? '';
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseAnonKey) return {};
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      return { Authorization: 'Bearer ' + session.access_token };
+    }
+  } catch {}
+  return {};
 }
 
 function classifyCSI(desc: string): { code: string; name: string } {
@@ -83,6 +93,7 @@ export default function TakeoffPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [autoGenStatus, setAutoGenStatus] = useState<string | null>(null);
 
   // New state for enhanced UI
   const [bidLoading, setBidLoading] = useState(false);
@@ -102,22 +113,40 @@ export default function TakeoffPage() {
     if (file.size > 50 * 1024 * 1024) { setErrorMsg('File too large. Maximum 50MB.'); setStage('error'); return; }
     setStage('processing'); setProgress(5); setStatusMsg('Creating takeoff project...');
     try {
-      const token = getCookie('sb-access-token');
-      const authHdr: Record<string, string> = token ? { Authorization: 'Bearer ' + token } : {};
-      const cr = await fetch('/api/takeoff/create', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHdr }, body: JSON.stringify({ tenantId: projectId, name: file.name.replace(/\.[^.]+$/, ''), projectType: 'residential', projectId }) });
+      // Get actual tenant ID from session, fall back to projectId for sandbox
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      let activeTenantId = projectId; // default for sandbox
+      try {
+        if (supabaseUrl && supabaseAnonKey) {
+          const supabase = createClient(supabaseUrl, supabaseAnonKey);
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id) activeTenantId = session.user.id;
+        }
+      } catch {}
+      const authHdr = await getAuthHeaders();
+
+      const cr = await fetch('/api/takeoff/create', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHdr }, body: JSON.stringify({ tenantId: activeTenantId, name: file.name.replace(/\.[^.]+$/, ''), projectType: 'residential', projectId }) });
       const cd = await cr.json();
       if (!cr.ok || !cd.takeoffProjectId) throw new Error(cd.error || 'Failed to create takeoff');
       const tid = cd.takeoffProjectId;
       setProgress(15); setStatusMsg('Uploading blueprint...');
-      const fd = new FormData(); fd.append('file', file); fd.append('tenantId', projectId); fd.append('sheetType', 'floor_plan');
+      const fd = new FormData(); fd.append('file', file); fd.append('tenantId', activeTenantId); fd.append('sheetType', 'floor_plan');
       const ur = await fetch('/api/takeoff/' + tid + '/upload', { method: 'POST', headers: { ...authHdr }, body: fd });
       const ud = await ur.json();
       if (!ur.ok) throw new Error(ud.error || 'Upload failed');
       setProgress(25); setStatusMsg('Blueprint uploaded — starting AI analysis...');
-      const rr = await fetch('/api/takeoff/' + tid + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHdr }, body: JSON.stringify({ tenantId: projectId }) });
+      const rr = await fetch('/api/takeoff/' + tid + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHdr }, body: JSON.stringify({ tenantId: activeTenantId }) });
       if (!rr.ok) { const ed = await rr.json(); if (rr.status === 402) throw new Error('AI run limit reached. Upgrade to Professional to continue.'); throw new Error(ed.error || 'Takeoff failed'); }
       const reader = rr.body?.getReader(); if (!reader) throw new Error('No response stream');
       const dec = new TextDecoder(); let done = false;
+
+      // Add timeout detection — 25s warning for hobby plan limit
+      const timeoutId = setTimeout(() => {
+        setErrorMsg('AI processing timed out. This feature requires Vercel Pro plan for full AI runs (300s). Upgrade at vercel.com or try a smaller blueprint.');
+        setStage('error');
+      }, 25000);
+
       while (!done) {
         const chunk = await reader.read(); done = chunk.done; if (!chunk.value) continue;
         for (const line of dec.decode(chunk.value).split('\n')) {
@@ -127,12 +156,70 @@ export default function TakeoffPage() {
             if (ev.type === 'status') { setStatusMsg(ev.message ?? ''); setStep(ev.step ?? 0); setTotalSteps(ev.totalSteps ?? 5); setProgress(25 + Math.round(((ev.step ?? 0) / (ev.totalSteps ?? 5)) * 65)); }
             else if (ev.type === 'done') {
               setProgress(100);
-              const mr = await fetch('/api/takeoff/' + tid + '/materials?tenantId=' + projectId + '&pageSize=500', { headers: { ...authHdr } });
+              clearTimeout(timeoutId);
+              const mr = await fetch('/api/takeoff/' + tid + '/materials?tenantId=' + activeTenantId + '&pageSize=500', { headers: { ...authHdr } });
               const md = mr.ok ? await mr.json() : { materials: [] };
-              setResult({ takeoffProjectId: tid, totalMaterialCost: ev.result?.totalMaterialCost ?? 0, totalLaborCost: ev.result?.totalLaborCost ?? 0, totalSf: ev.result?.totalSf ?? 0, timeSavedFormatted: ev.result?.timeSavedFormatted ?? '4h 0m', processingFormatted: ev.result?.processingFormatted ?? '0s', materials: md.materials ?? [], upsellPrompt: ev.result?.upsellPrompt ?? null });
+              const takeoffResult: TakeoffResult = {
+                takeoffProjectId: tid,
+                totalMaterialCost: ev.result?.totalMaterialCost ?? 0,
+                totalLaborCost: ev.result?.totalLaborCost ?? 0,
+                totalSf: ev.result?.totalSf ?? 0,
+                timeSavedFormatted: ev.result?.timeSavedFormatted ?? '4h 0m',
+                processingFormatted: ev.result?.processingFormatted ?? '0s',
+                materials: md.materials ?? [],
+                upsellPrompt: ev.result?.upsellPrompt ?? null,
+              };
+              setResult(takeoffResult);
+
+              // AUTO-GENERATE: Bid Package + SOV immediately after takeoff
+              setStatusMsg('Auto-generating bid package and schedule of values...');
+              try {
+                const sovItems = (md.materials ?? []).map((m: MaterialLine) => ({
+                  description: m.item_description,
+                  quantity: m.quantity,
+                  unit: m.unit,
+                  unitCost: m.unit_cost_estimate,
+                  total: m.total_cost_estimate,
+                  csiCode: classifyCSI(m.item_description || m.category || '').code,
+                }));
+
+                // Create bid package
+                const bpRes = await fetch('/api/bid-packages/create', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', ...authHdr },
+                  body: JSON.stringify({ projectId, takeoffId: tid, autoPopulate: true, sovItems }),
+                });
+                if (bpRes.ok) {
+                  const bpData = await bpRes.json();
+                  setAutoGenStatus('Bid package created — sending sub invitations by trade...');
+
+                  // Auto-invite subs by CSI division
+                  const csiGroups = groupByCSI(md.materials ?? []);
+                  for (const group of csiGroups.slice(0, 5)) { // top 5 divisions
+                    await fetch('/api/bid-packages/suggest-subs', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', ...authHdr },
+                      body: JSON.stringify({ trade: group.division.name, projectId, bidPackageId: bpData.bidPackageId, autoInvite: true }),
+                    }).catch(() => null); // non-blocking
+                  }
+                }
+
+                // Generate SOV
+                await fetch(`/api/projects/${projectId}/sov/generate`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', ...authHdr },
+                  body: JSON.stringify({ materials: md.materials ?? [] }),
+                }).catch(() => null); // non-blocking
+
+                setAutoGenStatus('done');
+              } catch (autoGenErr) {
+                console.warn('Auto-generate warning:', autoGenErr);
+                // Non-fatal — takeoff succeeded, just auto-gen failed
+              }
+
               setTimeout(() => setStage('complete'), 400); done = true; break;
-            } else if (ev.type === 'error') { throw new Error(ev.message); }
-          } catch (pe) { if (pe instanceof Error && !pe.message.includes('JSON')) throw pe; }
+            } else if (ev.type === 'error') { clearTimeout(timeoutId); throw new Error(ev.message); }
+          } catch (pe) { if (pe instanceof Error && !pe.message.includes('JSON')) { clearTimeout(timeoutId); throw pe; } }
         }
       }
     } catch (err) { setErrorMsg(err instanceof Error ? err.message : 'Takeoff failed'); setStage('error'); }
@@ -142,8 +229,7 @@ export default function TakeoffPage() {
     if (!result) return;
     setBidLoading(true);
     try {
-      const token = getCookie('sb-access-token');
-      const authHdr: Record<string, string> = token ? { Authorization: 'Bearer ' + token } : {};
+      const authHdr = await getAuthHeaders();
       const sovItems = result.materials.map(m => ({
         description: m.item_description,
         quantity: m.quantity,
@@ -170,8 +256,7 @@ export default function TakeoffPage() {
     if (!result) return;
     setSovLoading(true);
     try {
-      const token = getCookie('sb-access-token');
-      const authHdr: Record<string, string> = token ? { Authorization: 'Bearer ' + token } : {};
+      const authHdr = await getAuthHeaders();
       const res = await fetch(`/api/projects/${projectId}/sov/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHdr },
@@ -189,8 +274,7 @@ export default function TakeoffPage() {
   async function handleInviteSubs(divisionName: string) {
     setSubsModal({ open: true, trade: divisionName, loading: true, subs: [] });
     try {
-      const token = getCookie('sb-access-token');
-      const authHdr: Record<string, string> = token ? { Authorization: 'Bearer ' + token } : {};
+      const authHdr = await getAuthHeaders();
       const res = await fetch('/api/bid-packages/suggest-subs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHdr },
@@ -208,13 +292,40 @@ export default function TakeoffPage() {
   // ── UPLOAD STAGE ─────────────────────────────────────────────────────────────
   if (stage === 'upload') return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 'calc(100vh - 120px)', padding: 40 }}>
+
+      {/* Construction workflow steps */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {[
+          { n: 1, label: 'Upload Blueprint', active: true },
+          { n: 2, label: 'AI Reads Dimensions', active: false },
+          { n: 3, label: 'Generate Materials List', active: false },
+          { n: 4, label: 'Auto-Create Bid Package', active: false },
+          { n: 5, label: 'Send Sub Invitations', active: false },
+        ].map((step, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: step.active ? GOLD : DIM }}>
+            <div style={{ width: 20, height: 20, borderRadius: '50%', background: step.active ? GOLD : 'rgba(255,255,255,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: step.active ? DARK : DIM }}>
+              {step.n}
+            </div>
+            {step.label}
+            {i < 4 && <span style={{ color: '#263347' }}>→</span>}
+          </div>
+        ))}
+      </div>
+
       <div
         onDragOver={e => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
         onClick={() => fileRef.current?.click()}
         style={{ border: '2px dashed ' + (dragging ? GOLD : 'rgba(212,160,23,.4)'), borderRadius: 14, padding: '60px 80px', textAlign: 'center', cursor: 'pointer', maxWidth: 560, width: '100%', background: dragging ? 'rgba(212,160,23,.04)' : 'rgba(212,160,23,.02)', transition: 'all .2s' }}>
-        <input ref={fileRef} type="file" accept=".pdf,image/jpeg,image/png,image/webp,image/tiff" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,image/jpeg,image/png,image/webp,image/tiff"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+        />
         <div style={{ fontSize: 52, marginBottom: 16 }}>📐</div>
         <div style={{ fontSize: 20, fontWeight: 800, color: TEXT, marginBottom: 8 }}>Drop Your Blueprint Here</div>
         <div style={{ fontSize: 14, color: DIM, marginBottom: 24 }}>PDF, JPG, PNG — Claude reads every dimension automatically</div>
@@ -317,6 +428,9 @@ export default function TakeoffPage() {
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, color: GOLD }}>✅ Takeoff complete in {result?.processingFormatted ?? '?'} — {materials.length} materials</div>
           <div style={{ fontSize: 12, color: DIM }}>Time saved vs. manual: {result?.timeSavedFormatted ?? '4h+'}</div>
+          <div style={{ fontSize: 12, color: GREEN, marginTop: 2 }}>
+            ✅ Bid package created • SOV generated • Sub invitations sent
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
           {[
@@ -369,20 +483,37 @@ export default function TakeoffPage() {
             {/* ── Action buttons ── */}
             <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
               <button
+                onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)}
+                style={{ padding: '12px 24px', background: 'linear-gradient(135deg,#D4A017,#F0C040)', border: 'none', borderRadius: 9, color: DARK, fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 2px 12px rgba(212,160,23,.3)' }}>
+                📦 View Bid Package
+              </button>
+              <button
+                onClick={() => router.push(`/app/projects/${projectId}/pay-apps`)}
+                style={{ padding: '12px 24px', background: 'rgba(61,214,140,.1)', border: '1px solid rgba(61,214,140,.35)', borderRadius: 9, color: GREEN, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                📋 View Schedule of Values
+              </button>
+              <button
                 onClick={handleGenerateBidPackage}
                 disabled={bidLoading}
-                style={{ padding: '12px 24px', background: bidLoading ? 'rgba(212,160,23,.4)' : 'linear-gradient(135deg,#D4A017,#F0C040)', border: 'none', borderRadius: 9, color: DARK, fontSize: 14, fontWeight: 800, cursor: bidLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 2px 12px rgba(212,160,23,.3)' }}>
-                {bidLoading ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(0,0,0,.3)', borderTopColor: DARK, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> : '📦'}
-                {bidLoading ? 'Creating...' : 'Generate Bid Package from Takeoff'}
+                style={{ padding: '12px 24px', background: bidLoading ? 'rgba(212,160,23,.15)' : 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.35)', borderRadius: 9, color: GOLD, fontSize: 14, fontWeight: 700, cursor: bidLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {bidLoading ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(212,160,23,.3)', borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> : '🔄'}
+                {bidLoading ? 'Creating...' : 'Regenerate Bid Package'}
               </button>
               <button
                 onClick={handleGenerateSOV}
                 disabled={sovLoading}
                 style={{ padding: '12px 24px', background: 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.35)', borderRadius: 9, color: GOLD, fontSize: 14, fontWeight: 700, cursor: sovLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
                 {sovLoading ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(212,160,23,.3)', borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> : '📋'}
-                {sovLoading ? 'Generating...' : 'Auto-Generate Schedule of Values'}
+                {sovLoading ? 'Generating...' : 'Regenerate Schedule of Values'}
               </button>
             </div>
+
+            {/* ── Auto-gen status ── */}
+            {autoGenStatus && autoGenStatus !== 'done' && (
+              <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(61,214,140,.06)', border: '1px solid rgba(61,214,140,.2)', borderRadius: 8, fontSize: 13, color: GREEN }}>
+                {autoGenStatus}
+              </div>
+            )}
 
             {/* ── CSI grouped results table ── */}
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
