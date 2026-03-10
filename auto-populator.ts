@@ -468,35 +468,10 @@ export async function prefillMultipleForms(opts: {
 // API route handler — POST /api/ai/prefill
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { NextRequest, NextResponse } from 'next/server';
 
-export async function prefillHandler(request: NextRequest) {
-  const body = await request.json().catch(() => null);
-  if (!body?.formType || !body?.tenantId || !body?.projectId) {
-    return NextResponse.json({ error: 'formType, tenantId, and projectId are required' }, { status: 400 });
-  }
 
-  try {
-    const result = await prefillForm({
-      tenantId:  String(body.tenantId),
-      projectId: String(body.projectId),
-      formType:  String(body.formType) as FormType,
-      context:   body.context ?? {},
-      entityId:  body.entityId ? String(body.entityId) : undefined,
-    });
 
-    return NextResponse.json(result);
-  } catch (err) {
-    return NextResponse.json({
-      error: err instanceof Error ? err.message : 'Auto-fill failed',
-    }, { status: 500 });
-  }
-}
-
-// Namespace export
 export const AutoPopulator = {
   prefillForm,
   prefillMultipleForms,
 };
-
-// (aiResult is used only in ruleBasedFill — no global declaration needed)
