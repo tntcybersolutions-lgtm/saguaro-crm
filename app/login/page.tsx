@@ -4,10 +4,12 @@ import { createClient } from '@supabase/supabase-js';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#ef4444';
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const HAS_SUPABASE = !!(SUPABASE_URL && SUPABASE_URL !== 'https://demo.supabase.co' && SUPABASE_KEY);
+
 function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createClient(url, key);
+  return createClient(SUPABASE_URL!, SUPABASE_KEY!);
 }
 
 export default function LoginPage(){
@@ -20,6 +22,12 @@ export default function LoginPage(){
     if(!form.email||!form.password){ setError('Email and password are required.'); return; }
     setLoading(true); setError('');
     try {
+      // Demo mode — Supabase not configured, go straight to the app
+      if (!HAS_SUPABASE) {
+        const next = new URLSearchParams(window.location.search).get('next') || '/app';
+        window.location.href = next;
+        return;
+      }
       const supabase = getSupabase();
       const { data, error: authErr } = await supabase.auth.signInWithPassword({
         email: form.email.toLowerCase().trim(),

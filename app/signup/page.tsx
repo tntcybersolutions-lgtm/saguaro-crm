@@ -4,10 +4,12 @@ import { createClient } from '@supabase/supabase-js';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#ef4444',GREEN='#22c55e';
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const HAS_SUPABASE = !!(SUPABASE_URL && SUPABASE_URL !== 'https://demo.supabase.co' && SUPABASE_KEY);
+
 function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  return createClient(url, key);
+  return createClient(SUPABASE_URL!, SUPABASE_KEY!);
 }
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
@@ -26,6 +28,11 @@ export default function SignupPage(){
     if(form.password.length < 8){ setError('Password must be at least 8 characters.'); return; }
     setLoading(true); setError('');
     try {
+      // Demo mode — Supabase not configured, go straight to the app
+      if (!HAS_SUPABASE) {
+        window.location.href = '/app';
+        return;
+      }
       const supabase = getSupabase();
       const { data, error: signUpErr } = await supabase.auth.signUp({
         email: form.email.toLowerCase().trim(),
