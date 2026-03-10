@@ -8,28 +8,25 @@
   "regions": ["iad1"],
 
   "functions": {
-    "app/api/billing/webhook/route.ts": {
+    "app/api/billing/[...path]/route.ts": {
       "maxDuration": 30
     },
-    "app/api/ai/chat/route.ts": {
+    "app/api/ai/[...path]/route.ts": {
       "maxDuration": 60
     },
-    "app/api/takeoff/[takeoffId]/run/route.ts": {
+    "app/api/takeoff/[...path]/route.ts": {
       "maxDuration": 300
     },
-    "app/api/projects/[projectId]/bid-packages/[bidPackageId]/generate-jacket/route.ts": {
+    "app/api/[...path]/route.ts": {
       "maxDuration": 120
     },
-    "app/api/pay-apps/create/route.ts": {
+    "app/api/pay-apps/[...path]/route.ts": {
       "maxDuration": 60
     },
-    "app/api/insurance/upload/route.ts": {
+    "app/api/insurance/[...path]/route.ts": {
       "maxDuration": 60
     },
-    "app/api/payroll/create/route.ts": {
-      "maxDuration": 60
-    },
-    "app/api/documents/closeout/route.ts": {
+    "app/api/documents/[...path]/route.ts": {
       "maxDuration": 120
     }
   },
