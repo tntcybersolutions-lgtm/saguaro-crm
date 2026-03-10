@@ -33,7 +33,8 @@
       "Bash(node patch-bid-packages.js)",
       "Bash(rm patch-bid-packages.js)",
       "Bash(grep -E \"ai-chat|auto-populator|project-context|wh347|bid-jacket|w9-portal|sandbox-manager$\")",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(grep -E \"\\\\.ts$\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\ChadDerocher\\OneDrive - TNT Cyber Solutions\\Documents\\GitHub\\Live-Code-Saguaro\\app\\app\\projects\\[projectId]\\takeoff"

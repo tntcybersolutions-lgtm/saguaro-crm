@@ -10,7 +10,8 @@
       "Bash(node --version)",
       "Bash(python -c \":*)",
       "Bash(grep -n \"pricing\\\\|price-grid\\\\|price-card\\\\|$5,000\\\\|$6,500\\\\|$7,500\" saguaro-preview.html)",
-      "Bash(grep -n \"Stripe\\\\|stripe\" *.ts *.html *.sql)"
+      "Bash(grep -n \"Stripe\\\\|stripe\" *.ts *.html *.sql)",
+      "Bash(node -e \":*)"
     ]
   }
 }
