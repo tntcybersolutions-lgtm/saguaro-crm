@@ -1,0 +1,63 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+
+  "regions": ["iad1"],
+
+  "functions": {
+    "app/api/billing/webhook/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/ai/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/takeoff/[takeoffId]/run/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/projects/[projectId]/bid-packages/[bidPackageId]/generate-jacket/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/pay-apps/create/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/insurance/upload/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/payroll/create/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/documents/closeout/route.ts": {
+      "maxDuration": 120
+    }
+  },
+
+  "crons": [
+    { "path": "/api/internal/autopilot/run",  "schedule": "0 7 * * *" },
+    { "path": "/api/insurance/check-expiry",  "schedule": "0 8 * * *" },
+    { "path": "/api/sandbox/lifecycle",       "schedule": "0 9 * * *" }
+  ],
+
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options",  "value": "nosniff" },
+        { "key": "X-Frame-Options",          "value": "DENY" },
+        { "key": "X-XSS-Protection",         "value": "1; mode=block" }
+      ]
+    },
+    {
+      "source": "/api/billing/webhook",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache" }
+      ]
+    }
+  ],
+
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
