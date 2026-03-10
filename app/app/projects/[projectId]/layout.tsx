@@ -106,8 +106,15 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 56px)' }}>
 
+      {/* ── Mobile sidebar hide ──────────────────────────────────────── */}
+      <style>{`
+        @media (max-width: 768px) {
+          .sidebar-desktop { display: none !important; }
+        }
+      `}</style>
+
       {/* ── Project Sidebar ──────────────────────────────────────────── */}
-      <aside style={{
+      <aside className="sidebar-desktop" style={{
         width: collapsed ? 56 : 220,
         flexShrink: 0,
         background: '#0a1117',

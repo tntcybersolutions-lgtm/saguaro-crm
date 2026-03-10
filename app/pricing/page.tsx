@@ -39,7 +39,7 @@ export default function PricingPage(){
   return (
     <div style={{minHeight:'100vh',background:DARK,color:TEXT,fontFamily:'system-ui,sans-serif'}}>
       {/* Nav */}
-      <nav style={{position:'fixed' as const,top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(13,17,23,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 32px',gap:24,backdropFilter:'blur(12px)'}}>
+      <nav style={{position:'fixed' as const,top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(13,17,23,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 16px',gap:24,backdropFilter:'blur(12px)'}}>
         <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
           <span style={{fontSize:22}}>🌵</span>
           <span style={{fontWeight:800,fontSize:16,letterSpacing:1,color:GOLD}}>SAGUARO</span>
@@ -66,7 +66,7 @@ export default function PricingPage(){
         </div>
 
         {/* Pricing cards */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20,maxWidth:1100,margin:'0 auto',padding:'0 24px 60px'}}>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))',gap:20,maxWidth:1100,margin:'0 auto',padding:'0 24px 60px'}}>
           {PLANS.map(plan=>(
             <div key={plan.name} style={{background:RAISED,border:`2px solid ${plan.popular?plan.color:BORDER}`,borderRadius:14,overflow:'hidden',position:'relative' as const}}>
               {plan.popular&&<div style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,textAlign:'center' as const,padding:'6px 0',fontSize:11,fontWeight:800,color:'#0d1117',letterSpacing:1}}>MOST POPULAR</div>}

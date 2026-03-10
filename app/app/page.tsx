@@ -338,7 +338,7 @@ export default function DashboardPage() {
         )}
 
         {/* KPI Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, marginBottom: 28 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 28 }}>
           <KPI label="Active Projects"      value={String(activeProjects)}           sub={`${activeProjects} in progress`}    color={GOLD} />
           <KPI label="Total Contract Value" value={formatCurrency(totalContract)}     sub="+$45K change orders" />
           <KPI label="Billed to Date"       value={formatCurrency(428_500)}           sub="14.8% complete" />
@@ -382,7 +382,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Main 2-col grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
 
           {/* Active Projects */}
           <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
@@ -425,6 +425,7 @@ export default function DashboardPage() {
               <span style={{ fontWeight: 700, fontSize: 14 }}>Open RFIs</span>
               <Link href={`/app/projects/${DEMO_PROJECT.id}/rfis`} style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>View All →</Link>
             </div>
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
                 <tr style={{ background: '#0d1117' }}>
@@ -450,6 +451,7 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
@@ -459,6 +461,7 @@ export default function DashboardPage() {
             <span style={{ fontWeight: 700, fontSize: 14 }}>Subcontractor Compliance</span>
             <span style={{ fontSize: 12, color: DIM }}>6 subs on active project</span>
           </div>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ background: '#0d1117' }}>
@@ -480,6 +483,7 @@ export default function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
       </div>

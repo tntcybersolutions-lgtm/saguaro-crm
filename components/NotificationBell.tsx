@@ -41,7 +41,7 @@ export default function NotificationBell(){
 
   return (
     <div ref={ref} style={{position:'relative' as const}}>
-      <button onClick={()=>setOpen(!open)} style={{position:'relative' as const,background:'rgba(255,255,255,.04)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'7px 10px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <button onClick={()=>setOpen(!open)} style={{position:'relative' as const,background:'rgba(255,255,255,.04)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'10px 12px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
         <span style={{fontSize:18}}>🔔</span>
         {unreadCount>0&&(
           <span style={{position:'absolute' as const,top:-4,right:-4,minWidth:18,height:18,background:RED,borderRadius:9,fontSize:10,fontWeight:800,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',padding:'0 4px',border:`2px solid ${DARK}`}}>
@@ -51,7 +51,7 @@ export default function NotificationBell(){
       </button>
 
       {open&&(
-        <div style={{position:'absolute' as const,right:0,top:'calc(100% + 8px)',width:360,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,.5)',zIndex:1000,overflow:'hidden'}}>
+        <div style={{position:'absolute' as const,right:0,top:'calc(100% + 8px)',width:'min(360px, calc(100vw - 24px))',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:12,boxShadow:'0 20px 60px rgba(0,0,0,.5)',zIndex:1000,overflow:'hidden'}}>
           <div style={{padding:'12px 16px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center',background:'rgba(0,0,0,.2)'}}>
             <span style={{fontWeight:700,fontSize:14,color:TEXT}}>Notifications</span>
             <div style={{display:'flex',gap:8,alignItems:'center'}}>

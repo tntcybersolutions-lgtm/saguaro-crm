@@ -24,6 +24,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [aiReply, setAiReply] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   async function sendAI() {
     if (!aiMsg.trim()) return;
@@ -58,6 +59,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: '100vh', background: DARK, color: TEXT, fontFamily: 'system-ui,-apple-system,sans-serif' }}>
 
+      {/* ── Responsive styles ────────────────────────────────────────────── */}
+      <style>{`
+        @media (max-width: 768px) {
+          .mobile-hamburger { display: flex !important; }
+          .desktop-nav-links { display: none !important; }
+          .desktop-only { display: none !important; }
+        }
+      `}</style>
+
       {/* ── Top Nav ─────────────────────────────────────────────────────── */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 56, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 16, backdropFilter: 'blur(12px)' }}>
         <Link href="/app" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
@@ -66,8 +76,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <span style={{ fontSize: 10, background: GOLD, color: '#0d1117', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>CRM</span>
         </Link>
 
-        {/* Nav links */}
-        <div style={{ display: 'flex', gap: 2, marginLeft: 8 }}>
+        {/* Nav links — hidden on mobile via .desktop-nav-links */}
+        <div className="desktop-nav-links" style={{ display: 'flex', gap: 2, marginLeft: 8 }}>
           {[
             { label: 'Projects',   href: '/app/projects' },
             { label: 'Bids',       href: '/app/bids' },
@@ -84,10 +94,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         <div style={{ flex: 1 }} />
 
-        {/* ⌘K Command Palette hint */}
+        {/* ⌘K Command Palette hint — hidden on mobile */}
         <button
           onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
           title="Open command palette (⌘K)"
+          className="desktop-only"
           style={{
             display: 'flex', alignItems: 'center', gap: 5,
             padding: '4px 10px', borderRadius: 6,
@@ -112,11 +123,55 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#B85C2A)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#0d1117', cursor: 'pointer' }}>
           C
         </div>
+
+        {/* Hamburger button — shows on mobile only */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{
+            display: 'none', // hidden on desktop via inline, shown via CSS
+            background: 'none', border: 'none', color: TEXT, fontSize: 22,
+            cursor: 'pointer', padding: '8px', minWidth: 44, minHeight: 44,
+            alignItems: 'center', justifyContent: 'center',
+          }}
+          className="mobile-hamburger"
+          aria-label="Open menu"
+        >
+          {mobileMenuOpen ? '✕' : '☰'}
+        </button>
       </nav>
+
+      {/* Mobile menu drawer */}
+      {mobileMenuOpen && (
+        <div style={{
+          position: 'fixed', top: 56, left: 0, right: 0, zIndex: 99,
+          background: 'rgba(13,17,23,.98)', borderBottom: '1px solid #263347',
+          padding: '8px 0', backdropFilter: 'blur(12px)',
+        }}>
+          {[
+            { label: '📁 Projects', href: '/app/projects' },
+            { label: '💰 Bids', href: '/app/bids' },
+            { label: '📄 Documents', href: '/app/documents' },
+            { label: '🤖 Autopilot', href: '/app/autopilot' },
+            { label: '📊 Reports', href: '/app/reports' },
+            { label: '🧠 Intelligence', href: '/app/intelligence' },
+          ].map(item => (
+            <Link key={item.href} href={item.href}
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                display: 'block', padding: '14px 24px',
+                fontSize: 15, fontWeight: 600, color: TEXT,
+                textDecoration: 'none', borderBottom: '1px solid rgba(38,51,71,.4)',
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* ── AI Chat Panel ───────────────────────────────────────────────── */}
       {aiOpen && (
-        <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 200, width: 380, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,.5)', overflow: 'hidden' }}>
+        <div data-ai-panel style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 200, width: 'min(380px, calc(100vw - 24px))', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,.5)', overflow: 'hidden' }}>
           <div style={{ background: '#0d1117', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${BORDER}` }}>
             <span style={{ fontWeight: 700, fontSize: 14 }}>🤖 Saguaro AI</span>
             <button onClick={() => setAiOpen(false)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 18 }}>×</button>
