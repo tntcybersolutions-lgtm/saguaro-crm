@@ -7,6 +7,9 @@ import {
   uploadBlueprint,
 } from '../../../../takeoff-route';
 
+export const maxDuration = 300; // 5 min for AI processing
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }

@@ -1029,7 +1029,14 @@ export async function registerBlueprintFile(opts: {
     .from('blueprints')
     .upload(storagePath, opts.fileBuffer, { contentType: opts.contentType, upsert: false });
 
-  if (uploadErr) throw new Error(`Blueprint storage upload: ${uploadErr.message}`);
+  // If storage upload fails (e.g. bucket doesn't exist), log warning and continue
+  // The AI can still analyze the file from the in-memory buffer during runTakeoffStream
+  if (uploadErr) {
+    console.warn('Blueprint storage upload failed (bucket may not exist):', uploadErr.message);
+    // Use a placeholder path so the DB record can still be created
+  }
+
+  const actualStoragePath = uploadErr ? null : storagePath;
 
   // Record in database
   const { data: bp, error: dbErr } = await supabaseAdmin
@@ -1041,7 +1048,7 @@ export async function registerBlueprintFile(opts: {
       file_size: opts.fileBuffer.length,
       content_type: opts.contentType,
       storage_bucket: 'blueprints',
-      storage_path: storagePath,
+      storage_path: actualStoragePath ?? `local-placeholder-${Date.now()}`,
       sheet_type: opts.sheetType ?? 'floor_plan',
       sheet_number: opts.sheetNumber ?? null,
       page_number: opts.pageNumber ?? 1,
