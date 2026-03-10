@@ -4,9 +4,11 @@
  * Renders the top navigation bar and provides the page content area.
  * Project-level sidebar is rendered in the project layout.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import NotificationBell from '../../components/NotificationBell';
+import CommandPalette from '../../components/CommandPalette';
 
 const GOLD   = '#D4A017';
 const DARK   = '#0d1117';
@@ -21,6 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [aiMsg, setAiMsg] = useState('');
   const [aiReply, setAiReply] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
+  const [showScoreModal, setShowScoreModal] = useState(false);
 
   async function sendAI() {
     if (!aiMsg.trim()) return;
@@ -68,6 +71,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {[
             { label: 'Projects',   href: '/app/projects' },
             { label: 'Bids',       href: '/app/bids' },
+            { label: 'Documents',  href: '/app/documents' },
             { label: 'Autopilot',  href: '/app/autopilot' },
             { label: 'Reports',    href: '/app/reports' },
             { label: 'Intelligence', href: '/app/intelligence' },
@@ -79,6 +83,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <div style={{ flex: 1 }} />
+
+        {/* ⌘K Command Palette hint */}
+        <button
+          onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
+          title="Open command palette (⌘K)"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '4px 10px', borderRadius: 6,
+            background: 'rgba(255,255,255,.04)',
+            border: `1px solid ${BORDER}`,
+            color: DIM, fontSize: 11, fontWeight: 700,
+            cursor: 'pointer', letterSpacing: .5,
+          }}
+        >
+          <span style={{ fontFamily: 'system-ui, sans-serif' }}>⌘K</span>
+        </button>
+
+        {/* Notification Bell */}
+        <NotificationBell />
 
         {/* AI Assistant Button */}
         <button onClick={() => setAiOpen(!aiOpen)} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 14px', background: 'rgba(212,160,23,.12)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -127,6 +150,41 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main style={{ paddingTop: 56 }}>
         {children}
       </main>
+
+      {/* ── Command Palette ──────────────────────────────────────────────── */}
+      <CommandPalette
+        onScoreBid={() => setShowScoreModal(true)}
+      />
+
+      {/* ── Bid Score Modal (triggered from palette or nav) ───────────────── */}
+      {showScoreModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          onClick={e => { if (e.target === e.currentTarget) setShowScoreModal(false); }}
+        >
+          <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px rgba(0,0,0,.6)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 16, color: TEXT }}>🎯 Score a Bid</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>Navigate to the Bids tab to use the full AI scorer</div>
+              </div>
+              <button onClick={() => setShowScoreModal(false)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4 }}>×</button>
+            </div>
+            <div style={{ padding: 20 }}>
+              <p style={{ color: DIM, fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+                The full bid scoring tool is available on the Dashboard. Click the <strong style={{ color: GOLD }}>🎯 Score a Bid</strong> button at the top of the dashboard, or navigate to <strong style={{ color: TEXT }}>Bids → Score</strong>.
+              </p>
+              <a
+                href="/app/bids?tab=score"
+                style={{ display: 'block', marginTop: 16, padding: '10px', background: GOLD, borderRadius: 8, color: '#0d1117', fontWeight: 800, fontSize: 14, textAlign: 'center', textDecoration: 'none' }}
+                onClick={() => setShowScoreModal(false)}
+              >
+                Open Bid Scorer →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,7 +18,7 @@ export default function AutopilotPage() {
           <h1 style={{fontSize:26,fontWeight:800,color:TEXT,margin:'4px 0'}}>Autopilot Dashboard</h1>
           <div style={{fontSize:13,color:DIM}}>Claude monitors your projects 24/7 — RFIs, invoices, schedule, field issues</div>
         </div>
-        <button onClick={async()=>{const r=await fetch('/api/internal/autopilot/run',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+process.env.NEXT_PUBLIC_AUTOPILOT_CRON_SECRET||'demo'},body:JSON.stringify({tenantId:'demo'})});alert('Autopilot scan triggered!');}} style={{padding:'9px 18px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>
+        <button onClick={async()=>{const token=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('sb-access-token='))?.split('=')[1]||'';const r=await fetch('/api/internal/autopilot/run',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({tenantId:'demo'})});alert('Autopilot scan triggered!');}} style={{padding:'9px 18px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>
           🤖 Run Scan Now
         </button>
       </div>

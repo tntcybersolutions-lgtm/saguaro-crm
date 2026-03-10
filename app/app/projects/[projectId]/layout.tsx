@@ -37,6 +37,9 @@ const NAV_SECTIONS = [
       { label: 'Client Invoices', href: '/invoices',          icon: '🧾', badge: null },
       { label: 'Bills',           href: '/bills',             icon: '📄', badge: null },
       { label: 'Lien Waivers',    href: '/lien-waivers',      icon: '🔏', badge: null },
+      { label: 'Insurance',       href: '/insurance',         icon: '🛡️',  badge: null },
+      { label: 'Certified Payroll', href: '/payroll',         icon: '👷', badge: null },
+      { label: 'W-9 Requests',    href: '/w9',                icon: '📝', badge: null },
     ],
   },
   {
@@ -66,6 +69,7 @@ const NAV_SECTIONS = [
       { label: 'Drawings',        href: '/drawings',          icon: '📐', badge: null },
       { label: 'Permits',         href: '/permits',           icon: '🏛️',  badge: null },
       { label: 'Specifications',  href: '/specs',             icon: '📖', badge: null },
+      { label: 'Closeout',        href: '/closeout',          icon: '✅', badge: null },
     ],
   },
   {

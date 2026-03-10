@@ -6,7 +6,37 @@
       "Bash(do sed -i 's/\\\\\\\\!/!/g' \"$f\")",
       "Bash(echo \"Fixed: $f\")",
       "Bash(done)",
-      "Bash(node -e \"require\\(''puppeteer''\\); require\\(''mustache''\\); require\\(''date-fns''\\); console.log\\(''All packages verified''\\)\")"
+      "Bash(node -e \"require\\(''puppeteer''\\); require\\(''mustache''\\); require\\(''date-fns''\\); console.log\\(''All packages verified''\\)\")",
+      "Bash(node -e \":*)",
+      "Bash(node write-takeoff.js)",
+      "Read(//c/Users/ChadDerocher/OneDrive/**)",
+      "Bash(node write-stubs.js)",
+      "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\);const p=JSON.parse\\(d\\);console.log\\(Object.keys\\({...p.dependencies,...p.devDependencies}\\).filter\\(k=>k.includes\\(''''posthog''''\\)||k.includes\\(''''sentry''''\\)||k.includes\\(''''analytics''''\\)||k.includes\\(''''gtag''''\\)\\)\\)\")",
+      "Bash(node -e \"const p=require\\(''c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro/package.json''\\);const deps={...p.dependencies,...p.devDependencies};console.log\\(Object.keys\\(deps\\).filter\\(k=>[''posthog'',''sentry'',''analytics'',''gtag'',''ga4''].some\\(x=>k.includes\\(x\\)\\)\\)\\)\")",
+      "Bash(node -e \"const p=require\\(''c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro/package.json''\\);console.log\\(JSON.stringify\\(p.dependencies,null,2\\)\\)\")",
+      "Bash(node patch-new-project.js)",
+      "Bash(rm patch-new-project.js)",
+      "Bash(node patch-rfis-co.js)",
+      "Bash(node patch-new-project2.js)",
+      "Bash(rm patch-new-project2.js)",
+      "Bash(node patch-reports.js)",
+      "Bash(rm patch-reports.js)",
+      "Bash(grep -r \"getSupabaseAdmin\\\\|supabase-admin\" 'c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro' --include=*.ts -l)",
+      "Bash(find 'c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro' -name supabase-admin*)",
+      "Bash(find 'c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro' -name supabase*)",
+      "Bash(grep -r getSupabaseAdmin 'c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro' --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"createClient\\\\|supabase\" 'c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro/app/api/pay-apps' --include=*.ts)",
+      "Bash(grep -r \"supabase\\\\|import\" 'c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro/app/api/projects/create' --include=*.ts)",
+      "Bash(sed -i \"s|import { getSupabaseAdmin } from ''../../../../lib/supabase-admin'';|import { supabaseAdmin } from ''../../../../supabase/admin'';|g\" app/api/rfis/create/route.ts app/api/change-orders/create/route.ts)",
+      "Bash(sed -i \"s|const supabase = getSupabaseAdmin\\(\\);||g\" app/api/rfis/create/route.ts app/api/change-orders/create/route.ts)",
+      "Bash(grep -rn \"Connect Supabase\\\\|coming soon\\\\|TODO\\\\|placeholder\\\\|STUB\" 'c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro/app/app' --include=*.tsx)",
+      "Bash(node patch-bid-packages.js)",
+      "Bash(rm patch-bid-packages.js)",
+      "Bash(grep -E \"ai-chat|auto-populator|project-context|wh347|bid-jacket|w9-portal|sandbox-manager$\")",
+      "Bash(npx supabase:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\ChadDerocher\\OneDrive - TNT Cyber Solutions\\Documents\\GitHub\\Live-Code-Saguaro\\app\\app\\projects\\[projectId]\\takeoff"
     ]
   }
 }

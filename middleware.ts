@@ -29,9 +29,13 @@ const PUBLIC_PATHS = new Set([
   '/marketing.html',
 ]);
 
+// Prefixes that are also public
+const EXTRA_PUBLIC_PREFIXES = ['/onboarding/'];
+
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;
-  return PUBLIC_PREFIXES.some(p => pathname.startsWith(p));
+  if (PUBLIC_PREFIXES.some(p => pathname.startsWith(p))) return true;
+  return EXTRA_PUBLIC_PREFIXES.some(p => pathname.startsWith(p));
 }
 
 export async function middleware(request: NextRequest) {

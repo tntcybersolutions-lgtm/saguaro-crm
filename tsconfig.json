@@ -54,8 +54,11 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "*.ts",
+    "*.tsx",
+    "supabase/**/*.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": [
