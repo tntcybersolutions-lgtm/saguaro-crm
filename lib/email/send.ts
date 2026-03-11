@@ -302,7 +302,7 @@ export async function sendEmail(
       to: Array.isArray(opts.to) ? opts.to : [opts.to],
       subject: opts.subject,
       html: opts.html,
-      reply_to: opts.replyTo,
+      replyTo: opts.replyTo,
     });
     return result.data;
   } catch (err) {

@@ -252,3 +252,109 @@ export async function getTopSubsForTrade(
     return [];
   }
 }
+
+// ─── AI Bid Jacket Content Generator ─────────────────────────────────────────
+export async function generateBidJacketContent(
+  takeoffData: Array<{ description: string; csiCode?: string; quantity?: number; unit?: string; totalCost?: number }>,
+  projectContext: { projectName: string; projectType?: string; state?: string; trade?: string }
+): Promise<{ scopeNarrative: string; csiSections: string[]; exclusions: string[] }> {
+  const Anthropic = (await import('@anthropic-ai/sdk')).default;
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const itemsSummary = takeoffData.slice(0, 20).map(i =>
+    `- ${i.description} (${i.csiCode || 'CSI TBD'}): ${i.quantity || ''} ${i.unit || ''}`
+  ).join('\n');
+
+  try {
+    const msg = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `You are a construction estimator. Write a professional bid package scope of work for:
+Project: ${projectContext.projectName}
+Trade: ${projectContext.trade || 'General Construction'}
+State: ${projectContext.state || 'AZ'}
+Takeoff items:
+${itemsSummary}
+
+Respond with JSON: {
+  "scopeNarrative": "2-3 paragraph scope description",
+  "csiSections": ["03 30 00 Cast-in-Place Concrete", ...],
+  "exclusions": ["Painting", "Landscaping", ...]
+}`
+      }]
+    });
+
+    const text = (msg.content[0] as any).text;
+    const json = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || '{}');
+    return {
+      scopeNarrative: json.scopeNarrative || `Provide all labor, materials, and equipment for ${projectContext.trade || 'the work'} as shown on drawings and specifications.`,
+      csiSections: json.csiSections || [],
+      exclusions: json.exclusions || [],
+    };
+  } catch {
+    return {
+      scopeNarrative: `Furnish all labor, materials, equipment, and supervision for ${projectContext.trade || 'all work'} at ${projectContext.projectName} as shown on the contract documents and specifications.`,
+      csiSections: takeoffData.map(i => i.csiCode).filter(Boolean) as string[],
+      exclusions: ['Painting and finish work unless noted', 'Permits unless included in scope', 'Owner-furnished equipment'],
+    };
+  }
+}
+
+// ─── Bid Opportunity Scorer ───────────────────────────────────────────────────
+export async function scoreBidOpportunity(
+  bidData: {
+    projectName: string; projectType: string; location: string;
+    estimatedValue: number; trade?: string; dueDate?: string; ownerName?: string;
+  },
+  historyContext: string
+): Promise<{ score: number; reasoning: string; recommendation: string; risks: string[] }> {
+  const Anthropic = (await import('@anthropic-ai/sdk')).default;
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  try {
+    const msg = await client.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: `You are a construction bid analyst. Score this bid opportunity 0-100.
+
+Bid Opportunity:
+- Project: ${bidData.projectName}
+- Type: ${bidData.projectType}
+- Location: ${bidData.location}
+- Estimated Value: $${bidData.estimatedValue.toLocaleString()}
+- Trade: ${bidData.trade || 'GC'}
+- Due: ${bidData.dueDate || 'TBD'}
+- Owner: ${bidData.ownerName || 'Unknown'}
+
+${historyContext}
+
+Respond with JSON: {
+  "score": 75,
+  "reasoning": "2-3 sentence explanation",
+  "recommendation": "BID | PASS | BID_WITH_CAUTION",
+  "risks": ["Risk 1", "Risk 2"]
+}`
+      }]
+    });
+
+    const text = (msg.content[0] as any).text;
+    const json = JSON.parse(text.match(/\{[\s\S]*\}/)?.[0] || '{}');
+    return {
+      score: Math.min(100, Math.max(0, json.score || 50)),
+      reasoning: json.reasoning || 'Score based on project characteristics and history.',
+      recommendation: json.recommendation || 'BID_WITH_CAUTION',
+      risks: json.risks || [],
+    };
+  } catch {
+    return {
+      score: 50,
+      reasoning: 'Unable to generate AI score. Default score assigned.',
+      recommendation: 'BID_WITH_CAUTION',
+      risks: ['Verify project details before bidding'],
+    };
+  }
+}
