@@ -259,7 +259,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetch('/api/dashboard/stats')
       .then(r => r.json())
-      .then(data => setStats(data))
+      .then(data => setStats(data.stats ?? data))
       .catch(() => setStats({
         activeProjects: 1,
         openBids: 3,
@@ -273,7 +273,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetch('/api/dashboard/today')
       .then(r => r.json())
-      .then(data => setTodayItems(data.items ?? []))
+      .then(data => setTodayItems(data.items ?? data.actions ?? []))
       .catch(() => setTodayItems(null));
   }, []);
 

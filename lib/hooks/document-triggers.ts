@@ -26,15 +26,15 @@ export async function onDocumentGenerated(params: OnDocumentGeneratedParams): Pr
   try {
     const { projectId, tenantId, docType, pdfUrl, userId, recipientEmail, projectName } = params;
 
-    await createNotification({
+    await createNotification(
       tenantId,
-      userId,
-      projectId,
-      type: 'document_ready',
-      title: `${docType} ready`,
-      body: `Your ${docType} has been generated`,
-      link: pdfUrl,
-    });
+      userId ?? null,
+      'document_generated',
+      `${docType} ready`,
+      `Your ${docType} has been generated`,
+      pdfUrl,
+      projectId
+    );
 
     if (recipientEmail) {
       await sendDocumentReady(recipientEmail, projectName ?? 'Project', docType, pdfUrl);
@@ -64,14 +64,15 @@ export async function onPayAppSubmitted(params: OnPayAppSubmittedParams): Promis
 
     const name = projectName ?? 'Project';
 
-    await createNotification({
+    await createNotification(
       tenantId,
-      projectId,
-      type: 'pay_app_submitted',
-      title: `Pay Application #${appNumber} submitted`,
-      body: `Pay Application #${appNumber} for ${name} has been submitted for review`,
-      link: pdfUrl,
-    });
+      null,
+      'pay_app_submitted',
+      `Pay Application #${appNumber} submitted`,
+      `Pay Application #${appNumber} for ${name} has been submitted for review`,
+      pdfUrl,
+      projectId
+    );
 
     if (ownerEmail) {
       await sendPayAppNotification(ownerEmail, name, appNumber, amount, pdfUrl);
@@ -101,14 +102,15 @@ export async function onLienWaiverRequested(params: OnLienWaiverRequestedParams)
     const { projectId, tenantId, subName, subEmail, projectName, amount, throughDate, portalUrl } =
       params;
 
-    await createNotification({
+    await createNotification(
       tenantId,
-      projectId,
-      type: 'lien_waiver_requested',
-      title: `Lien waiver requested — ${subName}`,
-      body: `A lien waiver has been sent to ${subName} for ${projectName}`,
-      link: portalUrl,
-    });
+      null,
+      'lien_waiver_requested',
+      `Lien waiver requested — ${subName}`,
+      `A lien waiver has been sent to ${subName} for ${projectName}`,
+      portalUrl,
+      projectId
+    );
 
     await sendLienWaiverRequest(subEmail, subName, projectName, amount, throughDate, portalUrl);
   } catch (err) {
@@ -203,15 +205,15 @@ export async function onSubOnboarded(
 
     // Preliminary notice for AZ, CA, TX
     if (['AZ', 'CA', 'TX'].includes(state || '')) {
-      await createNotification({
-        tenantId: (project as any).tenant_id || '',
-        userId: (project as any).created_by || undefined,
-        type: 'sub_added',
-        title: `Preliminary Notice Required \u2014 ${(sub as any).name}`,
-        body: `${state} requires a preliminary notice for ${(sub as any).name} within 20 days of first work. Generate now.`,
-        link: `/app/projects/${projectId}/compliance`,
-        projectId,
-      });
+      await createNotification(
+        (project as any).tenant_id || '',
+        (project as any).created_by ?? null,
+        'sub_added',
+        `Preliminary Notice Required \u2014 ${(sub as any).name}`,
+        `${state} requires a preliminary notice for ${(sub as any).name} within 20 days of first work. Generate now.`,
+        `/app/projects/${projectId}/compliance`,
+        projectId
+      );
     }
 
     // W-9 request if sub payments likely > $600
@@ -252,15 +254,15 @@ export async function onProjectPublic(
       .eq('id', projectId)
       .single();
 
-    await createNotification({
-      tenantId: (project as any)?.tenant_id || '',
-      userId: userId || (project as any)?.created_by || undefined,
-      type: 'autopilot_alert',
-      title: 'Public Project \u2014 Required Documents',
-      body: 'Non-Collusion Affidavit and Subcontractor List are required for public project submissions.',
-      link: `/app/projects/${projectId}/documents`,
-      projectId,
-    });
+    await createNotification(
+      (project as any)?.tenant_id || '',
+      userId ?? (project as any)?.created_by ?? null,
+      'autopilot_alert',
+      'Public Project \u2014 Required Documents',
+      'Non-Collusion Affidavit and Subcontractor List are required for public project submissions.',
+      `/app/projects/${projectId}/documents`,
+      projectId
+    );
   } catch (err) {
     console.error('[Trigger] onProjectPublic failed:', err);
   }

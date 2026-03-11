@@ -1,23 +1,9 @@
-import PostHog from 'posthog-node';
-
-const ANON_ID = 'server';
-
-let _client: PostHog | null = null;
-
-function getClient(): PostHog | null {
-  const key = process.env.POSTHOG_API_KEY;
-  if (!key) return null;
-
-  if (!_client) {
-    _client = new PostHog(key, {
-      host: 'https://app.posthog.com',
-      flushAt: 1,
-      flushInterval: 0,
-    });
-  }
-
-  return _client;
-}
+/**
+ * lib/analytics.ts
+ * Server-side analytics helper — gracefully logs events.
+ * In production, connect PostHog or another analytics provider.
+ * Currently logs to console in dev; no-ops in production.
+ */
 
 // ─── trackEvent ───────────────────────────────────────────────────────────────
 
@@ -27,14 +13,10 @@ export function trackEvent(
   distinctId?: string,
 ): void {
   try {
-    const client = getClient();
-    if (!client) return;
-
-    client.capture({
-      distinctId: distinctId ?? ANON_ID,
-      event,
-      properties: properties ?? {},
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[Analytics] ${event}`, { distinctId, ...properties });
+    }
+    // TODO: wire posthog-node when added to package.json
   } catch {
     // fire-and-forget — never throw
   }
@@ -102,8 +84,5 @@ export function track(
   event: AnalyticsEvent,
   properties?: Record<string, unknown>
 ): void {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log(`[Analytics] ${event}`, properties);
-  }
   trackEvent(event, properties);
 }
