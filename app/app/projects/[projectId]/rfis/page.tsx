@@ -1,8 +1,8 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { DEMO_RFIS } from '../../../../../demo-data';
 import { useRouter } from 'next/navigation';
+import { getAuthHeaders } from '../../../../../lib/supabase-browser';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#c03030';
 function Badge({label,color='#94a3b8',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
@@ -23,19 +23,31 @@ export default function RFIsPage(){
   const [replyRfi, setReplyRfi] = useState<any|null>(null);
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
-  const [rfis, setRfis] = useState<any[]>(DEMO_RFIS);
+  const [rfis, setRfis] = useState<any[]>([]);
+  const [loadingRfis, setLoadingRfis] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({title:'',priority:'normal',assignedTo:'Sonoran Architecture Group',responseDue:'',drawingRef:'',specSection:'',description:''});
   const set = (k:string,v:string) => setForm(f=>({...f,[k]:v}));
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const headers = await getAuthHeaders();
+        const r = await fetch(`/api/rfis?projectId=${pid}`, { headers });
+        const d = await r.json();
+        setRfis(d.rfis ?? []);
+      } catch { /* keep empty */ } finally { setLoadingRfis(false); }
+    })();
+  }, [pid]);
 
   async function submitReply() {
     if (!replyRfi || !replyText.trim()) return;
     setReplying(true);
     try {
-      const token = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('sb-access-token='))?.split('=')[1]||'';
+      const headers = await getAuthHeaders();
       await fetch('/api/rfis/reply', {
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        headers:{'Content-Type':'application/json',...headers},
         body: JSON.stringify({rfiId:replyRfi.id, projectId:pid, response:replyText}),
       });
       setRfis(prev=>prev.map(r=>r.id===replyRfi.id?{...r,status:'answered',responded_at:new Date().toISOString()}:r));
@@ -48,10 +60,10 @@ export default function RFIsPage(){
     if (!form.title.trim()) return;
     setSaving(true);
     try {
-      const token = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('sb-access-token='))?.split('=')[1]||'';
+      const headers = await getAuthHeaders();
       const r = await fetch('/api/rfis/create', {
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        headers:{'Content-Type':'application/json',...headers},
         body: JSON.stringify({projectId:pid,title:form.title,priority:form.priority,assignedTo:form.assignedTo,responseDue:form.responseDue,drawingRef:form.drawingRef,specSection:form.specSection,description:form.description})
       });
       const d = await r.json();
@@ -70,7 +82,7 @@ export default function RFIsPage(){
   }
 
   return <div>
-    <PageHeader title="RFIs" sub={`${rfis.filter(r=>r.status!=='closed').length} open · ${rfis.length} total`} actions={<button onClick={()=>setShowNew(!showNew)} style={{padding:'8px 16px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ New RFI</button>}/>
+    <PageHeader title="RFIs" sub={loadingRfis ? 'Loading…' : `${rfis.filter(r=>r.status!=='closed').length} open · ${rfis.length} total`} actions={<button onClick={()=>setShowNew(!showNew)} style={{padding:'8px 16px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ New RFI</button>}/>
     {showNew&&<div style={{margin:24,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:24}}>
       <div style={{fontWeight:700,fontSize:15,marginBottom:16,color:TEXT}}>New Request for Information</div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>

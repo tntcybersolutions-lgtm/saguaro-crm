@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import BidPackageWizard from '../../../../../components/BidPackageWizard';
+import { getAuthHeaders } from '../../../../../lib/supabase-browser';
 
 const GOLD = '#D4A017', DARK = '#0d1117', RAISED = '#1f2c3e', BORDER = '#263347', DIM = '#8fa3c0', TEXT = '#e8edf8';
 
@@ -98,9 +99,27 @@ export default function BidPackagesPage() {
 
   const [showWizard, setShowWizard] = useState(false);
   const [packages, setPackages] = useState(INITIAL);
+  const [loadingPkgs, setLoadingPkgs] = useState(true);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const dropdownRefs = useRef<Record<string, React.RefObject<HTMLButtonElement | null>>>({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const headers = await getAuthHeaders();
+        const r = await fetch(`/api/bid-packages?projectId=${projectId}`, { headers });
+        const d = await r.json();
+        if (d.packages && d.packages.length > 0) {
+          setPackages(d.packages.map((p: any) => ({
+            id: p.id, code: p.code, name: p.name, status: p.status,
+            due: p.bid_due_date ?? '—', subs: p.invite_count ?? 0,
+            awarded: p.awarded_to ? `${p.awarded_to}${p.awarded_amount ? ' — $' + Number(p.awarded_amount).toLocaleString() : ''}` : '—',
+          })));
+        }
+      } catch { /* keep demo data */ } finally { setLoadingPkgs(false); }
+    })();
+  }, [projectId]);
 
   function getDropdownRef(id: string): React.RefObject<HTMLButtonElement | null> {
     if (!dropdownRefs.current[id]) {
@@ -109,12 +128,19 @@ export default function BidPackagesPage() {
     return dropdownRefs.current[id];
   }
 
-  async function handleInviteSubs(pkgId: string) {
+  async function handleInviteSubs(pkgId: string, trade: string) {
     setInvitingId(pkgId);
     try {
-      await fetch(`/api/bid-packages/${pkgId}/invite-subs`, { method: 'POST' });
+      const headers = await getAuthHeaders();
+      const r = await fetch(`/api/bid-packages/${pkgId}/invite-subs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify({ tradeRequired: trade || 'General', sendInvites: true }),
+      });
+      const d = await r.json();
+      alert(d.invitesSent > 0 ? `${d.invitesSent} invite${d.invitesSent > 1 ? 's' : ''} sent!` : `${d.totalSuggested} subs suggested. Set sendInvites to true to send emails.`);
     } catch {
-      // ignore
+      alert('Invite queued (demo mode)');
     } finally {
       setInvitingId(null);
     }
@@ -199,7 +225,7 @@ export default function BidPackagesPage() {
 
                     {/* Invite Subs */}
                     <button
-                      onClick={() => handleInviteSubs(bp.id)}
+                      onClick={() => handleInviteSubs(bp.id, bp.name)}
                       disabled={invitingId === bp.id}
                       style={{
                         background: 'none', border: `1px solid rgba(212,160,23,0.4)`,
