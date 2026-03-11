@@ -1,23 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#ef4444',GREEN='#22c55e';
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const HAS_SUPABASE = !!(
-  SUPABASE_URL &&
-  SUPABASE_URL !== 'https://demo.supabase.co' &&
-  SUPABASE_KEY &&
-  !SUPABASE_KEY.includes('placeholder') &&
-  !SUPABASE_KEY.startsWith('demo_') &&
-  SUPABASE_KEY.length > 20
-);
-
-function getSupabase() {
-  return createClient(SUPABASE_URL!, SUPABASE_KEY!);
-}
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
 
@@ -35,46 +19,28 @@ export default function SignupPage(){
     if(form.password.length < 8){ setError('Password must be at least 8 characters.'); return; }
     setLoading(true); setError('');
     try {
-      // Demo mode — Supabase not configured, go straight to the app
-      if (!HAS_SUPABASE) {
-        window.location.href = '/app';
-        return;
-      }
-      const supabase = getSupabase();
-      const { data, error: signUpErr } = await supabase.auth.signUp({
-        email: form.email.toLowerCase().trim(),
-        password: form.password,
-        options: {
-          data: {
-            company_name: form.company,
-            phone: form.phone,
-            role: form.role,
-            state: form.state,
-            company_size: form.size,
-          },
-        },
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
       });
-      if (signUpErr) {
-        if (signUpErr.message.toLowerCase().includes('already registered') || signUpErr.message.toLowerCase().includes('already exists') || signUpErr.message.toLowerCase().includes('user already')) {
-          setError('An account with this email already exists. Please log in instead.');
-        } else {
-          setError(signUpErr.message);
-        }
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Signup failed. Please try again.');
         setLoading(false);
         return;
       }
-      // If session exists, user is auto-confirmed — set cookie and go to app
-      if (data.session) {
-        const { access_token, refresh_token, expires_at } = data.session;
-        const exp = expires_at ? new Date(expires_at * 1000).toUTCString() : '';
-        document.cookie = `sb-access-token=${access_token}; path=/; expires=${exp}; SameSite=Lax`;
-        document.cookie = `sb-refresh-token=${refresh_token}; path=/; SameSite=Lax`;
+
+      if (data.confirmed || data.demo) {
+        // Auto-confirmed or demo mode — go straight to app
         window.location.href = '/app';
         return;
       }
-      // Otherwise email confirmation required
+
+      // Email confirmation required
       setSuccess(true);
-    } catch(e){
+    } catch {
       setError('Signup failed. Please check your connection and try again.');
     }
     setLoading(false);
@@ -105,7 +71,6 @@ export default function SignupPage(){
 
   return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
-      {/* Top nav bar */}
       <nav style={{padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${BORDER}`}}>
         <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:22}}>🌵</span>

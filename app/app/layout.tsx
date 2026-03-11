@@ -4,7 +4,7 @@
  * Renders the top navigation bar and provides the page content area.
  * Project-level sidebar is rendered in the project layout.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NotificationBell from '../../components/NotificationBell';
@@ -25,6 +25,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [aiLoading, setAiLoading] = useState(false);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Auto-refresh session token on mount
+  useEffect(() => {
+    fetch('/api/auth/refresh')
+      .then(r => {
+        if (r.status === 401) {
+          // Session fully expired — redirect to login
+          window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+        }
+      })
+      .catch(() => {}); // Network error — don't log out, let middleware handle it
+  }, []);
+
+  async function handleLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  }
 
   async function sendAI() {
     if (!aiMsg.trim()) return;
@@ -119,9 +137,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           🤖 AI Assistant
         </button>
 
-        {/* Avatar */}
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#B85C2A)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#0d1117', cursor: 'pointer' }}>
-          C
+        {/* Avatar + user menu */}
+        <div style={{ position: 'relative' }}>
+          <div
+            onClick={() => setShowUserMenu(v => !v)}
+            style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#B85C2A)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#0d1117', cursor: 'pointer' }}
+          >
+            C
+          </div>
+          {showUserMenu && (
+            <div
+              style={{ position: 'absolute', top: 40, right: 0, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, minWidth: 160, boxShadow: '0 8px 32px rgba(0,0,0,.5)', zIndex: 300, overflow: 'hidden' }}
+              onMouseLeave={() => setShowUserMenu(false)}
+            >
+              <button
+                onClick={handleLogout}
+                style={{ display: 'block', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+              >
+                🚪 Sign Out
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Hamburger button — shows on mobile only */}

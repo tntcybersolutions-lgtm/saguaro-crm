@@ -1,23 +1,7 @@
 'use client';
 import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#ef4444';
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const HAS_SUPABASE = !!(
-  SUPABASE_URL &&
-  SUPABASE_URL !== 'https://demo.supabase.co' &&
-  SUPABASE_KEY &&
-  !SUPABASE_KEY.includes('placeholder') &&
-  !SUPABASE_KEY.startsWith('demo_') &&
-  SUPABASE_KEY.length > 20
-);
-
-function getSupabase() {
-  return createClient(SUPABASE_URL!, SUPABASE_KEY!);
-}
 
 export default function LoginPage(){
   const [form, setForm] = useState({email:'',password:''});
@@ -25,7 +9,6 @@ export default function LoginPage(){
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
 
-  // Show helpful messages from auth callback errors or post-signup redirects
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const err = params.get('error');
@@ -40,37 +23,23 @@ export default function LoginPage(){
     if(!form.email||!form.password){ setError('Email and password are required.'); return; }
     setLoading(true); setError('');
     try {
-      // Demo mode — Supabase not configured, go straight to the app
-      if (!HAS_SUPABASE) {
-        const next = new URLSearchParams(window.location.search).get('next') || '/app';
-        window.location.href = next;
-        return;
-      }
-      const supabase = getSupabase();
-      const { data, error: authErr } = await supabase.auth.signInWithPassword({
-        email: form.email.toLowerCase().trim(),
-        password: form.password,
+      const res = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
-      if (authErr || !data.session) {
-        const msg = authErr?.message?.toLowerCase() || '';
-        if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
-          setError('Please check your email and click the confirmation link before signing in.');
-        } else if (msg.includes('invalid') || msg.includes('credentials')) {
-          setError('Invalid email or password. Please try again.');
-        } else {
-          setError(authErr?.message || 'Login failed. Please try again.');
-        }
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Login failed. Please try again.');
         setLoading(false);
         return;
       }
-      // Set cookie so middleware can verify auth on /app/* routes
-      const { access_token, refresh_token, expires_at } = data.session;
-      const exp = expires_at ? new Date(expires_at * 1000).toUTCString() : '';
-      document.cookie = `sb-access-token=${access_token}; path=/; expires=${exp}; SameSite=Lax`;
-      document.cookie = `sb-refresh-token=${refresh_token}; path=/; SameSite=Lax`;
+
+      // Success — redirect to intended page or app
       const next = new URLSearchParams(window.location.search).get('next') || '/app';
       window.location.href = next;
-    } catch(e){
+    } catch {
       setError('Login failed. Please check your connection and try again.');
     }
     setLoading(false);
@@ -81,7 +50,6 @@ export default function LoginPage(){
 
   return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
-      {/* Top nav bar */}
       <nav style={{padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${BORDER}`}}>
         <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:22}}>🌵</span>
