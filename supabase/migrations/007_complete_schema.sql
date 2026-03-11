@@ -770,6 +770,19 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 -- ============================================================
+-- ADD MISSING COLUMNS (idempotent — safe to re-run)
+-- These are needed when tables already exist from a partial migration
+-- ============================================================
+
+ALTER TABLE w9_requests ADD COLUMN IF NOT EXISTS token uuid DEFAULT gen_random_uuid();
+CREATE UNIQUE INDEX IF NOT EXISTS w9_requests_token_unique ON w9_requests(token) WHERE token IS NOT NULL;
+
+ALTER TABLE bid_package_invites ADD COLUMN IF NOT EXISTS token uuid DEFAULT gen_random_uuid();
+CREATE UNIQUE INDEX IF NOT EXISTS bid_invites_token_unique ON bid_package_invites(token) WHERE token IS NOT NULL;
+
+ALTER TABLE lien_waivers ADD COLUMN IF NOT EXISTS token uuid DEFAULT gen_random_uuid();
+
+-- ============================================================
 -- INDEXES
 -- ============================================================
 
@@ -879,9 +892,12 @@ BEGIN
 END $$;
 
 -- Public portal access (no auth) for tokens
-CREATE POLICY IF NOT EXISTS "public_w9_token" ON w9_requests FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "public_bid_invite_token" ON bid_package_invites FOR SELECT USING (true);
-CREATE POLICY IF NOT EXISTS "public_lien_waiver_token" ON lien_waivers FOR SELECT USING (true);
+DROP POLICY IF EXISTS "public_w9_token" ON w9_requests;
+CREATE POLICY "public_w9_token" ON w9_requests FOR SELECT USING (true);
+DROP POLICY IF EXISTS "public_bid_invite_token" ON bid_package_invites;
+CREATE POLICY "public_bid_invite_token" ON bid_package_invites FOR SELECT USING (true);
+DROP POLICY IF EXISTS "public_lien_waiver_token" ON lien_waivers;
+CREATE POLICY "public_lien_waiver_token" ON lien_waivers FOR SELECT USING (true);
 
 -- ============================================================
 -- UPDATED_AT TRIGGERS
