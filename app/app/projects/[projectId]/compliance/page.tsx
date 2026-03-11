@@ -10,6 +10,38 @@ export default function CompliancePage(){
   const params=useParams(); const pid=params['projectId'] as string;
   const [data,setData]=useState<{subs?:ComplianceSub[]}>({});
   const [loading,setLoading]=useState(true);
+  const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
+
+  useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),4000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
+
+  async function requestAllCOIs(){
+    try{
+      const tenantId=await getTenantId();
+      const headers=await getAuthHeaders();
+      await fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify({projectId:pid,tenantId})});
+      setToast({msg:'COI request emails sent to all subcontractors.',type:'success'});
+    }catch{
+      setToast({msg:'Failed to send COI requests.',type:'error'});
+    }
+  }
+
+  async function requestCOI(subId:string,subName:string){
+    try{
+      await fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subId,projectId:pid,tenantId:pid})});
+      setToast({msg:`COI request sent to ${subName}`,type:'success'});
+    }catch{
+      setToast({msg:`Failed to send COI request to ${subName}`,type:'error'});
+    }
+  }
+
+  async function requestW9(subId:string,subName:string){
+    try{
+      await fetch('/api/documents/w9-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subId,projectId:pid,tenantId:pid})});
+      setToast({msg:`W-9 request sent to ${subName}`,type:'success'});
+    }catch{
+      setToast({msg:`Failed to send W-9 request to ${subName}`,type:'error'});
+    }
+  }
 
   useEffect(()=>{
     (async () => {
@@ -36,9 +68,14 @@ export default function CompliancePage(){
   const issues=subs.filter(s=>s.coi_status==='expired'||s.coi_status==='expiring'||s.w9_status==='pending'||s.lien_waiver_status==='missing');
 
   return <div>
+    {toast && (
+      <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
+        {toast.msg}
+      </div>
+    )}
     <div style={{padding:'16px 24px',borderBottom:'1px solid '+BORDER,display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d1117'}}>
       <div><h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>Compliance Dashboard</h2><div style={{fontSize:12,color:DIM,marginTop:3}}>COI tracking, W-9 status, lien waivers — {subs.length} subcontractors</div></div>
-      <button onClick={async()=>{const tenantId=await getTenantId();const headers=await getAuthHeaders();await fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify({projectId:pid,tenantId})});alert('COI request emails sent to all subcontractors.');}} style={{padding:'8px 16px',background:'linear-gradient(135deg,'+GOLD+',#F0C040)',border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>Request All COIs</button>
+      <button onClick={requestAllCOIs} style={{padding:'8px 16px',background:'linear-gradient(135deg,'+GOLD+',#F0C040)',border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>Request All COIs</button>
     </div>
 
     {issues.length>0&&<div style={{margin:24,background:'rgba(192,48,48,.08)',border:'1px solid rgba(192,48,48,.25)',borderRadius:10,padding:'14px 18px'}}>
@@ -79,8 +116,8 @@ export default function CompliancePage(){
             <td style={{padding:'12px 14px'}}><span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:statusColor(s.w9_status)+'22',color:statusColor(s.w9_status)}}>{statusLabel(s.w9_status)}</span></td>
             <td style={{padding:'12px 14px'}}><span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:statusColor(s.lien_waiver_status)+'22',color:statusColor(s.lien_waiver_status)}}>{statusLabel(s.lien_waiver_status)}</span></td>
             <td style={{padding:'12px 14px',display:'flex',gap:6}}>
-              {(s.coi_status==='expired'||s.coi_status==='expiring')&&<button onClick={()=>fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subId:s.id,projectId:pid,tenantId:pid})}).then(()=>alert('COI request sent to '+s.name))} style={{padding:'3px 8px',background:'none',border:'1px solid rgba(212,160,23,.4)',borderRadius:4,color:GOLD,fontSize:10,cursor:'pointer'}}>Request COI</button>}
-              {s.w9_status==='pending'&&<button onClick={()=>fetch('/api/documents/w9-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subId:s.id,projectId:pid,tenantId:pid})}).then(()=>alert('W-9 request sent to '+s.name))} style={{padding:'3px 8px',background:'none',border:'1px solid rgba(26,95,168,.4)',borderRadius:4,color:'#4a9de8',fontSize:10,cursor:'pointer'}}>Request W-9</button>}
+              {(s.coi_status==='expired'||s.coi_status==='expiring')&&<button onClick={()=>requestCOI(s.id,s.name)} style={{padding:'3px 8px',background:'none',border:'1px solid rgba(212,160,23,.4)',borderRadius:4,color:GOLD,fontSize:10,cursor:'pointer'}}>Request COI</button>}
+              {s.w9_status==='pending'&&<button onClick={()=>requestW9(s.id,s.name)} style={{padding:'3px 8px',background:'none',border:'1px solid rgba(26,95,168,.4)',borderRadius:4,color:'#4a9de8',fontSize:10,cursor:'pointer'}}>Request W-9</button>}
             </td>
           </tr>
         ))}</tbody>

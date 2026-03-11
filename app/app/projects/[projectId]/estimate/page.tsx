@@ -71,6 +71,9 @@ export default function EstimatePage() {
   const [filter, setFilter] = useState('');
   const [showAddLine, setShowAddLine] = useState(false);
   const [groupBy, setGroupBy] = useState<'lines' | 'type' | 'status'>('lines');
+  const [toast, setToast] = useState<{msg:string;type:'success'|'error'}|null>(null);
+
+  React.useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),5000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
 
   // Summary totals
   const rootLines = lines.filter(l => l.is_group && !l.group_id);
@@ -97,11 +100,16 @@ export default function EstimatePage() {
   const fmt = (n: number) => n === 0 ? '$ 0.00' : '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const handleAIFill = () => {
-    alert('AI Takeoff — Paste your blueprint and Claude will populate every line item with quantities, units, and costs automatically.\n\nGo to: Project → Takeoff → Upload Blueprint');
+    setToast({msg:'AI Takeoff: Go to Project → Takeoff → Upload Blueprint to auto-populate line items.',type:'success'});
   };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px)' }}>
+      {toast && (
+        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
+          {toast.msg}
+        </div>
+      )}
 
       {/* ── Header ───────────────────────────────────────────────────── */}
       <div style={{ padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 12, background: DARK, flexShrink: 0 }}>
@@ -132,7 +140,7 @@ export default function EstimatePage() {
           <button onClick={handleAIFill} style={{ padding: '6px 12px', background: 'rgba(212,160,23,.12)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 6, color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
             🤖 AI Fill from Blueprint
           </button>
-          <button onClick={() => alert('Import CSV or Excel coming soon')} style={{ padding: '6px 12px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: DIM, fontSize: 12, cursor: 'pointer' }}>
+          <button onClick={() => setToast({msg:'CSV/Excel import coming soon.',type:'success'})} style={{ padding: '6px 12px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: DIM, fontSize: 12, cursor: 'pointer' }}>
             Import
           </button>
           <button onClick={() => setShowAddLine(true)} style={{ padding: '7px 16px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 6, color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
