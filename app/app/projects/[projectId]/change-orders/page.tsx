@@ -1,7 +1,7 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { DEMO_CHANGE_ORDERS } from '../../../../../demo-data';
+import { getAuthHeaders } from '../../../../../lib/supabase-browser';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#c03030';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -19,19 +19,31 @@ export default function ChangeOrdersPage(){
   const params = useParams();
   const pid = params['projectId'] as string;
   const [showNew, setShowNew] = useState(false);
-  const [cos, setCos] = useState(DEMO_CHANGE_ORDERS);
+  const [cos, setCos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({title:'',costImpact:'',scheduleImpactDays:'0',reason:'',initiatedBy:'',description:''});
   const set = (k:string,v:string) => setForm(f=>({...f,[k]:v}));
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const headers = await getAuthHeaders();
+        const r = await fetch(`/api/change-orders?projectId=${pid}`, { headers });
+        const d = await r.json();
+        setCos(d.changeOrders ?? []);
+      } catch { /* keep empty */ } finally { setLoading(false); }
+    })();
+  }, [pid]);
 
   async function createCO() {
     if (!form.title.trim()) return;
     setSaving(true);
     try {
-      const token = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('sb-access-token='))?.split('=')[1]||'';
+      const headers = await getAuthHeaders();
       const r = await fetch('/api/change-orders/create', {
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        headers:{'Content-Type':'application/json',...headers},
         body: JSON.stringify({projectId:pid,title:form.title,costImpact:Number(form.costImpact)||0,scheduleImpactDays:Number(form.scheduleImpactDays)||0,reason:form.reason,initiatedBy:form.initiatedBy,description:form.description})
       });
       const d = await r.json();
@@ -47,8 +59,10 @@ export default function ChangeOrdersPage(){
     } finally { setSaving(false); }
   }
 
+  const netImpact = cos.reduce((s,c)=>s+(c.cost_impact??0),0);
+
   return <div>
-    <PageHeader title="Change Orders" sub={`${cos.length} change orders · ${fmt(cos.reduce((s,c)=>s+c.cost_impact,0))} net impact`} actions={<button onClick={()=>setShowNew(!showNew)} style={{padding:'8px 16px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ New Change Order</button>}/>
+    <PageHeader title="Change Orders" sub={loading?'Loading…':`${cos.length} change orders · ${fmt(netImpact)} net impact`} actions={<button onClick={()=>setShowNew(!showNew)} style={{padding:'8px 16px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ New Change Order</button>}/>
     {showNew&&<div style={{margin:24,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:24}}>
       <div style={{fontWeight:700,fontSize:15,marginBottom:16,color:TEXT}}>New Change Order</div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
@@ -68,32 +82,48 @@ export default function ChangeOrdersPage(){
     </div>}
     <div style={{padding:24}}>
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24}}>
-        {[{l:'Total COs',v:String(cos.length)},{l:'Approved',v:fmt(cos.filter(c=>c.status==='approved').reduce((s,c)=>s+c.cost_impact,0))},{l:'Pending Approval',v:fmt(cos.filter(c=>c.status==='pending').reduce((s,c)=>s+c.cost_impact,0))},{l:'Net Impact',v:(cos.reduce((s,c)=>s+c.cost_impact,0)>=0?'+':'')+fmt(cos.reduce((s,c)=>s+c.cost_impact,0))}].map(k=>(
+        {[{l:'Total COs',v:String(cos.length)},{l:'Approved',v:fmt(cos.filter(c=>c.status==='approved').reduce((s,c)=>s+(c.cost_impact??0),0))},{l:'Pending Approval',v:fmt(cos.filter(c=>c.status==='pending').reduce((s,c)=>s+(c.cost_impact??0),0))},{l:'Net Impact',v:(netImpact>=0?'+':'')+fmt(netImpact)}].map(k=>(
           <div key={k.l} style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 18px'}}>
             <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase' as const,color:DIM,marginBottom:6}}>{k.l}</div>
             <div style={{fontSize:22,fontWeight:800,color:TEXT}}>{k.v}</div>
           </div>
         ))}
       </div>
-      <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
-        <thead><tr style={{background:'#0a1117'}}>
-          {['CO #','Title','Status','Cost Impact','Schedule Impact','Submitted','Approved','Actions'].map(h=>(
-            <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
-          ))}
-        </tr></thead>
-        <tbody>{cos.map(co=>(
-          <tr key={co.id} style={{borderBottom:`1px solid rgba(38,51,71,.5)`}}>
-            <td style={{padding:'12px 14px',color:GOLD,fontWeight:700}}>{co.co_number}</td>
-            <td style={{padding:'12px 14px',color:TEXT}}>{co.title}</td>
-            <td style={{padding:'12px 14px'}}><Badge label={co.status} color={co.status==='approved'?'#3dd68c':GOLD} bg={co.status==='approved'?'rgba(26,138,74,.12)':'rgba(212,160,23,.12)'}/></td>
-            <td style={{padding:'12px 14px',color:'#f97316',fontWeight:700}}>+{fmt(co.cost_impact)}</td>
-            <td style={{padding:'12px 14px',color:co.schedule_impact_days>0?'#f97316':DIM}}>{co.schedule_impact_days>0?co.schedule_impact_days+' days':'None'}</td>
-            <td style={{padding:'12px 14px',color:DIM}}>{co.created_at.split('T')[0]}</td>
-            <td style={{padding:'12px 14px',color:co.status==='approved'?'#3dd68c':DIM}}>{co.status==='approved'?'Approved':'Pending'}</td>
-            <td style={{padding:'12px 14px'}}><button style={{background:'none',border:'none',color:DIM,cursor:'pointer',fontSize:16}}>⋯</button></td>
-          </tr>
-        ))}</tbody>
-      </table>
+
+      {loading ? (
+        <div style={{padding:40,textAlign:'center',color:DIM}}>Loading change orders…</div>
+      ) : cos.length === 0 ? (
+        <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:40,textAlign:'center'}}>
+          <div style={{fontSize:36,marginBottom:12}}>📋</div>
+          <div style={{fontWeight:700,fontSize:15,color:TEXT,marginBottom:8}}>No change orders yet</div>
+          <div style={{fontSize:13,color:DIM,marginBottom:20}}>Create your first change order to track scope and cost changes</div>
+          <button onClick={()=>setShowNew(true)} style={{padding:'10px 22px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ Create First CO</button>
+        </div>
+      ) : (
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
+            <thead><tr style={{background:'#0a1117'}}>
+              {['CO #','Title','Status','Cost Impact','Schedule Impact','Created','Actions'].map(h=>(
+                <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>{cos.map(co=>(
+              <tr key={co.id} style={{borderBottom:`1px solid rgba(38,51,71,.5)`}}>
+                <td style={{padding:'12px 14px',color:GOLD,fontWeight:700}}>{co.co_number}</td>
+                <td style={{padding:'12px 14px',color:TEXT}}>{co.title}</td>
+                <td style={{padding:'12px 14px'}}><Badge label={co.status} color={co.status==='approved'?'#3dd68c':GOLD} bg={co.status==='approved'?'rgba(26,138,74,.12)':'rgba(212,160,23,.12)'}/></td>
+                <td style={{padding:'12px 14px',color:'#f97316',fontWeight:700}}>{(co.cost_impact??0)>=0?'+':''}{fmt(co.cost_impact??0)}</td>
+                <td style={{padding:'12px 14px',color:(co.schedule_impact_days??0)>0?'#f97316':DIM}}>{(co.schedule_impact_days??0)>0?co.schedule_impact_days+' days':'None'}</td>
+                <td style={{padding:'12px 14px',color:DIM}}>{co.created_at?.split('T')[0]??'—'}</td>
+                <td style={{padding:'12px 14px'}}>
+                  {co.status==='pending'&&<button onClick={async()=>{const headers=await getAuthHeaders();await fetch('/api/change-orders/'+co.id+'/approve',{method:'POST',headers:{'Content-Type':'application/json',...headers}});setCos(prev=>prev.map(c=>c.id===co.id?{...c,status:'approved'}:c));}} style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:'#0d1117',fontSize:11,padding:'4px 10px',fontWeight:700,cursor:'pointer'}}>Approve</button>}
+                  {co.status==='approved'&&<span style={{fontSize:11,color:'#3dd68c',fontWeight:700}}>✓ Approved</span>}
+                </td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
     </div>
   </div>;
 }

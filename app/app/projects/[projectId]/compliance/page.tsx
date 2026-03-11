@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { getAuthHeaders, getTenantId } from '../../../../../lib/supabase-browser';
 const GOLD='#D4A017',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#3dd68c',RED='#ef4444';
 
 interface ComplianceSub { id:string; name:string; trade:string; contract_amount:number; coi_status:string; coi_expiry:string|null; w9_status:string; lien_waiver_status:string; }
@@ -11,8 +12,15 @@ export default function CompliancePage(){
   const [loading,setLoading]=useState(true);
 
   useEffect(()=>{
-    fetch('/api/compliance/'+pid+'?tenantId='+pid)
-      .then(r=>r.json()).then(d=>setData(d)).catch(()=>{}).finally(()=>setLoading(false));
+    (async () => {
+      try {
+        const tenantId = await getTenantId();
+        const headers = await getAuthHeaders();
+        const r = await fetch('/api/compliance/'+pid+'?tenantId='+tenantId, { headers });
+        const d = await r.json();
+        setData(d);
+      } catch { /* use demo fallback */ } finally { setLoading(false); }
+    })();
   },[pid]);
 
   const subs:ComplianceSub[] = data.subs ?? [
@@ -30,7 +38,7 @@ export default function CompliancePage(){
   return <div>
     <div style={{padding:'16px 24px',borderBottom:'1px solid '+BORDER,display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d1117'}}>
       <div><h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>Compliance Dashboard</h2><div style={{fontSize:12,color:DIM,marginTop:3}}>COI tracking, W-9 status, lien waivers — {subs.length} subcontractors</div></div>
-      <button onClick={()=>fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({projectId:pid,tenantId:pid})}).then(()=>alert('COI request emails sent to all subcontractors.'))} style={{padding:'8px 16px',background:'linear-gradient(135deg,'+GOLD+',#F0C040)',border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>Request All COIs</button>
+      <button onClick={async()=>{const tenantId=await getTenantId();const headers=await getAuthHeaders();await fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify({projectId:pid,tenantId})});alert('COI request emails sent to all subcontractors.');}} style={{padding:'8px 16px',background:'linear-gradient(135deg,'+GOLD+',#F0C040)',border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>Request All COIs</button>
     </div>
 
     {issues.length>0&&<div style={{margin:24,background:'rgba(192,48,48,.08)',border:'1px solid rgba(192,48,48,.25)',borderRadius:10,padding:'14px 18px'}}>

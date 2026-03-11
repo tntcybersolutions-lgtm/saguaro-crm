@@ -413,6 +413,36 @@ export async function GET(
     }
   }
 
+  // GET /api/projects  (tenant-scoped project list)
+  if (seg0 === 'projects' && !seg1) {
+    try {
+      const bearer = req.headers.get('authorization');
+      let tenantId: string | null = null;
+      if (bearer?.startsWith('Bearer ')) {
+        const token = bearer.slice(7);
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        );
+        const { data: { user } } = await supabase.auth.getUser(token);
+        tenantId = user?.id ?? null;
+      }
+      if (!tenantId) {
+        return NextResponse.json({ projects: [DEMO_PROJECT], source: 'demo' });
+      }
+      const { data, error } = await supabaseAdmin
+        .from('projects')
+        .select('id, name, address, project_number, status, contract_amount, start_date, substantial_completion_date, project_type, created_at')
+        .eq('tenant_id', tenantId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return NextResponse.json({ projects: data ?? [], source: 'live' });
+    } catch {
+      return NextResponse.json({ projects: [DEMO_PROJECT], source: 'demo' });
+    }
+  }
+
   // GET /api/context/:projectId
   if (seg0 === 'context' && seg1) {
     const tenantId = req.nextUrl.searchParams.get('tenantId');
@@ -421,12 +451,67 @@ export async function GET(
     return NextResponse.json(ctx);
   }
 
+  // GET /api/rfis?projectId=...
+  if (seg0 === 'rfis' && !seg1) {
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get('projectId') || '';
+    if (!projectId) return NextResponse.json({ rfis: DEMO_RFIS, source: 'demo' });
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('rfis')
+        .select('id, number, title, status, priority, assigned_to, response_due_date, cost_impact_amount, schedule_impact_days, created_at')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      if (!data || data.length === 0) return NextResponse.json({ rfis: DEMO_RFIS, source: 'demo' });
+      return NextResponse.json({ rfis: data, source: 'live' });
+    } catch {
+      return NextResponse.json({ rfis: DEMO_RFIS, source: 'demo' });
+    }
+  }
+
+  // GET /api/change-orders?projectId=...
+  if (seg0 === 'change-orders' && !seg1) {
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get('projectId') || '';
+    if (!projectId) return NextResponse.json({ changeOrders: DEMO_CHANGE_ORDERS, source: 'demo' });
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('change_orders')
+        .select('id, co_number, title, status, cost_impact, schedule_impact_days, reason, created_at')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      if (!data || data.length === 0) return NextResponse.json({ changeOrders: DEMO_CHANGE_ORDERS, source: 'demo' });
+      return NextResponse.json({ changeOrders: data, source: 'live' });
+    } catch {
+      return NextResponse.json({ changeOrders: DEMO_CHANGE_ORDERS, source: 'demo' });
+    }
+  }
+
   // GET /api/compliance/:projectId
   if (seg0 === 'compliance' && seg1) {
     const tenantId = req.nextUrl.searchParams.get('tenantId');
     if (!tenantId) return NextResponse.json({ error: 'tenantId required' }, { status: 400 });
     const { data } = await supabaseAdmin.from('project_compliance_dashboard').select('*').eq('project_id', seg1).eq('tenant_id', tenantId).maybeSingle();
     return NextResponse.json(data ?? {});
+  }
+
+  // GET /api/autopilot/alerts?projectId=&tenantId=
+  if (seg0 === 'autopilot' && seg1 === 'alerts') {
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get('projectId') || '';
+    const tenantId = searchParams.get('tenantId') || '';
+    try {
+      let q = supabaseAdmin.from('autopilot_alerts').select('*').eq('dismissed', false).order('created_at', { ascending: false }).limit(50);
+      if (projectId) q = q.eq('project_id', projectId);
+      if (tenantId) q = q.eq('tenant_id', tenantId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return NextResponse.json({ alerts: data ?? [], source: 'live' });
+    } catch {
+      return NextResponse.json({ alerts: DEMO_AUTOPILOT_ALERTS, source: 'demo' });
+    }
   }
 
   // GET /api/takeoffs/latest
@@ -447,6 +532,24 @@ export async function GET(
   // GET /api/payroll/:projectId
   if (seg0 === 'payroll' && seg1 && seg1 !== 'create') {
     return getCertifiedPayrollHandler(req, seg1);
+  }
+
+  // GET /api/bid-packages?projectId=...  (list all for a project)
+  if (seg0 === 'bid-packages' && !seg1) {
+    const { searchParams } = new URL(req.url);
+    const projectId = searchParams.get('projectId') || '';
+    if (!projectId) return NextResponse.json({ packages: [], source: 'demo' });
+    try {
+      const { data, error } = await supabaseAdmin
+        .from('bid_packages')
+        .select('id, code, name, trade, status, bid_due_date, awarded_to, awarded_amount, created_at')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return NextResponse.json({ packages: data ?? [], source: 'live' });
+    } catch {
+      return NextResponse.json({ packages: [], source: 'demo' });
+    }
   }
 
   // GET /api/bid-packages/:id
@@ -682,6 +785,25 @@ export async function POST(
       return NextResponse.json({ projectId: fakeId, projectNumber, name });
     }
     return NextResponse.json({ projectId: project.id, projectNumber: project.project_number, name: project.name });
+  }
+
+  // POST /api/autopilot/dismiss
+  if (seg0 === 'autopilot' && seg1 === 'dismiss') {
+    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+    const alertId = String(body.alertId ?? '');
+    if (!alertId) return NextResponse.json({ error: 'alertId required' }, { status: 400 });
+    try {
+      await supabaseAdmin.from('autopilot_alerts').update({ dismissed: true, dismissed_at: new Date().toISOString() }).eq('id', alertId);
+    } catch { /* non-fatal */ }
+    return NextResponse.json({ success: true });
+  }
+
+  // POST /api/change-orders/:id/approve
+  if (seg0 === 'change-orders' && seg1 && seg2 === 'approve') {
+    try {
+      await supabaseAdmin.from('change_orders').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', seg1);
+    } catch { /* non-fatal */ }
+    return NextResponse.json({ success: true });
   }
 
   // POST /api/projects/:projectId/bid-packages/:bidPackageId/generate-jacket
