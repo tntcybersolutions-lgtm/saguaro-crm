@@ -1,379 +1,276 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
-const GOLD = '#D4A017';
-const DARK = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
-const GREEN = '#3dd68c';
-const RED_COLOR = '#ef4444';
-const YELLOW = '#f59e0b';
+const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
-const fmt = (n: number) =>
-  '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const INP:React.CSSProperties = {padding:'8px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
+const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6};
 
-const inp: React.CSSProperties = {
-  width: '100%',
-  padding: '9px 12px',
-  background: '#0d1117',
-  border: '1px solid ' + BORDER,
-  borderRadius: 7,
-  color: TEXT,
-  fontSize: 13,
-  outline: 'none',
-};
+const POLICY_TYPES = ['GL','WC','Auto','Umbrella','E&O','Professional Liability','Other'];
 
-interface InsuranceCert {
-  id: string;
-  subName: string;
-  policyType: string;
-  carrier: string;
-  policyNo: string;
-  effectiveDate: string;
-  expiryDate: string;
-  coverageAmount: number;
-  status: 'active' | 'expiring' | 'expired';
-  daysUntilExpiry: number;
+function daysUntilExpiry(expiryDate:string):number{
+  if(!expiryDate) return 9999;
+  return Math.round((new Date(expiryDate+'T12:00:00').getTime()-Date.now())/86400000);
 }
 
-const DEMO_CERTS: InsuranceCert[] = [
-  {
-    id: 'cert-001',
-    subName: 'Desert Electrical Contractors',
-    policyType: 'GL',
-    carrier: 'Travelers Insurance',
-    policyNo: 'GL-2026-84721',
-    effectiveDate: '2026-01-01',
-    expiryDate: '2027-01-01',
-    coverageAmount: 2_000_000,
-    status: 'active',
-    daysUntilExpiry: 297,
-  },
-  {
-    id: 'cert-002',
-    subName: 'Desert Electrical Contractors',
-    policyType: 'WC',
-    carrier: 'Hartford Financial',
-    policyNo: 'WC-2026-33902',
-    effectiveDate: '2026-01-01',
-    expiryDate: '2027-01-01',
-    coverageAmount: 1_000_000,
-    status: 'active',
-    daysUntilExpiry: 297,
-  },
-  {
-    id: 'cert-003',
-    subName: 'AZ Concrete Solutions',
-    policyType: 'GL',
-    carrier: 'Liberty Mutual',
-    policyNo: 'GL-2026-55123',
-    effectiveDate: '2025-12-01',
-    expiryDate: '2026-03-22',
-    coverageAmount: 2_000_000,
-    status: 'expiring',
-    daysUntilExpiry: 12,
-  },
-  {
-    id: 'cert-004',
-    subName: 'Southwest Roofing & Sheet Metal',
-    policyType: 'Umbrella',
-    carrier: 'Zurich Insurance',
-    policyNo: 'UMB-2025-90011',
-    effectiveDate: '2025-06-01',
-    expiryDate: '2026-02-28',
-    coverageAmount: 5_000_000,
-    status: 'expired',
-    daysUntilExpiry: -10,
-  },
-];
-
-const POLICY_TYPES = ['GL', 'WC', 'Auto', 'Umbrella', 'E&O', 'Other'];
-
-function statusBadge(status: InsuranceCert['status'], days: number) {
-  if (status === 'expired') return { label: 'Expired', color: RED_COLOR, bg: 'rgba(239,68,68,.12)' };
-  if (status === 'expiring') return { label: `Expiring in ${days}d`, color: YELLOW, bg: 'rgba(245,158,11,.12)' };
-  return { label: 'Active', color: GREEN, bg: 'rgba(61,214,140,.12)' };
+function certStatus(expiryDate:string):{label:string,c:string,bg:string}{
+  const days = daysUntilExpiry(expiryDate);
+  if(days<0)   return {label:'Expired',        c:RED,        bg:'rgba(192,48,48,.14)'};
+  if(days<30)  return {label:`Exp. in ${days}d`,c:'#f59e0b', bg:'rgba(245,158,11,.14)'};
+  return {label:'Active',c:'#3dd68c',bg:'rgba(26,138,74,.14)'};
 }
 
 export default function InsurancePage() {
-  const params = useParams();
-  const pid = params['projectId'] as string;
+  const params    = useParams();
+  const projectId = params['projectId'] as string;
 
-  const [certs, setCerts] = useState<InsuranceCert[]>(DEMO_CERTS);
-  const [showUploadForm, setShowUploadForm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [certs,setCerts]       = useState<any[]>([]);
+  const [loading,setLoading]   = useState(true);
+  const [error,setError]       = useState('');
+  const [showForm,setShowForm] = useState(false);
+  const [saving,setSaving]     = useState(false);
+  const [renewingId,setRenewingId] = useState<string|null>(null);
+  const [toast,setToast] = useState<{msg:string;type:'success'|'error'}|null>(null);
 
-  const [form, setForm] = useState({
-    subName: '',
-    policyType: 'GL',
-    carrier: '',
-    policyNo: '',
-    effectiveDate: '',
-    expiryDate: '',
-    coverageAmount: '',
-  });
+  useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),4000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
 
-  const setF = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm(p => ({ ...p, [k]: e.target.value }));
+  // Form
+  const [fSub,setFSub]         = useState('');
+  const [fType,setFType]       = useState('GL');
+  const [fCarrier,setFCarrier] = useState('');
+  const [fPolicy,setFPolicy]   = useState('');
+  const [fEff,setFEff]         = useState('');
+  const [fExp,setFExp]         = useState('');
+  const [fAmt,setFAmt]         = useState('');
 
-  const totalCerts = certs.length;
-  const activeCerts = certs.filter(c => c.status === 'active').length;
-  const expiringCerts = certs.filter(c => c.status === 'expiring').length;
-  const expiredCerts = certs.filter(c => c.status === 'expired').length;
-
-  async function handleUpload(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.subName || !form.carrier || !form.policyNo || !form.effectiveDate || !form.expiryDate) {
-      setError('All fields except coverage amount are required.');
-      return;
+  const load = useCallback(async()=>{
+    setLoading(true); setError('');
+    try{
+      const r = await fetch(`/api/insurance/${projectId}`);
+      if(!r.ok) throw new Error(await r.text());
+      const d = await r.json();
+      setCerts(d.certs||d.certificates||d.data||[]);
+    }catch(e:any){
+      setError(e.message||'Failed to load insurance certificates');
+      setCerts([]);
+    }finally{
+      setLoading(false);
     }
-    setError('');
-    setLoading(true);
-    try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      fd.append('projectId', pid);
-      await fetch('/api/insurance/upload', { method: 'POST', body: fd });
+  },[projectId]);
 
-      // Compute days until expiry for optimistic update
-      const expiry = new Date(form.expiryDate);
-      const today = new Date();
-      const days = Math.round((expiry.getTime() - today.getTime()) / 86400000);
-      const certStatus: InsuranceCert['status'] = days < 0 ? 'expired' : days < 30 ? 'expiring' : 'active';
+  useEffect(()=>{ load(); },[load]);
 
-      const newCert: InsuranceCert = {
-        id: 'cert-new-' + Date.now(),
-        subName: form.subName,
-        policyType: form.policyType,
-        carrier: form.carrier,
-        policyNo: form.policyNo,
-        effectiveDate: form.effectiveDate,
-        expiryDate: form.expiryDate,
-        coverageAmount: form.coverageAmount ? Number(form.coverageAmount) : 0,
-        status: certStatus,
-        daysUntilExpiry: days,
-      };
-      setCerts(prev => [newCert, ...prev]);
-      setForm({ subName: '', policyType: 'GL', carrier: '', policyNo: '', effectiveDate: '', expiryDate: '', coverageAmount: '' });
-      setShowUploadForm(false);
-    } catch {
-      setError('Upload failed. Please try again.');
+  async function addCert(){
+    if(!fSub.trim()||!fCarrier.trim()||!fPolicy.trim()||!fEff||!fExp){ setError('All fields except coverage amount are required'); return; }
+    setSaving(true); setError('');
+    try{
+      const r = await fetch('/api/insurance/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        projectId,subName:fSub,policyType:fType,carrier:fCarrier,policyNo:fPolicy,
+        effectiveDate:fEff,expiryDate:fExp,coverageAmount:parseFloat(fAmt)||0,
+      })});
+      const d = await r.json();
+      if(d.error) throw new Error(d.error);
+      setFSub(''); setFType('GL'); setFCarrier(''); setFPolicy(''); setFEff(''); setFExp(''); setFAmt('');
+      setShowForm(false);
+      await load();
+    }catch(e:any){
+      setError(e.message||'Failed to add certificate');
+    }finally{
+      setSaving(false);
     }
-    setLoading(false);
   }
 
-  return (
-    <div style={{ background: DARK, minHeight: '100%' }}>
+  async function requestRenewal(certId:string,subName:string){
+    setRenewingId(certId);
+    try{
+      const r = await fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({projectId,certId,subName})});
+      const d = await r.json();
+      if(d.error) throw new Error(d.error);
+      setToast({msg:`Renewal request sent to ${subName}`,type:'success'});
+    }catch(e:any){
+      setToast({msg:e.message||'Failed to send renewal request',type:'error'});
+    }finally{
+      setRenewingId(null);
+    }
+  }
 
-      {/* Header */}
-      <div style={{
-        padding: '16px 24px', borderBottom: `1px solid ${BORDER}`,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: DARK,
-      }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Insurance Certificates</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Track COIs for all subcontractors — expiration alerts included</div>
+  const totalCount    = certs.length;
+  const activeCount   = certs.filter(c=>daysUntilExpiry(c.expiry_date||c.expiryDate)>=30).length;
+  const expiringCount = certs.filter(c=>{ const d=daysUntilExpiry(c.expiry_date||c.expiryDate); return d>=0&&d<30; }).length;
+  const expiredCount  = certs.filter(c=>daysUntilExpiry(c.expiry_date||c.expiryDate)<0).length;
+
+  return (
+    <div>
+      {toast && (
+        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
+          {toast.msg}
         </div>
-        <button
-          onClick={() => setShowUploadForm(!showUploadForm)}
-          style={{
-            padding: '8px 18px',
-            background: `linear-gradient(135deg,${GOLD},#F0C040)`,
-            border: 'none', borderRadius: 7,
-            color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: 'pointer',
-          }}
-        >+ Upload Certificate</button>
+      )}
+      {/* Header */}
+      <div style={{padding:'18px 24px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+        <div>
+          <h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>Insurance Certificates</h2>
+          <div style={{fontSize:12,color:DIM,marginTop:3}}>COIs for all subcontractors — expiration alerts included</div>
+        </div>
+        <button onClick={()=>setShowForm(!showForm)}
+          style={{padding:'9px 20px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:DARK,fontSize:13,fontWeight:800,cursor:'pointer'}}>
+          {showForm ? '× Cancel' : '+ Add Certificate'}
+        </button>
       </div>
 
-      <div style={{ padding: 24 }}>
+      {/* Add Form */}
+      {showForm && (
+        <div style={{margin:'20px 24px',background:RAISED,border:`1px solid rgba(212,160,23,.3)`,borderRadius:12,padding:24}}>
+          <div style={{fontWeight:800,fontSize:15,color:TEXT,marginBottom:18,paddingBottom:12,borderBottom:`1px solid ${BORDER}`}}>Add Insurance Certificate</div>
+          {error && (
+            <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'10px 14px',marginBottom:16,color:RED,fontSize:13}}>
+              {error}
+            </div>
+          )}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14,marginBottom:14}}>
+            <div style={{gridColumn:'1/-1'}}>
+              <label style={LBL}>Subcontractor Name *</label>
+              <input value={fSub} onChange={e=>setFSub(e.target.value)} placeholder="Desert Electrical Contractors" style={INP}/>
+            </div>
+            <div>
+              <label style={LBL}>Policy Type *</label>
+              <select value={fType} onChange={e=>setFType(e.target.value)} style={INP}>
+                {POLICY_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={LBL}>Carrier *</label>
+              <input value={fCarrier} onChange={e=>setFCarrier(e.target.value)} placeholder="Travelers Insurance" style={INP}/>
+            </div>
+            <div>
+              <label style={LBL}>Policy Number *</label>
+              <input value={fPolicy} onChange={e=>setFPolicy(e.target.value)} placeholder="GL-2026-84721" style={INP}/>
+            </div>
+            <div>
+              <label style={LBL}>Effective Date *</label>
+              <input type="date" value={fEff} onChange={e=>setFEff(e.target.value)} style={INP}/>
+            </div>
+            <div>
+              <label style={LBL}>Expiry Date *</label>
+              <input type="date" value={fExp} onChange={e=>setFExp(e.target.value)} style={INP}/>
+            </div>
+            <div>
+              <label style={LBL}>Coverage Amount ($)</label>
+              <input type="number" value={fAmt} onChange={e=>setFAmt(e.target.value)} placeholder="2000000" min="0" style={INP}/>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={addCert} disabled={saving}
+              style={{padding:'9px 22px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:DARK,fontWeight:800,fontSize:13,cursor:saving?'wait':'pointer',opacity:saving?.6:1}}>
+              {saving ? 'Adding…' : 'Add Certificate'}
+            </button>
+            <button onClick={()=>{setShowForm(false);setError('');}}
+              style={{padding:'9px 18px',background:'none',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,cursor:'pointer'}}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
-        {/* KPI cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+      <div style={{padding:24}}>
+        {/* Error (outside form) */}
+        {error && !showForm && (
+          <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'12px 16px',marginBottom:20,color:RED,fontSize:13}}>
+            {error}
+          </div>
+        )}
+
+        {/* KPI Cards */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24}}>
           {[
-            { label: 'Total Certificates', value: totalCerts, color: TEXT },
-            { label: 'Active', value: activeCerts, color: GREEN },
-            { label: 'Expiring Soon', value: expiringCerts, color: YELLOW },
-            { label: 'Expired', value: expiredCerts, color: RED_COLOR },
-          ].map(kpi => (
-            <div key={kpi.label} style={{
-              background: RAISED, border: `1px solid ${BORDER}`,
-              borderRadius: 10, padding: '16px 18px',
-            }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: DIM, marginBottom: 6, letterSpacing: 0.5 }}>
-                {kpi.label}
-              </div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: kpi.color }}>{kpi.value}</div>
+            {l:'Total',v:totalCount,c:TEXT},
+            {l:'Active',v:activeCount,c:'#3dd68c'},
+            {l:'Expiring Soon',v:expiringCount,c:'#f59e0b'},
+            {l:'Expired',v:expiredCount,c:RED},
+          ].map(k=>(
+            <div key={k.l} style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 18px'}}>
+              <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase' as const,color:DIM,marginBottom:6}}>{k.l}</div>
+              <div style={{fontSize:26,fontWeight:800,color:k.c}}>{k.v}</div>
             </div>
           ))}
         </div>
 
-        {/* Upload form */}
-        {showUploadForm && (
-          <div style={{
-            background: RAISED, border: '1px solid rgba(212,160,23,.3)',
-            borderRadius: 12, padding: 24, marginBottom: 24,
-          }}>
-            <div style={{ fontWeight: 700, fontSize: 15, color: TEXT, marginBottom: 16 }}>Upload Insurance Certificate</div>
-            {error && (
-              <div style={{
-                background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)',
-                borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: RED_COLOR,
-              }}>{error}</div>
-            )}
-            <form onSubmit={handleUpload}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
-                {[
-                  { label: 'Subcontractor Name *', key: 'subName' as const, placeholder: 'Desert Electrical Contractors' },
-                  { label: 'Carrier *', key: 'carrier' as const, placeholder: 'Travelers Insurance' },
-                  { label: 'Policy Number *', key: 'policyNo' as const, placeholder: 'GL-2026-84721' },
-                  { label: 'Effective Date *', key: 'effectiveDate' as const, type: 'date' },
-                  { label: 'Expiry Date *', key: 'expiryDate' as const, type: 'date' },
-                  { label: 'Coverage Amount ($)', key: 'coverageAmount' as const, placeholder: '2000000', type: 'number' },
-                ].map(field => (
-                  <div key={field.key}>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>
-                      {field.label}
-                    </label>
-                    <input
-                      type={field.type || 'text'}
-                      value={form[field.key]}
-                      onChange={setF(field.key)}
-                      placeholder={field.placeholder}
-                      style={inp}
-                    />
-                  </div>
-                ))}
-              </div>
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>
-                  Policy Type *
-                </label>
-                <select value={form.policyType} onChange={setF('policyType')} style={inp}>
-                  {POLICY_TYPES.map(pt => <option key={pt} value={pt}>{pt}</option>)}
-                </select>
-              </div>
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>
-                  Certificate PDF / Image
-                </label>
-                <input
-                  type="file"
-                  accept=".pdf,.png,.jpg,.jpeg"
-                  style={{ ...inp, cursor: 'pointer' }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    padding: '10px 24px',
-                    background: `linear-gradient(135deg,${GOLD},#F0C040)`,
-                    border: 'none', borderRadius: 8,
-                    color: '#0d1117', fontSize: 13, fontWeight: 800,
-                    cursor: loading ? 'wait' : 'pointer',
-                    opacity: loading ? 0.7 : 1,
-                  }}
-                >{loading ? 'Uploading...' : 'Upload Certificate'}</button>
-                <button
-                  type="button"
-                  onClick={() => { setShowUploadForm(false); setError(''); }}
-                  style={{
-                    padding: '10px 18px', background: RAISED,
-                    border: `1px solid ${BORDER}`, borderRadius: 8,
-                    color: DIM, fontSize: 13, cursor: 'pointer',
-                  }}
-                >Cancel</button>
-              </div>
-            </form>
+        {/* Loading */}
+        {loading && <div style={{padding:40,textAlign:'center' as const,color:DIM}}>Loading certificates…</div>}
+
+        {/* Empty */}
+        {!loading && certs.length===0 && (
+          <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:56,textAlign:'center' as const}}>
+            <div style={{fontSize:40,marginBottom:14}}>🛡️</div>
+            <div style={{fontWeight:800,fontSize:16,color:TEXT,marginBottom:8}}>No certificates yet</div>
+            <div style={{fontSize:13,color:DIM,marginBottom:24}}>Upload COIs for all subcontractors to track expiration dates and maintain compliance.</div>
+            <button onClick={()=>setShowForm(true)}
+              style={{padding:'10px 24px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:DARK,fontSize:13,fontWeight:800,cursor:'pointer'}}>
+              + Add First Certificate
+            </button>
           </div>
         )}
 
-        {/* Certificate table */}
-        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#0a1117' }}>
-                {['Sub Name', 'Policy Type', 'Carrier', 'Policy #', 'Coverage', 'Effective', 'Expiry', 'Days Until Expiry', 'Status'].map(h => (
-                  <th key={h} style={{
-                    padding: '10px 14px', textAlign: 'left',
-                    fontSize: 10, fontWeight: 700,
-                    textTransform: 'uppercase', letterSpacing: 0.5,
-                    color: DIM, borderBottom: `1px solid ${BORDER}`,
-                    whiteSpace: 'nowrap',
-                  }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {certs.map(cert => {
-                const badge = statusBadge(cert.status, cert.daysUntilExpiry);
-                const isExpired = cert.status === 'expired';
-                const rowBg = isExpired
-                  ? 'rgba(239,68,68,.05)'
-                  : cert.status === 'expiring'
-                    ? 'rgba(245,158,11,.04)'
-                    : 'transparent';
-                return (
-                  <tr key={cert.id} style={{ background: rowBg, borderBottom: `1px solid rgba(38,51,71,.5)` }}>
-                    <td style={{ padding: '11px 14px', color: TEXT, fontWeight: 600 }}>{cert.subName}</td>
-                    <td style={{ padding: '11px 14px' }}>
-                      <span style={{
-                        display: 'inline-block', padding: '2px 8px',
-                        borderRadius: 4, fontSize: 11, fontWeight: 700,
-                        background: 'rgba(212,160,23,.1)', color: GOLD,
-                        textTransform: 'uppercase',
-                      }}>{cert.policyType}</span>
-                    </td>
-                    <td style={{ padding: '11px 14px', color: DIM }}>{cert.carrier}</td>
-                    <td style={{ padding: '11px 14px', color: DIM, fontFamily: 'monospace', fontSize: 12 }}>{cert.policyNo}</td>
-                    <td style={{ padding: '11px 14px', color: TEXT }}>
-                      {cert.coverageAmount > 0 ? fmt(cert.coverageAmount) : '—'}
-                    </td>
-                    <td style={{ padding: '11px 14px', color: DIM }}>{cert.effectiveDate}</td>
-                    <td style={{ padding: '11px 14px', color: isExpired ? RED_COLOR : DIM, fontWeight: isExpired ? 700 : 400 }}>
-                      {cert.expiryDate}
-                    </td>
-                    <td style={{ padding: '11px 14px', color: badge.color, fontWeight: 700 }}>
-                      {cert.daysUntilExpiry < 0
-                        ? `${Math.abs(cert.daysUntilExpiry)}d ago`
-                        : `${cert.daysUntilExpiry}d`}
-                    </td>
-                    <td style={{ padding: '11px 14px' }}>
-                      <span style={{
-                        fontSize: 10, fontWeight: 700, padding: '2px 8px',
-                        borderRadius: 4, background: badge.bg, color: badge.color,
-                        textTransform: 'uppercase', letterSpacing: 0.3,
-                        whiteSpace: 'nowrap',
-                      }}>{badge.label}</span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {certs.length === 0 && (
-            <div style={{ padding: 48, textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>🛡️</div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: TEXT, marginBottom: 8 }}>No certificates uploaded yet</div>
-              <div style={{ fontSize: 13, color: DIM, marginBottom: 20 }}>Upload COIs for all subcontractors to track expiration dates and maintain compliance.</div>
-              <button
-                onClick={() => setShowUploadForm(true)}
-                style={{
-                  padding: '10px 22px',
-                  background: `linear-gradient(135deg,${GOLD},#F0C040)`,
-                  border: 'none', borderRadius: 8,
-                  color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: 'pointer',
-                }}
-              >Upload First Certificate</button>
-            </div>
-          )}
-        </div>
+        {/* Table */}
+        {!loading && certs.length>0 && (
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
+              <thead>
+                <tr style={{background:DARK}}>
+                  {['Sub Name','Policy Type','Carrier','Policy #','Coverage','Expiry Date','Status','Actions'].map(h=>(
+                    <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap' as const}}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {certs.map((c:any,idx:number)=>{
+                  const expDate  = c.expiry_date||c.expiryDate||'';
+                  const days     = daysUntilExpiry(expDate);
+                  const st       = certStatus(expDate);
+                  const expired  = days<0;
+                  const expiring = days>=0&&days<30;
+                  const rowBg    = expired?'rgba(192,48,48,.06)':expiring?'rgba(245,158,11,.04)':'transparent';
+                  const cid      = c.id||String(idx);
+                  return (
+                    <tr key={cid} style={{borderBottom:`1px solid rgba(38,51,71,.5)`,background:rowBg}}>
+                      <td style={{padding:'11px 14px',color:TEXT,fontWeight:600}}>{c.sub_name||c.subName||c.vendor_name||'—'}</td>
+                      <td style={{padding:'11px 14px'}}>
+                        <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:'rgba(212,160,23,.12)',color:GOLD,textTransform:'uppercase' as const}}>
+                          {c.policy_type||c.policyType||'—'}
+                        </span>
+                      </td>
+                      <td style={{padding:'11px 14px',color:DIM}}>{c.carrier||'—'}</td>
+                      <td style={{padding:'11px 14px',color:DIM,fontFamily:'monospace',fontSize:12}}>{c.policy_number||c.policyNo||'—'}</td>
+                      <td style={{padding:'11px 14px',color:TEXT}}>{c.coverage_amount||c.coverageAmount ? fmt(Number(c.coverage_amount||c.coverageAmount||0)) : '—'}</td>
+                      <td style={{padding:'11px 14px',color:expired?RED:expiring?'#f59e0b':DIM,fontWeight:expired||expiring?700:400}}>
+                        {expDate ? new Date(expDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'}
+                        {expiring && !expired && <span style={{marginLeft:6,fontSize:10,color:'#f59e0b'}}>({days}d)</span>}
+                        {expired && <span style={{marginLeft:6,fontSize:10,color:RED}}>(expired)</span>}
+                      </td>
+                      <td style={{padding:'11px 14px'}}>
+                        <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c,textTransform:'uppercase' as const,letterSpacing:.3}}>
+                          {st.label}
+                        </span>
+                      </td>
+                      <td style={{padding:'11px 14px'}}>
+                        {(expired||expiring) && (
+                          <button onClick={()=>requestRenewal(cid,c.sub_name||c.subName||'')} disabled={renewingId===cid}
+                            style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'4px 10px',cursor:renewingId===cid?'wait':'pointer',opacity:renewingId===cid?.5:1}}>
+                            {renewingId===cid ? '…' : 'Request Renewal'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,129 +1,308 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getAuthHeaders } from '../../../../../lib/supabase-browser';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#c03030';
-const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-function Badge({label,color='#94a3b8',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
-  return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color,textTransform:'uppercase' as const,letterSpacing:.3}}>{label}</span>;
+const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
+
+const INP:React.CSSProperties = {padding:'8px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
+const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6};
+
+function statusStyle(s:string):{c:string,bg:string}{
+  if(s==='approved') return {c:'#3dd68c',bg:'rgba(26,138,74,.14)'};
+  if(s==='rejected') return {c:RED,    bg:'rgba(192,48,48,.14)'};
+  return {c:GOLD,bg:'rgba(212,160,23,.14)'};
 }
-function PageHeader({title,sub,actions}:{title:string,sub?:string,actions?:React.ReactNode}){
-  return <div style={{padding:'18px 24px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'space-between',background:DARK}}>
-    <div><h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>{title}</h2>{sub&&<div style={{fontSize:12,color:DIM,marginTop:3}}>{sub}</div>}</div>
-    {actions&&<div style={{display:'flex',gap:10}}>{actions}</div>}
-  </div>;
-}
 
-export default function ChangeOrdersPage(){
-  const params = useParams();
-  const pid = params['projectId'] as string;
-  const [showNew, setShowNew] = useState(false);
-  const [cos, setCos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({title:'',costImpact:'',scheduleImpactDays:'0',reason:'',initiatedBy:'',description:''});
-  const set = (k:string,v:string) => setForm(f=>({...f,[k]:v}));
+export default function ChangeOrdersPage() {
+  const params    = useParams();
+  const projectId = params['projectId'] as string;
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const headers = await getAuthHeaders();
-        const r = await fetch(`/api/change-orders?projectId=${pid}`, { headers });
-        const d = await r.json();
-        setCos(d.changeOrders ?? []);
-      } catch { /* keep empty */ } finally { setLoading(false); }
-    })();
-  }, [pid]);
+  const [cos,setCos]         = useState<any[]>([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError]     = useState('');
+  const [showForm,setShowForm] = useState(false);
+  const [saving,setSaving]   = useState(false);
+  const [approvingId,setApprovingId] = useState<string|null>(null);
+  const [toast,setToast] = useState<{msg:string;type:'success'|'error'}|null>(null);
 
-  async function createCO() {
-    if (!form.title.trim()) return;
-    setSaving(true);
-    try {
-      const headers = await getAuthHeaders();
-      const r = await fetch('/api/change-orders/create', {
-        method:'POST',
-        headers:{'Content-Type':'application/json',...headers},
-        body: JSON.stringify({projectId:pid,title:form.title,costImpact:Number(form.costImpact)||0,scheduleImpactDays:Number(form.scheduleImpactDays)||0,reason:form.reason,initiatedBy:form.initiatedBy,description:form.description})
-      });
+  useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),4000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
+
+  // project contract sum for running total
+  const [contractSum,setContractSum] = useState(0);
+
+  // form
+  const [fTitle,setFTitle]         = useState('');
+  const [fDesc,setFDesc]           = useState('');
+  const [fReason,setFReason]       = useState('');
+  const [fCost,setFCost]           = useState('');
+  const [fSchedule,setFSchedule]   = useState('');
+
+  const load = useCallback(async()=>{
+    setLoading(true); setError('');
+    try{
+      const [coRes,projRes] = await Promise.all([
+        fetch(`/api/change-orders/list?projectId=${projectId}`),
+        fetch('/api/projects/list'),
+      ]);
+      const coData   = await coRes.json();
+      const projData = await projRes.json();
+      const project  = (projData.projects||[]).find((p:any)=>p.id===projectId);
+      setCos((coData.changeOrders??[]).sort((a:any,b:any)=>(a.co_number||0)-(b.co_number||0)));
+      if(project?.contract_amount) setContractSum(Number(project.contract_amount)||0);
+    }catch(e:any){
+      setError(e.message||'Failed to load change orders');
+    }finally{
+      setLoading(false);
+    }
+  },[projectId]);
+
+  useEffect(()=>{ load(); },[load]);
+
+  async function createCO(){
+    if(!fTitle.trim()){ setError('Title is required'); return; }
+    setSaving(true); setError('');
+    try{
+      const r = await fetch('/api/change-orders/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        projectId,title:fTitle,description:fDesc,reason:fReason,
+        costImpact:parseFloat(fCost)||0,scheduleImpact:parseFloat(fSchedule)||0,
+      })});
       const d = await r.json();
-      if (d.changeOrder) {
-        setCos(prev => [...prev, {
-          id: d.changeOrder.id, co_number: d.changeOrder.co_number, title: form.title,
-          status: 'pending', cost_impact: Number(form.costImpact)||0, schedule_impact_days: Number(form.scheduleImpactDays)||0,
-          created_at: new Date().toISOString(),
-        }]);
-        setForm({title:'',costImpact:'',scheduleImpactDays:'0',reason:'',initiatedBy:'',description:''});
-        setShowNew(false);
-      }
-    } finally { setSaving(false); }
+      if(d.error) throw new Error(d.error);
+      setFTitle(''); setFDesc(''); setFReason(''); setFCost(''); setFSchedule('');
+      setShowForm(false);
+      await load();
+    }catch(e:any){
+      setError(e.message||'Failed to create change order');
+    }finally{
+      setSaving(false);
+    }
   }
 
-  const netImpact = cos.reduce((s,c)=>s+(c.cost_impact??0),0);
+  async function approveCO(id:string){
+    setApprovingId(id);
+    try{
+      const r = await fetch(`/api/change-orders/${id}/approve`,{method:'POST',headers:{'Content-Type':'application/json'}});
+      const d = await r.json();
+      if(d.error) throw new Error(d.error);
+      setCos(prev=>prev.map(c=>c.id===id?{...c,status:'approved'}:c));
+      setToast({msg:'Change order approved.',type:'success'});
+    }catch(e:any){
+      setToast({msg:e.message||'Failed to approve change order',type:'error'});
+    }finally{
+      setApprovingId(null);
+    }
+  }
 
-  return <div>
-    <PageHeader title="Change Orders" sub={loading?'Loading…':`${cos.length} change orders · ${fmt(netImpact)} net impact`} actions={<button onClick={()=>setShowNew(!showNew)} style={{padding:'8px 16px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ New Change Order</button>}/>
-    {showNew&&<div style={{margin:24,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:24}}>
-      <div style={{fontWeight:700,fontSize:15,marginBottom:16,color:TEXT}}>New Change Order</div>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
-        {([['Title','title','e.g. Added electrical outlets in kitchen'],['Cost Impact ($)','costImpact','e.g. 4500'],['Schedule Impact (days)','scheduleImpactDays','0'],['Reason','reason','e.g. Owner request'],['Initiated By','initiatedBy','e.g. Owner']]).map(([lbl,key,ph])=>(
-          <div key={key}><label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>{lbl}</label>
-            <input value={(form as any)[key]} onChange={e=>set(key,e.target.value)} placeholder={ph} style={{width:'100%',padding:'8px 12px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none'}}/></div>
-        ))}
-      </div>
-      <div style={{marginBottom:16}}>
-        <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Description</label>
-        <textarea value={form.description} onChange={e=>set('description',e.target.value)} rows={4} placeholder="Describe the change in detail..." style={{width:'100%',padding:'8px 12px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',resize:'vertical'}}/>
-      </div>
-      <div style={{display:'flex',gap:10}}>
-        <button onClick={createCO} disabled={saving||!form.title.trim()} style={{padding:'9px 20px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer',opacity:saving||!form.title.trim()?0.6:1}}>{saving?'Creating...':'Create CO'}</button>
-        <button onClick={()=>setShowNew(false)} style={{padding:'9px 20px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:7,color:DIM,fontSize:13,cursor:'pointer'}}>Cancel</button>
-      </div>
-    </div>}
-    <div style={{padding:24}}>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24}}>
-        {[{l:'Total COs',v:String(cos.length)},{l:'Approved',v:fmt(cos.filter(c=>c.status==='approved').reduce((s,c)=>s+(c.cost_impact??0),0))},{l:'Pending Approval',v:fmt(cos.filter(c=>c.status==='pending').reduce((s,c)=>s+(c.cost_impact??0),0))},{l:'Net Impact',v:(netImpact>=0?'+':'')+fmt(netImpact)}].map(k=>(
-          <div key={k.l} style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 18px'}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase' as const,color:DIM,marginBottom:6}}>{k.l}</div>
-            <div style={{fontSize:22,fontWeight:800,color:TEXT}}>{k.v}</div>
-          </div>
-        ))}
-      </div>
+  async function rejectCO(id:string){
+    if(!window.confirm('Reject this change order?')) return;
+    setApprovingId(id);
+    try{
+      const r = await fetch(`/api/change-orders/${id}/reject`,{method:'POST',headers:{'Content-Type':'application/json'}});
+      const d = await r.json();
+      if(d.error) throw new Error(d.error);
+      setCos(prev=>prev.map(c=>c.id===id?{...c,status:'rejected'}:c));
+      setToast({msg:'Change order rejected.',type:'success'});
+    }catch(e:any){
+      setToast({msg:e.message||'Failed to reject change order',type:'error'});
+    }finally{
+      setApprovingId(null);
+    }
+  }
 
-      {loading ? (
-        <div style={{padding:40,textAlign:'center',color:DIM}}>Loading change orders…</div>
-      ) : cos.length === 0 ? (
-        <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:40,textAlign:'center'}}>
-          <div style={{fontSize:36,marginBottom:12}}>📋</div>
-          <div style={{fontWeight:700,fontSize:15,color:TEXT,marginBottom:8}}>No change orders yet</div>
-          <div style={{fontSize:13,color:DIM,marginBottom:20}}>Create your first change order to track scope and cost changes</div>
-          <button onClick={()=>setShowNew(true)} style={{padding:'10px 22px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ Create First CO</button>
-        </div>
-      ) : (
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
-            <thead><tr style={{background:'#0a1117'}}>
-              {['CO #','Title','Status','Cost Impact','Schedule Impact','Created','Actions'].map(h=>(
-                <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>{cos.map(co=>(
-              <tr key={co.id} style={{borderBottom:`1px solid rgba(38,51,71,.5)`}}>
-                <td style={{padding:'12px 14px',color:GOLD,fontWeight:700}}>{co.co_number}</td>
-                <td style={{padding:'12px 14px',color:TEXT}}>{co.title}</td>
-                <td style={{padding:'12px 14px'}}><Badge label={co.status} color={co.status==='approved'?'#3dd68c':GOLD} bg={co.status==='approved'?'rgba(26,138,74,.12)':'rgba(212,160,23,.12)'}/></td>
-                <td style={{padding:'12px 14px',color:'#f97316',fontWeight:700}}>{(co.cost_impact??0)>=0?'+':''}{fmt(co.cost_impact??0)}</td>
-                <td style={{padding:'12px 14px',color:(co.schedule_impact_days??0)>0?'#f97316':DIM}}>{(co.schedule_impact_days??0)>0?co.schedule_impact_days+' days':'None'}</td>
-                <td style={{padding:'12px 14px',color:DIM}}>{co.created_at?.split('T')[0]??'—'}</td>
-                <td style={{padding:'12px 14px'}}>
-                  {co.status==='pending'&&<button onClick={async()=>{const headers=await getAuthHeaders();await fetch('/api/change-orders/'+co.id+'/approve',{method:'POST',headers:{'Content-Type':'application/json',...headers}});setCos(prev=>prev.map(c=>c.id===co.id?{...c,status:'approved'}:c));}} style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:'#0d1117',fontSize:11,padding:'4px 10px',fontWeight:700,cursor:'pointer'}}>Approve</button>}
-                  {co.status==='approved'&&<span style={{fontSize:11,color:'#3dd68c',fontWeight:700}}>✓ Approved</span>}
-                </td>
-              </tr>
-            ))}</tbody>
-          </table>
+  // Running totals
+  const approvedCOs   = cos.filter(c=>c.status==='approved').reduce((s:number,c:any)=>s+(c.cost_impact||0),0);
+  const pendingCOs    = cos.filter(c=>c.status==='pending').reduce((s:number,c:any)=>s+(c.cost_impact||0),0);
+  const currentContract = contractSum + approvedCOs;
+
+  return (
+    <div>
+      {toast && (
+        <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
+          {toast.msg}
         </div>
       )}
+      {/* Header */}
+      <div style={{padding:'18px 24px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+        <div>
+          <h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>Change Orders</h2>
+          <div style={{fontSize:12,color:DIM,marginTop:3}}>
+            {loading ? 'Loading…' : `${cos.length} change order${cos.length!==1?'s':''}`}
+          </div>
+        </div>
+        <button onClick={()=>setShowForm(!showForm)}
+          style={{padding:'9px 20px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:DARK,fontSize:13,fontWeight:800,cursor:'pointer'}}>
+          {showForm ? '× Cancel' : '+ New Change Order'}
+        </button>
+      </div>
+
+      {/* Create Form */}
+      {showForm && (
+        <div style={{margin:'20px 24px',background:RAISED,border:`1px solid rgba(212,160,23,.3)`,borderRadius:12,padding:24}}>
+          <div style={{fontWeight:800,fontSize:15,color:TEXT,marginBottom:18,paddingBottom:12,borderBottom:`1px solid ${BORDER}`}}>New Change Order</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:16}}>
+            <div style={{gridColumn:'1/-1'}}>
+              <label style={LBL}>Title *</label>
+              <input value={fTitle} onChange={e=>setFTitle(e.target.value)} placeholder="e.g. Add electrical outlets in server room" style={INP}/>
+            </div>
+            <div>
+              <label style={LBL}>Reason</label>
+              <input value={fReason} onChange={e=>setFReason(e.target.value)} placeholder="e.g. Owner request, unforeseen conditions" style={INP}/>
+            </div>
+            <div>
+              <label style={LBL}>Cost Impact ($)</label>
+              <input type="number" value={fCost} onChange={e=>setFCost(e.target.value)} placeholder="0" style={INP}/>
+            </div>
+            <div>
+              <label style={LBL}>Schedule Impact (days)</label>
+              <input type="number" value={fSchedule} onChange={e=>setFSchedule(e.target.value)} placeholder="0" style={INP}/>
+            </div>
+            <div style={{gridColumn:'1/-1'}}>
+              <label style={LBL}>Description</label>
+              <textarea value={fDesc} onChange={e=>setFDesc(e.target.value)} rows={3} placeholder="Describe the change in detail…"
+                style={{...INP,resize:'vertical' as const}}/>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={createCO} disabled={saving||!fTitle.trim()}
+              style={{padding:'9px 22px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:DARK,fontWeight:800,fontSize:13,cursor:saving?'wait':'pointer',opacity:saving||!fTitle.trim()?.6:1}}>
+              {saving ? 'Creating…' : 'Create Change Order'}
+            </button>
+            <button onClick={()=>{setShowForm(false);setError('');}}
+              style={{padding:'9px 18px',background:'none',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,cursor:'pointer'}}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div style={{padding:24}}>
+        {/* Error */}
+        {error && (
+          <div style={{background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:8,padding:'12px 16px',marginBottom:20,color:RED,fontSize:13}}>
+            {error}
+          </div>
+        )}
+
+        {/* Contract Summary Bar */}
+        <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:12,padding:'16px 20px',marginBottom:20,display:'flex',gap:32,flexWrap:'wrap' as const,alignItems:'center'}}>
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:4}}>Original Contract</div>
+            <div style={{fontSize:18,fontWeight:800,color:TEXT}}>{fmt(contractSum)}</div>
+          </div>
+          <div style={{color:BORDER,fontSize:20}}>+</div>
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:4}}>Approved COs</div>
+            <div style={{fontSize:18,fontWeight:800,color:approvedCOs>=0?GREEN:RED}}>{approvedCOs>=0?'+':''}{fmt(approvedCOs)}</div>
+          </div>
+          <div style={{color:BORDER,fontSize:20}}>=</div>
+          <div>
+            <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:4}}>Current Contract Sum</div>
+            <div style={{fontSize:22,fontWeight:800,color:GOLD}}>{fmt(currentContract)}</div>
+          </div>
+          {pendingCOs!==0 && (
+            <>
+              <div style={{marginLeft:'auto',padding:'8px 16px',background:'rgba(212,160,23,.08)',border:`1px solid rgba(212,160,23,.2)`,borderRadius:8}}>
+                <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:3}}>Pending Approval</div>
+                <div style={{fontSize:16,fontWeight:800,color:GOLD}}>{pendingCOs>=0?'+':''}{fmt(pendingCOs)}</div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* KPI Cards */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24}}>
+          {[
+            {l:'Total COs',v:String(cos.length),c:TEXT},
+            {l:'Pending',v:String(cos.filter(c=>c.status==='pending').length),c:GOLD},
+            {l:'Approved',v:String(cos.filter(c=>c.status==='approved').length),c:'#3dd68c'},
+            {l:'Rejected',v:String(cos.filter(c=>c.status==='rejected').length),c:RED},
+          ].map(k=>(
+            <div key={k.l} style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 18px'}}>
+              <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase' as const,color:DIM,marginBottom:6}}>{k.l}</div>
+              <div style={{fontSize:22,fontWeight:800,color:k.c}}>{k.v}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Loading */}
+        {loading && <div style={{padding:40,textAlign:'center' as const,color:DIM}}>Loading change orders…</div>}
+
+        {/* Empty */}
+        {!loading && cos.length===0 && (
+          <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:56,textAlign:'center' as const}}>
+            <div style={{fontSize:40,marginBottom:14}}>📋</div>
+            <div style={{fontWeight:800,fontSize:16,color:TEXT,marginBottom:8}}>No change orders yet</div>
+            <div style={{fontSize:13,color:DIM,marginBottom:24}}>Track scope changes, owner requests, and unforeseen conditions.</div>
+            <button onClick={()=>setShowForm(true)}
+              style={{padding:'10px 24px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:DARK,fontSize:13,fontWeight:800,cursor:'pointer'}}>
+              + Create First Change Order
+            </button>
+          </div>
+        )}
+
+        {/* Table */}
+        {!loading && cos.length>0 && (
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
+              <thead>
+                <tr style={{background:DARK}}>
+                  {['CO #','Title','Status','Cost Impact','Schedule Impact','Reason','Actions'].map(h=>(
+                    <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,color:DIM,borderBottom:`1px solid ${BORDER}`}}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {cos.map((co:any)=>{
+                  const st = statusStyle(co.status||'pending');
+                  const cost = Number(co.cost_impact||0);
+                  return (
+                    <tr key={co.id} style={{borderBottom:`1px solid rgba(38,51,71,.5)`}}>
+                      <td style={{padding:'12px 14px',color:GOLD,fontWeight:800}}>CO-{String(co.co_number).padStart(3,'0')}</td>
+                      <td style={{padding:'12px 14px',color:TEXT,maxWidth:240}}>
+                        <div style={{fontWeight:600}}>{co.title}</div>
+                        {co.description && <div style={{fontSize:11,color:DIM,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:230}}>{co.description}</div>}
+                      </td>
+                      <td style={{padding:'12px 14px'}}>
+                        <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c,textTransform:'uppercase' as const,letterSpacing:.3}}>
+                          {co.status||'pending'}
+                        </span>
+                      </td>
+                      <td style={{padding:'12px 14px',color:cost>0?ORANGE:cost<0?RED:DIM,fontWeight:700}}>
+                        {cost>=0?'+':''}{fmt(cost)}
+                      </td>
+                      <td style={{padding:'12px 14px',color:(co.schedule_impact||0)>0?ORANGE:DIM}}>
+                        {(co.schedule_impact||0)>0 ? `+${co.schedule_impact} days` : '—'}
+                      </td>
+                      <td style={{padding:'12px 14px',color:DIM,maxWidth:150}}>
+                        <div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{co.reason||'—'}</div>
+                      </td>
+                      <td style={{padding:'12px 14px'}}>
+                        {co.status==='pending' && (
+                          <div style={{display:'flex',gap:6}}>
+                            <button onClick={()=>approveCO(co.id)} disabled={approvingId===co.id}
+                              style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:DARK,fontSize:11,padding:'4px 12px',fontWeight:800,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?.6:1}}>
+                              {approvingId===co.id ? '…' : 'Approve'}
+                            </button>
+                            <button onClick={()=>rejectCO(co.id)} disabled={approvingId===co.id}
+                              style={{background:'none',border:`1px solid rgba(192,48,48,.4)`,borderRadius:5,color:RED,fontSize:11,padding:'4px 12px',fontWeight:700,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?.6:1}}>
+                              Reject
+                            </button>
+                          </div>
+                        )}
+                        {co.status==='approved' && <span style={{fontSize:11,color:'#3dd68c',fontWeight:700}}>✓ Approved</span>}
+                        {co.status==='rejected' && <span style={{fontSize:11,color:RED,fontWeight:700}}>✗ Rejected</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
-  </div>;
+  );
 }
