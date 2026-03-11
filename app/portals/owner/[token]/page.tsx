@@ -12,6 +12,7 @@ export default function OwnerApprovalPortal() {
   const [action, setAction] = useState<'approved'|'rejected'|null>(null);
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState('');
+  const [feedback, setFeedback] = useState<string>('');
 
   useEffect(() => {
     fetch('/api/owner-portal/approve/' + token)
@@ -31,8 +32,8 @@ export default function OwnerApprovalPortal() {
       });
       const d = await res.json();
       if (d.success) setAction(act);
-      else alert(d.error || 'Failed to process. Please try again.');
-    } catch { alert('Network error. Please try again.'); }
+      else { setFeedback(d.error || 'Failed to process. Please try again.'); setTimeout(() => setFeedback(''), 4000); }
+    } catch { setFeedback('Network error. Please try again.'); setTimeout(() => setFeedback(''), 4000); }
     setSaving(false);
   }
 
@@ -194,6 +195,7 @@ export default function OwnerApprovalPortal() {
           </div>
         </div>
       </div>
+      {feedback && <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:'rgba(192,48,48,0.9)',color:'#fff',fontWeight:600,fontSize:'14px'}}>{feedback}</div>}
     </div>
   );
 }

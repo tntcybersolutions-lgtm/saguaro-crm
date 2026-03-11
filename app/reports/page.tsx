@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
 export default function ReportsPage() {
+  const [feedback, setFeedback] = useState<string>('');
   const reports = [
     {icon:'💰',title:'Job Cost Report',desc:'Budget vs actuals by cost code, variance analysis',action:'Generate'},
     {icon:'📈',title:'Bid Win/Loss Summary',desc:'Win rate by trade, margin analysis, competitor comparison',action:'Generate'},
@@ -26,13 +27,14 @@ export default function ReportsPage() {
               <div style={{fontWeight:700,color:TEXT,fontSize:14,marginBottom:5}}>{r.title}</div>
               <div style={{fontSize:12,color:DIM,lineHeight:1.5,marginBottom:14}}>{r.desc}</div>
               <div style={{display:'flex',gap:8}}>
-                <button onClick={()=>alert(`Generating ${r.title}...\n\nIn production this exports a PDF/CSV with real project data.`)} style={{padding:'6px 14px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:6,color:'#0d1117',fontSize:12,fontWeight:700,cursor:'pointer'}}>📄 {r.action}</button>
+                <button onClick={()=>{setFeedback(`Generating ${r.title}...`);setTimeout(()=>setFeedback(''),4000);}} style={{padding:'6px 14px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:6,color:'#0d1117',fontSize:12,fontWeight:700,cursor:'pointer'}}>📄 {r.action}</button>
                 <button style={{padding:'6px 12px',background:'none',border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>CSV</button>
               </div>
             </div>
           </div>
         ))}
       </div>
+      {feedback && <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:'rgba(34,197,94,0.9)',color:'#fff',fontWeight:600,fontSize:'14px'}}>{feedback}</div>}
     </div>
   );
 }

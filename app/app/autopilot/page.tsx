@@ -6,6 +6,7 @@ const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3
 
 export default function AutopilotPage() {
   const [filter, setFilter] = useState<'all'|'critical'|'high'|'medium'>('all');
+  const [feedback, setFeedback] = useState<string>('');
   const alerts = DEMO_AUTOPILOT_ALERTS.filter(a => filter === 'all' || a.severity === filter);
 
   const sevColor = (s: string) => s==='critical'?{bg:'rgba(192,48,48,.12)',c:'#ff7070',border:'rgba(192,48,48,.3)'}:s==='high'?{bg:'rgba(249,115,22,.1)',c:'#f97316',border:'rgba(249,115,22,.3)'}:{bg:'rgba(212,160,23,.1)',c:GOLD,border:'rgba(212,160,23,.3)'};
@@ -18,7 +19,7 @@ export default function AutopilotPage() {
           <h1 style={{fontSize:26,fontWeight:800,color:TEXT,margin:'4px 0'}}>Autopilot Dashboard</h1>
           <div style={{fontSize:13,color:DIM}}>Claude monitors your projects 24/7 — RFIs, invoices, schedule, field issues</div>
         </div>
-        <button onClick={async()=>{const token=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('sb-access-token='))?.split('=')[1]||'';const r=await fetch('/api/internal/autopilot/run',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({tenantId:'demo'})});alert('Autopilot scan triggered!');}} style={{padding:'9px 18px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>
+        <button onClick={async()=>{const token=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('sb-access-token='))?.split('=')[1]||'';const r=await fetch('/api/internal/autopilot/run',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({tenantId:'demo'})});setFeedback('Autopilot scan triggered!');setTimeout(()=>setFeedback(''),4000);}} style={{padding:'9px 18px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>
           🤖 Run Scan Now
         </button>
       </div>
@@ -79,6 +80,7 @@ export default function AutopilotPage() {
           <div style={{fontSize:13}}>All projects are running smoothly</div>
         </div>}
       </div>
+      {feedback && <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:'rgba(34,197,94,0.9)',color:'#fff',fontWeight:600,fontSize:'14px'}}>{feedback}</div>}
     </div>
   );
 }
