@@ -10,6 +10,7 @@ export default function W9Portal() {
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<string>('');
   const [form, setForm] = useState({
     legalName: '', businessName: '', taxClassification: 'individual',
     exemptPayeeCode: '', exemptFromFatca: '',
@@ -29,8 +30,8 @@ export default function W9Portal() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.certify) { alert('You must check the certification box to submit.'); return; }
-    if (!form.tin || form.tin.replace(/\D/g,'').length < 9) { alert('Please enter a valid TIN (9 digits).'); return; }
+    if (!form.certify) { setFeedback('You must check the certification box to submit.'); setTimeout(() => setFeedback(''), 4000); return; }
+    if (!form.tin || form.tin.replace(/\D/g,'').length < 9) { setFeedback('Please enter a valid TIN (9 digits).'); setTimeout(() => setFeedback(''), 4000); return; }
     setSaving(true);
     try {
       const res = await fetch('/api/portals/w9/' + token, {
@@ -40,8 +41,8 @@ export default function W9Portal() {
       });
       const d = await res.json();
       if (d.success) setSubmitted(true);
-      else alert(d.error || 'Failed to submit. Please try again.');
-    } catch { alert('Network error. Please try again.'); }
+      else { setFeedback(d.error || 'Failed to submit. Please try again.'); setTimeout(() => setFeedback(''), 4000); }
+    } catch { setFeedback('Network error. Please try again.'); setTimeout(() => setFeedback(''), 4000); }
     setSaving(false);
   }
 
@@ -199,6 +200,7 @@ export default function W9Portal() {
           </div>
         </form>
       </div>
+      {feedback && <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:'rgba(192,48,48,0.9)',color:'#fff',fontWeight:600,fontSize:'14px'}}>{feedback}</div>}
     </div>
   );
 }
