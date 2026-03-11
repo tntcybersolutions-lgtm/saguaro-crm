@@ -1,5 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { DEMO_PROJECT, DEMO_SUBS, DEMO_PAY_APPS, DEMO_CHANGE_ORDERS, DEMO_RFIS } from '../../../../demo-data';
+
+function buildDemoResponse(id: string) {
+  const p = { ...DEMO_PROJECT, id: id || DEMO_PROJECT.id, end_date: DEMO_PROJECT.substantial_date };
+  const cos = DEMO_CHANGE_ORDERS;
+  const apps = DEMO_PAY_APPS;
+  const contractSumToDate = p.contract_amount + cos.reduce((s, co) => s + (co.cost_impact || 0), 0);
+  const totalBilledToDate = apps.length > 0 ? apps[0].total_completed_and_stored : 0;
+  return {
+    project: { ...p, contractSumToDate, totalBilledToDate },
+    subs: DEMO_SUBS,
+    payApps: apps,
+    changeOrders: cos,
+    rfis: DEMO_RFIS,
+    team: [],
+    source: 'demo',
+  };
+}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -21,7 +39,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       db.from('project_team').select('*').eq('project_id', id),
     ]);
 
-    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    if (!project) {
+      // Return demo data for demo project IDs
+      return NextResponse.json(buildDemoResponse(id));
+    }
 
     const cos = (changeOrders || []) as any[];
     const apps = (payApps || []) as any[];
@@ -37,8 +58,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       rfis: rfis || [],
       team: team || [],
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    // DB not available — return demo data
+    return NextResponse.json(buildDemoResponse(id));
   }
 }
 

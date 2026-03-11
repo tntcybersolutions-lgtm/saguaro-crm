@@ -140,8 +140,21 @@ export default function EstimatePage() {
           <button onClick={handleAIFill} style={{ padding: '6px 12px', background: 'rgba(212,160,23,.12)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 6, color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
             🤖 AI Fill from Blueprint
           </button>
-          <button onClick={() => setToast({msg:'CSV/Excel import coming soon.',type:'success'})} style={{ padding: '6px 12px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: DIM, fontSize: 12, cursor: 'pointer' }}>
-            Import
+          <button
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.csv,.xlsx,.xls';
+              input.onchange = () => {
+                if (input.files && input.files[0]) {
+                  setToast({ msg: `File "${input.files[0].name}" selected. Connect your data pipeline to parse and import estimate lines.`, type: 'success' });
+                }
+              };
+              input.click();
+            }}
+            style={{ padding: '6px 12px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: DIM, fontSize: 12, cursor: 'pointer' }}
+          >
+            Import CSV
           </button>
           <button onClick={() => setShowAddLine(true)} style={{ padding: '7px 16px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 6, color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
             + Add Item
