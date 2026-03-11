@@ -23,6 +23,17 @@ export default function LoginPage(){
   const [form, setForm] = useState({email:'',password:''});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+
+  // Show helpful messages from auth callback errors or post-signup redirects
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    const msg = params.get('message');
+    if (err === 'confirmation_failed') setError('The confirmation link expired or was already used. Please request a new one.');
+    if (err === 'missing_code') setError('Invalid confirmation link. Please try signing up again.');
+    if (msg === 'confirmed') setInfo('Email confirmed! You can now sign in.');
+  }, []);
 
   async function handleLogin(e?: React.FormEvent){
     e?.preventDefault();
@@ -41,7 +52,14 @@ export default function LoginPage(){
         password: form.password,
       });
       if (authErr || !data.session) {
-        setError('Invalid email or password. Please try again.');
+        const msg = authErr?.message?.toLowerCase() || '';
+        if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+          setError('Please check your email and click the confirmation link before signing in.');
+        } else if (msg.includes('invalid') || msg.includes('credentials')) {
+          setError('Invalid email or password. Please try again.');
+        } else {
+          setError(authErr?.message || 'Login failed. Please try again.');
+        }
         setLoading(false);
         return;
       }
@@ -80,6 +98,11 @@ export default function LoginPage(){
           </div>
 
           <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:32}}>
+            {info&&(
+              <div style={{background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:'#22c55e',display:'flex',alignItems:'flex-start',gap:8}}>
+                <span>✅</span><span>{info}</span>
+              </div>
+            )}
             {error&&(
               <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
                 <span>⚠️</span><span>{error}</span>
