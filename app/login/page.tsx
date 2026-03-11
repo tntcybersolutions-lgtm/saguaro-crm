@@ -10,6 +10,35 @@ export default function LoginPage(){
   const [info, setInfo] = useState('');
 
   React.useEffect(() => {
+    // Handle implicit flow: Supabase puts tokens in the URL hash fragment.
+    // The server-side /auth/callback can't read the hash, so it redirects here
+    // with ?error=missing_code. We detect the hash tokens and set the session.
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      const hp = new URLSearchParams(hash);
+      const access_token = hp.get('access_token');
+      const refresh_token = hp.get('refresh_token');
+      const expires_at = hp.get('expires_at');
+      if (access_token && refresh_token) {
+        setInfo('Confirming your account…');
+        fetch('/api/auth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token, refresh_token, expires_at: expires_at ? Number(expires_at) : undefined }),
+        }).then(res => {
+          if (res.ok) {
+            const next = new URLSearchParams(window.location.search).get('next') || '/app';
+            window.location.replace(next);
+          } else {
+            setError('Confirmation failed. Please try signing in or request a new link.');
+          }
+        }).catch(() => {
+          setError('Confirmation failed. Please check your connection and try again.');
+        });
+        return;
+      }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const err = params.get('error');
     const msg = params.get('message');
