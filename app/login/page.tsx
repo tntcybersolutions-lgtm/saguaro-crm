@@ -6,7 +6,14 @@ const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const HAS_SUPABASE = !!(SUPABASE_URL && SUPABASE_URL !== 'https://demo.supabase.co' && SUPABASE_KEY);
+const HAS_SUPABASE = !!(
+  SUPABASE_URL &&
+  SUPABASE_URL !== 'https://demo.supabase.co' &&
+  SUPABASE_KEY &&
+  !SUPABASE_KEY.includes('placeholder') &&
+  !SUPABASE_KEY.startsWith('demo_') &&
+  SUPABASE_KEY.length > 20
+);
 
 function getSupabase() {
   return createClient(SUPABASE_URL!, SUPABASE_KEY!);
