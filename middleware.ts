@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const PUBLIC_PREFIXES = [
   '/api/',
   '/_next/',
+  '/auth/',
   '/favicon',
   '/robots',
   '/sitemap',
@@ -41,11 +42,17 @@ function isPublic(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // In demo mode or if Supabase is not configured — let everything through
+  // In demo mode or if Supabase is not properly configured — let everything through
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const isDemoMode =
     process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ||
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://demo.supabase.co';
+    !supabaseUrl ||
+    supabaseUrl === 'https://demo.supabase.co' ||
+    !supabaseKey ||
+    supabaseKey.includes('placeholder') ||
+    supabaseKey.startsWith('demo_') ||
+    supabaseKey.length < 20;
 
   if (isDemoMode) {
     return NextResponse.next();
