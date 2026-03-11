@@ -54,6 +54,36 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
+  // Create tenant + user_profile using service role key (bypasses RLS)
+  if (data.user?.id) {
+    try {
+      const adminClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { auth: { persistSession: false } }
+      );
+      const slug = company.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 50);
+      const { data: tenant } = await adminClient
+        .from('tenants')
+        .insert({ name: company, slug: `${slug}-${Date.now()}`, plan: 'trial' })
+        .select()
+        .single();
+      if (tenant) {
+        await adminClient.from('user_profiles').insert({
+          tenant_id: tenant.id,
+          user_id: data.user.id,
+          email: email.toLowerCase().trim(),
+          full_name: body.name || '',
+          role: 'admin',
+          phone: phone || '',
+          title: role || 'General Contractor',
+        });
+      }
+    } catch (err) {
+      console.error('[signup] tenant creation error:', err);
+    }
+  }
+
   // Auto-confirmed (email confirmation disabled in Supabase) — set session immediately
   if (data.session) {
     const { access_token, refresh_token, expires_at } = data.session;
