@@ -1,64 +1,24 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#22c55e';
 
 const NAV_LINKS = [
   { label: 'Features',  href: '/#features' },
+  { label: 'How It Works', href: '/#demo' },
   { label: 'Pricing',   href: '/pricing' },
-  { label: 'Security',  href: '/security' },
   { label: 'Compare',   href: '/compare/procore' },
 ];
 
 const FEATURES = [
-  {
-    icon: '📐',
-    title: 'AI Blueprint Takeoff',
-    desc: 'Upload any PDF blueprint. Claude reads every dimension, calculates all materials, and generates a full bid estimate in under 60 seconds.',
-    pill: 'AI-powered',
-  },
-  {
-    icon: '💰',
-    title: 'AIA Pay Applications',
-    desc: 'Generate G702/G703 Continuation Sheets automatically. Submit to owners digitally with one click — no PDFs to fill by hand.',
-    pill: 'G702 / G703',
-  },
-  {
-    icon: '🔒',
-    title: 'Lien Waivers — All 50 States',
-    desc: 'Conditional & unconditional, partial & final. AZ, CA, TX statutory language. Send, sign, and track — no paper, no fax.',
-    pill: 'All 50 states',
-  },
-  {
-    icon: '🤖',
-    title: 'Autopilot',
-    desc: "Automated RFI routing, change order alerts, insurance expiry reminders, and pay app follow-ups — while you're in the field.",
-    pill: 'Fully automated',
-  },
-  {
-    icon: '📋',
-    title: 'Certified Payroll WH-347',
-    desc: 'DOL-compliant weekly reports for prevailing wage projects. Pulls live Davis-Bacon wage rates. Submits directly to agencies.',
-    pill: 'Davis-Bacon',
-  },
-  {
-    icon: '🧠',
-    title: 'Bid Intelligence',
-    desc: 'AI scores every bid opportunity 0–100 based on your win history, market conditions, and margin targets. Stop chasing bad bids.',
-    pill: 'Win rate AI',
-  },
-  {
-    icon: '📦',
-    title: 'Bid Package Manager',
-    desc: 'Auto-create bid packages from takeoff data. Invite subs by CSI trade division. Track responses in one dashboard.',
-    pill: 'CSI MasterFormat',
-  },
-  {
-    icon: '🛡️',
-    title: 'Insurance & Compliance',
-    desc: 'ACORD 25 COI parser, expiry alerts, OSHA 300 log, and sub compliance dashboard. Never let a lapsed COI delay a project.',
-    pill: 'OSHA + COI',
-  },
+  { icon: '📐', title: 'AI Blueprint Takeoff', desc: 'Upload any PDF blueprint. Claude reads every dimension, calculates all materials, and generates a full bid estimate in under 60 seconds.', pill: 'AI-powered' },
+  { icon: '💰', title: 'AIA Pay Applications', desc: 'Generate G702/G703 Continuation Sheets automatically. Submit to owners digitally with one click — no PDFs to fill by hand.', pill: 'G702 / G703' },
+  { icon: '🔒', title: 'Lien Waivers — All 50 States', desc: 'Conditional & unconditional, partial & final. AZ, CA, TX statutory language. Send, sign, and track — no paper, no fax.', pill: 'All 50 states' },
+  { icon: '🤖', title: 'Autopilot', desc: "Automated RFI routing, change order alerts, insurance expiry reminders, and pay app follow-ups — while you're in the field.", pill: 'Fully automated' },
+  { icon: '📋', title: 'Certified Payroll WH-347', desc: 'DOL-compliant weekly reports for prevailing wage projects. Pulls live Davis-Bacon wage rates. Submits directly to agencies.', pill: 'Davis-Bacon' },
+  { icon: '🧠', title: 'Bid Intelligence', desc: 'AI scores every bid opportunity 0–100 based on your win history, market conditions, and margin targets. Stop chasing bad bids.', pill: 'Win rate AI' },
+  { icon: '📦', title: 'Bid Package Manager', desc: 'Auto-create bid packages from takeoff data. Invite subs by CSI trade division. Track responses in one dashboard.', pill: 'CSI MasterFormat' },
+  { icon: '🛡️', title: 'Insurance & Compliance', desc: 'ACORD 25 COI parser, expiry alerts, OSHA 300 log, and sub compliance dashboard. Never let a lapsed COI delay a project.', pill: 'OSHA + COI' },
 ];
 
 const STATS = [
@@ -69,22 +29,352 @@ const STATS = [
 ];
 
 const TESTIMONIALS = [
+  { quote: "We used to spend half a day doing material takeoffs by hand. Now our estimator uploads the PDF and has numbers in a minute. It changed how we bid.", name: "Marcus T.", title: "Project Manager — General Contractor, Phoenix AZ" },
+  { quote: "The lien waiver module alone is worth it. We do 30–40 waivers a month across multiple projects. This cut our admin time by 80%.", name: "Jennifer R.", title: "Operations Director — Specialty Subcontractor, Las Vegas NV" },
+  { quote: "We compared this to Procore and Buildertrend. Saguaro has everything we need at a fraction of the cost, and the AI features are actually useful.", name: "David K.", title: "Owner — Mid-Size GC, Denver CO" },
+];
+
+// ── Interactive Product Tour Steps ────────────────────────────────────────────
+const DEMO_STEPS = [
   {
-    quote: "We used to spend half a day doing material takeoffs by hand. Now our estimator uploads the PDF and has numbers in a minute. It changed how we bid.",
-    name: "Marcus T.",
-    title: "Project Manager — General Contractor, Phoenix AZ",
+    step: 1,
+    label: 'Upload Blueprint',
+    icon: '📐',
+    tagline: 'Drop any PDF — floor plan, structural, MEP',
+    screen: 'upload',
   },
   {
-    quote: "The lien waiver module alone is worth it. We do 30–40 waivers a month across multiple projects. This cut our admin time by 80%.",
-    name: "Jennifer R.",
-    title: "Operations Director — Specialty Subcontractor, Las Vegas NV",
+    step: 2,
+    label: 'AI Reads Everything',
+    icon: '🤖',
+    tagline: 'Claude analyzes every dimension & spec in real time',
+    screen: 'processing',
   },
   {
-    quote: "We compared this to Procore and Buildertrend. Saguaro has everything we need at a fraction of the cost, and the AI features are actually useful.",
-    name: "David K.",
-    title: "Owner — Mid-Size GC, Denver CO",
+    step: 3,
+    label: 'Instant Material Takeoff',
+    icon: '📊',
+    tagline: 'Full CSI-organized material list with quantities & costs',
+    screen: 'takeoff',
+  },
+  {
+    step: 4,
+    label: 'Bid Package + Sub Invites',
+    icon: '📦',
+    tagline: 'Auto-create packages by trade, invite subs instantly',
+    screen: 'bidpackage',
+  },
+  {
+    step: 5,
+    label: 'Generate G702 Pay App',
+    icon: '💰',
+    tagline: 'AIA G702/G703 filled and ready to submit to owner',
+    screen: 'payapp',
   },
 ];
+
+const TAKEOFF_MATERIALS = [
+  { csi: '03 30 00', desc: 'Cast-in-Place Concrete', qty: '14,200', unit: 'CY', unit_cost: '$142', total: '$2,016,400' },
+  { csi: '03 20 00', desc: 'Concrete Reinforcing', qty: '48,600', unit: 'LB', unit_cost: '$0.82', total: '$39,852' },
+  { csi: '04 20 00', desc: 'Concrete Masonry — CMU', qty: '8,400', unit: 'SF', unit_cost: '$18', total: '$151,200' },
+  { csi: '05 12 00', desc: 'Structural Steel Framing', qty: '112,000', unit: 'LB', unit_cost: '$1.65', total: '$184,800' },
+  { csi: '07 50 00', desc: 'Membrane Roofing — TPO', qty: '24,000', unit: 'SF', unit_cost: '$8.50', total: '$204,000' },
+];
+
+const BID_PACKAGES_DEMO = [
+  { code: 'BP-01', name: 'Concrete & Foundation', trade: 'Concrete', subs: 3, status: 'invited' },
+  { code: 'BP-02', name: 'Structural Steel', trade: 'Steel', subs: 4, status: 'invited' },
+  { code: 'BP-03', name: 'Mechanical HVAC', trade: 'HVAC', subs: 3, status: 'invited' },
+  { code: 'BP-04', name: 'Electrical', trade: 'Electrical', subs: 5, status: 'invited' },
+  { code: 'BP-05', name: 'Roofing — TPO System', trade: 'Roofing', subs: 3, status: 'invited' },
+  { code: 'BP-06', name: 'Plumbing Rough-In', trade: 'Plumbing', subs: 2, status: 'invited' },
+];
+
+// ── Demo Screen Components ────────────────────────────────────────────────────
+
+function UploadScreen({ active }: { active: boolean }) {
+  const [dragging, setDragging] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
+
+  useEffect(() => {
+    if (!active) { setDragging(false); setUploaded(false); return; }
+    const t1 = setTimeout(() => setDragging(true), 600);
+    const t2 = setTimeout(() => { setDragging(false); setUploaded(true); }, 1800);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [active]);
+
+  return (
+    <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16, height: '100%' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>AI Blueprint Takeoff — New Project</div>
+      <div style={{ flex: 1, border: `2px dashed ${dragging ? GOLD : uploaded ? '#3dd68c' : BORDER}`, borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, background: dragging ? 'rgba(212,160,23,.06)' : uploaded ? 'rgba(34,197,94,.06)' : 'rgba(255,255,255,.02)', transition: 'all .4s' }}>
+        {!uploaded ? (
+          <>
+            <div style={{ fontSize: 40, transition: 'transform .3s', transform: dragging ? 'scale(1.2)' : 'scale(1)' }}>{dragging ? '📂' : '📄'}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: dragging ? GOLD : TEXT }}>{dragging ? 'Drop to upload…' : 'Drop blueprint PDF here'}</div>
+            <div style={{ fontSize: 12, color: DIM }}>or click to browse — PDF, DWG, TIF supported</div>
+            <div style={{ padding: '8px 20px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, borderRadius: 7, color: '#0d1117', fontWeight: 800, fontSize: 13, cursor: 'pointer' }}>Choose File</div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 40 }}>✅</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#3dd68c' }}>Blueprint uploaded!</div>
+            <div style={{ background: 'rgba(255,255,255,.04)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 20 }}>📄</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Riverdale_Medical_Pavilion_FloorPlan.pdf</div>
+                <div style={{ fontSize: 11, color: DIM }}>24,200 SF · 48 pages · 8.4 MB</div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      {uploaded && (
+        <div style={{ padding: '10px 16px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, borderRadius: 8, textAlign: 'center', color: '#0d1117', fontWeight: 800, fontSize: 14, cursor: 'pointer' }}>
+          Run AI Takeoff →
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProcessingScreen({ active }: { active: boolean }) {
+  const LINES = [
+    'Parsing PDF structure… 48 pages detected',
+    'Identifying drawing types: Architectural, Structural, MEP',
+    'Extracting dimensions from floor plan A1.01…',
+    'Found scale: 1/8" = 1\'-0"',
+    'Calculating room areas: 847 dimensions processed',
+    'Reading structural drawings S1.01–S3.04…',
+    'Concrete schedule: 14,200 CY total volume',
+    'Rebar schedule: #5 @ 12" OC — 48,600 LB',
+    'Detecting roof area from A3.01: 24,000 SF TPO',
+    'CMU exterior walls: 8,400 SF @ 8" block',
+    'Steel tonnage: W-shapes — 112,000 LB total',
+    'Cross-referencing spec sections 03300, 04200, 05120…',
+    'Generating CSI MasterFormat cost codes…',
+    '✅ Takeoff complete — 5 major divisions, 47 line items',
+  ];
+  const [visibleLines, setVisibleLines] = useState(0);
+  const [pct, setPct] = useState(0);
+
+  useEffect(() => {
+    if (!active) { setVisibleLines(0); setPct(0); return; }
+    let i = 0;
+    const interval = setInterval(() => {
+      i++;
+      setVisibleLines(i);
+      setPct(Math.round((i / LINES.length) * 100));
+      if (i >= LINES.length) clearInterval(interval);
+    }, 180);
+    return () => clearInterval(interval);
+  }, [active]);
+
+  return (
+    <div style={{ padding: 20, height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>AI Analyzing Blueprint…</div>
+        <span style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>{pct}%</span>
+      </div>
+      <div style={{ height: 6, background: 'rgba(255,255,255,.06)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg,${GOLD},#F0C040)`, borderRadius: 3, transition: 'width .15s' }} />
+      </div>
+      <div style={{ flex: 1, background: '#070d14', borderRadius: 8, border: `1px solid ${BORDER}`, padding: '12px 14px', overflowY: 'auto', fontFamily: 'monospace', fontSize: 11, lineHeight: 1.8 }}>
+        {LINES.slice(0, visibleLines).map((line, i) => (
+          <div key={i} style={{ color: line.startsWith('✅') ? '#3dd68c' : line.startsWith('Found') || line.startsWith('Concrete') || line.startsWith('Rebar') || line.startsWith('Steel') ? GOLD : '#6b8aad' }}>
+            {line.startsWith('✅') ? line : `> ${line}`}
+          </div>
+        ))}
+        {visibleLines < LINES.length && <div style={{ color: GOLD, animation: 'none' }}>_</div>}
+      </div>
+    </div>
+  );
+}
+
+function TakeoffScreen({ active }: { active: boolean }) {
+  const [visible, setVisible] = useState(0);
+  const total = TAKEOFF_MATERIALS.reduce((s, m) => s + parseInt(m.total.replace(/\D/g, '')), 0);
+
+  useEffect(() => {
+    if (!active) { setVisible(0); return; }
+    let i = 0;
+    const t = setInterval(() => { i++; setVisible(i); if (i >= TAKEOFF_MATERIALS.length) clearInterval(t); }, 250);
+    return () => clearInterval(t);
+  }, [active]);
+
+  return (
+    <div style={{ padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Material Takeoff — Riverdale Medical Pavilion</div>
+        <span style={{ fontSize: 10, background: 'rgba(212,160,23,.12)', color: GOLD, border: `1px solid rgba(212,160,23,.3)`, borderRadius: 4, padding: '2px 8px', fontWeight: 700 }}>47 LINE ITEMS</span>
+      </div>
+      <div style={{ flex: 1, overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <thead>
+            <tr style={{ background: '#0a1117' }}>
+              {['CSI Code', 'Description', 'Qty', 'Unit', '$/Unit', 'Total'].map(h => (
+                <th key={h} style={{ padding: '7px 10px', textAlign: 'left', color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .4, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {TAKEOFF_MATERIALS.slice(0, visible).map((m, i) => (
+              <tr key={i} style={{ borderBottom: `1px solid rgba(38,51,71,.4)`, opacity: 1, animation: 'none' }}>
+                <td style={{ padding: '8px 10px', color: GOLD, fontFamily: 'monospace', fontWeight: 700 }}>{m.csi}</td>
+                <td style={{ padding: '8px 10px', color: TEXT, fontWeight: 600 }}>{m.desc}</td>
+                <td style={{ padding: '8px 10px', color: TEXT, textAlign: 'right' }}>{m.qty}</td>
+                <td style={{ padding: '8px 10px', color: DIM }}>{m.unit}</td>
+                <td style={{ padding: '8px 10px', color: DIM }}>{m.unit_cost}</td>
+                <td style={{ padding: '8px 10px', color: '#3dd68c', fontWeight: 700, textAlign: 'right' }}>{m.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {visible >= TAKEOFF_MATERIALS.length && (
+        <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ flex: 1, background: 'rgba(212,160,23,.06)', border: `1px solid rgba(212,160,23,.2)`, borderRadius: 8, padding: '10px 14px' }}>
+            <div style={{ fontSize: 10, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Showing 5 of 47 items</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: GOLD }}>$2,596,252</div>
+            <div style={{ fontSize: 10, color: DIM }}>Total estimated material cost</div>
+          </div>
+          <div style={{ flex: 1, padding: '10px 14px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#0d1117' }}>Create Bid Packages</div>
+              <div style={{ fontSize: 10, color: 'rgba(0,0,0,.6)' }}>Auto-split by CSI trade →</div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BidPackageScreen({ active }: { active: boolean }) {
+  const [visible, setVisible] = useState(0);
+  const [inviteSent, setInviteSent] = useState(false);
+
+  useEffect(() => {
+    if (!active) { setVisible(0); setInviteSent(false); return; }
+    let i = 0;
+    const t = setInterval(() => { i++; setVisible(i); if (i >= BID_PACKAGES_DEMO.length) { clearInterval(t); setTimeout(() => setInviteSent(true), 600); } }, 200);
+    return () => clearInterval(t);
+  }, [active]);
+
+  return (
+    <div style={{ padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Bid Packages — Auto-Created from Takeoff</div>
+        {inviteSent && (
+          <span style={{ fontSize: 10, background: 'rgba(34,197,94,.12)', color: '#3dd68c', border: '1px solid rgba(34,197,94,.3)', borderRadius: 4, padding: '2px 8px', fontWeight: 700 }}>✓ 20 SUBS INVITED</span>
+        )}
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        {BID_PACKAGES_DEMO.slice(0, visible).map((bp, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,.03)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 12px' }}>
+            <span style={{ fontFamily: 'monospace', fontSize: 10, color: GOLD, fontWeight: 700, minWidth: 40 }}>{bp.code}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{bp.name}</div>
+              <div style={{ fontSize: 10, color: DIM }}>{bp.trade} · {bp.subs} subs invited</div>
+            </div>
+            <span style={{ fontSize: 9, background: 'rgba(212,160,23,.12)', color: GOLD, border: `1px solid rgba(212,160,23,.25)`, borderRadius: 4, padding: '2px 6px', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              {inviteSent ? '📧 INVITED' : 'DRAFT'}
+            </span>
+          </div>
+        ))}
+      </div>
+      {inviteSent && (
+        <div style={{ background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.25)', borderRadius: 8, padding: '10px 14px', display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ fontSize: 18 }}>📧</span>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#3dd68c' }}>Bid invites sent to 20 subcontractors</div>
+            <div style={{ fontSize: 11, color: DIM }}>Responses due by Dec 15 · Tracking in real time</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PayAppScreen({ active }: { active: boolean }) {
+  const [animPct, setAnimPct] = useState(0);
+  const target = 428500;
+
+  useEffect(() => {
+    if (!active) { setAnimPct(0); return; }
+    const start = Date.now();
+    const dur = 1400;
+    const raf = () => {
+      const t = Math.min((Date.now() - start) / dur, 1);
+      setAnimPct(Math.round(t * target));
+      if (t < 1) requestAnimationFrame(raf);
+    };
+    requestAnimationFrame(raf);
+  }, [active]);
+
+  const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  return (
+    <div style={{ padding: '16px 20px', height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>AIA G702 — Pay Application #2</div>
+        <span style={{ fontSize: 10, background: 'rgba(74,157,232,.12)', color: '#4a9de8', border: '1px solid rgba(74,157,232,.3)', borderRadius: 4, padding: '2px 8px', fontWeight: 700 }}>DRAFT</span>
+      </div>
+
+      <div style={{ background: '#0a1117', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '12px 14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+          {[['Project', 'Riverdale Medical Pavilion'],['Owner','Desert Health Partners LLC'],['Contractor','Copper State Developments'],['Period','Feb 1 – Feb 28, 2026']].map(([l,v])=>(
+            <div key={l}>
+              <div style={{ fontSize: 9, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 2 }}>{l}</div>
+              <div style={{ fontSize: 11, color: TEXT, fontWeight: 600 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 10, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {[['Contract Sum','$2,850,000'],['Net COs','+$45,000'],['Contract to Date','$2,895,000']].map(([l,v])=>(
+            <div key={l}>
+              <div style={{ fontSize: 9, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .4, marginBottom: 2 }}>{l}</div>
+              <div style={{ fontSize: 12, color: TEXT, fontWeight: 700 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '12px 14px' }}>
+          <div style={{ fontSize: 9, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Total Completed</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: GOLD }}>{fmt(animPct)}</div>
+          <div style={{ height: 3, background: 'rgba(255,255,255,.06)', borderRadius: 2, marginTop: 6 }}>
+            <div style={{ height: '100%', width: `${(animPct / 2895000) * 100}%`, background: `linear-gradient(90deg,${GOLD},#F0C040)`, borderRadius: 2, transition: 'width .05s' }} />
+          </div>
+        </div>
+        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '12px 14px' }}>
+          <div style={{ fontSize: 9, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Current Payment Due</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#3dd68c' }}>{fmt(Math.max(0, animPct * 0.9 - 128250))}</div>
+          <div style={{ fontSize: 9, color: DIM, marginTop: 6 }}>After 10% retainage · Less prior payments</div>
+        </div>
+      </div>
+
+      {animPct >= target - 100 && (
+        <div style={{ padding: '10px 14px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, borderRadius: 8, textAlign: 'center', cursor: 'pointer' }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: '#0d1117' }}>📧 Submit to Owner for Approval</div>
+          <div style={{ fontSize: 10, color: 'rgba(0,0,0,.6)', marginTop: 2 }}>Approval link emailed · PDF attached · One click</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DemoScreen({ step }: { step: typeof DEMO_STEPS[0]; active: boolean }) {
+  const active = true; // always rendered when shown
+  if (step.screen === 'upload') return <UploadScreen active={active} />;
+  if (step.screen === 'processing') return <ProcessingScreen active={active} />;
+  if (step.screen === 'takeoff') return <TakeoffScreen active={active} />;
+  if (step.screen === 'bidpackage') return <BidPackageScreen active={active} />;
+  if (step.screen === 'payapp') return <PayAppScreen active={active} />;
+  return null;
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -92,16 +382,30 @@ export default function HomePage() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', company: '', message: '' });
   const [contactSent, setContactSent] = useState(false);
   const [contactLoading, setContactLoading] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Auto-advance demo steps every 4.5 seconds
+  useEffect(() => {
+    if (paused) return;
+    timerRef.current = setInterval(() => {
+      setActiveStep(s => (s + 1) % DEMO_STEPS.length);
+    }, 4500);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [paused, activeStep]);
+
+  function goToStep(i: number) {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setActiveStep(i);
+    setPaused(false);
+  }
 
   async function submitContact(e: React.FormEvent) {
     e.preventDefault();
     setContactLoading(true);
     try {
-      await fetch('/api/leads/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(contactForm),
-      });
+      await fetch('/api/leads/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(contactForm) });
       setContactSent(true);
     } catch { /* non-fatal */ }
     setContactLoading(false);
@@ -117,8 +421,6 @@ export default function HomePage() {
           <span style={{ fontWeight: 900, fontSize: 16, letterSpacing: 1, color: GOLD }}>SAGUARO</span>
           <span style={{ fontSize: 10, background: GOLD, color: '#0d1117', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>CRM</span>
         </a>
-
-        {/* Desktop nav links */}
         <div style={{ display: 'flex', gap: 4, marginLeft: 8 }} className="desktop-nav">
           {NAV_LINKS.map(l => (
             <a key={l.href} href={l.href} style={{ padding: '6px 12px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: DIM, textDecoration: 'none', transition: 'color .15s' }}
@@ -128,17 +430,10 @@ export default function HomePage() {
             </a>
           ))}
         </div>
-
         <div style={{ flex: 1 }} />
-
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <a href="/login" className="desktop-nav" style={{ padding: '7px 16px', background: 'rgba(255,255,255,.04)', border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-            Log In
-          </a>
-          <a href="/signup" style={{ padding: '7px 18px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 7, color: '#0d1117', fontSize: 13, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>
-            Free Trial
-          </a>
-          {/* Hamburger */}
+          <a href="/login" className="desktop-nav" style={{ padding: '7px 16px', background: 'rgba(255,255,255,.04)', border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Log In</a>
+          <a href="/signup" style={{ padding: '7px 18px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 7, color: '#0d1117', fontSize: 13, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>Free Trial</a>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="mobile-only"
             style={{ display: 'none', background: 'none', border: 'none', color: TEXT, fontSize: 22, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
             aria-label="Menu">
@@ -172,7 +467,15 @@ export default function HomePage() {
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .testimonials-grid { grid-template-columns: 1fr !important; }
+          .demo-layout { flex-direction: column !important; }
+          .demo-steps-col { flex-direction: row !important; overflow-x: auto; min-width: unset !important; }
+          .demo-screen { min-height: 320px !important; }
         }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .demo-screen-inner { animation: fadeInUp .35s ease; }
       `}</style>
 
       <div style={{ paddingTop: 56 }}>
@@ -196,8 +499,8 @@ export default function HomePage() {
             <a href="/signup" style={{ padding: '14px 32px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 10, color: '#0d1117', fontSize: 16, fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 20px rgba(212,160,23,.3)' }}>
               Start Free Trial — No Card Required
             </a>
-            <a href="/login" style={{ padding: '14px 28px', background: 'rgba(255,255,255,.04)', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT, fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>
-              Sign In →
+            <a href="#demo" style={{ padding: '14px 28px', background: 'rgba(255,255,255,.04)', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT, fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>
+              ▶ Watch How It Works
             </a>
           </div>
           <p style={{ marginTop: 16, fontSize: 12, color: '#4a5f7a' }}>30-day free trial · No credit card · Cancel anytime</p>
@@ -212,6 +515,71 @@ export default function HomePage() {
                 <div style={{ fontSize: 12, color: DIM, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* ── Interactive Product Demo ───────────────────────────────────── */}
+        <section id="demo" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Live Product Tour</div>
+            <h2 style={{ fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 900, margin: '0 0 14px' }}>From Blueprint to Paid — in One Platform</h2>
+            <p style={{ fontSize: 15, color: DIM, maxWidth: 560, margin: '0 auto' }}>See the exact steps a GC takes from winning a bid to collecting final payment.</p>
+          </div>
+
+          <div className="demo-layout" style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+
+            {/* Step list (left) */}
+            <div className="demo-steps-col" style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220, flexShrink: 0 }}>
+              {DEMO_STEPS.map((s, i) => {
+                const isActive = i === activeStep;
+                const isDone = i < activeStep;
+                return (
+                  <button key={i} onClick={() => goToStep(i)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 10, border: `1px solid ${isActive ? GOLD : isDone ? 'rgba(34,197,94,.3)' : BORDER}`, background: isActive ? 'rgba(212,160,23,.08)' : isDone ? 'rgba(34,197,94,.04)' : 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'all .2s', flexShrink: 0 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: isActive ? GOLD : isDone ? '#3dd68c' : 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, fontWeight: 800, color: isActive || isDone ? '#0d1117' : DIM }}>
+                      {isDone ? '✓' : s.step}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: isActive ? TEXT : isDone ? '#3dd68c' : DIM, lineHeight: 1.3 }}>{s.icon} {s.label}</div>
+                      {isActive && <div style={{ fontSize: 10, color: DIM, marginTop: 2, lineHeight: 1.4 }}>{s.tagline}</div>}
+                    </div>
+                  </button>
+                );
+              })}
+
+              {/* Progress bar */}
+              <div style={{ marginTop: 8, padding: '0 4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: DIM, marginBottom: 5 }}>
+                  <span>Step {activeStep + 1} of {DEMO_STEPS.length}</span>
+                  <button onClick={() => setPaused(p => !p)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 10, padding: 0 }}>{paused ? '▶ Resume' : '⏸ Pause'}</button>
+                </div>
+                <div style={{ height: 3, background: 'rgba(255,255,255,.06)', borderRadius: 2 }}>
+                  <div style={{ height: '100%', width: `${((activeStep + 1) / DEMO_STEPS.length) * 100}%`, background: `linear-gradient(90deg,${GOLD},#F0C040)`, borderRadius: 2, transition: 'width .4s' }} />
+                </div>
+              </div>
+
+              <a href="/signup" style={{ marginTop: 12, padding: '11px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, borderRadius: 9, color: '#0d1117', fontWeight: 800, fontSize: 13, textDecoration: 'none', textAlign: 'center', display: 'block' }}>
+                Try It Free →
+              </a>
+            </div>
+
+            {/* App screen (right) */}
+            <div style={{ flex: 1, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,.4)', minHeight: 400 }}>
+              {/* Browser chrome */}
+              <div style={{ padding: '10px 14px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,.2)' }}>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />)}
+                </div>
+                <div style={{ flex: 1, background: 'rgba(255,255,255,.05)', borderRadius: 6, padding: '4px 10px', fontSize: 11, color: DIM, marginLeft: 4 }}>
+                  app.saguarocrm.com/app/projects/…/{DEMO_STEPS[activeStep].screen}
+                </div>
+                <span style={{ fontSize: 10, color: GOLD, fontWeight: 700 }}>🌵 SAGUARO</span>
+              </div>
+              {/* Screen content */}
+              <div key={activeStep} className="demo-screen demo-screen-inner" style={{ minHeight: 380 }}>
+                <DemoScreen step={DEMO_STEPS[activeStep]} active={true} />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -293,7 +661,7 @@ export default function HomePage() {
             </div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Product</div>
-              {[['Features', '/#features'], ['Pricing', '/pricing'], ['Security', '/security'], ['Compare Procore', '/compare/procore'], ['Compare Buildertrend', '/compare/buildertrend']].map(([l, h]) => (
+              {[['Features', '/#features'], ['How It Works', '/#demo'], ['Pricing', '/pricing'], ['Security', '/security'], ['Compare Procore', '/compare/procore']].map(([l, h]) => (
                 <a key={h} href={h} style={{ display: 'block', fontSize: 13, color: DIM, textDecoration: 'none', marginBottom: 8 }}
                   onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
                   onMouseLeave={e => (e.currentTarget.style.color = DIM)}>{l}</a>
@@ -309,7 +677,7 @@ export default function HomePage() {
             </div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Legal</div>
-              {[['Privacy Policy', '/privacy'], ['Terms of Service', '/terms'], ['SLA', '/sla'], ['Security', '/security']].map(([l, h]) => (
+              {[['Privacy Policy', '/privacy'], ['Terms of Service', '/terms'], ['Security', '/security']].map(([l, h]) => (
                 <a key={h} href={h} style={{ display: 'block', fontSize: 13, color: DIM, textDecoration: 'none', marginBottom: 8 }}
                   onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
                   onMouseLeave={e => (e.currentTarget.style.color = DIM)}>{l}</a>
