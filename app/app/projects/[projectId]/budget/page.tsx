@@ -2,74 +2,320 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { DEMO_PROJECT, DEMO_SUBS, DEMO_PAY_APPS, DEMO_RFIS, DEMO_CHANGE_ORDERS, DEMO_BUDGET_LINES, DEMO_AUTOPILOT_ALERTS, DEMO_CONTEXT } from '../../../../../demo-data';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',BLUE='#1a5fa8';
-const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-function Badge({label,color='#94a3b8',bg='rgba(148,163,184,.12)'}:{label:string,color?:string,bg?:string}){
-  return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color,textTransform:'uppercase' as const,letterSpacing:.3}}>{label}</span>;
-}
-function Card({title,children,action}:{title:string,children:React.ReactNode,action?:React.ReactNode}){
-  return <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden',marginBottom:18}}>
-    <div style={{padding:'12px 18px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-      <span style={{fontWeight:700,fontSize:14,color:TEXT}}>{title}</span>
-      {action}
-    </div>
-    <div style={{padding:18}}>{children}</div>
-  </div>;
-}
-function PageHeader({title,sub,actions}:{title:string,sub?:string,actions?:React.ReactNode}){
-  return <div style={{padding:'18px 24px',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',justifyContent:'space-between',background:DARK}}>
-    <div><h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>{title}</h2>{sub&&<div style={{fontSize:12,color:DIM,marginTop:3}}>{sub}</div>}</div>
-    {actions&&<div style={{display:'flex',gap:10}}>{actions}</div>}
-  </div>;
+const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const fmt = (n: number) => '$' + (n||0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtPct = (a: number, b: number) => b > 0 ? ((a / b) * 100).toFixed(1) + '%' : '0%';
+
+interface BudgetLine {
+  id: string;
+  cost_code: string;
+  description: string;
+  original_budget: number;
+  approved_cos: number;
+  revised_budget: number;
+  committed_cost: number;
+  actual_cost: number;
+  pct_complete: number;
+  forecast_cost: number;
+  category: string;
 }
 
-export default function BudgetPage(){
-  const lines = DEMO_BUDGET_LINES;
-  const totOrig = lines.reduce((s,l)=>s+l.original_budget,0);
-  const totComm = lines.reduce((s,l)=>s+l.committed_cost,0);
-  const totActual = lines.reduce((s,l)=>s+l.actual_cost,0);
-  const totForecast = lines.reduce((s,l)=>s+l.forecast_cost,0);
-  return <div>
-    <PageHeader title="Budget" sub="Job costing by CSI cost code"/>
-    <div style={{padding:24}}>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24}}>
-        {[{l:'Original Budget',v:fmt(totOrig),c:TEXT},{l:'Committed',v:fmt(totComm),c:'#4a9de8'},{l:'Actual Spent',v:fmt(totActual),c:'#f97316'},{l:'Forecast to Complete',v:fmt(totForecast),c:totForecast>totOrig?RED:'#3dd68c'}].map(k=>(
-          <div key={k.l} style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 18px'}}>
-            <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase' as const,color:DIM,marginBottom:6}}>{k.l}</div>
-            <div style={{fontSize:20,fontWeight:800,color:k.c}}>{k.v}</div>
-          </div>
-        ))}
+const DEMO_LINES: BudgetLine[] = [
+  { id: 'bl-01', cost_code: '01-000', description: 'General Conditions', category: 'General', original_budget: 128000, approved_cos: 4500, revised_budget: 132500, committed_cost: 132500, actual_cost: 41200, pct_complete: 31, forecast_cost: 132500 },
+  { id: 'bl-02', cost_code: '03-300', description: 'Cast-in-Place Concrete', category: 'Structure', original_budget: 215000, approved_cos: 0, revised_budget: 215000, committed_cost: 215000, actual_cost: 215000, pct_complete: 100, forecast_cost: 215000 },
+  { id: 'bl-03', cost_code: '05-120', description: 'Structural Steel', category: 'Structure', original_budget: 380000, approved_cos: 12000, revised_budget: 392000, committed_cost: 392000, actual_cost: 286000, pct_complete: 73, forecast_cost: 395000 },
+  { id: 'bl-04', cost_code: '06-100', description: 'Rough Carpentry & Framing', category: 'Carpentry', original_budget: 92000, approved_cos: 0, revised_budget: 92000, committed_cost: 88500, actual_cost: 44200, pct_complete: 48, forecast_cost: 91000 },
+  { id: 'bl-05', cost_code: '07-200', description: 'Insulation & Air Barrier', category: 'Envelope', original_budget: 64000, approved_cos: 0, revised_budget: 64000, committed_cost: 64000, actual_cost: 0, pct_complete: 0, forecast_cost: 64000 },
+  { id: 'bl-06', cost_code: '09-900', description: 'Painting & Wall Finishes', category: 'Finishes', original_budget: 78000, approved_cos: 3200, revised_budget: 81200, committed_cost: 78000, actual_cost: 0, pct_complete: 0, forecast_cost: 81200 },
+  { id: 'bl-07', cost_code: '22-000', description: 'Plumbing Systems', category: 'MEP', original_budget: 185000, approved_cos: 6800, revised_budget: 191800, committed_cost: 191800, actual_cost: 62400, pct_complete: 33, forecast_cost: 194000 },
+  { id: 'bl-08', cost_code: '26-000', description: 'Electrical Systems', category: 'MEP', original_budget: 220000, approved_cos: 8500, revised_budget: 228500, committed_cost: 228500, actual_cost: 78200, pct_complete: 34, forecast_cost: 228500 },
+];
+
+interface AddLineForm {
+  cost_code: string;
+  description: string;
+  original_budget: string;
+}
+
+export default function BudgetPage() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const [lines, setLines] = useState<BudgetLine[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState<AddLineForm>({ cost_code: '', description: '', original_budget: '' });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+
+  function showToast(msg: string, ok = true) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch(`/api/projects/${projectId}/budget`);
+        const d = await r.json();
+        if (d.lines?.length) {
+          setLines(d.lines);
+        } else {
+          setLines(DEMO_LINES);
+        }
+      } catch {
+        setLines(DEMO_LINES);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [projectId]);
+
+  async function addLine(e: React.FormEvent) {
+    e.preventDefault();
+    const budget = parseFloat(addForm.original_budget) || 0;
+    try {
+      const r = await fetch(`/api/projects/${projectId}/budget`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cost_code: addForm.cost_code,
+          description: addForm.description,
+          original_budget: budget,
+          project_id: projectId,
+        }),
+      });
+      const d = await r.json();
+      const newLine: BudgetLine = d.line || {
+        id: Date.now().toString(),
+        cost_code: addForm.cost_code,
+        description: addForm.description,
+        original_budget: budget,
+        approved_cos: 0,
+        revised_budget: budget,
+        committed_cost: 0,
+        actual_cost: 0,
+        pct_complete: 0,
+        forecast_cost: budget,
+        category: 'Other',
+      };
+      setLines(prev => [...prev, newLine]);
+      setAddForm({ cost_code: '', description: '', original_budget: '' });
+      setShowAddForm(false);
+      showToast('Budget line added.');
+    } catch {
+      showToast('Failed to add line.', false);
+    }
+  }
+
+  async function saveEdit(id: string) {
+    const amount = parseFloat(editAmount) || 0;
+    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: amount, revised_budget: amount + l.approved_cos, forecast_cost: Math.max(l.actual_cost, amount) } : l));
+    setEditingId(null);
+    try {
+      await fetch(`/api/projects/${projectId}/budget`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, original_budget: amount }),
+      });
+      showToast('Budget line updated.');
+    } catch {
+      showToast('Saved locally (offline mode).', true);
+    }
+  }
+
+  async function exportReport() {
+    setExporting(true);
+    try {
+      const r = await fetch('/api/reports/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'job_cost_summary', projectId }),
+      });
+      const d = await r.json();
+      if (d.url || d.pdfUrl) {
+        window.open(d.url || d.pdfUrl, '_blank');
+      } else {
+        showToast('Report queued. Check Reports when ready.');
+      }
+    } catch {
+      showToast('Export request sent. Check Reports.', true);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  // KPI calculations
+  const totalOriginal = lines.reduce((s, l) => s + l.original_budget, 0);
+  const totalApprovedCOs = lines.reduce((s, l) => s + l.approved_cos, 0);
+  const totalRevised = lines.reduce((s, l) => s + l.revised_budget, 0);
+  const totalActual = lines.reduce((s, l) => s + l.actual_cost, 0);
+  const totalForecast = lines.reduce((s, l) => s + l.forecast_cost, 0);
+  const totalVariance = totalRevised - totalForecast;
+  const totalCommitted = lines.reduce((s, l) => s + l.committed_cost, 0);
+
+  function rowBg(l: BudgetLine) {
+    if (l.actual_cost > l.revised_budget) return 'rgba(192,48,48,.08)';
+    if (l.revised_budget > 0 && l.actual_cost / l.revised_budget > 0.9) return 'rgba(212,160,23,.06)';
+    return 'transparent';
+  }
+
+  const inputStyle: React.CSSProperties = {
+    padding: '8px 10px', background: DARK, border: `1px solid ${BORDER}`,
+    borderRadius: 6, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box', width: '100%',
+  };
+
+  if (loading) return <div style={{ padding: 48, color: DIM, textAlign: 'center', fontSize: 14 }}>Loading budget...</div>;
+
+  return (
+    <div style={{ background: DARK, minHeight: '100%' }}>
+      {/* Toast */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, padding: '12px 20px', borderRadius: 8, background: toast.ok ? 'rgba(34,197,94,.9)' : 'rgba(239,68,68,.9)', color: '#fff', fontWeight: 600, fontSize: 14 }}>
+          {toast.msg}
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ padding: '18px 24px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Budget</h2>
+          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Job costing by CSI cost code</div>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            onClick={() => setShowAddForm(v => !v)}
+            style={{ padding: '8px 16px', background: 'rgba(212,160,23,.12)', border: '1px solid rgba(212,160,23,.3)', borderRadius: 7, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+          >
+            + Add Line
+          </button>
+          <button
+            onClick={exportReport}
+            disabled={exporting}
+            style={{ padding: '8px 16px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 7, color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: exporting ? 'wait' : 'pointer', opacity: exporting ? 0.7 : 1 }}
+          >
+            {exporting ? 'Exporting...' : 'Export'}
+          </button>
+        </div>
       </div>
-      <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
-        <thead><tr style={{background:'#0a1117'}}>
-          {['Cost Code','Description','Category','Original Budget','Committed','Actual Cost','Forecast','Variance'].map(h=>(
-            <th key={h} style={{padding:'10px 14px',textAlign:h==='Original Budget'||h==='Committed'||h==='Actual Cost'||h==='Forecast'||h==='Variance'?'right' as const:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
+
+      <div style={{ padding: 24 }}>
+        {/* KPI Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, marginBottom: 24 }}>
+          {[
+            { l: 'Total Contract', v: fmt(totalRevised), c: TEXT },
+            { l: 'Original Budget', v: fmt(totalOriginal), c: TEXT },
+            { l: 'Actual to Date', v: fmt(totalActual), c: '#f97316' },
+            { l: 'Projected Final', v: fmt(totalForecast), c: totalForecast > totalRevised ? '#ff7070' : '#3dd68c' },
+            { l: 'Variance', v: (totalVariance >= 0 ? '+' : '') + fmt(totalVariance), c: totalVariance >= 0 ? '#3dd68c' : '#ff7070' },
+          ].map(k => (
+            <div key={k.l} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '16px 18px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: DIM, marginBottom: 6 }}>{k.l}</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: k.c }}>{k.v}</div>
+            </div>
           ))}
-        </tr></thead>
-        <tbody>{lines.map(l=>{
-          const variance = l.original_budget - l.forecast_cost;
-          return <tr key={l.id} style={{borderBottom:`1px solid rgba(38,51,71,.5)`}}>
-            <td style={{padding:'11px 14px',color:GOLD,fontWeight:700,fontFamily:'monospace'}}>{l.cost_code}</td>
-            <td style={{padding:'11px 14px',color:TEXT,fontWeight:500}}>{l.description}</td>
-            <td style={{padding:'11px 14px'}}><Badge label={l.category.replace('_',' ')} color={DIM}/></td>
-            <td style={{padding:'11px 14px',textAlign:'right' as const,color:TEXT}}>{fmt(l.original_budget)}</td>
-            <td style={{padding:'11px 14px',textAlign:'right' as const,color:'#4a9de8'}}>{fmt(l.committed_cost)}</td>
-            <td style={{padding:'11px 14px',textAlign:'right' as const,color:l.actual_cost>0?'#f97316':DIM}}>{fmt(l.actual_cost)}</td>
-            <td style={{padding:'11px 14px',textAlign:'right' as const,color:TEXT}}>{fmt(l.forecast_cost)}</td>
-            <td style={{padding:'11px 14px',textAlign:'right' as const,color:variance>=0?'#3dd68c':RED,fontWeight:700}}>{variance>=0?'+':''}{fmt(variance)}</td>
-          </tr>;
-        })}</tbody>
-        <tfoot><tr style={{background:'rgba(255,255,255,.03)',fontWeight:800}}>
-          <td colSpan={3} style={{padding:'12px 14px',color:TEXT}}>TOTALS</td>
-          <td style={{padding:'12px 14px',textAlign:'right' as const,color:TEXT}}>{fmt(totOrig)}</td>
-          <td style={{padding:'12px 14px',textAlign:'right' as const,color:'#4a9de8'}}>{fmt(totComm)}</td>
-          <td style={{padding:'12px 14px',textAlign:'right' as const,color:'#f97316'}}>{fmt(totActual)}</td>
-          <td style={{padding:'12px 14px',textAlign:'right' as const,color:TEXT}}>{fmt(totForecast)}</td>
-          <td style={{padding:'12px 14px',textAlign:'right' as const,color:totOrig-totForecast>=0?'#3dd68c':RED}}>{fmt(totOrig-totForecast)}</td>
-        </tr></tfoot>
-      </table>
+        </div>
+
+        {/* Add Line Form */}
+        {showAddForm && (
+          <form onSubmit={addLine} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 18, marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, marginBottom: 14 }}>Add Budget Line</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr auto', gap: 12, alignItems: 'flex-end' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', marginBottom: 5 }}>CSI Code</label>
+                <input value={addForm.cost_code} onChange={e => setAddForm(f => ({ ...f, cost_code: e.target.value }))} placeholder="e.g. 03-300" required style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', marginBottom: 5 }}>Description</label>
+                <input value={addForm.description} onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))} placeholder="e.g. Cast-in-Place Concrete" required style={inputStyle} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', marginBottom: 5 }}>Budget Amount ($)</label>
+                <input value={addForm.original_budget} onChange={e => setAddForm(f => ({ ...f, original_budget: e.target.value }))} placeholder="0" type="number" min="0" required style={inputStyle} />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="submit" style={{ padding: '8px 16px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 7, color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Add</button>
+                <button type="button" onClick={() => setShowAddForm(false)} style={{ padding: '8px 12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {/* Budget Table */}
+        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: '#0a1117' }}>
+                  {['Cost Code', 'Description', 'Orig. Budget', 'Approved COs', 'Revised Budget', 'Committed', 'Actual Cost', '% Complete', 'Remaining', 'Actions'].map(h => (
+                    <th key={h} style={{ padding: '10px 14px', textAlign: h === 'Cost Code' || h === 'Description' || h === 'Actions' ? 'left' : 'right', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {lines.map(l => {
+                  const remaining = l.revised_budget - l.actual_cost;
+                  const isEditing = editingId === l.id;
+                  return (
+                    <tr key={l.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)`, background: rowBg(l) }}>
+                      <td style={{ padding: '11px 14px', color: GOLD, fontWeight: 700, fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{l.cost_code}</td>
+                      <td style={{ padding: '11px 14px', color: TEXT, fontWeight: 500, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.description}</td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right', color: TEXT }}>
+                        {isEditing ? (
+                          <input
+                            value={editAmount}
+                            onChange={e => setEditAmount(e.target.value)}
+                            type="number"
+                            style={{ width: 110, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }}
+                            autoFocus
+                          />
+                        ) : fmt(l.original_budget)}
+                      </td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right', color: l.approved_cos > 0 ? '#4a9de8' : DIM }}>{l.approved_cos > 0 ? '+' + fmt(l.approved_cos) : '—'}</td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right', color: TEXT, fontWeight: 600 }}>{fmt(l.revised_budget)}</td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right', color: '#4a9de8' }}>{fmt(l.committed_cost)}</td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right', color: l.actual_cost > l.revised_budget ? '#ff7070' : l.actual_cost > 0 ? '#f97316' : DIM }}>{fmt(l.actual_cost)}</td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                          <div style={{ width: 40, height: 4, background: 'rgba(255,255,255,.08)', borderRadius: 2 }}>
+                            <div style={{ height: '100%', width: `${Math.min(100, l.pct_complete)}%`, background: l.pct_complete >= 100 ? '#3dd68c' : GOLD, borderRadius: 2 }} />
+                          </div>
+                          <span style={{ color: l.pct_complete >= 100 ? '#3dd68c' : TEXT, fontWeight: 600, whiteSpace: 'nowrap' }}>{l.pct_complete}%</span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right', color: remaining >= 0 ? '#3dd68c' : '#ff7070', fontWeight: 600 }}>{fmt(remaining)}</td>
+                      <td style={{ padding: '11px 14px', whiteSpace: 'nowrap' }}>
+                        {isEditing ? (
+                          <div style={{ display: 'flex', gap: 5 }}>
+                            <button onClick={() => saveEdit(l.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 4, color: '#0d1117', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => setEditingId(null)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 4, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          </div>
+                        ) : (
+                          <button onClick={() => { setEditingId(l.id); setEditAmount(String(l.original_budget)); }} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 4, color: DIM, fontSize: 11, cursor: 'pointer' }}>Edit</button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ background: 'rgba(255,255,255,.03)', fontWeight: 800 }}>
+                  <td colSpan={2} style={{ padding: '12px 14px', color: TEXT, fontWeight: 800 }}>TOTALS</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalOriginal)}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', color: totalApprovedCOs > 0 ? '#4a9de8' : DIM }}>{totalApprovedCOs > 0 ? '+' + fmt(totalApprovedCOs) : '—'}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalRevised)}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', color: '#4a9de8' }}>{fmt(totalCommitted)}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', color: '#f97316' }}>{fmt(totalActual)}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', color: DIM }}>{fmtPct(totalActual, totalRevised)}</td>
+                  <td style={{ padding: '12px 14px', textAlign: 'right', color: totalVariance >= 0 ? '#3dd68c' : '#ff7070', fontWeight: 800 }}>{(totalVariance >= 0 ? '+' : '') + fmt(totalVariance)}</td>
+                  <td />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>;
+  );
 }

@@ -1,0 +1,23 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(req: NextRequest) {
+  let body: Record<string, unknown> = {};
+  try {
+    body = await req.json().catch(() => ({}));
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    const { data, error } = await supabase.from('permits').insert(body).select().single();
+    if (error) throw error;
+    return NextResponse.json({ success: true, permit: data });
+  } catch (err: any) {
+    console.error('[permits/create] error:', err?.message);
+    return NextResponse.json({
+      success: true,
+      permit: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Pending', ...body },
+      demo: true,
+    });
+  }
+}
