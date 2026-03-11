@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 
-const FROM = 'noreply@saguarocrm.com';
+const FROM = process.env.EMAIL_FROM || 'Saguaro CRM <noreply@saguarocontrol.net>';
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -221,7 +221,7 @@ export async function sendInsuranceExpiring(
         ${detail('Days Remaining', String(daysLeft))}
       `)}
       ${para('Please upload an updated certificate of insurance as soon as possible to avoid work stoppages.')}
-      ${btn('Upload Updated COI', `https://app.saguarocrm.com/insurance`)}
+      ${btn('Upload Updated COI', `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/app/insurance`)}
     `);
 
     await resend.emails.send({

@@ -5,7 +5,7 @@ import { onProjectCreated } from '@/lib/triggers';
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
-    const tenantId = user?.id || 'demo';
+    const tenantId = user?.tenantId || 'demo';
     const body = await req.json();
     const db = createServerClient();
 

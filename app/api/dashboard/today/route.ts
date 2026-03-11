@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ actions: DEMO_ACTIONS, source: 'demo' });
 
     const db = createServerClient();
-    const tenantId = user.id;
+    const tenantId = user.tenantId;
     const today = new Date().toISOString().split('T')[0];
     const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
 

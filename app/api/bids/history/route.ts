@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const user = await getUser(req);
     if (!user) return NextResponse.json({ history: DEMO_HISTORY, source: 'demo' });
     const db = createServerClient();
-    const { data } = await db.from('bid_history').select('*').eq('tenant_id', user.id).order('bid_date', { ascending: false }).limit(50);
+    const { data } = await db.from('bid_history').select('*').eq('tenant_id', user.tenantId).order('bid_date', { ascending: false }).limit(50);
     const history = data || [];
     const wins = history.filter((b: any) => b.won);
     return NextResponse.json({

@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
     // In production, query real data and build real report
     // For now, use demo data structure
     const db = createServerClient();
-    const tenantId = user.id;
+    const tenantId = user.tenantId;
 
     try {
       // Attempt real data queries based on report type

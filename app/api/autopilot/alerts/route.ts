@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     }
 
     const db = createServerClient();
-    const tenantId = user.id;
+    const tenantId = user.tenantId;
 
     let query = db
       .from('autopilot_alerts')

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ stats: DEMO_STATS, source: 'demo' });
 
     const db = createServerClient();
-    const tenantId = user.id;
+    const tenantId = user.tenantId;
 
     const [
       { count: activeProjects },

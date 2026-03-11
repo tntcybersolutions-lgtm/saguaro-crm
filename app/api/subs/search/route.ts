@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const user = await getUser(req);
     const db = createServerClient();
     let query = db.from('subcontractors').select('*').order('name').limit(50);
-    if (user?.id) query = query.eq('tenant_id', user.id);
+    if (user?.tenantId) query = query.eq('tenant_id', user.tenantId);
     if (trade) query = query.ilike('trade', `%${trade}%`);
     if (state) query = query.eq('state', state);
     if (q) query = query.ilike('name', `%${q}%`);

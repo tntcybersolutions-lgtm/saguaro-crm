@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       .from('autopilot_alerts')
       .update({ status: 'dismissed', dismissed_at: new Date().toISOString() })
       .eq('id', alertId)
-      .eq('tenant_id', user.id);
+      .eq('tenant_id', user.tenantId);
 
     if (error) throw error;
 

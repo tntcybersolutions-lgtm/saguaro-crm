@@ -27,8 +27,9 @@ export function createBrowserClient(): SupabaseClient {
   return createClient(URL, ANON);
 }
 
-/** Extract authenticated user from cookie-based session */
-export async function getUser(req?: NextRequest): Promise<{ id: string; email: string } | null> {
+/** Extract authenticated user from cookie-based session.
+ *  Returns { id (auth uid), tenantId, email } — always use tenantId for DB queries. */
+export async function getUser(req?: NextRequest): Promise<{ id: string; tenantId: string; email: string } | null> {
   try {
     const supabase = createClient(URL, ANON, {
       auth: { persistSession: false },
@@ -40,24 +41,26 @@ export async function getUser(req?: NextRequest): Promise<{ id: string; email: s
     });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
-    return { id: user.id, email: user.email || '' };
+
+    // Look up tenant_id from user_profiles (may differ from auth uid)
+    const admin = createServerClient();
+    const { data: profile } = await admin
+      .from('user_profiles')
+      .select('tenant_id')
+      .eq('user_id', user.id)
+      .single();
+
+    const tenantId = (profile as any)?.tenant_id || user.id;
+    return { id: user.id, tenantId, email: user.email || '' };
   } catch {
     return null;
   }
 }
 
-/** Get tenant_id for the current user (defaults to user.id for solo tenants) */
+/** Get tenant_id for the current user */
 export async function getTenantId(req?: NextRequest): Promise<string | null> {
   const user = await getUser(req);
-  if (!user) return null;
-  // In single-tenant-per-user model, tenant_id == user.id
-  const supabase = createServerClient();
-  const { data } = await supabase
-    .from('user_profiles')
-    .select('tenant_id')
-    .eq('user_id', user.id)
-    .single();
-  return (data as any)?.tenant_id || user.id;
+  return user?.tenantId ?? null;
 }
 
 /** Supabase admin — alias for createServerClient */

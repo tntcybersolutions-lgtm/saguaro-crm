@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await db
       .from('projects')
       .select('*')
-      .eq('tenant_id', user.id)
+      .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ projects: data || [], source: 'live' });
