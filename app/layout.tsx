@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ToastProvider } from '../components/Toast';
+import MarketingChatWrapper from '../components/MarketingChatWrapper';
 
 export const viewport = {
   width: 'device-width',
@@ -172,6 +173,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ToastProvider>
           {children}
         </ToastProvider>
+        <MarketingChatWrapper />
       </body>
     </html>
   );

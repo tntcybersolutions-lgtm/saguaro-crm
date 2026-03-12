@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NotificationBell from '../../components/NotificationBell';
 import CommandPalette from '../../components/CommandPalette';
+import SaguaroChatWidget from '../../components/SaguaroChatWidget';
 
 const GOLD   = '#D4A017';
 const DARK   = '#0d1117';
@@ -40,6 +41,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userInitials, setUserInitials] = useState('?');
+  const [sageUserId, setSageUserId] = useState<string | null>(null);
+  const [sageProjects, setSageProjects] = useState<Array<{ id: string; name: string }>>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,6 +55,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       })
       .then(d => {
         if (!d) return;
+        if (d.id) setSageUserId(d.id);
         if (d.name) {
           const parts = d.name.trim().split(/\s+/);
           const initials = parts.length >= 2
@@ -61,6 +65,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         } else if (d.email) {
           setUserInitials(d.email[0].toUpperCase());
         }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch project list for Sage context
+  useEffect(() => {
+    fetch('/api/projects?limit=15&fields=id,name')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d && Array.isArray(d.projects)) setSageProjects(d.projects);
+        else if (d && Array.isArray(d)) setSageProjects(d);
       })
       .catch(() => {});
   }, []);
@@ -375,6 +390,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main style={{ paddingTop: 56 }}>
         {children}
       </main>
+
+      {/* ── Sage CRM Chat Widget ─────────────────────────────────────────── */}
+      <SaguaroChatWidget variant="crm" userId={sageUserId} projectList={sageProjects} />
 
       {/* ── Command Palette ──────────────────────────────────────────────── */}
       <CommandPalette onScoreBid={() => setShowScoreModal(true)} />
