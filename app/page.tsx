@@ -5,6 +5,7 @@ const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#
 
 const NAV_LINKS = [
   { label: 'Features',  href: '/#features' },
+  { label: 'Field App', href: '/field-app' },
   { label: 'How It Works', href: '/#demo' },
   { label: 'Pricing',   href: '/pricing' },
   { label: 'Compare',   href: '/compare/procore' },
@@ -19,6 +20,7 @@ const FEATURES = [
   { icon: '🧠', title: 'Bid Intelligence', desc: 'AI scores every bid opportunity 0–100 based on your win history, market conditions, and margin targets. Stop chasing bad bids.', pill: 'Win rate AI' },
   { icon: '📦', title: 'Bid Package Manager', desc: 'Auto-create bid packages from takeoff data. Invite subs by CSI trade division. Track responses in one dashboard.', pill: 'CSI MasterFormat' },
   { icon: '🛡️', title: 'Insurance & Compliance', desc: 'ACORD 25 COI parser, expiry alerts, OSHA 300 log, and sub compliance dashboard. Never let a lapsed COI delay a project.', pill: 'OSHA + COI' },
+  { icon: '📱', title: 'Mobile Field App', desc: 'Give your crew a native-speed PWA — daily logs, photos, GPS clock-in, punch lists, RFIs, and inspections. Works offline. No App Store required.', pill: 'iOS · Android · No App Store' },
 ];
 
 const STATS = [
@@ -398,6 +400,126 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Mobile Field App Section ─────────────────────────────────── */}
+        <section id="field-app" style={{ padding: '72px 48px', maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 64, flexWrap: 'wrap' }}>
+
+            {/* Left: phone mockup */}
+            <div style={{ flex: '0 0 320px', maxWidth: 320, margin: '0 auto', position: 'relative' }}>
+              {/* Glow */}
+              <div style={{ position: 'absolute', inset: -32, background: 'radial-gradient(ellipse 80% 60% at 50% 55%, rgba(212,160,23,0.15) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(18px)' }} />
+
+              {/* Phone shell */}
+              <div style={{ position: 'relative', background: 'linear-gradient(160deg, #141e2e 0%, #0d1520 100%)', border: '2px solid rgba(255,255,255,0.12)', borderRadius: 36, padding: '12px 8px', boxShadow: '0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(212,160,23,0.08)' }}>
+                {/* Notch */}
+                <div style={{ width: 80, height: 6, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '0 auto 10px' }} />
+
+                {/* Screen content — Field home */}
+                <div style={{ background: '#09111A', borderRadius: 24, overflow: 'hidden', padding: '14px 12px' }}>
+                  {/* Header bar */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(212,160,23,0.2)', border: '1px solid rgba(212,160,23,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>🌵</div>
+                      <div>
+                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1, color: GOLD }}>SAGUARO</div>
+                        <div style={{ fontSize: 6, color: DIM, letterSpacing: 0.5 }}>FIELD</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 7, color: GREEN, fontWeight: 700 }}>● Online</div>
+                  </div>
+
+                  {/* Action grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+                    {[
+                      { icon: '📋', label: 'Daily Log', color: '#3B82F6' },
+                      { icon: '📸', label: 'Photos', color: GOLD },
+                      { icon: '⏱', label: 'Clock In', color: GREEN },
+                      { icon: '✅', label: 'Punch List', color: '#8B5CF6' },
+                    ].map(a => (
+                      <div key={a.label} style={{ background: `rgba(${a.color === GOLD ? '212,160,23' : a.color === GREEN ? '34,197,94' : a.color === '#3B82F6' ? '59,130,246' : '139,92,246'},.08)`, border: `1px solid rgba(${a.color === GOLD ? '212,160,23' : a.color === GREEN ? '34,197,94' : a.color === '#3B82F6' ? '59,130,246' : '139,92,246'},.2)`, borderRadius: 10, padding: '8px 6px', textAlign: 'center' as const }}>
+                        <div style={{ fontSize: 16, marginBottom: 2 }}>{a.icon}</div>
+                        <div style={{ fontSize: 7, fontWeight: 700, color: TEXT }}>{a.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Open RFIs mini card */}
+                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '7px 8px', marginBottom: 6 }}>
+                    <div style={{ fontSize: 7, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 4 }}>Open RFIs</div>
+                    {['Footing depth clarification', 'MEP coordination — Level 2'].map(r => (
+                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: GOLD, flexShrink: 0 }} />
+                        <div style={{ fontSize: 7, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{r}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* GPS clock bar */}
+                  <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: 10 }}>📍</span>
+                    <div style={{ fontSize: 7, color: GREEN, fontWeight: 700 }}>Clocked in · 7:02 AM · GPS verified</div>
+                  </div>
+                </div>
+
+                {/* Home bar */}
+                <div style={{ width: 60, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '10px auto 0' }} />
+              </div>
+            </div>
+
+            {/* Right: copy */}
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.35)', borderRadius: 24, padding: '5px 14px 5px 8px', marginBottom: 20 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,160,23,0.2)', fontSize: 10 }}>📱</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Mobile Field App</span>
+              </div>
+
+              <h2 style={{ fontSize: 'clamp(24px, 3vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 14px', lineHeight: 1.08 }}>
+                Your crew's office<br />
+                <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>is their phone</span>
+              </h2>
+
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.58)', margin: '0 0 28px', lineHeight: 1.65, maxWidth: 460 }}>
+                Saguaro Field gives your crew everything they need in the field — daily logs, photos, GPS clock-in, punch lists, RFIs, and safety inspections. Works offline on any device. No App Store. No extra license fees.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12, marginBottom: 32 }}>
+                {[
+                  { icon: '📶', title: 'Works 100% Offline', desc: 'Log work, clock in, and submit photos with zero signal. Syncs automatically when you reconnect.' },
+                  { icon: '📍', title: 'GPS Time Tracking', desc: 'Clock in with verified GPS coordinates. Foremen see the whole crew in real time.' },
+                  { icon: '🤖', title: 'AI Field Assistant', desc: 'Ask Sage anything about the project — plans, schedules, specs, contacts — while standing on the slab.' },
+                  { icon: '📲', title: 'No App Store Needed', desc: 'Install directly from your browser on iOS, Android, iPad, or Desktop. Nothing to download or update.' },
+                ].map(f => (
+                  <div key={f.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{f.icon}</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{f.title}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.48)', lineHeight: 1.5 }}>{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <a href="/field-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 8, color: '#000', fontSize: 13, fontWeight: 800, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 4px 20px rgba(212,160,23,0.3)` }}>
+                  📱 See Field App Features →
+                </a>
+                <a href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 13, textDecoration: 'none' }}>
+                  Open Field App
+                </a>
+              </div>
+
+              <div style={{ display: 'flex', gap: 16, marginTop: 16, flexWrap: 'wrap' }}>
+                {['✓ iOS & Android', '✓ Works Offline', '✓ Free with any plan', '✓ No App Store'].map(t => (
+                  <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>
+                    <span style={{ color: GOLD, fontWeight: 700 }}>{t.slice(0,1)}</span>{t.slice(1)}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </section>
+
         {/* ── CTA Banner ───────────────────────────────────────────────── */}
         <section style={{ padding: '56px 48px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
           <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 12px', lineHeight: 1.1 }}>
@@ -436,7 +558,7 @@ export default function HomePage() {
             </div>
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: TEXT, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Product</div>
-              {[['Features', '/#features'], ['How It Works', '/#demo'], ['Pricing', '/pricing'], ['Security', '/security'], ['Compare Procore', '/compare/procore']].map(([l, h]) => (
+              {[['Features', '/#features'], ['Field App', '/field-app'], ['How It Works', '/#demo'], ['Pricing', '/pricing'], ['Security', '/security'], ['Compare Procore', '/compare/procore']].map(([l, h]) => (
                 <a key={h} href={h} style={{ display: 'block', fontSize: 13, color: DIM, textDecoration: 'none', marginBottom: 8 }}
                   onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
                   onMouseLeave={e => (e.currentTarget.style.color = DIM)}>{l}</a>
