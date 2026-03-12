@@ -183,6 +183,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="desktop-nav-links" style={{ display: 'flex', gap: 2, marginLeft: 8 }}>
           {[
             { label: 'Projects',   href: '/app/projects' },
+            { label: 'AI Takeoff', href: '/app/takeoff' },
             { label: 'Bids',       href: '/app/bids' },
             { label: 'Documents',  href: '/app/documents' },
             { label: 'Autopilot',  href: '/app/autopilot' },
@@ -256,6 +257,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div style={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: 99, background: 'rgba(13,17,23,.98)', borderBottom: '1px solid #263347', padding: '8px 0', backdropFilter: 'blur(12px)' }}>
           {[
             { label: '📁 Projects', href: '/app/projects' },
+            { label: '📐 AI Takeoff', href: '/app/takeoff' },
             { label: '💰 Bids', href: '/app/bids' },
             { label: '📄 Documents', href: '/app/documents' },
             { label: '🤖 Autopilot', href: '/app/autopilot' },
