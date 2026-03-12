@@ -169,7 +169,7 @@ function EquipmentPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT }}>🚜 Equipment Log</h1>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT, display: 'flex', alignItems: 'center', gap: 8 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><rect x={1} y={3} width={15} height={13}/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx={5.5} cy={18.5} r={2.5}/><circle cx={18.5} cy={18.5} r={2.5}/></svg>Equipment Log</h1>
           <p style={{ margin: '3px 0 0', fontSize: 13, color: DIM }}>{projectName}</p>
           <p style={{ margin: '2px 0 0', fontSize: 12, color: DIM }}>{todayDisplay()}</p>
         </div>
@@ -212,7 +212,7 @@ function EquipmentPage() {
           <div style={{ textAlign: 'center', padding: '40px 0', color: DIM }}>Loading today's equipment...</div>
         ) : entries.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 16px', color: DIM }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🚜</div>
+            <div style={{ marginBottom: 12, color: DIM, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={48} height={48}><rect x={1} y={3} width={15} height={13}/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx={5.5} cy={18.5} r={2.5}/><circle cx={18.5} cy={18.5} r={2.5}/></svg></div>
             <p style={{ margin: 0, fontSize: 15 }}>No equipment logged today.</p>
             <p style={{ margin: '6px 0 0', fontSize: 13 }}>Tap "+ Log Equipment" to add a machine or tool.</p>
           </div>
@@ -226,7 +226,7 @@ function EquipmentPage() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT }}>{entry.equipment_name}</p>
-                      {entry.operator && <p style={{ margin: '3px 0 0', fontSize: 13, color: DIM }}>👷 {entry.operator}</p>}
+                      {entry.operator && <p style={{ margin: '3px 0 0', fontSize: 13, color: DIM, display: 'flex', alignItems: 'center', gap: 4 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx={12} cy={7} r={4}/></svg>{entry.operator}</p>}
                       {entry.notes && <p style={{ margin: '4px 0 0', fontSize: 12, color: DIM, lineHeight: 1.4 }}>{entry.notes}</p>}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>

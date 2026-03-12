@@ -197,7 +197,7 @@ function DrawingsPage() {
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>📐 {selectedDrawing.sheet}</h1>
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT, display: 'flex', alignItems: 'center', gap: 8 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg>{selectedDrawing.sheet}</h1>
             <p style={{ margin: '3px 0 0', fontSize: 13, color: DIM }}>{selectedDrawing.name}</p>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -373,7 +373,7 @@ function DrawingsPage() {
       <button onClick={() => router.back()} style={backBtn}>← Back</button>
 
       <div style={{ marginBottom: 16 }}>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT }}>📐 Drawings</h1>
+        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT, display: 'flex', alignItems: 'center', gap: 8 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg>Drawings</h1>
         <p style={{ margin: '3px 0 0', fontSize: 13, color: DIM }}>{projectName}</p>
       </div>
 
@@ -381,7 +381,7 @@ function DrawingsPage() {
         <div style={{ textAlign: 'center', padding: '40px 0', color: DIM }}>Loading drawings...</div>
       ) : drawings.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px 16px', color: DIM }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>📐</div>
+          <div style={{ marginBottom: 12, color: DIM, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={48} height={48}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg></div>
           <p style={{ margin: 0, fontSize: 15 }}>No drawings found for this project.</p>
           <p style={{ margin: '6px 0 0', fontSize: 13 }}>Upload drawings in the web portal.</p>
         </div>
@@ -396,7 +396,7 @@ function DrawingsPage() {
               {drawing.thumbnail_url ? (
                 <img src={drawing.thumbnail_url} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, flexShrink: 0, background: '#09111A' }} />
               ) : (
-                <div style={{ width: 56, height: 56, borderRadius: 8, background: '#09111A', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>📄</div>
+                <div style={{ width: 56, height: 56, borderRadius: 8, background: '#09111A', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, flexShrink: 0 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>

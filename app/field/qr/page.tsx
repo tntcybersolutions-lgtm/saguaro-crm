@@ -220,7 +220,11 @@ function QRPage() {
               cursor: 'pointer',
             }}
           >
-            {t === 'scan' ? '📷 Scan' : '⚡ Generate'}
+            {t === 'scan' ? (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={15} height={15}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx={12} cy={13} r={4}/></svg>Scan</span>
+            ) : (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={15} height={15}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Generate</span>
+            )}
           </button>
         ))}
       </div>
@@ -247,7 +251,7 @@ function QRPage() {
             />
             {!scanning && (
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                <div style={{ fontSize: 56 }}>📷</div>
+                <div style={{ color: DIM, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={56} height={56}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx={12} cy={13} r={4}/></svg></div>
                 <p style={{ margin: 0, fontSize: 14, color: DIM, textAlign: 'center', padding: '0 20px' }}>Point camera at a QR code</p>
               </div>
             )}
@@ -348,7 +352,7 @@ function QRPage() {
                     onClick={() => setScanResult(h.text)}
                     style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 12px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}
                   >
-                    <span style={{ fontSize: 16, flexShrink: 0 }}>🔗</span>
+                    <span style={{ flexShrink: 0, color: DIM, display: 'flex' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ margin: 0, fontSize: 13, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.text}</p>
                       <p style={{ margin: '2px 0 0', fontSize: 11, color: DIM }}>{relTime(h.scannedAt)}</p>
@@ -458,7 +462,7 @@ function QRPage() {
 
           {!qrUrl && (
             <div style={{ textAlign: 'center', padding: '32px 16px', color: DIM }}>
-              <div style={{ fontSize: 56, marginBottom: 10 }}>⚡</div>
+              <div style={{ marginBottom: 10, color: DIM, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={48} height={48}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
               <p style={{ margin: 0, fontSize: 14 }}>Select a quick option or enter custom text, then tap Generate.</p>
             </div>
           )}

@@ -12,16 +12,16 @@ const NAV_LINKS = [
   { label: 'Compare',   href: '/compare/procore' },
 ];
 
-const FEATURES = [
-  { icon: '📐', title: 'AI Blueprint Takeoff', desc: 'Upload any PDF blueprint. Claude reads every dimension, calculates all materials, and generates a full bid estimate in under 60 seconds.', pill: 'AI-powered' },
-  { icon: '💰', title: 'AIA Pay Applications', desc: 'Generate G702/G703 Continuation Sheets automatically. Submit to owners digitally with one click — no PDFs to fill by hand.', pill: 'G702 / G703' },
-  { icon: '🔒', title: 'Lien Waivers — All 50 States', desc: 'Conditional & unconditional, partial & final. AZ, CA, TX statutory language. Send, sign, and track — no paper, no fax.', pill: 'All 50 states' },
-  { icon: '🤖', title: 'Autopilot', desc: "Automated RFI routing, change order alerts, insurance expiry reminders, and pay app follow-ups — while you're in the field.", pill: 'Fully automated' },
-  { icon: '📋', title: 'Certified Payroll WH-347', desc: 'DOL-compliant weekly reports for prevailing wage projects. Pulls live Davis-Bacon wage rates. Submits directly to agencies.', pill: 'Davis-Bacon' },
-  { icon: '🧠', title: 'Bid Intelligence', desc: 'AI scores every bid opportunity 0–100 based on your win history, market conditions, and margin targets. Stop chasing bad bids.', pill: 'Win rate AI' },
-  { icon: '📦', title: 'Bid Package Manager', desc: 'Auto-create bid packages from takeoff data. Invite subs by CSI trade division. Track responses in one dashboard.', pill: 'CSI MasterFormat' },
-  { icon: '🛡️', title: 'Insurance & Compliance', desc: 'ACORD 25 COI parser, expiry alerts, OSHA 300 log, and sub compliance dashboard. Never let a lapsed COI delay a project.', pill: 'OSHA + COI' },
-  { icon: '📱', title: 'Mobile Field App', desc: 'Give your crew a native-speed PWA — daily logs, photos, GPS clock-in, punch lists, RFIs, and inspections. Works offline. No App Store required.', pill: 'iOS · Android · No App Store' },
+const FEATURES: { icon: React.ReactNode; title: string; desc: string; pill: string }[] = [
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg>, title: 'AI Blueprint Takeoff', desc: 'Upload any PDF blueprint. Claude reads every dimension, calculates all materials, and generates a full bid estimate in under 60 seconds.', pill: 'AI-powered' },
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><line x1={12} y1={1} x2={12} y2={23}/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>, title: 'AIA Pay Applications', desc: 'Generate G702/G703 Continuation Sheets automatically. Submit to owners digitally with one click — no PDFs to fill by hand.', pill: 'G702 / G703' },
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><rect x={3} y={11} width={18} height={11} rx={2} ry={2}/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>, title: 'Lien Waivers — All 50 States', desc: 'Conditional & unconditional, partial & final. AZ, CA, TX statutory language. Send, sign, and track — no paper, no fax.', pill: 'All 50 states' },
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>, title: 'Autopilot', desc: "Automated RFI routing, change order alerts, insurance expiry reminders, and pay app follow-ups — while you're in the field.", pill: 'Fully automated' },
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1={16} y1={13} x2={8} y2={13}/><line x1={16} y1={17} x2={8} y2={17}/><polyline points="10 9 9 9 8 9"/></svg>, title: 'Certified Payroll WH-347', desc: 'DOL-compliant weekly reports for prevailing wage projects. Pulls live Davis-Bacon wage rates. Submits directly to agencies.', pill: 'Davis-Bacon' },
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><line x1={18} y1={20} x2={18} y2={10}/><line x1={12} y1={20} x2={12} y2={4}/><line x1={6} y1={20} x2={6} y2={14}/></svg>, title: 'Bid Intelligence', desc: 'AI scores every bid opportunity 0–100 based on your win history, market conditions, and margin targets. Stop chasing bad bids.', pill: 'Win rate AI' },
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>, title: 'Bid Package Manager', desc: 'Auto-create bid packages from takeoff data. Invite subs by CSI trade division. Track responses in one dashboard.', pill: 'CSI MasterFormat' },
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, title: 'Insurance & Compliance', desc: 'ACORD 25 COI parser, expiry alerts, OSHA 300 log, and sub compliance dashboard. Never let a lapsed COI delay a project.', pill: 'OSHA + COI' },
+  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>, title: 'Mobile Field App', desc: 'Give your crew a native-speed PWA — daily logs, photos, GPS clock-in, punch lists, RFIs, and inspections. Works offline. No App Store required.', pill: 'iOS · Android · No App Store' },
 ];
 
 const STATS = [
@@ -38,12 +38,12 @@ const TESTIMONIALS = [
 ];
 
 // ── Workflow steps (for display only — real system at /sandbox) ───────────────
-const WORKFLOW_STEPS = [
-  { step: 1, icon: '📐', label: 'Upload Blueprint', desc: 'Drop any PDF — floor plan, structural, MEP. Claude reads every dimension automatically.' },
-  { step: 2, icon: '🤖', label: 'AI Reads Everything', desc: 'Claude Opus analyzes every dimension, spec, and schedule. Scale detected automatically.' },
-  { step: 3, icon: '📊', label: 'Instant Material Takeoff', desc: 'Full CSI-organized material list — 50–200 line items with quantities, waste factors & costs.' },
-  { step: 4, icon: '📦', label: 'Bid Package + Sub Invites', desc: 'Auto-create packages by CSI trade division. Subs invited by email in one click.' },
-  { step: 5, icon: '💰', label: 'Generate G702 Pay App', desc: 'AIA G702/G703 filled from your SOV and ready to submit to owner digitally.' },
+const WORKFLOW_STEPS: { step: number; icon: React.ReactNode; label: string; desc: string }[] = [
+  { step: 1, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg>, label: 'Upload Blueprint', desc: 'Drop any PDF — floor plan, structural, MEP. Claude reads every dimension automatically.' },
+  { step: 2, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>, label: 'AI Reads Everything', desc: 'Claude Opus analyzes every dimension, spec, and schedule. Scale detected automatically.' },
+  { step: 3, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={18} y1={20} x2={18} y2={10}/><line x1={12} y1={20} x2={12} y2={4}/><line x1={6} y1={20} x2={6} y2={14}/></svg>, label: 'Instant Material Takeoff', desc: 'Full CSI-organized material list — 50–200 line items with quantities, waste factors & costs.' },
+  { step: 4, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>, label: 'Bid Package + Sub Invites', desc: 'Auto-create packages by CSI trade division. Subs invited by email in one click.' },
+  { step: 5, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={1} x2={12} y2={23}/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>, label: 'Generate G702 Pay App', desc: 'AIA G702/G703 filled from your SOV and ready to submit to owner digitally.' },
 ];
 
 const TAKEOFF_MATERIALS = [
@@ -240,7 +240,7 @@ export default function HomePage() {
                     </div>
                     {/* AI bar */}
                     <div style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.18)', borderRadius: 7, padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
-                      <span style={{ fontSize: 13 }}>🤖</span>
+                      <span style={{ color: GOLD, display: 'flex' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
                         Claude analyzed 847 dimensions · 5 CSI divisions · <span style={{ color: GOLD, fontWeight: 700 }}>Completed in 41s</span>
                       </div>
@@ -321,6 +321,133 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Mobile Field App Section ─────────────────────────────────── */}
+        <section id="field-app" style={{ background: 'rgba(212,160,23,0.04)', borderTop: '1px solid rgba(212,160,23,0.15)', borderBottom: '1px solid rgba(212,160,23,0.15)' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 48px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 64, flexWrap: 'wrap' }}>
+
+            {/* Left: phone mockup */}
+            <div style={{ flex: '0 0 320px', maxWidth: 320, margin: '0 auto', position: 'relative' }}>
+              {/* Glow */}
+              <div style={{ position: 'absolute', inset: -32, background: 'radial-gradient(ellipse 80% 60% at 50% 55%, rgba(212,160,23,0.15) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(18px)' }} />
+
+              {/* Phone shell */}
+              <div style={{ position: 'relative', background: 'linear-gradient(160deg, #141e2e 0%, #0d1520 100%)', border: '2px solid rgba(255,255,255,0.12)', borderRadius: 36, padding: '12px 8px', boxShadow: '0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(212,160,23,0.08)' }}>
+                {/* Notch */}
+                <div style={{ width: 80, height: 6, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '0 auto 10px' }} />
+
+                {/* Screen content — Field home */}
+                <div style={{ background: '#09111A', borderRadius: 24, overflow: 'hidden', padding: '14px 12px' }}>
+                  {/* Header bar */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(212,160,23,0.2)', border: '1px solid rgba(212,160,23,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, fontWeight: 900, fontSize: 8, letterSpacing: '-0.5px' }}>SG</div>
+                      <div>
+                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1, color: GOLD }}>SAGUARO</div>
+                        <div style={{ fontSize: 6, color: DIM, letterSpacing: 0.5 }}>FIELD</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 7, color: GREEN, fontWeight: 700 }}>● Online</div>
+                  </div>
+
+                  {/* Action grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
+                    {([
+                      { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>, label: 'Daily Log', color: '#3B82F6', rgb: '59,130,246' },
+                      { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx={12} cy={13} r={4}/></svg>, label: 'Photos', color: GOLD, rgb: '212,160,23' },
+                      { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><circle cx={12} cy={12} r={10}/><polyline points="12 6 12 12 16 14"/></svg>, label: 'Clock In', color: GREEN, rgb: '34,197,94' },
+                      { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>, label: 'Punch List', color: '#8B5CF6', rgb: '139,92,246' },
+                    ] as { icon: React.ReactNode; label: string; color: string; rgb: string }[]).map(a => (
+                      <div key={a.label} style={{ background: `rgba(${a.rgb},.08)`, border: `1px solid rgba(${a.rgb},.2)`, borderRadius: 10, padding: '8px 6px', textAlign: 'center' as const }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 2, color: a.color }}>{a.icon}</div>
+                        <div style={{ fontSize: 7, fontWeight: 700, color: TEXT }}>{a.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Open RFIs mini card */}
+                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '7px 8px', marginBottom: 6 }}>
+                    <div style={{ fontSize: 7, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 4 }}>Open RFIs</div>
+                    {['Footing depth clarification', 'MEP coordination — Level 2'].map(r => (
+                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
+                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: GOLD, flexShrink: 0 }} />
+                        <div style={{ fontSize: 7, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{r}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* GPS clock bar */}
+                  <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ color: GREEN, display: 'flex' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={10} height={10}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx={12} cy={10} r={3}/></svg></span>
+                    <div style={{ fontSize: 7, color: GREEN, fontWeight: 700 }}>Clocked in · 7:02 AM · GPS verified</div>
+                  </div>
+                </div>
+
+                {/* Home bar */}
+                <div style={{ width: 60, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '10px auto 0' }} />
+              </div>
+            </div>
+
+            {/* Right: copy */}
+            <div style={{ flex: 1, minWidth: 280 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.35)', borderRadius: 24, padding: '5px 14px 5px 8px', marginBottom: 20 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,160,23,0.2)', color: GOLD }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={10} height={10}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg></span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Mobile Field App</span>
+              </div>
+
+              <h2 style={{ fontSize: 'clamp(24px, 3vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 14px', lineHeight: 1.08 }}>
+                Your crew's office<br />
+                <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>is their phone</span>
+              </h2>
+
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.58)', margin: '0 0 28px', lineHeight: 1.65, maxWidth: 460 }}>
+                Saguaro Field gives your crew everything they need in the field — daily logs, photos, GPS clock-in, punch lists, RFIs, and safety inspections. Works offline on any device. No App Store. No extra license fees.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12, marginBottom: 32 }}>
+                {([
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M1.05 12A11 11 0 0 1 23 12"/><path d="M5 12a7 7 0 0 1 14 0"/><path d="M9 12a3 3 0 0 1 6 0"/><line x1={12} y1={12} x2={12.01} y2={12}/></svg>, title: 'Works 100% Offline', desc: 'Log work, clock in, and submit photos with zero signal. Syncs automatically when you reconnect.' },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx={12} cy={10} r={3}/></svg>, title: 'GPS Time Tracking', desc: 'Clock in with verified GPS coordinates. Foremen see the whole crew in real time.' },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>, title: 'AI Field Assistant', desc: 'Ask Sage anything about the project — plans, schedules, specs, contacts — while standing on the slab.' },
+                  { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>, title: 'No App Store Needed', desc: 'Install directly from your browser on iOS, Android, iPad, or Desktop. Nothing to download or update.' },
+                ] as { icon: React.ReactNode; title: string; desc: string }[]).map(f => (
+                  <div key={f.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, flexShrink: 0 }}>{f.icon}</div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{f.title}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.48)', lineHeight: 1.5 }}>{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <a href="/field-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 8, color: '#000', fontSize: 13, fontWeight: 800, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 4px 20px rgba(212,160,23,0.3)` }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
+                  See Field App Features →
+                </a>
+                <a href="/get-the-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(212,160,23,0.1)', border: `1px solid rgba(212,160,23,0.35)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>
+                  Get the App
+                </a>
+                <a href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 13, textDecoration: 'none' }}>
+                  Open Field App
+                </a>
+              </div>
+
+              <div style={{ display: 'flex', gap: 16, marginTop: 16, flexWrap: 'wrap' }}>
+                {['✓ iOS & Android', '✓ Works Offline', '✓ Free with any plan', '✓ No App Store'].map(t => (
+                  <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>
+                    <span style={{ color: GOLD, fontWeight: 700 }}>{t.slice(0,1)}</span>{t.slice(1)}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+          </div>
+          </div>
+        </section>
+
         {/* ── How It Works / Try It Now ─────────────────────────────────── */}
         <section id="demo" style={{ padding: '56px 48px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -328,7 +455,8 @@ export default function HomePage() {
             <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px' }}>From Blueprint to Paid — in One Platform</h2>
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', maxWidth: 560, margin: '0 auto 28px' }}>Upload any PDF blueprint. Claude reads every dimension, calculates all materials, and drives the entire project lifecycle.</p>
             <a href="/sandbox" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 32px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, letterSpacing: '0.04em', textDecoration: 'none' }}>
-              📐 Try Free — Upload Your Blueprint
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg>
+              Try Free — Upload Your Blueprint
             </a>
             <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>5 free AI runs · No credit card · Results in under 60 seconds</div>
           </div>
@@ -340,7 +468,7 @@ export default function HomePage() {
                   {s.step}
                 </div>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{s.icon} {s.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: GOLD, display: 'flex' }}>{s.icon}</span>{s.label}</div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55 }}>{s.desc}</div>
                 </div>
               </div>
@@ -371,7 +499,7 @@ export default function HomePage() {
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(212,160,23,.4)')}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)')}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 20 }}>{f.icon}</span>
+                  <span style={{ color: GOLD, display: 'flex' }}>{f.icon}</span>
                   <span style={{ fontSize: 9, fontWeight: 700, color: GOLD, background: 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.25)', borderRadius: 10, padding: '2px 8px', letterSpacing: '0.1em', marginBottom: 8 }}>{f.pill}</span>
                 </div>
                 <div style={{ fontWeight: 600, fontSize: 14, letterSpacing: '0.01em', color: TEXT, marginBottom: 6 }}>{f.title}</div>
@@ -401,129 +529,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Mobile Field App Section ─────────────────────────────────── */}
-        <section id="field-app" style={{ padding: '72px 48px', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 64, flexWrap: 'wrap' }}>
-
-            {/* Left: phone mockup */}
-            <div style={{ flex: '0 0 320px', maxWidth: 320, margin: '0 auto', position: 'relative' }}>
-              {/* Glow */}
-              <div style={{ position: 'absolute', inset: -32, background: 'radial-gradient(ellipse 80% 60% at 50% 55%, rgba(212,160,23,0.15) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(18px)' }} />
-
-              {/* Phone shell */}
-              <div style={{ position: 'relative', background: 'linear-gradient(160deg, #141e2e 0%, #0d1520 100%)', border: '2px solid rgba(255,255,255,0.12)', borderRadius: 36, padding: '12px 8px', boxShadow: '0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(212,160,23,0.08)' }}>
-                {/* Notch */}
-                <div style={{ width: 80, height: 6, background: 'rgba(255,255,255,0.12)', borderRadius: 4, margin: '0 auto 10px' }} />
-
-                {/* Screen content — Field home */}
-                <div style={{ background: '#09111A', borderRadius: 24, overflow: 'hidden', padding: '14px 12px' }}>
-                  {/* Header bar */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 6, background: 'rgba(212,160,23,0.2)', border: '1px solid rgba(212,160,23,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11 }}>🌵</div>
-                      <div>
-                        <div style={{ fontSize: 8, fontWeight: 900, letterSpacing: 1, color: GOLD }}>SAGUARO</div>
-                        <div style={{ fontSize: 6, color: DIM, letterSpacing: 0.5 }}>FIELD</div>
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 7, color: GREEN, fontWeight: 700 }}>● Online</div>
-                  </div>
-
-                  {/* Action grid */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 10 }}>
-                    {[
-                      { icon: '📋', label: 'Daily Log', color: '#3B82F6' },
-                      { icon: '📸', label: 'Photos', color: GOLD },
-                      { icon: '⏱', label: 'Clock In', color: GREEN },
-                      { icon: '✅', label: 'Punch List', color: '#8B5CF6' },
-                    ].map(a => (
-                      <div key={a.label} style={{ background: `rgba(${a.color === GOLD ? '212,160,23' : a.color === GREEN ? '34,197,94' : a.color === '#3B82F6' ? '59,130,246' : '139,92,246'},.08)`, border: `1px solid rgba(${a.color === GOLD ? '212,160,23' : a.color === GREEN ? '34,197,94' : a.color === '#3B82F6' ? '59,130,246' : '139,92,246'},.2)`, borderRadius: 10, padding: '8px 6px', textAlign: 'center' as const }}>
-                        <div style={{ fontSize: 16, marginBottom: 2 }}>{a.icon}</div>
-                        <div style={{ fontSize: 7, fontWeight: 700, color: TEXT }}>{a.label}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Open RFIs mini card */}
-                  <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, padding: '7px 8px', marginBottom: 6 }}>
-                    <div style={{ fontSize: 7, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 4 }}>Open RFIs</div>
-                    {['Footing depth clarification', 'MEP coordination — Level 2'].map(r => (
-                      <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 3 }}>
-                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: GOLD, flexShrink: 0 }} />
-                        <div style={{ fontSize: 7, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{r}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* GPS clock bar */}
-                  <div style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ fontSize: 10 }}>📍</span>
-                    <div style={{ fontSize: 7, color: GREEN, fontWeight: 700 }}>Clocked in · 7:02 AM · GPS verified</div>
-                  </div>
-                </div>
-
-                {/* Home bar */}
-                <div style={{ width: 60, height: 4, background: 'rgba(255,255,255,0.15)', borderRadius: 2, margin: '10px auto 0' }} />
-              </div>
-            </div>
-
-            {/* Right: copy */}
-            <div style={{ flex: 1, minWidth: 280 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.35)', borderRadius: 24, padding: '5px 14px 5px 8px', marginBottom: 20 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,160,23,0.2)', fontSize: 10 }}>📱</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Mobile Field App</span>
-              </div>
-
-              <h2 style={{ fontSize: 'clamp(24px, 3vw, 38px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 14px', lineHeight: 1.08 }}>
-                Your crew's office<br />
-                <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>is their phone</span>
-              </h2>
-
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.58)', margin: '0 0 28px', lineHeight: 1.65, maxWidth: 460 }}>
-                Saguaro Field gives your crew everything they need in the field — daily logs, photos, GPS clock-in, punch lists, RFIs, and safety inspections. Works offline on any device. No App Store. No extra license fees.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12, marginBottom: 32 }}>
-                {[
-                  { icon: '📶', title: 'Works 100% Offline', desc: 'Log work, clock in, and submit photos with zero signal. Syncs automatically when you reconnect.' },
-                  { icon: '📍', title: 'GPS Time Tracking', desc: 'Clock in with verified GPS coordinates. Foremen see the whole crew in real time.' },
-                  { icon: '🤖', title: 'AI Field Assistant', desc: 'Ask Sage anything about the project — plans, schedules, specs, contacts — while standing on the slab.' },
-                  { icon: '📲', title: 'No App Store Needed', desc: 'Install directly from your browser on iOS, Android, iPad, or Desktop. Nothing to download or update.' },
-                ].map(f => (
-                  <div key={f.title} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{f.icon}</div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{f.title}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.48)', lineHeight: 1.5 }}>{f.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <a href="/field-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 8, color: '#000', fontSize: 13, fontWeight: 800, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 4px 20px rgba(212,160,23,0.3)` }}>
-                  📱 See Field App Features →
-                </a>
-                <a href="/get-the-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(212,160,23,0.1)', border: `1px solid rgba(212,160,23,0.35)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-                  📲 Get the App
-                </a>
-                <a href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 13, textDecoration: 'none' }}>
-                  Open Field App
-                </a>
-              </div>
-
-              <div style={{ display: 'flex', gap: 16, marginTop: 16, flexWrap: 'wrap' }}>
-                {['✓ iOS & Android', '✓ Works Offline', '✓ Free with any plan', '✓ No App Store'].map(t => (
-                  <span key={t} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'rgba(255,255,255,0.38)' }}>
-                    <span style={{ color: GOLD, fontWeight: 700 }}>{t.slice(0,1)}</span>{t.slice(1)}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </section>
-
         {/* ── CTA Banner ───────────────────────────────────────────────── */}
         <section style={{ padding: '56px 48px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
           <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 12px', lineHeight: 1.1 }}>
@@ -541,8 +546,10 @@ export default function HomePage() {
             </button>
           </div>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
-            {['✅ 30 days free', '✅ Cancel anytime', '✅ No per-seat fees', '✅ Unlimited users'].map(t => (
-              <span key={t} style={{ fontSize: 12, color: DIM }}>{t}</span>
+            {['30 days free', 'Cancel anytime', 'No per-seat fees', 'Unlimited users'].map(t => (
+              <span key={t} style={{ fontSize: 12, color: DIM, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={11} height={11} style={{ color: GOLD }}><polyline points="20 6 9 17 4 12"/></svg>{t}
+              </span>
             ))}
           </div>
         </section>
@@ -607,7 +614,7 @@ export default function HomePage() {
             <div style={{ padding: 24 }}>
               {contactSent ? (
                 <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                  <div style={{ fontSize: 44, marginBottom: 12 }}>✅</div>
+                  <div style={{ marginBottom: 12, color: GREEN, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={44} height={44}><polyline points="20 6 9 17 4 12"/></svg></div>
                   <div style={{ fontWeight: 700, fontSize: 16, color: TEXT, marginBottom: 8 }}>Message sent!</div>
                   <div style={{ fontSize: 13, color: DIM }}>We'll be in touch within 1 business day.</div>
                   <button onClick={() => { setContactModal(false); setContactSent(false); }} style={{ marginTop: 20, padding: '10px 24px', background: GOLD, border: 'none', borderRadius: 8, color: '#0d1117', fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>Done</button>

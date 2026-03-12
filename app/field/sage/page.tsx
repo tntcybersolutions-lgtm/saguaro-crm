@@ -212,7 +212,7 @@ function SagePage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, background: RAISED, flexShrink: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', padding: 0, lineHeight: 1 }}>‹</button>
-          <span style={{ fontSize: 22 }}>🤖</span>
+          <span style={{ color: GOLD, display: 'flex', alignItems: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: GOLD, lineHeight: 1 }}>Sage AI</div>
             <div style={{ fontSize: 11, color: DIM, marginTop: 1 }}>Your construction intelligence</div>
@@ -232,7 +232,7 @@ function SagePage() {
         {!hasMessages && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 20, paddingBottom: 24 }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 56, marginBottom: 10 }}>🤖</div>
+              <div style={{ marginBottom: 10, color: GOLD, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={56} height={56}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
               <div style={{ fontSize: 20, fontWeight: 800, color: GOLD, marginBottom: 4 }}>Sage AI</div>
               <div style={{ fontSize: 14, color: DIM, maxWidth: 260, lineHeight: 1.5 }}>Ask me anything about your project — I know your RFIs, schedule, punch list, and more.</div>
             </div>
@@ -353,7 +353,7 @@ function SagePage() {
             }}
             title="Voice input"
           >
-            🎤
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1={12} y1={19} x2={12} y2={23}/><line x1={8} y1={23} x2={16} y2={23}/></svg>
           </button>
           {/* Send button */}
           <button

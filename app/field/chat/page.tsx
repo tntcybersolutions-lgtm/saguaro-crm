@@ -177,7 +177,7 @@ function ChatPage() {
     return (
       <div style={{ padding: '18px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
         <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: '100%', maxWidth: 360 }}>
-          <div style={{ fontSize: 40, textAlign: 'center', marginBottom: 12 }}>💬</div>
+          <div style={{ textAlign: 'center', marginBottom: 12, color: DIM, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
           <h2 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 800, color: TEXT, textAlign: 'center' }}>What's your name?</h2>
           <p style={{ margin: '0 0 20px', fontSize: 13, color: DIM, textAlign: 'center' }}>Your name will appear with your messages.</p>
           <input
@@ -207,7 +207,7 @@ function ChatPage() {
         <button onClick={() => router.back()} style={backBtn}>← Back</button>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>💬 Job Board</h1>
+            <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT, display: 'flex', alignItems: 'center', gap: 8 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Job Board</h1>
             <p style={{ margin: '2px 0 0', fontSize: 12, color: DIM }}>{projectName}</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -223,7 +223,7 @@ function ChatPage() {
           <div style={{ textAlign: 'center', padding: '40px 0', color: DIM }}>Loading messages...</div>
         ) : messages.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 16px', color: DIM }}>
-            <div style={{ fontSize: 40, marginBottom: 10 }}>💬</div>
+            <div style={{ marginBottom: 10, color: DIM, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
             <p style={{ margin: 0, fontSize: 14 }}>No messages yet. Start the conversation!</p>
           </div>
         ) : (
