@@ -6,6 +6,7 @@ const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#
 const NAV_LINKS = [
   { label: 'Features',  href: '/#features' },
   { label: 'Field App', href: '/field-app' },
+  { label: 'Get the App', href: '/get-the-app' },
   { label: 'How It Works', href: '/#demo' },
   { label: 'Pricing',   href: '/pricing' },
   { label: 'Compare',   href: '/compare/procore' },
@@ -502,6 +503,9 @@ export default function HomePage() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <a href="/field-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 8, color: '#000', fontSize: 13, fontWeight: 800, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 4px 20px rgba(212,160,23,0.3)` }}>
                   📱 See Field App Features →
+                </a>
+                <a href="/get-the-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(212,160,23,0.1)', border: `1px solid rgba(212,160,23,0.35)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                  📲 Get the App
                 </a>
                 <a href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 13, textDecoration: 'none' }}>
                   Open Field App
