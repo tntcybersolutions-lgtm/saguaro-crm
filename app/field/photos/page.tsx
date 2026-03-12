@@ -1,9 +1,9 @@
 'use client';
 /**
  * Saguaro Field — Photos
- * Camera capture + gallery. Works offline via IndexedDB queue.
+ * Fixed response parsing. Camera capture + gallery with category filter. Offline queue.
  */
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
@@ -12,32 +12,33 @@ const RAISED = '#0f1d2b';
 const BORDER = '#1e3148';
 const TEXT   = '#e8edf8';
 const DIM    = '#8fa3c0';
-const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 
-const CATEGORIES = ['Progress', 'Issue', 'Delivery', 'Inspection', 'Safety', 'Completion', 'Other'];
+const CATEGORIES = ['All', 'Progress', 'Issue', 'Delivery', 'Inspection', 'Safety', 'Completion', 'Other'];
 const CAT_COLORS: Record<string, string> = {
   Progress: '#3B82F6', Issue: RED, Delivery: '#F59E0B',
-  Inspection: '#8B5CF6', Safety: '#EF4444', Completion: GREEN, Other: DIM,
+  Inspection: '#8B5CF6', Safety: RED, Completion: '#22C55E', Other: DIM,
 };
 
-interface PhotoEntry { id: string; dataUrl: string; category: string; caption: string; uploaded: boolean; timestamp: number; }
+interface Photo { id: string; url: string; filename: string; category: string; caption: string; uploaded: boolean; created_at: string; }
 
-export default function FieldPhotosPage() {
+function PhotosPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const projectId = searchParams.get('projectId') || '';
 
   const fileRef = useRef<HTMLInputElement>(null);
-  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
-  const [selected, setSelected] = useState<PhotoEntry | null>(null);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [filterCat, setFilterCat] = useState('All');
+  const [selected, setSelected] = useState<Photo | null>(null);
   const [uploading, setUploading] = useState(false);
   const [online, setOnline] = useState(true);
+  const [loadingGallery, setLoadingGallery] = useState(true);
 
-  // Pending upload state
+  // Pending
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState('');
-  const [pendingCategory, setPendingCategory] = useState('Progress');
+  const [pendingCat, setPendingCat] = useState('Progress');
   const [pendingCaption, setPendingCaption] = useState('');
 
   useEffect(() => {
@@ -49,23 +50,25 @@ export default function FieldPhotosPage() {
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
 
-  // Load existing photos from server
+  // Load gallery from GET /api/photos
   useEffect(() => {
-    if (!projectId) return;
-    fetch(`/api/photos?projectId=${projectId}&limit=20`)
-      .then((r) => r.ok ? r.json() : null)
+    if (!projectId) { setLoadingGallery(false); return; }
+    fetch(`/api/photos?projectId=${projectId}`)
+      .then((r) => r.ok ? r.json() : { photos: [] })
       .then((d) => {
-        const list = d?.photos || d?.data || [];
-        setPhotos(list.map((p: Record<string, unknown>) => ({
-          id: String(p.id),
-          dataUrl: String(p.file_url || p.url || ''),
+        const list: Photo[] = (d.photos || []).map((p: Record<string, unknown>) => ({
+          id: String(p.id || ''),
+          url: String(p.url || ''),          // FIXED: .url not .file_url
+          filename: String(p.filename || ''),
           category: String(p.category || 'Progress'),
-          caption: String(p.caption || p.description || ''),
+          caption: String(p.caption || ''),
           uploaded: true,
-          timestamp: new Date(String(p.created_at || Date.now())).getTime(),
-        })));
+          created_at: String(p.created_at || new Date().toISOString()),
+        }));
+        setPhotos(list);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoadingGallery(false));
   }, [projectId]);
 
   const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +78,6 @@ export default function FieldPhotosPage() {
     const reader = new FileReader();
     reader.onload = (ev) => setPendingPreview(String(ev.target?.result || ''));
     reader.readAsDataURL(file);
-    // Reset input
     e.target.value = '';
   };
 
@@ -83,28 +85,28 @@ export default function FieldPhotosPage() {
     setPendingFile(null);
     setPendingPreview('');
     setPendingCaption('');
-    setPendingCategory('Progress');
+    setPendingCat('Progress');
   };
 
   const uploadPhoto = useCallback(async () => {
     if (!pendingFile) return;
     setUploading(true);
 
-    const localEntry: PhotoEntry = {
+    const localPhoto: Photo = {
       id: `local-${Date.now()}`,
-      dataUrl: pendingPreview,
-      category: pendingCategory,
+      url: pendingPreview,
+      filename: pendingFile.name,
+      category: pendingCat,
       caption: pendingCaption,
       uploaded: false,
-      timestamp: Date.now(),
+      created_at: new Date().toISOString(),
     };
 
     try {
       if (!online) throw new Error('offline');
-
       const fd = new FormData();
       fd.append('file', pendingFile, pendingFile.name);
-      fd.append('category', pendingCategory);
+      fd.append('category', pendingCat);
       fd.append('caption', pendingCaption);
       if (projectId) fd.append('projectId', projectId);
 
@@ -112,16 +114,19 @@ export default function FieldPhotosPage() {
       if (!res.ok) throw new Error('Upload failed');
       const data = await res.json();
 
-      setPhotos((prev) => [{
-        id: String(data.id || data.photo?.id || localEntry.id),
-        dataUrl: String(data.file_url || data.photo?.file_url || pendingPreview),
-        category: pendingCategory,
+      // FIXED: API returns photo.url not photo.file_url
+      const savedPhoto: Photo = {
+        id: String(data.photo?.id || Date.now()),
+        url: String(data.photo?.url || pendingPreview),
+        filename: String(data.photo?.filename || pendingFile.name),
+        category: pendingCat,
         caption: pendingCaption,
         uploaded: true,
-        timestamp: Date.now(),
-      }, ...prev]);
+        created_at: String(data.photo?.created_at || new Date().toISOString()),
+      };
+      setPhotos((prev) => [savedPhoto, ...prev]);
     } catch {
-      // Queue for later sync (store base64)
+      // Queue for offline sync
       const base64 = pendingPreview.split(',')[1] || '';
       await enqueue({
         url: '/api/photos/upload',
@@ -131,192 +136,147 @@ export default function FieldPhotosPage() {
         isFormData: true,
         formDataEntries: [
           { name: 'file', value: base64, filename: pendingFile.name, type: pendingFile.type },
-          { name: 'category', value: pendingCategory },
+          { name: 'category', value: pendingCat },
           { name: 'caption', value: pendingCaption },
           ...(projectId ? [{ name: 'projectId', value: projectId }] : []),
         ],
       });
-      setPhotos((prev) => [localEntry, ...prev]);
+      setPhotos((prev) => [localPhoto, ...prev]);
     }
 
     cancelPending();
     setUploading(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingFile, pendingPreview, pendingCategory, pendingCaption, projectId, online]);
+  }, [pendingFile, pendingPreview, pendingCat, pendingCaption, projectId, online]);
+
+  const filteredPhotos = filterCat === 'All' ? photos : photos.filter((p) => p.category === filterCat);
 
   return (
-    <div style={{ padding: '20px 16px' }}>
+    <div style={{ padding: '18px 16px' }}>
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <button
-          onClick={() => router.back()}
-          style={{ background: 'none', border: 'none', color: DIM, fontSize: 14, cursor: 'pointer', padding: 0, marginBottom: 8 }}
-        >
-          ← Back
-        </button>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT }}>Photos</h1>
-        {!online && (
-          <div style={{ marginTop: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '6px 12px', fontSize: 13, color: RED }}>
-            Offline — photos will upload when reconnected
-          </div>
-        )}
+      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT }}>Photos</h1>
+          <p style={{ margin: '2px 0 0', fontSize: 13, color: DIM }}>{photos.length} photo{photos.length !== 1 ? 's' : ''} on this project</p>
+        </div>
+        {!online && <span style={{ fontSize: 12, color: RED, fontWeight: 700 }}>Offline</span>}
       </div>
 
       {/* Capture button */}
       {!pendingPreview && (
         <>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleFilePick}
-            style={{ display: 'none' }}
-          />
+          <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFilePick} style={{ display: 'none' }} />
           <button
             onClick={() => fileRef.current?.click()}
-            style={{
-              width: '100%',
-              background: RAISED,
-              border: `2px dashed ${GOLD}`,
-              borderRadius: 14,
-              padding: '28px',
-              color: GOLD,
-              fontSize: 17,
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 8,
-              marginBottom: 24,
-            }}
+            style={{ width: '100%', background: RAISED, border: `2px dashed rgba(212,160,23,.5)`, borderRadius: 14, padding: '22px', color: GOLD, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}
           >
-            <span style={{ fontSize: 40 }}>📸</span>
-            Take or Upload Photo
+            <span style={{ fontSize: 32 }}>📸</span>
+            Take or Upload a Photo
           </button>
         </>
       )}
 
       {/* Preview + form */}
       {pendingPreview && (
-        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden', marginBottom: 24 }}>
+        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pendingPreview} alt="Preview" style={{ width: '100%', maxHeight: 260, objectFit: 'cover' }} />
-          <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {/* Category */}
+          <img src={pendingPreview} alt="Preview" style={{ width: '100%', maxHeight: 280, objectFit: 'cover' }} />
+          <div style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* Category chips */}
             <div>
-              <label style={labelStyle}>Category</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 }}>
-                {CATEGORIES.map((c) => (
+              <label style={lbl}>Category</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                {CATEGORIES.filter((c) => c !== 'All').map((c) => (
                   <button
                     key={c}
                     type="button"
-                    onClick={() => setPendingCategory(c)}
-                    style={{
-                      background: pendingCategory === c ? `rgba(${hexToRgb(CAT_COLORS[c] || DIM)}, 0.2)` : 'transparent',
-                      border: `1px solid ${pendingCategory === c ? (CAT_COLORS[c] || DIM) : BORDER}`,
-                      borderRadius: 20,
-                      padding: '5px 12px',
-                      color: pendingCategory === c ? (CAT_COLORS[c] || DIM) : DIM,
-                      fontSize: 13,
-                      fontWeight: pendingCategory === c ? 700 : 400,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {c}
-                  </button>
+                    onClick={() => setPendingCat(c)}
+                    style={{ background: pendingCat === c ? `rgba(${hexRgb(CAT_COLORS[c])}, .2)` : 'transparent', border: `1px solid ${pendingCat === c ? CAT_COLORS[c] : BORDER}`, borderRadius: 20, padding: '5px 12px', color: pendingCat === c ? CAT_COLORS[c] : DIM, fontSize: 13, fontWeight: pendingCat === c ? 700 : 400, cursor: 'pointer' }}
+                  >{c}</button>
                 ))}
               </div>
             </div>
-
-            {/* Caption */}
             <div>
-              <label style={labelStyle}>Caption (optional)</label>
-              <input
-                type="text"
-                value={pendingCaption}
-                onChange={(e) => setPendingCaption(e.target.value)}
-                placeholder="Describe what you're capturing..."
-                style={{ ...inputStyle, marginTop: 6 }}
-              />
+              <label style={lbl}>Caption</label>
+              <input type="text" value={pendingCaption} onChange={(e) => setPendingCaption(e.target.value)} placeholder="Describe what you're capturing..." style={{ ...inp, marginTop: 5 }} />
             </div>
-
-            {/* Actions */}
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button
-                type="button"
-                onClick={cancelPending}
-                style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, color: DIM, fontSize: 15, cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" onClick={cancelPending} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, color: DIM, fontSize: 15, cursor: 'pointer' }}>Cancel</button>
               <button
                 type="button"
                 onClick={uploadPhoto}
                 disabled={uploading}
-                style={{
-                  flex: 2,
-                  background: uploading ? '#1e3148' : GOLD,
-                  border: 'none',
-                  borderRadius: 10,
-                  padding: 14,
-                  color: uploading ? DIM : '#000',
-                  fontSize: 15,
-                  fontWeight: 800,
-                  cursor: uploading ? 'wait' : 'pointer',
-                }}
+                style={{ flex: 2, background: uploading ? '#1e3148' : GOLD, border: 'none', borderRadius: 10, padding: 14, color: uploading ? DIM : '#000', fontSize: 15, fontWeight: 800, cursor: uploading ? 'wait' : 'pointer' }}
               >
-                {uploading ? 'Saving...' : online ? 'Upload Photo' : 'Save Offline'}
+                {uploading ? 'Uploading...' : online ? 'Upload Photo' : 'Save Offline'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Gallery */}
+      {/* Category filter */}
       {photos.length > 0 && (
-        <>
-          <p style={{ margin: '0 0 12px', fontSize: 12, color: DIM, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-            Recent Photos ({photos.length})
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 20 }}>
-            {photos.map((p) => (
-              <div
-                key={p.id}
-                onClick={() => setSelected(p)}
-                style={{ position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', border: `1px solid ${BORDER}` }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.dataUrl} alt={p.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                {!p.uploaded && (
-                  <div style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(239,68,68,0.9)', borderRadius: 4, padding: '1px 5px', fontSize: 9, color: '#fff', fontWeight: 700 }}>
-                    PENDING
-                  </div>
-                )}
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.7))', padding: '12px 6px 4px', fontSize: 9, color: '#fff' }}>
-                  {p.category}
-                </div>
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 12 }}>
+          {CATEGORIES.map((c) => (
+            <button
+              key={c}
+              onClick={() => setFilterCat(c)}
+              style={{ flexShrink: 0, background: filterCat === c ? (c === 'All' ? 'rgba(212,160,23,.2)' : `rgba(${hexRgb(CAT_COLORS[c])}, .2)`) : 'transparent', border: `1px solid ${filterCat === c ? (c === 'All' ? GOLD : CAT_COLORS[c]) : BORDER}`, borderRadius: 20, padding: '5px 12px', color: filterCat === c ? (c === 'All' ? GOLD : CAT_COLORS[c]) : DIM, fontSize: 12, fontWeight: filterCat === c ? 700 : 400, cursor: 'pointer' }}
+            >
+              {c}
+              {c !== 'All' && photos.filter((p) => p.category === c).length > 0 && (
+                <span style={{ marginLeft: 4, opacity: 0.7 }}>({photos.filter((p) => p.category === c).length})</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Gallery grid */}
+      {loadingGallery ? (
+        <div style={{ textAlign: 'center', padding: '24px 0', color: DIM, fontSize: 14 }}>Loading photos...</div>
+      ) : filteredPhotos.length > 0 ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5 }}>
+          {filteredPhotos.map((p) => (
+            <div key={p.id} onClick={() => setSelected(p)} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', border: `1px solid ${BORDER}` }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url || p.url} alt={p.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              {!p.uploaded && (
+                <div style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(239,68,68,.9)', borderRadius: 4, padding: '1px 5px', fontSize: 9, color: '#fff', fontWeight: 700 }}>PENDING</div>
+              )}
+              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent,rgba(0,0,0,.75))', padding: '10px 5px 4px' }}>
+                <div style={{ display: 'inline-block', background: `rgba(${hexRgb(CAT_COLORS[p.category] || DIM)}, .6)`, borderRadius: 3, padding: '1px 5px', fontSize: 9, color: '#fff', fontWeight: 700 }}>{p.category}</div>
               </div>
-            ))}
+            </div>
+          ))}
+        </div>
+      ) : (
+        !pendingPreview && (
+          <div style={{ textAlign: 'center', padding: '32px 16px', color: DIM }}>
+            <div style={{ fontSize: 40, marginBottom: 8 }}>📷</div>
+            <p style={{ margin: 0, fontSize: 14 }}>{filterCat === 'All' ? 'No photos yet. Tap above to take the first one.' : `No ${filterCat} photos.`}</p>
           </div>
-        </>
+        )
       )}
 
       {/* Lightbox */}
       {selected && (
         <div
           onClick={() => setSelected(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.96)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={selected.dataUrl} alt={selected.caption} style={{ maxWidth: '100%', maxHeight: '75vh', borderRadius: 12, objectFit: 'contain' }} />
-          <div style={{ marginTop: 16, textAlign: 'center' }}>
-            <span style={{ background: `rgba(${hexToRgb(CAT_COLORS[selected.category] || DIM)}, 0.2)`, border: `1px solid ${CAT_COLORS[selected.category] || DIM}`, borderRadius: 20, padding: '3px 12px', fontSize: 12, color: CAT_COLORS[selected.category] || DIM, fontWeight: 700 }}>
+          <img src={selected.url} alt={selected.caption} style={{ maxWidth: '100%', maxHeight: '72vh', borderRadius: 12, objectFit: 'contain' }} />
+          <div style={{ marginTop: 14, textAlign: 'center' }}>
+            <span style={{ background: `rgba(${hexRgb(CAT_COLORS[selected.category] || DIM)}, .25)`, border: `1px solid ${CAT_COLORS[selected.category] || DIM}`, borderRadius: 20, padding: '3px 14px', fontSize: 12, color: CAT_COLORS[selected.category] || DIM, fontWeight: 700 }}>
               {selected.category}
             </span>
             {selected.caption && <p style={{ margin: '8px 0 0', color: TEXT, fontSize: 15 }}>{selected.caption}</p>}
-            <p style={{ margin: '4px 0 0', color: DIM, fontSize: 12 }}>Tap anywhere to close</p>
+            <p style={{ margin: '6px 0 0', color: DIM, fontSize: 12 }}>
+              {new Date(selected.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · Tap to close
+            </p>
           </div>
         </div>
       )}
@@ -324,12 +284,17 @@ export default function FieldPhotosPage() {
   );
 }
 
-const labelStyle: React.CSSProperties = { fontSize: 12, color: DIM, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.7 };
-const inputStyle: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '12px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
+export default function FieldPhotosPage() {
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><PhotosPage /></Suspense>;
+}
 
-function hexToRgb(hex: string): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `${r}, ${g}, ${b}`;
+const lbl: React.CSSProperties = { fontSize: 12, color: '#8fa3c0', fontWeight: 600 };
+const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+
+function hexRgb(hex: string): string {
+  const r = parseInt((hex || '#888').slice(1, 3), 16);
+  const g = parseInt((hex || '#888').slice(3, 5), 16);
+  const b = parseInt((hex || '#888').slice(5, 7), 16);
+  return `${r},${g},${b}`;
 }
