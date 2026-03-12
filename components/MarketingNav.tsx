@@ -35,34 +35,34 @@ export default function MarketingNav() {
         background: scrolled ? 'rgba(13,17,23,0.97)' : 'rgba(13,17,23,0.85)',
         backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         borderBottom: scrolled ? '1px solid rgba(212,160,23,0.25)' : '1px solid rgba(38,51,71,0.8)',
-        transition: 'all 0.3s ease', height: '60px',
+        transition: 'all 0.3s ease', height: '58px',
         display: 'flex', alignItems: 'center',
       }}>
         <div style={{
-          maxWidth: '1200px', margin: '0 auto', padding: '0 24px',
+          maxWidth: '1200px', margin: '0 auto', padding: '0 48px',
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '40px', width: 'auto', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+            <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '36px', width: 'auto', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-              <span style={{ fontWeight: 900, fontSize: '15px', letterSpacing: '1px', background: 'linear-gradient(90deg,#D4A017,#F0C040)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
-              <span style={{ fontSize: '10px', color: '#8fa3c0', letterSpacing: '0.5px', fontWeight: 600 }}>Control Systems</span>
+              <span style={{ fontWeight: 700, fontSize: '14px', letterSpacing: '0.1em', background: 'linear-gradient(90deg,#D4A017,#F0C040)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
+              <span style={{ fontSize: '7px', color: '#8fa3c0', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
             </span>
           </Link>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} className="mn-desktop">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }} className="mn-desktop">
             {navLinks.map(link => (
               <button key={link.label} onClick={() => scrollTo(link.href)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8fa3c0', fontSize: '13px', fontWeight: 600, padding: '6px 12px', borderRadius: '6px', transition: 'color 0.15s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#e8edf8'}
-                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = '#8fa3c0'}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.65)', fontSize: '13px', fontWeight: 400, letterSpacing: '0.04em', padding: 0, transition: 'color 0.2s' }}
+                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,1)'}
+                onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.65)'}
               >{link.label}</button>
             ))}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="mn-desktop">
-            <Link href="/login" style={{ padding: '7px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid #263347', borderRadius: '7px', color: '#e8edf8', fontSize: '13px', fontWeight: 700, textDecoration: 'none' }}>Log In</Link>
-            <Link href="/signup" style={{ padding: '7px 18px', background: 'linear-gradient(135deg,#D4A017,#F0C040)', border: 'none', borderRadius: '7px', color: '#0d1117', fontSize: '13px', fontWeight: 800, textDecoration: 'none' }}>Free Trial</Link>
+            <Link href="/login" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 400, textDecoration: 'none' }}>Log In</Link>
+            <Link href="/signup" style={{ padding: '7px 18px', background: '#D4A017', border: 'none', borderRadius: '6px', color: '#000', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="mn-mobile"
@@ -72,7 +72,7 @@ export default function MarketingNav() {
       </nav>
 
       {mobileOpen && (
-        <div style={{ position: 'fixed', top: '60px', left: 0, right: 0, zIndex: 9998, background: 'rgba(13,17,23,0.99)', borderBottom: '1px solid #263347', padding: '8px 0', backdropFilter: 'blur(12px)' }}>
+        <div style={{ position: 'fixed', top: '58px', left: 0, right: 0, zIndex: 9998, background: 'rgba(13,17,23,0.99)', borderBottom: '1px solid #263347', padding: '8px 0', backdropFilter: 'blur(12px)' }}>
           {[...navLinks, { label: 'Log In', href: '/login' }].map(link => (
             <button key={link.href} onClick={() => scrollTo(link.href)}
               style={{ display: 'block', width: '100%', textAlign: 'left', padding: '14px 24px', fontSize: '15px', fontWeight: 600, color: '#e8edf8', background: 'none', border: 'none', borderBottom: '1px solid rgba(38,51,71,0.5)', cursor: 'pointer' }}>
@@ -81,14 +81,14 @@ export default function MarketingNav() {
           ))}
           <div style={{ padding: '16px' }}>
             <Link href="/signup" onClick={() => setMobileOpen(false)}
-              style={{ display: 'block', textAlign: 'center', padding: '13px', background: 'linear-gradient(135deg,#D4A017,#F0C040)', borderRadius: '9px', color: '#0d1117', fontWeight: 800, textDecoration: 'none', fontSize: '15px' }}>
+              style={{ display: 'block', textAlign: 'center', padding: '13px', background: '#D4A017', borderRadius: '9px', color: '#000', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
               Start Free Trial →
             </Link>
           </div>
         </div>
       )}
 
-      <div style={{ height: '60px' }} />
+      <div style={{ height: '58px' }} />
 
       <style>{`
         @media (max-width: 768px) {

@@ -415,27 +415,27 @@ export default function HomePage() {
     <div style={{ minHeight: '100vh', background: DARK, color: TEXT, fontFamily: 'system-ui,-apple-system,sans-serif' }}>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 56, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 24, backdropFilter: 'blur(12px)' }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 58, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 48px', gap: 24, backdropFilter: 'blur(12px)' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 40, width: 'auto', objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-            <span style={{ fontWeight: 900, fontSize: 15, letterSpacing: 1, background: `linear-gradient(90deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
-            <span style={{ fontSize: 10, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
+            <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '0.1em', background: `linear-gradient(90deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
+            <span style={{ fontSize: 7, color: DIM, letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
           </span>
         </a>
-        <div style={{ display: 'flex', gap: 4, marginLeft: 8 }} className="desktop-nav">
+        <div style={{ display: 'flex', gap: 28 }} className="desktop-nav">
           {NAV_LINKS.map(l => (
-            <a key={l.href} href={l.href} style={{ padding: '6px 12px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: DIM, textDecoration: 'none', transition: 'color .15s' }}
-              onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
-              onMouseLeave={e => (e.currentTarget.style.color = DIM)}>
+            <a key={l.href} href={l.href} style={{ fontSize: 13, fontWeight: 400, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.65)', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,1)')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}>
               {l.label}
             </a>
           ))}
         </div>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <a href="/login" className="desktop-nav" style={{ padding: '7px 16px', background: 'rgba(255,255,255,.04)', border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Log In</a>
-          <a href="/signup" style={{ padding: '7px 18px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 7, color: '#0d1117', fontSize: 13, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }}>Free Trial</a>
+          <a href="/login" className="desktop-nav" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 400, textDecoration: 'none' }}>Log In</a>
+          <a href="/signup" style={{ padding: '7px 18px', background: GOLD, border: 'none', borderRadius: 6, color: '#000', fontSize: 13, fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none', flexShrink: 0 }}>Free Trial</a>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="mobile-only"
             style={{ display: 'none', background: 'none', border: 'none', color: TEXT, fontSize: 22, cursor: 'pointer', padding: 8, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
             aria-label="Menu">
@@ -446,7 +446,7 @@ export default function HomePage() {
 
       {/* Mobile drawer */}
       {mobileMenuOpen && (
-        <div style={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: 99, background: 'rgba(13,17,23,.99)', borderBottom: `1px solid ${BORDER}`, padding: '8px 0', backdropFilter: 'blur(12px)' }}>
+        <div style={{ position: 'fixed', top: 58, left: 0, right: 0, zIndex: 99, background: 'rgba(13,17,23,.99)', borderBottom: `1px solid ${BORDER}`, padding: '8px 0', backdropFilter: 'blur(12px)' }}>
           {[...NAV_LINKS, { label: 'Log In', href: '/login' }].map(l => (
             <a key={l.href} href={l.href} onClick={() => setMobileMenuOpen(false)}
               style={{ display: 'block', padding: '14px 24px', fontSize: 15, fontWeight: 600, color: TEXT, textDecoration: 'none', borderBottom: `1px solid rgba(38,51,71,.5)` }}>
@@ -465,7 +465,14 @@ export default function HomePage() {
         @media (max-width: 768px) {
           .desktop-nav { display: none !important; }
           .mobile-only { display: flex !important; }
-          .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-flex { flex-direction: column !important; }
+          .hero-left { flex: 0 0 100% !important; max-width: 100% !important; text-align: center !important; }
+          .hero-left h1 { text-align: center !important; font-size: clamp(28px, 8vw, 40px) !important; }
+          .hero-left p { text-align: center !important; max-width: 100% !important; }
+          .hero-left div[style*="flex-start"] { justify-content: center !important; }
+          .hero-left p[style*="text-align: left"] { text-align: center !important; }
+          .hero-right { flex: 0 0 100% !important; max-width: 100% !important; display: none !important; }
+          .hero-section { padding: 48px 24px 40px !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .testimonials-grid { grid-template-columns: 1fr !important; }
@@ -480,52 +487,62 @@ export default function HomePage() {
         .demo-screen-inner { animation: fadeInUp .35s ease; }
       `}</style>
 
-      <div style={{ paddingTop: 56 }}>
+      <div style={{ paddingTop: 58 }}>
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <section style={{ padding: '56px 24px 42px', maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(212,160,23,.1)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 20, padding: '5px 14px', marginBottom: 24 }}>
-            <span style={{ fontSize: 14 }}>🤖</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, letterSpacing: .5 }}>AI-Powered Construction Management</span>
+        <section style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 48px 64px' }} className="hero-section">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 48 }} className="hero-flex">
+            {/* Left column */}
+            <div style={{ flex: '0 0 55%', maxWidth: '55%' }} className="hero-left">
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.4)', borderRadius: 20, padding: '5px 12px', marginBottom: 20 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.12em', textTransform: 'uppercase' }}>AI-Powered Construction Management</span>
+              </div>
+              <h1 style={{ fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 800, margin: '0 0 16px', lineHeight: 1.1, letterSpacing: '-0.02em', textAlign: 'left' }}>
+                The CRM Built<br />
+                <span style={{ color: GOLD }}>for Construction</span>
+              </h1>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', maxWidth: 480, margin: '0 0 28px', lineHeight: 1.6, textAlign: 'left' }}>
+                AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll, Bid Intelligence — everything a General Contractor needs to run profitable projects.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
+                <a href="/signup" style={{ padding: '10px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, border: 'none', borderRadius: 7, color: '#000', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textDecoration: 'none', cursor: 'pointer' }}>
+                  Start Free Trial — No Card Required
+                </a>
+                <a href="#demo" style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 7, color: 'rgba(255,255,255,0.75)', fontSize: 13, textDecoration: 'none' }}>
+                  ▶ Watch How It Works
+                </a>
+              </div>
+              <p style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', textAlign: 'left' }}>30-day free trial · No credit card · Cancel anytime</p>
+            </div>
+
+            {/* Right column — mock UI card */}
+            <div style={{ flex: '0 0 45%', maxWidth: '45%' }} className="hero-right">
+              <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24, height: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: GOLD, letterSpacing: '0.04em' }}>🌵 Saguaro Intelligence</span>
+                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>AI analysis ready</span>
+              </div>
+            </div>
           </div>
-          <h1 style={{ fontSize: 'clamp(28px, 4.7vw, 53px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.08, letterSpacing: -1 }}>
-            The CRM Built<br />
-            <span style={{ background: `linear-gradient(135deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              for Construction
-            </span>
-          </h1>
-          <p style={{ fontSize: 'clamp(14px, 1.7vw, 17px)', color: DIM, maxWidth: 620, margin: '0 auto 28px', lineHeight: 1.65 }}>
-            AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll, Bid Intelligence — everything a General Contractor needs to run profitable projects.
-          </p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/signup" style={{ padding: '14px 32px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 10, color: '#0d1117', fontSize: 16, fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 20px rgba(212,160,23,.3)' }}>
-              Start Free Trial — No Card Required
-            </a>
-            <a href="#demo" style={{ padding: '14px 28px', background: 'rgba(255,255,255,.04)', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT, fontSize: 16, fontWeight: 700, textDecoration: 'none' }}>
-              ▶ Watch How It Works
-            </a>
-          </div>
-          <p style={{ marginTop: 16, fontSize: 12, color: '#4a5f7a' }}>30-day free trial · No credit card · Cancel anytime</p>
         </section>
 
         {/* ── Stats bar ─────────────────────────────────────────────────── */}
-        <section style={{ borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: '32px 24px', background: 'rgba(31,44,62,.4)' }}>
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-            {STATS.map(s => (
-              <div key={s.label}>
-                <div style={{ fontSize: 40, fontWeight: 900, color: GOLD, lineHeight: 1 }}>{s.value}</div>
-                <div style={{ fontSize: 11, color: DIM, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
+        <section style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', maxWidth: 1100, margin: '0 auto', padding: '28px 48px', textAlign: 'center' }}>
+            {STATS.map((s, i) => (
+              <div key={s.label} style={{ borderRight: i < STATS.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none', padding: '0 24px' }}>
+                <div style={{ fontSize: 28, fontWeight: 700, color: GOLD, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, lineHeight: 1.4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{s.label}</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* ── Interactive Product Demo ───────────────────────────────────── */}
-        <section id="demo" style={{ padding: '60px 24px', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Live Product Tour</div>
-            <h2 style={{ fontSize: 'clamp(23px, 3.5vw, 35px)', fontWeight: 900, margin: '0 0 14px' }}>From Blueprint to Paid — in One Platform</h2>
-            <p style={{ fontSize: 15, color: DIM, maxWidth: 560, margin: '0 auto' }}>See the exact steps a GC takes from winning a bid to collecting final payment.</p>
+        <section id="demo" style={{ padding: '56px 48px', maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>Live Product Tour</div>
+            <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px' }}>From Blueprint to Paid — in One Platform</h2>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', maxWidth: 560, margin: '0 auto' }}>See the exact steps a GC takes from winning a bid to collecting final payment.</p>
           </div>
 
           <div className="demo-layout" style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
@@ -586,42 +603,42 @@ export default function HomePage() {
         </section>
 
         {/* ── Features ─────────────────────────────────────────────────── */}
-        <section id="features" style={{ padding: '60px 24px', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 52 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Everything You Need</div>
-            <h2 style={{ fontSize: 'clamp(25px, 3.5vw, 37px)', fontWeight: 900, margin: '0 0 14px' }}>One platform. Every project document.</h2>
-            <p style={{ fontSize: 16, color: DIM, maxWidth: 540, margin: '0 auto' }}>No more switching between 6 different tools. Saguaro handles the full construction document lifecycle.</p>
+        <section id="features" style={{ padding: '56px 48px', maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>Everything You Need</div>
+            <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px' }}>One platform. Every project document.</h2>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', maxWidth: 540, margin: '0 auto' }}>No more switching between 6 different tools. Saguaro handles the full construction document lifecycle.</p>
           </div>
-          <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
             {FEATURES.map(f => (
-              <div key={f.title} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '18px 16px', transition: 'border-color .2s' }}
+              <div key={f.title} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '20px 22px', transition: 'border-color .2s' }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(212,160,23,.4)')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ fontSize: 28 }}>{f.icon}</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: GOLD, background: 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.25)', borderRadius: 4, padding: '2px 7px', letterSpacing: .3 }}>{f.pill}</span>
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)')}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ fontSize: 20 }}>{f.icon}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: GOLD, background: 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.25)', borderRadius: 10, padding: '2px 8px', letterSpacing: '0.1em', marginBottom: 8 }}>{f.pill}</span>
                 </div>
-                <div style={{ fontWeight: 800, fontSize: 15, color: TEXT, marginBottom: 8 }}>{f.title}</div>
-                <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>{f.desc}</div>
+                <div style={{ fontWeight: 600, fontSize: 14, letterSpacing: '0.01em', color: TEXT, marginBottom: 6 }}>{f.title}</div>
+                <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>{f.desc}</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* ── Testimonials ─────────────────────────────────────────────── */}
-        <section style={{ padding: '45px 24px 60px', background: 'rgba(31,44,62,.3)', borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
-          <div style={{ maxWidth: 1060, margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: 44 }}>
-              <h2 style={{ fontSize: 'clamp(21px, 2.6vw, 30px)', fontWeight: 900, margin: '0 0 10px' }}>Built by GCs, for GCs</h2>
-              <p style={{ color: DIM, fontSize: 15 }}>Real feedback from contractors who switched from legacy software</p>
+        <section style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(31,44,62,.3)' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '56px 48px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px' }}>Built by GCs, for GCs</h2>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>Real feedback from contractors who switched from legacy software</p>
             </div>
-            <div className="testimonials-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+            <div className="testimonials-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
               {TESTIMONIALS.map((t, i) => (
-                <div key={i} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '19px 18px' }}>
-                  <div style={{ fontSize: 22, color: GOLD, marginBottom: 12 }}>❝</div>
-                  <p style={{ fontSize: 14, color: TEXT, lineHeight: 1.7, marginBottom: 16 }}>{t.quote}</p>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{t.name}</div>
-                  <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{t.title}</div>
+                <div key={i} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 22px' }}>
+                  <div style={{ fontSize: 28, color: 'rgba(212,160,23,0.4)', marginBottom: 10 }}>❝</div>
+                  <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 14 }}>{t.quote}</p>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{t.name}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{t.title}</div>
                 </div>
               ))}
             </div>
@@ -629,24 +646,24 @@ export default function HomePage() {
         </section>
 
         {/* ── CTA Banner ───────────────────────────────────────────────── */}
-        <section style={{ padding: '60px 24px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(25px, 3.5vw, 39px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.1 }}>
+        <section style={{ padding: '56px 48px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 12px', lineHeight: 1.1 }}>
             Ready to run smarter projects?
           </h2>
-          <p style={{ fontSize: 16, color: DIM, margin: '0 0 32px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: '0 0 24px', lineHeight: 1.6 }}>
             Start your 30-day free trial. No credit card required. Full access to every feature from day one.
           </p>
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/signup" style={{ padding: '15px 36px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 10, color: '#0d1117', fontSize: 16, fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 20px rgba(212,160,23,.25)' }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="/signup" style={{ padding: '10px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, border: 'none', borderRadius: 7, color: '#000', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textDecoration: 'none' }}>
               Start Free Trial →
             </a>
-            <button onClick={() => setContactModal(true)} style={{ padding: '15px 28px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={() => setContactModal(true)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 7, color: 'rgba(255,255,255,0.75)', fontSize: 13, cursor: 'pointer' }}>
               Talk to Sales
             </button>
           </div>
-          <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
             {['✅ 30 days free', '✅ Cancel anytime', '✅ No per-seat fees', '✅ Unlimited users'].map(t => (
-              <span key={t} style={{ fontSize: 13, color: DIM }}>{t}</span>
+              <span key={t} style={{ fontSize: 12, color: DIM }}>{t}</span>
             ))}
           </div>
         </section>
