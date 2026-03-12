@@ -1,7 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { DEMO_PROJECT, DEMO_PAY_APPS, DEMO_RFIS, DEMO_AUTOPILOT_ALERTS, DEMO_SUBS } from '../../demo-data';
 
 const GOLD  = '#D4A017';
 const DARK  = '#0d1117';
@@ -37,6 +36,33 @@ interface ScoreResult {
   recommendation: string;
   reasoning: string;
   suggestedMargin: number;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  address: string;
+  status: string;
+  contract_amount: number;
+  start_date: string;
+  end_date: string;
+  project_number: string;
+}
+
+interface RFI {
+  id: string;
+  rfi_number: string;
+  subject: string;
+  status: string;
+  due_date: string;
+  project_id: string;
+}
+
+interface Sub {
+  id: string;
+  name: string;
+  trade: string;
+  contract_amount: number;
 }
 
 /* ─── KPI Card ────────────────────────────────────────────────────────── */
@@ -166,7 +192,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 16, color: TEXT }}>🎯 Score a Bid</div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: TEXT }}>Score a Bid</div>
             <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>AI-powered bid scoring and recommendation</div>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4 }}>×</button>
@@ -207,7 +233,6 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
             </form>
           ) : (
             <div>
-              {/* Score Badge */}
               <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', background: DARK, border: `2px solid ${scoreColor}`, borderRadius: 14, padding: '18px 32px' }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Bid Score</div>
@@ -215,17 +240,14 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
                   <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>out of 100</div>
                 </div>
               </div>
-              {/* Recommendation */}
               <div style={{ background: DARK, borderRadius: 8, padding: '12px 16px', marginBottom: 12 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 5 }}>Recommendation</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: scoreColor }}>{result.recommendation}</div>
               </div>
-              {/* Reasoning */}
               <div style={{ background: DARK, borderRadius: 8, padding: '12px 16px', marginBottom: 12 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 5 }}>Reasoning</div>
                 <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.6 }}>{result.reasoning}</div>
               </div>
-              {/* Suggested Margin */}
               <div style={{ background: `rgba(212,160,23,.08)`, border: `1px solid rgba(212,160,23,.2)`, borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Suggested Margin</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: GOLD }}>{result.suggestedMargin}%</div>
@@ -249,42 +271,69 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashStats | null>(null);
   const [todayItems, setTodayItems] = useState<TodayItem[] | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
-
-  const proj = DEMO_PROJECT;
-  const alerts = DEMO_AUTOPILOT_ALERTS;
+  const [userName, setUserName] = useState('');
+  const [projects, setProjects] = useState<Project[] | null>(null);
+  const [rfis, setRfis] = useState<RFI[] | null>(null);
+  const [subs, setSubs] = useState<Sub[] | null>(null);
 
   const formatCurrency = (n: number) => '$' + n.toLocaleString();
 
-  // Fetch dashboard stats (real data with demo fallback)
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => { if (!d.demo && d.name) setUserName(d.name); })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     fetch('/api/dashboard/stats')
       .then(r => r.json())
       .then(data => setStats(data.stats ?? data))
-      .catch(() => setStats({
-        activeProjects: 1,
-        openBids: 3,
-        pendingPayApps: 1,
-        totalContractValue: 2_850_000,
-        monthlyRevenue: 257_400,
-      }));
+      .catch(() => setStats({ activeProjects: 0, openBids: 0, pendingPayApps: 0, totalContractValue: 0, monthlyRevenue: 0 }));
   }, []);
 
-  // Fetch today priority actions
   useEffect(() => {
     fetch('/api/dashboard/today')
       .then(r => r.json())
       .then(data => setTodayItems(data.items ?? data.actions ?? []))
-      .catch(() => setTodayItems(null));
+      .catch(() => setTodayItems([]));
   }, []);
 
-  const activeProjects = stats?.activeProjects ?? 1;
-  const openBids       = stats?.openBids ?? 3;
-  const pendingPayApps = stats?.pendingPayApps ?? 1;
-  const totalContract  = stats?.totalContractValue ?? 2_850_000;
+  useEffect(() => {
+    fetch('/api/projects/list')
+      .then(r => r.json())
+      .then(d => setProjects(d.source === 'demo' ? [] : (d.projects || [])))
+      .catch(() => setProjects([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/rfis/list')
+      .then(r => r.json())
+      .then(d => setRfis(d.source === 'demo' ? [] : (d.rfis || []).filter((r: any) => r.status !== 'closed')))
+      .catch(() => setRfis([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/subs/list')
+      .then(r => r.json())
+      .then(d => setSubs(d.subs || []))
+      .catch(() => setSubs([]));
+  }, []);
+
+  const activeProjects = stats?.activeProjects ?? 0;
+  const openBids       = stats?.openBids ?? 0;
+  const pendingPayApps = stats?.pendingPayApps ?? 0;
+  const totalContract  = stats?.totalContractValue ?? 0;
 
   return (
     <>
-      {/* Pulse animation keyframes */}
       <style>{`
         @keyframes skeletonPulse {
           0%,100% { opacity: 1; }
@@ -299,7 +348,9 @@ export default function DashboardPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: DIM }}>Portfolio Overview</div>
-            <h1 style={{ fontSize: 28, fontWeight: 800, margin: '4px 0', color: TEXT }}>Good morning, Chad 👋</h1>
+            <h1 style={{ fontSize: 28, fontWeight: 800, margin: '4px 0', color: TEXT }}>
+              {greeting}{userName ? `, ${userName}` : ''}
+            </h1>
             <div style={{ fontSize: 14, color: DIM }}>Here's what needs your attention today.</div>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
@@ -310,40 +361,18 @@ export default function DashboardPage() {
               onClick={() => setShowScoreModal(true)}
               style={{ padding: '10px 18px', background: 'rgba(212,160,23,.12)', color: GOLD, border: `1px solid rgba(212,160,23,.3)`, borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
             >
-              🎯 Score a Bid
+              Score a Bid
             </button>
           </div>
         </div>
 
-        {/* Autopilot Alerts */}
-        {alerts.length > 0 && (
-          <div style={{ background: 'rgba(192,48,48,.08)', border: '1px solid rgba(192,48,48,.25)', borderRadius: 10, padding: '14px 18px', marginBottom: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 16 }}>🤖</span>
-              <span style={{ fontWeight: 800, color: TEXT, fontSize: 14 }}>Autopilot — {alerts.length} Alert{alerts.length > 1 ? 's' : ''} Need Attention</span>
-              <Link href="/app/autopilot" style={{ marginLeft: 'auto', fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 700 }}>View All →</Link>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {alerts.slice(0, 3).map(a => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', background: 'rgba(0,0,0,.2)', borderRadius: 8 }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, background: a.severity === 'critical' ? '#c03030' : a.severity === 'high' ? '#B85C2A' : '#856d00', color: '#fff', textTransform: 'uppercase' }}>
-                    {a.severity}
-                  </span>
-                  <span style={{ fontSize: 13, color: TEXT, flex: 1 }}>{a.title}</span>
-                  <span style={{ fontSize: 12, color: DIM, maxWidth: 300 }}>{a.summary.slice(0, 60)}…</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* KPI Row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 28 }}>
-          <KPI label="Active Projects"      value={String(activeProjects)}           sub={`${activeProjects} in progress`}    color={GOLD} />
-          <KPI label="Total Contract Value" value={formatCurrency(totalContract)}     sub="+$45K change orders" />
-          <KPI label="Billed to Date"       value={formatCurrency(428_500)}           sub="14.8% complete" />
-          <KPI label="Open RFIs"            value="2"                                 sub="1 urgent — blocking"                color={RED} />
-          <KPI label="Win Rate (30 days)"   value="67%"                               sub={`${openBids} bids open`}           color={GREEN} />
+          <KPI label="Active Projects"      value={String(activeProjects)}        sub={activeProjects === 1 ? '1 in progress' : `${activeProjects} in progress`}  color={GOLD} />
+          <KPI label="Total Contract Value" value={formatCurrency(totalContract)} sub="active projects" />
+          <KPI label="Open Bids"            value={String(openBids)}              sub="awaiting award" color={BLUE} />
+          <KPI label="Pending Pay Apps"     value={String(pendingPayApps)}        sub="submitted / approved" color={pendingPayApps > 0 ? ORANGE : DIM} />
+          <KPI label="Open RFIs"            value={String(rfis?.length ?? '—')}   sub={rfis?.some(r => r.is_overdue) ? 'some overdue' : 'none overdue'} color={rfis?.length ? ORANGE : DIM} />
         </div>
 
         {/* ── Today's Priority Actions ──────────────────────────────────── */}
@@ -353,14 +382,13 @@ export default function DashboardPage() {
               <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Today's Priority Actions</span>
               <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>Items requiring your attention</div>
             </div>
-            {todayItems && (
+            {todayItems && todayItems.filter(i => i.urgency === 'high').length > 0 && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 10, background: 'rgba(192,48,48,.15)', color: RED, border: '1px solid rgba(192,48,48,.3)' }}>
                 {todayItems.filter(i => i.urgency === 'high').length} urgent
               </span>
             )}
           </div>
 
-          {/* Loading skeletons */}
           {todayItems === null && (
             <div>
               <SkeletonRow />
@@ -369,10 +397,9 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Loaded items */}
           {todayItems !== null && todayItems.length === 0 && (
             <div style={{ padding: '28px 18px', textAlign: 'center', color: DIM, fontSize: 13 }}>
-              ✅ All caught up — no urgent items right now.
+              All caught up — no urgent items right now.
             </div>
           )}
 
@@ -391,104 +418,136 @@ export default function DashboardPage() {
               <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>All Projects →</Link>
             </div>
             <div style={{ padding: 16 }}>
-              <Link href={`/app/projects/${DEMO_PROJECT.id}`} style={{ display: 'block', textDecoration: 'none' }}>
-                <div style={{ padding: '14px 16px', background: '#0d1117', borderRadius: 8, border: `1px solid ${BORDER}`, cursor: 'pointer', transition: 'border-color .15s' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
-                      <div style={{ fontSize: 12, color: DIM }}>{proj.address}</div>
-                    </div>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 4, background: 'rgba(26,138,74,.15)', color: '#3dd68c', border: '1px solid rgba(26,138,74,.3)', height: 'fit-content' }}>ACTIVE</span>
-                  </div>
-                  {/* Progress bar */}
-                  <div style={{ marginBottom: 8 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: DIM, marginBottom: 4 }}>
-                      <span>Progress</span><span>14.8% — {formatCurrency(428_500)} billed</span>
-                    </div>
-                    <div style={{ height: 5, background: 'rgba(255,255,255,.08)', borderRadius: 3 }}>
-                      <div style={{ height: '100%', width: '14.8%', background: `linear-gradient(90deg,${GOLD},#F0C040)`, borderRadius: 3 }} />
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
-                    <span style={{ color: DIM }}>Contract: <strong style={{ color: TEXT }}>{formatCurrency(proj.contract_amount)}</strong></span>
-                    <span style={{ color: DIM }}>Start: <strong style={{ color: TEXT }}>Jan 15, 2026</strong></span>
-                    <span style={{ color: DIM }}>Sub: <strong style={{ color: TEXT }}>Sep 30, 2026</strong></span>
-                  </div>
+              {projects === null && (
+                <div>
+                  <SkeletonRow />
+                  <SkeletonRow />
                 </div>
-              </Link>
+              )}
+              {projects !== null && projects.length === 0 && (
+                <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                  <div style={{ fontSize: 32, marginBottom: 10 }}>📁</div>
+                  <div style={{ color: DIM, fontSize: 13, marginBottom: 14 }}>No active projects yet.</div>
+                  <Link href="/app/projects/new" style={{ display: 'inline-block', padding: '8px 18px', background: GOLD, color: '#0d1117', borderRadius: 7, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+                    Create your first project
+                  </Link>
+                </div>
+              )}
+              {projects !== null && projects.slice(0, 3).map(proj => (
+                <Link key={proj.id} href={`/app/projects/${proj.id}`} style={{ display: 'block', textDecoration: 'none', marginBottom: 10 }}>
+                  <div style={{ padding: '14px 16px', background: '#0d1117', borderRadius: 8, border: `1px solid ${BORDER}`, cursor: 'pointer', transition: 'border-color .15s' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
+                        <div style={{ fontSize: 12, color: DIM }}>{proj.address}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 4, background: 'rgba(26,138,74,.15)', color: '#3dd68c', border: '1px solid rgba(26,138,74,.3)', height: 'fit-content', textTransform: 'uppercase' }}>
+                        {proj.status}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
+                      <span style={{ color: DIM }}>Contract: <strong style={{ color: TEXT }}>{formatCurrency(proj.contract_amount)}</strong></span>
+                      {proj.project_number && <span style={{ color: DIM }}>#{proj.project_number}</span>}
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
 
-          {/* Recent RFIs */}
+          {/* Open RFIs */}
           <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, fontSize: 14 }}>Open RFIs</span>
-              <Link href={`/app/projects/${DEMO_PROJECT.id}/rfis`} style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>View All →</Link>
+              <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>View Projects →</Link>
             </div>
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-              <thead>
-                <tr style={{ background: '#0d1117' }}>
-                  {['RFI #','Title','Status','Due'].map(h => (
-                    <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {DEMO_RFIS.filter(r => r.status !== 'closed').map(rfi => (
-                  <tr key={rfi.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
-                    <td style={{ padding: '10px 12px', color: GOLD, fontWeight: 700 }}>{rfi.number}</td>
-                    <td style={{ padding: '10px 12px', color: TEXT, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rfi.title}</td>
-                    <td style={{ padding: '10px 12px' }}>
-                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 700, background: rfi.status === 'open' ? 'rgba(212,160,23,.15)' : 'rgba(26,95,168,.15)', color: rfi.status === 'open' ? GOLD : '#4a9de8' }}>
-                        {rfi.status.replace('_', ' ').toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ padding: '10px 12px', color: rfi.response_due_date && new Date(rfi.response_due_date) < new Date() ? RED : DIM }}>
-                      {rfi.response_due_date}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
+            {rfis === null && (
+              <div>
+                <SkeletonRow />
+                <SkeletonRow />
+              </div>
+            )}
+            {rfis !== null && rfis.length === 0 && (
+              <div style={{ padding: '28px 18px', textAlign: 'center', color: DIM, fontSize: 13 }}>
+                No open RFIs. Add projects to track RFIs here.
+              </div>
+            )}
+            {rfis !== null && rfis.length > 0 && (
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: '#0d1117' }}>
+                      {['RFI #', 'Subject', 'Status', 'Due'].map(h => (
+                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rfis.map(rfi => (
+                      <tr key={rfi.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
+                        <td style={{ padding: '10px 12px', color: GOLD, fontWeight: 700 }}>{rfi.rfi_number}</td>
+                        <td style={{ padding: '10px 12px', color: TEXT, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rfi.subject}</td>
+                        <td style={{ padding: '10px 12px' }}>
+                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 700, background: rfi.status === 'open' ? 'rgba(212,160,23,.15)' : 'rgba(26,95,168,.15)', color: rfi.status === 'open' ? GOLD : '#4a9de8' }}>
+                            {rfi.status.replace('_', ' ').toUpperCase()}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px 12px', color: rfi.due_date && new Date(rfi.due_date) < new Date() ? RED : DIM }}>
+                          {rfi.due_date || '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Subcontractor Compliance */}
         <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
           <div style={{ padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>Subcontractor Compliance</span>
-            <span style={{ fontSize: 12, color: DIM }}>6 subs on active project</span>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>Subcontractors</span>
+            <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>View Projects →</Link>
           </div>
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead>
-              <tr style={{ background: '#0d1117' }}>
-                {['Subcontractor','Trade','Contract Value','COI','W-9','Status'].map(h => (
-                  <th key={h} style={{ padding: '8px 14px', textAlign: 'left', color: DIM, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {DEMO_SUBS.map(sub => (
-                <tr key={sub.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
-                  <td style={{ padding: '10px 14px', fontWeight: 600, color: TEXT }}>{sub.name}</td>
-                  <td style={{ padding: '10px 14px', color: DIM }}>{sub.trade}</td>
-                  <td style={{ padding: '10px 14px', color: TEXT }}>${sub.contract_amount.toLocaleString()}</td>
-                  <td style={{ padding: '10px 14px' }}><span style={{ color: '#3dd68c' }}>✓ Active</span></td>
-                  <td style={{ padding: '10px 14px' }}><span style={{ color: '#3dd68c' }}>✓ On file</span></td>
-                  <td style={{ padding: '10px 14px' }}><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(26,138,74,.15)', color: '#3dd68c', fontWeight: 700 }}>COMPLIANT</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
+          {subs === null && (
+            <div>
+              <SkeletonRow />
+              <SkeletonRow />
+            </div>
+          )}
+          {subs !== null && subs.length === 0 && (
+            <div style={{ padding: '28px 18px', textAlign: 'center', color: DIM, fontSize: 13 }}>
+              No subcontractors yet. Add them to your projects to track compliance here.
+            </div>
+          )}
+          {subs !== null && subs.length > 0 && (
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: '#0d1117' }}>
+                    {['Subcontractor', 'Trade', 'Contract Value', 'Status'].map(h => (
+                      <th key={h} style={{ padding: '8px 14px', textAlign: 'left', color: DIM, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {subs.map(sub => (
+                    <tr key={sub.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
+                      <td style={{ padding: '10px 14px', fontWeight: 600, color: TEXT }}>{sub.name}</td>
+                      <td style={{ padding: '10px 14px', color: DIM }}>{sub.trade}</td>
+                      <td style={{ padding: '10px 14px', color: TEXT }}>{formatCurrency(sub.contract_amount || 0)}</td>
+                      <td style={{ padding: '10px 14px' }}><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(26,138,74,.15)', color: '#3dd68c', fontWeight: 700 }}>ACTIVE</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
       </div>
 
-      {/* Bid Score Modal */}
       {showScoreModal && <BidScoreModal onClose={() => setShowScoreModal(false)} />}
     </>
   );

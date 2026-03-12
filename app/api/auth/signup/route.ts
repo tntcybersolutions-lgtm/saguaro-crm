@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     { auth: { persistSession: false } }
   );
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
   const { data, error } = await supabase.auth.signUp({
     email: email.toLowerCase().trim(),

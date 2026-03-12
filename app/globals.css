@@ -9,6 +9,42 @@ a { color: #D4A017; text-decoration: none; }
 button { font-family: inherit; }
 input, textarea, select { font-family: inherit; }
 
+/* ── Global dark-theme select / option styling ── */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: #111b27;
+  color: #e8edf8;
+  border: 1px solid #263347;
+  border-radius: 8px;
+  padding: 10px 36px 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s;
+  /* Custom caret arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238fa3c0' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+select:hover,
+select:focus {
+  border-color: #D4A017;
+  color: #e8edf8;
+}
+select option {
+  background-color: #111b27;
+  color: #e8edf8;
+  font-size: 14px;
+  padding: 8px 12px;
+}
+select option:checked,
+select option:hover {
+  background-color: #1f2c3e;
+  color: #D4A017;
+}
+
 /* ── Responsive breakpoints ── */
 @media (max-width: 768px) {
   html { font-size: 13px; }

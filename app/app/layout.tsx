@@ -26,6 +26,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [userInitials, setUserInitials] = useState('?');
+
+  // Fetch user info for avatar
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.demo && d.name) {
+          const parts = d.name.trim().split(/\s+/);
+          const initials = parts.length >= 2
+            ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+            : d.name.slice(0, 2).toUpperCase();
+          setUserInitials(initials);
+        } else if (!d.demo && d.email) {
+          setUserInitials(d.email[0].toUpperCase());
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Auto-refresh session token on mount
   useEffect(() => {
@@ -143,7 +162,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             onClick={() => setShowUserMenu(v => !v)}
             style={{ width: 32, height: 32, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#B85C2A)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#0d1117', cursor: 'pointer' }}
           >
-            C
+            {userInitials}
           </div>
           {showUserMenu && (
             <div

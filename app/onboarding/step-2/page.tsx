@@ -21,6 +21,9 @@ const inputStyle: React.CSSProperties = {
   border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,
   outline:'none',boxSizing:'border-box',
 };
+const selectStyle: React.CSSProperties = {
+  ...inputStyle, background:'#111b27', cursor:'pointer',
+};
 
 const labelStyle: React.CSSProperties = {
   display:'block',fontSize:11,fontWeight:700,color:DIM,
@@ -118,7 +121,7 @@ export default function OnboardingStep2() {
               </div>
               <div>
                 <label style={labelStyle}>State *</label>
-                <select value={form.state} onChange={set('state')} style={{...inputStyle,cursor:'pointer'}}>
+                <select value={form.state} onChange={set('state')} style={selectStyle}>
                   <option value="">Select state...</option>
                   {US_STATES.map(s=><option key={s} value={s}>{s}</option>)}
                 </select>
@@ -143,7 +146,7 @@ export default function OnboardingStep2() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
               <div>
                 <label style={labelStyle}>Number of Employees</label>
-                <select value={form.employees} onChange={set('employees')} style={{...inputStyle,cursor:'pointer'}}>
+                <select value={form.employees} onChange={set('employees')} style={selectStyle}>
                   <option value="">Select...</option>
                   <option value="1-10">1–10</option>
                   <option value="11-50">11–50</option>
@@ -153,7 +156,7 @@ export default function OnboardingStep2() {
               </div>
               <div>
                 <label style={labelStyle}>Annual Volume</label>
-                <select value={form.annualVolume} onChange={set('annualVolume')} style={{...inputStyle,cursor:'pointer'}}>
+                <select value={form.annualVolume} onChange={set('annualVolume')} style={selectStyle}>
                   <option value="">Select...</option>
                   <option value="0-1M">Under $1M</option>
                   <option value="1M-10M">$1M – $10M</option>

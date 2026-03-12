@@ -6,7 +6,7 @@ const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
 
 export default function SignupPage(){
-  const [form, setForm] = useState({email:'',password:'',company:'',phone:'',role:'General Contractor',state:'AZ',size:'1-10'});
+  const [form, setForm] = useState({name:'',email:'',password:'',company:'',phone:'',role:'General Contractor',state:'AZ',size:'1-10'});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -15,7 +15,7 @@ export default function SignupPage(){
 
   async function handleSubmit(e: React.FormEvent){
     e.preventDefault();
-    if(!form.email||!form.password||!form.company){ setError('Email, password, and company name are required.'); return; }
+    if(!form.name||!form.email||!form.password||!form.company){ setError('Full name, email, password, and company name are required.'); return; }
     if(form.password.length < 8){ setError('Password must be at least 8 characters.'); return; }
     setLoading(true); setError('');
     try {
@@ -47,6 +47,7 @@ export default function SignupPage(){
   }
 
   const inputStyle = {width:'100%',padding:'11px 14px',background:'rgba(255,255,255,.04)',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box' as const,transition:'border-color .15s'};
+  const selectStyle = {width:'100%',padding:'11px 14px',background:'#111b27',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:14,outline:'none',boxSizing:'border-box' as const,transition:'border-color .15s',cursor:'pointer'};
   const labelStyle = {display:'block' as const,fontSize:11,fontWeight:700 as const,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:6};
 
   if(success) return (
@@ -94,6 +95,10 @@ export default function SignupPage(){
             )}
 
             <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column' as const,gap:16}}>
+              <div>
+                <label style={labelStyle}>Your Full Name *</label>
+                <input placeholder="John Smith" value={form.name} onChange={e=>update('name',e.target.value)} required autoComplete="name" style={inputStyle}/>
+              </div>
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))',gap:14}}>
                 <div>
                   <label style={labelStyle}>Work Email *</label>
@@ -115,7 +120,7 @@ export default function SignupPage(){
                 </div>
                 <div>
                   <label style={labelStyle}>State</label>
-                  <select value={form.state} onChange={e=>update('state',e.target.value)} style={{...inputStyle}}>
+                  <select value={form.state} onChange={e=>update('state',e.target.value)} style={selectStyle as React.CSSProperties}>
                     {US_STATES.map(s=><option key={s}>{s}</option>)}
                   </select>
                 </div>
@@ -123,13 +128,13 @@ export default function SignupPage(){
               <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))',gap:14}}>
                 <div>
                   <label style={labelStyle}>Company Type</label>
-                  <select value={form.role} onChange={e=>update('role',e.target.value)} style={{...inputStyle}}>
+                  <select value={form.role} onChange={e=>update('role',e.target.value)} style={selectStyle as React.CSSProperties}>
                     {['General Contractor','Electrical','Plumbing','Mechanical / HVAC','Concrete','Roofing','Specialty Contractor','Developer / Owner','Other'].map(r=><option key={r}>{r}</option>)}
                   </select>
                 </div>
                 <div>
                   <label style={labelStyle}>Team Size</label>
-                  <select value={form.size} onChange={e=>update('size',e.target.value)} style={{...inputStyle}}>
+                  <select value={form.size} onChange={e=>update('size',e.target.value)} style={selectStyle as React.CSSProperties}>
                     {['1-10','11-25','26-50','51-100','100+'].map(s=><option key={s}>{s}</option>)}
                   </select>
                 </div>
