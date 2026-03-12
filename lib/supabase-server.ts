@@ -31,16 +31,22 @@ export function createBrowserClient(): SupabaseClient {
  *  Returns { id (auth uid), tenantId, email } — always use tenantId for DB queries. */
 export async function getUser(req?: NextRequest): Promise<{ id: string; tenantId: string; email: string } | null> {
   try {
+    // Extract JWT from cookie or Authorization header
+    let token: string | undefined;
+    if (req) {
+      token =
+        req.cookies.get('sb-access-token')?.value ||
+        req.headers.get('authorization')?.replace('Bearer ', '') ||
+        undefined;
+    }
+    if (!token) return null;
+
+    // Validate JWT directly — works without a persisted session
     const supabase = createClient(URL, ANON, {
       auth: { persistSession: false },
-      global: {
-        headers: req
-          ? { cookie: req.headers.get('cookie') || '' }
-          : {},
-      },
     });
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
 
     // Look up tenant_id from user_profiles (may differ from auth uid)
     const admin = createServerClient();
