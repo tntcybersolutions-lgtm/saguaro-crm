@@ -22,7 +22,7 @@ export default function TermsPage(){
           {h:'9. Disclaimers',b:'The Service is provided "as is." We are not lawyers or accountants. Document templates are starting points and should be reviewed by qualified professionals for your specific jurisdiction and situation. We are not liable for legal or financial outcomes.'},
           {h:'10. Limitation of Liability',b:'To the maximum extent permitted by law, our total liability to you shall not exceed the amount you paid us in the 12 months before the claim. We are not liable for indirect, incidental, or consequential damages.'},
           {h:'11. Governing Law',b:'These terms are governed by the laws of the State of Arizona, USA. Disputes shall be resolved in Maricopa County, Arizona.'},
-          {h:'12. Contact',b:'For legal questions: legal@saguarocrm.com · TNT Cyber Solutions · Scottsdale, AZ 85251'},
+          {h:'12. Contact',b:'For legal questions: legal@saguarocontrol.net · TNT Cyber Solutions · Scottsdale, AZ 85251'},
         ].map(s=>(
           <div key={s.h} style={{marginBottom:28}}>
             <h2 style={{fontSize:18,fontWeight:700,marginBottom:8,color:TEXT}}>{s.h}</h2>

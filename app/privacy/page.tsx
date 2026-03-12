@@ -15,12 +15,12 @@ export default function PrivacyPage(){
           {h:'How We Use Your Information',b:'We use your data to: provide and improve the Service; send transactional emails (account, billing, document notifications); respond to support requests; analyze usage to improve features; comply with legal obligations. We do NOT sell your personal information to third parties. We do NOT use your project data to train AI models.'},
           {h:'Data Storage and Security',b:'All data is encrypted at rest (AES-256) and in transit (TLS 1.3). Hosted on Supabase (AWS us-east-1). We maintain automated backups. Access is restricted to authorized personnel. We are pursuing SOC2 Type II certification.'},
           {h:'Cookies and Tracking',b:'We use cookies for: authentication (session tokens), preferences, and analytics (Google Analytics 4, PostHog). You can disable non-essential cookies in your browser. We use no advertising trackers.'},
-          {h:'Data Retention',b:'Active account data is retained as long as your account is active. After account cancellation, data is retained for 30 days then deleted. You may request immediate deletion at privacy@saguarocrm.com.'},
-          {h:'Your Rights (CCPA/GDPR)',b:'You have the right to: access your personal data; correct inaccurate data; request deletion of your data; export your data in machine-readable format; opt out of marketing emails at any time. To exercise these rights, email privacy@saguarocrm.com.'},
+          {h:'Data Retention',b:'Active account data is retained as long as your account is active. After account cancellation, data is retained for 30 days then deleted. You may request immediate deletion at privacy@saguarocontrol.net.'},
+          {h:'Your Rights (CCPA/GDPR)',b:'You have the right to: access your personal data; correct inaccurate data; request deletion of your data; export your data in machine-readable format; opt out of marketing emails at any time. To exercise these rights, email privacy@saguarocontrol.net.'},
           {h:'Third-Party Services',b:'We use: Supabase (database), Stripe (payments), Resend (email delivery), Anthropic (AI features), PostHog (product analytics), Google Analytics (web analytics), Vercel (hosting). Each has their own privacy policy.'},
           {h:'Children',b:"Our Service is not directed at children under 13. We do not knowingly collect data from children."},
           {h:'Changes to This Policy',b:'We will notify users of material changes via email and in-app notice 30 days before changes take effect.'},
-          {h:'Contact',b:'Privacy questions: privacy@saguarocrm.com · TNT Cyber Solutions · Scottsdale, AZ 85251'},
+          {h:'Contact',b:'Privacy questions: privacy@saguarocontrol.net · TNT Cyber Solutions · Scottsdale, AZ 85251'},
         ].map(s=>(
           <div key={s.h} style={{marginBottom:28}}>
             <h2 style={{fontSize:18,fontWeight:700,marginBottom:8,color:TEXT}}>{s.h}</h2>

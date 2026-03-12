@@ -130,7 +130,7 @@ export default function SLAPage() {
           ))}
         </div>
         <div style={{marginTop:20,padding:'16px 20px',background:'rgba(239,68,68,.06)',border:'1px solid rgba(239,68,68,.2)',borderRadius:8,fontSize:13,color:DIM}}>
-          <strong style={{color:TEXT}}>Credit cap:</strong> Total credits in any calendar month shall not exceed 50% of your monthly fee. Credits are non-transferable and have no cash value. To request a review, email <a href="mailto:sla@saguarocrm.com" style={{color:GOLD,textDecoration:'none'}}>sla@saguarocrm.com</a> within 30 days of the incident.
+          <strong style={{color:TEXT}}>Credit cap:</strong> Total credits in any calendar month shall not exceed 50% of your monthly fee. Credits are non-transferable and have no cash value. To request a review, email <a href="mailto:sla@saguarocontrol.net" style={{color:GOLD,textDecoration:'none'}}>sla@saguarocontrol.net</a> within 30 days of the incident.
         </div>
       </div>
 
@@ -156,7 +156,7 @@ export default function SLAPage() {
         {[
           {term:'Downtime',def:'Any period during which the Service is unavailable and not due to scheduled maintenance or excluded causes. Measured in 1-minute intervals.'},
           {term:'Monthly Uptime %',def:'((Total minutes in month − Downtime minutes) / Total minutes in month) × 100'},
-          {term:'Scheduled Maintenance',def:'Planned maintenance announced via status.saguarocrm.com and email at least 48 hours in advance. Typically performed Sunday 2am–4am MST.'},
+          {term:'Scheduled Maintenance',def:'Planned maintenance announced via status.saguarocontrol.net and email at least 48 hours in advance. Typically performed Sunday 2am–4am MST.'},
           {term:'Credit Period',def:'Credits are calculated and applied to the next invoice following the month in which the SLA was missed.'},
         ].map(d=>(
           <div key={d.term} style={{marginBottom:20,paddingBottom:20,borderBottom:`1px solid ${BORDER}`}}>
@@ -170,8 +170,8 @@ export default function SLAPage() {
       <div style={{textAlign:'center',padding:'60px 24px',background:RAISED,borderTop:`1px solid ${BORDER}`}}>
         <h2 style={{fontSize:26,fontWeight:900,marginBottom:10}}>SLA questions or incident reports?</h2>
         <p style={{color:DIM,marginBottom:20,fontSize:15}}>We respond to SLA inquiries within one business day.</p>
-        <a href="mailto:sla@saguarocrm.com" style={{display:'inline-block',padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,borderRadius:9,color:'#0d1117',fontWeight:800,fontSize:15,textDecoration:'none'}}>
-          sla@saguarocrm.com
+        <a href="mailto:sla@saguarocontrol.net" style={{display:'inline-block',padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,borderRadius:9,color:'#0d1117',fontWeight:800,fontSize:15,textDecoration:'none'}}>
+          sla@saguarocontrol.net
         </a>
         <div style={{marginTop:20,fontSize:13,color:DIM}}>
           <a href="/security" style={{color:GOLD,textDecoration:'none'}}>Security</a> · <a href="/privacy" style={{color:GOLD,textDecoration:'none'}}>Privacy</a> · <a href="/terms" style={{color:GOLD,textDecoration:'none'}}>Terms</a>

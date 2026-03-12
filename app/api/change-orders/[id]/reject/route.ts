@@ -33,7 +33,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         'change_order_approved',
         `Change Order #${c.co_number} rejected`,
         body.reason ? `Reason: ${body.reason}` : `CO #${c.co_number} was rejected on ${project.name}`,
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app'}/app/projects/${project.id}/change-orders`,
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/app/projects/${project.id}/change-orders`,
         project.id
       );
     }
