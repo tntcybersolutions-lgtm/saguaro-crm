@@ -16,6 +16,7 @@ const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 
 const WEATHER_OPTS = ['Sunny', 'Partly Cloudy', 'Overcast', 'Windy', 'Light Rain', 'Heavy Rain', 'Storm', 'Snow', 'Fog', 'Extreme Heat'];
+const PURPLE = '#8B5CF6';
 
 function DailyLogForm() {
   const searchParams = useSearchParams();
@@ -27,6 +28,8 @@ function DailyLogForm() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [listening, setListening] = useState(false);
 
   // Form state
   const [superintendent, setSuperintendent] = useState('');
@@ -79,6 +82,8 @@ function DailyLogForm() {
     if (!projectId) { setError('No project selected. Go back home and pick a project first.'); return; }
     if (!workPerformed.trim()) { setError('Please describe the work performed today.'); return; }
     setSaving(true);
+    // suppress unused var lint
+    void aiLoading; void listening;
     setError('');
 
     // Build notes with superintendent prefix
@@ -185,6 +190,62 @@ function DailyLogForm() {
 
         {/* ── Work & Equipment ─────────────────────────── */}
         <Section label="Work Performed">
+          {/* AI Draft button */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <button
+              type="button"
+              disabled={aiLoading || !online}
+              onClick={async () => {
+                setAiLoading(true);
+                try {
+                  const res = await fetch('/api/field/ai-draft', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ projectName, weather, tempHigh, crewCount, superintendent }),
+                  });
+                  const d = await res.json();
+                  if (d.draft) {
+                    if (d.draft.workPerformed) setWorkPerformed(d.draft.workPerformed);
+                    if (d.draft.delays) setDelays(d.draft.delays);
+                    if (d.draft.safetyNotes) setSafetyNotes(d.draft.safetyNotes);
+                    if (d.draft.notes) setNotes(d.draft.notes);
+                  }
+                } catch { /* ai unavailable */ }
+                setAiLoading(false);
+              }}
+              style={{ flex: 1, background: aiLoading ? '#1e3148' : 'rgba(139,92,246,.15)', border: `1px solid rgba(139,92,246,.3)`, borderRadius: 10, padding: '10px', color: aiLoading ? DIM : PURPLE, fontSize: 13, fontWeight: 700, cursor: aiLoading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              {aiLoading ? '⟳ Drafting...' : '🤖 AI Draft Log'}
+            </button>
+            {/* Voice-to-text (Web Speech API) */}
+            <button
+              type="button"
+              onClick={() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const w = window as any;
+                const SR = w.SpeechRecognition || w.webkitSpeechRecognition;
+                if (!SR) { alert('Voice input not supported on this browser.'); return; }
+                const recognition = new SR();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                setListening(true);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                recognition.onresult = (e: any) => {
+                  const transcript = e.results[0][0].transcript;
+                  setWorkPerformed((prev: string) => prev ? `${prev} ${transcript}` : transcript);
+                  setListening(false);
+                };
+                recognition.onerror = () => setListening(false);
+                recognition.onend = () => setListening(false);
+                recognition.start();
+              }}
+              style={{ background: listening ? 'rgba(239,68,68,.2)' : 'rgba(212,160,23,.1)', border: `1px solid ${listening ? 'rgba(239,68,68,.4)' : 'rgba(212,160,23,.25)'}`, borderRadius: 10, padding: '10px 14px', color: listening ? RED : GOLD, fontSize: 18, cursor: 'pointer' }}
+              title="Voice to text"
+            >
+              {listening ? '🔴' : '🎙'}
+            </button>
+          </div>
           <Field label="Work Performed Today *">
             <textarea value={workPerformed} onChange={(e) => setWorkPerformed(e.target.value)} placeholder="Describe what was accomplished — trades on site, areas worked, progress milestones..." rows={5} style={inp} required />
           </Field>

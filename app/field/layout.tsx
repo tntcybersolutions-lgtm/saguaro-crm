@@ -1,8 +1,7 @@
 'use client';
 /**
  * Saguaro Field — Mobile PWA Shell
- * Completely separate from the desktop /app/ layout.
- * Optimized for foremen on job sites — big touch targets, offline-first.
+ * Bottom nav: Home · Punch · Log · Photos · More
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
@@ -18,11 +17,11 @@ const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 
 const NAV = [
-  { href: '/field',         label: 'Home',    icon: HomeIcon },
-  { href: '/field/log',     label: 'Log',     icon: LogIcon },
-  { href: '/field/photos',  label: 'Photos',  icon: CameraIcon },
-  { href: '/field/inspect', label: 'Inspect', icon: ClipboardIcon },
-  { href: '/field/more',    label: 'More',    icon: GridIcon },
+  { href: '/field',         label: 'Home',   Icon: HomeIcon },
+  { href: '/field/punch',   label: 'Punch',  Icon: PunchIcon },
+  { href: '/field/log',     label: 'Log',    Icon: LogIcon },
+  { href: '/field/photos',  label: 'Photos', Icon: CameraIcon },
+  { href: '/field/more',    label: 'More',   Icon: GridIcon },
 ];
 
 export default function FieldLayout({ children }: { children: React.ReactNode }) {
@@ -114,10 +113,10 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      {/* Install banner */}
+      {/* Install prompt */}
       {showInstall && (
         <div style={{ background: 'rgba(212,160,23,.1)', borderBottom: `1px solid rgba(212,160,23,.25)`, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <span style={{ fontSize: 13, color: TEXT }}>Add Saguaro Field to your home screen</span>
+          <span style={{ fontSize: 13, color: TEXT }}>Add Saguaro Field to home screen</span>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button onClick={() => setShowInstall(false)} style={{ background: 'none', border: 'none', color: DIM, fontSize: 13, cursor: 'pointer' }}>Later</button>
             <button onClick={handleInstall} style={{ background: GOLD, border: 'none', borderRadius: 6, padding: '5px 12px', color: '#000', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Install</button>
@@ -132,14 +131,13 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      {/* Page content */}
       <main style={{ flex: 1, overflowY: 'auto', paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         {children}
       </main>
 
       {/* Bottom nav */}
       <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#060e17', borderTop: `1px solid ${BORDER}`, display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 50 }}>
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ href, label, Icon }) => {
           const active = href === '/field' ? pathname === '/field' : pathname.startsWith(href);
           return (
             <Link key={href} href={href} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '9px 4px 7px', color: active ? GOLD : DIM, textDecoration: 'none' }}>
@@ -161,18 +159,19 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
   );
 }
 
+// Nav icons
 function HomeIcon({ active }: { active: boolean }) {
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>{!active && <polyline points="9 22 9 12 15 12 15 22"/>}</svg>;
+  return <svg width="23" height="23" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>{!active&&<polyline points="9 22 9 12 15 12 15 22"/>}</svg>;
+}
+function PunchIcon({ active }: { active: boolean }) {
+  return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" fill={active ? 'currentColor' : 'none'}/><line x1="12" y1="8" x2="12" y2="12" stroke={active?'#060e17':'currentColor'} strokeWidth="2.5"/><line x1="12" y1="16" x2="12.01" y2="16" stroke={active?'#060e17':'currentColor'} strokeWidth="3"/></svg>;
 }
 function LogIcon({ active }: { active: boolean }) {
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill={active ? 'currentColor' : 'none'} /><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13" stroke={active ? '#060e17' : 'currentColor'}/><line x1="16" y1="17" x2="8" y2="17" stroke={active ? '#060e17' : 'currentColor'}/></svg>;
+  return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill={active?'currentColor':'none'}/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13" stroke={active?'#060e17':'currentColor'}/><line x1="16" y1="17" x2="8" y2="17" stroke={active?'#060e17':'currentColor'}/></svg>;
 }
 function CameraIcon({ active }: { active: boolean }) {
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4" fill={active ? '#060e17' : 'none'}/></svg>;
-}
-function ClipboardIcon({ active }: { active: boolean }) {
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M9 12l2 2 4-4" stroke={active ? '#060e17' : 'currentColor'} strokeWidth="2.2"/></svg>;
+  return <svg width="23" height="23" viewBox="0 0 24 24" fill={active?'currentColor':'none'} stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4" fill={active?'#060e17':'none'}/></svg>;
 }
 function GridIcon({ active }: { active: boolean }) {
-  return <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" fill={active ? 'currentColor' : 'none'}/><rect x="14" y="3" width="7" height="7" fill={active ? 'currentColor' : 'none'}/><rect x="3" y="14" width="7" height="7" fill={active ? 'currentColor' : 'none'}/><rect x="14" y="14" width="7" height="7" fill={active ? 'currentColor' : 'none'}/></svg>;
+  return <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" fill={active?'currentColor':'none'}/><rect x="14" y="3" width="7" height="7" fill={active?'currentColor':'none'}/><rect x="3" y="14" width="7" height="7" fill={active?'currentColor':'none'}/><rect x="14" y="14" width="7" height="7" fill={active?'currentColor':'none'}/></svg>;
 }
