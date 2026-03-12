@@ -85,7 +85,7 @@ export default function PricingPage(){
                     <div style={{fontSize:12,color:DIM,marginTop:4}}>Custom pricing for your scale</div>
                   </div>
                 )}
-                <a href={plan.name==='Enterprise'?'mailto:sales@saguarocrm.com':'/app/signup'} style={{display:'block',textAlign:'center' as const,padding:'12px 0',background:plan.popular?`linear-gradient(135deg,${GOLD},#F0C040)`:'rgba(255,255,255,.06)',border:`1px solid ${plan.popular?'transparent':BORDER}`,borderRadius:8,color:plan.popular?'#0d1117':TEXT,fontWeight:800,fontSize:14,textDecoration:'none',marginBottom:24}}>
+                <a href={plan.name==='Enterprise'?'mailto:sales@saguarocontrol.net':'/app/signup'} style={{display:'block',textAlign:'center' as const,padding:'12px 0',background:plan.popular?`linear-gradient(135deg,${GOLD},#F0C040)`:'rgba(255,255,255,.06)',border:`1px solid ${plan.popular?'transparent':BORDER}`,borderRadius:8,color:plan.popular?'#0d1117':TEXT,fontWeight:800,fontSize:14,textDecoration:'none',marginBottom:24}}>
                   {plan.name==='Enterprise'?'Contact Sales':'Start Free Trial'}
                 </a>
                 <div style={{borderTop:`1px solid ${BORDER}`,paddingTop:20}}>

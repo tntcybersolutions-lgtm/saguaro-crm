@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
         `Team invite sent to ${name || email}`,
         `${email} has been invited to join your team as ${role}.`,
         projectId
-          ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app'}/app/projects/${projectId}/team`
-          : `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app'}/app`
+          ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/app/projects/${projectId}/team`
+          : `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/app`
       );
     }
 

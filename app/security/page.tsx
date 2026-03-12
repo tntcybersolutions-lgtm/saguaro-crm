@@ -102,7 +102,7 @@ export default function SecurityPage() {
           <div style={{fontWeight:800,fontSize:16,color:TEXT,marginBottom:8}}>Responsible Disclosure</div>
           <p style={{color:DIM,fontSize:14,lineHeight:1.7,margin:'0 0 12px'}}>
             Found a security vulnerability? We take all reports seriously. Please email us at{' '}
-            <a href="mailto:security@saguarocrm.com" style={{color:GOLD,textDecoration:'none',fontWeight:700}}>security@saguarocrm.com</a>{' '}
+            <a href="mailto:security@saguarocontrol.net" style={{color:GOLD,textDecoration:'none',fontWeight:700}}>security@saguarocontrol.net</a>{' '}
             and we will respond within 24 hours. We do not pursue legal action against good-faith researchers.
           </p>
           <div style={{display:'flex',alignItems:'center',gap:8,fontSize:13,color:DIM}}>
@@ -117,8 +117,8 @@ export default function SecurityPage() {
       <div style={{textAlign:'center',padding:'60px 24px',background:RAISED,borderTop:`1px solid ${BORDER}`}}>
         <h2 style={{fontSize:28,fontWeight:900,marginBottom:12}}>Questions about security?</h2>
         <p style={{color:DIM,fontSize:16,marginBottom:20}}>Our security team is here to help.</p>
-        <a href="mailto:security@saguarocrm.com" style={{display:'inline-block',padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,borderRadius:9,color:'#0d1117',fontWeight:800,fontSize:15,textDecoration:'none'}}>
-          security@saguarocrm.com
+        <a href="mailto:security@saguarocontrol.net" style={{display:'inline-block',padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,borderRadius:9,color:'#0d1117',fontWeight:800,fontSize:15,textDecoration:'none'}}>
+          security@saguarocontrol.net
         </a>
         <div style={{marginTop:20,fontSize:13,color:DIM}}>
           Also see: <a href="/privacy" style={{color:GOLD,textDecoration:'none'}}>Privacy Policy</a> · <a href="/terms" style={{color:GOLD,textDecoration:'none'}}>Terms of Service</a> · <a href="/sla" style={{color:GOLD,textDecoration:'none'}}>SLA</a>

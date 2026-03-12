@@ -5,7 +5,7 @@ import { sendSubInvitedToBid } from '@/lib/email';
 export async function GET(req: NextRequest) {
   try {
     const db = createServerClient();
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app';
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
     // Find bid packages due in 3 days
     const in3 = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];

@@ -27,7 +27,7 @@ import { buildBidHistoryContext } from '@/lib/construction-intelligence';
 
 // ─── CORS helpers ─────────────────────────────────────────────────────────────
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net';
 
 function corsHeaders() {
   return {

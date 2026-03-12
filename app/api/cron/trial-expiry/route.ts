@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   try {
     const db = createServerClient();
     const today = new Date();
-    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app';
+    const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
     // Find trials expiring in 7, 3, or 1 day
     const { data: tenants } = await db

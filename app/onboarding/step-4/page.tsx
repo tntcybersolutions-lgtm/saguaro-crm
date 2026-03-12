@@ -182,7 +182,7 @@ export default function OnboardingStep4() {
         )}
 
         <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#4a5f7a'}}>
-          Questions? <a href="mailto:support@saguarocrm.com" style={{color:DIM}}>support@saguarocrm.com</a>
+          Questions? <a href="mailto:support@saguarocontrol.net" style={{color:DIM}}>support@saguarocontrol.net</a>
         </div>
       </div>
     </div>

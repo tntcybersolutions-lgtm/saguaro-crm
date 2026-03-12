@@ -571,7 +571,7 @@ export default function HomePage() {
                   {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />)}
                 </div>
                 <div style={{ flex: 1, background: 'rgba(255,255,255,.05)', borderRadius: 6, padding: '4px 10px', fontSize: 11, color: DIM, marginLeft: 4 }}>
-                  app.saguarocrm.com/app/projects/…/{DEMO_STEPS[activeStep].screen}
+                  saguarocontrol.net/app/projects/…/{DEMO_STEPS[activeStep].screen}
                 </div>
                 <span style={{ fontSize: 10, color: GOLD, fontWeight: 700 }}>🌵 SAGUARO</span>
               </div>
