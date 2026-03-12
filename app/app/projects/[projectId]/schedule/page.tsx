@@ -9,7 +9,7 @@ interface DelayPrediction {
   predicted_delay_days: number;
   confidence: number;
   risk_factors: string[];
-  critical_path: string[];
+  critical_path_activities: string[];
   recommendations: string[];
   summary: string;
 }
@@ -64,11 +64,11 @@ function DelayPredictionPanel({ result, onClose }: { result: DelayPrediction; on
           </div>
         )}
         {/* Critical Path */}
-        {result.critical_path.length > 0 && (
+        {result.critical_path_activities.length > 0 && (
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 8 }}>Critical Path Activities</div>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
-              {result.critical_path.map((a, i) => (
+              {result.critical_path_activities.map((a, i) => (
                 <li key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 12, color: GOLD }}>
                   <span style={{ marginTop: 1, flexShrink: 0 }}>→</span><span>{a}</span>
                 </li>

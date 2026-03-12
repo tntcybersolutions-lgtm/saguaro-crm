@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     console.error('[equipment/create] error:', msg);
     return NextResponse.json({
       success: true,
-      entry: { id: Date.now(), ...row },
+      entry: { id: String(Date.now()), ...row },
       demo: true,
     });
   }

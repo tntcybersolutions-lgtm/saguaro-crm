@@ -41,8 +41,8 @@ Return only the raw JSON object, no markdown or code fences.`;
       messages: [{ role: 'user', content: prompt }],
     });
 
-    const responseText =
-      message.content[0].type === 'text' ? message.content[0].text : '';
+    const firstBlock = message.content?.[0];
+    const responseText = firstBlock?.type === 'text' ? (firstBlock as { type: 'text'; text: string }).text : '';
 
     let parsed: Record<string, unknown>;
     try {
