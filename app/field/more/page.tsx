@@ -72,6 +72,11 @@ function MorePage(){
     {href:`/field/delivery${projectId?`?projectId=${projectId}`:''}`,emoji:'📦',label:'Deliveries',desc:'Confirm deliveries, flag damage',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
     {href:`/field/contacts${projectId?`?projectId=${projectId}`:''}`,emoji:'👥',label:'Team Contacts',desc:'Quick-dial PM, subs, owner',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
     {href:`/field/inspect${projectId?`?projectId=${projectId}`:''}`,emoji:'✅',label:'Inspections',desc:'19 checklist types with deficiency tracking',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
+    {href:`/field/drawings${projectId?`?projectId=${projectId}`:''}`,emoji:'📐',label:'Drawings',desc:'View plans, drop pins on issues',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
+    {href:`/field/equipment${projectId?`?projectId=${projectId}`:''}`,emoji:'🚜',label:'Equipment Log',desc:'Track equipment hours and condition',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/chat${projectId?`?projectId=${projectId}`:''}`,emoji:'💬',label:'Job Board',desc:'Crew messages and announcements',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
+    {href:`/field/sage${projectId?`?projectId=${projectId}`:''}`,emoji:'🤖',label:'Sage AI',desc:'Ask anything about your project',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
+    {href:`/field/qr${projectId?`?projectId=${projectId}`:''}`,emoji:'📷',label:'QR Scanner',desc:'Scan or generate QR codes',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
   ];
   const QUICK=[
     {id:'timesheet',emoji:'⏰',label:'Quick Timesheet',desc:'Log hours in 10 seconds',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},

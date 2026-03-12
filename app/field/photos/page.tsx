@@ -13,6 +13,9 @@ const BORDER = '#1e3148';
 const TEXT   = '#e8edf8';
 const DIM    = '#8fa3c0';
 const RED    = '#EF4444';
+const AMBER  = '#F59E0B';
+const GREEN  = '#22C55E';
+const BLUE   = '#3B82F6';
 
 const CATEGORIES = ['All', 'Progress', 'Issue', 'Delivery', 'Inspection', 'Safety', 'Completion', 'Other'];
 const CAT_COLORS: Record<string, string> = {
@@ -28,12 +31,19 @@ function PhotosPage() {
   const projectId = searchParams.get('projectId') || '';
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [filterCat, setFilterCat] = useState('All');
   const [selected, setSelected] = useState<Photo | null>(null);
   const [uploading, setUploading] = useState(false);
   const [online, setOnline] = useState(true);
   const [loadingGallery, setLoadingGallery] = useState(true);
+
+  // Markup state
+  const [markupMode, setMarkupMode] = useState(false);
+  const [markupColor, setMarkupColor] = useState('#EF4444');
+  const [markupStrokes, setMarkupStrokes] = useState<Array<{x:number;y:number;drawing:boolean}[]>>([]);
+  const [currentStroke, setCurrentStroke] = useState<{x:number;y:number;drawing:boolean}[]>([]);
 
   // Pending
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -148,6 +158,147 @@ function PhotosPage() {
     setUploading(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingFile, pendingPreview, pendingCat, pendingCaption, projectId, online]);
+
+  const enterMarkup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMarkupMode(true);
+    setMarkupStrokes([]);
+    setCurrentStroke([]);
+    // Clear canvas on next tick after it mounts
+    setTimeout(() => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }, 50);
+  };
+
+  const exitMarkup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMarkupMode(false);
+    setMarkupStrokes([]);
+    setCurrentStroke([]);
+  };
+
+  const undoStroke = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const newStrokes = markupStrokes.slice(0, -1);
+    setMarkupStrokes(newStrokes);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Redraw remaining strokes
+    newStrokes.forEach(stroke => {
+      ctx.beginPath();
+      stroke.forEach((pt, idx) => {
+        if (idx === 0) { ctx.moveTo(pt.x, pt.y); }
+        else {
+          ctx.lineTo(pt.x, pt.y);
+          ctx.strokeStyle = markupColor;
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+        }
+      });
+    });
+  };
+
+  const saveMarkup = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const canvas = canvasRef.current;
+    if (!canvas || !selected) return;
+    const dataUrl = canvas.toDataURL('image/png');
+    const savedPhoto: Photo = {
+      id: `markup-${Date.now()}`,
+      url: dataUrl,
+      filename: `markup-${selected.filename || 'photo'}.png`,
+      category: selected.category,
+      caption: `Markup of: ${selected.caption || selected.filename}`,
+      uploaded: false,
+      created_at: new Date().toISOString(),
+    };
+    setPhotos(prev => [savedPhoto, ...prev]);
+    setMarkupMode(false);
+    setMarkupStrokes([]);
+    setCurrentStroke([]);
+    setSelected(savedPhoto);
+  };
+
+  const handleCanvasTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    if (e.type === 'touchstart') {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      setCurrentStroke([{x, y, drawing: false}]);
+    } else {
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = markupColor;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      setCurrentStroke(prev => [...prev, {x, y, drawing: true}]);
+    }
+  };
+
+  const handleCanvasTouchEnd = () => {
+    if (currentStroke.length > 0) {
+      setMarkupStrokes(prev => [...prev, currentStroke]);
+      setCurrentStroke([]);
+    }
+  };
+
+  // Mouse drawing support (desktop/dev)
+  const mouseDrawing = useRef(false);
+  const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    e.stopPropagation();
+    mouseDrawing.current = true;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setCurrentStroke([{x, y, drawing: false}]);
+  };
+  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!mouseDrawing.current) return;
+    e.stopPropagation();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = markupColor;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    setCurrentStroke(prev => [...prev, {x, y, drawing: true}]);
+  };
+  const handleCanvasMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    e.stopPropagation();
+    mouseDrawing.current = false;
+    if (currentStroke.length > 0) {
+      setMarkupStrokes(prev => [...prev, currentStroke]);
+      setCurrentStroke([]);
+    }
+  };
 
   const filteredPhotos = filterCat === 'All' ? photos : photos.filter((p) => p.category === filterCat);
 
@@ -264,19 +415,119 @@ function PhotosPage() {
       {/* Lightbox */}
       {selected && (
         <div
-          onClick={() => setSelected(null)}
+          onClick={() => { if (!markupMode) { setSelected(null); setMarkupMode(false); } }}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.96)', zIndex: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={selected.url} alt={selected.caption} style={{ maxWidth: '100%', maxHeight: '72vh', borderRadius: 12, objectFit: 'contain' }} />
-          <div style={{ marginTop: 14, textAlign: 'center' }}>
-            <span style={{ background: `rgba(${hexRgb(CAT_COLORS[selected.category] || DIM)}, .25)`, border: `1px solid ${CAT_COLORS[selected.category] || DIM}`, borderRadius: 20, padding: '3px 14px', fontSize: 12, color: CAT_COLORS[selected.category] || DIM, fontWeight: 700 }}>
-              {selected.category}
-            </span>
-            {selected.caption && <p style={{ margin: '8px 0 0', color: TEXT, fontSize: 15 }}>{selected.caption}</p>}
-            <p style={{ margin: '6px 0 0', color: DIM, fontSize: 12 }}>
-              {new Date(selected.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · Tap to close
-            </p>
+          {/* Image + canvas wrapper */}
+          <div style={{ position: 'relative', maxWidth: '100%', maxHeight: '72vh', display: 'flex' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={selected.url}
+              alt={selected.caption}
+              style={{ maxWidth: '100%', maxHeight: '72vh', borderRadius: markupMode ? 0 : 12, objectFit: 'contain', display: 'block' }}
+              id="lightbox-img"
+            />
+            {/* Markup canvas overlay */}
+            {markupMode && (
+              <canvas
+                ref={canvasRef}
+                width={canvasRef.current?.offsetWidth || 320}
+                height={canvasRef.current?.offsetHeight || 240}
+                onTouchStart={handleCanvasTouch}
+                onTouchMove={handleCanvasTouch}
+                onTouchEnd={handleCanvasTouchEnd}
+                onMouseDown={handleCanvasMouseDown}
+                onMouseMove={handleCanvasMouseMove}
+                onMouseUp={handleCanvasMouseUp}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  cursor: 'crosshair',
+                  touchAction: 'none',
+                  borderRadius: 0,
+                  zIndex: 10,
+                }}
+              />
+            )}
+          </div>
+
+          {/* Controls */}
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ marginTop: 14, textAlign: 'center', width: '100%' }}
+          >
+            {/* Category + Markup toggle row */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+              <span style={{ background: `rgba(${hexRgb(CAT_COLORS[selected.category] || DIM)}, .25)`, border: `1px solid ${CAT_COLORS[selected.category] || DIM}`, borderRadius: 20, padding: '3px 14px', fontSize: 12, color: CAT_COLORS[selected.category] || DIM, fontWeight: 700 }}>
+                {selected.category}
+              </span>
+              {!markupMode ? (
+                <button
+                  onClick={enterMarkup}
+                  style={{ background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 20, padding: '3px 14px', fontSize: 12, color: AMBER, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  ✏️ Markup
+                </button>
+              ) : (
+                <span style={{ background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 20, padding: '3px 14px', fontSize: 12, color: RED, fontWeight: 700 }}>
+                  ✏️ Drawing...
+                </span>
+              )}
+            </div>
+
+            {/* Markup toolbar */}
+            {markupMode && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+                {/* Color picker */}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: DIM }}>Color:</span>
+                  {[RED, AMBER, BLUE, GREEN].map(color => (
+                    <button
+                      key={color}
+                      onClick={e => { e.stopPropagation(); setMarkupColor(color); }}
+                      style={{
+                        width: 28, height: 28, borderRadius: '50%', background: color, cursor: 'pointer',
+                        border: markupColor === color ? '3px solid #fff' : '2px solid transparent',
+                        flexShrink: 0,
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* Action buttons */}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={undoStroke}
+                    disabled={markupStrokes.length === 0}
+                    style={{ background: 'rgba(255,255,255,.08)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '8px 14px', color: markupStrokes.length === 0 ? DIM : TEXT, fontSize: 13, cursor: markupStrokes.length === 0 ? 'default' : 'pointer', fontWeight: 600 }}
+                  >
+                    ↩ Undo
+                  </button>
+                  <button
+                    onClick={exitMarkup}
+                    style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 10, padding: '8px 14px', color: RED, fontSize: 13, cursor: 'pointer', fontWeight: 600 }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveMarkup}
+                    style={{ background: GREEN, border: 'none', borderRadius: 10, padding: '8px 14px', color: '#000', fontSize: 13, cursor: 'pointer', fontWeight: 800 }}
+                  >
+                    💾 Save Markup
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!markupMode && (
+              <>
+                {selected.caption && <p style={{ margin: '8px 0 0', color: TEXT, fontSize: 15 }}>{selected.caption}</p>}
+                <p style={{ margin: '6px 0 0', color: DIM, fontSize: 12 }}>
+                  {new Date(selected.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · Tap outside to close
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

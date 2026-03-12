@@ -5,6 +5,95 @@ import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
+interface DelayPrediction {
+  predicted_delay_days: number;
+  confidence: number;
+  risk_factors: string[];
+  critical_path: string[];
+  recommendations: string[];
+  summary: string;
+}
+
+function DelayPredictionPanel({ result, onClose }: { result: DelayPrediction; onClose: () => void }) {
+  const delayColor = result.predicted_delay_days === 0 ? GREEN : result.predicted_delay_days <= 7 ? '#d97706' : RED;
+  const confColor = result.confidence >= 70 ? GREEN : result.confidence >= 40 ? '#d97706' : RED;
+  return (
+    <div style={{ margin: '0 24px 20px', background: 'rgba(15,22,35,0.97)', border: '1px solid rgba(212,160,23,.25)', borderRadius: 12, padding: 20, animation: 'slideDown .25s ease' }}>
+      <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 16 }}>🤖</span>
+          <span style={{ fontWeight: 800, fontSize: 14, color: TEXT }}>AI Schedule Prediction</span>
+        </div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: DIM, fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>×</button>
+      </div>
+
+      {/* Key metrics row */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' as const }}>
+        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '14px 20px', flex: '0 0 auto' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 4 }}>Predicted Delay</div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: delayColor }}>
+            {result.predicted_delay_days === 0 ? 'On Track' : `+${result.predicted_delay_days}d`}
+          </div>
+        </div>
+        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '14px 20px', flex: '0 0 auto' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 4 }}>Confidence</div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: confColor }}>{result.confidence}%</div>
+          <div style={{ marginTop: 6, height: 6, width: 100, background: BORDER, borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{ width: `${result.confidence}%`, height: '100%', background: confColor, borderRadius: 3, transition: 'width .6s ease' }} />
+          </div>
+        </div>
+        {/* Summary */}
+        <div style={{ flex: 1, background: 'rgba(212,160,23,.06)', border: '1px solid rgba(212,160,23,.12)', borderRadius: 10, padding: '14px 16px', fontSize: 13, color: TEXT, lineHeight: 1.6, minWidth: 200 }}>
+          {result.summary}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        {/* Risk Factors */}
+        {result.risk_factors.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 8 }}>Risk Factors</div>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+              {result.risk_factors.map((f, i) => (
+                <li key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 12, color: '#f87171' }}>
+                  <span style={{ marginTop: 1, flexShrink: 0 }}>⚠</span><span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* Critical Path */}
+        {result.critical_path.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 8 }}>Critical Path Activities</div>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+              {result.critical_path.map((a, i) => (
+                <li key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 12, color: GOLD }}>
+                  <span style={{ marginTop: 1, flexShrink: 0 }}>→</span><span>{a}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* Recommendations */}
+        {result.recommendations.length > 0 && (
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 8 }}>Recommendations</div>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column' as const, gap: 5 }}>
+              {result.recommendations.map((r, i) => (
+                <li key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 12, color: '#86efac' }}>
+                  <span style={{ marginTop: 1, flexShrink: 0 }}>✓</span><span>{r}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface Task {
   id: string;
   name: string;
@@ -42,6 +131,11 @@ export default function SchedulePage() {
   const [editingPct, setEditingPct] = useState<string | null>(null);
   const [pctVal, setPctVal] = useState(0);
 
+  // AI Delay Prediction state
+  const [delayPrediction, setDelayPrediction] = useState<DelayPrediction | null>(null);
+  const [predictLoading, setPredictLoading] = useState(false);
+  const [predictError, setPredictError] = useState('');
+
   const fetchTasks = useCallback(async () => {
     setLoading(true);
     try {
@@ -63,6 +157,26 @@ export default function SchedulePage() {
   const today = new Date().toISOString().split('T')[0];
   const daysRemaining = allEnd ? Math.max(0, daysBetween(today, allEnd)) : 0;
   const pctScheduleComplete = tasks.length ? Math.round(tasks.reduce((s, t) => s + t.pct_complete, 0) / tasks.length) : 0;
+
+  async function predictDelays() {
+    setPredictLoading(true);
+    setPredictError('');
+    setDelayPrediction(null);
+    try {
+      const res = await fetch('/api/ai/schedule-predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, activities: tasks }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setDelayPrediction(json);
+    } catch (e: unknown) {
+      setPredictError((e as Error).message || 'AI prediction failed');
+    } finally {
+      setPredictLoading(false);
+    }
+  }
 
   async function handleSave() {
     if (!form.name || !form.start_date || !form.end_date) { setErrorMsg('Name, start and end dates are required.'); return; }
@@ -127,8 +241,17 @@ export default function SchedulePage() {
           <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Schedule</h2>
           <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Project schedule and milestones</div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
           <button onClick={handleExport} style={{ padding: '8px 14px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Export PDF</button>
+          <button
+            onClick={() => {
+              if (delayPrediction) { setDelayPrediction(null); setPredictError(''); }
+              else predictDelays();
+            }}
+            disabled={predictLoading || tasks.length === 0}
+            style={{ padding: '8px 16px', background: delayPrediction ? 'rgba(212,160,23,.15)' : 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.35)', borderRadius: 7, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: tasks.length === 0 ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+            {predictLoading ? '🤖 Predicting…' : delayPrediction ? '🤖 Hide Prediction' : '🤖 Predict Delays'}
+          </button>
           <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>+ Add Task</button>
         </div>
       </div>
@@ -150,6 +273,17 @@ export default function SchedulePage() {
 
       {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
       {errorMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+
+      {predictError && (
+        <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>
+          {predictError}
+        </div>
+      )}
+      {delayPrediction && (
+        <div style={{ marginTop: 16 }}>
+          <DelayPredictionPanel result={delayPrediction} onClose={() => { setDelayPrediction(null); setPredictError(''); }} />
+        </div>
+      )}
 
       {showForm && (
         <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>

@@ -14,43 +14,31 @@ export async function POST(req: NextRequest) {
 
   const row = {
     tenant_id: user.tenantId,
-    project_id: body.project_id || body.projectId,
-    sender_name: body.sender_name || body.senderName || user.email || 'Field User',
-    content: body.content || body.message || '',
-    is_system: false,
-    metadata: body.metadata || null,
+    project_id: body.project_id || body.projectId || null,
+    title: body.title || '',
+    body: body.body || body.message || '',
+    type: body.type || 'general',
+    url: body.url || null,
+    is_read: false,
   };
 
   try {
     const db = createServerClient();
-
-    // Try project_messages first
     const { data, error } = await db
-      .from('project_messages')
+      .from('notifications')
       .insert(row)
       .select()
       .single();
 
-    if (!error) {
-      return NextResponse.json({ success: true, message: data });
-    }
-
-    // Fallback to messages table
-    const { data: data2, error: error2 } = await db
-      .from('messages')
-      .insert(row)
-      .select()
-      .single();
-
-    if (error2) throw error2;
-    return NextResponse.json({ success: true, message: data2 });
+    if (error) throw error;
+    return NextResponse.json({ success: true, notification: data });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('[messages/send] error:', msg);
+    console.error('[notifications/push] error:', msg);
     return NextResponse.json({
       success: true,
-      message: {
-        id: Date.now().toString(),
+      notification: {
+        id: `demo-${Date.now()}`,
         ...row,
         created_at: new Date().toISOString(),
       },

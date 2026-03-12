@@ -14,43 +14,33 @@ export async function POST(req: NextRequest) {
 
   const row = {
     tenant_id: user.tenantId,
-    project_id: body.project_id || body.projectId,
-    sender_name: body.sender_name || body.senderName || user.email || 'Field User',
-    content: body.content || body.message || '',
-    is_system: false,
-    metadata: body.metadata || null,
+    project_id: body.project_id || body.projectId || null,
+    drawing_id: body.drawing_id || body.drawingId || null,
+    x_pct: Number(body.x_pct) || 0,
+    y_pct: Number(body.y_pct) || 0,
+    title: body.title || '',
+    note: body.note || body.notes || '',
+    category: body.category || 'Other',
+    created_by_email: user.email || '',
   };
 
   try {
     const db = createServerClient();
-
-    // Try project_messages first
     const { data, error } = await db
-      .from('project_messages')
+      .from('drawing_pins')
       .insert(row)
       .select()
       .single();
 
-    if (!error) {
-      return NextResponse.json({ success: true, message: data });
-    }
-
-    // Fallback to messages table
-    const { data: data2, error: error2 } = await db
-      .from('messages')
-      .insert(row)
-      .select()
-      .single();
-
-    if (error2) throw error2;
-    return NextResponse.json({ success: true, message: data2 });
+    if (error) throw error;
+    return NextResponse.json({ success: true, pin: data });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error('[messages/send] error:', msg);
+    console.error('[drawings/pin] error:', msg);
     return NextResponse.json({
       success: true,
-      message: {
-        id: Date.now().toString(),
+      pin: {
+        id: `demo-${Date.now()}`,
         ...row,
         created_at: new Date().toISOString(),
       },
