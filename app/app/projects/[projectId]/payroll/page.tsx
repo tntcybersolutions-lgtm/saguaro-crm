@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030';
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -208,7 +209,7 @@ export default function PayrollPage() {
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20 }}>
             <div style={{ flex: 1, maxWidth: 240 }}>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>Week Ending Date *</label>
-              <input type="date" value={weekEndingDate} onChange={e => setWeekEndingDate(e.target.value)} style={inp} />
+              <SaguaroDatePicker value={weekEndingDate} onChange={setWeekEndingDate} style={inp} />
             </div>
             <button
               onClick={() => setShowAddEmployee(!showAddEmployee)}

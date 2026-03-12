@@ -2,6 +2,7 @@ import React from 'react';
 import Script from 'next/script';
 import type { Metadata } from 'next';
 import './globals.css';
+import 'react-datepicker/dist/react-datepicker.css';
 import { ToastProvider } from '../components/Toast';
 
 export const viewport = {

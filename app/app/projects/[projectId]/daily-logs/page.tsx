@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -137,7 +138,7 @@ export default function DailyLogsPage() {
         <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>New Daily Log</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div><label style={label}>Date</label><input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Date</label><SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} /></div>
             <div><label style={label}>Superintendent</label><input type="text" value={form.superintendent} onChange={e => setForm(p => ({ ...p, superintendent: e.target.value }))} placeholder="Name" style={inp} /></div>
             <div><label style={label}>Weather</label>
               <select value={form.weather} onChange={e => setForm(p => ({ ...p, weather: e.target.value }))} style={inp}>

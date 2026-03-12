@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import SaguaroDatePicker from '../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
 const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
@@ -94,11 +95,11 @@ export default function NewProjectPage() {
             <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:12,padding:24}}>
               <div style={{fontWeight:700,fontSize:14,color:TEXT,marginBottom:18,paddingBottom:10,borderBottom:`1px solid ${BORDER}`}}>Key Dates</div>
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
-                <FIELD label="Award Date"><input type="date" value={awardDate} onChange={e=>setAwardDate(e.target.value)} style={INPUT_STYLE}/></FIELD>
-                <FIELD label="Notice to Proceed"><input type="date" value={ntpDate} onChange={e=>setNtpDate(e.target.value)} style={INPUT_STYLE}/></FIELD>
-                <FIELD label="Start Date"><input type="date" value={startDate} onChange={e=>setStartDate(e.target.value)} style={INPUT_STYLE}/></FIELD>
-                <FIELD label="Substantial Completion"><input type="date" value={subDate} onChange={e=>setSubDate(e.target.value)} style={INPUT_STYLE}/></FIELD>
-                <FIELD label="Final Completion"><input type="date" value={finalDate} onChange={e=>setFinalDate(e.target.value)} style={INPUT_STYLE}/></FIELD>
+                <FIELD label="Award Date"><SaguaroDatePicker value={awardDate} onChange={setAwardDate} style={INPUT_STYLE}/></FIELD>
+                <FIELD label="Notice to Proceed"><SaguaroDatePicker value={ntpDate} onChange={setNtpDate} style={INPUT_STYLE}/></FIELD>
+                <FIELD label="Start Date"><SaguaroDatePicker value={startDate} onChange={setStartDate} style={INPUT_STYLE}/></FIELD>
+                <FIELD label="Substantial Completion"><SaguaroDatePicker value={subDate} onChange={setSubDate} style={INPUT_STYLE}/></FIELD>
+                <FIELD label="Final Completion"><SaguaroDatePicker value={finalDate} onChange={setFinalDate} style={INPUT_STYLE}/></FIELD>
                 <FIELD label="State Jurisdiction"><input value={stateJurisdiction} onChange={e=>setStateJurisdiction(e.target.value)} placeholder="AZ" style={INPUT_STYLE}/></FIELD>
               </div>
             </div>

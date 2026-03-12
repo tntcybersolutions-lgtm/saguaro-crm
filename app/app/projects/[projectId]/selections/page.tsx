@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -130,7 +131,7 @@ export default function SelectionsPage() {
             <div><label style={label}>Item *</label><input type="text" value={form.item} onChange={e => setForm(p => ({ ...p, item: e.target.value }))} placeholder="e.g. Countertops" style={inp} /></div>
             <div><label style={label}>Made By</label><input type="text" value={form.made_by} onChange={e => setForm(p => ({ ...p, made_by: e.target.value }))} style={inp} /></div>
             <div style={{ gridColumn: 'span 2' }}><label style={label}>Specification / Model</label><input type="text" value={form.spec} onChange={e => setForm(p => ({ ...p, spec: e.target.value }))} placeholder="e.g. Quartz — Silestone Lyra" style={inp} /></div>
-            <div><label style={label}>Due Date</label><input type="date" value={form.due_date} onChange={e => setForm(p => ({ ...p, due_date: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Due Date</label><SaguaroDatePicker value={form.due_date} onChange={v => setForm(p => ({ ...p, due_date: v }))} style={inp} /></div>
             <div style={{ gridColumn: 'span 3' }}><label style={label}>Notes</label><input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} style={inp} /></div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>

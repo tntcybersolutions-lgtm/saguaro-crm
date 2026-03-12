@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -120,7 +121,7 @@ export default function InspectionsPage() {
                 {INSPECTION_TYPES.map(t => <option key={t}>{t}</option>)}
               </select>
             </div>
-            <div><label style={label}>Date *</label><input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Date *</label><SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} /></div>
             <div><label style={label}>Inspector *</label><input type="text" value={form.inspector} onChange={e => setForm(p => ({ ...p, inspector: e.target.value }))} style={inp} /></div>
             <div><label style={label}>Agency</label><input type="text" value={form.agency} onChange={e => setForm(p => ({ ...p, agency: e.target.value }))} placeholder="e.g. City of Phoenix" style={inp} /></div>
             <div style={{ gridColumn: 'span 2' }}><label style={label}>Notes</label><input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} style={inp} /></div>

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -121,9 +122,9 @@ export default function PurchaseOrdersPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
             <div><label style={label}>Vendor *</label><input type="text" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} /></div>
             <div><label style={label}>Amount ($) *</label><input type="number" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: Number(e.target.value) }))} style={inp} /></div>
-            <div><label style={label}>Issue Date</label><input type="date" value={form.issued_date} onChange={e => setForm(p => ({ ...p, issued_date: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Issue Date</label><SaguaroDatePicker value={form.issued_date} onChange={v => setForm(p => ({ ...p, issued_date: v }))} style={inp} /></div>
             <div style={{ gridColumn: 'span 2' }}><label style={label}>Description *</label><input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Expected Delivery</label><input type="date" value={form.expected_delivery} onChange={e => setForm(p => ({ ...p, expected_delivery: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Expected Delivery</label><SaguaroDatePicker value={form.expected_delivery} onChange={v => setForm(p => ({ ...p, expected_delivery: v }))} style={inp} /></div>
             <div style={{ gridColumn: 'span 3' }}><label style={label}>Notes</label><input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} style={inp} /></div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>

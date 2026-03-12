@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 
@@ -128,7 +129,7 @@ export default function RFIsPage() {
             </div>
             <div>
               <label style={LBL}>Due Date</label>
-              <input type="date" value={fDueDate} onChange={e=>setFDueDate(e.target.value)} style={INP}/>
+              <SaguaroDatePicker value={fDueDate} onChange={setFDueDate} style={INP}/>
             </div>
             <div style={{gridColumn:'1/-1'}}>
               <label style={LBL}>Question / Description</label>

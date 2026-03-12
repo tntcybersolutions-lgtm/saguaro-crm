@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -150,11 +151,11 @@ export default function InsurancePage() {
             </div>
             <div>
               <label style={LBL}>Effective Date *</label>
-              <input type="date" value={fEff} onChange={e=>setFEff(e.target.value)} style={INP}/>
+              <SaguaroDatePicker value={fEff} onChange={setFEff} style={INP}/>
             </div>
             <div>
               <label style={LBL}>Expiry Date *</label>
-              <input type="date" value={fExp} onChange={e=>setFExp(e.target.value)} style={INP}/>
+              <SaguaroDatePicker value={fExp} onChange={setFExp} style={INP}/>
             </div>
             <div>
               <label style={LBL}>Coverage Amount ($)</label>

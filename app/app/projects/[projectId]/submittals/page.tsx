@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -151,7 +152,7 @@ export default function SubmittalsPage() {
             <div style={{ gridColumn: 'span 2' }}><label style={label}>Description *</label><input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} /></div>
             <div><label style={label}>Spec Section *</label><input type="text" value={form.spec_section} onChange={e => setForm(p => ({ ...p, spec_section: e.target.value }))} placeholder="e.g. 03 31 00" style={inp} /></div>
             <div><label style={label}>Submitted By</label><input type="text" value={form.submitted_by} onChange={e => setForm(p => ({ ...p, submitted_by: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Required By Date</label><input type="date" value={form.required_by} onChange={e => setForm(p => ({ ...p, required_by: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Required By Date</label><SaguaroDatePicker value={form.required_by} onChange={v => setForm(p => ({ ...p, required_by: v }))} style={inp} /></div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>

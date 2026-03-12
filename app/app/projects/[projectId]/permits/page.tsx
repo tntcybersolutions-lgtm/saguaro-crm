@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -132,8 +133,8 @@ export default function PermitsPage() {
             <div><label style={label}>Permit Type *</label><input type="text" value={form.permit_type} onChange={e => setForm(p => ({ ...p, permit_type: e.target.value }))} placeholder="e.g. Building" style={inp} /></div>
             <div><label style={label}>Permit Number *</label><input type="text" value={form.number} onChange={e => setForm(p => ({ ...p, number: e.target.value }))} style={inp} /></div>
             <div><label style={label}>Issuing Authority *</label><input type="text" value={form.authority} onChange={e => setForm(p => ({ ...p, authority: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Applied Date</label><input type="date" value={form.applied_date} onChange={e => setForm(p => ({ ...p, applied_date: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Required By</label><input type="date" value={form.required_by} onChange={e => setForm(p => ({ ...p, required_by: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Applied Date</label><SaguaroDatePicker value={form.applied_date} onChange={v => setForm(p => ({ ...p, applied_date: v }))} style={inp} /></div>
+            <div><label style={label}>Required By</label><SaguaroDatePicker value={form.required_by} onChange={v => setForm(p => ({ ...p, required_by: v }))} style={inp} /></div>
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>

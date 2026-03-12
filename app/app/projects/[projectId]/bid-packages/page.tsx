@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -231,7 +232,7 @@ function WizardModal({ projectId, onClose, onCreated }: { projectId: string; onC
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>Bid Due Date</label>
-                <input type="date" value={w.dueDate} onChange={e => setField('dueDate', e.target.value)} style={inp} />
+                <SaguaroDatePicker value={w.dueDate} onChange={v => setField('dueDate', v)} style={inp} />
               </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                 <input type="checkbox" checked={w.requiresBond} onChange={e => setField('requiresBond', e.target.checked)} style={{ width: 16, height: 16, accentColor: GOLD }} />

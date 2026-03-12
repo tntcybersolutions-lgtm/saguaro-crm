@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import SaguaroDatePicker from '../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#ef4444',GREEN='#22c55e';
 
@@ -121,7 +122,7 @@ export default function OnboardingStep3() {
               </div>
               <div>
                 <label style={labelStyle}>Start Date</label>
-                <input type="date" value={form.startDate} onChange={set('startDate')} style={{...inputStyle,colorScheme:'dark'}}/>
+                <SaguaroDatePicker value={form.startDate} onChange={v => setForm(p=>({...p,startDate:v}))} style={{...inputStyle,colorScheme:'dark'}}/>
               </div>
             </div>
 

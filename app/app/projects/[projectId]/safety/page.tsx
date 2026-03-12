@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -147,7 +148,7 @@ export default function SafetyPage() {
         <div style={{ margin: '0 24px 0', background: RAISED, border: '1px solid rgba(239,68,68,.3)', borderRadius: 10, padding: 24, marginTop: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: RED, marginBottom: 16 }}>Report Safety Incident</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div><label style={label}>Date *</label><input type="date" value={incidentForm.date} onChange={e => setIncidentForm(p => ({ ...p, date: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Date *</label><SaguaroDatePicker value={incidentForm.date} onChange={v => setIncidentForm(p => ({ ...p, date: v }))} style={inp} /></div>
             <div><label style={label}>Type</label>
               <select value={incidentForm.type} onChange={e => setIncidentForm(p => ({ ...p, type: e.target.value }))} style={inp}>
                 {['Near Miss','First Aid','Recordable','Lost Time','Property Damage'].map(t => <option key={t}>{t}</option>)}
@@ -210,7 +211,7 @@ export default function SafetyPage() {
         <div style={{ margin: '0 24px 0', background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24, marginTop: 16 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Log Safety Inspection</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div><label style={label}>Date *</label><input type="date" value={inspectionForm.date} onChange={e => setInspectionForm(p => ({ ...p, date: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Date *</label><SaguaroDatePicker value={inspectionForm.date} onChange={v => setInspectionForm(p => ({ ...p, date: v }))} style={inp} /></div>
             <div><label style={label}>Inspector *</label><input type="text" value={inspectionForm.inspector} onChange={e => setInspectionForm(p => ({ ...p, inspector: e.target.value }))} style={inp} /></div>
             <div><label style={label}>Type</label>
               <select value={inspectionForm.type} onChange={e => setInspectionForm(p => ({ ...p, type: e.target.value }))} style={inp}>

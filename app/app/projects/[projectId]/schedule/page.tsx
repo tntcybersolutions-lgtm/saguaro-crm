@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
@@ -160,8 +161,8 @@ export default function SchedulePage() {
                 {['Not Started','In Progress','Complete','Delayed'].map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
-            <div><label style={label}>Start Date *</label><input type="date" value={form.start_date} onChange={e => setForm(p => ({ ...p, start_date: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>End Date *</label><input type="date" value={form.end_date} onChange={e => setForm(p => ({ ...p, end_date: e.target.value }))} style={inp} /></div>
+            <div><label style={label}>Start Date *</label><SaguaroDatePicker value={form.start_date} onChange={v => setForm(p => ({ ...p, start_date: v }))} style={inp} /></div>
+            <div><label style={label}>End Date *</label><SaguaroDatePicker value={form.end_date} onChange={v => setForm(p => ({ ...p, end_date: v }))} style={inp} /></div>
             <div><label style={label}>% Complete</label><input type="number" min={0} max={100} value={form.pct_complete} onChange={e => setForm(p => ({ ...p, pct_complete: Number(e.target.value) }))} style={inp} /></div>
             <div><label style={label}>Predecessor</label><input type="text" value={form.predecessor} onChange={e => setForm(p => ({ ...p, predecessor: e.target.value }))} placeholder="Previous task name" style={inp} /></div>
           </div>
