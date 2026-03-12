@@ -104,12 +104,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        {/* PWA / Mobile App */}
+        {/* PWA / Mobile App — iOS, Android, Desktop */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Saguaro Field" />
+        <meta name="application-name" content="Saguaro Field" />
+        <meta name="theme-color" content="#D4A017" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#D4A017" />
+        {/* Apple touch icons — multiple sizes for iPhone/iPad */}
         <link rel="apple-touch-icon" href="/logo-icon.jpg" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/logo-icon.jpg" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/logo-icon.jpg" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/logo-icon.jpg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/logo-icon.jpg" />
+        {/* Microsoft Tiles */}
+        <meta name="msapplication-TileColor" content="#D4A017" />
+        <meta name="msapplication-TileImage" content="/logo-icon.jpg" />
+        <meta name="msapplication-config" content="none" />
         {/* Service Worker registration */}
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {

@@ -31,6 +31,8 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
   const [syncing, setSyncing] = useState(false);
   const [installEvent, setInstallEvent] = useState<Event | null>(null);
   const [showInstall, setShowInstall] = useState(false);
+  const [isIos, setIsIos] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -62,6 +64,25 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
+    // Detect iOS (Safari on iPhone/iPad)
+    const ua = navigator.userAgent;
+    const ios = /iphone|ipad|ipod/i.test(ua);
+    setIsIos(ios);
+    // Check if already installed as standalone
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window.navigator as any).standalone === true;
+    setIsStandalone(standalone);
+
+    // Show iOS prompt after 3 seconds if not installed
+    if (ios && !standalone) {
+      const dismissed = sessionStorage.getItem('sag_install_dismissed');
+      if (!dismissed) setTimeout(() => setShowInstall(true), 3000);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Android/Desktop Chrome: beforeinstallprompt
     const handler = (e: Event) => { e.preventDefault(); setInstallEvent(e); setShowInstall(true); };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -79,11 +100,21 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
   }, [syncing]);
 
   const handleInstall = async () => {
+    if (isIos) {
+      // iOS: navigate to install guide
+      window.location.href = '/field/install';
+      return;
+    }
     if (!installEvent) return;
-    // @ts-expect-error: BeforeInstallPromptEvent
-    await installEvent.prompt();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (installEvent as any).prompt();
     setShowInstall(false);
     setInstallEvent(null);
+  };
+
+  const dismissInstall = () => {
+    setShowInstall(false);
+    sessionStorage.setItem('sag_install_dismissed', '1');
   };
 
   return (
@@ -113,13 +144,24 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      {/* Install prompt */}
-      {showInstall && (
+      {/* Install prompt — hidden when already standalone */}
+      {showInstall && !isStandalone && (
         <div style={{ background: 'rgba(212,160,23,.1)', borderBottom: `1px solid rgba(212,160,23,.25)`, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <span style={{ fontSize: 13, color: TEXT }}>Add Saguaro Field to home screen</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>
+              {isIos ? '📲 Install on iPhone/iPad' : '📲 Install Saguaro Field'}
+            </span>
+            {isIos && (
+              <p style={{ margin: '2px 0 0', fontSize: 11, color: DIM }}>
+                Tap Share ↑ then &quot;Add to Home Screen&quot;
+              </p>
+            )}
+          </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={() => setShowInstall(false)} style={{ background: 'none', border: 'none', color: DIM, fontSize: 13, cursor: 'pointer' }}>Later</button>
-            <button onClick={handleInstall} style={{ background: GOLD, border: 'none', borderRadius: 6, padding: '5px 12px', color: '#000', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Install</button>
+            <button onClick={dismissInstall} style={{ background: 'none', border: 'none', color: DIM, fontSize: 13, cursor: 'pointer', padding: '4px' }}>✕</button>
+            <button onClick={handleInstall} style={{ background: GOLD, border: 'none', borderRadius: 6, padding: '5px 12px', color: '#000', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              {isIos ? 'How to' : 'Install'}
+            </button>
           </div>
         </div>
       )}

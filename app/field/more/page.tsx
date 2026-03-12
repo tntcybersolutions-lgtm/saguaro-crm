@@ -83,6 +83,7 @@ function MorePage(){
     {emoji:'📄',label:'Documents',href:'/app/documents'},{emoji:'📊',label:'Reports',href:'/app/reports'},
     {emoji:'🤖',label:'AI Autopilot',href:'/app/autopilot'},{emoji:'📐',label:'AI Takeoff',href:'/app/takeoff'},
   ];
+  const APP_INSTALL={emoji:'📲',label:'Install App',desc:'Add to home screen — works offline',href:'/field/install',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'};
 
   return(
     <div style={{padding:'18px 16px'}}>
@@ -113,6 +114,12 @@ function MorePage(){
               </button>
             ))}
           </div>
+          {/* Install app */}
+          <a href={APP_INSTALL.href} style={{background:APP_INSTALL.bg,border:`1px solid ${APP_INSTALL.border}`,borderRadius:14,padding:'14px 16px',display:'flex',alignItems:'center',gap:12,textDecoration:'none',marginBottom:18}}>
+            <div style={{width:44,height:44,borderRadius:12,background:'rgba(212,160,23,.12)',border:'1px solid rgba(212,160,23,.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{APP_INSTALL.emoji}</div>
+            <div><p style={{margin:0,fontSize:15,fontWeight:700,color:APP_INSTALL.color}}>{APP_INSTALL.label}</p><p style={{margin:'2px 0 0',fontSize:12,color:DIM}}>{APP_INSTALL.desc}</p></div>
+            <span style={{marginLeft:'auto',color:DIM,fontSize:18}}>›</span>
+          </a>
           <p style={sLbl}>Desktop</p>
           <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,overflow:'hidden'}}>
             {DESKTOP.map((l,i)=>(

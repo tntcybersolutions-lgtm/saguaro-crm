@@ -1,25 +1,72 @@
 {
-  "name": "Saguaro CRM",
+  "id": "/field",
+  "name": "Saguaro Field",
   "short_name": "Saguaro",
-  "description": "AI-Powered Construction Management",
+  "description": "Field management for construction crews — daily logs, photos, inspections, punch lists, time tracking. Works offline.",
   "start_url": "/field",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "scope": "/",
-  "background_color": "#0A0E14",
+  "background_color": "#09111A",
   "theme_color": "#D4A017",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "lang": "en-US",
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
       "src": "/logo-icon.jpg",
       "sizes": "192x192",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "maskable"
     },
     {
       "src": "/logo-icon.jpg",
       "sizes": "512x512",
       "type": "image/jpeg",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Daily Log",
+      "short_name": "Log",
+      "description": "Submit today's daily log",
+      "url": "/field/log",
+      "icons": [{ "src": "/logo-icon.jpg", "sizes": "96x96", "type": "image/jpeg" }]
+    },
+    {
+      "name": "Take Photo",
+      "short_name": "Photo",
+      "description": "Capture a site photo",
+      "url": "/field/photos",
+      "icons": [{ "src": "/logo-icon.jpg", "sizes": "96x96", "type": "image/jpeg" }]
+    },
+    {
+      "name": "Clock In",
+      "short_name": "Clock",
+      "description": "Clock in with GPS",
+      "url": "/field/clock",
+      "icons": [{ "src": "/logo-icon.jpg", "sizes": "96x96", "type": "image/jpeg" }]
+    },
+    {
+      "name": "Punch List",
+      "short_name": "Punch",
+      "description": "View and update punch list",
+      "url": "/field/punch",
+      "icons": [{ "src": "/logo-icon.jpg", "sizes": "96x96", "type": "image/jpeg" }]
+    }
+  ],
+  "prefer_related_applications": false
 }

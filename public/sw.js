@@ -1,5 +1,5 @@
-/* Saguaro Field — Service Worker v1 */
-const CACHE = 'saguaro-field-v1';
+/* Saguaro Field — Service Worker v3 */
+const CACHE = 'saguaro-field-v3';
 const OFFLINE_URL = '/field';
 
 const PRECACHE = [
@@ -7,6 +7,13 @@ const PRECACHE = [
   '/field/log',
   '/field/photos',
   '/field/inspect',
+  '/field/punch',
+  '/field/clock',
+  '/field/contacts',
+  '/field/schedule',
+  '/field/delivery',
+  '/field/more',
+  '/field/install',
   '/logo-icon.jpg',
   '/site.webmanifest',
 ];
@@ -14,7 +21,9 @@ const PRECACHE = [
 // ─── Install ─────────────────────────────────────────────
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(PRECACHE))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -32,15 +41,15 @@ self.addEventListener('fetch', (e) => {
   const { request } = e;
   const url = new URL(request.url);
 
-  // Skip non-GET and cross-origin (except same-origin API)
+  // Skip non-GET and cross-origin
   if (request.method !== 'GET') return;
   if (url.origin !== location.origin) return;
 
-  // API calls: network first, no cache
+  // API calls: network first, offline JSON fallback
   if (url.pathname.startsWith('/api/')) {
     e.respondWith(
       fetch(request).catch(() =>
-        new Response(JSON.stringify({ error: 'offline' }), {
+        new Response(JSON.stringify({ error: 'offline', offline: true }), {
           headers: { 'Content-Type': 'application/json' },
           status: 503,
         })
@@ -49,13 +58,15 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // App navigation: network first, fallback to cache, fallback to /field
+  // Field app navigation: network first, cache fallback, offline page fallback
   if (url.pathname.startsWith('/field') || request.mode === 'navigate') {
     e.respondWith(
       fetch(request)
         .then((res) => {
-          const clone = res.clone();
-          caches.open(CACHE).then((c) => c.put(request, clone));
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE).then((c) => c.put(request, clone));
+          }
           return res;
         })
         .catch(() =>
@@ -65,13 +76,15 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Static assets: cache first
+  // Static assets (images, fonts, JS chunks): cache first
   e.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
       return fetch(request).then((res) => {
-        const clone = res.clone();
-        caches.open(CACHE).then((c) => c.put(request, clone));
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(CACHE).then((c) => c.put(request, clone));
+        }
         return res;
       });
     })
@@ -81,15 +94,42 @@ self.addEventListener('fetch', (e) => {
 // ─── Background Sync (Chromium only) ─────────────────────
 self.addEventListener('sync', (e) => {
   if (e.tag === 'field-sync') {
-    e.waitUntil(replayQueue());
+    e.waitUntil(notifyClientsToSync());
   }
 });
 
-async function replayQueue() {
-  // The page handles replaying; we just notify all clients
+async function notifyClientsToSync() {
   const clients = await self.clients.matchAll({ type: 'window' });
   clients.forEach((c) => c.postMessage({ type: 'SYNC_NOW' }));
 }
+
+// ─── Push Notifications (future) ─────────────────────────
+self.addEventListener('push', (e) => {
+  if (!e.data) return;
+  const data = e.data.json().catch(() => ({ title: 'Saguaro Field', body: e.data.text() }));
+  e.waitUntil(
+    data.then((d) =>
+      self.registration.showNotification(d.title || 'Saguaro Field', {
+        body: d.body || '',
+        icon: '/logo-icon.jpg',
+        badge: '/logo-icon.jpg',
+        data: d,
+      })
+    )
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window' }).then((clients) => {
+      const target = (e.notification.data?.url) || '/field';
+      const existing = clients.find((c) => c.url.includes('/field') && 'focus' in c);
+      if (existing) return existing.focus();
+      return self.clients.openWindow(target);
+    })
+  );
+});
 
 // ─── Message handler ─────────────────────────────────────
 self.addEventListener('message', (e) => {

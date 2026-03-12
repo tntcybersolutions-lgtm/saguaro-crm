@@ -10,9 +10,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
+    const body = await req.json().catch(() => ({}));
+    const newStatus = body.status || 'Complete';
+    const updateData: Record<string, unknown> = { status: newStatus };
+    if (newStatus === 'complete' || newStatus === 'Complete') {
+      updateData.completed_at = new Date().toISOString();
+    }
     const { error } = await supabase
       .from('punch_list_items')
-      .update({ status: 'Complete', completed_at: new Date().toISOString() })
+      .update(updateData)
       .eq('id', params.id);
     if (error) throw error;
     return NextResponse.json({ success: true });

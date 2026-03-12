@@ -5,6 +5,7 @@
  * - Images: resizes with sharp (auto-installs if missing), pure-JS fallback
  * Users never see install noise — all silent.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { execSync } from 'child_process';
 import path from 'path';
@@ -13,14 +14,15 @@ const MB = 1024 * 1024;
 
 // ── Sharp: lazy-load with silent auto-install ─────────────────────────────────
 
-let sharpModule: typeof import('sharp') | null | 'unavailable' = null;
+let sharpModule: any = null;
+let sharpUnavailable = false;
 
-async function getSharp(): Promise<typeof import('sharp') | null> {
-  if (sharpModule === 'unavailable') return null;
+async function getSharp(): Promise<any> {
+  if (sharpUnavailable) return null;
   if (sharpModule) return sharpModule;
 
   try {
-    sharpModule = (await import('sharp')).default as unknown as typeof import('sharp');
+    sharpModule = (await import('sharp' as any)).default;
     return sharpModule;
   } catch {
     // Not installed — try to install it silently
@@ -31,10 +33,10 @@ async function getSharp(): Promise<typeof import('sharp') | null> {
         stdio: 'ignore',
         timeout: 60_000,
       });
-      sharpModule = (await import('sharp')).default as unknown as typeof import('sharp');
+      sharpModule = (await import('sharp' as any)).default;
       return sharpModule;
     } catch {
-      sharpModule = 'unavailable';
+      sharpUnavailable = true;
       return null;
     }
   }
@@ -81,7 +83,7 @@ async function resizeImage(buffer: ArrayBuffer, mimeType: string): Promise<{ buf
   const sharp = await getSharp();
   if (sharp) {
     try {
-      const resized = await (sharp as unknown as (input: Buffer) => import('sharp').Sharp)(original)
+      const resized = await sharp(original)
         .resize(3000, 3000, { fit: 'inside', withoutEnlargement: true })
         .jpeg({ quality: 80 })
         .toBuffer();
