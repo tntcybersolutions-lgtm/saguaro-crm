@@ -515,7 +515,7 @@ export default function HomePage() {
               <p style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', textAlign: 'left' }}>30-day free trial · No credit card · Cancel anytime</p>
             </div>
 
-            {/* Right column — mock CRM UI */}
+            {/* Right column — AI Takeoff UI */}
             <div style={{ flex: '0 0 45%', maxWidth: '45%' }} className="hero-right">
               <div style={{ background: '#111b27', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
                 {/* Browser chrome */}
@@ -524,57 +524,55 @@ export default function HomePage() {
                     {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />)}
                   </div>
                   <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 4, padding: '3px 8px', fontSize: 10, color: 'rgba(255,255,255,0.3)', marginLeft: 4 }}>
-                    saguarocontrol.net/app/projects/riverside-medical
+                    saguarocontrol.net/app/takeoff/riverside-medical
                   </div>
                 </div>
-                {/* App content */}
-                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {/* Project header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {/* Takeoff header */}
+                <div style={{ padding: '12px 14px 0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                     <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>Riverside Medical Pavilion</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Active · Phoenix, AZ · $2.85M contract</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: TEXT }}>AI Blueprint Takeoff</div>
+                      <div style={{ fontSize: 9, color: DIM, marginTop: 1 }}>Riverside Medical Pavilion · 48 pages · 24,200 SF</div>
                     </div>
-                    <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.12)', color: '#3dd68c', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 4, padding: '2px 7px', fontWeight: 700 }}>ON TRACK</span>
+                    <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.12)', color: '#3dd68c', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 4, padding: '2px 7px', fontWeight: 700 }}>✓ COMPLETE</span>
                   </div>
-                  {/* Progress bar */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>
-                      <span>Contract completion</span><span style={{ color: GOLD }}>62%</span>
-                    </div>
-                    <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
-                      <div style={{ height: '100%', width: '62%', background: `linear-gradient(90deg,${GOLD},#F0C040)`, borderRadius: 2 }} />
-                    </div>
+                  {/* AI processing bar */}
+                  <div style={{ background: 'rgba(212,160,23,0.07)', border: '1px solid rgba(212,160,23,0.2)', borderRadius: 6, padding: '7px 10px', display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+                    <span style={{ fontSize: 11 }}>🤖</span>
+                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', lineHeight: 1.4 }}>Claude analyzed 847 dimensions · 5 CSI divisions · <span style={{ color: GOLD, fontWeight: 700 }}>Completed in 41s</span></div>
                   </div>
-                  {/* Mini stat row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-                    {[['Pay App #4','$428,500','submitted'],['Lien Waivers','12 / 14','current'],['Open RFIs','3','pending']].map(([label, val, sub]) => (
-                      <div key={label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '8px 10px' }}>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>{label}</div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{val}</div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{sub}</div>
-                      </div>
+                </div>
+                {/* Material table */}
+                <div style={{ padding: '0 14px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 52px 36px 54px 62px', gap: '0 6px', padding: '5px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px 6px 0 0' }}>
+                    {['CSI','Description','Qty','Unit','Unit $','Total'].map(h => (
+                      <div key={h} style={{ fontSize: 8, fontWeight: 700, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: h === 'Total' || h === 'Unit $' || h === 'Qty' ? 'right' : 'left' }}>{h}</div>
                     ))}
                   </div>
-                  {/* AI alert */}
-                  <div style={{ background: 'rgba(212,160,23,0.07)', border: '1px solid rgba(212,160,23,0.2)', borderRadius: 6, padding: '8px 10px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: 12 }}>🤖</span>
-                    <div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: GOLD }}>Autopilot Alert</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>Southwest Electric COI expires in 8 days — renewal requested automatically.</div>
+                  {TAKEOFF_MATERIALS.map((row, i) => (
+                    <div key={row.csi} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 52px 36px 54px 62px', gap: '0 6px', padding: '6px 6px', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <div style={{ fontSize: 9, color: GOLD, fontFamily: 'monospace', fontWeight: 600 }}>{row.csi}</div>
+                      <div style={{ fontSize: 9, color: TEXT, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.desc}</div>
+                      <div style={{ fontSize: 9, color: TEXT, textAlign: 'right' }}>{row.qty}</div>
+                      <div style={{ fontSize: 9, color: DIM, textAlign: 'right' }}>{row.unit}</div>
+                      <div style={{ fontSize: 9, color: DIM, textAlign: 'right' }}>{row.unit_cost}</div>
+                      <div style={{ fontSize: 9, color: TEXT, fontWeight: 700, textAlign: 'right' }}>{row.total}</div>
                     </div>
+                  ))}
+                </div>
+                {/* Total row + export */}
+                <div style={{ padding: '8px 14px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 6px', background: 'rgba(212,160,23,0.08)', borderRadius: 6, marginBottom: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: GOLD }}>Estimated Material Total</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: GOLD }}>$2,596,252</span>
                   </div>
-                  {/* Sub list */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {[['Southwest Electric','Electrical','$340K','✓ W9'],['Mesa Concrete Co.','Concrete','$620K','✓ COI'],['AZ Steel Erectors','Steel','$185K','⚠ COI']].map(([name, trade, amt, status]) => (
-                      <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', background: 'rgba(255,255,255,0.03)', borderRadius: 5 }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 10, fontWeight: 600, color: TEXT }}>{name}</div>
-                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{trade} · {amt}</div>
-                        </div>
-                        <span style={{ fontSize: 9, color: status.startsWith('⚠') ? '#f59e0b' : '#3dd68c', fontWeight: 700 }}>{status}</span>
-                      </div>
-                    ))}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                    <div style={{ padding: '7px 10px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 6, textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#000', cursor: 'pointer' }}>
+                      Export Bid Package →
+                    </div>
+                    <div style={{ padding: '7px 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, textAlign: 'center', fontSize: 10, fontWeight: 600, color: TEXT, cursor: 'pointer' }}>
+                      Generate G702 Pay App
+                    </div>
                   </div>
                 </div>
               </div>
