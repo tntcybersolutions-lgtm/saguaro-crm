@@ -189,6 +189,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             { label: 'Autopilot',  href: '/app/autopilot' },
             { label: 'Reports',    href: '/app/reports' },
             { label: 'Intelligence', href: '/app/intelligence' },
+            { label: '📱 Field App', href: '/field' },
           ].map(item => (
             <Link key={item.href} href={item.href} style={{ padding: '6px 12px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: pathname.startsWith(item.href) ? GOLD : DIM, background: pathname.startsWith(item.href) ? 'rgba(212,160,23,.1)' : 'transparent', textDecoration: 'none', transition: 'all .15s' }}>
               {item.label}
@@ -263,6 +264,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             { label: '🤖 Autopilot', href: '/app/autopilot' },
             { label: '📊 Reports', href: '/app/reports' },
             { label: '🧠 Intelligence', href: '/app/intelligence' },
+            { label: '📱 Field App', href: '/field' },
           ].map(item => (
             <Link key={item.href} href={item.href}
               onClick={() => setMobileMenuOpen(false)}
