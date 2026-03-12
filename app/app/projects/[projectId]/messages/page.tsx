@@ -16,13 +16,6 @@ interface Message {
   project_id: string;
 }
 
-const DEMO_MESSAGES: Message[] = [
-  { id: 'm-1', from: 'Chad D.', to: 'All Subs', subject: 'Kickoff meeting Monday 8am', body: 'Team — kickoff meeting at the site Monday at 8am sharp. Please confirm attendance.', date: '2026-01-08', priority: 'Normal', read: true, project_id: '' },
-  { id: 'm-2', from: 'Desert Electric', to: 'Chad D.', subject: 'RFI: Panel location change', body: 'Please advise on revised panel location per updated architectural drawings Rev 3.', date: '2026-02-12', priority: 'High', read: false, project_id: '' },
-  { id: 'm-3', from: 'Chad D.', to: 'AZ Plumbing', subject: 'Approval: Rev plumbing layout', body: 'Approved to proceed per revised plumbing layout submitted 2/10.', date: '2026-02-14', priority: 'Normal', read: true, project_id: '' },
-  { id: 'm-4', from: 'Owner Rep', to: 'Chad D.', subject: 'Site visit request — next Thursday', body: 'We would like to schedule a site walk for Thursday afternoon. Please confirm availability.', date: '2026-03-05', priority: 'Normal', read: false, project_id: '' },
-];
-
 const EMPTY_FORM = { to: '', subject: '', body: '', priority: 'Normal' };
 
 export default function MessagesPage() {
@@ -42,9 +35,9 @@ export default function MessagesPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/messages`);
       const json = await res.json();
-      setMessages(json.messages?.length ? json.messages : DEMO_MESSAGES.map(m => ({ ...m, project_id: projectId })));
+      setMessages(json.messages || []);
     } catch {
-      setMessages(DEMO_MESSAGES.map(m => ({ ...m, project_id: projectId })));
+      setMessages([]);
     } finally {
       setLoading(false);
     }

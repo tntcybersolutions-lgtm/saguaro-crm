@@ -22,17 +22,6 @@ const STATUS_COLORS: Record<string, string> = {
   'Not Started': DIM,
 };
 
-const DEMO_TASKS: Task[] = [
-  { id: 't-1', name: 'Site Preparation', start_date: '2026-01-08', end_date: '2026-01-21', pct_complete: 100, status: 'Complete', predecessor: '', project_id: '' },
-  { id: 't-2', name: 'Foundation', start_date: '2026-01-22', end_date: '2026-02-07', pct_complete: 100, status: 'Complete', predecessor: 'Site Preparation', project_id: '' },
-  { id: 't-3', name: 'Framing', start_date: '2026-02-08', end_date: '2026-03-07', pct_complete: 70, status: 'In Progress', predecessor: 'Foundation', project_id: '' },
-  { id: 't-4', name: 'Rough MEP', start_date: '2026-03-08', end_date: '2026-04-05', pct_complete: 0, status: 'Not Started', predecessor: 'Framing', project_id: '' },
-  { id: 't-5', name: 'Insulation & Drywall', start_date: '2026-04-06', end_date: '2026-05-03', pct_complete: 0, status: 'Not Started', predecessor: 'Rough MEP', project_id: '' },
-  { id: 't-6', name: 'Finish Work', start_date: '2026-05-04', end_date: '2026-07-12', pct_complete: 0, status: 'Not Started', predecessor: 'Insulation & Drywall', project_id: '' },
-  { id: 't-7', name: 'Punch List', start_date: '2026-07-13', end_date: '2026-08-02', pct_complete: 0, status: 'Not Started', predecessor: 'Finish Work', project_id: '' },
-  { id: 't-8', name: 'Substantial Completion', start_date: '2026-08-03', end_date: '2026-08-03', pct_complete: 0, status: 'Not Started', predecessor: 'Punch List', project_id: '' },
-];
-
 const EMPTY_FORM = { name: '', start_date: '', end_date: '', pct_complete: 0, status: 'Not Started', predecessor: '' };
 
 function daysBetween(a: string, b: string) {
@@ -57,9 +46,9 @@ export default function SchedulePage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/schedule`);
       const json = await res.json();
-      setTasks(json.tasks?.length ? json.tasks : DEMO_TASKS.map(t => ({ ...t, project_id: projectId })));
+      setTasks(json.tasks || []);
     } catch {
-      setTasks(DEMO_TASKS.map(t => ({ ...t, project_id: projectId })));
+      setTasks([]);
     } finally {
       setLoading(false);
     }

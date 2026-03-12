@@ -33,15 +33,6 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   Complete: { bg: 'rgba(61,214,140,.2)', color: GREEN },
 };
 
-const DEMO_ITEMS: PunchItem[] = [
-  { id: 'p-1', number: 'P-001', description: 'Touch up paint — master bedroom', location: 'Master Bedroom', assigned_sub: 'Paint crew', due_date: '2026-09-15', priority: 'Low', status: 'Open', project_id: '' },
-  { id: 'p-2', number: 'P-002', description: 'Adjust door hardware — unit 3', location: 'Unit 3 entry', assigned_sub: 'Finish crew', due_date: '2026-09-10', priority: 'Medium', status: 'In Progress', project_id: '' },
-  { id: 'p-3', number: 'P-003', description: 'Install missing outlet cover — kitchen', location: 'Kitchen', assigned_sub: 'Desert Electric', due_date: '2026-09-08', priority: 'High', status: 'Ready to Inspect', project_id: '' },
-  { id: 'p-4', number: 'P-004', description: 'Caulk gap at shower surround', location: 'Master Bath', assigned_sub: 'Tile crew', due_date: '2026-09-05', priority: 'Medium', status: 'Complete', project_id: '' },
-  { id: 'p-5', number: 'P-005', description: 'Replace cracked window — bedroom 2', location: 'Bedroom 2', assigned_sub: 'Window World', due_date: '2026-09-20', priority: 'High', status: 'Open', project_id: '' },
-  { id: 'p-6', number: 'P-006', description: 'Fix drywall damage — hallway', location: 'Main Hallway', assigned_sub: 'Drywall crew', due_date: '2026-09-12', priority: 'Critical', status: 'Open', project_id: '' },
-];
-
 const EMPTY_FORM = { description: '', location: '', assigned_sub: '', due_date: '', priority: 'Medium' };
 
 export default function PunchListPage() {
@@ -62,9 +53,9 @@ export default function PunchListPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/punch-list`);
       const json = await res.json();
-      setItems(json.items?.length ? json.items : DEMO_ITEMS.map(i => ({ ...i, project_id: projectId })));
+      setItems(json.items || []);
     } catch {
-      setItems(DEMO_ITEMS.map(i => ({ ...i, project_id: projectId })));
+      setItems([]);
     } finally {
       setLoading(false);
     }

@@ -15,11 +15,6 @@ interface Proposal {
   project_id: string;
 }
 
-const DEMO_PROPOSALS: Proposal[] = [
-  { id: 'prop-1', version: 'v1.0', created_date: '2025-12-01', amount: 2750000, status: 'Superseded', notes: 'Initial proposal', pdf_url: null, project_id: '' },
-  { id: 'prop-2', version: 'v2.0', created_date: '2025-12-15', amount: 2850000, status: 'Accepted', notes: 'Final — includes value engineering and owner alternates', pdf_url: null, project_id: '' },
-];
-
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
   Sent: { bg: 'rgba(59,130,246,.2)', color: '#60a5fa' },
@@ -48,9 +43,9 @@ export default function ProposalPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/proposals`);
       const json = await res.json();
-      setProposals(json.proposals?.length ? json.proposals : DEMO_PROPOSALS.map(p => ({ ...p, project_id: projectId })));
+      setProposals(json.proposals || []);
     } catch {
-      setProposals(DEMO_PROPOSALS.map(p => ({ ...p, project_id: projectId })));
+      setProposals([]);
     } finally {
       setLoading(false);
     }

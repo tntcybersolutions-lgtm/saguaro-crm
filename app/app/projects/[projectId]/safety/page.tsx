@@ -27,14 +27,6 @@ interface Inspection {
   project_id: string;
 }
 
-const DEMO_INCIDENTS: Incident[] = [
-  { id: 'i-1', date: '2026-02-05', type: 'Near Miss', description: 'Unsecured material — Level 2', injured_party: 'None', severity: 'Near Miss', reported_by: 'Site Super', status: 'Resolved', project_id: '' },
-];
-const DEMO_INSPECTIONS: Inspection[] = [
-  { id: 'ins-1', date: '2026-01-20', inspector: 'Chad D.', type: 'Toolbox Talk', result: 'Pass', items: 8, notes: 'Fall protection — all crew signed', project_id: '' },
-  { id: 'ins-2', date: '2026-02-15', inspector: 'Chad D.', type: 'Site Safety Walk', result: 'Pass', items: 12, notes: 'Heat stress prevention — all crew signed', project_id: '' },
-];
-
 const INCIDENT_FORM = { date: '', type: 'Near Miss', description: '', injured_party: 'None', severity: 'Near Miss', reported_by: '' };
 const INSPECTION_FORM = { date: '', inspector: '', type: 'Site Safety Walk', result: 'Pass', items: 0, notes: '' };
 const SEVERITIES = ['Near Miss','First Aid','Recordable','Lost Time'];
@@ -59,11 +51,11 @@ export default function SafetyPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/safety`);
       const json = await res.json();
-      setIncidents(json.incidents?.length ? json.incidents : DEMO_INCIDENTS.map(i => ({ ...i, project_id: projectId })));
-      setInspections(json.inspections?.length ? json.inspections : DEMO_INSPECTIONS.map(i => ({ ...i, project_id: projectId })));
+      setIncidents(json.incidents || []);
+      setInspections(json.inspections || []);
     } catch {
-      setIncidents(DEMO_INCIDENTS.map(i => ({ ...i, project_id: projectId })));
-      setInspections(DEMO_INSPECTIONS.map(i => ({ ...i, project_id: projectId })));
+      setIncidents([]);
+      setInspections([]);
     } finally {
       setLoading(false);
     }

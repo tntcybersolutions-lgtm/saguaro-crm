@@ -163,11 +163,15 @@ export default function DocumentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {DEMO_PAY_APPS.map(pa => {
+                  {loadingPayApps ? (
+                    <tr><td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center', color: DIM }}>Loading...</td></tr>
+                  ) : payApps.length === 0 ? (
+                    <tr><td colSpan={5} style={{ padding: '48px 16px', textAlign: 'center', color: DIM, fontSize: 13 }}>No pay applications yet.</td></tr>
+                  ) : payApps.map(pa => {
                     const sc = statusConfig[pa.status] || statusConfig.draft;
                     return (
                       <tr key={pa.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
-                        <td style={{ padding: '12px 16px', color: GOLD, fontWeight: 700 }}>#{pa.appNo.toString().padStart(3, '0')}</td>
+                        <td style={{ padding: '12px 16px', color: GOLD, fontWeight: 700 }}>#{(pa.appNo ?? pa.app_no ?? '').toString().padStart(3, '0')}</td>
                         <td style={{ padding: '12px 16px', color: DIM }}>{pa.period}</td>
                         <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{fmt(pa.amount)}</td>
                         <td style={{ padding: '12px 16px' }}><Badge label={pa.status} color={sc.color} bg={sc.bg} /></td>
@@ -214,14 +218,18 @@ export default function DocumentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {DEMO_LIEN_WAIVERS.map(lw => {
+                  {loadingLienWaivers ? (
+                    <tr><td colSpan={6} style={{ padding: '32px 16px', textAlign: 'center', color: DIM }}>Loading...</td></tr>
+                  ) : lienWaivers.length === 0 ? (
+                    <tr><td colSpan={6} style={{ padding: '48px 16px', textAlign: 'center', color: DIM, fontSize: 13 }}>No lien waivers yet.</td></tr>
+                  ) : lienWaivers.map(lw => {
                     const sc = statusConfig[lw.status] || statusConfig.pending;
                     return (
                       <tr key={lw.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
-                        <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{lw.subName}</td>
+                        <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{lw.subName ?? lw.sub_name}</td>
                         <td style={{ padding: '12px 16px', color: DIM }}>{lw.type}</td>
                         <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(lw.amount)}</td>
-                        <td style={{ padding: '12px 16px', color: DIM }}>{lw.throughDate}</td>
+                        <td style={{ padding: '12px 16px', color: DIM }}>{lw.throughDate ?? lw.through_date}</td>
                         <td style={{ padding: '12px 16px' }}><Badge label={lw.status} color={sc.color} bg={sc.bg} /></td>
                         <td style={{ padding: '12px 16px' }}>
                           <button style={{
@@ -305,13 +313,17 @@ export default function DocumentsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {DEMO_PAYROLL.map(pr => {
+                  {loadingPayroll ? (
+                    <tr><td colSpan={5} style={{ padding: '32px 16px', textAlign: 'center', color: DIM }}>Loading...</td></tr>
+                  ) : payroll.length === 0 ? (
+                    <tr><td colSpan={5} style={{ padding: '48px 16px', textAlign: 'center', color: DIM, fontSize: 13 }}>No certified payroll records yet.</td></tr>
+                  ) : payroll.map(pr => {
                     const sc = statusConfig[pr.status] || statusConfig.draft;
                     return (
                       <tr key={pr.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
-                        <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{pr.weekEnding}</td>
+                        <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 600 }}>{pr.weekEnding ?? pr.week_ending}</td>
                         <td style={{ padding: '12px 16px', color: DIM }}>{pr.employees}</td>
-                        <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(pr.totalGross)}</td>
+                        <td style={{ padding: '12px 16px', color: TEXT }}>{fmt(pr.totalGross ?? pr.total_gross ?? 0)}</td>
                         <td style={{ padding: '12px 16px' }}><Badge label={pr.status} color={sc.color} bg={sc.bg} /></td>
                         <td style={{ padding: '12px 16px' }}>
                           <button style={{

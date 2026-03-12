@@ -23,15 +23,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   Completion: 'rgba(61,214,140,.6)',
 };
 
-const DEMO_PHOTOS: Photo[] = [
-  { id: 'ph-1', date: '2026-03-10', category: 'Progress', description: 'Framing Level 2 — east wing', url: null, project_id: '' },
-  { id: 'ph-2', date: '2026-03-08', category: 'Progress', description: 'North wall framing complete', url: null, project_id: '' },
-  { id: 'ph-3', date: '2026-03-05', category: 'Delivery', description: 'Lumber delivery — 2x6x16', url: null, project_id: '' },
-  { id: 'ph-4', date: '2026-02-28', category: 'Inspection', description: 'Framing inspection — passed', url: null, project_id: '' },
-  { id: 'ph-5', date: '2026-02-20', category: 'Issue', description: 'Window rough opening needs revision', url: null, project_id: '' },
-  { id: 'ph-6', date: '2026-02-10', category: 'Progress', description: 'Foundation complete', url: null, project_id: '' },
-];
-
 export default function PhotosPage() {
   const params = useParams();
   const projectId = params.projectId as string;
@@ -48,9 +39,9 @@ export default function PhotosPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/photos`);
       const json = await res.json();
-      setPhotos(json.photos?.length ? json.photos : DEMO_PHOTOS.map(p => ({ ...p, project_id: projectId })));
+      setPhotos(json.photos || []);
     } catch {
-      setPhotos(DEMO_PHOTOS.map(p => ({ ...p, project_id: projectId })));
+      setPhotos([]);
     } finally {
       setLoading(false);
     }
