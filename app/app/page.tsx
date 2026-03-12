@@ -372,7 +372,7 @@ export default function DashboardPage() {
           <KPI label="Total Contract Value" value={formatCurrency(totalContract)} sub="active projects" />
           <KPI label="Open Bids"            value={String(openBids)}              sub="awaiting award" color={BLUE} />
           <KPI label="Pending Pay Apps"     value={String(pendingPayApps)}        sub="submitted / approved" color={pendingPayApps > 0 ? ORANGE : DIM} />
-          <KPI label="Open RFIs"            value={String(rfis?.length ?? '—')}   sub={rfis?.some(r => r.is_overdue) ? 'some overdue' : 'none overdue'} color={rfis?.length ? ORANGE : DIM} />
+          <KPI label="Open RFIs"            value={String(rfis?.length ?? '—')}   sub={rfis?.some(r => r.due_date && new Date(r.due_date) < new Date()) ? 'some overdue' : 'none overdue'} color={rfis?.length ? ORANGE : DIM} />
         </div>
 
         {/* ── Today's Priority Actions ──────────────────────────────────── */}

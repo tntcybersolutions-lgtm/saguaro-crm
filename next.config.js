@@ -113,6 +113,8 @@ const nextConfig = {
 
   // Image optimization
   images: {
+    domains: ['saguarocontrol.net'],
+    formats: ['image/webp', 'image/avif'],
     remotePatterns: [
       {
         protocol: 'https',

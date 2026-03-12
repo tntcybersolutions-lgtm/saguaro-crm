@@ -152,10 +152,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Top Nav ─────────────────────────────────────────────────────── */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 56, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 16, backdropFilter: 'blur(12px)' }}>
-        <Link href="/app" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-          <span style={{ fontSize: 22 }}>🌵</span>
-          <span style={{ fontWeight: 800, fontSize: 16, letterSpacing: 1, color: GOLD }}>SAGUARO</span>
-          <span style={{ fontSize: 10, background: GOLD, color: '#0d1117', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>CRM</span>
+        <Link href="/app" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
+          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+            <span style={{ fontWeight: 900, fontSize: 14, letterSpacing: 1, background: `linear-gradient(90deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
+            <span style={{ fontSize: 10, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
+          </span>
         </Link>
 
         {/* Nav links — hidden on mobile via .desktop-nav-links */}
