@@ -60,9 +60,11 @@ export default function PayAppsPage() {
         body:JSON.stringify({payAppId:pa.id,projectId}),
       });
       const d = await r.json();
-      const url = d.url||d.pdfUrl||d.g702PdfUrl;
-      if(url) window.open(url,'_blank');
-      else setToast({msg:'PDF generation queued — check Documents section.',type:'success'});
+      const url = d.g702Url || d.url || d.pdfUrl;
+      if(url) {
+        window.open(url,'_blank');
+        if(d.g703Url) window.open(d.g703Url,'_blank');
+      } else setToast({msg:d.error||'PDF generation failed — check Documents section.',type:d.error?'error':'success'});
     }catch{
       setToast({msg:'Failed to generate PDF.',type:'error'});
     }finally{

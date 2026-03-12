@@ -46,15 +46,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Fetch user info for avatar
   useEffect(() => {
     fetch('/api/auth/me')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) return null;
+        return r.json();
+      })
       .then(d => {
-        if (!d.demo && d.name) {
+        if (!d) return;
+        if (d.name) {
           const parts = d.name.trim().split(/\s+/);
           const initials = parts.length >= 2
             ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
             : d.name.slice(0, 2).toUpperCase();
           setUserInitials(initials);
-        } else if (!d.demo && d.email) {
+        } else if (d.email) {
           setUserInitials(d.email[0].toUpperCase());
         }
       })

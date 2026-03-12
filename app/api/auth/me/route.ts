@@ -4,7 +4,7 @@ import { getUser, createServerClient } from '@/lib/supabase-server';
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
   if (!user) {
-    return NextResponse.json({ demo: true, name: '', email: '' });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const db = createServerClient();

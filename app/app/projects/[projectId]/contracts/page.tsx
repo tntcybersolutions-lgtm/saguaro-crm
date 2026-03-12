@@ -74,19 +74,15 @@ export default function ContractsPage() {
         body: JSON.stringify({ projectId, ...form }),
       });
       const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to save contract');
       const newContract: Contract = json.contract || { id: `c-${Date.now()}`, project_id: projectId, status: 'Draft', execution_date: null, pdf_url: null, ...form };
       setContracts(prev => [newContract, ...prev]);
       setShowForm(false);
       setForm(EMPTY_FORM);
       setSuccessMsg('Contract created successfully.');
       setTimeout(() => setSuccessMsg(''), 4000);
-    } catch {
-      const newContract: Contract = { id: `c-${Date.now()}`, project_id: projectId, status: 'Draft', execution_date: null, pdf_url: null, ...form };
-      setContracts(prev => [newContract, ...prev]);
-      setShowForm(false);
-      setForm(EMPTY_FORM);
-      setSuccessMsg('Contract created (demo mode).');
-      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to save contract. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -101,8 +97,7 @@ export default function ContractsPage() {
       setSuccessMsg('Signed contract uploaded.');
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch {
-      setSuccessMsg('Upload received (demo mode).');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      setErrorMsg('Upload failed. Please try again.');
     } finally {
       setUploadingId(null);
     }

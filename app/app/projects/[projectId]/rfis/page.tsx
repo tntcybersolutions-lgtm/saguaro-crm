@@ -213,7 +213,7 @@ export default function RFIsPage() {
                             {rfi.due_date ? new Date(rfi.due_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'}
                           </td>
                           <td style={{padding:'12px 14px'}}>
-                            {(rfi.status==='open'||rfi.status==='open') && (
+                            {(rfi.status==='open'||rfi.status==='pending') && (
                               <button onClick={()=>{setAnsweringId(answeringId===rfi.id?null:rfi.id);setAnswerText('');}}
                                 style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:DARK,fontSize:11,padding:'4px 12px',fontWeight:800,cursor:'pointer'}}>
                                 {answeringId===rfi.id ? 'Cancel' : 'Answer'}

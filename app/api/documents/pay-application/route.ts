@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       })),
     });
 
-    const tenantId = user?.id || project?.tenant_id;
+    const tenantId = user?.tenantId || project?.tenant_id;
     const [g702Url, g703Url] = await Promise.all([
       saveDocument(body.projectId || project?.id, 'g702', g702Bytes, { payAppId: body.payAppId }, tenantId),
       saveDocument(body.projectId || project?.id, 'g703', g703Bytes, { payAppId: body.payAppId }, tenantId),

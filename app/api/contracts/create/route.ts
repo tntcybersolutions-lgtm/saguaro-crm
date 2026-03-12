@@ -4,23 +4,27 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  let body: Record<string, unknown> = {};
+  const body = await req.json().catch(() => ({}));
+  if (!body.projectId) return NextResponse.json({ error: 'projectId is required' }, { status: 400 });
   try {
-    body = await req.json().catch(() => ({}));
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    const { data, error } = await supabase.from('contracts').insert(body).select().single();
+    const db = createServerClient();
+    const { data, error } = await db.from('contracts').insert({
+      project_id: body.projectId,
+      sub_name: body.sub_name || '',
+      trade: body.trade || '',
+      amount: body.amount || 0,
+      scope: body.scope || '',
+      start_date: body.start_date || null,
+      end_date: body.end_date || null,
+      retainage_pct: body.retainage_pct || 10,
+      status: 'Draft',
+      tenant_id: user.tenantId,
+      created_by: user.id,
+    }).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, contract: data });
   } catch (err: any) {
     console.error('[contracts/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      contract: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Draft', ...body },
-      demo: true,
-    });
+    return NextResponse.json({ error: err.message || 'Failed to create contract' }, { status: 500 });
   }
 }
