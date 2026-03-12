@@ -24,11 +24,11 @@ export async function POST(req: NextRequest) {
       checkNumber: body.checkNumber,
     });
 
-    const pdfUrl = await saveDocument(body.projectId, `lien-waiver-${body.waiverType}`, pdfBytes, body, user?.id || p?.tenant_id);
+    const pdfUrl = await saveDocument(body.projectId, `lien-waiver-${body.waiverType}`, pdfBytes, body, user?.tenantId || p?.tenant_id);
 
     // Save to DB
     const { data: waiver } = await db.from('lien_waivers').insert({
-      tenant_id: user?.id || p?.tenant_id,
+      tenant_id: user?.tenantId || p?.tenant_id,
       project_id: body.projectId,
       sub_id: body.subId || null,
       pay_app_id: body.payAppId || null,

@@ -146,12 +146,12 @@ function WizardModal({ projectId, onClose, onCreated }: { projectId: string; onC
     setField('submitting', true);
     setField('error', '');
     try {
-      const sovItems = w.lineItems.map(li => ({
+      const lineItems = w.lineItems.map(li => ({
         description: li.description,
-        qty: Number(li.qty),
+        quantity: Number(li.qty),
         unit: li.unit,
-        unitCost: Number(li.unitPrice),
-        total: Number(li.qty) * Number(li.unitPrice),
+        unitPrice: Number(li.unitPrice),
+        totalAmount: Number(li.qty) * Number(li.unitPrice),
       }));
       const cr = await fetch('/api/bid-packages/create', {
         method: 'POST',
@@ -160,15 +160,15 @@ function WizardModal({ projectId, onClose, onCreated }: { projectId: string; onC
           projectId,
           trade: w.trade,
           name: `${w.trade} Package`,
-          scope: w.scope,
-          bidDueDate: w.dueDate,
+          scopeSummary: w.scope,
+          dueDate: w.dueDate,
           requiresBond: w.requiresBond,
-          sovItems,
+          lineItems,
         }),
       });
       const cd = await cr.json() as any;
       if (!cr.ok) throw new Error(cd.error || 'Failed to create package');
-      const pkgId = cd.bidPackageId || cd.id;
+      const pkgId = cd.bidPackage?.id || cd.bidPackageId || cd.id;
 
       // Invite checked subs + extras
       const toInvite = [
