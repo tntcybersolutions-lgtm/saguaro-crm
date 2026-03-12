@@ -152,7 +152,7 @@ function DeliveryPage() {
     setSaving(false);
   };
 
-  const condConfig = CONDITIONS.find((c) => c.value === condition)!;
+  const condConfig = CONDITIONS.find((c) => c.value === condition) || CONDITIONS[0];
   const todayDeliveries = deliveries.filter((d) => {
     const dDate = new Date(d.created_at);
     const now = new Date();

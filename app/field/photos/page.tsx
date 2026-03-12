@@ -242,7 +242,7 @@ function PhotosPage() {
           {filteredPhotos.map((p) => (
             <div key={p.id} onClick={() => setSelected(p)} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', cursor: 'pointer', border: `1px solid ${BORDER}` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.url || p.url} alt={p.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              <img src={p.url} alt={p.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               {!p.uploaded && (
                 <div style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(239,68,68,.9)', borderRadius: 4, padding: '1px 5px', fontSize: 9, color: '#fff', fontWeight: 700 }}>PENDING</div>
               )}

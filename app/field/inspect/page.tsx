@@ -91,7 +91,7 @@ function InspectionForm() {
   const checked = checklist.filter((c) => c.checked).length;
   const deficiencies = checklist.filter((c) => c.deficiency).length;
   const pct = checklist.length ? Math.round((checked / checklist.length) * 100) : 0;
-  const res = RESULTS.find((r) => r.value === result)!;
+  const res = RESULTS.find((r) => r.value === result) || RESULTS[RESULTS.length - 1];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
