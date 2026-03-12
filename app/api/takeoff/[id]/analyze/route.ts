@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { processBlueprint } from '@/lib/blueprint-processor';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -88,7 +89,7 @@ export async function GET(
           return done();
         }
 
-        if (!takeoff.file_url) {
+        if (!takeoff.storage_path && !takeoff.file_url) {
           send('error', { message: 'No blueprint uploaded. Please upload a file first.' });
           return done();
         }
@@ -97,16 +98,44 @@ export async function GET(
         await supabase.from('takeoffs').update({ status: 'analyzing' }).eq('id', takeoffId);
         send('progress', { step: 2, message: 'Sending blueprint to AI...', pct: 15 });
 
-        // 3. Fetch the file from storage
-        const fileResponse = await fetch(takeoff.file_url);
-        if (!fileResponse.ok) {
-          send('error', { message: 'Could not load blueprint file from storage.' });
+        // 3. Fetch the file from private storage or fallback to public URL
+        const rawMime: string = takeoff.storage_path
+          ? takeoff.file_type || 'application/pdf'
+          : 'application/pdf';
+
+        let fileBuffer: ArrayBuffer;
+
+        if (takeoff.storage_path) {
+          const { data: blob, error: dlErr } = await supabase.storage
+            .from('blueprints')
+            .download(takeoff.storage_path);
+          if (dlErr || !blob) {
+            send('error', { message: 'Could not load blueprint from storage.' });
+            return done();
+          }
+          fileBuffer = await blob.arrayBuffer();
+        } else if (takeoff.file_url) {
+          const fileResponse = await fetch(takeoff.file_url);
+          if (!fileResponse.ok) {
+            send('error', { message: 'Could not load blueprint file.' });
+            return done();
+          }
+          fileBuffer = await fileResponse.arrayBuffer();
+        } else {
+          send('error', { message: 'No blueprint file found for this takeoff.' });
           return done();
         }
 
-        const fileBuffer = await fileResponse.arrayBuffer();
-        const base64 = Buffer.from(fileBuffer).toString('base64');
-        const mimeType: string = takeoff.file_type || 'application/pdf';
+        // Hard limit: 50MB is unreasonably large for any blueprint scan
+        const MB = 1024 * 1024;
+        if (fileBuffer.byteLength > 50 * MB) {
+          send('error', { message: `Blueprint file is too large (${Math.round(fileBuffer.byteLength / MB)}MB). Please upload a file under 50MB.` });
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          return done();
+        }
+
+        // Process: trim PDF pages or resize image — handles sharp auto-install silently
+        const { base64, mimeType } = await processBlueprint(fileBuffer, rawMime);
 
         send('progress', { step: 3, message: 'AI is reading your blueprint...', pct: 25 });
 
@@ -279,7 +308,10 @@ export async function GET(
         done();
 
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Analysis failed. Please try again.';
+        let message = err instanceof Error ? err.message : 'Analysis failed. Please try again.';
+        if (message.toLowerCase().includes('prompt is too long') || message.toLowerCase().includes('context length')) {
+          message = 'Blueprint file is too large for AI analysis. Please try a smaller file, reduce PDF pages, or use a lower-resolution image.';
+        }
         console.error('[takeoff/analyze]', err);
         send('error', { message });
         try { await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId); } catch { /* non-fatal */ }
