@@ -17,13 +17,6 @@ interface Inspection {
   project_id: string;
 }
 
-const DEMO_INSPECTIONS: Inspection[] = [
-  { id: 'ins-1', type: 'Foundation', date: '2026-02-10', inspector: 'John Smith', agency: 'City of Phoenix', result: 'Passed', notes: 'No issues', status: 'Complete', re_inspection_date: null, project_id: '' },
-  { id: 'ins-2', type: 'Framing', date: '2026-02-28', inspector: 'John Smith', agency: 'City of Phoenix', result: 'Passed', notes: 'Minor correction — corrected on site', status: 'Complete', re_inspection_date: null, project_id: '' },
-  { id: 'ins-3', type: 'Rough Electrical', date: '2026-03-05', inspector: 'Mary Jones', agency: 'City of Phoenix', result: 'Pending', notes: 'Scheduled', status: 'Scheduled', re_inspection_date: null, project_id: '' },
-  { id: 'ins-4', type: 'Rough Plumbing', date: '2026-03-12', inspector: 'Bob Davis', agency: 'City of Phoenix', result: 'Pending', notes: '', status: 'Scheduled', re_inspection_date: null, project_id: '' },
-];
-
 const INSPECTION_TYPES = ['Foundation','Framing','Rough Electrical','Rough Plumbing','Rough HVAC','Insulation','Drywall','Final Electrical','Final Plumbing','Final Building'];
 const EMPTY_FORM = { type: 'Framing', date: '', inspector: '', agency: '', notes: '' };
 
@@ -54,9 +47,9 @@ export default function InspectionsPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/inspections`);
       const json = await res.json();
-      setInspections(json.inspections?.length ? json.inspections : DEMO_INSPECTIONS.map(i => ({ ...i, project_id: projectId })));
+      setInspections(json.inspections ?? []);
     } catch {
-      setInspections(DEMO_INSPECTIONS.map(i => ({ ...i, project_id: projectId })));
+      setInspections([]);
     } finally {
       setLoading(false);
     }
@@ -142,7 +135,9 @@ export default function InspectionsPage() {
       )}
 
       <div style={{ padding: '16px 24px 40px', overflowX: 'auto' }}>
-        {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : (
+        {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : inspections.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 48, color: DIM, fontSize: 13 }}>No inspections scheduled yet. Use the button above to schedule one.</div>
+        ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#0a1117' }}>

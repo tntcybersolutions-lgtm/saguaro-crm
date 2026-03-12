@@ -1,6 +1,6 @@
 'use client';
-import React, { useState } from 'react';
-import { DEMO_PROJECT } from '../../../../../demo-data';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 
 const GOLD = '#D4A017'; const DARK = '#0d1117'; const RAISED = '#1f2c3e';
 const BORDER = '#263347'; const DIM = '#8fa3c0'; const TEXT = '#e8edf8';
@@ -65,6 +65,8 @@ const STATUS_COLORS: Record<Status, { bg: string; color: string }> = {
 };
 
 export default function EstimatePage() {
+  const { projectId } = useParams<{ projectId: string }>();
+  const [projectName, setProjectName] = useState('');
   const [lines, setLines] = useState<EstimateLine[]>(INITIAL_LINES);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -72,6 +74,14 @@ export default function EstimatePage() {
   const [showAddLine, setShowAddLine] = useState(false);
   const [groupBy, setGroupBy] = useState<'lines' | 'type' | 'status'>('lines');
   const [toast, setToast] = useState<{msg:string;type:'success'|'error'}|null>(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+    fetch(`/api/projects/${projectId}`)
+      .then(r => r.json())
+      .then(d => { if (d.project?.name) setProjectName(d.project.name); })
+      .catch(() => {});
+  }, [projectId]);
 
   React.useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),5000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
 
@@ -115,7 +125,7 @@ export default function EstimatePage() {
       <div style={{ padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 12, background: DARK, flexShrink: 0 }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 18, fontWeight: 800, color: TEXT }}>Estimate</div>
-          <div style={{ fontSize: 12, color: DIM }}>{DEMO_PROJECT.name} · Version 1 <span style={{ background: 'rgba(212,160,23,.15)', color: GOLD, padding: '1px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700, marginLeft: 4 }}>WORKING</span></div>
+          <div style={{ fontSize: 12, color: DIM }}>{projectName || 'This Project'} · Version 1 <span style={{ background: 'rgba(212,160,23,.15)', color: GOLD, padding: '1px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700, marginLeft: 4 }}>WORKING</span></div>
         </div>
 
         {/* Toolbar */}

@@ -21,17 +21,6 @@ interface BudgetLine {
   category: string;
 }
 
-const DEMO_LINES: BudgetLine[] = [
-  { id: 'bl-01', cost_code: '01-000', description: 'General Conditions', category: 'General', original_budget: 128000, approved_cos: 4500, revised_budget: 132500, committed_cost: 132500, actual_cost: 41200, pct_complete: 31, forecast_cost: 132500 },
-  { id: 'bl-02', cost_code: '03-300', description: 'Cast-in-Place Concrete', category: 'Structure', original_budget: 215000, approved_cos: 0, revised_budget: 215000, committed_cost: 215000, actual_cost: 215000, pct_complete: 100, forecast_cost: 215000 },
-  { id: 'bl-03', cost_code: '05-120', description: 'Structural Steel', category: 'Structure', original_budget: 380000, approved_cos: 12000, revised_budget: 392000, committed_cost: 392000, actual_cost: 286000, pct_complete: 73, forecast_cost: 395000 },
-  { id: 'bl-04', cost_code: '06-100', description: 'Rough Carpentry & Framing', category: 'Carpentry', original_budget: 92000, approved_cos: 0, revised_budget: 92000, committed_cost: 88500, actual_cost: 44200, pct_complete: 48, forecast_cost: 91000 },
-  { id: 'bl-05', cost_code: '07-200', description: 'Insulation & Air Barrier', category: 'Envelope', original_budget: 64000, approved_cos: 0, revised_budget: 64000, committed_cost: 64000, actual_cost: 0, pct_complete: 0, forecast_cost: 64000 },
-  { id: 'bl-06', cost_code: '09-900', description: 'Painting & Wall Finishes', category: 'Finishes', original_budget: 78000, approved_cos: 3200, revised_budget: 81200, committed_cost: 78000, actual_cost: 0, pct_complete: 0, forecast_cost: 81200 },
-  { id: 'bl-07', cost_code: '22-000', description: 'Plumbing Systems', category: 'MEP', original_budget: 185000, approved_cos: 6800, revised_budget: 191800, committed_cost: 191800, actual_cost: 62400, pct_complete: 33, forecast_cost: 194000 },
-  { id: 'bl-08', cost_code: '26-000', description: 'Electrical Systems', category: 'MEP', original_budget: 220000, approved_cos: 8500, revised_budget: 228500, committed_cost: 228500, actual_cost: 78200, pct_complete: 34, forecast_cost: 228500 },
-];
-
 interface AddLineForm {
   cost_code: string;
   description: string;
@@ -62,10 +51,10 @@ export default function BudgetPage() {
         if (d.lines?.length) {
           setLines(d.lines);
         } else {
-          setLines(DEMO_LINES);
+          setLines([]);
         }
       } catch {
-        setLines(DEMO_LINES);
+        setLines([]);
       } finally {
         setLoading(false);
       }
@@ -254,6 +243,13 @@ export default function BudgetPage() {
                 </tr>
               </thead>
               <tbody>
+                {lines.length === 0 && (
+                  <tr>
+                    <td colSpan={10} style={{ padding: '48px 24px', textAlign: 'center', color: DIM, fontSize: 13 }}>
+                      No budget lines yet. Add your first budget item.
+                    </td>
+                  </tr>
+                )}
                 {lines.map(l => {
                   const remaining = l.revised_budget - l.actual_cost;
                   const isEditing = editingId === l.id;

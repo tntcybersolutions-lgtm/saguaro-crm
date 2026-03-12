@@ -16,14 +16,6 @@ interface ProjectFile {
   project_id: string;
 }
 
-const DEMO_FILES: ProjectFile[] = [
-  { id: 'f-1', name: 'Contract_Desert_Electric.pdf', type: 'PDF', size: '2.1 MB', uploaded_by: 'Chad D.', date: '2026-01-10', url: null, category: 'Contracts', project_id: '' },
-  { id: 'f-2', name: 'Permit_Building_2026.pdf', type: 'PDF', size: '0.8 MB', uploaded_by: 'Chad D.', date: '2026-01-12', url: null, category: 'Permits', project_id: '' },
-  { id: 'f-3', name: 'Insurance_COI_Mesa_Roofing.pdf', type: 'PDF', size: '1.3 MB', uploaded_by: 'Admin', date: '2026-02-15', url: null, category: 'Insurance', project_id: '' },
-  { id: 'f-4', name: 'Drawings_Rev3.zip', type: 'ZIP', size: '45.2 MB', uploaded_by: 'Chad D.', date: '2026-02-01', url: null, category: 'Drawings', project_id: '' },
-  { id: 'f-5', name: 'Scope_of_Work_v2.docx', type: 'DOCX', size: '0.4 MB', uploaded_by: 'Chad D.', date: '2026-01-05', url: null, category: 'Contracts', project_id: '' },
-];
-
 const CATEGORIES = ['All','Contracts','Drawings','Permits','Insurance','Photos','Reports','Other'];
 const TYPE_ICONS: Record<string, string> = { PDF: '📄', ZIP: '📦', DOCX: '📝', XLSX: '📊', PNG: '🖼️', JPG: '🖼️' };
 
@@ -43,9 +35,9 @@ export default function FilesPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/files`);
       const json = await res.json();
-      setFiles(json.files?.length ? json.files : DEMO_FILES.map(f => ({ ...f, project_id: projectId })));
+      setFiles(json.files ?? []);
     } catch {
-      setFiles(DEMO_FILES.map(f => ({ ...f, project_id: projectId })));
+      setFiles([]);
     } finally {
       setLoading(false);
     }
@@ -85,7 +77,7 @@ export default function FilesPage() {
       await fetch('/api/files/upload', { method: 'POST', body: fd });
       setSuccessMsg(`${uploadedFiles.length} file(s) uploaded.`);
     } catch {
-      setSuccessMsg(`${uploadedFiles.length} file(s) added (demo mode).`);
+      setSuccessMsg(`${uploadedFiles.length} file(s) added locally.`);
     }
     setFiles(prev => [...newFiles, ...prev]);
     setUploading(false);
@@ -126,7 +118,7 @@ export default function FilesPage() {
 
       <div style={{ padding: '16px 24px 40px', overflowX: 'auto' }}>
         {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>No files found.</div>
+          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>{files.length === 0 ? 'No files uploaded yet.' : 'No files match your search.'}</div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>

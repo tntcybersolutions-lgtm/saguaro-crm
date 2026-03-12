@@ -26,25 +26,6 @@ function Badge({ label, color = '#94a3b8', bg = 'rgba(148,163,184,.12)' }: { lab
 const TABS = ['Pay Applications', 'Lien Waivers', 'Bonds & Forms', 'Payroll', 'Closeout'] as const;
 type Tab = typeof TABS[number];
 
-const DEMO_PAY_APPS = [
-  { id: 'pa-001', appNo: 1, period: 'Jan 1 – Jan 31, 2026', amount: 192000, status: 'paid' },
-  { id: 'pa-002', appNo: 2, period: 'Feb 1 – Feb 28, 2026', amount: 208500, status: 'approved' },
-  { id: 'pa-003', appNo: 3, period: 'Mar 1 – Mar 31, 2026', amount: 176250, status: 'draft' },
-];
-
-const DEMO_LIEN_WAIVERS = [
-  { id: 'lw-001', subName: 'Desert Electrical Contractors', type: 'Conditional Partial', amount: 96000, throughDate: '2026-01-31', status: 'executed' },
-  { id: 'lw-002', subName: 'AZ Concrete Solutions', type: 'Unconditional Partial', amount: 72500, throughDate: '2026-01-31', status: 'executed' },
-  { id: 'lw-003', subName: 'Southwest Roofing & Sheet Metal', type: 'Conditional Partial', amount: 48750, throughDate: '2026-02-28', status: 'pending' },
-  { id: 'lw-004', subName: 'Desert Electrical Contractors', type: 'Conditional Partial', amount: 96000, throughDate: '2026-02-28', status: 'executed' },
-];
-
-const DEMO_PAYROLL = [
-  { id: 'pr-001', weekEnding: '2026-03-07', employees: 14, totalGross: 28450, status: 'submitted' },
-  { id: 'pr-002', weekEnding: '2026-02-28', employees: 12, totalGross: 24800, status: 'submitted' },
-  { id: 'pr-003', weekEnding: '2026-02-21', employees: 11, totalGross: 22100, status: 'submitted' },
-];
-
 const BOND_CARDS = [
   { code: 'A310', name: 'Bid Bond', desc: 'AIA A310 – Bid bond for proposal phase', icon: '📋' },
   { code: 'A312-P', name: 'Performance Bond', desc: 'AIA A312 – Performance bond for contract execution', icon: '🛡️' },
@@ -78,6 +59,36 @@ const statusConfig: Record<string, { color: string; bg: string }> = {
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Pay Applications');
+  const [payApps, setPayApps] = useState<any[]>([]);
+  const [lienWaivers, setLienWaivers] = useState<any[]>([]);
+  const [payroll, setPayroll] = useState<any[]>([]);
+  const [loadingPayApps, setLoadingPayApps] = useState(true);
+  const [loadingLienWaivers, setLoadingLienWaivers] = useState(true);
+  const [loadingPayroll, setLoadingPayroll] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/pay-apps/list')
+      .then(r => r.json())
+      .then(d => setPayApps(d.payApps ?? d.items ?? []))
+      .catch(() => setPayApps([]))
+      .finally(() => setLoadingPayApps(false));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/lien-waivers/list')
+      .then(r => r.json())
+      .then(d => setLienWaivers(d.lienWaivers ?? d.items ?? []))
+      .catch(() => setLienWaivers([]))
+      .finally(() => setLoadingLienWaivers(false));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/documents/list?type=payroll')
+      .then(r => r.json())
+      .then(d => setPayroll(d.payroll ?? d.items ?? []))
+      .catch(() => setPayroll([]))
+      .finally(() => setLoadingPayroll(false));
+  }, []);
 
   return (
     <div style={{ background: DARK, minHeight: '100%' }}>

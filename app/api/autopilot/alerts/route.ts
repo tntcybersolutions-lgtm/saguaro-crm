@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { DEMO_AUTOPILOT_ALERTS } from '../../../../demo-data';
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,10 +8,7 @@ export async function GET(req: NextRequest) {
 
     const user = await getUser(req);
     if (!user) {
-      const alerts = projectId
-        ? DEMO_AUTOPILOT_ALERTS.filter(() => true) // return all demo alerts
-        : DEMO_AUTOPILOT_ALERTS;
-      return NextResponse.json({ alerts, source: 'demo' });
+      return NextResponse.json({ alerts: [], source: 'unauth' }, { status: 401 });
     }
 
     const db = createServerClient();
@@ -31,12 +27,10 @@ export async function GET(req: NextRequest) {
     }
 
     const { data, error } = await query;
-
     if (error) throw error;
 
-    const alerts = (data || []).length > 0 ? data : DEMO_AUTOPILOT_ALERTS;
-    return NextResponse.json({ alerts, source: (data || []).length > 0 ? 'live' : 'demo' });
+    return NextResponse.json({ alerts: data || [], source: 'live' });
   } catch {
-    return NextResponse.json({ alerts: DEMO_AUTOPILOT_ALERTS, source: 'demo' });
+    return NextResponse.json({ alerts: [], source: 'error' });
   }
 }

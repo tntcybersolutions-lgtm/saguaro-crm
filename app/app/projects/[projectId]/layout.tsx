@@ -1,8 +1,7 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
-import { DEMO_PROJECT } from '../../../../demo-data';
 
 const GOLD = '#D4A017'; const DARK = '#0d1117'; const RAISED = '#1f2c3e';
 const BORDER = '#263347'; const DIM = '#8fa3c0'; const TEXT = '#e8edf8';
@@ -94,14 +93,31 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const projectId = params['projectId'] as string;
   const base = `/app/projects/${projectId}`;
   const [collapsed, setCollapsed] = useState(false);
+  const [projectName, setProjectName] = useState('');
+  const [projectNumber, setProjectNumber] = useState('');
+  const [pctComplete, setPctComplete] = useState(0);
+
+  useEffect(() => {
+    if (!projectId) return;
+    fetch(`/api/projects/${projectId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.project) {
+          setProjectName(d.project.name || '');
+          setProjectNumber(d.project.project_number || '');
+          const billed = d.project.totalBilledToDate || 0;
+          const contract = d.project.contractSumToDate || d.project.contract_amount || 1;
+          setPctComplete(parseFloat(((billed / contract) * 100).toFixed(1)));
+        }
+      })
+      .catch(() => {});
+  }, [projectId]);
 
   const isActive = (href: string) => {
     const full = base + href;
     if (href === '') return pathname === base;
     return pathname.startsWith(full);
   };
-
-  const pctComplete = 14.8;
 
   return (
     <div style={{ display: 'flex', minHeight: 'calc(100vh - 56px)' }}>
@@ -132,8 +148,8 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
         <div style={{ padding: '14px 12px', borderBottom: `1px solid ${BORDER}` }}>
           {!collapsed && (
             <>
-              <div style={{ fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 2, lineHeight: 1.3 }}>{DEMO_PROJECT.name}</div>
-              <div style={{ fontSize: 10, color: DIM, marginBottom: 8 }}>{DEMO_PROJECT.project_number}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 2, lineHeight: 1.3 }}>{projectName || '—'}</div>
+              <div style={{ fontSize: 10, color: DIM, marginBottom: 8 }}>{projectNumber}</div>
               {/* Progress */}
               <div style={{ height: 3, background: 'rgba(255,255,255,.08)', borderRadius: 2, marginBottom: 3 }}>
                 <div style={{ height: '100%', width: `${pctComplete}%`, background: `linear-gradient(90deg,${GOLD},#F0C040)`, borderRadius: 2 }} />

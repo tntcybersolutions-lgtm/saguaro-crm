@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { DEMO_PROJECT, DEMO_SUBS, DEMO_PAY_APPS, DEMO_RFIS, DEMO_CHANGE_ORDERS, DEMO_BUDGET_LINES, DEMO_AUTOPILOT_ALERTS, DEMO_CONTEXT } from '../../../../../demo-data';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',BLUE='#1a5fa8';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -26,9 +25,30 @@ function PageHeader({title,sub,actions}:{title:string,sub?:string,actions?:React
 }
 
 export default function TeamPage(){
+  const params = useParams();
+  const projectId = params['projectId'] as string;
   const [showInvite, setShowInvite] = useState(false);
-  const members = [{name:'Chad Derocher',role:'Project Manager',email:'chad@copperstate.com',access:'Admin',last:'Today'},{name:'Mike Torres',role:'Superintendent',email:'mike@copperstate.com',access:'Manager',last:'Today'},{name:'Sarah Chen',role:'Estimator',email:'sarah@copperstate.com',access:'Member',last:'Yesterday'}];
-  const subs = DEMO_SUBS.slice(0,4).map(s=>({name:s.name,role:'Subcontractor',email:s.primary_email,access:'Sub Portal',last:'Active'}));
+  const [members, setMembers] = useState<{name:string,role:string,email:string,access:string,last:string}[]>([]);
+  const [subs, setSubs] = useState<{name:string,role:string,email:string,access:string,last:string}[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!projectId) return;
+    (async () => {
+      try {
+        const r = await fetch(`/api/projects/${projectId}`);
+        const d = await r.json();
+        setMembers(d.members ?? []);
+        setSubs((d.subs ?? []).map((s: any) => ({ name: s.name, role: 'Subcontractor', email: s.primary_email || s.email || '', access: 'Sub Portal', last: 'Active' })));
+      } catch {
+        setMembers([]);
+        setSubs([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [projectId]);
+
   return <div>
     <PageHeader title="Team" sub="Manage project team members and access" actions={<button onClick={()=>setShowInvite(!showInvite)} style={{padding:'8px 16px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ Invite Member</button>}/>
     {showInvite&&<div style={{margin:24,background:RAISED,border:`1px solid rgba(212,160,23,.3)`,borderRadius:10,padding:24}}>
@@ -52,7 +72,11 @@ export default function TeamPage(){
           <thead><tr>
             {['Name','Role','Email','Access Level','Last Active','Actions'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}
           </tr></thead>
-          <tbody>{members.map(m=><tr key={m.name} style={{borderBottom:`1px solid rgba(38,51,71,.4)`}}>
+          <tbody>{loading ? (
+            <tr><td colSpan={6} style={{padding:'24px 12px',textAlign:'center',color:DIM,fontSize:13}}>Loading...</td></tr>
+          ) : members.length === 0 ? (
+            <tr><td colSpan={6} style={{padding:'32px 12px',textAlign:'center',color:DIM,fontSize:13}}>No team members yet. Invite someone to get started.</td></tr>
+          ) : members.map(m=><tr key={m.name} style={{borderBottom:`1px solid rgba(38,51,71,.4)`}}>
             <td style={{padding:'11px 12px'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:32,height:32,borderRadius:'50%',background:`linear-gradient(135deg,${GOLD},#B85C2A)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'#0d1117'}}>{m.name[0]}</div><span style={{color:TEXT,fontWeight:600}}>{m.name}</span></div></td>
             <td style={{padding:'11px 12px',color:DIM}}>{m.role}</td>
             <td style={{padding:'11px 12px',color:DIM}}>{m.email}</td>
@@ -67,7 +91,9 @@ export default function TeamPage(){
           <thead><tr>
             {['Company','Contact Email','Portal Access','Actions'].map(h=><th key={h} style={{padding:'8px 12px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}
           </tr></thead>
-          <tbody>{subs.map(s=><tr key={s.name} style={{borderBottom:`1px solid rgba(38,51,71,.4)`}}>
+          <tbody>{subs.length === 0 ? (
+            <tr><td colSpan={4} style={{padding:'32px 12px',textAlign:'center',color:DIM,fontSize:13}}>No subcontractors on this project yet.</td></tr>
+          ) : subs.map(s=><tr key={s.name} style={{borderBottom:`1px solid rgba(38,51,71,.4)`}}>
             <td style={{padding:'11px 12px',color:TEXT,fontWeight:600}}>{s.name}</td>
             <td style={{padding:'11px 12px',color:DIM}}>{s.email}</td>
             <td style={{padding:'11px 12px'}}><Badge label="Sub Portal" color='#a78bfa' bg='rgba(167,139,250,.12)'/></td>

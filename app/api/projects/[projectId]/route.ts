@@ -1,27 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { DEMO_PROJECT, DEMO_SUBS, DEMO_PAY_APPS, DEMO_CHANGE_ORDERS, DEMO_RFIS } from '../../../../demo-data';
-
-function buildDemoResponse(projectId: string) {
-  const p = { ...DEMO_PROJECT, id: projectId || DEMO_PROJECT.id, end_date: DEMO_PROJECT.substantial_date };
-  const cos = DEMO_CHANGE_ORDERS;
-  const apps = DEMO_PAY_APPS;
-  const contractSumToDate = p.contract_amount + cos.reduce((s, co) => s + (co.cost_impact || 0), 0);
-  const totalBilledToDate = apps.length > 0 ? apps[0].total_completed_and_stored : 0;
-  return {
-    project: { ...p, contractSumToDate, totalBilledToDate },
-    subs: DEMO_SUBS,
-    payApps: apps,
-    changeOrders: cos,
-    rfis: DEMO_RFIS,
-    team: [],
-    source: 'demo',
-  };
-}
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   try {
+    const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const db = createServerClient();
     const [
       { data: project },
@@ -31,16 +16,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       { data: rfis },
       { data: team },
     ] = await Promise.all([
-      db.from('projects').select('*').eq('id', projectId).single(),
-      db.from('subcontractors').select('*').eq('project_id', projectId).order('created_at', { ascending: false }),
-      db.from('pay_applications').select('*').eq('project_id', projectId).order('app_number', { ascending: false }),
-      db.from('change_orders').select('*').eq('project_id', projectId).order('created_at', { ascending: false }),
-      db.from('rfis').select('*').eq('project_id', projectId).order('created_at', { ascending: false }),
+      db.from('projects').select('*').eq('id', projectId).eq('tenant_id', user.tenantId).single(),
+      db.from('subcontractors').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }),
+      db.from('pay_applications').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('app_number', { ascending: false }),
+      db.from('change_orders').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }),
+      db.from('rfis').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }),
       db.from('project_team').select('*').eq('project_id', projectId),
     ]);
 
     if (!project) {
-      return NextResponse.json(buildDemoResponse(projectId));
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
     const cos = (changeOrders || []) as any[];
@@ -58,7 +43,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       team: team || [],
     });
   } catch {
-    return NextResponse.json(buildDemoResponse(projectId));
+    return NextResponse.json({ error: 'Failed to load project' }, { status: 500 });
   }
 }
 
@@ -69,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ proj
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const db = createServerClient();
-    const { data, error } = await db.from('projects').update(body).eq('id', projectId).select().single();
+    const { data, error } = await db.from('projects').update(body).eq('id', projectId).eq('tenant_id', user.tenantId).select().single();
     if (error) throw error;
     return NextResponse.json({ project: data });
   } catch (err: any) {

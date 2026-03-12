@@ -5,6 +5,8 @@ import { onPayAppCreated } from '@/lib/triggers';
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json();
     const db = createServerClient();
 
@@ -25,7 +27,7 @@ export async function POST(req: NextRequest) {
     const appNumber = ((lastApp as any)?.app_number || 0) + 1;
 
     const { data: payApp, error } = await db.from('pay_applications').insert({
-      tenant_id: user?.id || p?.tenant_id,
+      tenant_id: user.tenantId,
       project_id: projectId,
       app_number: appNumber,
       period_from: body.periodFrom,
@@ -56,7 +58,7 @@ export async function POST(req: NextRequest) {
     if (body.lineItems && body.lineItems.length > 0) {
       await db.from('schedule_of_values').insert(
         body.lineItems.map((item: any, i: number) => ({
-          tenant_id: user?.id || p?.tenant_id,
+          tenant_id: user.tenantId,
           project_id: projectId,
           pay_app_id: (payApp as any).id,
           line_number: i + 1,

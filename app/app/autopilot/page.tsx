@@ -1,6 +1,5 @@
 'use client';
 import React, { useState } from 'react';
-import { DEMO_AUTOPILOT_ALERTS, DEMO_PROJECT } from '../../../demo-data';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#c03030';
 
@@ -23,7 +22,7 @@ export default function AutopilotPage() {
   const [alertStates, setAlertStates] = useState<Record<string, 'acknowledged'|'dismissed'>>({});
   const [scanning, setScanning] = useState(false);
 
-  const allAlerts = DEMO_AUTOPILOT_ALERTS as AutopilotAlert[];
+  const allAlerts: AutopilotAlert[] = [];
   const visibleAlerts = allAlerts.filter(a => {
     if (alertStates[a.id] === 'dismissed') return false;
     return filter === 'all' || a.severity === filter;
@@ -136,7 +135,7 @@ export default function AutopilotPage() {
                   <div style={{display:'flex',gap:8,flexWrap:'wrap' as const}}>
                     <span style={{fontSize:11,padding:'2px 8px',borderRadius:4,background:'rgba(255,255,255,.05)',color:DIM}}>{alert.rule_code.replace(/_/g,' ')}</span>
                     <span style={{fontSize:11,padding:'2px 8px',borderRadius:4,background:'rgba(255,255,255,.05)',color:DIM}}>{alert.entity_type}</span>
-                    <span style={{fontSize:11,padding:'2px 8px',borderRadius:4,background:'rgba(255,255,255,.05)',color:DIM}}>{DEMO_PROJECT.name}</span>
+                    <span style={{fontSize:11,padding:'2px 8px',borderRadius:4,background:'rgba(255,255,255,.05)',color:DIM}}>{alert.entity_type}</span>
                   </div>
                 </div>
                 <div style={{display:'flex',gap:8,flexShrink:0}}>

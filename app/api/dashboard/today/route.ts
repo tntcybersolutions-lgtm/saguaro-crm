@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 
-const DEMO_ACTIONS = [
-  { type: 'pay-app', title: 'Pay App #3 awaiting certification', subtitle: 'Mesa Office Complex — $127,500 due', urgency: 'high', actionUrl: '/app/projects/demo-1/pay-apps', actionLabel: 'Review' },
-  { type: 'insurance', title: 'Southwest Electrical insurance expires in 12 days', subtitle: 'GL Certificate — exp. Nov 15', urgency: 'high', actionUrl: '/app/projects/demo-1/insurance', actionLabel: 'Request Renewal' },
-  { type: 'rfi', title: '3 RFIs overdue for response', subtitle: 'Scottsdale Retail Center', urgency: 'medium', actionUrl: '/app/projects/demo-2/rfis', actionLabel: 'View RFIs' },
-  { type: 'compliance', title: 'W-9 missing for Desert Drywall Co', subtitle: 'Required before next payment', urgency: 'medium', actionUrl: '/app/projects/demo-1/w9', actionLabel: 'Send Request' },
-];
-
 export async function GET(req: NextRequest) {
   try {
     const user = await getUser(req);
-    if (!user) return NextResponse.json({ actions: DEMO_ACTIONS, source: 'demo' });
+    if (!user) return NextResponse.json({ actions: [], source: 'unauth' }, { status: 401 });
 
     const db = createServerClient();
     const tenantId = user.tenantId;
@@ -73,8 +66,8 @@ export async function GET(req: NextRequest) {
       });
     });
 
-    return NextResponse.json({ actions: actions.length > 0 ? actions : DEMO_ACTIONS, source: actions.length > 0 ? 'live' : 'demo' });
+    return NextResponse.json({ actions, source: 'live' });
   } catch {
-    return NextResponse.json({ actions: DEMO_ACTIONS, source: 'demo' });
+    return NextResponse.json({ actions: [], source: 'error' });
   }
 }

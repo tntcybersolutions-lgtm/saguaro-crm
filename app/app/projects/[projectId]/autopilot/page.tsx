@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders, getTenantId } from '../../../../../lib/supabase-browser';
-import { DEMO_AUTOPILOT_ALERTS } from '../../../../../demo-data';
 
 const GOLD='#D4A017',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#3dd68c',RED='#ef4444';
 
@@ -23,9 +22,9 @@ export default function AutopilotPage(){
         const headers = await getAuthHeaders();
         const r = await fetch(`/api/autopilot/alerts?projectId=${pid}&tenantId=${tenantId}`, { headers });
         const d = await r.json();
-        setAlerts(d.alerts ?? DEMO_AUTOPILOT_ALERTS);
+        setAlerts(d.alerts ?? []);
       } catch {
-        setAlerts(DEMO_AUTOPILOT_ALERTS);
+        setAlerts([]);
       } finally { setLoading(false); }
     })();
   }, [pid]);

@@ -16,12 +16,6 @@ interface Invoice {
   project_id: string;
 }
 
-const DEMO_INVOICES: Invoice[] = [
-  { id: 'inv-1', invoice_num: 'INV-001', period: 'Jan 2026', amount: 214250, issued_date: '2026-02-01', due_date: '2026-03-01', status: 'Paid', notes: 'Draw #1', project_id: '' },
-  { id: 'inv-2', invoice_num: 'INV-002', period: 'Feb 2026', amount: 171400, issued_date: '2026-03-01', due_date: '2026-04-01', status: 'Pending', notes: 'Draw #2', project_id: '' },
-  { id: 'inv-3', invoice_num: 'INV-003', period: 'Mar 2026', amount: 198000, issued_date: '2026-04-01', due_date: '2026-05-01', status: 'Draft', notes: 'Draw #3 — in progress', project_id: '' },
-];
-
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
   Sent: { bg: 'rgba(59,130,246,.2)', color: '#60a5fa' },
@@ -48,9 +42,9 @@ export default function InvoicesPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/invoices`);
       const json = await res.json();
-      setInvoices(json.invoices?.length ? json.invoices : DEMO_INVOICES.map(i => ({ ...i, project_id: projectId })));
+      setInvoices(json.invoices ?? []);
     } catch {
-      setInvoices(DEMO_INVOICES.map(i => ({ ...i, project_id: projectId })));
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -140,7 +134,9 @@ export default function InvoicesPage() {
       )}
 
       <div style={{ padding: '16px 24px 40px', overflowX: 'auto' }}>
-        {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : (
+        {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : invoices.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 48, color: DIM, fontSize: 13 }}>No invoices yet. Create your first invoice above.</div>
+        ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead>
               <tr style={{ background: '#0a1117' }}>

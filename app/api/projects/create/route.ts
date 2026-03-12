@@ -5,12 +5,13 @@ import { onProjectCreated } from '@/lib/triggers';
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
-    const tenantId = user?.tenantId || 'demo';
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
+    if (!body.name) return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
     const db = createServerClient();
 
     const { data: project, error } = await db.from('projects').insert({
-      tenant_id: tenantId,
+      tenant_id: user.tenantId,
       name: body.name,
       address: body.address,
       city: body.city,

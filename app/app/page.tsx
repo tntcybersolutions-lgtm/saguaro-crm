@@ -309,14 +309,14 @@ export default function DashboardPage() {
   useEffect(() => {
     fetch('/api/projects/list')
       .then(r => r.json())
-      .then(d => setProjects(d.source === 'demo' ? [] : (d.projects || [])))
+      .then(d => setProjects(d.projects || []))
       .catch(() => setProjects([]));
   }, []);
 
   useEffect(() => {
     fetch('/api/rfis/list')
       .then(r => r.json())
-      .then(d => setRfis(d.source === 'demo' ? [] : (d.rfis || []).filter((r: any) => r.status !== 'closed')))
+      .then(d => setRfis((d.rfis || []).filter((r: any) => r.status !== 'closed')))
       .catch(() => setRfis([]));
   }, []);
 

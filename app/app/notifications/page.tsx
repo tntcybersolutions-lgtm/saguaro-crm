@@ -43,14 +43,6 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-const DEMO_NOTIFICATIONS: NotificationItem[] = [
-  { id: '1', type: 'pay_app', title: 'Pay App #2 Approved', body: 'Riverdale Medical — $257,400 approved by owner', read: false, created_at: new Date(Date.now() - 3600000).toISOString(), link: '/app/projects/demo-project-00000000-0000-0000-0000-000000000001/pay-apps' },
-  { id: '2', type: 'rfi', title: 'RFI-002 Overdue', body: 'Structural beam depth at roof level — no response from engineer', read: false, created_at: new Date(Date.now() - 7200000).toISOString(), link: '/app/projects/demo-project-00000000-0000-0000-0000-000000000001/rfis' },
-  { id: '3', type: 'change_order', title: 'Change Order CO-001 Approved', body: 'Electrical panel 200A upgrade — $45,000 approved', read: true, created_at: new Date(Date.now() - 86400000).toISOString(), link: '/app/projects/demo-project-00000000-0000-0000-0000-000000000001/change-orders' },
-  { id: '4', type: 'insurance', title: 'COI Expiring Soon', body: 'Southwest Roofing — GL certificate expires in 12 days', read: true, created_at: new Date(Date.now() - 172800000).toISOString(), link: '/app/projects/demo-project-00000000-0000-0000-0000-000000000001/insurance' },
-  { id: '5', type: 'bid', title: 'New Bid Received', body: 'Desert Electrical submitted bid: $385,000 for Electrical package', read: true, created_at: new Date(Date.now() - 259200000).toISOString(), link: '/app/bids' },
-];
-
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,9 +56,9 @@ export default function NotificationsPage() {
       if (!r.ok) throw new Error('fetch failed');
       const d = await r.json();
       const items = d.notifications || d.items || [];
-      setNotifications(items.length > 0 ? items : DEMO_NOTIFICATIONS);
+      setNotifications(items);
     } catch {
-      setNotifications(DEMO_NOTIFICATIONS);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
