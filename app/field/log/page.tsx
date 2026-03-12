@@ -1,14 +1,13 @@
 'use client';
 /**
  * Saguaro Field — Daily Log
- * Touch-optimized daily log form. Works offline via IndexedDB queue.
+ * Fixed API endpoint + field mapping. Touch-optimized sections. Offline-first.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD   = '#D4A017';
-const DARK   = '#09111A';
 const RAISED = '#0f1d2b';
 const BORDER = '#1e3148';
 const TEXT   = '#e8edf8';
@@ -16,121 +15,118 @@ const DIM    = '#8fa3c0';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 
-const WEATHER_OPTIONS = ['Sunny', 'Partly Cloudy', 'Overcast', 'Windy', 'Light Rain', 'Heavy Rain', 'Storm', 'Snow', 'Fog'];
+const WEATHER_OPTS = ['Sunny', 'Partly Cloudy', 'Overcast', 'Windy', 'Light Rain', 'Heavy Rain', 'Storm', 'Snow', 'Fog', 'Extreme Heat'];
 
-interface Field { label: string; key: string; type: 'text' | 'number' | 'textarea' | 'select'; options?: string[]; placeholder?: string; }
-
-const FIELDS: Field[] = [
-  { label: 'Superintendent / Foreman', key: 'superintendent', type: 'text', placeholder: 'Your name' },
-  { label: 'Weather', key: 'weather', type: 'select', options: WEATHER_OPTIONS },
-  { label: 'Temperature (°F)', key: 'temperature', type: 'number', placeholder: 'e.g. 78' },
-  { label: 'Crew on Site', key: 'crew_count', type: 'number', placeholder: 'e.g. 12' },
-  { label: 'Work Performed', key: 'work_performed', type: 'textarea', placeholder: 'Describe what was accomplished today...' },
-  { label: 'Equipment Used', key: 'equipment', type: 'textarea', placeholder: 'List equipment on site...' },
-  { label: 'Materials Delivered', key: 'materials', type: 'textarea', placeholder: 'List any deliveries...' },
-  { label: 'Visitors / Inspectors', key: 'visitors', type: 'text', placeholder: 'e.g. Owner rep, building inspector' },
-  { label: 'Incidents / Safety Notes', key: 'incidents', type: 'textarea', placeholder: 'Near misses, safety concerns, etc.' },
-];
-
-type FormData = Record<string, string>;
-
-export default function FieldLogPage() {
+function DailyLogForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const projectId = searchParams.get('projectId') || '';
 
   const [projectName, setProjectName] = useState('');
-  const [form, setForm] = useState<FormData>({
-    superintendent: '',
-    weather: 'Sunny',
-    temperature: '',
-    crew_count: '',
-    work_performed: '',
-    equipment: '',
-    materials: '',
-    visitors: '',
-    incidents: '',
-  });
+  const [online, setOnline] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
-  const [online, setOnline] = useState(true);
+
+  // Form state
+  const [superintendent, setSuperintendent] = useState('');
+  const [weather, setWeather] = useState('Sunny');
+  const [tempHigh, setTempHigh] = useState('');
+  const [tempLow, setTempLow] = useState('');
+  const [crewCount, setCrewCount] = useState('');
+  const [workPerformed, setWorkPerformed] = useState('');
+  const [equipment, setEquipment] = useState('');
+  const [materialsDelivered, setMaterialsDelivered] = useState('');
+  const [visitors, setVisitors] = useState('');
+  const [delays, setDelays] = useState('');
+  const [safetyNotes, setSafetyNotes] = useState('');
+  const [notes, setNotes] = useState('');
 
   useEffect(() => {
-    setOnline(navigator.onLine);
     const on = () => setOnline(true);
     const off = () => setOnline(false);
     window.addEventListener('online', on);
     window.addEventListener('offline', off);
+    setOnline(navigator.onLine);
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
 
-  // Load project name and last entry defaults
   useEffect(() => {
     if (!projectId) return;
-    fetch(`/api/projects/list`)
+    // Load project name
+    fetch('/api/projects/list')
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => {
-        const p = d?.projects?.find((x: { id: string; name: string }) => x.id === projectId);
-        if (p) setProjectName(p.name);
-      })
+      .then((d) => { const p = d?.projects?.find((x: { id: string; name: string }) => x.id === projectId); if (p) setProjectName(p.name); })
       .catch(() => {});
 
-    // Pull last log to pre-fill superintendent + crew
+    // Pre-fill from last log — fixed: response is d.logs[0]
     fetch(`/api/projects/${projectId}/daily-logs?limit=1`)
       .then((r) => r.ok ? r.json() : null)
       .then((d) => {
-        const last = d?.data?.[0] || d?.[0];
-        if (last) {
-          setForm((prev) => ({
-            ...prev,
-            superintendent: last.superintendent || prev.superintendent,
-            crew_count: last.crew_count ? String(last.crew_count) : prev.crew_count,
-          }));
-        }
+        const last = d?.logs?.[0];
+        if (!last) return;
+        if (last.crew_count) setCrewCount(String(last.crew_count));
+        if (last.weather) setWeather(last.weather);
+        // Try to extract superintendent from notes
+        const supMatch = (last.notes || '').match(/^Superintendent: ([^\n]+)/);
+        if (supMatch) setSuperintendent(supMatch[1]);
       })
       .catch(() => {});
   }, [projectId]);
 
-  const set = (key: string, value: string) => setForm((f) => ({ ...f, [key]: value }));
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!projectId) { setError('No project selected. Go back and pick a project.'); return; }
+    if (!projectId) { setError('No project selected. Go back home and pick a project first.'); return; }
+    if (!workPerformed.trim()) { setError('Please describe the work performed today.'); return; }
     setSaving(true);
     setError('');
 
+    // Build notes with superintendent prefix
+    const fullNotes = [
+      superintendent.trim() ? `Superintendent: ${superintendent.trim()}` : '',
+      equipment.trim() ? `Equipment: ${equipment.trim()}` : '',
+      notes.trim(),
+    ].filter(Boolean).join('\n');
+
+    // FIXED: correct field names matching /api/daily-logs/create
     const payload = {
-      ...form,
-      date: new Date().toISOString().split('T')[0],
-      crew_count: form.crew_count ? parseInt(form.crew_count) : null,
-      temperature: form.temperature ? parseInt(form.temperature) : null,
+      projectId,
+      logDate: new Date().toISOString().split('T')[0],
+      weather,
+      temperatureHigh: tempHigh ? parseInt(tempHigh) : null,
+      temperatureLow: tempLow ? parseInt(tempLow) : null,
+      crewCount: crewCount ? parseInt(crewCount) : 0,
+      workPerformed: workPerformed.trim(),
+      delays: delays.trim(),
+      safetyNotes: safetyNotes.trim(),
+      materialsDelivered: materialsDelivered.trim(),
+      visitors: visitors.trim(),
+      notes: fullNotes,
     };
 
     try {
       if (!online) throw new Error('offline');
-      const res = await fetch(`/api/projects/${projectId}/daily-logs`, {
+      // FIXED: correct endpoint /api/daily-logs/create
+      const res = await fetch('/api/daily-logs/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `HTTP ${res.status}`);
+      }
       setSaved(true);
-      setTimeout(() => router.push('/field'), 1500);
+      setTimeout(() => router.push('/field'), 1800);
     } catch (err) {
-      // Queue for later sync
-      try {
-        await enqueue({
-          url: `/api/projects/${projectId}/daily-logs`,
-          method: 'POST',
-          body: JSON.stringify(payload),
-          contentType: 'application/json',
-          isFormData: false,
-        });
-        setSaved(true);
-        setTimeout(() => router.push('/field'), 1500);
-      } catch {
-        setError(String(err) || 'Failed to save. Please try again.');
+      if (String(err).includes('offline') || !online) {
+        try {
+          await enqueue({ url: '/api/daily-logs/create', method: 'POST', body: JSON.stringify(payload), contentType: 'application/json', isFormData: false });
+          setSaved(true);
+          setTimeout(() => router.push('/field'), 1800);
+        } catch (q) { setError(String(q) || 'Failed to queue. Please try again.'); }
+      } else {
+        setError(String(err) || 'Failed to submit.');
       }
     } finally {
       setSaving(false);
@@ -139,110 +135,131 @@ export default function FieldLogPage() {
 
   if (saved) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: 16, padding: 32 }}>
-        <div style={{ fontSize: 64 }}>✅</div>
-        <h2 style={{ margin: 0, fontSize: 22, color: GREEN }}>Log Saved!</h2>
-        <p style={{ margin: 0, color: DIM, fontSize: 14, textAlign: 'center' }}>
-          {online ? 'Submitted to dashboard.' : 'Saved offline — will sync when connected.'}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', gap: 14, padding: 32, textAlign: 'center' }}>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(34,197,94,.15)', border: '2px solid rgba(34,197,94,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>✅</div>
+        <h2 style={{ margin: 0, fontSize: 22, color: GREEN }}>Log Submitted!</h2>
+        <p style={{ margin: 0, color: DIM, fontSize: 14 }}>
+          {online ? 'Saved to the project dashboard.' : 'Queued offline — will sync when reconnected.'}
         </p>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '20px 16px' }}>
+    <div style={{ padding: '18px 16px' }}>
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <button
-          onClick={() => router.back()}
-          style={{ background: 'none', border: 'none', color: DIM, fontSize: 14, cursor: 'pointer', padding: 0, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }}
-        >
-          ← Back
-        </button>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT }}>Daily Log</h1>
-        <p style={{ margin: '4px 0 0', fontSize: 14, color: DIM }}>
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-          {projectName ? ` · ${projectName}` : ''}
-        </p>
-        {!online && (
-          <div style={{ marginTop: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, padding: '6px 12px', fontSize: 13, color: RED }}>
-            Offline — will sync when reconnected
-          </div>
-        )}
-      </div>
+      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <h1 style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: TEXT }}>Daily Log</h1>
+      <p style={{ margin: '0 0 14px', fontSize: 14, color: DIM }}>
+        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+        {projectName ? ` · ${projectName}` : ''}
+      </p>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {FIELDS.map((f) => (
-          <div key={f.key}>
-            <label style={{ display: 'block', fontSize: 12, color: DIM, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 6 }}>
-              {f.label}
-            </label>
-            {f.type === 'textarea' ? (
-              <textarea
-                value={form[f.key]}
-                onChange={(e) => set(f.key, e.target.value)}
-                placeholder={f.placeholder}
-                rows={4}
-                style={inputStyle}
-              />
-            ) : f.type === 'select' ? (
-              <select
-                value={form[f.key]}
-                onChange={(e) => set(f.key, e.target.value)}
-                style={inputStyle}
-              >
-                {f.options?.map((o) => <option key={o} value={o} style={{ background: '#0f1d2b' }}>{o}</option>)}
-              </select>
-            ) : (
-              <input
-                type={f.type}
-                value={form[f.key]}
-                onChange={(e) => set(f.key, e.target.value)}
-                placeholder={f.placeholder}
-                inputMode={f.type === 'number' ? 'numeric' : undefined}
-                style={inputStyle}
-              />
-            )}
-          </div>
-        ))}
+      {!online && <OfflineBanner />}
 
-        {error && (
-          <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, padding: '10px 14px', color: RED, fontSize: 14 }}>
-            {error}
-          </div>
-        )}
+      <form onSubmit={handleSubmit}>
+        {/* ── Site Conditions ─────────────────────────── */}
+        <Section label="Site Conditions">
+          <Row>
+            <Field label="Superintendent">
+              <input value={superintendent} onChange={(e) => setSuperintendent(e.target.value)} placeholder="Your name" style={inp} />
+            </Field>
+            <Field label="Crew Count">
+              <input type="number" inputMode="numeric" value={crewCount} onChange={(e) => setCrewCount(e.target.value)} placeholder="0" style={inp} />
+            </Field>
+          </Row>
+          <Field label="Weather">
+            <select value={weather} onChange={(e) => setWeather(e.target.value)} style={inp}>
+              {WEATHER_OPTS.map((o) => <option key={o} value={o} style={{ background: '#0f1d2b' }}>{o}</option>)}
+            </select>
+          </Field>
+          <Row>
+            <Field label="High Temp (°F)">
+              <input type="number" inputMode="numeric" value={tempHigh} onChange={(e) => setTempHigh(e.target.value)} placeholder="e.g. 92" style={inp} />
+            </Field>
+            <Field label="Low Temp (°F)">
+              <input type="number" inputMode="numeric" value={tempLow} onChange={(e) => setTempLow(e.target.value)} placeholder="e.g. 68" style={inp} />
+            </Field>
+          </Row>
+        </Section>
+
+        {/* ── Work & Equipment ─────────────────────────── */}
+        <Section label="Work Performed">
+          <Field label="Work Performed Today *">
+            <textarea value={workPerformed} onChange={(e) => setWorkPerformed(e.target.value)} placeholder="Describe what was accomplished — trades on site, areas worked, progress milestones..." rows={5} style={inp} required />
+          </Field>
+          <Field label="Equipment On Site">
+            <textarea value={equipment} onChange={(e) => setEquipment(e.target.value)} placeholder="e.g. Boom lift (60'), concrete pump, excavator..." rows={3} style={inp} />
+          </Field>
+          <Field label="Materials Delivered">
+            <textarea value={materialsDelivered} onChange={(e) => setMaterialsDelivered(e.target.value)} placeholder="List any deliveries received..." rows={2} style={inp} />
+          </Field>
+        </Section>
+
+        {/* ── Delays & Issues ──────────────────────────── */}
+        <Section label="Delays & Issues">
+          <Field label="Delays / Schedule Impact">
+            <textarea value={delays} onChange={(e) => setDelays(e.target.value)} placeholder="Any delays? Weather, material, labor shortages..." rows={2} style={inp} />
+          </Field>
+          <Field label="Visitors / Inspectors">
+            <input value={visitors} onChange={(e) => setVisitors(e.target.value)} placeholder="e.g. Owner rep, building inspector, architect" style={inp} />
+          </Field>
+        </Section>
+
+        {/* ── Safety ───────────────────────────────────── */}
+        <Section label="Safety">
+          <Field label="Safety Notes / Incidents">
+            <textarea value={safetyNotes} onChange={(e) => setSafetyNotes(e.target.value)} placeholder="Near misses, hazards, toolbox topics, OSHA items..." rows={3} style={inp} />
+          </Field>
+          <Field label="Additional Notes">
+            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything else to document..." rows={2} style={inp} />
+          </Field>
+        </Section>
+
+        {error && <ErrorBox msg={error} />}
 
         <button
           type="submit"
           disabled={saving}
-          style={{
-            background: saving ? '#1e3148' : GOLD,
-            border: 'none',
-            borderRadius: 14,
-            padding: '18px',
-            color: saving ? DIM : '#000',
-            fontSize: 17,
-            fontWeight: 800,
-            cursor: saving ? 'wait' : 'pointer',
-            letterSpacing: 0.5,
-            marginTop: 4,
-          }}
+          style={{ width: '100%', background: saving ? '#1e3148' : GOLD, border: 'none', borderRadius: 14, padding: '18px', color: saving ? DIM : '#000', fontSize: 17, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', marginTop: 4, letterSpacing: 0.3 }}
         >
-          {saving ? 'Saving...' : online ? 'Submit Daily Log' : 'Save Offline'}
+          {saving ? 'Submitting...' : online ? '✓ Submit Daily Log' : '💾 Save Offline'}
         </button>
       </form>
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  background: '#0f1d2b',
-  border: '1px solid #1e3148',
-  borderRadius: 10,
-  padding: '14px 16px',
-  color: '#e8edf8',
-  fontSize: 16,
-  outline: 'none',
-  resize: 'vertical',
-};
+export default function FieldLogPage() {
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><DailyLogForm /></Suspense>;
+}
+
+// ── Shared UI helpers ─────────────────────────────────────
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ background: '#0f1d2b', border: '1px solid #1e3148', borderRadius: 14, padding: '14px 14px 6px', marginBottom: 12 }}>
+      <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#8fa3c0', textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</p>
+      {children}
+    </div>
+  );
+}
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <label style={{ display: 'block', fontSize: 12, color: '#8fa3c0', marginBottom: 5 }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+function Row({ children }: { children: React.ReactNode }) {
+  return <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>{children}</div>;
+}
+function OfflineBanner() {
+  return <div style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.25)', borderRadius: 8, padding: '8px 12px', marginBottom: 14, fontSize: 13, color: RED, fontWeight: 600 }}>Offline — will sync when reconnected</div>;
+}
+function ErrorBox({ msg }: { msg: string }) {
+  return <div style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 8, padding: '10px 14px', color: RED, fontSize: 14, marginBottom: 12 }}>{msg}</div>;
+}
+
+const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '12px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
