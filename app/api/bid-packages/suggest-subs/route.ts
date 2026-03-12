@@ -6,9 +6,11 @@ export async function GET(req: NextRequest) {
   const trade = searchParams.get('trade') || '';
   const projectId = searchParams.get('projectId') || '';
 
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
-    const user = await getUser(req);
-    const tenantId = user?.id || 'demo';
+    const tenantId = user.tenantId;
     const db = createServerClient();
 
     const [{ data: performance }, { data: projectSubs }] = await Promise.all([

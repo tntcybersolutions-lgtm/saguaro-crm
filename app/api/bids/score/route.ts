@@ -4,8 +4,9 @@ import { scoreBidOpportunity, buildBidHistoryContext } from '@/lib/construction-
 import { createServerClient } from '@/lib/supabase-server';
 
 export async function POST(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    const user = await getUser(req);
     const body = await req.json();
     const db = createServerClient();
 
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
       ownerName: body.ownerName,
     };
 
-    const historyContext = await buildBidHistoryContext(db, user?.id || 'demo', normalized.projectType);
+    const historyContext = await buildBidHistoryContext(db, user.tenantId, normalized.projectType);
     const result = await scoreBidOpportunity(normalized, historyContext);
 
     // Calculate suggested margin from score (higher score = higher suggested margin)

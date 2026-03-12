@@ -3,13 +3,13 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { onBidPackageCreated } from '@/lib/triggers';
 
 export async function POST(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    const user = await getUser(req);
     const body = await req.json();
     const db = createServerClient();
 
-    const { data: project } = await db.from('projects').select('tenant_id').eq('id', body.projectId).single();
-    const tenantId = user?.id || (project as any)?.tenant_id || 'demo';
+    const tenantId = user.tenantId;
 
     const { data: pkg, error } = await db.from('bid_packages').insert({
       tenant_id: tenantId,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 
 /**
  * /api/reports/export
@@ -6,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * Returns CSV download or PDF (via pdf-lib)
  */
 export async function POST(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const body = await req.json().catch(() => ({}));
     const { format = 'csv', columns = [], rows = [], title = 'Report', type = 'report' } = body;

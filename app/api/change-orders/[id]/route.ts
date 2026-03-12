@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id } = await params;
   try {
     const body = await req.json();

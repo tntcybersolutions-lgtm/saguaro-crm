@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const week = new URL(req.url).searchParams.get('week');
     const { createClient } = await import('@supabase/supabase-js');

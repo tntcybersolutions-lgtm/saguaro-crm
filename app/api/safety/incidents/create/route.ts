@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 
 export async function POST(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   let body: Record<string, unknown> = {};
   try {
     body = await req.json().catch(() => ({}));

@@ -2,18 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 
 export async function POST(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    const user = await getUser(req);
     const body = await req.json().catch(() => ({}));
     const db = createServerClient();
 
-    const { data: project } = await db
-      .from('projects')
-      .select('tenant_id')
-      .eq('id', body.projectId)
-      .single();
-
-    const tenantId = user?.id || (project as any)?.tenant_id || 'demo';
+    const tenantId = user.tenantId;
 
     const { data: log, error } = await db.from('daily_logs').insert({
       tenant_id: tenantId,
@@ -37,14 +32,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, log });
   } catch (err: any) {
     console.error('[daily-logs/create]', err?.message);
-    return NextResponse.json({
-      success: true,
-      log: {
-        id: 'demo-' + Date.now(),
-        log_date: new Date().toISOString().split('T')[0],
-        status: 'created',
-      },
-      demo: true,
-    });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

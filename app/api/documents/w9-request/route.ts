@@ -5,11 +5,13 @@ import { sendW9Request } from '@/lib/email';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
 export async function GET(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId');
   try {
     const db = createServerClient();
-    let query = db.from('w9_requests').select('*').order('sent_at', { ascending: false });
+    let query = db.from('w9_requests').select('*').eq('tenant_id', user.tenantId).order('sent_at', { ascending: false });
     if (projectId) query = query.eq('project_id', projectId);
     const { data, error } = await query;
     if (error) throw error;
@@ -20,16 +22,16 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    const user = await getUser(req);
     const body = await req.json();
     const db = createServerClient();
 
-    const { data: project } = await db.from('projects').select('tenant_id, name').eq('id', body.projectId).single();
-    const tenantId = user?.id || (project as any)?.tenant_id || 'demo';
+    const { data: project } = await db.from('projects').select('name').eq('id', body.projectId).eq('tenant_id', user.tenantId).single();
 
     const { data: w9, error } = await db.from('w9_requests').insert({
-      tenant_id: tenantId,
+      tenant_id: user.tenantId,
       project_id: body.projectId,
       sub_id: body.subId || null,
       vendor_name: body.vendorName,

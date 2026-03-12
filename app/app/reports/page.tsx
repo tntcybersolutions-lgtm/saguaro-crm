@@ -141,7 +141,7 @@ export default function ReportsPage() {
           <div style={{padding:'14px 20px',borderBottom:`1px solid ${BORDER}`,display:'flex',justifyContent:'space-between',alignItems:'center',background:'rgba(0,0,0,.2)'}}>
             <div>
               <div style={{fontWeight:800,fontSize:15,color:TEXT}}>{activeResult.title}</div>
-              <div style={{fontSize:11,color:DIM,marginTop:2}}>{activeResult.message} {activeResult.source === 'demo' ? '(demo data)' : ''}</div>
+              <div style={{fontSize:11,color:DIM,marginTop:2}}>{activeResult.message}</div>
             </div>
             <button onClick={()=>setActiveReport(null)} style={{background:'none',border:'none',color:DIM,cursor:'pointer',fontSize:20,lineHeight:1}}>×</button>
           </div>
