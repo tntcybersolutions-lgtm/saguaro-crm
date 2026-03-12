@@ -272,7 +272,7 @@ function ChatPage() {
           <textarea
             value={content}
             onChange={e => setContent(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(e as unknown as React.FormEvent); } }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage({ preventDefault: () => {} } as React.FormEvent); } }}
             placeholder={`Message as ${myName}…`}
             rows={1}
             style={{

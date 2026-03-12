@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 export function useRealtimeRFIs(projectId: string | null, onNew: (rfi: Record<string, unknown>) => void) {

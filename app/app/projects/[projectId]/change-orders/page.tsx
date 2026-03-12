@@ -278,7 +278,7 @@ export default function ChangeOrdersPage() {
           </div>
           <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
             <button onClick={createCO} disabled={saving||!fTitle.trim()}
-              style={{padding:'9px 22px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:DARK,fontWeight:800,fontSize:13,cursor:saving?'wait':'pointer',opacity:saving||!fTitle.trim()?.6:1}}>
+              style={{padding:'9px 22px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:DARK,fontWeight:800,fontSize:13,cursor:saving?'wait':'pointer',opacity:(saving||!fTitle.trim())?0.6:1}}>
               {saving ? 'Creating…' : 'Create Change Order'}
             </button>
             <button onClick={()=>{setShowForm(false);setError('');}}
@@ -287,8 +287,8 @@ export default function ChangeOrdersPage() {
             </button>
             <button
               onClick={()=>analyzeRisk({title:fTitle,description:fDesc,reason:fReason,cost_impact:parseFloat(fCost)||0,schedule_impact:parseFloat(fSchedule)||0},'form')}
-              disabled={riskLoading&&riskTarget==='form'||!fTitle.trim()}
-              style={{padding:'9px 18px',background:'rgba(212,160,23,.1)',border:`1px solid rgba(212,160,23,.3)`,borderRadius:8,color:GOLD,fontSize:13,fontWeight:700,cursor:'pointer',opacity:!fTitle.trim()?.5:1,display:'flex',alignItems:'center',gap:6}}>
+              disabled={(riskLoading&&riskTarget==='form')||!fTitle.trim()}
+              style={{padding:'9px 18px',background:'rgba(212,160,23,.1)',border:`1px solid rgba(212,160,23,.3)`,borderRadius:8,color:GOLD,fontSize:13,fontWeight:700,cursor:'pointer',opacity:!fTitle.trim()?0.5:1,display:'flex',alignItems:'center',gap:6}}>
               {riskLoading&&riskTarget==='form' ? '🤖 Analyzing…' : '🤖 Analyze Risk'}
             </button>
           </div>
@@ -410,11 +410,11 @@ export default function ChangeOrdersPage() {
                           {co.status==='pending' && (
                             <>
                               <button onClick={()=>approveCO(co.id)} disabled={approvingId===co.id}
-                                style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:DARK,fontSize:11,padding:'4px 12px',fontWeight:800,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?.6:1}}>
+                                style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:DARK,fontSize:11,padding:'4px 12px',fontWeight:800,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?0.6:1}}>
                                 {approvingId===co.id ? '…' : 'Approve'}
                               </button>
                               <button onClick={()=>rejectCO(co.id)} disabled={approvingId===co.id}
-                                style={{background:'none',border:`1px solid rgba(192,48,48,.4)`,borderRadius:5,color:RED,fontSize:11,padding:'4px 12px',fontWeight:700,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?.6:1}}>
+                                style={{background:'none',border:`1px solid rgba(192,48,48,.4)`,borderRadius:5,color:RED,fontSize:11,padding:'4px 12px',fontWeight:700,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?0.6:1}}>
                                 Reject
                               </button>
                             </>
