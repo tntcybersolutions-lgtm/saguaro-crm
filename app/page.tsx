@@ -126,12 +126,12 @@ export default function HomePage() {
           .mobile-only { display: flex !important; }
           .hero-flex { flex-direction: column !important; }
           .hero-left { flex: 0 0 100% !important; max-width: 100% !important; text-align: center !important; }
-          .hero-left h1 { text-align: center !important; font-size: clamp(28px, 8vw, 40px) !important; }
+          .hero-left h1 { text-align: center !important; font-size: clamp(32px, 9vw, 48px) !important; }
           .hero-left p { text-align: center !important; max-width: 100% !important; }
-          .hero-left div[style*="flex-start"] { justify-content: center !important; }
-          .hero-left p[style*="text-align: left"] { text-align: center !important; }
+          .hero-cta-row { justify-content: center !important; }
+          .hero-trust { justify-content: center !important; }
           .hero-right { flex: 0 0 100% !important; max-width: 100% !important; display: none !important; }
-          .hero-section { padding: 48px 24px 40px !important; }
+          .hero-section { padding: 56px 24px 48px !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .testimonials-grid { grid-template-columns: 1fr !important; }
@@ -140,104 +140,171 @@ export default function HomePage() {
           .demo-screen { min-height: 320px !important; }
         }
         @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(8px); }
+          from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        .hero-animate { animation: fadeInUp .6s ease both; }
+        .hero-animate-delay { animation: fadeInUp .6s ease .15s both; }
+        .hero-animate-panel { animation: fadeInUp .7s ease .1s both; }
         .demo-screen-inner { animation: fadeInUp .35s ease; }
+        .cta-primary:hover { opacity: 0.9; transform: translateY(-1px); transition: all .15s ease; }
+        .cta-secondary:hover { border-color: rgba(255,255,255,0.4) !important; color: #fff !important; transition: all .15s ease; }
       `}</style>
 
       <div style={{ paddingTop: 58 }}>
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <section style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 48px 64px' }} className="hero-section">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 48 }} className="hero-flex">
-            {/* Left column */}
-            <div style={{ flex: '0 0 55%', maxWidth: '55%' }} className="hero-left">
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.4)', borderRadius: 20, padding: '5px 12px', marginBottom: 20 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.12em', textTransform: 'uppercase' }}>AI-Powered Construction Management</span>
-              </div>
-              <h1 style={{ fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 800, margin: '0 0 16px', lineHeight: 1.1, letterSpacing: '-0.02em', textAlign: 'left' }}>
-                The CRM Built<br />
-                <span style={{ color: GOLD }}>for Construction</span>
-              </h1>
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.6)', maxWidth: 480, margin: '0 0 28px', lineHeight: 1.6, textAlign: 'left' }}>
-                AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll, Bid Intelligence — everything a General Contractor needs to run profitable projects.
-              </p>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap' }}>
-                <a href="/signup" style={{ padding: '10px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, border: 'none', borderRadius: 7, color: '#000', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textDecoration: 'none', cursor: 'pointer' }}>
-                  Start Free Trial — No Card Required
-                </a>
-                <a href="#demo" style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 7, color: 'rgba(255,255,255,0.75)', fontSize: 13, textDecoration: 'none' }}>
-                  ▶ Watch How It Works
-                </a>
-              </div>
-              <p style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', textAlign: 'left' }}>30-day free trial · No credit card · Cancel anytime</p>
-            </div>
+        <section style={{ position: 'relative', overflow: 'hidden' }} className="hero-section">
 
-            {/* Right column — AI Takeoff UI */}
-            <div style={{ flex: '0 0 45%', maxWidth: '45%' }} className="hero-right">
-              <div style={{ background: '#111b27', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
-                {/* Browser chrome */}
-                <div style={{ background: '#0a1117', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  <div style={{ display: 'flex', gap: 5 }}>
-                    {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />)}
-                  </div>
-                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 4, padding: '3px 8px', fontSize: 10, color: 'rgba(255,255,255,0.3)', marginLeft: 4 }}>
-                    saguarocontrol.net/app/takeoff/riverside-medical
-                  </div>
+          {/* Atmospheric background */}
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 60% at 15% 50%, rgba(212,160,23,0.07) 0%, transparent 65%), radial-gradient(ellipse 50% 50% at 85% 30%, rgba(37,99,235,0.06) 0%, transparent 60%)', pointerEvents: 'none' }} />
+          {/* Subtle grid texture */}
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none', maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)' }} />
+
+          <div style={{ maxWidth: 1140, margin: '0 auto', padding: '88px 48px 80px', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 56 }} className="hero-flex">
+
+              {/* ── Left column ── */}
+              <div style={{ flex: '0 0 52%', maxWidth: '52%' }} className="hero-left">
+
+                {/* Badge */}
+                <div className="hero-animate" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.35)', borderRadius: 24, padding: '5px 14px 5px 8px', marginBottom: 24 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,160,23,0.2)', fontSize: 10 }}>✦</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.1em', textTransform: 'uppercase' }}>AI-Powered Construction CRM</span>
                 </div>
-                {/* Takeoff header */}
-                <div style={{ padding: '12px 14px 0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: TEXT }}>AI Blueprint Takeoff</div>
-                      <div style={{ fontSize: 9, color: DIM, marginTop: 1 }}>Riverside Medical Pavilion · 48 pages · 24,200 SF</div>
-                    </div>
-                    <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.12)', color: '#3dd68c', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 4, padding: '2px 7px', fontWeight: 700 }}>✓ COMPLETE</span>
-                  </div>
-                  {/* AI processing bar */}
-                  <div style={{ background: 'rgba(212,160,23,0.07)', border: '1px solid rgba(212,160,23,0.2)', borderRadius: 6, padding: '7px 10px', display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
-                    <span style={{ fontSize: 11 }}>🤖</span>
-                    <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', lineHeight: 1.4 }}>Claude analyzed 847 dimensions · 5 CSI divisions · <span style={{ color: GOLD, fontWeight: 700 }}>Completed in 41s</span></div>
-                  </div>
+
+                {/* Headline */}
+                <h1 className="hero-animate" style={{ fontSize: 'clamp(36px, 4.2vw, 58px)', fontWeight: 900, margin: '0 0 20px', lineHeight: 1.06, letterSpacing: '-0.03em', textAlign: 'left' }}>
+                  The CRM Built<br />
+                  <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>for General Contractors</span>
+                </h1>
+
+                {/* Subheadline */}
+                <p className="hero-animate-delay" style={{ fontSize: 16, color: 'rgba(255,255,255,0.58)', maxWidth: 460, margin: '0 0 32px', lineHeight: 1.65, textAlign: 'left' }}>
+                  AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll &amp; Bid Intelligence — everything a GC needs to run profitable projects, in one platform.
+                </p>
+
+                {/* CTA row */}
+                <div className="hero-cta-row hero-animate-delay" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
+                  <a href="/signup" className="cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 28px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, border: 'none', borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 4px 24px rgba(212,160,23,0.35)` }}>
+                    Start Free Trial
+                    <span style={{ fontSize: 16 }}>→</span>
+                  </a>
+                  <a href="#demo" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 22px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 14, textDecoration: 'none' }}>
+                    <span style={{ fontSize: 12 }}>▶</span> How It Works
+                  </a>
                 </div>
-                {/* Material table */}
-                <div style={{ padding: '0 14px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 52px 36px 54px 62px', gap: '0 6px', padding: '5px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px 6px 0 0' }}>
-                    {['CSI','Description','Qty','Unit','Unit $','Total'].map(h => (
-                      <div key={h} style={{ fontSize: 8, fontWeight: 700, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: h === 'Total' || h === 'Unit $' || h === 'Qty' ? 'right' : 'left' }}>{h}</div>
-                    ))}
-                  </div>
-                  {TAKEOFF_MATERIALS.map((row, i) => (
-                    <div key={row.csi} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 52px 36px 54px 62px', gap: '0 6px', padding: '6px 6px', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                      <div style={{ fontSize: 9, color: GOLD, fontFamily: 'monospace', fontWeight: 600 }}>{row.csi}</div>
-                      <div style={{ fontSize: 9, color: TEXT, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.desc}</div>
-                      <div style={{ fontSize: 9, color: TEXT, textAlign: 'right' }}>{row.qty}</div>
-                      <div style={{ fontSize: 9, color: DIM, textAlign: 'right' }}>{row.unit}</div>
-                      <div style={{ fontSize: 9, color: DIM, textAlign: 'right' }}>{row.unit_cost}</div>
-                      <div style={{ fontSize: 9, color: TEXT, fontWeight: 700, textAlign: 'right' }}>{row.total}</div>
-                    </div>
+
+                {/* Trust row */}
+                <div className="hero-trust hero-animate-delay" style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+                  {[
+                    { icon: '✓', label: 'No credit card required' },
+                    { icon: '✓', label: '30-day free trial' },
+                    { icon: '✓', label: 'Cancel anytime' },
+                  ].map(t => (
+                    <span key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(255,255,255,0.38)' }}>
+                      <span style={{ color: GOLD, fontWeight: 700, fontSize: 11 }}>{t.icon}</span>
+                      {t.label}
+                    </span>
                   ))}
                 </div>
-                {/* Total row + export */}
-                <div style={{ padding: '8px 14px 12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 6px', background: 'rgba(212,160,23,0.08)', borderRadius: 6, marginBottom: 8 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: GOLD }}>Estimated Material Total</span>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: GOLD }}>$2,596,252</span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                    <div style={{ padding: '7px 10px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 6, textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#000', cursor: 'pointer' }}>
-                      Export Bid Package →
+              </div>
+
+              {/* ── Right column — Product screenshot ── */}
+              <div style={{ flex: '0 0 48%', maxWidth: '48%', position: 'relative' }} className="hero-right">
+                {/* Glow behind panel */}
+                <div style={{ position: 'absolute', inset: -24, background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(212,160,23,0.12) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(20px)' }} />
+
+                <div className="hero-animate-panel" style={{ position: 'relative', background: 'linear-gradient(160deg, #141e2e 0%, #0d1520 100%)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.65), 0 0 0 1px rgba(212,160,23,0.08), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+                  {/* Browser chrome */}
+                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ display: 'flex', gap: 5 }}>
+                      {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c, opacity: 0.85 }} />)}
                     </div>
-                    <div style={{ padding: '7px 10px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, textAlign: 'center', fontSize: 10, fontWeight: 600, color: TEXT, cursor: 'pointer' }}>
-                      Generate G702 Pay App
+                    <div style={{ flex: 1, background: 'rgba(255,255,255,0.06)', borderRadius: 5, padding: '3px 10px', fontSize: 10, color: 'rgba(255,255,255,0.28)', marginLeft: 6, fontFamily: 'monospace' }}>
+                      saguarocontrol.net/app/takeoff
+                    </div>
+                  </div>
+
+                  {/* Takeoff header */}
+                  <div style={{ padding: '14px 16px 0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>AI Blueprint Takeoff</div>
+                        <div style={{ fontSize: 10, color: DIM, marginTop: 2 }}>Riverside Medical Pavilion · 48 pages · 24,200 SF</div>
+                      </div>
+                      <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.12)', color: '#3dd68c', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 5, padding: '3px 8px', fontWeight: 700, letterSpacing: '0.05em' }}>✓ COMPLETE</span>
+                    </div>
+                    {/* AI bar */}
+                    <div style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.18)', borderRadius: 7, padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+                      <span style={{ fontSize: 13 }}>🤖</span>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
+                        Claude analyzed 847 dimensions · 5 CSI divisions · <span style={{ color: GOLD, fontWeight: 700 }}>Completed in 41s</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Material table */}
+                  <div style={{ padding: '0 16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '68px 1fr 52px 36px 54px 62px', gap: '0 6px', padding: '6px 6px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px 6px 0 0' }}>
+                      {['CSI','Description','Qty','Unit','Unit $','Total'].map(h => (
+                        <div key={h} style={{ fontSize: 8, fontWeight: 700, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: h === 'Total' || h === 'Unit $' || h === 'Qty' ? 'right' : 'left' }}>{h}</div>
+                      ))}
+                    </div>
+                    {TAKEOFF_MATERIALS.map((row, i) => (
+                      <div key={row.csi} style={{ display: 'grid', gridTemplateColumns: '68px 1fr 52px 36px 54px 62px', gap: '0 6px', padding: '6px 6px', background: i % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.035)' }}>
+                        <div style={{ fontSize: 9, color: GOLD, fontFamily: 'monospace', fontWeight: 700 }}>{row.csi}</div>
+                        <div style={{ fontSize: 9, color: TEXT, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.desc}</div>
+                        <div style={{ fontSize: 9, color: TEXT, textAlign: 'right' }}>{row.qty}</div>
+                        <div style={{ fontSize: 9, color: DIM, textAlign: 'right' }}>{row.unit}</div>
+                        <div style={{ fontSize: 9, color: DIM, textAlign: 'right' }}>{row.unit_cost}</div>
+                        <div style={{ fontSize: 9, color: '#3dd68c', fontWeight: 700, textAlign: 'right' }}>{row.total}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer */}
+                  <div style={{ padding: '10px 16px 14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.15)', borderRadius: 7, marginBottom: 10 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: GOLD }}>Estimated Material Total</span>
+                      <span style={{ fontSize: 14, fontWeight: 900, color: GOLD }}>$2,596,252</span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
+                      <div style={{ padding: '8px 10px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 6, textAlign: 'center', fontSize: 10, fontWeight: 800, color: '#000' }}>
+                        Export Bid Package →
+                      </div>
+                      <div style={{ padding: '8px 10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, textAlign: 'center', fontSize: 10, fontWeight: 600, color: TEXT }}>
+                        Generate G702 Pay App
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
         </section>
+
+        {/* ── Social proof strip ───────────────────────────────────────────── */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+          <div style={{ maxWidth: 1140, margin: '0 auto', padding: '14px 48px', display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>Trusted by GCs across the Southwest</span>
+            {[
+              { v: '500+', l: 'Projects managed' },
+              { v: '$2B+', l: 'In contract value tracked' },
+              { v: '50 states', l: 'Lien waiver coverage' },
+              { v: '60 sec', l: 'Avg. AI takeoff time' },
+            ].map((s, i) => (
+              <React.Fragment key={s.l}>
+                {i > 0 && <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.08)' }} />}
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, color: TEXT }}>{s.v}</span>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{s.l}</span>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
 
         {/* ── Stats bar ─────────────────────────────────────────────────── */}
         <section style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
