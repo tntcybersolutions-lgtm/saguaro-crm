@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * Clock Out — creates a completed timesheet entry with actual hours worked.
@@ -14,7 +15,6 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); } catch { /* empty body */ }
 
   try {
-    const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     const hoursWorked  = Math.max(0, Math.round(((rawMs - breakMs) / 3_600_000) * 100) / 100);
 
     const entry = {
+      tenant_id:     user.tenantId,
       project_id:    body.projectId    || null,
       employee_name: (body.employeeName as string) || user.email || 'Unknown',
       work_date:     new Date().toISOString().split('T')[0],
@@ -50,7 +51,12 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json({ success: true, entry: data, hoursWorked, clockOutTime: clockOutTime.toISOString() });
+    return NextResponse.json({
+      success: true,
+      entry: data,
+      hoursWorked,
+      clockOutTime: clockOutTime.toISOString(),
+    });
 
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
@@ -60,7 +66,12 @@ export async function POST(req: NextRequest) {
     const hoursWorked = clockInTime
       ? Math.max(0, Math.round(((Date.now() - clockInTime.getTime() - breakMs) / 3_600_000) * 100) / 100)
       : 0;
-    // Client uses localStorage as source of truth; we return success + hours so it can display correctly
-    return NextResponse.json({ success: true, hoursWorked, clockOutTime: new Date().toISOString(), demo: true, error: msg });
+    return NextResponse.json({
+      success: true,
+      hoursWorked,
+      clockOutTime: new Date().toISOString(),
+      demo: true,
+      error: msg,
+    });
   }
 }

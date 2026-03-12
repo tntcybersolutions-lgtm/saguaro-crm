@@ -15,11 +15,12 @@ export async function GET(req: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Store deliveries in punch_list_items with trade='delivery'
+    // Deliveries stored in punch_list_items with trade='delivery'
     let query = supabase
       .from('punch_list_items')
       .select('*')
       .eq('trade', 'delivery')
+      .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false })
       .limit(30);
 
@@ -32,18 +33,18 @@ export async function GET(req: NextRequest) {
       let meta: Record<string, unknown> = {};
       try { meta = JSON.parse(d.notes || '{}'); } catch { /* ok */ }
       return {
-        id: d.id,
-        project_id: d.project_id,
-        supplier: d.location || 'Unknown Supplier',
-        description: d.description,
-        status: d.status || 'pending',
-        po_number: meta.po_number || '',
-        qty_ordered: meta.qty_ordered || '',
+        id:           d.id,
+        project_id:   d.project_id,
+        supplier:     d.location || 'Unknown Supplier',
+        description:  d.description,
+        status:       d.status || 'open',
+        po_number:    meta.po_number    || '',
+        qty_ordered:  meta.qty_ordered  || '',
         qty_received: meta.qty_received || '',
-        condition: meta.condition || 'Accepted',
-        received_by: meta.received_by || '',
-        photo_urls: d.photo_urls || [],
-        created_at: d.created_at,
+        condition:    meta.condition    || 'Accepted',
+        received_by:  meta.received_by  || '',
+        photo_urls:   d.photo_urls      || [],
+        created_at:   d.created_at,
       };
     });
 
