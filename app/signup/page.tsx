@@ -73,9 +73,12 @@ export default function SignupPage(){
   return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
       <nav style={{padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${BORDER}`}}>
-        <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
-          <span style={{fontSize:22}}>🌵</span>
-          <span style={{fontWeight:900,fontSize:16,color:GOLD,letterSpacing:1}}>SAGUARO</span>
+        <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}}>
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:36,width:'auto',objectFit:'contain',borderRadius:4}} />
+          <span style={{display:'flex',flexDirection:'column',lineHeight:1.15}}>
+            <span style={{fontWeight:900,fontSize:14,letterSpacing:1,background:`linear-gradient(90deg,${GOLD},#F0C040)`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAGUARO</span>
+            <span style={{fontSize:10,color:DIM,letterSpacing:.5,fontWeight:600}}>Control Systems</span>
+          </span>
         </a>
         <a href="/login" style={{fontSize:13,color:DIM,textDecoration:'none',fontWeight:600}}>Already have an account? <span style={{color:GOLD}}>Sign in →</span></a>
       </nav>
@@ -83,6 +86,9 @@ export default function SignupPage(){
       <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'32px 24px'}}>
         <div style={{width:'100%',maxWidth:480}}>
           <div style={{textAlign:'center' as const,marginBottom:28}}>
+            <div style={{display:'flex',justifyContent:'center',marginBottom:16}}>
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:56,width:'auto',objectFit:'contain',borderRadius:6}} />
+            </div>
             <h1 style={{fontSize:26,fontWeight:800,margin:'0 0 8px',color:TEXT}}>Start your free trial</h1>
             <p style={{color:DIM,fontSize:14,margin:0}}>30 days free · No credit card · Cancel anytime</p>
           </div>

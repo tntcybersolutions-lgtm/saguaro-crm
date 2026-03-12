@@ -42,10 +42,12 @@ export default function MarketingNav() {
           maxWidth: '1200px', margin: '0 auto', padding: '0 24px',
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span style={{ fontSize: '22px' }}>🌵</span>
-            <span style={{ fontWeight: 900, fontSize: '16px', letterSpacing: '1px', color: '#D4A017' }}>SAGUARO</span>
-            <span style={{ fontSize: '10px', background: '#D4A017', color: '#0d1117', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>CRM</span>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '40px', width: 'auto', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+            <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+              <span style={{ fontWeight: 900, fontSize: '15px', letterSpacing: '1px', background: 'linear-gradient(90deg,#D4A017,#F0C040)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
+              <span style={{ fontSize: '10px', color: '#8fa3c0', letterSpacing: '0.5px', fontWeight: 600 }}>Control Systems</span>
+            </span>
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} className="mn-desktop">

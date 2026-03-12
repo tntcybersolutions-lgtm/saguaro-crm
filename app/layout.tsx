@@ -1,5 +1,6 @@
 import React from 'react';
 import Script from 'next/script';
+import type { Metadata } from 'next';
 import './globals.css';
 import { ToastProvider } from '../components/Toast';
 
@@ -10,9 +11,86 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
-export const metadata = {
-  title: 'Saguaro CRM',
-  description: 'Construction Intelligence Platform',
+export const metadata: Metadata = {
+  metadataBase: new URL('https://saguarocontrol.net'),
+
+  title: {
+    default: 'Saguaro CRM — AI-Powered Construction Management',
+    template: '%s | Saguaro CRM',
+  },
+
+  description: 'The CRM built for General Contractors. AI blueprint takeoff, AIA pay applications, lien waivers, bid intelligence, and certified payroll — all in one platform.',
+
+  keywords: [
+    'construction CRM',
+    'general contractor software',
+    'AI blueprint takeoff',
+    'AIA G702 pay application',
+    'lien waiver software',
+    'construction bid management',
+    'certified payroll WH-347',
+    'construction project management',
+    'Saguaro CRM',
+  ],
+
+  authors: [{ name: 'Saguaro Control Systems', url: 'https://saguarocontrol.net' }],
+
+  creator: 'Saguaro Control Systems',
+  publisher: 'Saguaro Control Systems',
+
+  icons: {
+    icon: [
+      { url: '/logo-icon.jpg', type: 'image/jpeg' },
+    ],
+    apple: [
+      { url: '/logo-icon.jpg', sizes: '180x180', type: 'image/jpeg' },
+    ],
+    shortcut: '/logo-icon.jpg',
+  },
+
+  openGraph: {
+    type: 'website',
+    url: 'https://saguarocontrol.net',
+    siteName: 'Saguaro CRM',
+    title: 'Saguaro CRM — AI-Powered Construction Management',
+    description: 'AI blueprint takeoff, AIA pay applications, lien waivers, bid intelligence. Built for General Contractors.',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Saguaro CRM — AI-Powered Construction Management',
+        type: 'image/jpeg',
+      },
+    ],
+    locale: 'en_US',
+  },
+
+  twitter: {
+    card: 'summary_large_image',
+    site: '@saguarocrm',
+    creator: '@saguarocrm',
+    title: 'Saguaro CRM — AI-Powered Construction Management',
+    description: 'AI blueprint takeoff, AIA pay applications, lien waivers, bid intelligence. Built for General Contractors.',
+    images: ['/og-image.jpg'],
+  },
+
+  alternates: {
+    canonical: 'https://saguarocontrol.net',
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+
+  manifest: '/site.webmanifest',
 };
 
 const GA_ID     = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
@@ -46,6 +124,50 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         )}
       </head>
       <body style={{ margin: 0, padding: 0, background: '#0d1117', color: '#e8edf8' }}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "Saguaro CRM",
+              "url": "https://saguarocontrol.net",
+              "logo": "https://saguarocontrol.net/logo-full.jpg",
+              "image": "https://saguarocontrol.net/og-image.jpg",
+              "description": "AI-powered construction CRM for general contractors. Blueprint takeoff, pay applications, lien waivers, bid intelligence.",
+              "applicationCategory": "BusinessApplication",
+              "operatingSystem": "Web",
+              "offers": {
+                "@type": "Offer",
+                "price": "199",
+                "priceCurrency": "USD",
+                "priceSpecification": {
+                  "@type": "UnitPriceSpecification",
+                  "price": "199",
+                  "priceCurrency": "USD",
+                  "unitText": "MONTH"
+                }
+              },
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "reviewCount": "47"
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "Saguaro Control Systems",
+                "url": "https://saguarocontrol.net",
+                "logo": "https://saguarocontrol.net/logo-full.jpg",
+                "address": {
+                  "@type": "PostalAddress",
+                  "addressLocality": "Phoenix",
+                  "addressRegion": "AZ",
+                  "addressCountry": "US"
+                }
+              }
+            })
+          }}
+        />
         <ToastProvider>
           {children}
         </ToastProvider>

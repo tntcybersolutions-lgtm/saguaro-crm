@@ -416,10 +416,12 @@ export default function HomePage() {
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 56, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 24, backdropFilter: 'blur(12px)' }}>
-        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', flexShrink: 0 }}>
-          <span style={{ fontSize: 22 }}>🌵</span>
-          <span style={{ fontWeight: 900, fontSize: 16, letterSpacing: 1, color: GOLD }}>SAGUARO</span>
-          <span style={{ fontSize: 10, background: GOLD, color: '#0d1117', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>CRM</span>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 40, width: 'auto', objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
+          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+            <span style={{ fontWeight: 900, fontSize: 15, letterSpacing: 1, background: `linear-gradient(90deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
+            <span style={{ fontSize: 10, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
+          </span>
         </a>
         <div style={{ display: 'flex', gap: 4, marginLeft: 8 }} className="desktop-nav">
           {NAV_LINKS.map(l => (
@@ -481,18 +483,18 @@ export default function HomePage() {
       <div style={{ paddingTop: 56 }}>
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <section style={{ padding: '80px 24px 60px', maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
+        <section style={{ padding: '56px 24px 42px', maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(212,160,23,.1)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 20, padding: '5px 14px', marginBottom: 24 }}>
             <span style={{ fontSize: 14 }}>🤖</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, letterSpacing: .5 }}>AI-Powered Construction Management</span>
           </div>
-          <h1 style={{ fontSize: 'clamp(36px, 6vw, 68px)', fontWeight: 900, margin: '0 0 20px', lineHeight: 1.08, letterSpacing: -1 }}>
+          <h1 style={{ fontSize: 'clamp(28px, 4.7vw, 53px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.08, letterSpacing: -1 }}>
             The CRM Built<br />
             <span style={{ background: `linear-gradient(135deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               for Construction
             </span>
           </h1>
-          <p style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: DIM, maxWidth: 620, margin: '0 auto 36px', lineHeight: 1.65 }}>
+          <p style={{ fontSize: 'clamp(14px, 1.7vw, 17px)', color: DIM, maxWidth: 620, margin: '0 auto 28px', lineHeight: 1.65 }}>
             AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll, Bid Intelligence — everything a General Contractor needs to run profitable projects.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -511,18 +513,18 @@ export default function HomePage() {
           <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24, maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
             {STATS.map(s => (
               <div key={s.label}>
-                <div style={{ fontSize: 32, fontWeight: 900, color: GOLD, lineHeight: 1 }}>{s.value}</div>
-                <div style={{ fontSize: 12, color: DIM, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
+                <div style={{ fontSize: 40, fontWeight: 900, color: GOLD, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: DIM, marginTop: 6, lineHeight: 1.4 }}>{s.label}</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* ── Interactive Product Demo ───────────────────────────────────── */}
-        <section id="demo" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
+        <section id="demo" style={{ padding: '60px 24px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Live Product Tour</div>
-            <h2 style={{ fontSize: 'clamp(26px, 4vw, 40px)', fontWeight: 900, margin: '0 0 14px' }}>From Blueprint to Paid — in One Platform</h2>
+            <h2 style={{ fontSize: 'clamp(23px, 3.5vw, 35px)', fontWeight: 900, margin: '0 0 14px' }}>From Blueprint to Paid — in One Platform</h2>
             <p style={{ fontSize: 15, color: DIM, maxWidth: 560, margin: '0 auto' }}>See the exact steps a GC takes from winning a bid to collecting final payment.</p>
           </div>
 
@@ -584,15 +586,15 @@ export default function HomePage() {
         </section>
 
         {/* ── Features ─────────────────────────────────────────────────── */}
-        <section id="features" style={{ padding: '80px 24px', maxWidth: 1100, margin: '0 auto' }}>
+        <section id="features" style={{ padding: '60px 24px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>Everything You Need</div>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '0 0 16px' }}>One platform. Every project document.</h2>
+            <h2 style={{ fontSize: 'clamp(25px, 3.5vw, 37px)', fontWeight: 900, margin: '0 0 14px' }}>One platform. Every project document.</h2>
             <p style={{ fontSize: 16, color: DIM, maxWidth: 540, margin: '0 auto' }}>No more switching between 6 different tools. Saguaro handles the full construction document lifecycle.</p>
           </div>
           <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
             {FEATURES.map(f => (
-              <div key={f.title} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '24px 22px', transition: 'border-color .2s' }}
+              <div key={f.title} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '18px 16px', transition: 'border-color .2s' }}
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(212,160,23,.4)')}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -607,15 +609,15 @@ export default function HomePage() {
         </section>
 
         {/* ── Testimonials ─────────────────────────────────────────────── */}
-        <section style={{ padding: '60px 24px 80px', background: 'rgba(31,44,62,.3)', borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
+        <section style={{ padding: '45px 24px 60px', background: 'rgba(31,44,62,.3)', borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ maxWidth: 1060, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 44 }}>
-              <h2 style={{ fontSize: 'clamp(24px, 3vw, 34px)', fontWeight: 900, margin: '0 0 10px' }}>Built by GCs, for GCs</h2>
+              <h2 style={{ fontSize: 'clamp(21px, 2.6vw, 30px)', fontWeight: 900, margin: '0 0 10px' }}>Built by GCs, for GCs</h2>
               <p style={{ color: DIM, fontSize: 15 }}>Real feedback from contractors who switched from legacy software</p>
             </div>
             <div className="testimonials-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
               {TESTIMONIALS.map((t, i) => (
-                <div key={i} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '24px 22px' }}>
+                <div key={i} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '19px 18px' }}>
                   <div style={{ fontSize: 22, color: GOLD, marginBottom: 12 }}>❝</div>
                   <p style={{ fontSize: 14, color: TEXT, lineHeight: 1.7, marginBottom: 16 }}>{t.quote}</p>
                   <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{t.name}</div>
@@ -627,8 +629,8 @@ export default function HomePage() {
         </section>
 
         {/* ── CTA Banner ───────────────────────────────────────────────── */}
-        <section style={{ padding: '80px 24px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.1 }}>
+        <section style={{ padding: '60px 24px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(25px, 3.5vw, 39px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.1 }}>
             Ready to run smarter projects?
           </h2>
           <p style={{ fontSize: 16, color: DIM, margin: '0 0 32px', lineHeight: 1.6 }}>
@@ -653,9 +655,12 @@ export default function HomePage() {
         <footer style={{ borderTop: `1px solid ${BORDER}`, padding: '40px 24px', background: 'rgba(13,17,23,.8)' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 32 }}>
             <div>
-              <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none', marginBottom: 12 }}>
-                <span style={{ fontSize: 20 }}>🌵</span>
-                <span style={{ fontWeight: 900, fontSize: 15, color: GOLD, letterSpacing: 1 }}>SAGUARO CRM</span>
+              <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 12 }}>
+                <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
+                <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+                  <span style={{ fontWeight: 900, fontSize: 14, letterSpacing: 1, background: `linear-gradient(90deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
+                  <span style={{ fontSize: 10, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
+                </span>
               </a>
               <p style={{ fontSize: 12, color: DIM, lineHeight: 1.6, margin: 0 }}>AI-powered construction management for general contractors.</p>
             </div>
