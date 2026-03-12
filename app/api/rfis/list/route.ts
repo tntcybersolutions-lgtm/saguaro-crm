@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getUser(req);
     if (!user) {
-      return NextResponse.json({ rfis: [], source: 'demo' });
+      return NextResponse.json({ rfis: [] }, { status: 401 });
     }
 
     const db = createServerClient();
