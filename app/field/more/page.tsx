@@ -60,8 +60,8 @@ function MorePage(){
   const submitSafety=async(e:React.FormEvent)=>{
     e.preventDefault(); if(!safetyDesc.trim())return; setSaving(true);
     const p={project_id:projectId,description:safetyDesc.trim(),severity:safetySeverity,injury_type:safetyInjury,location:safetyLocation.trim(),reported_to:safetyReported.trim(),incident_date:new Date().toISOString().split('T')[0],type:'incident'};
-    try{if(!online)throw new Error('offline');await fetch('/api/inspections/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});showSaved('Safety incident logged');}
-    catch{await enqueue({url:'/api/inspections/create',method:'POST',body:JSON.stringify(p),contentType:'application/json',isFormData:false});showSaved('Safety report queued — will sync when online');}
+    try{if(!online)throw new Error('offline');await fetch('/api/safety/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});showSaved('Safety incident logged');}
+    catch{await enqueue({url:'/api/safety/create',method:'POST',body:JSON.stringify(p),contentType:'application/json',isFormData:false});showSaved('Safety report queued — will sync when online');}
     setSafetyDesc('');setSafetyLocation('');setSafetyReported('');setSaving(false);
   };
 

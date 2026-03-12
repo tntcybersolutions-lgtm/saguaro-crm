@@ -13,21 +13,23 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Use punch_list_items table with trade='delivery'
+    // Deliveries stored in punch_list_items with trade='delivery'
     const row = {
-      project_id: body.projectId,
-      description: body.description || `Delivery from ${body.supplier}`,
-      location: body.supplier || 'Unknown Supplier',
-      trade: 'delivery',
-      status: body.condition === 'Refused' ? 'flagged' : 'open',
-      priority: 'normal',
+      tenant_id:   user.tenantId,
+      project_id:  body.projectId || body.project_id,
+      description: body.description || `Delivery from ${body.supplier || 'Unknown'}`,
+      location:    body.supplier || 'Unknown Supplier',
+      trade:       'delivery',
+      status:      body.condition === 'Refused' ? 'flagged' : 'open',
+      priority:    'normal',
       notes: JSON.stringify({
-        po_number: body.poNumber || '',
-        qty_ordered: body.qtyOrdered || '',
+        po_number:    body.poNumber    || '',
+        qty_ordered:  body.qtyOrdered  || '',
         qty_received: body.qtyReceived || '',
-        condition: body.condition || 'Accepted',
-        received_by: body.receivedBy || '',
+        condition:    body.condition   || 'Accepted',
+        received_by:  body.receivedBy  || '',
         delivery_time: new Date().toISOString(),
+        extra_notes:  body.notes       || '',
       }),
       photo_urls: body.photoUrls || [],
     };
@@ -42,11 +44,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, delivery: data });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[deliveries/create] error:', msg);
     return NextResponse.json({
       success: true,
       delivery: { id: Date.now().toString(), created_at: new Date().toISOString() },
       demo: true,
-      error: msg,
     });
   }
 }

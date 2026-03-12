@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * Clock In — stores clock event as a timesheet entry with type='clock_in'.
- * No dedicated DB table needed; uses timesheet_entries with a special marker.
  * The client also stores state in localStorage for offline support.
  */
 export async function POST(req: NextRequest) {
@@ -12,23 +12,23 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
     const clockIn = {
-      project_id: body.projectId || null,
-      employee_name: body.employeeName || user.email || 'Unknown',
-      work_date: new Date().toISOString().split('T')[0],
-      hours: 0,
-      cost_code: 'Clock Event',
+      tenant_id:     user.tenantId,
+      project_id:    body.projectId || null,
+      employee_name: (body.employeeName as string) || user.email || 'Unknown',
+      work_date:     new Date().toISOString().split('T')[0],
+      hours:         0,
+      cost_code:     'Clock Event',
       notes: JSON.stringify({
-        type: 'clock_in',
-        clock_in_time: new Date().toISOString(),
-        latitude: body.latitude || null,
-        longitude: body.longitude || null,
+        type:           'clock_in',
+        clock_in_time:  new Date().toISOString(),
+        latitude:       body.latitude  || null,
+        longitude:      body.longitude || null,
       }),
     };
 
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
-    // Still return success — client uses localStorage as source of truth
+    // Client uses localStorage as source of truth — return success so app continues
     return NextResponse.json({
       success: true,
       clockInTime: new Date().toISOString(),

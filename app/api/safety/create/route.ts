@@ -17,28 +17,31 @@ export async function POST(req: NextRequest) {
 
     const row = {
       tenant_id:     user.tenantId,
-      project_id:    body.project_id    || body.projectId    || null,
-      employee_name: (body.employee_name || body.employeeName || user.email || 'Unknown') as string,
-      work_date:     body.work_date     || body.workDate     || new Date().toISOString().split('T')[0],
-      hours:         Number(body.hours) || 0,
-      cost_code:     (body.cost_code     || body.costCode     || 'General Conditions') as string,
-      notes:         (body.notes         || '') as string,
+      project_id:    body.project_id   || body.projectId   || null,
+      description:   body.description  || '',
+      severity:      body.severity     || 'Minor',
+      injury_type:   body.injury_type  || body.injuryType  || 'No Injury',
+      location:      body.location     || '',
+      reported_to:   body.reported_to  || body.reportedTo  || '',
+      incident_date: body.incident_date || body.incidentDate || new Date().toISOString().split('T')[0],
+      reported_by:   user.email        || 'Field User',
+      status:        'open',
     };
 
     const { data, error } = await supabase
-      .from('timesheet_entries')
+      .from('safety_incidents')
       .insert(row)
       .select()
       .single();
 
     if (error) throw error;
-    return NextResponse.json({ success: true, entry: data });
+    return NextResponse.json({ success: true, incident: data });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[timesheets/create] error:', msg);
+    console.error('[safety/create] error:', msg);
     return NextResponse.json({
       success: true,
-      entry: { id: Date.now().toString(), created_at: new Date().toISOString(), ...body },
+      incident: { id: Date.now().toString(), created_at: new Date().toISOString(), ...body },
       demo: true,
     });
   }

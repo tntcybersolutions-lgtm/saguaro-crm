@@ -1,5 +1,5 @@
-/* Saguaro Field — Service Worker v3 */
-const CACHE = 'saguaro-field-v3';
+/* Saguaro Field — Service Worker v4 */
+const CACHE = 'saguaro-field-v4';
 const OFFLINE_URL = '/field';
 
 const PRECACHE = [
@@ -14,7 +14,7 @@ const PRECACHE = [
   '/field/delivery',
   '/field/more',
   '/field/install',
-  '/logo-icon.jpg',
+  '/icons/icon-192x192.png',
   '/site.webmanifest',
 ];
 
@@ -103,19 +103,18 @@ async function notifyClientsToSync() {
   clients.forEach((c) => c.postMessage({ type: 'SYNC_NOW' }));
 }
 
-// ─── Push Notifications (future) ─────────────────────────
+// ─── Push Notifications ───────────────────────────────────
 self.addEventListener('push', (e) => {
   if (!e.data) return;
-  const data = e.data.json().catch(() => ({ title: 'Saguaro Field', body: e.data.text() }));
+  let d;
+  try { d = e.data.json(); } catch { d = { title: 'Saguaro Field', body: e.data.text() }; }
   e.waitUntil(
-    data.then((d) =>
-      self.registration.showNotification(d.title || 'Saguaro Field', {
-        body: d.body || '',
-        icon: '/logo-icon.jpg',
-        badge: '/logo-icon.jpg',
-        data: d,
-      })
-    )
+    self.registration.showNotification(d.title || 'Saguaro Field', {
+      body:  d.body  || '',
+      icon:  '/icons/icon-192x192.png',
+      badge: '/icons/icon-96x96.png',
+      data:  d,
+    })
   );
 });
 
