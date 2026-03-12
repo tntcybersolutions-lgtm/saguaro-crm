@@ -3,10 +3,96 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const AMBER='#d97706';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 const INP:React.CSSProperties = {padding:'8px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
 const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6};
+
+interface AIRiskResult {
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  approval_likelihood: number;
+  flags: string[];
+  recommendations: string[];
+  summary: string;
+}
+
+function RiskBadge({ level }: { level: 'LOW' | 'MEDIUM' | 'HIGH' }) {
+  const cfg = {
+    LOW:    { bg:'rgba(26,138,74,.18)',  color:'#3dd68c', label:'LOW RISK' },
+    MEDIUM: { bg:'rgba(217,119,6,.18)',  color:AMBER,     label:'MEDIUM RISK' },
+    HIGH:   { bg:'rgba(192,48,48,.18)',  color:RED,       label:'HIGH RISK' },
+  }[level];
+  return (
+    <span style={{fontSize:12,fontWeight:800,padding:'4px 12px',borderRadius:6,background:cfg.bg,color:cfg.color,textTransform:'uppercase',letterSpacing:.5}}>
+      {cfg.label}
+    </span>
+  );
+}
+
+function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () => void }) {
+  const approvalColor = result.approval_likelihood >= 70 ? '#3dd68c' : result.approval_likelihood >= 40 ? AMBER : RED;
+  return (
+    <div style={{marginTop:12,background:'rgba(15,22,35,0.97)',border:`1px solid rgba(212,160,23,.25)`,borderRadius:12,padding:20,animation:'slideDown .25s ease'}}>
+      <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:16}}>🤖</span>
+          <span style={{fontWeight:800,fontSize:14,color:TEXT}}>AI Risk Analysis</span>
+          <RiskBadge level={result.risk_level} />
+        </div>
+        <button onClick={onClose} style={{background:'none',border:'none',color:DIM,fontSize:18,cursor:'pointer',lineHeight:1}}>×</button>
+      </div>
+
+      {/* Approval Likelihood */}
+      <div style={{marginBottom:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+          <span style={{fontSize:12,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5}}>Approval Likelihood</span>
+          <span style={{fontSize:18,fontWeight:800,color:approvalColor}}>{result.approval_likelihood}%</span>
+        </div>
+        <div style={{height:8,background:BORDER,borderRadius:4,overflow:'hidden'}}>
+          <div style={{width:`${result.approval_likelihood}%`,height:'100%',background:approvalColor,borderRadius:4,transition:'width .6s ease'}} />
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div style={{background:'rgba(212,160,23,.06)',border:`1px solid rgba(212,160,23,.12)`,borderRadius:8,padding:'12px 14px',marginBottom:14,fontSize:13,color:TEXT,lineHeight:1.6}}>
+        {result.summary}
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+        {/* Flags */}
+        {result.flags.length > 0 && (
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:8}}>Flags / Concerns</div>
+            <ul style={{margin:0,padding:0,listStyle:'none',display:'flex',flexDirection:'column',gap:5}}>
+              {result.flags.map((f,i) => (
+                <li key={i} style={{display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:'#f87171'}}>
+                  <span style={{marginTop:1,flexShrink:0}}>⚠</span>
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* Recommendations */}
+        {result.recommendations.length > 0 && (
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:8}}>Recommendations</div>
+            <ul style={{margin:0,padding:0,listStyle:'none',display:'flex',flexDirection:'column',gap:5}}>
+              {result.recommendations.map((r,i) => (
+                <li key={i} style={{display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:'#86efac'}}>
+                  <span style={{marginTop:1,flexShrink:0}}>✓</span>
+                  <span>{r}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function statusStyle(s:string):{c:string,bg:string}{
   if(s==='approved') return {c:'#3dd68c',bg:'rgba(26,138,74,.14)'};
@@ -26,6 +112,12 @@ export default function ChangeOrdersPage() {
   const [approvingId,setApprovingId] = useState<string|null>(null);
   const [toast,setToast] = useState<{msg:string;type:'success'|'error'}|null>(null);
 
+  // AI Risk Analysis state
+  const [riskTarget,setRiskTarget] = useState<'form'|string|null>(null); // 'form' = new CO form, or CO id
+  const [riskResult,setRiskResult] = useState<AIRiskResult|null>(null);
+  const [riskLoading,setRiskLoading] = useState(false);
+  const [riskError,setRiskError] = useState('');
+
   useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),4000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
 
   // project contract sum for running total
@@ -37,6 +129,27 @@ export default function ChangeOrdersPage() {
   const [fReason,setFReason]       = useState('');
   const [fCost,setFCost]           = useState('');
   const [fSchedule,setFSchedule]   = useState('');
+
+  async function analyzeRisk(coData: Record<string, unknown>, targetKey: 'form' | string) {
+    setRiskTarget(targetKey);
+    setRiskResult(null);
+    setRiskError('');
+    setRiskLoading(true);
+    try {
+      const r = await fetch('/api/ai/change-order-risk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, ...coData }),
+      });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      setRiskResult(d);
+    } catch(e: unknown) {
+      setRiskError((e as Error).message || 'AI analysis failed');
+    } finally {
+      setRiskLoading(false);
+    }
+  }
 
   const load = useCallback(async()=>{
     setLoading(true); setError('');
@@ -163,7 +276,7 @@ export default function ChangeOrdersPage() {
                 style={{...INP,resize:'vertical' as const}}/>
             </div>
           </div>
-          <div style={{display:'flex',gap:10}}>
+          <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
             <button onClick={createCO} disabled={saving||!fTitle.trim()}
               style={{padding:'9px 22px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:DARK,fontWeight:800,fontSize:13,cursor:saving?'wait':'pointer',opacity:saving||!fTitle.trim()?.6:1}}>
               {saving ? 'Creating…' : 'Create Change Order'}
@@ -172,7 +285,19 @@ export default function ChangeOrdersPage() {
               style={{padding:'9px 18px',background:'none',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,cursor:'pointer'}}>
               Cancel
             </button>
+            <button
+              onClick={()=>analyzeRisk({title:fTitle,description:fDesc,reason:fReason,cost_impact:parseFloat(fCost)||0,schedule_impact:parseFloat(fSchedule)||0},'form')}
+              disabled={riskLoading&&riskTarget==='form'||!fTitle.trim()}
+              style={{padding:'9px 18px',background:'rgba(212,160,23,.1)',border:`1px solid rgba(212,160,23,.3)`,borderRadius:8,color:GOLD,fontSize:13,fontWeight:700,cursor:'pointer',opacity:!fTitle.trim()?.5:1,display:'flex',alignItems:'center',gap:6}}>
+              {riskLoading&&riskTarget==='form' ? '🤖 Analyzing…' : '🤖 Analyze Risk'}
+            </button>
           </div>
+          {riskTarget==='form' && riskError && (
+            <div style={{marginTop:10,padding:'8px 12px',background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:7,color:RED,fontSize:12}}>{riskError}</div>
+          )}
+          {riskTarget==='form' && riskResult && (
+            <AIRiskPanel result={riskResult} onClose={()=>{setRiskResult(null);setRiskTarget(null);}} />
+          )}
         </div>
       )}
 
@@ -259,7 +384,8 @@ export default function ChangeOrdersPage() {
                   const st = statusStyle(co.status||'pending');
                   const cost = Number(co.cost_impact||0);
                   return (
-                    <tr key={co.id} style={{borderBottom:`1px solid rgba(38,51,71,.5)`}}>
+                    <React.Fragment key={co.id}>
+                    <tr style={{borderBottom:`1px solid rgba(38,51,71,.5)`}}>
                       <td style={{padding:'12px 14px',color:GOLD,fontWeight:800}}>CO-{String(co.co_number).padStart(3,'0')}</td>
                       <td style={{padding:'12px 14px',color:TEXT,maxWidth:240}}>
                         <div style={{fontWeight:600}}>{co.title}</div>
@@ -280,22 +406,42 @@ export default function ChangeOrdersPage() {
                         <div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{co.reason||'—'}</div>
                       </td>
                       <td style={{padding:'12px 14px'}}>
-                        {co.status==='pending' && (
-                          <div style={{display:'flex',gap:6}}>
-                            <button onClick={()=>approveCO(co.id)} disabled={approvingId===co.id}
-                              style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:DARK,fontSize:11,padding:'4px 12px',fontWeight:800,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?.6:1}}>
-                              {approvingId===co.id ? '…' : 'Approve'}
-                            </button>
-                            <button onClick={()=>rejectCO(co.id)} disabled={approvingId===co.id}
-                              style={{background:'none',border:`1px solid rgba(192,48,48,.4)`,borderRadius:5,color:RED,fontSize:11,padding:'4px 12px',fontWeight:700,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?.6:1}}>
-                              Reject
-                            </button>
-                          </div>
-                        )}
-                        {co.status==='approved' && <span style={{fontSize:11,color:'#3dd68c',fontWeight:700}}>✓ Approved</span>}
-                        {co.status==='rejected' && <span style={{fontSize:11,color:RED,fontWeight:700}}>✗ Rejected</span>}
+                        <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                          {co.status==='pending' && (
+                            <>
+                              <button onClick={()=>approveCO(co.id)} disabled={approvingId===co.id}
+                                style={{background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:DARK,fontSize:11,padding:'4px 12px',fontWeight:800,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?.6:1}}>
+                                {approvingId===co.id ? '…' : 'Approve'}
+                              </button>
+                              <button onClick={()=>rejectCO(co.id)} disabled={approvingId===co.id}
+                                style={{background:'none',border:`1px solid rgba(192,48,48,.4)`,borderRadius:5,color:RED,fontSize:11,padding:'4px 12px',fontWeight:700,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?.6:1}}>
+                                Reject
+                              </button>
+                            </>
+                          )}
+                          {co.status==='approved' && <span style={{fontSize:11,color:'#3dd68c',fontWeight:700}}>✓ Approved</span>}
+                          {co.status==='rejected' && <span style={{fontSize:11,color:RED,fontWeight:700}}>✗ Rejected</span>}
+                          <button
+                            onClick={()=>{
+                              if(riskTarget===co.id&&riskResult){setRiskResult(null);setRiskTarget(null);}
+                              else analyzeRisk({title:co.title,description:co.description,reason:co.reason,cost_impact:co.cost_impact,schedule_impact:co.schedule_impact,status:co.status},co.id);
+                            }}
+                            disabled={riskLoading&&riskTarget===co.id}
+                            style={{background:'rgba(212,160,23,.08)',border:`1px solid rgba(212,160,23,.25)`,borderRadius:5,color:GOLD,fontSize:11,padding:'4px 10px',fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                            {riskLoading&&riskTarget===co.id ? '🤖…' : '🤖 Risk'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
+                    {riskTarget===co.id && (riskResult||riskError) && (
+                      <tr>
+                        <td colSpan={7} style={{padding:'0 14px 14px'}}>
+                          {riskError && <div style={{padding:'8px 12px',background:'rgba(192,48,48,.12)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:7,color:RED,fontSize:12}}>{riskError}</div>}
+                          {riskResult && <AIRiskPanel result={riskResult} onClose={()=>{setRiskResult(null);setRiskTarget(null);}} />}
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>
