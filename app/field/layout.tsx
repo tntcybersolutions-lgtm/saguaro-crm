@@ -123,8 +123,11 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
       <div style={{ background: '#060e17', padding: '10px 16px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 50, paddingTop: 'max(10px,env(safe-area-inset-top))' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-icon.jpg" alt="Saguaro" width={28} height={28} style={{ borderRadius: 6 }} />
-          <span style={{ fontWeight: 800, fontSize: 14, color: GOLD, letterSpacing: 0.8 }}>SAGUARO FIELD</span>
+          <img src="/icons/icon-96x96.png" alt="Saguaro" width={30} height={30} style={{ borderRadius: 8, border: '1px solid rgba(212,160,23,.2)' }} />
+          <div style={{ lineHeight: 1.1 }}>
+            <span style={{ fontWeight: 900, fontSize: 14, color: GOLD, letterSpacing: 1 }}>SAGUARO</span>
+            <span style={{ fontWeight: 400, fontSize: 10, color: DIM, display: 'block', letterSpacing: 2, textTransform: 'uppercase' }}>Field</span>
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {queueCount > 0 && (

@@ -141,12 +141,34 @@ export default function FieldHome() {
   const cond = weather ? COND_CONFIG[weather.condition] : null;
 
   return (
-    <div style={{ padding: '18px 16px 8px' }}>
-      {/* Greeting */}
-      <p style={{ margin: '0 0 2px', color: DIM, fontSize: 13 }}>{todayStr()}</p>
-      <h1 style={{ margin: '0 0 18px', fontSize: 24, fontWeight: 800, color: TEXT }}>
-        {greeting()}{userName ? `, ${userName}` : ''}
-      </h1>
+    <div style={{ padding: '0 0 8px' }}>
+      {/* Branded hero banner */}
+      <div style={{
+        background: 'linear-gradient(160deg, #0d1e30 0%, #09111A 60%, #0f1d2b 100%)',
+        borderBottom: '1px solid rgba(212,160,23,.18)',
+        padding: '18px 16px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        marginBottom: 16,
+      }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icons/icon-192x192.png"
+          alt="Saguaro"
+          width={52}
+          height={52}
+          style={{ borderRadius: 14, border: '1.5px solid rgba(212,160,23,.35)', boxShadow: '0 4px 20px rgba(212,160,23,.15)' }}
+        />
+        <div style={{ flex: 1 }}>
+          <p style={{ margin: '0 0 1px', fontSize: 11, color: 'rgba(212,160,23,.7)', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>Saguaro Field</p>
+          <h1 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: TEXT, lineHeight: 1.2 }}>
+            {greeting()}{userName ? `, ${userName}` : ''}
+          </h1>
+          <p style={{ margin: '2px 0 0', fontSize: 12, color: DIM }}>{todayStr()}</p>
+        </div>
+      </div>
+      <div style={{ padding: '0 16px' }}>
 
       {/* Weather */}
       {weather && (
@@ -229,6 +251,7 @@ export default function FieldHome() {
           ))}
         </div>
       )}
+      </div>{/* /padding wrapper */}
     </div>
   );
 }

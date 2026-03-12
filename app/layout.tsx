@@ -42,12 +42,18 @@ export const metadata: Metadata = {
 
   icons: {
     icon: [
-      { url: '/logo-icon.jpg', type: 'image/jpeg' },
+      { url: '/favicon-32x32.png',     sizes: '32x32',   type: 'image/png' },
+      { url: '/favicon-16x16.png',     sizes: '16x16',   type: 'image/png' },
+      { url: '/icons/icon-96x96.png',  sizes: '96x96',   type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: [
-      { url: '/logo-icon.jpg', sizes: '180x180', type: 'image/jpeg' },
+      { url: '/apple-touch-icon.png',   sizes: '180x180', type: 'image/png' },
+      { url: '/icons/icon-167x167.png', sizes: '167x167', type: 'image/png' },
+      { url: '/icons/icon-152x152.png', sizes: '152x152', type: 'image/png' },
+      { url: '/icons/icon-120x120.png', sizes: '120x120', type: 'image/png' },
     ],
-    shortcut: '/logo-icon.jpg',
+    shortcut: '/icons/icon-192x192.png',
   },
 
   openGraph: {
@@ -112,15 +118,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="application-name" content="Saguaro Field" />
         <meta name="theme-color" content="#D4A017" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#D4A017" />
-        {/* Apple touch icons — multiple sizes for iPhone/iPad */}
-        <link rel="apple-touch-icon" href="/logo-icon.jpg" />
-        <link rel="apple-touch-icon" sizes="120x120" href="/logo-icon.jpg" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/logo-icon.jpg" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/logo-icon.jpg" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/logo-icon.jpg" />
+        {/* Apple touch icons — PNG, multiple sizes for iPhone/iPad/Mac */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167x167.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         {/* Microsoft Tiles */}
         <meta name="msapplication-TileColor" content="#D4A017" />
-        <meta name="msapplication-TileImage" content="/logo-icon.jpg" />
+        <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
         <meta name="msapplication-config" content="none" />
         {/* Service Worker registration */}
         <script dangerouslySetInnerHTML={{ __html: `
