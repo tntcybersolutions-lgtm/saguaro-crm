@@ -11,10 +11,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await getUser(req);
-    if (!user) {
-      // Demo mode — just acknowledge
-      return NextResponse.json({ success: true, source: 'demo' });
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const db = createServerClient();
 

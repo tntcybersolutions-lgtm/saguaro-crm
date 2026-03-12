@@ -8,18 +8,9 @@ export async function POST(req: NextRequest) {
 
     const user = await getUser(req);
 
-    if (!user && !tenantId) {
-      // Demo mode scan
-      return NextResponse.json({
-        success: true,
-        summary: 'Autopilot scan complete. 3 alerts found: 1 overdue RFI, 1 overdue invoice, 1 project risk rollup.',
-        alertsCreated: 0,
-        alertsResolved: 0,
-        source: 'demo',
-      });
-    }
+    if (!user && !tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const effectiveTenantId = user?.id ?? tenantId;
+    const effectiveTenantId = user?.tenantId ?? tenantId;
 
     // In production, this would trigger the actual autopilot engine.
     // For now, run basic checks and return summary.
