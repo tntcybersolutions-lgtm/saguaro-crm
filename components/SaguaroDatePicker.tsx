@@ -2,7 +2,6 @@
 import React from 'react';
 import DatePicker from 'react-datepicker';
 
-const GOLD = '#D4A017';
 const DARK = '#0d1117';
 const BORDER = '#263347';
 const TEXT = '#e8edf8';
@@ -16,6 +15,7 @@ const DEFAULT_INPUT_STYLE: React.CSSProperties = {
   color: TEXT,
   fontSize: 13,
   outline: 'none',
+  cursor: 'pointer',
 };
 
 interface SaguaroDatePickerProps {
@@ -24,6 +24,29 @@ interface SaguaroDatePickerProps {
   style?: React.CSSProperties;
   placeholder?: string;
 }
+
+interface CustomInputProps {
+  value?: string;
+  onClick?: React.MouseEventHandler<HTMLInputElement>;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  placeholder?: string;
+  inputStyle: React.CSSProperties;
+}
+
+const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(
+  ({ value, onClick, onChange, placeholder, inputStyle }, ref) => (
+    <input
+      ref={ref}
+      value={value ?? ''}
+      onClick={onClick}
+      onChange={onChange ?? (() => {})}
+      placeholder={placeholder ?? 'MM/DD/YYYY'}
+      style={inputStyle}
+      readOnly
+    />
+  )
+);
+CustomInput.displayName = 'SaguaroDateInput';
 
 function parseISOString(s: string): Date | null {
   if (!s) return null;
@@ -42,6 +65,7 @@ function toISOString(d: Date | null): string {
 
 export default function SaguaroDatePicker({ value, onChange, style, placeholder }: SaguaroDatePickerProps) {
   const selected = parseISOString(value);
+  const inputStyle = { ...DEFAULT_INPUT_STYLE, ...style };
 
   return (
     <DatePicker
@@ -52,12 +76,7 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder 
       showPopperArrow={false}
       calendarClassName="saguaro-calendar"
       popperPlacement="bottom-start"
-      customInput={
-        <input
-          style={{ ...DEFAULT_INPUT_STYLE, ...style, cursor: 'pointer' }}
-          readOnly={false}
-        />
-      }
+      customInput={<CustomInput inputStyle={inputStyle} />}
     />
   );
 }
