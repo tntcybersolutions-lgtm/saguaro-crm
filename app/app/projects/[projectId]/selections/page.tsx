@@ -17,14 +17,6 @@ interface Selection {
   project_id: string;
 }
 
-const DEMO_SELECTIONS: Selection[] = [
-  { id: 'sel-1', category: 'Flooring', item: 'Hardwood — Main', spec: '3/4" Oak pre-finished natural', made_by: 'Owner', date: '2026-01-25', status: 'Approved', due_date: '2026-02-01', notes: '', project_id: '' },
-  { id: 'sel-2', category: 'Kitchen', item: 'Countertops', spec: 'Quartz — Silestone Lyra', made_by: 'Owner', date: '2026-01-28', status: 'Approved', due_date: '2026-02-05', notes: '', project_id: '' },
-  { id: 'sel-3', category: 'Exterior', item: 'Paint Color', spec: 'Sherwin Williams — Accessible Beige SW 7036', made_by: 'Owner', date: '2026-02-10', status: 'Approved', due_date: '2026-02-15', notes: '', project_id: '' },
-  { id: 'sel-4', category: 'Plumbing', item: 'Fixtures', spec: 'Moen Align — brushed nickel', made_by: 'Owner', date: '2026-02-15', status: 'Pending', due_date: '2026-03-01', notes: 'Awaiting final confirmation', project_id: '' },
-  { id: 'sel-5', category: 'Electrical', item: 'Light Fixtures', spec: 'Kichler — matte black throughout', made_by: 'Designer', date: '2026-03-01', status: 'Pending', due_date: '2026-03-15', notes: '', project_id: '' },
-];
-
 const CATEGORIES = ['Flooring','Kitchen','Bathrooms','Exterior','Plumbing','Electrical','HVAC','Roofing','Windows','Doors','Cabinetry','Hardware','Other'];
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Pending: { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
@@ -54,9 +46,9 @@ export default function SelectionsPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/selections`);
       const json = await res.json();
-      setSelections(json.selections?.length ? json.selections : DEMO_SELECTIONS.map(s => ({ ...s, project_id: projectId })));
+      setSelections(json.selections || []);
     } catch {
-      setSelections(DEMO_SELECTIONS.map(s => ({ ...s, project_id: projectId })));
+      setSelections([]);
     } finally {
       setLoading(false);
     }

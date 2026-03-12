@@ -20,15 +20,6 @@ const PRIORITIES = ['High','Medium','Low'];
 const CATEGORIES = ['Administrative','Field','Design','Financial','Compliance'];
 const PRIORITY_COLORS: Record<string, string> = { High: RED, Medium: GOLD, Low: DIM };
 
-const DEMO_TODOS: TodoItem[] = [
-  { id: 'td-1', task: 'Submit pay application #3', assigned_to: 'Chad D.', due_date: '2026-04-01', priority: 'High', category: 'Financial', status: 'Open', complete: false, project_id: '' },
-  { id: 'td-2', task: 'Request updated COI from Mesa Roofing', assigned_to: 'Admin', due_date: '2026-03-25', priority: 'High', category: 'Compliance', status: 'Open', complete: false, project_id: '' },
-  { id: 'td-3', task: 'Review and approve framing submittals', assigned_to: 'Chad D.', due_date: '2026-03-20', priority: 'Medium', category: 'Design', status: 'Open', complete: false, project_id: '' },
-  { id: 'td-4', task: 'Schedule rough MEP inspection', assigned_to: 'Admin', due_date: '2026-04-05', priority: 'Medium', category: 'Field', status: 'Open', complete: false, project_id: '' },
-  { id: 'td-5', task: 'Update project schedule — Phase 2', assigned_to: 'Chad D.', due_date: '2026-03-15', priority: 'Medium', category: 'Administrative', status: 'Complete', complete: true, project_id: '' },
-  { id: 'td-6', task: 'Collect W-9 from Southwest Concrete', assigned_to: 'Admin', due_date: '2026-03-12', priority: 'Low', category: 'Compliance', status: 'Complete', complete: true, project_id: '' },
-];
-
 const EMPTY_FORM = { task: '', assigned_to: '', due_date: '', priority: 'Medium', category: 'Administrative' };
 const FILTER_TABS = ['All','Open','Due Today','Overdue','Complete'] as const;
 
@@ -51,9 +42,9 @@ export default function TodosPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/todos`);
       const json = await res.json();
-      setTodos(json.todos?.length ? json.todos : DEMO_TODOS.map(t => ({ ...t, project_id: projectId })));
+      setTodos(json.todos || []);
     } catch {
-      setTodos(DEMO_TODOS.map(t => ({ ...t, project_id: projectId })));
+      setTodos([]);
     } finally {
       setLoading(false);
     }

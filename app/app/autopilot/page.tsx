@@ -161,8 +161,8 @@ export default function AutopilotPage() {
         {visibleAlerts.length===0&&(
           <div style={{textAlign:'center' as const,padding:60,color:DIM}}>
             <div style={{fontSize:40,marginBottom:12}}>✅</div>
-            <div style={{fontSize:18,fontWeight:700,color:TEXT}}>No alerts</div>
-            <div style={{fontSize:13}}>All projects are running smoothly</div>
+            <div style={{fontSize:18,fontWeight:700,color:TEXT}}>No autopilot alerts — all clear!</div>
+            <div style={{fontSize:13}}>All projects are running smoothly. Run a scan to check for new issues.</div>
           </div>
         )}
       </div>

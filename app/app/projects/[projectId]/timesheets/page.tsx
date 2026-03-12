@@ -27,13 +27,6 @@ function getWeekStart(date: Date): string {
   return d.toISOString().split('T')[0];
 }
 
-const DEMO_ENTRIES: TimeEntry[] = [
-  { id: 'ts-1', employee: 'Mike Torres', mon: 8, tue: 8, wed: 8, thu: 8, fri: 8, sat: 4, sun: 0, cost_code: '06 - Wood & Plastics', status: 'Approved', week_start: getWeekStart(new Date()), project_id: '' },
-  { id: 'ts-2', employee: 'Jose Morales', mon: 8, tue: 8, wed: 8, thu: 8, fri: 8, sat: 8, sun: 0, cost_code: '06 - Wood & Plastics', status: 'Approved', week_start: getWeekStart(new Date()), project_id: '' },
-  { id: 'ts-3', employee: 'David Kim', mon: 8, tue: 8, wed: 8, thu: 8, fri: 8, sat: 0, sun: 0, cost_code: '26 - Electrical', status: 'Submitted', week_start: getWeekStart(new Date()), project_id: '' },
-  { id: 'ts-4', employee: 'Ana Rivera', mon: 8, tue: 8, wed: 8, thu: 8, fri: 8, sat: 0, sun: 0, cost_code: '09 - Finishes', status: 'Draft', week_start: getWeekStart(new Date()), project_id: '' },
-];
-
 const EMPTY_FORM: Omit<TimeEntry, 'id' | 'project_id'> = { employee: '', mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0, cost_code: '06 - Wood & Plastics', status: 'Draft', week_start: getWeekStart(new Date()) };
 
 function totalHours(e: TimeEntry) { return e.mon + e.tue + e.wed + e.thu + e.fri + e.sat + e.sun; }
@@ -55,9 +48,9 @@ export default function TimesheetsPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/timesheets?week=${currentWeek}`);
       const json = await res.json();
-      setEntries(json.entries?.length ? json.entries : DEMO_ENTRIES.map(e => ({ ...e, project_id: projectId, week_start: currentWeek })));
+      setEntries(json.entries || []);
     } catch {
-      setEntries(DEMO_ENTRIES.map(e => ({ ...e, project_id: projectId, week_start: currentWeek })));
+      setEntries([]);
     } finally {
       setLoading(false);
     }

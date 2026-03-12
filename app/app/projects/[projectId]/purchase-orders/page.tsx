@@ -17,13 +17,6 @@ interface PurchaseOrder {
   project_id: string;
 }
 
-const DEMO_POS: PurchaseOrder[] = [
-  { id: 'po-1', po_num: 'PO-001', vendor: 'Desert Steel Supply', description: 'Structural steel — Phase 1', amount: 28400, issued_date: '2026-01-20', expected_delivery: '2026-02-05', status: 'Delivered', notes: '', project_id: '' },
-  { id: 'po-2', po_num: 'PO-002', vendor: 'Phoenix Lumber Co', description: 'Framing lumber — 2x6 studs', amount: 15880, issued_date: '2026-02-01', expected_delivery: '2026-02-10', status: 'Delivered', notes: '', project_id: '' },
-  { id: 'po-3', po_num: 'PO-003', vendor: 'Window World AZ', description: 'Windows — 18 units', amount: 6930, issued_date: '2026-02-10', expected_delivery: '2026-04-01', status: 'In Transit', notes: 'Lead time 6-8 weeks', project_id: '' },
-  { id: 'po-4', po_num: 'PO-004', vendor: 'AZ Ready Mix', description: 'Concrete — additional pours', amount: 4200, issued_date: '2026-03-01', expected_delivery: '2026-03-15', status: 'Ordered', notes: '', project_id: '' },
-];
-
 const STATUSES = ['Draft','Ordered','In Transit','Delivered','Cancelled'];
 const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
@@ -51,9 +44,9 @@ export default function PurchaseOrdersPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/purchase-orders`);
       const json = await res.json();
-      setPos(json.purchase_orders?.length ? json.purchase_orders : DEMO_POS.map(p => ({ ...p, project_id: projectId })));
+      setPos(json.purchase_orders || []);
     } catch {
-      setPos(DEMO_POS.map(p => ({ ...p, project_id: projectId })));
+      setPos([]);
     } finally {
       setLoading(false);
     }

@@ -16,17 +16,6 @@ interface Spec {
   project_id: string;
 }
 
-const DEMO_SPECS: Spec[] = [
-  { id: 's-1', division: '01', section: '01 10 00', title: 'Summary of Work', version: '2026-01-15', date: '2026-01-15', status: 'Current', url: null, project_id: '' },
-  { id: 's-2', division: '03', section: '03 31 00', title: 'Structural Concrete', version: '2026-01-15', date: '2026-01-15', status: 'Current', url: null, project_id: '' },
-  { id: 's-3', division: '06', section: '06 10 00', title: 'Rough Carpentry', version: '2026-01-15', date: '2026-01-15', status: 'Current', url: null, project_id: '' },
-  { id: 's-4', division: '07', section: '07 52 00', title: 'Modified Bituminous Roofing', version: '2026-01-15', date: '2026-01-15', status: 'Current', url: null, project_id: '' },
-  { id: 's-5', division: '09', section: '09 21 16', title: 'Gypsum Board', version: '2026-01-15', date: '2026-01-15', status: 'Current', url: null, project_id: '' },
-  { id: 's-6', division: '22', section: '22 00 00', title: 'Plumbing', version: '2026-01-15', date: '2026-01-15', status: 'Current', url: null, project_id: '' },
-  { id: 's-7', division: '23', section: '23 00 00', title: 'HVAC', version: '2026-01-15', date: '2026-01-15', status: 'Current', url: null, project_id: '' },
-  { id: 's-8', division: '26', section: '26 05 00', title: 'Common Work — Electrical', version: '2026-01-15', date: '2026-01-15', status: 'Current', url: null, project_id: '' },
-];
-
 const EMPTY_FORM = { division: '', section: '', title: '', version: '' };
 
 function statusBadge(status: string) {
@@ -58,9 +47,9 @@ export default function SpecsPage() {
     try {
       const res = await fetch(`/api/projects/${projectId}/specs`);
       const json = await res.json();
-      setSpecs(json.specs?.length ? json.specs : DEMO_SPECS.map(s => ({ ...s, project_id: projectId })));
+      setSpecs(json.specs || []);
     } catch {
-      setSpecs(DEMO_SPECS.map(s => ({ ...s, project_id: projectId })));
+      setSpecs([]);
     } finally {
       setLoading(false);
     }
