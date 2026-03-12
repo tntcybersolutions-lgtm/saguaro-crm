@@ -515,11 +515,68 @@ export default function HomePage() {
               <p style={{ marginTop: 12, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.04em', textAlign: 'left' }}>30-day free trial · No credit card · Cancel anytime</p>
             </div>
 
-            {/* Right column — mock UI card */}
+            {/* Right column — mock CRM UI */}
             <div style={{ flex: '0 0 45%', maxWidth: '45%' }} className="hero-right">
-              <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 24, height: 320, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: GOLD, letterSpacing: '0.04em' }}>🌵 Saguaro Intelligence</span>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>AI analysis ready</span>
+              <div style={{ background: '#111b27', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}>
+                {/* Browser chrome */}
+                <div style={{ background: '#0a1117', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                  <div style={{ display: 'flex', gap: 5 }}>
+                    {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: c }} />)}
+                  </div>
+                  <div style={{ flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 4, padding: '3px 8px', fontSize: 10, color: 'rgba(255,255,255,0.3)', marginLeft: 4 }}>
+                    saguarocontrol.net/app/projects/riverside-medical
+                  </div>
+                </div>
+                {/* App content */}
+                <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {/* Project header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>Riverside Medical Pavilion</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 1 }}>Active · Phoenix, AZ · $2.85M contract</div>
+                    </div>
+                    <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.12)', color: '#3dd68c', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 4, padding: '2px 7px', fontWeight: 700 }}>ON TRACK</span>
+                  </div>
+                  {/* Progress bar */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 4 }}>
+                      <span>Contract completion</span><span style={{ color: GOLD }}>62%</span>
+                    </div>
+                    <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2 }}>
+                      <div style={{ height: '100%', width: '62%', background: `linear-gradient(90deg,${GOLD},#F0C040)`, borderRadius: 2 }} />
+                    </div>
+                  </div>
+                  {/* Mini stat row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+                    {[['Pay App #4','$428,500','submitted'],['Lien Waivers','12 / 14','current'],['Open RFIs','3','pending']].map(([label, val, sub]) => (
+                      <div key={label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 6, padding: '8px 10px' }}>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>{label}</div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>{val}</div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{sub}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* AI alert */}
+                  <div style={{ background: 'rgba(212,160,23,0.07)', border: '1px solid rgba(212,160,23,0.2)', borderRadius: 6, padding: '8px 10px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: 12 }}>🤖</span>
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: GOLD }}>Autopilot Alert</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.4 }}>Southwest Electric COI expires in 8 days — renewal requested automatically.</div>
+                    </div>
+                  </div>
+                  {/* Sub list */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    {[['Southwest Electric','Electrical','$340K','✓ W9'],['Mesa Concrete Co.','Concrete','$620K','✓ COI'],['AZ Steel Erectors','Steel','$185K','⚠ COI']].map(([name, trade, amt, status]) => (
+                      <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', background: 'rgba(255,255,255,0.03)', borderRadius: 5 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 10, fontWeight: 600, color: TEXT }}>{name}</div>
+                          <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{trade} · {amt}</div>
+                        </div>
+                        <span style={{ fontSize: 9, color: status.startsWith('⚠') ? '#f59e0b' : '#3dd68c', fontWeight: 700 }}>{status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
