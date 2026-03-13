@@ -35,7 +35,11 @@
       "Bash(grep -E \"ai-chat|auto-populator|project-context|wh347|bid-jacket|w9-portal|sandbox-manager$\")",
       "Bash(npx supabase:*)",
       "Bash(grep -E \"\\\\.ts$\")",
-      "Bash(grep -E \"route\\\\.\\(ts|tsx\\)$\")"
+      "Bash(grep -E \"route\\\\.\\(ts|tsx\\)$\")",
+      "Bash(npx next:*)",
+      "Bash(grep -rn \"projects/create\\\\|new.*project\\\\|create.*project\" 'c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro/app/app/' --include=*.tsx)",
+      "Bash(node scripts/update-colors.js)",
+      "Bash(node scripts/fix-backbtns.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\ChadDerocher\\OneDrive - TNT Cyber Solutions\\Documents\\GitHub\\Live-Code-Saguaro\\app\\app\\projects\\[projectId]\\takeoff"
