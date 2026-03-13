@@ -194,7 +194,15 @@ export async function GET(
           return done();
         }
 
-        const { base64, mimeType } = await processBlueprint(fileBuffer, rawMime);
+        const processed = await processBlueprint(fileBuffer, rawMime);
+
+        if (processed.error) {
+          send('error', { message: processed.error });
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          return done();
+        }
+
+        const { base64, mimeType } = processed;
 
         send('progress', { step: 3, message: 'AI is reading your blueprint...', pct: 25 });
 

@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { getPdfPageCount, generateThumbnail } from '@/lib/blueprint-processor';
 
 export const runtime = 'nodejs';
+
+const VALID_TYPES = [
+  'application/pdf',
+  'image/png',
+  'image/jpeg',
+  'image/tiff',
+  'image/webp',
+];
+
+const FRIENDLY_ACCEPT = 'PDF, PNG, JPG, TIFF, or WebP';
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+
+function formatSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${bytes} bytes`;
+}
 
 export async function POST(
   req: NextRequest,
@@ -18,17 +36,24 @@ export async function POST(
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/tiff', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
+    // Friendly file type validation
+    if (!VALID_TYPES.includes(file.type)) {
+      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+      if (ext === 'dwg' || ext === 'dxf') {
+        return NextResponse.json(
+          { error: `${ext.toUpperCase()} files are not yet supported. Please export as PDF from AutoCAD and upload that instead.` },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
-        { error: 'Invalid file type. Accepted: PDF, PNG, JPG, TIFF' },
+        { error: `Unsupported file type "${file.type || ext}". Accepted formats: ${FRIENDLY_ACCEPT}.` },
         { status: 400 }
       );
     }
 
-    if (file.size > 50 * 1024 * 1024) {
+    if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: 'File too large. Maximum 50MB.' },
+        { error: `File is too large (${formatSize(file.size)}). Maximum size is ${formatSize(MAX_SIZE)}.` },
         { status: 400 }
       );
     }
@@ -44,12 +69,19 @@ export async function POST(
       return NextResponse.json({ error: 'Takeoff not found' }, { status: 404 });
     }
 
-    // Upload to Supabase Storage
-    const fileExt = file.name.split('.').pop() || 'pdf';
-    const storagePath = `${takeoff.project_id}/blueprints/${takeoffId}/blueprint.${fileExt}`;
-
+    // Read file into buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    // Detect PDF page count
+    let pageCount = 0;
+    if (file.type === 'application/pdf') {
+      pageCount = await getPdfPageCount(buffer);
+    }
+
+    // Upload blueprint to Supabase Storage
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
+    const storagePath = `${takeoff.project_id}/blueprints/${takeoffId}/blueprint.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('blueprints')
@@ -65,24 +97,64 @@ export async function POST(
       .from('blueprints')
       .getPublicUrl(storagePath);
 
+    // Generate thumbnail (non-blocking — don't fail upload if this fails)
+    let thumbnailUrl: string | null = null;
+    try {
+      const thumb = await generateThumbnail(buffer, file.type);
+      if (thumb) {
+        const thumbPath = `${takeoff.project_id}/blueprints/${takeoffId}/thumbnail.jpg`;
+        const { error: thumbErr } = await supabase.storage
+          .from('blueprints')
+          .upload(thumbPath, thumb, {
+            contentType: 'image/jpeg',
+            upsert: true,
+          });
+        if (!thumbErr) {
+          const { data: { publicUrl: thumbUrl } } = supabase.storage
+            .from('blueprints')
+            .getPublicUrl(thumbPath);
+          thumbnailUrl = thumbUrl;
+        }
+      }
+    } catch (err) {
+      console.warn('[takeoff/upload] Thumbnail generation failed (non-fatal):', err instanceof Error ? err.message : err);
+    }
+
     // Update takeoff record
+    const updatePayload: Record<string, unknown> = {
+      file_url: publicUrl,
+      file_name: file.name,
+      storage_path: storagePath,
+      file_type: file.type,
+      file_size: file.size,
+      status: 'uploaded',
+    };
+
+    if (pageCount > 0) {
+      updatePayload.page_count = pageCount;
+    }
+    if (thumbnailUrl) {
+      updatePayload.thumbnail_url = thumbnailUrl;
+    }
+
     const { data: updated, error: updateError } = await supabase
       .from('takeoffs')
-      .update({
-        file_url: publicUrl,
-        file_name: file.name,
-        storage_path: storagePath,
-        file_type: file.type,
-        file_size: file.size,
-        status: 'uploaded',
-      })
+      .update(updatePayload)
       .eq('id', takeoffId)
       .select()
       .single();
 
     if (updateError) throw updateError;
 
-    return NextResponse.json({ success: true, takeoff: updated, fileUrl: publicUrl });
+    return NextResponse.json({
+      success: true,
+      takeoff: updated,
+      fileUrl: publicUrl,
+      thumbnailUrl,
+      fileSize: file.size,
+      fileSizeFormatted: formatSize(file.size),
+      pageCount: pageCount || undefined,
+    });
 
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Upload failed';
