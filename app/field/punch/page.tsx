@@ -2,8 +2,9 @@
 /**
  * Saguaro Field — Punch List
  * Create, view, and update punch list items. Offline queue.
+ * Enhanced: Batch ops, assignee notifications, advanced filters, statistics.
  */
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
@@ -16,6 +17,7 @@ const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const AMBER  = '#F59E0B';
 const BLUE   = '#3B82F6';
+const PURPLE = '#A855F7';
 
 const PRIORITIES = ['Critical', 'High', 'Medium', 'Low'];
 const STATUSES   = ['open', 'in_progress', 'ready_to_inspect', 'complete'];
@@ -36,9 +38,336 @@ interface PunchItem {
   notes?: string;
   created_at: string;
   photo_urls?: string[];
+  assignee?: string;
+}
+
+interface FilterPreset {
+  name: string;
+  statuses: string[];
+  priorities: string[];
+  trades: string[];
+  assignee: string;
+  dateField: string;
+  dateFrom: string;
+  dateTo: string;
 }
 
 type View = 'list' | 'new' | 'detail';
+
+/* ─── Confirmation Dialog ─── */
+function ConfirmDialog({ message, onConfirm, onCancel }: { message: string; onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.65)' }}>
+      <div style={{ background: '#0D1D2E', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '24px', maxWidth: 340, width: '90%' }}>
+        <p style={{ margin: '0 0 20px', fontSize: 15, color: TEXT, lineHeight: 1.5 }}>{message}</p>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onCancel} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px', color: DIM, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+          <button onClick={onConfirm} style={{ flex: 1, background: RED, border: 'none', borderRadius: 10, padding: '12px', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Assignee Picker Dialog ─── */
+function AssigneePickerDialog({ assignees, onSelect, onCancel }: { assignees: string[]; onSelect: (a: string) => void; onCancel: () => void }) {
+  const [custom, setCustom] = useState('');
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.65)' }}>
+      <div style={{ background: '#0D1D2E', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '24px', maxWidth: 380, width: '90%', maxHeight: '70vh', overflow: 'auto' }}>
+        <p style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700, color: TEXT }}>Reassign To</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+          {assignees.map((a) => (
+            <button key={a} onClick={() => onSelect(a)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px 14px', color: TEXT, fontSize: 14, cursor: 'pointer', textAlign: 'left' }}>{a}</button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+          <input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Or type a name..." style={{ ...inp, flex: 1 }} />
+          <button onClick={() => { if (custom.trim()) onSelect(custom.trim()); }} disabled={!custom.trim()} style={{ background: custom.trim() ? GOLD : BORDER, border: 'none', borderRadius: 10, padding: '10px 16px', color: custom.trim() ? '#000' : DIM, fontWeight: 700, fontSize: 13, cursor: custom.trim() ? 'pointer' : 'default' }}>Assign</button>
+        </div>
+        <button onClick={onCancel} style={{ width: '100%', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px', color: DIM, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Priority Picker Dialog ─── */
+function PriorityPickerDialog({ onSelect, onCancel }: { onSelect: (p: string) => void; onCancel: () => void }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.65)' }}>
+      <div style={{ background: '#0D1D2E', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '24px', maxWidth: 300, width: '90%' }}>
+        <p style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700, color: TEXT }}>Change Priority</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+          {PRIORITIES.map((p) => (
+            <button key={p} onClick={() => onSelect(p)} style={{ background: 'transparent', border: `1px solid ${PRIORITY_COLORS[p] || BORDER}`, borderRadius: 10, padding: '12px 14px', color: PRIORITY_COLORS[p] || TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>{p}</button>
+          ))}
+        </div>
+        <button onClick={onCancel} style={{ width: '100%', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px', color: DIM, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Notification Toast ─── */
+function Toast({ message, onDone }: { message: string; onDone: () => void }) {
+  useEffect(() => { const t = setTimeout(onDone, 3000); return () => clearTimeout(t); }, [onDone]);
+  return (
+    <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 10000, background: GREEN, borderRadius: 10, padding: '10px 20px', color: '#000', fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', boxShadow: '0 4px 20px rgba(0,0,0,.4)' }}>
+      {message}
+    </div>
+  );
+}
+
+/* ─── Statistics Panel ─── */
+function StatsPanel({ items }: { items: PunchItem[] }) {
+  const [open, setOpen] = useState(false);
+  const total = items.length;
+  if (total === 0) return null;
+
+  const openItems = items.filter((i) => i.status !== 'complete');
+  const closedItems = items.filter((i) => i.status === 'complete');
+  const openPct = total > 0 ? Math.round((openItems.length / total) * 100) : 0;
+
+  // By priority
+  const byPriority: Record<string, number> = {};
+  openItems.forEach((i) => { byPriority[i.priority] = (byPriority[i.priority] || 0) + 1; });
+
+  // By trade
+  const byTrade: Record<string, number> = {};
+  openItems.forEach((i) => { byTrade[i.trade] = (byTrade[i.trade] || 0) + 1; });
+  const tradeEntries = Object.entries(byTrade).sort((a, b) => b[1] - a[1]);
+
+  // Average age of open items (days)
+  const now = new Date();
+  const avgAgeDays = openItems.length > 0
+    ? Math.round(openItems.reduce((sum, i) => sum + (now.getTime() - new Date(i.created_at).getTime()) / 86400000, 0) / openItems.length)
+    : 0;
+
+  // Overdue count
+  const overdueCount = openItems.filter((i) => i.due_date && new Date(i.due_date) < now).length;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <button onClick={() => setOpen(!open)} style={{ width: '100%', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.8 }}>Statistics</span>
+        <span style={{ color: DIM, fontSize: 18, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .2s' }}>›</span>
+      </button>
+      {open && (
+        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderTop: 'none', borderRadius: '0 0 12px 12px', padding: '14px' }}>
+          {/* Pie chart - CSS conic gradient */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+            <div style={{
+              width: 72, height: 72, borderRadius: '50%', flexShrink: 0,
+              background: `conic-gradient(${RED} 0deg ${openPct * 3.6}deg, ${GREEN} ${openPct * 3.6}deg 360deg)`,
+            }} />
+            <div>
+              <p style={{ margin: '0 0 4px', fontSize: 14, color: RED, fontWeight: 700 }}>{openItems.length} Open ({openPct}%)</p>
+              <p style={{ margin: 0, fontSize: 14, color: GREEN, fontWeight: 700 }}>{closedItems.length} Closed ({100 - openPct}%)</p>
+            </div>
+          </div>
+
+          {/* Priority breakdown */}
+          <p style={{ ...secLbl, marginBottom: 6 }}>By Priority (Open)</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+            {PRIORITIES.map((p) => byPriority[p] ? (
+              <div key={p} style={{ background: `rgba(${hexRgb(PRIORITY_COLORS[p])}, .12)`, border: `1px solid rgba(${hexRgb(PRIORITY_COLORS[p])}, .3)`, borderRadius: 8, padding: '6px 12px' }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: PRIORITY_COLORS[p] }}>{byPriority[p]}</span>
+                <span style={{ fontSize: 11, color: PRIORITY_COLORS[p], marginLeft: 5 }}>{p}</span>
+              </div>
+            ) : null)}
+          </div>
+
+          {/* Trade breakdown */}
+          {tradeEntries.length > 0 && (
+            <>
+              <p style={{ ...secLbl, marginBottom: 6 }}>By Trade (Open)</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 14 }}>
+                {tradeEntries.slice(0, 6).map(([t, count]) => {
+                  const pct = Math.round((count / openItems.length) * 100);
+                  return (
+                    <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                          <span style={{ fontSize: 12, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t}</span>
+                          <span style={{ fontSize: 12, color: DIM, flexShrink: 0, marginLeft: 6 }}>{count}</span>
+                        </div>
+                        <div style={{ height: 4, background: BORDER, borderRadius: 2 }}>
+                          <div style={{ height: 4, background: GOLD, borderRadius: 2, width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Metrics row */}
+          <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ flex: 1, background: `rgba(${hexRgb(BLUE)}, .08)`, border: `1px solid rgba(${hexRgb(BLUE)}, .2)`, borderRadius: 10, padding: '10px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: BLUE }}>{avgAgeDays}</p>
+              <p style={{ margin: 0, fontSize: 10, color: DIM, textTransform: 'uppercase' }}>Avg Days Open</p>
+            </div>
+            <div style={{ flex: 1, background: `rgba(${hexRgb(overdueCount > 0 ? RED : GREEN)}, .08)`, border: `1px solid rgba(${hexRgb(overdueCount > 0 ? RED : GREEN)}, .2)`, borderRadius: 10, padding: '10px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: overdueCount > 0 ? RED : GREEN }}>{overdueCount}</p>
+              <p style={{ margin: 0, fontSize: 10, color: DIM, textTransform: 'uppercase' }}>Overdue</p>
+            </div>
+            <div style={{ flex: 1, background: `rgba(${hexRgb(GOLD)}, .08)`, border: `1px solid rgba(${hexRgb(GOLD)}, .2)`, borderRadius: 10, padding: '10px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: GOLD }}>{total}</p>
+              <p style={{ margin: 0, fontSize: 10, color: DIM, textTransform: 'uppercase' }}>Total Items</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Advanced Filter Panel ─── */
+function AdvancedFilterPanel({
+  show, onClose,
+  filterStatuses, setFilterStatuses,
+  filterPriorities, setFilterPriorities,
+  filterTrades, setFilterTrades,
+  filterAssignee, setFilterAssignee,
+  filterDateField, setFilterDateField,
+  filterDateFrom, setFilterDateFrom,
+  filterDateTo, setFilterDateTo,
+  assignees,
+  onSavePreset,
+  savedPresets,
+  onLoadPreset,
+  onDeletePreset,
+  onClearAll,
+}: {
+  show: boolean; onClose: () => void;
+  filterStatuses: string[]; setFilterStatuses: (v: string[]) => void;
+  filterPriorities: string[]; setFilterPriorities: (v: string[]) => void;
+  filterTrades: string[]; setFilterTrades: (v: string[]) => void;
+  filterAssignee: string; setFilterAssignee: (v: string) => void;
+  filterDateField: string; setFilterDateField: (v: string) => void;
+  filterDateFrom: string; setFilterDateFrom: (v: string) => void;
+  filterDateTo: string; setFilterDateTo: (v: string) => void;
+  assignees: string[];
+  onSavePreset: (name: string) => void;
+  savedPresets: FilterPreset[];
+  onLoadPreset: (p: FilterPreset) => void;
+  onDeletePreset: (name: string) => void;
+  onClearAll: () => void;
+}) {
+  const [presetName, setPresetName] = useState('');
+  const [showSave, setShowSave] = useState(false);
+
+  if (!show) return null;
+
+  const toggleInList = (list: string[], item: string, setter: (v: string[]) => void) => {
+    setter(list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
+  };
+
+  const chipStyle = (active: boolean, color: string = GOLD): React.CSSProperties => ({
+    background: active ? `rgba(${hexRgb(color)}, .2)` : 'transparent',
+    border: `1px solid ${active ? color : BORDER}`,
+    borderRadius: 20, padding: '5px 12px',
+    color: active ? color : DIM,
+    fontSize: 12, fontWeight: active ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap',
+  });
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9998, display: 'flex', flexDirection: 'column', background: '#070E18' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: `1px solid ${BORDER}` }}>
+        <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: TEXT }}>Advanced Filters</h3>
+        <button onClick={onClose} style={{ background: GOLD, border: 'none', borderRadius: 10, padding: '8px 18px', color: '#000', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Apply</button>
+      </div>
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
+        {/* Saved Presets */}
+        {savedPresets.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <p style={secLbl}>Saved Presets</p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {savedPresets.map((p) => (
+                <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                  <button onClick={() => onLoadPreset(p)} style={{ ...chipStyle(false, PURPLE), borderRadius: '20px 0 0 20px', borderRight: 'none' }}>{p.name}</button>
+                  <button onClick={() => onDeletePreset(p.name)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: '0 20px 20px 0', padding: '5px 8px', color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>x</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Status multi-select */}
+        <p style={secLbl}>Status</p>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+          {STATUSES.map((s) => (
+            <button key={s} onClick={() => toggleInList(filterStatuses, s, setFilterStatuses)} style={chipStyle(filterStatuses.includes(s), STATUS_COLORS[s])}>
+              {STATUS_LABELS[s]}
+            </button>
+          ))}
+        </div>
+
+        {/* Priority multi-select */}
+        <p style={secLbl}>Priority</p>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+          {PRIORITIES.map((p) => (
+            <button key={p} onClick={() => toggleInList(filterPriorities, p, setFilterPriorities)} style={chipStyle(filterPriorities.includes(p), PRIORITY_COLORS[p])}>
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {/* Trade multi-select */}
+        <p style={secLbl}>Trade</p>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
+          {TRADES.map((t) => (
+            <button key={t} onClick={() => toggleInList(filterTrades, t, setFilterTrades)} style={chipStyle(filterTrades.includes(t))}>
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {/* Assignee */}
+        <p style={secLbl}>Assignee</p>
+        <select value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value)} style={{ ...inp, marginBottom: 16 }}>
+          <option value="" style={{ background: '#0D1D2E' }}>All Assignees</option>
+          {assignees.map((a) => <option key={a} value={a} style={{ background: '#0D1D2E' }}>{a}</option>)}
+        </select>
+
+        {/* Date range */}
+        <p style={secLbl}>Date Range</p>
+        <select value={filterDateField} onChange={(e) => setFilterDateField(e.target.value)} style={{ ...inp, marginBottom: 8 }}>
+          <option value="" style={{ background: '#0D1D2E' }}>No Date Filter</option>
+          <option value="created_at" style={{ background: '#0D1D2E' }}>Created Date</option>
+          <option value="due_date" style={{ background: '#0D1D2E' }}>Due Date</option>
+        </select>
+        {filterDateField && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+            <div>
+              <label style={{ fontSize: 11, color: DIM }}>From</label>
+              <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} style={inp} />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, color: DIM }}>To</label>
+              <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} style={inp} />
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <button onClick={onClearAll} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px', color: DIM, fontSize: 13, cursor: 'pointer' }}>Clear All</button>
+          <button onClick={() => setShowSave(!showSave)} style={{ flex: 1, background: 'transparent', border: `1px solid ${GOLD}`, borderRadius: 10, padding: '12px', color: GOLD, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Save Preset</button>
+        </div>
+        {showSave && (
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <input value={presetName} onChange={(e) => setPresetName(e.target.value)} placeholder="Preset name..." style={{ ...inp, flex: 1 }} />
+            <button onClick={() => { if (presetName.trim()) { onSavePreset(presetName.trim()); setPresetName(''); setShowSave(false); } }} style={{ background: GOLD, border: 'none', borderRadius: 10, padding: '10px 16px', color: '#000', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Save</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ════════════════════════════════ MAIN COMPONENT ════════════════════════════════ */
 
 function PunchListPage() {
   const searchParams = useSearchParams();
@@ -61,11 +390,133 @@ function PunchListPage() {
   const [priority, setPriority] = useState('Medium');
   const [dueDate, setDueDate]   = useState('');
   const [notes, setNotes]       = useState('');
+  const [assignee, setAssignee] = useState('');
 
   // Photo attachment
   const photoRef = useRef<HTMLInputElement>(null);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+
+  // Batch/Bulk operations
+  const [selectMode, setSelectMode]     = useState(false);
+  const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set());
+  const [showConfirm, setShowConfirm]   = useState<{ message: string; action: () => void } | null>(null);
+  const [showAssigneePicker, setShowAssigneePicker] = useState(false);
+  const [showPriorityPicker, setShowPriorityPicker] = useState(false);
+  const [batchBusy, setBatchBusy] = useState(false);
+
+  // Toast
+  const [toast, setToast] = useState('');
+
+  // Advanced filters
+  const [showAdvFilter, setShowAdvFilter] = useState(false);
+  const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
+  const [filterPriorities, setFilterPriorities] = useState<string[]>([]);
+  const [filterTrades, setFilterTrades] = useState<string[]>([]);
+  const [filterAssignee, setFilterAssignee] = useState('');
+  const [filterDateField, setFilterDateField] = useState('');
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [savedPresets, setSavedPresets] = useState<FilterPreset[]>([]);
+  const [advancedActive, setAdvancedActive] = useState(false);
+
+  // Gather unique assignees from items
+  const uniqueAssignees = Array.from(new Set(items.map((i) => i.assignee).filter(Boolean) as string[]));
+
+  // Load saved presets from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`punch-filter-presets-${projectId}`);
+      if (raw) setSavedPresets(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, [projectId]);
+
+  const savePresetsToStorage = (presets: FilterPreset[]) => {
+    setSavedPresets(presets);
+    try { localStorage.setItem(`punch-filter-presets-${projectId}`, JSON.stringify(presets)); } catch { /* ignore */ }
+  };
+
+  const handleSavePreset = (name: string) => {
+    const preset: FilterPreset = { name, statuses: filterStatuses, priorities: filterPriorities, trades: filterTrades, assignee: filterAssignee, dateField: filterDateField, dateFrom: filterDateFrom, dateTo: filterDateTo };
+    const updated = [...savedPresets.filter((p) => p.name !== name), preset];
+    savePresetsToStorage(updated);
+  };
+
+  const handleLoadPreset = (p: FilterPreset) => {
+    setFilterStatuses(p.statuses); setFilterPriorities(p.priorities); setFilterTrades(p.trades);
+    setFilterAssignee(p.assignee); setFilterDateField(p.dateField); setFilterDateFrom(p.dateFrom); setFilterDateTo(p.dateTo);
+    setAdvancedActive(true);
+    setFilter('advanced');
+  };
+
+  const handleDeletePreset = (name: string) => {
+    savePresetsToStorage(savedPresets.filter((p) => p.name !== name));
+  };
+
+  const clearAdvancedFilters = () => {
+    setFilterStatuses([]); setFilterPriorities([]); setFilterTrades([]);
+    setFilterAssignee(''); setFilterDateField(''); setFilterDateFrom(''); setFilterDateTo('');
+    setAdvancedActive(false);
+    setFilter('all');
+  };
+
+  const applyAdvancedFilter = useCallback(() => {
+    const hasAny = filterStatuses.length > 0 || filterPriorities.length > 0 || filterTrades.length > 0 || !!filterAssignee || !!filterDateField;
+    setAdvancedActive(hasAny);
+    if (hasAny) setFilter('advanced');
+    else if (filter === 'advanced') setFilter('all');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterStatuses, filterPriorities, filterTrades, filterAssignee, filterDateField, filterDateFrom, filterDateTo]);
+
+  // Quick preset helpers
+  const applyQuickPreset = (preset: string) => {
+    clearAdvancedFilters();
+    const today = new Date().toISOString().split('T')[0];
+    switch (preset) {
+      case 'my-items':
+        // Filter by current user - use assignee if available
+        setFilterAssignee('me');
+        setAdvancedActive(true);
+        setFilter('advanced');
+        break;
+      case 'overdue': {
+        setFilterStatuses(['open', 'in_progress', 'ready_to_inspect']);
+        setFilterDateField('due_date');
+        setFilterDateTo(today);
+        setAdvancedActive(true);
+        setFilter('advanced');
+        break;
+      }
+      case 'created-today':
+        setFilterDateField('created_at');
+        setFilterDateFrom(today);
+        setFilterDateTo(today);
+        setAdvancedActive(true);
+        setFilter('advanced');
+        break;
+      case 'high-priority':
+        setFilterPriorities(['Critical', 'High']);
+        setAdvancedActive(true);
+        setFilter('advanced');
+        break;
+    }
+  };
+
+  // Send notification helper
+  const sendNotification = async (recipientAssignee: string, message: string) => {
+    try {
+      await fetch(`/api/projects/${projectId}/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignee: recipientAssignee, message }),
+      });
+      setToast(`Notification sent to ${recipientAssignee}`);
+    } catch {
+      // Enqueue for offline
+      await enqueue({ url: `/api/projects/${projectId}/notifications`, method: 'POST', body: JSON.stringify({ assignee: recipientAssignee, message }), contentType: 'application/json', isFormData: false });
+      setToast(`Notification queued for ${recipientAssignee}`);
+    }
+  };
 
   const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -155,6 +606,7 @@ function PunchListPage() {
       notes: [notes.trim(), photoUrls.length ? `Photos: ${photoUrls.join(', ')}` : ''].filter(Boolean).join('\n'),
       status: 'open',
       photo_urls: photoUrls,
+      assignee: assignee.trim() || null,
     };
 
     try {
@@ -165,16 +617,28 @@ function PunchListPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed');
+
+      // Send notification to assignee
+      if (assignee.trim()) {
+        await sendNotification(assignee.trim(), `New punch item assigned to you: "${desc.trim().slice(0, 60)}"`);
+      }
+
       await loadItems();
       resetForm();
       setView('list');
     } catch {
       await enqueue({ url: '/api/punch-list/create', method: 'POST', body: JSON.stringify(payload), contentType: 'application/json', isFormData: false });
+
+      // Queue notification for assignee
+      if (assignee.trim()) {
+        await sendNotification(assignee.trim(), `New punch item assigned to you: "${desc.trim().slice(0, 60)}"`);
+      }
+
       setItems((prev) => [{
         id: `local-${Date.now()}`,
         description: desc.trim(), location: location.trim(), trade, priority, status: 'open',
         due_date: dueDate || undefined, notes: notes.trim(), created_at: new Date().toISOString(),
-        photo_urls: photoPreviews,
+        photo_urls: photoPreviews, assignee: assignee.trim() || undefined,
       }, ...prev]);
       resetForm();
       setView('list');
@@ -199,14 +663,153 @@ function PunchListPage() {
     }
   };
 
-  const resetForm = () => { setDesc(''); setLocation(''); setTrade('General Contractor'); setPriority('Medium'); setDueDate(''); setNotes(''); setPhotoPreviews([]); setPhotoFiles([]); };
+  const resetForm = () => { setDesc(''); setLocation(''); setTrade('General Contractor'); setPriority('Medium'); setDueDate(''); setNotes(''); setPhotoPreviews([]); setPhotoFiles([]); setAssignee(''); };
 
-  const filtered = filter === 'all' ? items : items.filter((i) => i.status === filter || i.priority.toLowerCase() === filter);
+  /* ── Batch operations ── */
+  const toggleSelectItem = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => { setSelectedIds(new Set(filtered.map((i) => i.id))); };
+  const deselectAll = () => { setSelectedIds(new Set()); };
+
+  const batchClose = async () => {
+    setBatchBusy(true);
+    const ids = Array.from(selectedIds);
+    // Optimistic update
+    setItems((prev) => prev.map((i) => ids.includes(i.id) ? { ...i, status: 'complete' } : i));
+    try {
+      if (!online) throw new Error('offline');
+      await fetch(`/api/projects/${projectId}/punch-list/batch`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, update: { status: 'complete' } }),
+      });
+    } catch {
+      await enqueue({ url: `/api/projects/${projectId}/punch-list/batch`, method: 'PATCH', body: JSON.stringify({ ids, update: { status: 'complete' } }), contentType: 'application/json', isFormData: false });
+    }
+    setSelectedIds(new Set());
+    setSelectMode(false);
+    setBatchBusy(false);
+    setToast(`${ids.length} item(s) closed`);
+  };
+
+  const batchReassign = async (newAssignee: string) => {
+    setBatchBusy(true);
+    const ids = Array.from(selectedIds);
+    setItems((prev) => prev.map((i) => ids.includes(i.id) ? { ...i, assignee: newAssignee } : i));
+    try {
+      if (!online) throw new Error('offline');
+      await fetch(`/api/projects/${projectId}/punch-list/batch`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, update: { assignee: newAssignee } }),
+      });
+    } catch {
+      await enqueue({ url: `/api/projects/${projectId}/punch-list/batch`, method: 'PATCH', body: JSON.stringify({ ids, update: { assignee: newAssignee } }), contentType: 'application/json', isFormData: false });
+    }
+    // Send notification
+    await sendNotification(newAssignee, `${ids.length} punch item(s) have been reassigned to you.`);
+    setSelectedIds(new Set());
+    setSelectMode(false);
+    setShowAssigneePicker(false);
+    setBatchBusy(false);
+  };
+
+  const batchChangePriority = async (newPriority: string) => {
+    setBatchBusy(true);
+    const ids = Array.from(selectedIds);
+    setItems((prev) => prev.map((i) => ids.includes(i.id) ? { ...i, priority: newPriority } : i));
+    try {
+      if (!online) throw new Error('offline');
+      await fetch(`/api/projects/${projectId}/punch-list/batch`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, update: { priority: newPriority } }),
+      });
+    } catch {
+      await enqueue({ url: `/api/projects/${projectId}/punch-list/batch`, method: 'PATCH', body: JSON.stringify({ ids, update: { priority: newPriority } }), contentType: 'application/json', isFormData: false });
+    }
+    setSelectedIds(new Set());
+    setSelectMode(false);
+    setShowPriorityPicker(false);
+    setBatchBusy(false);
+    setToast(`${ids.length} item(s) updated to ${newPriority}`);
+  };
+
+  const batchDelete = async () => {
+    setBatchBusy(true);
+    const ids = Array.from(selectedIds);
+    setItems((prev) => prev.filter((i) => !ids.includes(i.id)));
+    try {
+      if (!online) throw new Error('offline');
+      await fetch(`/api/projects/${projectId}/punch-list/batch`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+    } catch {
+      await enqueue({ url: `/api/projects/${projectId}/punch-list/batch`, method: 'DELETE', body: JSON.stringify({ ids }), contentType: 'application/json', isFormData: false });
+    }
+    setSelectedIds(new Set());
+    setSelectMode(false);
+    setBatchBusy(false);
+    setToast(`${ids.length} item(s) deleted`);
+  };
+
+  // Detail view reassign
+  const reassignItem = async (item: PunchItem, newAssignee: string) => {
+    setItems((prev) => prev.map((i) => i.id === item.id ? { ...i, assignee: newAssignee } : i));
+    setSelected((prev) => prev ? { ...prev, assignee: newAssignee } : null);
+    try {
+      if (!online) throw new Error('offline');
+      await fetch(`/api/punch-list/${item.id}/complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assignee: newAssignee }),
+      });
+    } catch {
+      await enqueue({ url: `/api/punch-list/${item.id}/complete`, method: 'PATCH', body: JSON.stringify({ assignee: newAssignee }), contentType: 'application/json', isFormData: false });
+    }
+    await sendNotification(newAssignee, `Punch item reassigned to you: "${item.description.slice(0, 60)}"`);
+  };
+
+  /* ── Filtering logic ── */
+  const getFiltered = (): PunchItem[] => {
+    if (filter === 'advanced' || advancedActive) {
+      return items.filter((i) => {
+        if (filterStatuses.length > 0 && !filterStatuses.includes(i.status)) return false;
+        if (filterPriorities.length > 0 && !filterPriorities.includes(i.priority)) return false;
+        if (filterTrades.length > 0 && !filterTrades.includes(i.trade)) return false;
+        if (filterAssignee && filterAssignee !== 'me' && i.assignee !== filterAssignee) return false;
+        if (filterDateField && filterDateFrom) {
+          const val = filterDateField === 'created_at' ? i.created_at : i.due_date;
+          if (!val || val.slice(0, 10) < filterDateFrom) return false;
+        }
+        if (filterDateField && filterDateTo) {
+          const val = filterDateField === 'created_at' ? i.created_at : i.due_date;
+          if (!val || val.slice(0, 10) > filterDateTo) return false;
+        }
+        return true;
+      });
+    }
+    if (filter === 'all') return items;
+    return items.filter((i) => i.status === filter || i.priority.toLowerCase() === filter);
+  };
+
+  const filtered = getFiltered();
   const openCount = items.filter((i) => i.status !== 'complete').length;
   const criticalCount = items.filter((i) => i.priority === 'Critical' && i.status !== 'complete').length;
 
+  // Detail view reassign state
+  const [showDetailReassign, setShowDetailReassign] = useState(false);
+
   return (
-    <div style={{ padding: '18px 16px' }}>
+    <div style={{ padding: '18px 16px', paddingBottom: selectMode && selectedIds.size > 0 ? 100 : 18 }}>
       <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
 
       {/* Header */}
@@ -216,16 +819,24 @@ function PunchListPage() {
           <p style={{ margin: '3px 0 0', fontSize: 13, color: DIM }}>{projectName}</p>
         </div>
         {view === 'list' && (
-          <button
-            onClick={() => setView('new')}
-            style={{ background: GOLD, border: 'none', borderRadius: 10, padding: '10px 16px', color: '#000', fontSize: 14, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }}
-          >
-            + Add Item
-          </button>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={() => { setSelectMode(!selectMode); setSelectedIds(new Set()); }}
+              style={{ background: selectMode ? `rgba(${hexRgb(BLUE)}, .2)` : 'transparent', border: `1px solid ${selectMode ? BLUE : BORDER}`, borderRadius: 10, padding: '10px 14px', color: selectMode ? BLUE : DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              {selectMode ? 'Cancel' : 'Select'}
+            </button>
+            <button
+              onClick={() => setView('new')}
+              style={{ background: GOLD, border: 'none', borderRadius: 10, padding: '10px 16px', color: '#000', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+            >
+              + Add Item
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Stats */}
+      {/* Stats chips */}
       {view === 'list' && (
         <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
           <Chip label={`${openCount} Open`} color={openCount > 0 ? AMBER : GREEN} />
@@ -234,16 +845,52 @@ function PunchListPage() {
         </div>
       )}
 
+      {/* Statistics Panel */}
+      {view === 'list' && <StatsPanel items={items} />}
+
       {/* Filter chips */}
       {view === 'list' && (
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 12 }}>
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 6 }}>
           {['all', 'open', 'in_progress', 'ready_to_inspect', 'complete', 'Critical', 'High'].map((f) => (
-            <button key={f} onClick={() => setFilter(f)}
-              style={{ flexShrink: 0, background: filter === f ? 'rgba(212,160,23,.2)' : 'transparent', border: `1px solid ${filter === f ? GOLD : BORDER}`, borderRadius: 20, padding: '5px 12px', color: filter === f ? GOLD : DIM, fontSize: 12, fontWeight: filter === f ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            <button key={f} onClick={() => { setFilter(f); if (f !== 'advanced') setAdvancedActive(false); }}
+              style={{ flexShrink: 0, background: filter === f && !advancedActive ? 'rgba(212,160,23,.2)' : 'transparent', border: `1px solid ${filter === f && !advancedActive ? GOLD : BORDER}`, borderRadius: 20, padding: '5px 12px', color: filter === f && !advancedActive ? GOLD : DIM, fontSize: 12, fontWeight: filter === f && !advancedActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
               {STATUS_LABELS[f] || f}
             </button>
           ))}
+          <button onClick={() => setShowAdvFilter(true)}
+            style={{ flexShrink: 0, background: advancedActive ? `rgba(${hexRgb(PURPLE)}, .2)` : 'transparent', border: `1px solid ${advancedActive ? PURPLE : BORDER}`, borderRadius: 20, padding: '5px 12px', color: advancedActive ? PURPLE : DIM, fontSize: 12, fontWeight: advancedActive ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filters{advancedActive ? ' *' : ''}
+          </button>
+        </div>
+      )}
+
+      {/* Quick presets */}
+      {view === 'list' && (
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 12 }}>
+          {[
+            { key: 'my-items', label: 'My Items' },
+            { key: 'overdue', label: 'Overdue' },
+            { key: 'created-today', label: 'Created Today' },
+            { key: 'high-priority', label: 'High Priority' },
+          ].map((p) => (
+            <button key={p.key} onClick={() => applyQuickPreset(p.key)}
+              style={{ flexShrink: 0, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 20, padding: '4px 11px', color: DIM, fontSize: 11, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Select all / deselect all */}
+      {view === 'list' && selectMode && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <button onClick={selectAll} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 12px', color: GOLD, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Select All ({filtered.length})</button>
+          <button onClick={deselectAll} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 12px', color: DIM, fontSize: 12, cursor: 'pointer' }}>Deselect All</button>
+          {selectedIds.size > 0 && <span style={{ fontSize: 12, color: GOLD, alignSelf: 'center', fontWeight: 700 }}>{selectedIds.size} selected</span>}
         </div>
       )}
 
@@ -254,33 +901,79 @@ function PunchListPage() {
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 16px', color: DIM }}>
             <div style={{ display: 'flex', justifyContent: 'center', color: GREEN, marginBottom: 8, opacity: 0.6 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
-            <p style={{ margin: 0, fontSize: 14 }}>{filter === 'all' ? 'No punch list items. Tap "+ Add Item" to log one.' : 'No items match this filter.'}</p>
+            <p style={{ margin: 0, fontSize: 14 }}>{filter === 'all' && !advancedActive ? 'No punch list items. Tap "+ Add Item" to log one.' : 'No items match this filter.'}</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map((item) => (
               <div
                 key={item.id}
-                onClick={() => { setSelected(item); setView('detail'); }}
-                style={{ background: RAISED, border: `1px solid ${item.priority === 'Critical' ? 'rgba(239,68,68,.3)' : BORDER}`, borderRadius: 12, padding: '14px', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 0 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: PRIORITY_COLORS[item.priority] || DIM, marginTop: 4, flexShrink: 0 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT, lineHeight: 1.3 }}>{item.description}</p>
-                    {item.location && <p style={{ margin: '3px 0 0', fontSize: 12, color: DIM, display: 'flex', alignItems: 'center', gap: 4 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx={12} cy={10} r={3}/></svg> {item.location}</p>}
-                    <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                      <Tag label={item.trade} />
-                      <Tag label={STATUS_LABELS[item.status] || item.status} color={STATUS_COLORS[item.status]} />
-                      {item.due_date && <Tag label={`Due ${new Date(item.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`} color={new Date(item.due_date) < new Date() ? RED : DIM} />}
+                {selectMode && (
+                  <button
+                    onClick={() => toggleSelectItem(item.id)}
+                    style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', flexShrink: 0 }}
+                  >
+                    <div style={{
+                      width: 22, height: 22, borderRadius: 6,
+                      border: `2px solid ${selectedIds.has(item.id) ? GOLD : BORDER}`,
+                      background: selectedIds.has(item.id) ? GOLD : 'transparent',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {selectedIds.has(item.id) && <svg viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polyline points="20 6 9 17 4 12"/></svg>}
                     </div>
+                  </button>
+                )}
+                <div
+                  onClick={() => { if (selectMode) { toggleSelectItem(item.id); } else { setSelected(item); setView('detail'); } }}
+                  style={{ flex: 1, background: RAISED, border: `1px solid ${item.priority === 'Critical' ? 'rgba(239,68,68,.3)' : BORDER}`, borderRadius: 12, padding: '14px', cursor: 'pointer' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: PRIORITY_COLORS[item.priority] || DIM, marginTop: 4, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT, lineHeight: 1.3 }}>{item.description}</p>
+                      {item.location && <p style={{ margin: '3px 0 0', fontSize: 12, color: DIM, display: 'flex', alignItems: 'center', gap: 4 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx={12} cy={10} r={3}/></svg> {item.location}</p>}
+                      <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                        <Tag label={item.trade} />
+                        <Tag label={STATUS_LABELS[item.status] || item.status} color={STATUS_COLORS[item.status]} />
+                        {item.assignee && <Tag label={item.assignee} color={BLUE} />}
+                        {item.due_date && <Tag label={`Due ${new Date(item.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`} color={new Date(item.due_date) < new Date() ? RED : DIM} />}
+                      </div>
+                    </div>
+                    {!selectMode && <span style={{ color: DIM, fontSize: 18, flexShrink: 0 }}>›</span>}
                   </div>
-                  <span style={{ color: DIM, fontSize: 18, flexShrink: 0 }}>›</span>
                 </div>
               </div>
             ))}
           </div>
         )
+      )}
+
+      {/* ── Batch action bar ── */}
+      {view === 'list' && selectMode && selectedIds.size > 0 && (
+        <div style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          background: '#0A1628', borderTop: `1px solid ${BORDER}`,
+          padding: '10px 16px', display: 'flex', gap: 8, overflowX: 'auto', zIndex: 999,
+        }}>
+          <button disabled={batchBusy} onClick={() => setShowConfirm({ message: `Close ${selectedIds.size} selected item(s)? They will be marked as complete.`, action: batchClose })}
+            style={{ flexShrink: 0, background: GREEN, border: 'none', borderRadius: 10, padding: '10px 14px', color: '#000', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: batchBusy ? 0.5 : 1 }}>
+            Close ({selectedIds.size})
+          </button>
+          <button disabled={batchBusy} onClick={() => setShowAssigneePicker(true)}
+            style={{ flexShrink: 0, background: BLUE, border: 'none', borderRadius: 10, padding: '10px 14px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: batchBusy ? 0.5 : 1 }}>
+            Reassign
+          </button>
+          <button disabled={batchBusy} onClick={() => setShowPriorityPicker(true)}
+            style={{ flexShrink: 0, background: AMBER, border: 'none', borderRadius: 10, padding: '10px 14px', color: '#000', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: batchBusy ? 0.5 : 1 }}>
+            Priority
+          </button>
+          <button disabled={batchBusy} onClick={() => setShowConfirm({ message: `Delete ${selectedIds.size} selected item(s)? This cannot be undone.`, action: batchDelete })}
+            style={{ flexShrink: 0, background: RED, border: 'none', borderRadius: 10, padding: '10px 14px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: batchBusy ? 0.5 : 1 }}>
+            Delete
+          </button>
+        </div>
       )}
 
       {/* ── New item form ── */}
@@ -313,6 +1006,12 @@ function PunchListPage() {
                 </select>
               </Fld>
             </div>
+            <Fld label="Assignee">
+              <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Name of responsible person" style={inp} list="assignee-list" />
+              <datalist id="assignee-list">
+                {uniqueAssignees.map((a) => <option key={a} value={a} />)}
+              </datalist>
+            </Fld>
             <Fld label="Due Date">
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={inp} />
             </Fld>
@@ -360,6 +1059,7 @@ function PunchListPage() {
           <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
             <Tag label={selected.priority} color={PRIORITY_COLORS[selected.priority]} large />
             <Tag label={STATUS_LABELS[selected.status] || selected.status} color={STATUS_COLORS[selected.status]} large />
+            {selected.assignee && <Tag label={selected.assignee} color={BLUE} large />}
           </div>
           <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: TEXT, lineHeight: 1.3 }}>{selected.description}</h2>
           {selected.location && <p style={{ margin: '0 0 4px', fontSize: 14, color: DIM, display: 'flex', alignItems: 'center', gap: 5 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx={12} cy={10} r={3}/></svg> {selected.location}</p>}
@@ -380,6 +1080,14 @@ function PunchListPage() {
             </div>
           )}
 
+          {/* Reassign button */}
+          <div style={{ marginBottom: 16 }}>
+            <button onClick={() => setShowDetailReassign(true)} style={{ width: '100%', background: 'transparent', border: `1px solid ${BLUE}`, borderRadius: 12, padding: '12px 16px', color: BLUE, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx={9} cy={7} r={4}/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              {selected.assignee ? `Reassign (current: ${selected.assignee})` : 'Assign To'}
+            </button>
+          </div>
+
           <p style={secLbl}>Update Status</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {STATUSES.map((s) => (
@@ -394,6 +1102,30 @@ function PunchListPage() {
           </div>
         </div>
       )}
+
+      {/* ── Dialogs / Overlays ── */}
+      {showConfirm && <ConfirmDialog message={showConfirm.message} onConfirm={() => { showConfirm.action(); setShowConfirm(null); }} onCancel={() => setShowConfirm(null)} />}
+      {showAssigneePicker && <AssigneePickerDialog assignees={uniqueAssignees} onSelect={batchReassign} onCancel={() => setShowAssigneePicker(false)} />}
+      {showPriorityPicker && <PriorityPickerDialog onSelect={batchChangePriority} onCancel={() => setShowPriorityPicker(false)} />}
+      {showDetailReassign && selected && <AssigneePickerDialog assignees={uniqueAssignees} onSelect={(a) => { reassignItem(selected, a); setShowDetailReassign(false); }} onCancel={() => setShowDetailReassign(false)} />}
+      {toast && <Toast message={toast} onDone={() => setToast('')} />}
+      <AdvancedFilterPanel
+        show={showAdvFilter}
+        onClose={() => { setShowAdvFilter(false); applyAdvancedFilter(); }}
+        filterStatuses={filterStatuses} setFilterStatuses={setFilterStatuses}
+        filterPriorities={filterPriorities} setFilterPriorities={setFilterPriorities}
+        filterTrades={filterTrades} setFilterTrades={setFilterTrades}
+        filterAssignee={filterAssignee} setFilterAssignee={setFilterAssignee}
+        filterDateField={filterDateField} setFilterDateField={setFilterDateField}
+        filterDateFrom={filterDateFrom} setFilterDateFrom={setFilterDateFrom}
+        filterDateTo={filterDateTo} setFilterDateTo={setFilterDateTo}
+        assignees={uniqueAssignees}
+        onSavePreset={handleSavePreset}
+        savedPresets={savedPresets}
+        onLoadPreset={handleLoadPreset}
+        onDeletePreset={handleDeletePreset}
+        onClearAll={() => { clearAdvancedFilters(); setShowAdvFilter(false); }}
+      />
     </div>
   );
 }
