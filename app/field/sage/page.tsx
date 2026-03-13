@@ -206,12 +206,12 @@ function SagePage() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#09111A', position: 'relative' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', background: '#09111A' }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, background: RAISED, flexShrink: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', padding: 0, lineHeight: 1 }}>‹</button>
+          <button onClick={() => router.back()} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: '8px', lineHeight: 1, display: 'flex', alignItems: 'center', marginLeft: -8 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
           <span style={{ color: GOLD, display: 'flex', alignItems: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: GOLD, lineHeight: 1 }}>Sage AI</div>
@@ -227,7 +227,7 @@ function SagePage() {
       </div>
 
       {/* Messages area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ minHeight: 'calc(100dvh - 200px)', overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
         {!hasMessages && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1, gap: 20, paddingBottom: 24 }}>
