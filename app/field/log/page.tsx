@@ -6,6 +6,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0f1d2b';
@@ -76,6 +77,44 @@ function DailyLogForm() {
       })
       .catch(() => {});
   }, [projectId]);
+
+  // Auto-populate weather via geolocation + wttr.in (no API key needed)
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          const res = await fetch(`https://wttr.in/${latitude},${longitude}?format=j1`);
+          const data = await res.json();
+          const current = data.current_condition?.[0];
+          const today   = data.weather?.[0];
+          if (current) {
+            setWeather(current.weatherDesc?.[0]?.value ?? 'Sunny');
+            setTempHigh(today?.maxtempF ?? '');
+            setTempLow(today?.mintempF  ?? '');
+          }
+        } catch {
+          // Silent fail — user can fill manually
+        }
+      },
+      () => {} // User denied location — no problem
+    );
+  }, []);
+
+  // Auto-populate superintendent from Supabase session
+  useEffect(() => {
+    const getUser = async () => {
+      const supabase = getSupabaseBrowser();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.user_metadata?.full_name) {
+        setSuperintendent(user.user_metadata.full_name);
+      } else if (user?.email) {
+        setSuperintendent(user.email.split('@')[0]);
+      }
+    };
+    getUser();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
