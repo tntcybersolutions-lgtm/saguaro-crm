@@ -7,6 +7,7 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import EmailComposer from '@/components/EmailComposer';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -97,6 +98,7 @@ function SubmittalsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState('');
   const [online, setOnline] = useState(true);
+  const [showEmail, setShowEmail] = useState(false);
 
   /* ── New state ── */
   const [courtFilter, setCourtFilter] = useState<'all' | 'my_court'>('all');
@@ -556,7 +558,46 @@ function SubmittalsPage() {
           {selected.submitted_date && <p style={{ margin: '0 0 4px', fontSize: 13, color: DIM }}>Submitted: {formatDate(selected.submitted_date)}</p>}
           {selected.due_date && <p style={{ margin: '0 0 4px', fontSize: 13, color: DIM }}>Due: {formatDate(selected.due_date)}</p>}
           {selected.description && <p style={{ margin: '10px 0 0', fontSize: 14, color: TEXT, lineHeight: 1.5 }}>{selected.description}</p>}
+
+          {/* Email Button */}
+          <button onClick={() => setShowEmail(true)} style={{
+            marginTop: 12, background: 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.3)',
+            borderRadius: 10, padding: '8px 16px', color: GOLD, fontSize: 13, fontWeight: 700,
+            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+          }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+            </svg>
+            Email
+          </button>
         </div>
+
+        {showEmail && (
+          <EmailComposer
+            projectId={projectId}
+            onClose={() => setShowEmail(false)}
+            onSent={() => { setShowEmail(false); showToast('Email sent successfully'); }}
+            defaultSubject={`Submittal - ${selected.title} - ${selected.status}`}
+            defaultBody={[
+              `Submittal: ${selected.title}`,
+              num ? `Number: #${num}` : '',
+              `Status: ${selected.status}`,
+              selected.spec_section ? `Spec Section: ${selected.spec_section}` : '',
+              selected.submittal_type ? `Type: ${selected.submittal_type}` : '',
+              selected.submitted_by ? `Submitted by: ${selected.submitted_by}` : '',
+              selected.subcontractor ? `Subcontractor: ${selected.subcontractor}` : '',
+              selected.submitted_date ? `Submitted: ${formatDate(selected.submitted_date)}` : '',
+              selected.due_date ? `Due: ${formatDate(selected.due_date)}` : '',
+              `Days in Review: ${daysInReview}`,
+              overdue ? 'STATUS: OVERDUE' : '',
+              '',
+              selected.description ? `Description:\n${selected.description}` : '',
+            ].filter(Boolean).join('\n')}
+            module="submittals"
+            itemId={selected.id}
+            itemTitle={selected.title}
+          />
+        )}
 
         {/* ── Response Tracking ── */}
         <div style={{ background: RAISED, border: `1px solid ${overdue ? 'rgba(239,68,68,.4)' : BORDER}`, borderRadius: 14, padding: 16, marginBottom: 14 }}>
