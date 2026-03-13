@@ -15,7 +15,7 @@ INSTRUCTIONS:
 4. Be precise with quantities — use the scale if visible, or estimate from proportions
 5. Include EVERY trade: concrete, steel, framing, roofing, MEP, finishes, sitework
 
-Return ONLY a valid JSON object. No markdown. No explanation. Just JSON.
+Return ONLY a valid JSON object. No markdown. No explanation. No code fences. Just raw JSON starting with {
 
 Format:
 {
@@ -98,7 +98,7 @@ export async function GET(
         await supabase.from('takeoffs').update({ status: 'analyzing' }).eq('id', takeoffId);
         send('progress', { step: 2, message: 'Sending blueprint to AI...', pct: 15 });
 
-        // 3. Fetch the file from private storage or fallback to public URL
+        // 3. Fetch the file
         const rawMime: string = takeoff.storage_path
           ? takeoff.file_type || 'application/pdf'
           : 'application/pdf';
@@ -126,7 +126,6 @@ export async function GET(
           return done();
         }
 
-        // Hard limit: 50MB is unreasonably large for any blueprint scan
         const MB = 1024 * 1024;
         if (fileBuffer.byteLength > 50 * MB) {
           send('error', { message: `Blueprint file is too large (${Math.round(fileBuffer.byteLength / MB)}MB). Please upload a file under 50MB.` });
@@ -134,7 +133,6 @@ export async function GET(
           return done();
         }
 
-        // Process: trim PDF pages or resize image — handles sharp auto-install silently
         const { base64, mimeType } = await processBlueprint(fileBuffer, rawMime);
 
         send('progress', { step: 3, message: 'AI is reading your blueprint...', pct: 25 });
@@ -150,7 +148,7 @@ export async function GET(
 
         send('progress', { step: 4, message: 'Analyzing dimensions and materials...', pct: 40 });
 
-        // 5. Build message content — PDF vs image
+        // 5. Build message content
         type ContentBlock =
           | { type: 'document'; source: { type: 'base64'; media_type: string; data: string } }
           | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
@@ -182,18 +180,25 @@ export async function GET(
 
         // 6. Call Claude
         const response = await client.messages.create({
-          model: 'claude-sonnet-4-6',
+          model: 'claude-opus-4-5',
           max_tokens: 8000,
           messages: [{ role: 'user', content: messageContent as Parameters<typeof client.messages.create>[0]['messages'][0]['content'] }],
         });
 
         send('progress', { step: 6, message: 'Processing results...', pct: 75 });
 
-        // 7. Parse response
+        // 7. Parse response — strip markdown fences if Claude added them
         const rawText = response.content
           .filter((b) => b.type === 'text')
           .map((b) => (b as { type: 'text'; text: string }).text)
           .join('');
+
+        // Aggressively clean: strip ```json fences, leading/trailing whitespace
+        const cleaned = rawText
+          .replace(/^```json\s*/im, '')
+          .replace(/^```\s*/im, '')
+          .replace(/\s*```\s*$/im, '')
+          .trim();
 
         let parsed: {
           projectName?: string;
@@ -221,18 +226,21 @@ export async function GET(
         };
 
         try {
-          parsed = JSON.parse(rawText);
+          parsed = JSON.parse(cleaned);
         } catch {
-          const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+          // Try to extract a JSON object from anywhere in the text
+          const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
           if (!jsonMatch) {
-            send('error', { message: 'AI could not parse blueprint. Please try a clearer image.' });
+            console.error('[takeoff/analyze] No JSON found in response. Raw text: - route.ts:234', rawText.substring(0, 500));
+            send('error', { message: 'AI could not parse blueprint. Please try a clearer image or PDF.' });
             await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
             return done();
           }
           try {
             parsed = JSON.parse(jsonMatch[0]);
-          } catch {
-            send('error', { message: 'AI returned unexpected format. Please try again.' });
+          } catch (e2) {
+            console.error('[takeoff/analyze] JSON parse failed after extraction: - route.ts:242', e2, 'Extracted:', jsonMatch[0].substring(0, 500));
+            send('error', { message: 'AI returned unexpected format. Please try again with a different blueprint file.' });
             await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
             return done();
           }
@@ -257,11 +265,10 @@ export async function GET(
             notes: item.notes || '',
           }));
 
-          // Delete old items for this takeoff before reinserting
           await supabase.from('takeoff_materials').delete().eq('takeoff_id', takeoffId);
 
           const { error: insertErr } = await supabase.from('takeoff_materials').insert(rows);
-          if (insertErr) console.error('[takeoff/analyze] insert materials error:', insertErr);
+          if (insertErr) console.error('[takeoff/analyze] insert materials error: - route.ts:271', insertErr);
         }
 
         // 9. Update takeoff summary
@@ -284,11 +291,10 @@ export async function GET(
           })
           .eq('id', takeoffId);
 
-        if (updateErr) console.error('[takeoff/analyze] update error:', updateErr);
+        if (updateErr) console.error('[takeoff/analyze] update error: - route.ts:294', updateErr);
 
         send('progress', { step: 8, message: 'Complete!', pct: 100 });
 
-        // 10. Stream the full result back
         send('result', {
           takeoffId,
           projectName: parsed.projectName,
@@ -312,7 +318,7 @@ export async function GET(
         if (message.toLowerCase().includes('prompt is too long') || message.toLowerCase().includes('context length')) {
           message = 'Blueprint file is too large for AI analysis. Please try a smaller file, reduce PDF pages, or use a lower-resolution image.';
         }
-        console.error('[takeoff/analyze]', err);
+        console.error('[takeoff/analyze] - route.ts:321', err);
         send('error', { message });
         try { await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId); } catch { /* non-fatal */ }
         done();
