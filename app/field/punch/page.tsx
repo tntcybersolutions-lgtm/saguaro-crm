@@ -3,7 +3,7 @@
  * Saguaro Field — Punch List
  * Create, view, and update punch list items. Offline queue.
  */
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
@@ -35,6 +35,7 @@ interface PunchItem {
   due_date?: string;
   notes?: string;
   created_at: string;
+  photo_urls?: string[];
 }
 
 type View = 'list' | 'new' | 'detail';
@@ -60,6 +61,49 @@ function PunchListPage() {
   const [priority, setPriority] = useState('Medium');
   const [dueDate, setDueDate]   = useState('');
   const [notes, setNotes]       = useState('');
+
+  // Photo attachment
+  const photoRef = useRef<HTMLInputElement>(null);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+
+  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setPhotoPreviews((prev) => [...prev, String(ev.target?.result || '')]);
+        setPhotoFiles((prev) => [...prev, file]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== idx));
+    setPhotoFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const uploadPhotos = async (): Promise<string[]> => {
+    const urls: string[] = [];
+    for (const file of photoFiles) {
+      try {
+        const fd = new FormData();
+        fd.append('file', file, file.name);
+        fd.append('category', 'Punch');
+        fd.append('caption', desc.trim().slice(0, 80));
+        if (projectId) fd.append('projectId', projectId);
+        const res = await fetch('/api/photos/upload', { method: 'POST', body: fd });
+        if (res.ok) {
+          const data = await res.json();
+          urls.push(String(data.photo?.url || ''));
+        }
+      } catch { /* skip failed uploads */ }
+    }
+    return urls;
+  };
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -95,6 +139,12 @@ function PunchListPage() {
     if (!desc.trim()) return;
     setSaving(true);
 
+    // Upload photos first if online
+    let photoUrls: string[] = [];
+    if (photoFiles.length > 0 && online) {
+      photoUrls = await uploadPhotos();
+    }
+
     const payload = {
       projectId,
       description: desc.trim(),
@@ -102,8 +152,9 @@ function PunchListPage() {
       trade,
       priority,
       due_date: dueDate || null,
-      notes: notes.trim(),
+      notes: [notes.trim(), photoUrls.length ? `Photos: ${photoUrls.join(', ')}` : ''].filter(Boolean).join('\n'),
       status: 'open',
+      photo_urls: photoUrls,
     };
 
     try {
@@ -119,11 +170,11 @@ function PunchListPage() {
       setView('list');
     } catch {
       await enqueue({ url: '/api/punch-list/create', method: 'POST', body: JSON.stringify(payload), contentType: 'application/json', isFormData: false });
-      // Optimistic local add
       setItems((prev) => [{
         id: `local-${Date.now()}`,
         description: desc.trim(), location: location.trim(), trade, priority, status: 'open',
         due_date: dueDate || undefined, notes: notes.trim(), created_at: new Date().toISOString(),
+        photo_urls: photoPreviews,
       }, ...prev]);
       resetForm();
       setView('list');
@@ -148,7 +199,7 @@ function PunchListPage() {
     }
   };
 
-  const resetForm = () => { setDesc(''); setLocation(''); setTrade('General Contractor'); setPriority('Medium'); setDueDate(''); setNotes(''); };
+  const resetForm = () => { setDesc(''); setLocation(''); setTrade('General Contractor'); setPriority('Medium'); setDueDate(''); setNotes(''); setPhotoPreviews([]); setPhotoFiles([]); };
 
   const filtered = filter === 'all' ? items : items.filter((i) => i.status === filter || i.priority.toLowerCase() === filter);
   const openCount = items.filter((i) => i.status !== 'complete').length;
@@ -266,8 +317,29 @@ function PunchListPage() {
               <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={inp} />
             </Fld>
             <Fld label="Notes">
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional details, spec reference, photos needed..." rows={2} style={inp} />
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Additional details, spec reference..." rows={2} style={inp} />
             </Fld>
+          </div>
+
+          {/* Photo attachment */}
+          <div style={card}>
+            <p style={secLbl}>Photos</p>
+            <input ref={photoRef} type="file" accept="image/*" capture="environment" multiple onChange={handlePhotoCapture} style={{ display: 'none' }} />
+            <button type="button" onClick={() => photoRef.current?.click()} style={{ width: '100%', background: 'transparent', border: `2px dashed rgba(212,160,23,.4)`, borderRadius: 10, padding: '14px', color: GOLD, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: photoPreviews.length ? 10 : 0 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx={12} cy={13} r={4}/></svg>
+              Attach Photo
+            </button>
+            {photoPreviews.length > 0 && (
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                {photoPreviews.map((src, i) => (
+                  <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt={`Photo ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: `1px solid ${BORDER}` }} />
+                    <button type="button" onClick={() => removePhoto(i)} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: RED, border: 'none', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>
@@ -293,7 +365,20 @@ function PunchListPage() {
           {selected.location && <p style={{ margin: '0 0 4px', fontSize: 14, color: DIM, display: 'flex', alignItems: 'center', gap: 5 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx={12} cy={10} r={3}/></svg> {selected.location}</p>}
           <p style={{ margin: '0 0 16px', fontSize: 14, color: DIM, display: 'flex', alignItems: 'center', gap: 5 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> {selected.trade}</p>
           {selected.due_date && <p style={{ margin: '0 0 16px', fontSize: 14, color: new Date(selected.due_date) < new Date() ? RED : DIM, display: 'flex', alignItems: 'center', gap: 5 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={3} y={4} width={18} height={18} rx={2}/><line x1={16} y1={2} x2={16} y2={6}/><line x1={8} y1={2} x2={8} y2={6}/><line x1={3} y1={10} x2={21} y2={10}/></svg> Due {new Date(selected.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>}
-          {selected.notes && <p style={{ margin: '0 0 16px', fontSize: 14, color: TEXT, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 12px' }}>{selected.notes}</p>}
+          {selected.notes && <p style={{ margin: '0 0 16px', fontSize: 14, color: TEXT, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 12px', whiteSpace: 'pre-wrap' }}>{selected.notes}</p>}
+
+          {/* Attached photos */}
+          {selected.photo_urls && selected.photo_urls.length > 0 && (
+            <div style={{ marginBottom: 16 }}>
+              <p style={secLbl}>Attached Photos</p>
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+                {selected.photo_urls.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={i} src={url} alt={`Photo ${i + 1}`} style={{ width: 100, height: 100, objectFit: 'cover', borderRadius: 10, border: `1px solid ${BORDER}`, flexShrink: 0 }} />
+                ))}
+              </div>
+            </div>
+          )}
 
           <p style={secLbl}>Update Status</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
