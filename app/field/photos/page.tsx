@@ -322,7 +322,7 @@ function PhotosPage() {
             onClick={() => fileRef.current?.click()}
             style={{ width: '100%', background: RAISED, border: `2px dashed rgba(212,160,23,.5)`, borderRadius: 14, padding: '22px', color: GOLD, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}
           >
-            <span style={{ fontSize: 32 }}>📸</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={32} height={32}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx={12} cy={13} r={4}/></svg>
             Take or Upload a Photo
           </button>
         </>
@@ -406,7 +406,7 @@ function PhotosPage() {
       ) : (
         !pendingPreview && (
           <div style={{ textAlign: 'center', padding: '32px 16px', color: DIM }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>📷</div>
+            <div style={{ display: 'flex', justifyContent: 'center', color: DIM, marginBottom: 8, opacity: 0.5 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx={12} cy={13} r={4}/></svg></div>
             <p style={{ margin: 0, fontSize: 14 }}>{filterCat === 'All' ? 'No photos yet. Tap above to take the first one.' : `No ${filterCat} photos.`}</p>
           </div>
         )
@@ -466,13 +466,13 @@ function PhotosPage() {
               {!markupMode ? (
                 <button
                   onClick={enterMarkup}
-                  style={{ background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 20, padding: '3px 14px', fontSize: 12, color: AMBER, fontWeight: 700, cursor: 'pointer' }}
+                  style={{ background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 20, padding: '3px 14px', fontSize: 12, color: AMBER, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                 >
-                  ✏️ Markup
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Markup
                 </button>
               ) : (
-                <span style={{ background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 20, padding: '3px 14px', fontSize: 12, color: RED, fontWeight: 700 }}>
-                  ✏️ Drawing...
+                <span style={{ background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 20, padding: '3px 14px', fontSize: 12, color: RED, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Drawing...
                 </span>
               )}
             </div>
@@ -512,9 +512,9 @@ function PhotosPage() {
                   </button>
                   <button
                     onClick={saveMarkup}
-                    style={{ background: GREEN, border: 'none', borderRadius: 10, padding: '8px 14px', color: '#000', fontSize: 13, cursor: 'pointer', fontWeight: 800 }}
+                    style={{ background: GREEN, border: 'none', borderRadius: 10, padding: '8px 14px', color: '#000', fontSize: 13, cursor: 'pointer', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 5 }}
                   >
-                    💾 Save Markup
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Markup
                   </button>
                 </div>
               </div>

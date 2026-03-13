@@ -202,7 +202,7 @@ function PunchListPage() {
           <div style={{ textAlign: 'center', padding: '32px 0', color: DIM }}>Loading...</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 16px', color: DIM }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>✅</div>
+            <div style={{ display: 'flex', justifyContent: 'center', color: GREEN, marginBottom: 8, opacity: 0.6 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
             <p style={{ margin: 0, fontSize: 14 }}>{filter === 'all' ? 'No punch list items. Tap "+ Add Item" to log one.' : 'No items match this filter.'}</p>
           </div>
         ) : (
@@ -217,7 +217,7 @@ function PunchListPage() {
                   <div style={{ width: 10, height: 10, borderRadius: '50%', background: PRIORITY_COLORS[item.priority] || DIM, marginTop: 4, flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: TEXT, lineHeight: 1.3 }}>{item.description}</p>
-                    {item.location && <p style={{ margin: '3px 0 0', fontSize: 12, color: DIM }}>📍 {item.location}</p>}
+                    {item.location && <p style={{ margin: '3px 0 0', fontSize: 12, color: DIM, display: 'flex', alignItems: 'center', gap: 4 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx={12} cy={10} r={3}/></svg> {item.location}</p>}
                     <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                       <Tag label={item.trade} />
                       <Tag label={STATUS_LABELS[item.status] || item.status} color={STATUS_COLORS[item.status]} />
@@ -290,9 +290,9 @@ function PunchListPage() {
             <Tag label={STATUS_LABELS[selected.status] || selected.status} color={STATUS_COLORS[selected.status]} large />
           </div>
           <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: TEXT, lineHeight: 1.3 }}>{selected.description}</h2>
-          {selected.location && <p style={{ margin: '0 0 4px', fontSize: 14, color: DIM }}>📍 {selected.location}</p>}
-          <p style={{ margin: '0 0 16px', fontSize: 14, color: DIM }}>🔧 {selected.trade}</p>
-          {selected.due_date && <p style={{ margin: '0 0 16px', fontSize: 14, color: new Date(selected.due_date) < new Date() ? RED : DIM }}>📅 Due {new Date(selected.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>}
+          {selected.location && <p style={{ margin: '0 0 4px', fontSize: 14, color: DIM, display: 'flex', alignItems: 'center', gap: 5 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx={12} cy={10} r={3}/></svg> {selected.location}</p>}
+          <p style={{ margin: '0 0 16px', fontSize: 14, color: DIM, display: 'flex', alignItems: 'center', gap: 5 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg> {selected.trade}</p>
+          {selected.due_date && <p style={{ margin: '0 0 16px', fontSize: 14, color: new Date(selected.due_date) < new Date() ? RED : DIM, display: 'flex', alignItems: 'center', gap: 5 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={3} y={4} width={18} height={18} rx={2}/><line x1={16} y1={2} x2={16} y2={6}/><line x1={8} y1={2} x2={8} y2={6}/><line x1={3} y1={10} x2={21} y2={10}/></svg> Due {new Date(selected.due_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}</p>}
           {selected.notes && <p style={{ margin: '0 0 16px', fontSize: 14, color: TEXT, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 12px' }}>{selected.notes}</p>}
 
           <p style={secLbl}>Update Status</p>
