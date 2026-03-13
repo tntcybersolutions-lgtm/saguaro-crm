@@ -11,7 +11,13 @@
       "Bash(python -c \":*)",
       "Bash(grep -n \"pricing\\\\|price-grid\\\\|price-card\\\\|$5,000\\\\|$6,500\\\\|$7,500\" saguaro-preview.html)",
       "Bash(grep -n \"Stripe\\\\|stripe\" *.ts *.html *.sql)",
-      "Bash(node -e \":*)"
+      "Bash(node -e \":*)",
+      "Bash(find /c/Users/ChadDerocher/OneDrive*/Documents/GitHub/Live-Code-Saguaro -maxdepth 2 -type f \\\\\\(-name *.md -o -name CLAUDE* -o -name *BUILD* \\\\\\))",
+      "Bash(find /c/Users/ChadDerocher/OneDrive*/Documents/GitHub/Live-Code-Saguaro -path \"*/node_modules\" -prune -o -type f -path \"*takeoff*\" -print)",
+      "Bash(ls -la /c/Users/ChadDerocher/OneDrive*/Documents/GitHub/Live-Code-Saguaro/*.md)",
+      "Bash(ls \"c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro/\"*.md)",
+      "Bash(ls \"c:/Users/ChadDerocher/OneDrive - TNT Cyber Solutions/Documents/GitHub/Live-Code-Saguaro/\"CLAUDE*)",
+      "Bash(ls \"c:/Users/ChadDerocher/.claude/\"*.md)"
     ]
   }
 }

@@ -10,14 +10,26 @@ export async function GET(
     const supabase = createServerClient();
     const { id } = await params;
 
+    // Query takeoff without FK join to avoid PGRST200 errors
     const { data: takeoff, error: takeoffErr } = await supabase
       .from('takeoffs')
-      .select('*, projects!takeoffs_project_id_fkey(name)')
+      .select('*')
       .eq('id', id)
       .single();
 
     if (takeoffErr || !takeoff) {
       return notFound('Takeoff not found');
+    }
+
+    // Look up project name separately
+    let projectName: string | null = null;
+    if (takeoff.project_id) {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('name')
+        .eq('id', takeoff.project_id)
+        .maybeSingle();
+      projectName = project?.name || null;
     }
 
     const { data: materials, error: materialsErr } = await supabase
@@ -28,11 +40,9 @@ export async function GET(
 
     if (materialsErr) throw materialsErr;
 
-    const projects = takeoff.projects as { name?: string } | null;
     const result = {
       ...takeoff,
-      projects: undefined,
-      project_name: projects?.name || null,
+      project_name: projectName,
       materials: materials || [],
     };
 

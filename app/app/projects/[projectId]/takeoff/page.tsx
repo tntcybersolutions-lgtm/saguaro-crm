@@ -33,6 +33,7 @@ interface TakeoffResult {
   itemCount: number;
 }
 
+
 interface ProgressState {
   step: number;
   message: string;
@@ -239,19 +240,27 @@ export default function TakeoffPage() {
       for (const div of divisions) {
         const divItems = result.items.filter(i => i.csiCode?.startsWith(div));
         const divTotal = divItems.reduce((sum, i) => sum + i.totalCost, 0);
-        const divName = CSI_DIVISION_NAMES[div] || `Division ${div}`;
+        const divName  = CSI_DIVISION_NAMES[div] || `Division ${div}`;
 
         const res = await fetch('/api/bid-packages/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             projectId,
-            name: `Division ${div} — ${divName}`,
-            trade: divName,
-            csiDivision: div,
-            estimatedValue: divTotal,
+            name:         `Division ${div} — ${divName}`,
+            trade:        divName,
+            csiCodes:     [...new Set(divItems.map(i => i.csiCode))],
             scopeSummary: divItems.map(i => `${i.description}: ${fmtN(i.quantity)} ${i.unit}`).join('\n'),
-            dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            dueDate:      new Date(Date.now() + (divTotal > 250_000 ? 21 : 14) * 86_400_000).toISOString().split('T')[0],
+            requiresBond: divTotal > 100_000,
+            lineItems: divItems.map(i => ({
+              description: i.description,
+              quantity:    i.quantity,
+              unit:        i.unit,
+              unitPrice:   i.unitCost,
+              totalAmount: i.totalCost,
+              csiCode:     i.csiCode,
+            })),
           }),
         });
         if (res.ok) created++;
@@ -259,8 +268,7 @@ export default function TakeoffPage() {
 
       showToast(`${created} bid package${created !== 1 ? 's' : ''} created!`, 'success');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to create bid packages';
-      showToast(msg, 'error');
+      showToast(err instanceof Error ? err.message : 'Failed to create bid packages', 'error');
     } finally {
       setGenerating(null);
     }
@@ -270,30 +278,70 @@ export default function TakeoffPage() {
     if (!result) return;
     setGenerating('sov');
     try {
-      const sovLines = result.items.map((item, idx) => ({
-        itemNumber: idx + 1,
-        description: `${item.csiCode} — ${item.description}`,
-        scheduledValue: item.totalCost,
-      }));
-
       const res = await fetch('/api/pay-apps/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
-          periodFrom: new Date().toISOString().split('T')[0],
-          periodTo: new Date().toISOString().split('T')[0],
-          applicationNumber: 1,
-          scheduledValue: result.totalProjectCost,
-          sovLines,
+          periodFrom:    new Date().toISOString().split('T')[0],
+          periodTo:      new Date().toISOString().split('T')[0],
+          contractSum:   result.totalProjectCost,
+          // lineItems is what the API reads — each item maps to a schedule_of_values row
+          lineItems: result.items.map(i => ({
+            description:    `${i.csiCode} — ${i.description}`,
+            scheduledValue: i.totalCost,
+            csiCode:        i.csiCode,
+            balanceToFinish: i.totalCost,
+          })),
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to create SOV');
-      showToast('Schedule of Values created from takeoff!', 'success');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error((body as { error?: string }).error || 'Failed to create SOV');
+      }
+      showToast(`Schedule of Values created — ${result.items.length} line items`, 'success');
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to generate SOV';
-      showToast(msg, 'error');
+      showToast(err instanceof Error ? err.message : 'Failed to generate SOV', 'error');
+    } finally {
+      setGenerating(null);
+    }
+  };
+
+  const handleSageAutoDocs = async () => {
+    if (!result || !takeoffId) return;
+    setGenerating('sage');
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const es = new EventSource(`/api/takeoff/${takeoffId}/sage-auto-docs`);
+        let resolved = false;
+        es.onmessage = (e) => {
+          try {
+            const evt = JSON.parse(e.data);
+            if (evt.event === 'error') { es.close(); reject(new Error(evt.message)); }
+            if (evt.event === 'done') {
+              es.close();
+              resolved = true;
+              const pkgs = evt.packagesCreated ?? 0;
+              const jkts = evt.jacketsGenerated ?? 0;
+              const sov  = evt.sovCreated ? ' + SOV' : '';
+              showToast(
+                pkgs > 0
+                  ? `Sage built ${pkgs} bid packages, ${jkts} bid jackets${sov}`
+                  : 'Documents generated',
+                'success'
+              );
+              resolve();
+            }
+          } catch { /* ignore malformed chunks */ }
+        };
+        es.onerror = () => {
+          es.close();
+          if (!resolved) reject(new Error('Connection lost. Please try again.'));
+        };
+      });
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Document generation failed', 'error');
     } finally {
       setGenerating(null);
     }
@@ -690,16 +738,33 @@ export default function TakeoffPage() {
       {/* Action buttons */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <button
+          onClick={handleSageAutoDocs}
+          disabled={!!generating}
+          style={{
+            padding: '11px 24px',
+            background: generating === 'sage'
+              ? 'rgba(212,160,23,0.3)'
+              : `linear-gradient(135deg, ${GOLD}, #C8960F)`,
+            border: 'none', borderRadius: 8,
+            color: '#000', fontWeight: 800, fontSize: 13,
+            cursor: generating ? 'wait' : 'pointer',
+            letterSpacing: '0.03em',
+            opacity: (generating && generating !== 'sage') ? 0.5 : 1,
+          }}
+        >
+          {generating === 'sage' ? 'Sage is building...' : '⚡ Sage: Build All Documents'}
+        </button>
+        <button
           onClick={handleGenerateBidPackages}
           disabled={!!generating}
           style={{
             padding: '11px 22px',
-            background: `linear-gradient(135deg, ${GOLD}, #C8960F)`,
-            border: 'none', borderRadius: 8,
-            color: '#000', fontWeight: 700, fontSize: 13,
+            background: 'rgba(255,255,255,0.07)',
+            border: `1px solid rgba(255,255,255,0.15)`,
+            borderRadius: 8, color: '#fff',
+            fontWeight: 600, fontSize: 13,
             cursor: generating ? 'wait' : 'pointer',
-            letterSpacing: '0.04em',
-            opacity: generating && generating !== 'bid-packages' ? 0.6 : 1,
+            opacity: (generating && generating !== 'bid-packages') ? 0.5 : 1,
           }}
         >
           {generating === 'bid-packages' ? 'Creating...' : '📦 Generate Bid Packages'}
@@ -714,7 +779,7 @@ export default function TakeoffPage() {
             borderRadius: 8, color: '#fff',
             fontWeight: 600, fontSize: 13,
             cursor: generating ? 'wait' : 'pointer',
-            opacity: generating && generating !== 'sov' ? 0.6 : 1,
+            opacity: (generating && generating !== 'sov') ? 0.5 : 1,
           }}
         >
           {generating === 'sov' ? 'Creating...' : '📋 Auto-Generate SOV'}
@@ -726,8 +791,7 @@ export default function TakeoffPage() {
             background: 'rgba(255,255,255,0.07)',
             border: `1px solid rgba(255,255,255,0.15)`,
             borderRadius: 8, color: '#fff',
-            fontWeight: 600, fontSize: 13,
-            cursor: 'pointer',
+            fontWeight: 600, fontSize: 13, cursor: 'pointer',
           }}
         >
           📊 Export to CSV
@@ -752,9 +816,6 @@ export default function TakeoffPage() {
           + New Analysis
         </button>
       </div>
-
-      {/* Unused variable suppression */}
-      {takeoffId && null}
     </div>
   );
 }
