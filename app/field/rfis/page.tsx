@@ -32,6 +32,8 @@ interface RFI {
   subject: string;
   question: string;
   status: string;
+  priority?: string;
+  assigned_to?: string;
   due_date?: string;
   created_at?: string;
   spec_section?: string;
@@ -46,7 +48,36 @@ function statusColor(status: string): string {
   if (s === 'open' || s === 'pending') return BLUE;
   if (s === 'answered' || s === 'closed' || s === 'resolved') return GREEN;
   if (s === 'overdue') return RED;
+  if (s === 'draft') return DIM;
+  if (s === 'void') return '#6B7280';
   return DIM;
+}
+
+function priorityColor(priority: string): string {
+  const p = priority?.toLowerCase() || '';
+  if (p === 'critical') return RED;
+  if (p === 'high') return AMBER;
+  if (p === 'medium') return BLUE;
+  if (p === 'low') return GREEN;
+  return DIM;
+}
+
+const PRIORITY_RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+const STATUS_RANK: Record<string, number> = { open: 4, draft: 3, closed: 2, void: 1 };
+
+interface FilterState {
+  statuses: string[];
+  priorities: string[];
+  assignee: string;
+  dateFrom: string;
+  dateTo: string;
+  sortBy: string;
+  sortDir: 'asc' | 'desc';
+}
+
+interface SavedPreset {
+  name: string;
+  filter: FilterState;
 }
 
 function formatDate(d: string | undefined): string {
@@ -242,44 +273,172 @@ function RFIsPage() {
 
   // ─── Advanced Filters & Sorting ─────────────────────────────
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
-  const [filterSpecs, setFilterSpecs] = useState<string[]>([]);
-  const [filterDateField, setFilterDateField] = useState<'created' | 'due'>('created');
+  const [filterPriorities, setFilterPriorities] = useState<string[]>([]);
+  const [filterAssignee, setFilterAssignee] = useState('');
   const [filterDateFrom, setFilterDateFrom] = useState('');
   const [filterDateTo, setFilterDateTo] = useState('');
-  const [filterAssignee, setFilterAssignee] = useState('');
-  const [sortKey, setSortKey] = useState<'newest' | 'oldest' | 'due_date' | 'priority'>('newest');
-  const [showFilterPanel, setShowFilterPanel] = useState(false);
-  const [savedPresets, setSavedPresets] = useState<Array<{ name: string; f: Record<string, unknown>; s: string }>>([]);
+  const [sortBy, setSortBy] = useState<'date_created' | 'due_date' | 'priority' | 'status'>('date_created');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [savedPresets, setSavedPresets] = useState<SavedPreset[]>([]);
   const [presetName, setPresetName] = useState('');
-  const RFI_FILTER_STATUSES = ['Open', 'Closed', 'Pending', 'Overdue'];
+  const RFI_FILTER_STATUSES = ['Draft', 'Open', 'Closed', 'Void'];
+  const RFI_FILTER_PRIORITIES = ['Low', 'Medium', 'High', 'Critical'];
 
   useEffect(() => {
-    try { const raw = localStorage.getItem(`saguaro_filters_rfis_${projectId}`); if (raw) setSavedPresets(JSON.parse(raw)); } catch { /* */ }
+    try {
+      const raw = localStorage.getItem(`saguaro_rfi_presets_${projectId}`);
+      if (raw) setSavedPresets(JSON.parse(raw));
+    } catch { /* */ }
   }, [projectId]);
-  const persistPresets = (p: typeof savedPresets) => { setSavedPresets(p); try { localStorage.setItem(`saguaro_filters_rfis_${projectId}`, JSON.stringify(p)); } catch { /* */ } };
-  const saveCurrentPreset = () => { if (!presetName.trim()) return; persistPresets([...savedPresets, { name: presetName.trim(), f: { st: filterStatuses, sp: filterSpecs, df: filterDateField, d1: filterDateFrom, d2: filterDateTo, a: filterAssignee }, s: sortKey }]); setPresetName(''); };
-  const loadPreset = (p: typeof savedPresets[0]) => { const f = p.f; setFilterStatuses((f.st as string[]) || []); setFilterSpecs((f.sp as string[]) || []); setFilterDateField((f.df as 'created'|'due') || 'created'); setFilterDateFrom((f.d1 as string) || ''); setFilterDateTo((f.d2 as string) || ''); setFilterAssignee((f.a as string) || ''); setSortKey((p.s as typeof sortKey) || 'newest'); };
+
+  const persistPresets = (p: SavedPreset[]) => {
+    setSavedPresets(p);
+    try { localStorage.setItem(`saguaro_rfi_presets_${projectId}`, JSON.stringify(p)); } catch { /* */ }
+  };
+
+  const getCurrentFilterState = (): FilterState => ({
+    statuses: filterStatuses,
+    priorities: filterPriorities,
+    assignee: filterAssignee,
+    dateFrom: filterDateFrom,
+    dateTo: filterDateTo,
+    sortBy,
+    sortDir,
+  });
+
+  const applyFilterState = (f: FilterState) => {
+    setFilterStatuses(f.statuses || []);
+    setFilterPriorities(f.priorities || []);
+    setFilterAssignee(f.assignee || '');
+    setFilterDateFrom(f.dateFrom || '');
+    setFilterDateTo(f.dateTo || '');
+    setSortBy((f.sortBy as typeof sortBy) || 'date_created');
+    setSortDir(f.sortDir || 'desc');
+  };
+
+  const saveCurrentPreset = () => {
+    if (!presetName.trim()) return;
+    persistPresets([...savedPresets, { name: presetName.trim(), filter: getCurrentFilterState() }]);
+    setPresetName('');
+  };
+
   const deletePreset = (idx: number) => persistPresets(savedPresets.filter((_, i) => i !== idx));
-  const clearAllFilters = () => { setFilterStatuses([]); setFilterSpecs([]); setFilterDateFrom(''); setFilterDateTo(''); setFilterAssignee(''); setSortKey('newest'); };
-  const toggleArrFilter = (arr: string[], val: string, setter: React.Dispatch<React.SetStateAction<string[]>>) => setter(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]);
-  const isRfiOverdue = (r: RFI) => r.due_date && new Date(r.due_date) < new Date() && !['answered','closed','resolved'].includes((r.status||'').toLowerCase());
-  const activeFilterCount = [filterStatuses.length > 0, filterSpecs.length > 0, !!filterDateFrom || !!filterDateTo, !!filterAssignee].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setFilterStatuses([]);
+    setFilterPriorities([]);
+    setFilterAssignee('');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+    setSortBy('date_created');
+    setSortDir('desc');
+  };
+
+  const toggleArrFilter = (arr: string[], val: string, setter: React.Dispatch<React.SetStateAction<string[]>>) =>
+    setter(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]);
+
+  const activeFilterCount = [
+    filterStatuses.length > 0,
+    filterPriorities.length > 0,
+    !!filterAssignee,
+    !!filterDateFrom || !!filterDateTo,
+  ].filter(Boolean).length;
 
   const getFilteredRfis = (): RFI[] => {
     let result = [...rfis];
+    // Status filter
     if (filterStatuses.length > 0) {
-      result = result.filter(r => { const s = (r.status||'').toLowerCase(); return filterStatuses.some(fs => { const fl = fs.toLowerCase(); if (fl === 'overdue') return isRfiOverdue(r); if (fl === 'closed') return s === 'closed' || s === 'answered' || s === 'resolved'; return s === fl; }); });
+      result = result.filter(r => {
+        const s = (r.status || '').toLowerCase();
+        return filterStatuses.some(fs => {
+          const fl = fs.toLowerCase();
+          if (fl === 'closed') return s === 'closed' || s === 'answered' || s === 'resolved';
+          return s === fl;
+        });
+      });
     }
-    if (filterSpecs.length > 0) result = result.filter(r => r.spec_section && filterSpecs.includes(r.spec_section));
+    // Priority filter
+    if (filterPriorities.length > 0) {
+      result = result.filter(r => {
+        const p = (r.priority || '').toLowerCase();
+        return filterPriorities.some(fp => fp.toLowerCase() === p);
+      });
+    }
+    // Assigned To filter
+    if (filterAssignee.trim()) {
+      const needle = filterAssignee.trim().toLowerCase();
+      result = result.filter(r =>
+        (r.assigned_to || '').toLowerCase().includes(needle)
+      );
+    }
+    // Date range on created_at
     if (filterDateFrom || filterDateTo) {
-      result = result.filter(r => { const d = filterDateField === 'due' ? r.due_date : r.created_at; if (!d) return false; const dt = new Date(d).getTime(); if (filterDateFrom && dt < new Date(filterDateFrom).getTime()) return false; if (filterDateTo && dt > new Date(filterDateTo + 'T23:59:59').getTime()) return false; return true; });
+      result = result.filter(r => {
+        const d = r.created_at;
+        if (!d) return false;
+        const dt = new Date(d).getTime();
+        if (filterDateFrom && dt < new Date(filterDateFrom).getTime()) return false;
+        if (filterDateTo && dt > new Date(filterDateTo + 'T23:59:59').getTime()) return false;
+        return true;
+      });
     }
-    result.sort((a, b) => { if (sortKey === 'newest') return new Date(b.created_at||0).getTime() - new Date(a.created_at||0).getTime(); if (sortKey === 'oldest') return new Date(a.created_at||0).getTime() - new Date(b.created_at||0).getTime(); if (sortKey === 'due_date') { if (!a.due_date) return 1; if (!b.due_date) return -1; return new Date(a.due_date).getTime() - new Date(b.due_date).getTime(); } return 0; });
+    // Sorting
+    const dir = sortDir === 'asc' ? 1 : -1;
+    result.sort((a, b) => {
+      if (sortBy === 'date_created') {
+        return dir * (new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+      }
+      if (sortBy === 'due_date') {
+        if (!a.due_date && !b.due_date) return 0;
+        if (!a.due_date) return 1;
+        if (!b.due_date) return -1;
+        return dir * (new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+      }
+      if (sortBy === 'priority') {
+        const pa = PRIORITY_RANK[(a.priority || '').toLowerCase()] || 0;
+        const pb = PRIORITY_RANK[(b.priority || '').toLowerCase()] || 0;
+        return dir * (pa - pb);
+      }
+      if (sortBy === 'status') {
+        const sa = STATUS_RANK[(a.status || '').toLowerCase()] || 0;
+        const sb = STATUS_RANK[(b.status || '').toLowerCase()] || 0;
+        return dir * (sa - sb);
+      }
+      return 0;
+    });
     return result;
   };
-  const applyQuickPreset = (key: string) => { clearAllFilters(); if (key === 'overdue') { setFilterStatuses(['Overdue']); setSortKey('due_date'); } else if (key === 'this_week') { const d = new Date(); d.setDate(d.getDate() - d.getDay()); setFilterDateFrom(d.toISOString().slice(0,10)); setFilterDateField('created'); } else if (key === 'my_rfis') { setFilterAssignee('me'); } };
+
+  const applyQuickPreset = (key: string) => {
+    clearAllFilters();
+    if (key === 'open_rfis') {
+      setFilterStatuses(['Open']);
+      setSortBy('date_created');
+      setSortDir('desc');
+    } else if (key === 'overdue') {
+      // Show open RFIs sorted by due date ascending so most overdue appear first
+      setFilterStatuses(['Open']);
+      setSortBy('due_date');
+      setSortDir('asc');
+    } else if (key === 'my_rfis') {
+      setFilterAssignee('me');
+      setSortBy('date_created');
+      setSortDir('desc');
+    } else if (key === 'high_priority') {
+      setFilterPriorities(['High', 'Critical']);
+      setSortBy('priority');
+      setSortDir('desc');
+    }
+  };
+
   const filteredRfis = getFilteredRfis();
-  const chipStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(139,92,246,.12)', border: `1px solid rgba(139,92,246,.3)`, borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: PURPLE, cursor: 'pointer', whiteSpace: 'nowrap' };
+  const chipStyle: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 4,
+    background: 'rgba(139,92,246,.12)', border: `1px solid rgba(139,92,246,.3)`,
+    borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600,
+    color: PURPLE, cursor: 'pointer', whiteSpace: 'nowrap',
+  };
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -506,6 +665,259 @@ function RFIsPage() {
           </div>
         )}
 
+        {/* ─── Filter Bar ─── */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+          <button onClick={() => setDrawerOpen(true)} style={{
+            background: activeFilterCount > 0 ? 'rgba(212,160,23,.15)' : 'transparent',
+            border: `1px solid ${activeFilterCount > 0 ? GOLD : BORDER}`,
+            borderRadius: 10, padding: '8px 14px', color: activeFilterCount > 0 ? GOLD : DIM,
+            fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
+          </button>
+          {activeFilterCount > 0 && (
+            <button onClick={clearAllFilters} style={{
+              background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10,
+              padding: '8px 12px', color: DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            }}>Clear All</button>
+          )}
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: activeFilterCount > 0 ? GOLD : DIM, fontWeight: 600 }}>
+            {activeFilterCount > 0 ? `${filteredRfis.length} of ${rfis.length} results` : `${rfis.length} RFIs`}
+          </span>
+        </div>
+
+        {/* ─── Filter Drawer (slides from right) ─── */}
+        {drawerOpen && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 300,
+            display: 'flex', justifyContent: 'flex-end',
+          }}>
+            {/* Backdrop */}
+            <div
+              onClick={() => setDrawerOpen(false)}
+              style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                background: 'rgba(0,0,0,.6)', backdropFilter: 'blur(2px)',
+              }}
+            />
+            {/* Drawer panel */}
+            <div style={{
+              position: 'relative', width: '100%', maxWidth: 380,
+              background: '#07101C', borderLeft: `1px solid ${BORDER}`,
+              display: 'flex', flexDirection: 'column', overflowY: 'auto',
+              animation: 'none',
+            }}>
+              {/* Drawer header */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '16px 18px', borderBottom: `1px solid ${BORDER}`,
+                position: 'sticky', top: 0, background: '#07101C', zIndex: 1,
+              }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: TEXT }}>Filters &amp; Sort</h2>
+                <button onClick={() => setDrawerOpen(false)} style={{
+                  background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: 4, fontSize: 22, lineHeight: 1,
+                }}>&times;</button>
+              </div>
+
+              <div style={{ padding: '14px 18px', flex: 1 }}>
+                {/* Quick Presets */}
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, color: GOLD, marginBottom: 8 }}>Quick Presets</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {[
+                      { key: 'open_rfis', label: 'Open RFIs' },
+                      { key: 'overdue', label: 'Overdue' },
+                      { key: 'my_rfis', label: 'My RFIs' },
+                      { key: 'high_priority', label: 'High Priority' },
+                    ].map(qp => (
+                      <button key={qp.key} onClick={() => applyQuickPreset(qp.key)} style={{
+                        background: 'rgba(212,160,23,.08)', border: `1px solid rgba(212,160,23,.3)`,
+                        borderRadius: 20, padding: '6px 14px', color: GOLD,
+                        fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' as const,
+                      }}>{qp.label}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status multi-select */}
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Status</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {RFI_FILTER_STATUSES.map(s => {
+                      const active = filterStatuses.includes(s);
+                      return (
+                        <button key={s} onClick={() => toggleArrFilter(filterStatuses, s, setFilterStatuses)} style={{
+                          background: active ? `rgba(${hexRgb(statusColor(s.toLowerCase()))},.18)` : 'transparent',
+                          border: `1px solid ${active ? statusColor(s.toLowerCase()) : BORDER}`, borderRadius: 20,
+                          padding: '6px 14px', color: active ? statusColor(s.toLowerCase()) : DIM, fontSize: 12,
+                          fontWeight: active ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap' as const,
+                        }}>{s}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Priority multi-select */}
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Priority</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {RFI_FILTER_PRIORITIES.map(p => {
+                      const active = filterPriorities.includes(p);
+                      return (
+                        <button key={p} onClick={() => toggleArrFilter(filterPriorities, p, setFilterPriorities)} style={{
+                          background: active ? `rgba(${hexRgb(priorityColor(p))},.18)` : 'transparent',
+                          border: `1px solid ${active ? priorityColor(p) : BORDER}`, borderRadius: 20,
+                          padding: '6px 14px', color: active ? priorityColor(p) : DIM, fontSize: 12,
+                          fontWeight: active ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap' as const,
+                        }}>{p}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Assigned To */}
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Assigned To</label>
+                  <input
+                    value={filterAssignee}
+                    onChange={e => setFilterAssignee(e.target.value)}
+                    placeholder="Search by name or email..."
+                    style={{ ...inp, fontSize: 13, padding: '10px 14px' }}
+                  />
+                </div>
+
+                {/* Date range (Created Date) */}
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Created Date Range</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ ...lbl, fontSize: 10, marginBottom: 2 }}>From</label>
+                      <input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} style={{ ...inp, fontSize: 12, padding: '8px 10px' }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ ...lbl, fontSize: 10, marginBottom: 2 }}>To</label>
+                      <input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} style={{ ...inp, fontSize: 12, padding: '8px 10px' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sort By with asc/desc toggle */}
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Sort By</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)} style={{ ...inp, fontSize: 13, padding: '10px 14px', flex: 1 }}>
+                      <option value="date_created">Date Created</option>
+                      <option value="due_date">Due Date</option>
+                      <option value="priority">Priority</option>
+                      <option value="status">Status</option>
+                    </select>
+                    <button onClick={() => setSortDir(prev => prev === 'asc' ? 'desc' : 'asc')} style={{
+                      background: 'rgba(212,160,23,.08)', border: `1px solid rgba(212,160,23,.3)`,
+                      borderRadius: 10, padding: '10px 14px', color: GOLD, fontSize: 13,
+                      fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                      minWidth: 70, justifyContent: 'center',
+                    }}>
+                      {sortDir === 'asc' ? (
+                        <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={19} x2={12} y2={5}/><polyline points="5 12 12 5 19 12"/></svg> ASC</>
+                      ) : (
+                        <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={5} x2={12} y2={19}/><polyline points="19 12 12 19 5 12"/></svg> DESC</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ borderTop: `1px solid ${BORDER}`, margin: '8px 0 16px' }} />
+
+                {/* Save Preset */}
+                <div style={{ marginBottom: 18 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, color: GOLD }}>Save Current as Preset</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      value={presetName}
+                      onChange={e => setPresetName(e.target.value)}
+                      placeholder="Preset name..."
+                      style={{ ...inp, fontSize: 13, padding: '10px 14px', flex: 1 }}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveCurrentPreset(); } }}
+                    />
+                    <button onClick={saveCurrentPreset} disabled={!presetName.trim()} style={{
+                      background: presetName.trim() ? GOLD : BORDER, border: 'none', borderRadius: 10,
+                      padding: '10px 18px', color: presetName.trim() ? '#000' : DIM, fontSize: 13,
+                      fontWeight: 700, cursor: presetName.trim() ? 'pointer' : 'not-allowed',
+                    }}>Save</button>
+                  </div>
+                </div>
+
+                {/* Saved Presets */}
+                {savedPresets.length > 0 && (
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Saved Presets</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {savedPresets.map((p, i) => (
+                        <div key={i} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '8px 12px',
+                        }}>
+                          <button onClick={() => { applyFilterState(p.filter); }} style={{
+                            background: 'none', border: 'none', color: TEXT, fontSize: 13,
+                            fontWeight: 600, cursor: 'pointer', padding: 0, textAlign: 'left', flex: 1,
+                          }}>{p.name}</button>
+                          <button onClick={() => deletePreset(i)} style={{
+                            background: 'none', border: 'none', color: DIM, cursor: 'pointer',
+                            padding: '0 0 0 8px', fontSize: 16, lineHeight: 1, opacity: 0.6,
+                          }}>&times;</button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Drawer footer */}
+              <div style={{
+                padding: '14px 18px', borderTop: `1px solid ${BORDER}`,
+                display: 'flex', gap: 10, position: 'sticky', bottom: 0, background: '#07101C',
+              }}>
+                <button onClick={() => { clearAllFilters(); }} style={{
+                  flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10,
+                  padding: '12px', color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                }}>Reset</button>
+                <button onClick={() => setDrawerOpen(false)} style={{
+                  flex: 1, background: GOLD, border: 'none', borderRadius: 10,
+                  padding: '12px', color: '#000', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                }}>Apply &amp; Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Active filter chips below the bar */}
+        {activeFilterCount > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+            {filterStatuses.map(s => (
+              <span key={s} style={chipStyle}>
+                {s} <span onClick={() => setFilterStatuses(prev => prev.filter(v => v !== s))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+              </span>
+            ))}
+            {filterPriorities.map(p => (
+              <span key={p} style={{ ...chipStyle, background: `rgba(${hexRgb(priorityColor(p))},.12)`, borderColor: `rgba(${hexRgb(priorityColor(p))},.3)`, color: priorityColor(p) }}>
+                {p} <span onClick={() => setFilterPriorities(prev => prev.filter(v => v !== p))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+              </span>
+            ))}
+            {filterAssignee && (
+              <span style={chipStyle}>
+                Assigned: {filterAssignee} <span onClick={() => setFilterAssignee('')} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+              </span>
+            )}
+            {(filterDateFrom || filterDateTo) && (
+              <span style={chipStyle}>
+                Created: {filterDateFrom || '...'} - {filterDateTo || '...'} <span onClick={() => { setFilterDateFrom(''); setFilterDateTo(''); }} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+              </span>
+            )}
+          </div>
+        )}
+
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: DIM }}>Loading RFIs...</div>
         ) : rfis.length === 0 ? (
@@ -520,7 +932,7 @@ function RFIsPage() {
         ) : (
           <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {rfis.map((rfi) => {
+            {filteredRfis.map((rfi) => {
               const sc = statusColor(rfi.status);
               const isOverdue = rfi.due_date && new Date(rfi.due_date) < new Date() && rfi.status?.toLowerCase() !== 'answered' && rfi.status?.toLowerCase() !== 'closed' && rfi.status?.toLowerCase() !== 'resolved';
               const isChecked = selectedIds.has(rfi.id);
@@ -558,11 +970,21 @@ function RFIsPage() {
                         }}>
                           {isOverdue ? 'Overdue' : rfi.status}
                         </span>
+                        {rfi.priority && (
+                          <span style={{
+                            fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                            background: `rgba(${hexRgb(priorityColor(rfi.priority))},.12)`,
+                            color: priorityColor(rfi.priority),
+                          }}>
+                            {rfi.priority}
+                          </span>
+                        )}
                       </div>
                       <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: TEXT, lineHeight: 1.3 }}>{rfi.subject}</p>
                       <p style={{ margin: 0, fontSize: 12, color: DIM }}>
                         {rfi.due_date ? `Due ${formatDate(rfi.due_date)}` : 'No due date'}
                         {rfi.spec_section ? ` · ${rfi.spec_section}` : ''}
+                        {rfi.assigned_to ? ` · ${rfi.assigned_to}` : ''}
                       </p>
                     </div>
                     {!selectMode && <span style={{ color: DIM, fontSize: 18, flexShrink: 0, marginTop: 4 }}>›</span>}

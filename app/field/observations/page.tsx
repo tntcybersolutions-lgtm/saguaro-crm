@@ -4,7 +4,7 @@
  * Capture positive, negative, and condition-based safety observations.
  * Templates, checklists, corrective actions, photo capture, GPS, offline queue.
  */
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 import EmailComposer from '@/components/EmailComposer';
@@ -301,10 +301,109 @@ function ObservationsPage() {
   const [actionMsg, setActionMsg] = useState('');
   const [showEmail, setShowEmail] = useState(false);
 
-  /* Filters */
-  const [filterType, setFilterType] = useState<ObsType | 'all'>('all');
-  const [filterPriority, setFilterPriority] = useState<Priority | 'all'>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  /* ─── Advanced Filters ─── */
+  type SortField = 'date' | 'priority' | 'status' | 'type';
+  type SortDir = 'asc' | 'desc';
+  interface FilterState {
+    statuses: string[];
+    types: ObsType[];
+    priorities: Priority[];
+    observedBy: string;
+    dateFrom: string;
+    dateTo: string;
+    sortBy: SortField;
+    sortDir: SortDir;
+  }
+  interface SavedPreset {
+    name: string;
+    filters: FilterState;
+  }
+
+  const defaultFilters: FilterState = {
+    statuses: [],
+    types: [],
+    priorities: [],
+    observedBy: '',
+    dateFrom: '',
+    dateTo: '',
+    sortBy: 'date',
+    sortDir: 'desc',
+  };
+
+  const [filters, setFilters] = useState<FilterState>({ ...defaultFilters });
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [savedPresets, setSavedPresets] = useState<SavedPreset[]>([]);
+  const [presetName, setPresetName] = useState('');
+
+  /* Load saved presets from localStorage */
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(`saguaro_filters_obs_${projectId}`);
+      if (stored) setSavedPresets(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
+
+  const persistPresets = (presets: SavedPreset[]) => {
+    setSavedPresets(presets);
+    try { localStorage.setItem(`saguaro_filters_obs_${projectId}`, JSON.stringify(presets)); } catch { /* ignore */ }
+  };
+
+  const saveCurrentPreset = () => {
+    if (!presetName.trim()) return;
+    const newPresets = [...savedPresets.filter(p => p.name !== presetName.trim()), { name: presetName.trim(), filters: { ...filters } }];
+    persistPresets(newPresets);
+    setPresetName('');
+    setActionMsg('Filter preset saved');
+    setTimeout(() => setActionMsg(''), 2500);
+  };
+
+  const deletePreset = (name: string) => {
+    persistPresets(savedPresets.filter(p => p.name !== name));
+  };
+
+  const applyPreset = (preset: SavedPreset) => {
+    setFilters({ ...preset.filters });
+  };
+
+  const clearFilters = () => {
+    setFilters({ ...defaultFilters });
+  };
+
+  const filtersActive = useMemo(() => {
+    return filters.statuses.length > 0 || filters.types.length > 0 || filters.priorities.length > 0
+      || filters.observedBy.trim() !== '' || filters.dateFrom !== '' || filters.dateTo !== '';
+  }, [filters]);
+
+  const toggleArrayFilter = <T extends string>(arr: T[], val: T): T[] => {
+    return arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val];
+  };
+
+  /* Quick presets */
+  const quickPresets: { label: string; icon: string; apply: () => void }[] = [
+    {
+      label: 'Open Items', icon: '📂',
+      apply: () => setFilters({ ...defaultFilters, statuses: ['open'] }),
+    },
+    {
+      label: 'Safety Issues', icon: '🦺',
+      apply: () => setFilters({ ...defaultFilters, types: ['negative'], priorities: ['high', 'critical'] }),
+    },
+    {
+      label: 'This Week', icon: '📅',
+      apply: () => {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7));
+        monday.setHours(0, 0, 0, 0);
+        setFilters({ ...defaultFilters, dateFrom: monday.toISOString().split('T')[0], dateTo: now.toISOString().split('T')[0] });
+      },
+    },
+    {
+      label: 'Needs Action', icon: '⚡',
+      apply: () => setFilters({ ...defaultFilters, statuses: ['open'], priorities: ['high', 'critical'] }),
+    },
+  ];
 
   /* Create form state */
   const [newType, setNewType] = useState<ObsType>('positive');
@@ -529,16 +628,58 @@ function ObservationsPage() {
     return { total, positive, negative, conditions, openCA, positiveRate };
   }, [observations]);
 
-  /* ─── Filtered List ─── */
+  /* ─── Filtered & Sorted List ─── */
   const filtered = React.useMemo(() => {
-    return observations.filter(o => {
-      if (filterType !== 'all' && o.type !== filterType) return false;
-      if (filterPriority !== 'all' && o.priority !== filterPriority) return false;
-      if (filterStatus === 'open' && o.status !== 'open') return false;
-      if (filterStatus === 'closed' && o.status !== 'closed') return false;
+    const priorityOrder: Record<string, number> = { low: 0, medium: 1, high: 2, critical: 3 };
+    const statusOrder: Record<string, number> = { open: 0, closed: 1 };
+    const typeOrder: Record<string, number> = { positive: 0, negative: 1, condition: 2 };
+
+    const result = observations.filter(o => {
+      if (filters.statuses.length > 0 && !filters.statuses.includes(o.status || 'open')) return false;
+      if (filters.types.length > 0 && !filters.types.includes(o.type)) return false;
+      if (filters.priorities.length > 0 && !filters.priorities.includes(o.priority)) return false;
+      if (filters.observedBy.trim()) {
+        const search = filters.observedBy.toLowerCase();
+        if (!(o.created_by || '').toLowerCase().includes(search)) return false;
+      }
+      if (filters.dateFrom) {
+        const from = new Date(filters.dateFrom);
+        const created = o.created_at ? new Date(o.created_at) : null;
+        if (!created || created < from) return false;
+      }
+      if (filters.dateTo) {
+        const to = new Date(filters.dateTo);
+        to.setHours(23, 59, 59, 999);
+        const created = o.created_at ? new Date(o.created_at) : null;
+        if (!created || created > to) return false;
+      }
       return true;
     });
-  }, [observations, filterType, filterPriority, filterStatus]);
+
+    result.sort((a, b) => {
+      let cmp = 0;
+      switch (filters.sortBy) {
+        case 'date': {
+          const da = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const db = b.created_at ? new Date(b.created_at).getTime() : 0;
+          cmp = da - db;
+          break;
+        }
+        case 'priority':
+          cmp = (priorityOrder[a.priority] ?? 0) - (priorityOrder[b.priority] ?? 0);
+          break;
+        case 'status':
+          cmp = (statusOrder[a.status || 'open'] ?? 0) - (statusOrder[b.status || 'open'] ?? 0);
+          break;
+        case 'type':
+          cmp = (typeOrder[a.type] ?? 0) - (typeOrder[b.type] ?? 0);
+          break;
+      }
+      return filters.sortDir === 'desc' ? -cmp : cmp;
+    });
+
+    return result;
+  }, [observations, filters]);
 
   /* ─── Render Helpers ─── */
   const Pill = ({ label, color, small }: { label: string; color: string; small?: boolean }) => (
@@ -616,30 +757,193 @@ function ObservationsPage() {
   );
 
   /* ── FILTERS ── */
+  const obsChipStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(212,160,23,.12)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: GOLD, cursor: 'pointer', whiteSpace: 'nowrap' };
+
   const renderFilters = () => (
-    <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-      {/* Type filter */}
-      <select value={filterType} onChange={e => setFilterType(e.target.value as ObsType | 'all')} style={{
-        ...inputStyle, width: 'auto', padding: '6px 10px', fontSize: 12, borderRadius: 8,
+    <div style={{ marginBottom: 14 }}>
+      {/* Filter button row */}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+        <button onClick={() => setFilterDrawerOpen(!filterDrawerOpen)} style={{
+          background: filterDrawerOpen || filtersActive ? 'rgba(212,160,23,.15)' : 'transparent',
+          border: `1px solid ${filterDrawerOpen || filtersActive ? GOLD : BORDER}`,
+          borderRadius: 10, padding: '8px 14px', color: filterDrawerOpen || filtersActive ? GOLD : DIM,
+          fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+        }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filters {filtersActive ? `(active)` : ''}
+        </button>
+        {filtersActive && (
+          <button onClick={clearFilters} style={{
+            background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10,
+            padding: '8px 12px', color: DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          }}>Clear All</button>
+        )}
+        <span style={{
+          marginLeft: 'auto', fontSize: 12, fontWeight: 700,
+          color: filtersActive ? GOLD : DIM,
+          display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          {filtersActive && <span style={{ background: GOLD + '22', borderRadius: 6, padding: '2px 7px', fontSize: 11 }}>{filtered.length}</span>}
+          {filtersActive ? `of ${observations.length}` : `${observations.length} total`}
+        </span>
+      </div>
+
+      {/* Advanced Filter Panel (sliding drawer) */}
+      <div style={{
+        maxHeight: filterDrawerOpen ? 1000 : 0,
+        overflow: 'hidden',
+        transition: 'max-height 0.35s ease-in-out',
       }}>
-        <option value="all">All Types</option>
-        {OBS_TYPES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
-      </select>
-      {/* Priority filter */}
-      <select value={filterPriority} onChange={e => setFilterPriority(e.target.value as Priority | 'all')} style={{
-        ...inputStyle, width: 'auto', padding: '6px 10px', fontSize: 12, borderRadius: 8,
-      }}>
-        <option value="all">All Priorities</option>
-        {PRIORITIES.map(p => <option key={p.key} value={p.key}>{p.label}</option>)}
-      </select>
-      {/* Status filter */}
-      <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{
-        ...inputStyle, width: 'auto', padding: '6px 10px', fontSize: 12, borderRadius: 8,
-      }}>
-        <option value="all">All Status</option>
-        <option value="open">Open</option>
-        <option value="closed">Closed</option>
-      </select>
+        <div style={{ background: RAISED, border: `1px solid ${GOLD}44`, borderRadius: 14, padding: 14, marginBottom: 14 }}>
+          {/* Type chips */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Type</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {OBS_TYPES.map(t => {
+                const active = filters.types.includes(t.key);
+                return (
+                  <button key={t.key} onClick={() => setFilters(prev => ({ ...prev, types: toggleArrayFilter(prev.types, t.key) }))} style={{
+                    background: active ? t.color + '33' : 'transparent',
+                    border: `1.5px solid ${active ? t.color : BORDER}`, borderRadius: 20,
+                    padding: '5px 12px', color: active ? t.color : DIM, fontSize: 12,
+                    fontWeight: active ? 700 : 400, cursor: 'pointer',
+                  }}>{t.icon} {t.label}</button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Priority chips */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Priority</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {PRIORITIES.map(p => {
+                const active = filters.priorities.includes(p.key);
+                return (
+                  <button key={p.key} onClick={() => setFilters(prev => ({ ...prev, priorities: toggleArrayFilter(prev.priorities, p.key) }))} style={{
+                    background: active ? p.color + '33' : 'transparent',
+                    border: `1.5px solid ${active ? p.color : BORDER}`, borderRadius: 20,
+                    padding: '5px 12px', color: active ? p.color : DIM, fontSize: 12,
+                    fontWeight: active ? 700 : 400, cursor: 'pointer',
+                  }}>{p.label}</button>
+                );
+              })}
+            </div>
+          </div>
+          {/* Status chips */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Status</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[
+                { key: 'open', label: 'Open', color: AMBER },
+                { key: 'in_progress', label: 'In Progress', color: BLUE },
+                { key: 'resolved', label: 'Resolved', color: GREEN },
+                { key: 'closed', label: 'Closed', color: DIM },
+              ].map(s => (
+                <button key={s.key} onClick={() => setFilters(prev => ({ ...prev, statuses: toggleArrayFilter(prev.statuses, s.key) }))} style={{
+                  background: filters.statuses.includes(s.key) ? s.color + '33' : 'transparent',
+                  border: `1px solid ${filters.statuses.includes(s.key) ? s.color : BORDER}`, borderRadius: 20,
+                  padding: '5px 12px', color: filters.statuses.includes(s.key) ? s.color : DIM, fontSize: 12,
+                  fontWeight: filters.statuses.includes(s.key) ? 700 : 400, cursor: 'pointer',
+                }}>{s.label}</button>
+              ))}
+            </div>
+          </div>
+          {/* Trade filter */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Observed By</label>
+            <input value={filters.observedBy} onChange={e => setFilters(prev => ({ ...prev, observedBy: e.target.value }))} placeholder="Filter by observer..." style={{ ...inputStyle, fontSize: 13, padding: '8px 12px' }} />
+          </div>
+          {/* Date range */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Date Range</label>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input type="date" value={filters.dateFrom} onChange={e => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))} style={{ ...inputStyle, fontSize: 12, padding: '6px 8px', flex: 1, colorScheme: 'dark' }} />
+              <span style={{ color: DIM, fontSize: 12 }}>to</span>
+              <input type="date" value={filters.dateTo} onChange={e => setFilters(prev => ({ ...prev, dateTo: e.target.value }))} style={{ ...inputStyle, fontSize: 12, padding: '6px 8px', flex: 1, colorScheme: 'dark' }} />
+            </div>
+          </div>
+          {/* Sort */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Sort By</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <select value={filters.sortBy} onChange={e => setFilters(prev => ({ ...prev, sortBy: e.target.value as SortField }))} style={{ ...inputStyle, fontSize: 13, padding: '8px 12px', flex: 1 }}>
+                <option value="date">Date</option>
+                <option value="priority">Priority</option>
+                <option value="type">Type</option>
+                <option value="status">Status</option>
+              </select>
+              <button onClick={() => setFilters(prev => ({ ...prev, sortDir: prev.sortDir === 'asc' ? 'desc' : 'asc' }))} style={{
+                background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10,
+                padding: '8px 12px', color: DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+              }}>{filters.sortDir === 'asc' ? 'Asc' : 'Desc'}</button>
+            </div>
+          </div>
+          {/* Quick Presets */}
+          <div style={{ marginBottom: 12 }}>
+            <label style={labelStyle}>Quick Presets</label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {quickPresets.map(qp => (
+                <button key={qp.label} onClick={qp.apply} style={obsChipStyle}>{qp.icon} {qp.label}</button>
+              ))}
+            </div>
+          </div>
+          {/* Save Preset */}
+          <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 10, marginTop: 6 }}>
+            <label style={labelStyle}>Save Current as Preset</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input value={presetName} onChange={e => setPresetName(e.target.value)} placeholder="Preset name..." style={{ ...inputStyle, fontSize: 12, padding: '6px 10px', flex: 1 }} />
+              <button onClick={saveCurrentPreset} disabled={!presetName.trim()} style={{
+                background: presetName.trim() ? GOLD : '#1E3A5F', border: 'none', borderRadius: 8,
+                padding: '6px 14px', color: presetName.trim() ? '#000' : DIM, fontSize: 12, fontWeight: 700, cursor: presetName.trim() ? 'pointer' : 'not-allowed',
+              }}>Save</button>
+            </div>
+          </div>
+          {savedPresets.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <label style={labelStyle}>Saved Presets</label>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {savedPresets.map((p) => (
+                  <span key={p.name} style={{ ...obsChipStyle, gap: 6 }}>
+                    <span onClick={() => applyPreset(p)} style={{ cursor: 'pointer' }}>{p.name}</span>
+                    <span onClick={() => deletePreset(p.name)} style={{ cursor: 'pointer', opacity: 0.6, fontSize: 13, lineHeight: 1 }}>&times;</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Active filter chips */}
+      {filtersActive && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          {filters.types.map(t => (
+            <span key={t} style={obsChipStyle}>
+              {t} <span onClick={() => setFilters(prev => ({ ...prev, types: prev.types.filter(v => v !== t) }))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          ))}
+          {filters.priorities.map(p => (
+            <span key={p} style={obsChipStyle}>
+              {p} <span onClick={() => setFilters(prev => ({ ...prev, priorities: prev.priorities.filter(v => v !== p) }))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          ))}
+          {filters.statuses.map(s => (
+            <span key={s} style={obsChipStyle}>
+              {s} <span onClick={() => setFilters(prev => ({ ...prev, statuses: prev.statuses.filter(v => v !== s) }))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          ))}
+          {filters.observedBy && (
+            <span style={obsChipStyle}>
+              Observer: {filters.observedBy} <span onClick={() => setFilters(prev => ({ ...prev, observedBy: '' }))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          )}
+          {(filters.dateFrom || filters.dateTo) && (
+            <span style={obsChipStyle}>
+              Date: {filters.dateFrom || '...'} - {filters.dateTo || '...'} <span onClick={() => setFilters(prev => ({ ...prev, dateFrom: '', dateTo: '' }))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 
