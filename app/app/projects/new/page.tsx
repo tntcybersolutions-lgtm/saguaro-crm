@@ -134,13 +134,14 @@ export default function NewProjectPage() {
               </div>
             </div>
             <div style={{background:'rgba(212,160,23,.06)',border:'1px solid rgba(212,160,23,.2)',borderRadius:10,padding:'14px 18px',marginBottom:20,fontSize:13,color:DIM}}>
-              🤖 <strong style={{color:TEXT}}>AI Auto-Build on First Award:</strong> When the first bid is awarded, Saguaro will automatically create: 24 schedule tasks, budget by CSI code, sub-packages, safety plan, QC checkpoints, and contact directory.
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={15} height={15} style={{verticalAlign:'middle',marginRight:6,color:GOLD}}><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7H3a7 7 0 0 1 7-7h1V5.73A2 2 0 0 1 12 2zM9 14v3m3-3v3m3-3v3M3 21h18"/></svg>
+              <strong style={{color:TEXT}}>AI Auto-Build on First Award:</strong> When the first bid is awarded, Saguaro will automatically create: 24 schedule tasks, budget by CSI code, sub-packages, safety plan, QC checkpoints, and contact directory.
             </div>
           </div>
         </div>
         <div style={{display:'flex',gap:12,marginTop:8}}>
           <button type="submit" disabled={saving||!name.trim()||!address.trim()} style={{padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:8,color:'#0d1117',fontSize:15,fontWeight:800,cursor:'pointer',opacity:saving||!name.trim()||!address.trim()?0.6:1}}>
-            {saving?'Creating…':'✅ Create Project'}
+            {saving?'Creating…':'Create Project'}
           </button>
           <button type="button" onClick={()=>router.back()} style={{padding:'13px 20px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:14,cursor:'pointer'}}>
             Cancel

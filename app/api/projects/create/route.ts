@@ -58,6 +58,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ projectId, project, success: true });
   } catch (err: any) {
     console.error('[projects/create]', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const msg = err.message || String(err);
+    // PostgREST schema cache miss — surface a clear message
+    const userMsg = msg.includes('schema cache') || msg.includes('column') || msg.includes('schema')
+      ? `Database schema error — try again in a moment. If this persists, contact support. (${msg})`
+      : msg;
+    return NextResponse.json({ error: userMsg }, { status: 500 });
   }
 }
