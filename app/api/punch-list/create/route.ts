@@ -38,10 +38,9 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[punch-list/create] error:', msg);
-    return NextResponse.json({
-      success: true,
-      item: { id: Date.now().toString(), status: 'open', created_at: new Date().toISOString(), ...body },
-      demo: true,
-    });
+    return NextResponse.json(
+      { error: `[punch-list/create] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

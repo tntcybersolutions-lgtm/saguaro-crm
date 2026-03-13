@@ -33,13 +33,9 @@ export async function POST(req: NextRequest) {
       success: true,
       file: { id: Date.now().toString(), name: filename, url, created_at: new Date().toISOString() },
     });
-  } catch (err: any) {
-    console.error('[files/upload] error:', err?.message);
-    const filename = `file-${Date.now()}`;
-    return NextResponse.json({
-      success: true,
-      file: { id: Date.now().toString(), name: filename, url: null },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[files/upload] error:', msg);
+    return NextResponse.json({ error: `Failed to upload file: ${msg}` }, { status: 500 });
   }
 }

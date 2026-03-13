@@ -15,12 +15,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('project_todos').insert(body).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, todo: data });
-  } catch (err: any) {
-    console.error('[todos/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      todo: { id: Date.now().toString(), status: 'Open', created_at: new Date().toISOString(), ...body },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[todos/create] error:', msg);
+    return NextResponse.json({ error: `Failed to create todo: ${msg}` }, { status: 500 });
   }
 }

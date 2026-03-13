@@ -15,12 +15,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('submittals').insert(body).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, submittal: data });
-  } catch (err: any) {
-    console.error('[submittals/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      submittal: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Pending', ...body },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[submittals/create] error:', msg);
+    return NextResponse.json({ error: `Failed to create submittal: ${msg}` }, { status: 500 });
   }
 }

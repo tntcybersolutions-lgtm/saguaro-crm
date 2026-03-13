@@ -15,12 +15,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('safety_incidents').insert(body).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, incident: data });
-  } catch (err: any) {
-    console.error('[safety/incidents/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      incident: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Open', ...body },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[safety/incidents/create] error:', msg);
+    return NextResponse.json({ error: `Failed to create safety incident: ${msg}` }, { status: 500 });
   }
 }

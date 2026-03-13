@@ -37,14 +37,9 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[drawings/pin] error:', msg);
-    return NextResponse.json({
-      success: true,
-      pin: {
-        id: `demo-${Date.now()}`,
-        ...row,
-        created_at: new Date().toISOString(),
-      },
-      demo: true,
-    });
+    return NextResponse.json(
+      { error: `[drawings/pin] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

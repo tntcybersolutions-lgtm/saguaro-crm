@@ -1,118 +1,144 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getAuthHeaders, getTenantId } from '../../../../../lib/supabase-browser';
+import { PageWrap, SectionHeader, StatCard, Badge, Btn, Card, CardHeader, CardBody, Table, T } from '@/components/ui/shell';
 
-const GOLD='#D4A017',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#3dd68c',RED='#ef4444';
+interface Alert {
+  id: string;
+  severity: string;
+  alert_type: string;
+  message: string;
+  date: string;
+  status: string;
+}
 
-export default function AutopilotPage(){
+const SEVERITY_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'blue' | 'muted'> = {
+  critical: 'red',
+  high: 'amber',
+  medium: 'gold',
+  low: 'blue',
+  info: 'muted',
+};
+
+export default function AutopilotPage() {
   const params = useParams();
-  const pid = params['projectId'] as string;
-  const [running, setRunning] = useState(false);
-  const [result, setResult] = useState('');
-  const [alerts, setAlerts] = useState<any[]>([]);
+  const projectId = params.projectId as string;
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dismissing, setDismissing] = useState<string|null>(null);
-  const sevColor = (s:string) => s==='critical'?RED:s==='high'?'#f97316':GOLD;
+  const [running, setRunning] = useState(false);
+  const [toast, setToast] = useState('');
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const tenantId = await getTenantId();
-        const headers = await getAuthHeaders();
-        const r = await fetch(`/api/autopilot/alerts?projectId=${pid}&tenantId=${tenantId}`, { headers });
-        const d = await r.json();
-        setAlerts(d.alerts ?? []);
-      } catch {
-        setAlerts([]);
-      } finally { setLoading(false); }
-    })();
-  }, [pid]);
-
-  async function runAutopilot() {
-    setRunning(true); setResult('');
+  const fetchAlerts = useCallback(async () => {
+    setLoading(true);
     try {
-      const tenantId = await getTenantId();
-      const headers = await getAuthHeaders();
+      const res = await fetch(`/api/autopilot/alerts?projectId=${projectId}`);
+      const data = await res.json();
+      setAlerts(data.alerts ?? []);
+    } catch {
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId]);
+
+  useEffect(() => { fetchAlerts(); }, [fetchAlerts]);
+
+  async function runScan() {
+    setRunning(true);
+    try {
       const res = await fetch('/api/internal/autopilot/run', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers },
-        body: JSON.stringify({ projectId: pid, tenantId }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId }),
       });
-      const d = await res.json();
-      setResult(d.summary || d.message || 'Autopilot scan complete.');
+      const data = await res.json();
+      setToast(data.summary || data.message || 'Autopilot scan complete.');
+      await fetchAlerts();
     } catch {
-      setResult('Autopilot scan complete. No new issues found.');
-    } finally { setRunning(false); }
+      setToast('Autopilot scan complete. No new issues found.');
+    } finally {
+      setRunning(false);
+      setTimeout(() => setToast(''), 5000);
+    }
   }
 
   async function dismissAlert(alertId: string) {
-    setDismissing(alertId);
+    setDismissingId(alertId);
     try {
-      const tenantId = await getTenantId();
-      const headers = await getAuthHeaders();
       await fetch('/api/autopilot/dismiss', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers },
-        body: JSON.stringify({ alertId, projectId: pid, tenantId }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alertId, projectId }),
       });
-      setAlerts(prev => prev.filter(a => a.id !== alertId));
-    } catch {
-      // optimistically remove anyway
-      setAlerts(prev => prev.filter(a => a.id !== alertId));
-    } finally { setDismissing(null); }
+    } catch { /* optimistic */ }
+    setAlerts(prev => prev.filter(a => a.id !== alertId));
+    setDismissingId(null);
   }
 
-  return <div>
-    <div style={{padding:'16px 24px',borderBottom:'1px solid '+BORDER,display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d1117',flexWrap:'wrap',gap:12}}>
-      <div><h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>Autopilot</h2><div style={{fontSize:12,color:DIM,marginTop:3}}>AI-powered alerts for RFIs, change orders, insurance, and payments</div></div>
-      <button onClick={runAutopilot} disabled={running} style={{padding:'8px 16px',background:'linear-gradient(135deg,'+GOLD+',#F0C040)',border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:running?'wait':'pointer',opacity:running?.7:1}}>
-        {running ? '⟳ Scanning…' : 'Run Autopilot Scan'}
-      </button>
-    </div>
+  const activeAlerts = alerts.filter(a => a.status !== 'dismissed');
+  const criticalCount = activeAlerts.filter(a => a.severity === 'critical').length;
+  const highCount = activeAlerts.filter(a => a.severity === 'high').length;
 
-    {result && (
-      <div style={{margin:24,background:'rgba(26,138,74,.08)',border:'1px solid rgba(26,138,74,.3)',borderRadius:10,padding:'14px 18px',fontSize:13,color:GREEN}}>
-        ✅ {result}
-      </div>
-    )}
+  return (
+    <PageWrap>
+      <div style={{ padding: 24 }}>
+        <SectionHeader
+          title="Autopilot"
+          sub="AI-powered project alerts and monitoring"
+          action={
+            <Btn onClick={runScan} disabled={running}>
+              {running ? 'Scanning...' : 'Run Autopilot Scan'}
+            </Btn>
+          }
+        />
 
-    <div style={{padding:24}}>
-      {loading ? (
-        <div style={{padding:40,textAlign:'center',color:DIM}}>Loading alerts…</div>
-      ) : alerts.length === 0 ? (
-        <div style={{background:RAISED,border:'1px solid '+BORDER,borderRadius:10,padding:40,textAlign:'center',color:DIM}}>
-          <div style={{fontSize:36,marginBottom:12}}>✅</div>
-          <div style={{fontWeight:700,fontSize:15,color:TEXT,marginBottom:8}}>All systems nominal</div>
-          <div style={{fontSize:13}}>No active alerts. Run a scan to check for new issues.</div>
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+          <StatCard icon="🔔" label="Active Alerts" value={String(activeAlerts.length)} />
+          <StatCard icon="🔴" label="Critical" value={String(criticalCount)} />
+          <StatCard icon="🟠" label="High" value={String(highCount)} />
+          <StatCard icon="✅" label="Status" value={activeAlerts.length === 0 ? 'Clear' : 'Action Needed'} />
         </div>
-      ) : (
-        <div style={{display:'flex',flexDirection:'column',gap:10}}>
-          {alerts.map(a => (
-            <div key={a.id} style={{background:RAISED,border:'1px solid '+BORDER,borderRadius:10,padding:'16px 20px'}}>
-              <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
-                <span style={{fontSize:10,fontWeight:800,padding:'3px 8px',borderRadius:4,background:sevColor(a.severity)+'22',color:sevColor(a.severity),textTransform:'uppercase',flexShrink:0,marginTop:1}}>{a.severity}</span>
-                <div style={{flex:1}}>
-                  <div style={{fontWeight:700,color:TEXT,fontSize:14,marginBottom:4}}>{a.title}</div>
-                  <div style={{fontSize:12,color:DIM,lineHeight:1.5}}>{a.summary}</div>
-                </div>
-                <div style={{display:'flex',gap:8,flexShrink:0}}>
-                  <button
-                    onClick={() => dismissAlert(a.id)}
-                    disabled={dismissing === a.id}
-                    style={{padding:'5px 12px',background:'none',border:'1px solid '+BORDER,borderRadius:6,color:DIM,fontSize:11,cursor:'pointer',opacity:dismissing===a.id?.5:1}}
-                  >
-                    {dismissing === a.id ? '…' : 'Dismiss'}
-                  </button>
-                  <button style={{padding:'5px 12px',background:'linear-gradient(135deg,'+GOLD+',#F0C040)',border:'none',borderRadius:6,color:'#0d1117',fontSize:11,fontWeight:700,cursor:'pointer'}}>
-                    Resolve
-                  </button>
-                </div>
+
+        {toast && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 8, color: T.green, fontSize: 13 }}>
+            {toast}
+          </div>
+        )}
+
+        {/* Alerts */}
+        <Card>
+          <CardHeader>
+            <span style={{ fontWeight: 700, color: T.white, flex: 1 }}>Project Alerts</span>
+            <span style={{ fontSize: 12, color: T.muted }}>{activeAlerts.length} active</span>
+          </CardHeader>
+          <CardBody style={{ padding: 0 }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>Loading alerts...</div>
+            ) : activeAlerts.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40 }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: T.white, marginBottom: 8 }}>No active alerts for this project</div>
+                <div style={{ fontSize: 13, color: T.muted }}>Run a scan to check for new issues.</div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  </div>;
+            ) : (
+              <Table
+                headers={['Severity', 'Alert Type', 'Message', 'Date', 'Status', 'Actions']}
+                rows={activeAlerts.map(a => [
+                  <Badge key="sev" label={a.severity} color={SEVERITY_BADGE[a.severity] || 'muted'} />,
+                  <span key="type" style={{ fontWeight: 600 }}>{a.alert_type}</span>,
+                  <span key="msg" style={{ fontSize: 13 }}>{a.message}</span>,
+                  <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{a.date ? new Date(a.date).toLocaleDateString() : '---'}</span>,
+                  <Badge key="st" label={a.status || 'active'} color={a.status === 'resolved' ? 'green' : 'amber'} />,
+                  <Btn key="act" size="sm" variant="ghost" onClick={() => dismissAlert(a.id)} disabled={dismissingId === a.id}>
+                    {dismissingId === a.id ? '...' : 'Dismiss'}
+                  </Btn>,
+                ])}
+              />
+            )}
+          </CardBody>
+        </Card>
+      </div>
+    </PageWrap>
+  );
 }

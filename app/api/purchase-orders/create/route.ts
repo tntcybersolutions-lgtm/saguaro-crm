@@ -15,12 +15,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('purchase_orders').insert(body).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, purchaseOrder: data });
-  } catch (err: any) {
-    console.error('[purchase-orders/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      purchaseOrder: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Draft', ...body },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[purchase-orders/create] error:', msg);
+    return NextResponse.json({ error: `Failed to create purchase order: ${msg}` }, { status: 500 });
   }
 }

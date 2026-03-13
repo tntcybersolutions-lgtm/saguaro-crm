@@ -42,10 +42,9 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[inspections/create] error:', msg);
-    return NextResponse.json({
-      success: true,
-      inspection: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Scheduled', ...body },
-      demo: true,
-    });
+    return NextResponse.json(
+      { error: `[inspections/create] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

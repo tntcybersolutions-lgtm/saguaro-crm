@@ -39,10 +39,9 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[equipment/create] error:', msg);
-    return NextResponse.json({
-      success: true,
-      entry: { id: String(Date.now()), ...row },
-      demo: true,
-    });
+    return NextResponse.json(
+      { error: `[equipment/create] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

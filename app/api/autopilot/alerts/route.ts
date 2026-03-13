@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ alerts: data || [], source: 'live' });
-  } catch {
-    return NextResponse.json({ alerts: [], source: 'error' });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[autopilot/alerts] error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -41,16 +41,9 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[rfis/create] error:', msg);
-    return NextResponse.json({
-      success: true,
-      rfi: {
-        id: Date.now().toString(),
-        rfi_number: `RFI-${Date.now()}`,
-        status: 'open',
-        created_at: new Date().toISOString(),
-        ...body,
-      },
-      demo: true,
-    });
+    return NextResponse.json(
+      { error: `[rfis/create] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

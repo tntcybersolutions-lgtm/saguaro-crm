@@ -16,8 +16,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .eq('id', params.id);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error('[todos/complete] error:', err?.message);
-    return NextResponse.json({ success: true, demo: true });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[todos/complete] error:', msg);
+    return NextResponse.json({ error: `Failed to complete todo: ${msg}` }, { status: 500 });
   }
 }

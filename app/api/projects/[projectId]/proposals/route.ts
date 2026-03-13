@@ -8,9 +8,11 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     const { data, error } = await supabase.from('proposals').select('*').eq('project_id', params.projectId).order('created_date', { ascending: true });
-    if (error || !data?.length) return NextResponse.json({ proposals: [], demo: true });
-    return NextResponse.json({ proposals: data });
-  } catch {
-    return NextResponse.json({ proposals: [], demo: true });
+    if (error) throw error;
+    return NextResponse.json({ proposals: data || [] });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[projects/proposals] error:', msg);
+    return NextResponse.json({ error: `Failed to fetch proposals: ${msg}` }, { status: 500 });
   }
 }

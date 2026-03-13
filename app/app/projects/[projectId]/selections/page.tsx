@@ -1,36 +1,35 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
+import { PageWrap, SectionHeader, StatCard, Badge, Btn, Card, CardHeader, CardBody, Table, T } from '@/components/ui/shell';
 
 interface Selection {
   id: string;
   category: string;
   item: string;
-  spec: string;
-  made_by: string;
-  date: string;
+  manufacturer: string;
+  model: string;
+  cost: number;
   status: string;
-  due_date: string | null;
+  selected_by: string;
   notes: string;
+  owner_approved: boolean;
   project_id: string;
 }
 
-const CATEGORIES = ['Flooring','Kitchen','Bathrooms','Exterior','Plumbing','Electrical','HVAC','Roofing','Windows','Doors','Cabinetry','Hardware','Other'];
-const STATUS_MAP: Record<string, { bg: string; color: string }> = {
-  Pending: { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
-  Approved: { bg: 'rgba(61,214,140,.2)', color: GREEN },
-  Overdue: { bg: 'rgba(239,68,68,.2)', color: RED },
-  Revised: { bg: 'rgba(59,130,246,.2)', color: '#60a5fa' },
+const CATEGORIES = ['Flooring', 'Countertops', 'Fixtures', 'Hardware', 'Paint', 'Tile', 'Appliances'];
+
+const STATUS_BADGE: Record<string, 'amber' | 'blue' | 'gold' | 'green' | 'muted'> = {
+  pending: 'amber',
+  selected: 'blue',
+  ordered: 'gold',
+  installed: 'green',
 };
 
-const EMPTY_FORM = { category: 'Flooring', item: '', spec: '', made_by: 'Owner', due_date: '', notes: '' };
+const EMPTY_FORM = { category: 'Flooring', item: '', manufacturer: '', model: '', cost: 0, notes: '' };
 
 export default function SelectionsPage() {
-  const params = useParams();
-  const projectId = params.projectId as string;
+  const { projectId } = useParams() as { projectId: string };
   const [selections, setSelections] = useState<Selection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -38,9 +37,6 @@ export default function SelectionsPage() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
-
-  const today = new Date().toISOString().split('T')[0];
 
   const fetchSelections = useCallback(async () => {
     setLoading(true);
@@ -57,18 +53,29 @@ export default function SelectionsPage() {
 
   useEffect(() => { fetchSelections(); }, [fetchSelections]);
 
-  const filtered = filterStatus === 'All' ? selections : selections.filter(s => s.status === filterStatus);
-  const approved = selections.filter(s => s.status === 'Approved').length;
-  const pending = selections.filter(s => s.status === 'Pending').length;
-  const overdue = selections.filter(s => s.due_date && s.due_date < today && s.status !== 'Approved').length;
+  const totalCost = selections.reduce((s, sel) => s + (sel.cost || 0), 0);
+  const pending = selections.filter(s => s.status === 'pending').length;
+  const ordered = selections.filter(s => s.status === 'ordered').length;
+  const installed = selections.filter(s => s.status === 'installed').length;
 
   async function handleSave() {
     if (!form.item || !form.category) { setErrorMsg('Category and item are required.'); return; }
     setSaving(true);
     setErrorMsg('');
-    const newSel: Selection = { id: `sel-${Date.now()}`, project_id: projectId, date: today, status: 'Pending', ...form, due_date: form.due_date || null };
+    const newSel: Selection = {
+      id: `sel-${Date.now()}`,
+      project_id: projectId,
+      status: 'pending',
+      selected_by: '',
+      owner_approved: false,
+      ...form,
+    };
     try {
-      const res = await fetch('/api/selections/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, ...newSel }) });
+      const res = await fetch('/api/selections/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, ...newSel }),
+      });
       const json = await res.json();
       setSelections(prev => [...prev, json.selection || newSel]);
     } catch {
@@ -82,111 +89,122 @@ export default function SelectionsPage() {
   }
 
   async function handleApprove(id: string) {
-    try { await fetch(`/api/selections/${id}/approve`, { method: 'PATCH' }); } catch { /* demo */ }
-    setSelections(prev => prev.map(s => s.id === id ? { ...s, status: 'Approved' } : s));
-    setSuccessMsg('Selection approved.');
+    try {
+      await fetch(`/api/selections/${id}/approve`, { method: 'PATCH' });
+    } catch { /* demo */ }
+    setSelections(prev => prev.map(s => s.id === id ? { ...s, owner_approved: true } : s));
+    setSuccessMsg('Owner approval granted.');
     setTimeout(() => setSuccessMsg(''), 3000);
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '8px 12px', background: T.surface,
+    border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
+  };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
 
   return (
-    <div style={{ background: DARK, minHeight: '100vh' }}>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + BORDER, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Selections</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Owner and design selections log</div>
-        </div>
-        <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>+ Add Selection</button>
+    <PageWrap>
+      <div style={{ padding: '24px 24px 0' }}>
+        <SectionHeader
+          title="Selections"
+          sub="Owner and design selections log"
+          action={
+            <Btn onClick={() => { setShowForm(p => !p); setErrorMsg(''); }}>
+              {showForm ? 'Cancel' : '+ Add Selection'}
+            </Btn>
+          }
+        />
       </div>
 
-      {/* KPIs */}
-      <div style={{ padding: '20px 24px 0', display: 'flex', gap: 12 }}>
-        {[
-          { label: 'Total', value: selections.length, color: TEXT },
-          { label: 'Approved', value: approved, color: GREEN },
-          { label: 'Pending', value: pending, color: '#f59e0b' },
-          { label: 'Overdue', value: overdue, color: overdue > 0 ? RED : DIM },
-        ].map(k => (
-          <div key={k.label} style={{ background: RAISED, borderRadius: 8, padding: '12px 20px', border: '1px solid ' + BORDER, textAlign: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: k.color }}>{k.value}</div>
-            <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{k.label}</div>
-          </div>
-        ))}
+      {/* Stat Cards */}
+      <div style={{ padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+        <StatCard icon="🎨" label="Total Selections" value={String(selections.length)} />
+        <StatCard icon="⏳" label="Pending" value={String(pending)} />
+        <StatCard icon="📦" label="Ordered" value={String(ordered)} />
+        <StatCard icon="💰" label="Total Cost" value={`$${totalCost.toLocaleString()}`} />
       </div>
 
-      {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 8, color: T.green, fontSize: 13 }}>{successMsg}</div>
+      )}
+      {errorMsg && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 8, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+      )}
 
+      {/* Create Form */}
       {showForm && (
-        <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Add Selection</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div><label style={label}>Category *</label>
-              <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={inp}>
-                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div><label style={label}>Item *</label><input type="text" value={form.item} onChange={e => setForm(p => ({ ...p, item: e.target.value }))} placeholder="e.g. Countertops" style={inp} /></div>
-            <div><label style={label}>Made By</label><input type="text" value={form.made_by} onChange={e => setForm(p => ({ ...p, made_by: e.target.value }))} style={inp} /></div>
-            <div style={{ gridColumn: 'span 2' }}><label style={label}>Specification / Model</label><input type="text" value={form.spec} onChange={e => setForm(p => ({ ...p, spec: e.target.value }))} placeholder="e.g. Quartz — Silestone Lyra" style={inp} /></div>
-            <div><label style={label}>Due Date</label><SaguaroDatePicker value={form.due_date} onChange={v => setForm(p => ({ ...p, due_date: v }))} style={inp} /></div>
-            <div style={{ gridColumn: 'span 3' }}><label style={label}>Notes</label><input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} style={inp} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Save Selection'}
-            </button>
-            <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={{ padding: '9px 16px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          </div>
+        <div style={{ padding: '0 24px 16px' }}>
+          <Card>
+            <CardHeader><span style={{ fontWeight: 700, color: T.white }}>Add Selection</span></CardHeader>
+            <CardBody>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                <div>
+                  <label style={lbl}>Category *</label>
+                  <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={inp}>
+                    {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={lbl}>Item *</label>
+                  <input value={form.item} onChange={e => setForm(p => ({ ...p, item: e.target.value }))} placeholder="e.g. Kitchen Faucet" style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Manufacturer</label>
+                  <input value={form.manufacturer} onChange={e => setForm(p => ({ ...p, manufacturer: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Model</label>
+                  <input value={form.model} onChange={e => setForm(p => ({ ...p, model: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Cost ($)</label>
+                  <input type="number" value={form.cost} onChange={e => setForm(p => ({ ...p, cost: Number(e.target.value) }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Notes</label>
+                  <input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} style={inp} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <Btn onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Selection'}</Btn>
+                <Btn variant="ghost" onClick={() => { setShowForm(false); setErrorMsg(''); }}>Cancel</Btn>
+              </div>
+            </CardBody>
+          </Card>
         </div>
       )}
 
-      {/* Filter */}
-      <div style={{ padding: '16px 24px 0', display: 'flex', gap: 8 }}>
-        {['All','Pending','Approved'].map(s => (
-          <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '5px 12px', background: filterStatus === s ? GOLD : RAISED, border: '1px solid ' + (filterStatus === s ? GOLD : BORDER), borderRadius: 5, color: filterStatus === s ? DARK : DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{s}</button>
-        ))}
+      {/* Table */}
+      <div style={{ padding: '0 24px 40px' }}>
+        <Card>
+          <CardBody style={{ padding: 0 }}>
+            {loading ? (
+              <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading...</div>
+            ) : (
+              <Table
+                headers={['Category', 'Item', 'Manufacturer', 'Model', 'Cost', 'Status', 'Selected By', 'Owner Approval']}
+                rows={selections.map(s => [
+                  <span key="c" style={{ color: T.gold, fontWeight: 600 }}>{s.category}</span>,
+                  s.item,
+                  <span key="m" style={{ color: T.muted }}>{s.manufacturer || '—'}</span>,
+                  <span key="mod" style={{ color: T.muted }}>{s.model || '—'}</span>,
+                  <span key="cost" style={{ fontWeight: 700 }}>${(s.cost || 0).toLocaleString()}</span>,
+                  <Badge key="st" label={s.status} color={STATUS_BADGE[s.status] || 'muted'} />,
+                  <span key="by" style={{ color: T.muted }}>{s.selected_by || '—'}</span>,
+                  <div key="appr">
+                    {s.owner_approved ? (
+                      <Badge label="Approved" color="green" />
+                    ) : (
+                      <Btn size="sm" onClick={() => handleApprove(s.id)}>Approve</Btn>
+                    )}
+                  </div>,
+                ])}
+              />
+            )}
+          </CardBody>
+        </Card>
       </div>
-
-      <div style={{ padding: '16px 24px 40px', overflowX: 'auto' }}>
-        {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#0a1117' }}>
-                {['Category','Item','Specification','Made By','Date','Due Date','Status','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(s => {
-                const od = s.due_date && s.due_date < today && s.status !== 'Approved';
-                const effectiveStatus = od ? 'Overdue' : s.status;
-                const sc = STATUS_MAP[effectiveStatus] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-                return (
-                  <tr key={s.id} style={{ borderBottom: '1px solid rgba(38,51,71,.4)', background: od ? 'rgba(239,68,68,.04)' : 'transparent' }}>
-                    <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 600 }}>{s.category}</td>
-                    <td style={{ padding: '10px 14px', color: TEXT }}>{s.item}</td>
-                    <td style={{ padding: '10px 14px', color: DIM, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.spec}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{s.made_by}</td>
-                    <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{s.date}</td>
-                    <td style={{ padding: '10px 14px', color: od ? RED : DIM, whiteSpace: 'nowrap' }}>{s.due_date || '—'}</td>
-                    <td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{effectiveStatus}</span></td>
-                    <td style={{ padding: '10px 14px' }}>
-                      {s.status === 'Pending' && (
-                        <button onClick={() => handleApprove(s.id)} style={{ padding: '4px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 5, color: GREEN, fontSize: 12, cursor: 'pointer' }}>Approve</button>
-                      )}
-                      {s.status === 'Approved' && <span style={{ color: GREEN, fontSize: 12 }}>Approved</span>}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+    </PageWrap>
   );
 }

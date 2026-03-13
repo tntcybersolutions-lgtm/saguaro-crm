@@ -15,12 +15,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('safety_inspections').insert(body).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, inspection: data });
-  } catch (err: any) {
-    console.error('[safety/inspections/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      inspection: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Scheduled', ...body },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[safety/inspections/create] error:', msg);
+    return NextResponse.json({ error: `Failed to create safety inspection: ${msg}` }, { status: 500 });
   }
 }
