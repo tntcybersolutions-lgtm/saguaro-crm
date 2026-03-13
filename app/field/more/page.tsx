@@ -104,6 +104,18 @@ function MorePage(){
     {href:`/field/change-orders${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Change Orders',desc:'View, approve, and create COs from field',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
     {href:`/field/safety${projectId?`?projectId=${projectId}`:''}`,icon:'shield',label:'Safety',desc:'Incident reports and corrective actions',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
     {href:`/field/more/notifications${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Notifications',desc:'Push notification settings',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
+    {href:`/field/tm-tickets${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'T&M Tickets',desc:'Time & material tickets with signatures',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
+    {href:`/field/observations${projectId?`?projectId=${projectId}`:''}`,icon:'shield',label:'Observations',desc:'Proactive safety observations & templates',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
+    {href:`/field/meetings${projectId?`?projectId=${projectId}`:''}`,icon:'users',label:'Meetings',desc:'Minutes, attendees, action items',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
+    {href:`/field/correspondence${projectId?`?projectId=${projectId}`:''}`,icon:'document',label:'Correspondence',desc:'Letters, transmittals, notices',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
+    {href:`/field/forms${projectId?`?projectId=${projectId}`:''}`,icon:'check',label:'Custom Forms',desc:'Form builder & fillable templates',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
+    {href:`/field/directory${projectId?`?projectId=${projectId}`:''}`,icon:'users',label:'Directory',desc:'Company & project contacts',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/budget${projectId?`?projectId=${projectId}`:''}`,icon:'chart',label:'Budget',desc:'Cost tracking, forecast, variance',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
+    {href:`/field/bids${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Bid Management',desc:'Bid packages & comparison',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
+    {href:`/field/search${projectId?`?projectId=${projectId}`:''}`,icon:'qr',label:'Global Search',desc:'Search across all modules',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
+    {href:`/field/notifications${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Notification Center',desc:'Activity feed & alerts',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/favorites${projectId?`?projectId=${projectId}`:''}`,icon:'sparkle',label:'Favorites & Recents',desc:'Pinned items & recent activity',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
+    {href:`/field/activity${projectId?`?projectId=${projectId}`:''}`,icon:'calendar',label:'Activity Log',desc:'Audit trail — who changed what',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
   ];
   const QUICK=[
     {id:'timesheet',icon:'clock',label:'Quick Timesheet',desc:'Log hours in 10 seconds',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
