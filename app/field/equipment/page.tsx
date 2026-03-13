@@ -7,7 +7,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD = '#D4A017', RAISED = '#0f1d2b', BORDER = '#1e3148', TEXT = '#e8edf8', DIM = '#8fa3c0';
+const GOLD = '#D4A017', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 const GREEN = '#22C55E', RED = '#EF4444', AMBER = '#F59E0B', BLUE = '#3B82F6';
 
 function hr(hex: string): string {
@@ -17,8 +17,8 @@ function hr(hex: string): string {
   return `${r},${g},${b}`;
 }
 
-const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none', boxSizing: 'border-box' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const inp: React.CSSProperties = { width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '11px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none', boxSizing: 'border-box' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
 const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 14px 6px', marginBottom: 12 };
 const secLbl: React.CSSProperties = { margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.8 };
 
@@ -164,7 +164,7 @@ function EquipmentPage() {
 
   return (
     <div style={{ padding: '18px 16px', paddingBottom: 40 }}>
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -267,7 +267,7 @@ function EquipmentPage() {
                 autoComplete="off"
               />
               {showSuggestions && filteredSuggestions.length > 0 && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#09111A', border: `1px solid ${BORDER}`, borderRadius: 10, zIndex: 20, overflow: 'hidden', marginTop: 2 }}>
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#07101C', border: `1px solid ${BORDER}`, borderRadius: 10, zIndex: 20, overflow: 'hidden', marginTop: 2 }}>
                   {filteredSuggestions.map(s => (
                     <button
                       key={s}
@@ -356,7 +356,7 @@ function EquipmentPage() {
             <button
               type="submit"
               disabled={saving}
-              style={{ flex: 2, background: saving ? '#1e3148' : GOLD, border: 'none', borderRadius: 12, padding: '15px', color: saving ? DIM : '#000', fontSize: 15, fontWeight: 800, cursor: saving ? 'wait' : 'pointer' }}
+              style={{ flex: 2, background: saving ? '#1E3A5F' : GOLD, border: 'none', borderRadius: 12, padding: '15px', color: saving ? DIM : '#000', fontSize: 15, fontWeight: 800, cursor: saving ? 'wait' : 'pointer' }}
             >
               {saving ? 'Saving...' : '+ Log Equipment'}
             </button>
@@ -369,7 +369,7 @@ function EquipmentPage() {
 
 export default function FieldEquipmentPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}>
       <EquipmentPage />
     </Suspense>
   );

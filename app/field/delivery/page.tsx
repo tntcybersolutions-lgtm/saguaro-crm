@@ -8,10 +8,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const AMBER  = '#F59E0B';
@@ -161,7 +161,7 @@ function DeliveryPage() {
 
   return (
     <div style={{ padding: '18px 16px' }}>
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
         <div>
@@ -193,7 +193,7 @@ function DeliveryPage() {
               return (
                 <div key={d.id} style={{ background: RAISED, border: `1px solid ${d.condition === 'Refused' || d.condition === 'Damaged' ? 'rgba(239,68,68,.3)' : BORDER}`, borderRadius: 12, padding: '14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 24 }}>{cfg.emoji}</span>
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: cfg.color, opacity: 0.7 }} />
                     <div style={{ flex: 1 }}>
                       <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT }}>{d.supplier}</p>
                       <p style={{ margin: '2px 0 0', fontSize: 13, color: DIM }}>{d.description}</p>
@@ -249,7 +249,7 @@ function DeliveryPage() {
                   onClick={() => setCondition(c.value)}
                   style={{ background: condition === c.value ? `rgba(${hexRgb(c.color)},.15)` : 'transparent', border: `2px solid ${condition === c.value ? c.color : BORDER}`, borderRadius: 10, padding: '13px 8px', color: condition === c.value ? c.color : DIM, fontSize: 13, fontWeight: condition === c.value ? 800 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 >
-                  {c.emoji} {c.label}
+                  {c.label}
                 </button>
               ))}
             </div>
@@ -278,14 +278,14 @@ function DeliveryPage() {
           {/* Alert for bad conditions */}
           {(condition === 'Damaged' || condition === 'Refused') && (
             <div style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 10, padding: '12px 14px', marginBottom: 12, fontSize: 13, color: RED, fontWeight: 600 }}>
-              ⚠️ {condition === 'Refused' ? 'Refused deliveries should be documented and PM notified immediately.' : 'Damaged materials — document thoroughly and notify PM/supplier.'}
+              {condition === 'Refused' ? 'Refused deliveries should be documented and PM notified immediately.' : 'Damaged materials — document thoroughly and notify PM/supplier.'}
             </div>
           )}
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="button" onClick={() => setView('list')} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px', color: DIM, fontSize: 15, cursor: 'pointer' }}>Cancel</button>
-            <button type="submit" disabled={saving} style={{ flex: 2, background: saving ? '#1e3148' : condConfig.color, border: 'none', borderRadius: 12, padding: '16px', color: saving ? DIM : '#000', fontSize: 15, fontWeight: 800, cursor: saving ? 'wait' : 'pointer' }}>
-              {saving ? 'Saving...' : `${condConfig.emoji} Confirm Delivery`}
+            <button type="submit" disabled={saving} style={{ flex: 2, background: saving ? '#1E3A5F' : condConfig.color, border: 'none', borderRadius: 12, padding: '16px', color: saving ? DIM : '#000', fontSize: 15, fontWeight: 800, cursor: saving ? 'wait' : 'pointer' }}>
+              {saving ? 'Saving...' : 'Confirm Delivery'}
             </button>
           </div>
         </form>
@@ -295,7 +295,7 @@ function DeliveryPage() {
 }
 
 export default function FieldDeliveryPage() {
-  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><DeliveryPage /></Suspense>;
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}><DeliveryPage /></Suspense>;
 }
 
 function Fld({ label, children }: { label: string; children: React.ReactNode }) {
@@ -304,8 +304,8 @@ function Fld({ label, children }: { label: string; children: React.ReactNode }) 
 
 const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 14px 6px', marginBottom: 12 };
 const secLbl: React.CSSProperties = { margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.8 };
-const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const inp: React.CSSProperties = { width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '11px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
 
 function hexRgb(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);

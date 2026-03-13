@@ -8,10 +8,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const AMBER  = '#F59E0B';
@@ -146,7 +146,7 @@ function InspectionForm() {
   if (saved) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', gap: 14, padding: 32, textAlign: 'center' }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: `rgba(${hexRgb(res.color)}, .15)`, border: `2px solid rgba(${hexRgb(res.color)}, .3)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>{res.emoji}</div>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: `rgba(${hexRgb(res.color)}, .15)`, border: `2px solid rgba(${hexRgb(res.color)}, .3)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: res.color }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><polyline points="20 6 9 17 4 12"/></svg></div>
         <h2 style={{ margin: 0, fontSize: 22, color: res.color }}>{res.label}!</h2>
         <p style={{ margin: 0, color: DIM, fontSize: 14 }}>
           {online ? 'Inspection logged to dashboard.' : 'Queued offline — will sync when reconnected.'}
@@ -157,7 +157,7 @@ function InspectionForm() {
 
   return (
     <div style={{ padding: '18px 16px' }}>
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
       <h1 style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: TEXT }}>Inspection</h1>
       <p style={{ margin: '0 0 14px', fontSize: 14, color: DIM }}>
         {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -172,7 +172,7 @@ function InspectionForm() {
           <p style={sectionLabel}>Inspection Details</p>
           <Label>Type</Label>
           <select value={inspType} onChange={(e) => changeType(e.target.value)} style={{ ...inp, marginBottom: 10 }}>
-            {INSPECTION_TYPES.map((t) => <option key={t} value={t} style={{ background: '#0f1d2b' }}>{t}</option>)}
+            {INSPECTION_TYPES.map((t) => <option key={t} value={t} style={{ background: '#0D1D2E' }}>{t}</option>)}
           </select>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <div>
@@ -196,7 +196,7 @@ function InspectionForm() {
             </div>
           </div>
           {/* Progress bar */}
-          <div style={{ height: 5, background: '#1e3148', borderRadius: 3, marginBottom: 12 }}>
+          <div style={{ height: 5, background: '#1E3A5F', borderRadius: 3, marginBottom: 12 }}>
             <div style={{ height: '100%', background: pct === 100 ? GREEN : pct > 50 ? GOLD : AMBER, borderRadius: 3, width: `${pct}%`, transition: 'width 0.25s' }} />
           </div>
           {checklist.map((item, idx) => (
@@ -243,7 +243,7 @@ function InspectionForm() {
                 onClick={() => setResult(r.value)}
                 style={{ background: result === r.value ? r.bg : 'transparent', border: `2px solid ${result === r.value ? r.color : BORDER}`, borderRadius: 10, padding: '14px 8px', color: result === r.value ? r.color : DIM, fontSize: 14, fontWeight: result === r.value ? 800 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all .12s' }}
               >
-                <span>{r.emoji}</span><span>{r.label}</span>
+                <span>{r.label}</span>
               </button>
             ))}
           </div>
@@ -267,9 +267,9 @@ function InspectionForm() {
         <button
           type="submit"
           disabled={saving}
-          style={{ width: '100%', background: saving ? '#1e3148' : res.color, border: 'none', borderRadius: 14, padding: '18px', color: saving ? DIM : (result === 'pending' ? TEXT : '#000'), fontSize: 17, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', letterSpacing: 0.3 }}
+          style={{ width: '100%', background: saving ? '#1E3A5F' : res.color, border: 'none', borderRadius: 14, padding: '18px', color: saving ? DIM : (result === 'pending' ? TEXT : '#000'), fontSize: 17, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', letterSpacing: 0.3 }}
         >
-          {saving ? 'Submitting...' : `${res.emoji} Submit — ${res.label}`}
+          {saving ? 'Submitting...' : `Submit — ${res.label}`}
         </button>
       </form>
     </div>
@@ -277,7 +277,7 @@ function InspectionForm() {
 }
 
 export default function FieldInspectPage() {
-  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><InspectionForm /></Suspense>;
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}><InspectionForm /></Suspense>;
 }
 
 function Label({ children }: { children: React.ReactNode }) {
@@ -289,8 +289,8 @@ function OfflineBanner() {
 
 const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '14px 14px 6px', marginBottom: 12 };
 const sectionLabel: React.CSSProperties = { margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.8 };
-const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const inp: React.CSSProperties = { width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '11px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
 
 function hexRgb(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);

@@ -7,10 +7,10 @@ import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react
 import { useSearchParams, useRouter } from 'next/navigation';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const AMBER  = '#F59E0B';
@@ -206,7 +206,7 @@ function SagePage() {
   const hasMessages = messages.length > 0;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', background: '#09111A' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', background: '#07101C' }}>
 
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, background: RAISED, flexShrink: 0, zIndex: 10 }}>
@@ -306,7 +306,7 @@ function SagePage() {
 
       {/* Input bar */}
       <div style={{ padding: '10px 12px', paddingBottom: 'max(10px, env(safe-area-inset-bottom))', background: RAISED, borderTop: `1px solid ${BORDER}`, flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, background: '#09111A', border: `1px solid ${BORDER}`, borderRadius: 22, padding: '6px 6px 6px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, background: '#07101C', border: `1px solid ${BORDER}`, borderRadius: 22, padding: '6px 6px 6px 14px' }}>
           <textarea
             ref={inputRef}
             value={input}
@@ -387,7 +387,7 @@ function SagePage() {
 
 export default function FieldSagePage() {
   return (
-    <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}>
       <SagePage />
     </Suspense>
   );

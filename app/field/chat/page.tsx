@@ -8,7 +8,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 import { useRealtimeMessages } from '@/lib/useRealtime';
 
-const GOLD = '#D4A017', RAISED = '#0f1d2b', BORDER = '#1e3148', TEXT = '#e8edf8', DIM = '#8fa3c0';
+const GOLD = '#D4A017', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 const GREEN = '#22C55E';
 
 function hr(hex: string): string {
@@ -18,7 +18,7 @@ function hr(hex: string): string {
   return `${r},${g},${b}`;
 }
 
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
 
 interface Message {
   id: string;
@@ -185,13 +185,13 @@ function ChatPage() {
             onChange={e => setNameInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') saveName(); }}
             placeholder="Your first name or nickname"
-            style={{ width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '12px 14px', color: '#e8edf8', fontSize: 16, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+            style={{ width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '12px 14px', color: '#F0F4FF', fontSize: 16, outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
             autoFocus
           />
           <button
             onClick={saveName}
             disabled={!nameInput.trim()}
-            style={{ width: '100%', background: nameInput.trim() ? GOLD : '#1e3148', border: 'none', borderRadius: 10, padding: '14px', color: nameInput.trim() ? '#000' : DIM, fontSize: 16, fontWeight: 800, cursor: nameInput.trim() ? 'pointer' : 'default' }}
+            style={{ width: '100%', background: nameInput.trim() ? GOLD : '#1E3A5F', border: 'none', borderRadius: 10, padding: '14px', color: nameInput.trim() ? '#000' : DIM, fontSize: 16, fontWeight: 800, cursor: nameInput.trim() ? 'pointer' : 'default' }}
           >
             Join Job Board
           </button>
@@ -204,7 +204,7 @@ function ChatPage() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{ padding: '14px 16px 10px', flexShrink: 0, borderBottom: `1px solid ${BORDER}` }}>
-        <button onClick={() => router.back()} style={backBtn}>← Back</button>
+        <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT, display: 'flex', alignItems: 'center', gap: 8 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Job Board</h1>
@@ -277,11 +277,11 @@ function ChatPage() {
             rows={1}
             style={{
               flex: 1,
-              background: '#09111A',
+              background: '#07101C',
               border: `1px solid ${BORDER}`,
               borderRadius: 10,
               padding: '11px 14px',
-              color: '#e8edf8',
+              color: '#F0F4FF',
               fontSize: 15,
               outline: 'none',
               resize: 'none',
@@ -294,7 +294,7 @@ function ChatPage() {
             type="submit"
             disabled={!content.trim() || sending}
             style={{
-              background: content.trim() && !sending ? GOLD : '#1e3148',
+              background: content.trim() && !sending ? GOLD : '#1E3A5F',
               border: 'none',
               borderRadius: 10,
               width: 44,
@@ -327,7 +327,7 @@ function ChatPage() {
 
 export default function FieldChatPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}>
       <ChatPage />
     </Suspense>
   );

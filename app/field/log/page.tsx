@@ -9,10 +9,10 @@ import { enqueue } from '@/lib/field-db';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 
@@ -180,7 +180,7 @@ function DailyLogForm() {
   if (saved) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', gap: 14, padding: 32, textAlign: 'center' }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(34,197,94,.15)', border: '2px solid rgba(34,197,94,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>✅</div>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(34,197,94,.15)', border: '2px solid rgba(34,197,94,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={44} height={44}><polyline points="20 6 9 17 4 12"/></svg></div>
         <h2 style={{ margin: 0, fontSize: 22, color: GREEN }}>Log Submitted!</h2>
         <p style={{ margin: 0, color: DIM, fontSize: 14 }}>
           {online ? 'Saved to the project dashboard.' : 'Queued offline — will sync when reconnected.'}
@@ -192,7 +192,7 @@ function DailyLogForm() {
   return (
     <div style={{ padding: '18px 16px' }}>
       {/* Header */}
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
       <h1 style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: TEXT }}>Daily Log</h1>
       <p style={{ margin: '0 0 14px', fontSize: 14, color: DIM }}>
         {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
@@ -214,7 +214,7 @@ function DailyLogForm() {
           </Row>
           <Field label="Weather">
             <select value={weather} onChange={(e) => setWeather(e.target.value)} style={inp}>
-              {WEATHER_OPTS.map((o) => <option key={o} value={o} style={{ background: '#0f1d2b' }}>{o}</option>)}
+              {WEATHER_OPTS.map((o) => <option key={o} value={o} style={{ background: '#0D1D2E' }}>{o}</option>)}
             </select>
           </Field>
           <Row>
@@ -252,9 +252,13 @@ function DailyLogForm() {
                 } catch { /* ai unavailable */ }
                 setAiLoading(false);
               }}
-              style={{ flex: 1, background: aiLoading ? '#1e3148' : 'rgba(139,92,246,.15)', border: `1px solid rgba(139,92,246,.3)`, borderRadius: 10, padding: '10px', color: aiLoading ? DIM : PURPLE, fontSize: 13, fontWeight: 700, cursor: aiLoading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              style={{ flex: 1, background: aiLoading ? '#1E3A5F' : 'rgba(139,92,246,.15)', border: `1px solid rgba(139,92,246,.3)`, borderRadius: 10, padding: '10px', color: aiLoading ? DIM : PURPLE, fontSize: 13, fontWeight: 700, cursor: aiLoading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
             >
-              {aiLoading ? '⟳ Drafting...' : '🤖 AI Draft Log'}
+              {aiLoading ? (
+                <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14} style={{ animation: 'spin 1s linear infinite' }}><path d="M21 12a9 9 0 1 1-9-9"/></svg> Drafting...</>
+              ) : (
+                <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> AI Draft Log</>
+              )}
             </button>
             {/* Voice-to-text (Web Speech API) */}
             <button
@@ -282,7 +286,11 @@ function DailyLogForm() {
               style={{ background: listening ? 'rgba(239,68,68,.2)' : 'rgba(212,160,23,.1)', border: `1px solid ${listening ? 'rgba(239,68,68,.4)' : 'rgba(212,160,23,.25)'}`, borderRadius: 10, padding: '10px 14px', color: listening ? RED : GOLD, fontSize: 18, cursor: 'pointer' }}
               title="Voice to text"
             >
-              {listening ? '🔴' : '🎙'}
+              {listening ? (
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: RED, animation: 'pulse 1s infinite' }} />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={18} height={18}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1={12} y1={19} x2={12} y2={23}/><line x1={8} y1={23} x2={16} y2={23}/></svg>
+              )}
             </button>
           </div>
           <Field label="Work Performed Today *">
@@ -321,9 +329,9 @@ function DailyLogForm() {
         <button
           type="submit"
           disabled={saving}
-          style={{ width: '100%', background: saving ? '#1e3148' : GOLD, border: 'none', borderRadius: 14, padding: '18px', color: saving ? DIM : '#000', fontSize: 17, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', marginTop: 4, letterSpacing: 0.3 }}
+          style={{ width: '100%', background: saving ? '#1E3A5F' : GOLD, border: 'none', borderRadius: 14, padding: '18px', color: saving ? DIM : '#000', fontSize: 17, fontWeight: 800, cursor: saving ? 'wait' : 'pointer', marginTop: 4, letterSpacing: 0.3 }}
         >
-          {saving ? 'Submitting...' : online ? '✓ Submit Daily Log' : '💾 Save Offline'}
+          {saving ? 'Submitting...' : online ? 'Submit Daily Log' : 'Save Offline'}
         </button>
       </form>
     </div>
@@ -331,14 +339,14 @@ function DailyLogForm() {
 }
 
 export default function FieldLogPage() {
-  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><DailyLogForm /></Suspense>;
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}><DailyLogForm /></Suspense>;
 }
 
 // ── Shared UI helpers ─────────────────────────────────────
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: '#0f1d2b', border: '1px solid #1e3148', borderRadius: 14, padding: '14px 14px 6px', marginBottom: 12 }}>
-      <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#8fa3c0', textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</p>
+    <div style={{ background: '#0D1D2E', border: '1px solid #1E3A5F', borderRadius: 14, padding: '14px 14px 6px', marginBottom: 12 }}>
+      <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#8BAAC8', textTransform: 'uppercase', letterSpacing: 0.8 }}>{label}</p>
       {children}
     </div>
   );
@@ -346,7 +354,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 10 }}>
-      <label style={{ display: 'block', fontSize: 12, color: '#8fa3c0', marginBottom: 5 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 12, color: '#8BAAC8', marginBottom: 5 }}>{label}</label>
       {children}
     </div>
   );
@@ -361,5 +369,5 @@ function ErrorBox({ msg }: { msg: string }) {
   return <div style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 8, padding: '10px 14px', color: RED, fontSize: 14, marginBottom: 12 }}>{msg}</div>;
 }
 
-const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '12px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const inp: React.CSSProperties = { width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '12px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };

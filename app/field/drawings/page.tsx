@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD = '#D4A017', RAISED = '#0f1d2b', BORDER = '#1e3148', TEXT = '#e8edf8', DIM = '#8fa3c0';
+const GOLD = '#D4A017', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 const GREEN = '#22C55E', RED = '#EF4444', AMBER = '#F59E0B', BLUE = '#3B82F6';
 
 function hr(hex: string): string {
@@ -17,8 +17,8 @@ function hr(hex: string): string {
   return `${r},${g},${b}`;
 }
 
-const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none', boxSizing: 'border-box' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const inp: React.CSSProperties = { width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '11px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none', boxSizing: 'border-box' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
 
 const CATEGORY_COLORS: Record<string, string> = { RFI: BLUE, Punch: RED, Safety: AMBER, Other: DIM };
 
@@ -193,7 +193,7 @@ function DrawingsPage() {
   if (view === 'viewer' && selectedDrawing) {
     return (
       <div style={{ padding: '18px 16px', paddingBottom: 32 }}>
-        <button onClick={() => { setView('list'); setSelectedDrawing(null); setPins([]); setPendingPin(null); setShowPinForm(false); setSelectedPin(null); }} style={backBtn}>← Back to Drawings</button>
+        <button onClick={() => { setView('list'); setSelectedDrawing(null); setPins([]); setPendingPin(null); setShowPinForm(false); setSelectedPin(null); }} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
 
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
           <div>
@@ -334,7 +334,7 @@ function DrawingsPage() {
               <button type="button" onClick={cancelPin} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px', color: DIM, fontSize: 14, cursor: 'pointer' }}>
                 Cancel
               </button>
-              <button type="submit" disabled={savingPin} style={{ flex: 2, background: savingPin ? '#1e3148' : GOLD, border: 'none', borderRadius: 10, padding: '12px', color: savingPin ? DIM : '#000', fontSize: 14, fontWeight: 800, cursor: savingPin ? 'wait' : 'pointer' }}>
+              <button type="submit" disabled={savingPin} style={{ flex: 2, background: savingPin ? '#1E3A5F' : GOLD, border: 'none', borderRadius: 10, padding: '12px', color: savingPin ? DIM : '#000', fontSize: 14, fontWeight: 800, cursor: savingPin ? 'wait' : 'pointer' }}>
                 {savingPin ? 'Saving...' : 'Save Pin'}
               </button>
             </div>
@@ -370,7 +370,7 @@ function DrawingsPage() {
   // List view
   return (
     <div style={{ padding: '18px 16px' }}>
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
 
       <div style={{ marginBottom: 16 }}>
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT, display: 'flex', alignItems: 'center', gap: 8 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg>Drawings</h1>
@@ -394,9 +394,9 @@ function DrawingsPage() {
               style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '12px 14px', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}
             >
               {drawing.thumbnail_url ? (
-                <img src={drawing.thumbnail_url} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, flexShrink: 0, background: '#09111A' }} />
+                <img src={drawing.thumbnail_url} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 8, flexShrink: 0, background: '#07101C' }} />
               ) : (
-                <div style={{ width: 56, height: 56, borderRadius: 8, background: '#09111A', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, flexShrink: 0 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+                <div style={{ width: 56, height: 56, borderRadius: 8, background: '#07101C', border: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, flexShrink: 0 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
               )}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
@@ -416,7 +416,7 @@ function DrawingsPage() {
 
 export default function FieldDrawingsPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}>
       <DrawingsPage />
     </Suspense>
   );

@@ -7,10 +7,10 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const AMBER  = '#F59E0B';
@@ -108,7 +108,7 @@ function SchedulePage() {
 
   return (
     <div style={{ padding: '18px 16px' }}>
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
       <h1 style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: TEXT }}>Schedule</h1>
       <p style={{ margin: '0 0 14px', fontSize: 13, color: DIM }}>{projectName}</p>
 
@@ -121,7 +121,7 @@ function SchedulePage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: '#060e17', borderRadius: 10, padding: 4 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: '#060C15', borderRadius: 10, padding: 4 }}>
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)}
             style={{ flex: 1, background: tab === t.id ? RAISED : 'transparent', border: `1px solid ${tab === t.id ? BORDER : 'transparent'}`, borderRadius: 8, padding: '8px 4px', color: tab === t.id ? TEXT : DIM, fontSize: 11, fontWeight: tab === t.id ? 700 : 500, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}
@@ -136,7 +136,7 @@ function SchedulePage() {
         <div style={{ textAlign: 'center', padding: '40px 0', color: DIM }}>Loading schedule...</div>
       ) : displayTasks.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px 16px', color: DIM }}>
-          <div style={{ fontSize: 40, marginBottom: 8 }}>{tab === 'late' ? '✅' : '📅'}</div>
+          <div style={{ marginBottom: 8, color: tab === 'late' ? GREEN : GOLD, display: 'flex', justifyContent: 'center' }}>{tab === 'late' ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><polyline points="20 6 9 17 4 12"/></svg> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><rect x={3} y={4} width={18} height={18} rx={2}/><line x1={16} y1={2} x2={16} y2={6}/><line x1={8} y1={2} x2={8} y2={6}/><line x1={3} y1={10} x2={21} y2={10}/></svg>}</div>
           <p style={{ margin: 0, fontSize: 14 }}>
             {tab === 'today' ? 'No active tasks today. Check "This Week" or "All".' :
              tab === 'late' ? 'No late tasks — you\'re on schedule!' :
@@ -161,7 +161,7 @@ function SchedulePage() {
                       {task.is_milestone && <span title="Milestone" style={{ fontSize: 12 }}>🏁</span>}
                       <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: TEXT, lineHeight: 1.3 }}>{task.name}</p>
                     </div>
-                    {task.trade && <p style={{ margin: '0 0 6px', fontSize: 12, color: DIM }}>🔧 {task.trade}</p>}
+                    {task.trade && <p style={{ margin: '0 0 6px', fontSize: 12, color: DIM }}>{task.trade}</p>}
                     <p style={{ margin: '0 0 8px', fontSize: 12, color: DIM }}>
                       {formatDate(task.start_date)} – {formatDate(task.end_date)}
                       {late ? <span style={{ color: RED, fontWeight: 700 }}> · {Math.abs(daysLeft)}d overdue</span> :
@@ -169,7 +169,7 @@ function SchedulePage() {
                        daysLeft > 0 && daysLeft <= 3 ? <span style={{ color: AMBER }}> · {daysLeft}d left</span> : null}
                     </p>
                     {/* Progress bar */}
-                    <div style={{ height: 5, background: '#1e3148', borderRadius: 3 }}>
+                    <div style={{ height: 5, background: '#1E3A5F', borderRadius: 3 }}>
                       <div style={{ height: '100%', background: pct === 100 ? GREEN : late ? RED : active ? GOLD : BLUE, borderRadius: 3, width: `${pct}%`, transition: 'width .3s' }} />
                     </div>
                   </div>
@@ -190,14 +190,14 @@ function SchedulePage() {
 }
 
 export default function FieldSchedulePage() {
-  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><SchedulePage /></Suspense>;
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}><SchedulePage /></Suspense>;
 }
 
 function StatBadge({ label, value, color }: { label: string; value: number; color: string }) {
   return <div style={{ background: `rgba(${hexRgb(color)},.1)`, border: `1px solid rgba(${hexRgb(color)},.25)`, borderRadius: 20, padding: '4px 12px', fontSize: 12, color, fontWeight: 700 }}>{value} {label}</div>;
 }
 
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
 
 function hexRgb(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);

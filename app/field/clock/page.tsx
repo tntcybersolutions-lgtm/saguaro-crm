@@ -8,10 +8,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const AMBER  = '#F59E0B';
@@ -174,7 +174,7 @@ function ClockPage() {
 
   return (
     <div style={{ padding: '18px 16px' }}>
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
       <h1 style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: TEXT }}>Clock In / Out</h1>
       <p style={{ margin: '0 0 18px', fontSize: 13, color: DIM }}>GPS-stamped time tracking</p>
 
@@ -192,7 +192,7 @@ function ClockPage() {
             <p style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: TEXT }}>{clock.employeeName} · {clock.projectName || 'No project'}</p>
 
             {/* Break minutes */}
-            <div style={{ background: '#060e17', borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
+            <div style={{ background: '#060C15', borderRadius: 10, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
               <span style={{ fontSize: 13, color: DIM }}>Break time:</span>
               <input type="number" inputMode="numeric" value={breakMinutes} onChange={(e) => setBreakMinutes(e.target.value)} min="0" style={{ width: 60, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '4px 8px', color: TEXT, fontSize: 14, textAlign: 'center', outline: 'none' }} />
               <span style={{ fontSize: 13, color: DIM }}>min</span>
@@ -201,15 +201,15 @@ function ClockPage() {
             <button
               onClick={handleClockOut}
               disabled={saving}
-              style={{ width: '100%', background: saving ? '#1e3148' : RED, border: 'none', borderRadius: 14, padding: '18px', color: '#fff', fontSize: 18, fontWeight: 900, cursor: saving ? 'wait' : 'pointer', letterSpacing: 0.5 }}
+              style={{ width: '100%', background: saving ? '#1E3A5F' : RED, border: 'none', borderRadius: 14, padding: '18px', color: '#fff', fontSize: 18, fontWeight: 900, cursor: saving ? 'wait' : 'pointer', letterSpacing: 0.5 }}
             >
-              {saving ? 'Processing...' : '⏹ Clock Out'}
+              {saving ? 'Processing...' : 'Clock Out'}
             </button>
           </>
         ) : (
           <>
             {/* Ready to clock in */}
-            <div style={{ fontSize: 56, marginBottom: 8 }}>⏱</div>
+            <div style={{ marginBottom: 8, color: GOLD, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={56} height={56}><circle cx={12} cy={12} r={10}/><polyline points="12 6 12 12 16 14"/></svg></div>
             <p style={{ margin: '0 0 20px', fontSize: 16, color: DIM }}>Ready to clock in</p>
 
             <div style={{ textAlign: 'left', marginBottom: 16 }}>
@@ -218,29 +218,29 @@ function ClockPage() {
 
               <label style={lbl}>Project</label>
               <select value={clock.projectId} onChange={(e) => { const p = projects.find((x) => x.id === e.target.value); updateClock({ projectId: e.target.value, projectName: p?.name || '' }); }} style={{ ...inp, marginTop: 5, marginBottom: 12 }}>
-                <option value="" style={{ background: '#0f1d2b' }}>Select project...</option>
-                {projects.map((p) => <option key={p.id} value={p.id} style={{ background: '#0f1d2b' }}>{p.name}</option>)}
+                <option value="" style={{ background: '#0D1D2E' }}>Select project...</option>
+                {projects.map((p) => <option key={p.id} value={p.id} style={{ background: '#0D1D2E' }}>{p.name}</option>)}
               </select>
 
               <label style={lbl}>Cost Code</label>
               <select value={clock.costCode} onChange={(e) => updateClock({ costCode: e.target.value })} style={{ ...inp, marginTop: 5 }}>
-                {COST_CODES.map((c) => <option key={c} value={c} style={{ background: '#0f1d2b' }}>{c}</option>)}
+                {COST_CODES.map((c) => <option key={c} value={c} style={{ background: '#0D1D2E' }}>{c}</option>)}
               </select>
             </div>
 
             {/* GPS indicator */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, justifyContent: 'center' }}>
               <span style={{ fontSize: 11, color: gpsStatus === 'ok' ? GREEN : gpsStatus === 'denied' ? RED : DIM }}>
-                {gpsStatus === 'ok' ? `📍 GPS captured` : gpsStatus === 'getting' ? '📍 Getting location...' : gpsStatus === 'denied' ? '📍 Location denied' : '📍 GPS will capture on clock-in'}
+                {gpsStatus === 'ok' ? 'GPS captured' : gpsStatus === 'getting' ? 'Getting location...' : gpsStatus === 'denied' ? 'Location denied' : 'GPS will capture on clock-in'}
               </span>
             </div>
 
             <button
               onClick={handleClockIn}
               disabled={saving}
-              style={{ width: '100%', background: saving ? '#1e3148' : GREEN, border: 'none', borderRadius: 14, padding: '18px', color: '#000', fontSize: 18, fontWeight: 900, cursor: saving ? 'wait' : 'pointer', letterSpacing: 0.5 }}
+              style={{ width: '100%', background: saving ? '#1E3A5F' : GREEN, border: 'none', borderRadius: 14, padding: '18px', color: '#000', fontSize: 18, fontWeight: 900, cursor: saving ? 'wait' : 'pointer', letterSpacing: 0.5 }}
             >
-              {saving ? 'Clocking In...' : '▶ Clock In'}
+              {saving ? 'Clocking In...' : 'Clock In'}
             </button>
           </>
         )}
@@ -272,9 +272,9 @@ function ClockPage() {
 }
 
 export default function FieldClockPage() {
-  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><ClockPage /></Suspense>;
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}><ClockPage /></Suspense>;
 }
 
 const lbl: React.CSSProperties = { fontSize: 12, color: DIM, fontWeight: 600 };
-const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: DIM, fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const inp: React.CSSProperties = { width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '11px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: '8px', marginLeft: -8, display: 'flex', alignItems: 'center', marginBottom: 4 };

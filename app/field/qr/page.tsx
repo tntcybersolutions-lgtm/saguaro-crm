@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-const GOLD = '#D4A017', RAISED = '#0f1d2b', BORDER = '#1e3148', TEXT = '#e8edf8', DIM = '#8fa3c0';
+const GOLD = '#D4A017', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 const GREEN = '#22C55E', BLUE = '#3B82F6';
 
 function hr(hex: string): string {
@@ -17,8 +17,8 @@ function hr(hex: string): string {
   return `${r},${g},${b}`;
 }
 
-const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none', boxSizing: 'border-box' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const inp: React.CSSProperties = { width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '11px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none', boxSizing: 'border-box' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
 
 const MAX_HISTORY = 5;
 
@@ -198,12 +198,12 @@ function QRPage() {
 
   return (
     <div style={{ padding: '18px 16px', paddingBottom: 40 }}>
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
 
       <h1 style={{ margin: '0 0 16px', fontSize: 22, fontWeight: 800, color: TEXT }}>QR Scanner</h1>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', background: '#09111A', borderRadius: 12, padding: 4, marginBottom: 20, border: `1px solid ${BORDER}` }}>
+      <div style={{ display: 'flex', background: '#07101C', borderRadius: 12, padding: 4, marginBottom: 20, border: `1px solid ${BORDER}` }}>
         {(['scan', 'generate'] as Tab[]).map(t => (
           <button
             key={t}
@@ -410,7 +410,7 @@ function QRPage() {
             disabled={!genText.trim()}
             style={{
               width: '100%',
-              background: genText.trim() ? GOLD : '#1e3148',
+              background: genText.trim() ? GOLD : '#1E3A5F',
               border: 'none',
               borderRadius: 12,
               padding: '15px',
@@ -474,7 +474,7 @@ function QRPage() {
 
 export default function FieldQRPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}>
       <QRPage />
     </Suspense>
   );

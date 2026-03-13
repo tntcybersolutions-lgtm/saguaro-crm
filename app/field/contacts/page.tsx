@@ -7,10 +7,10 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const BLUE   = '#3B82F6';
 const RED    = '#EF4444';
@@ -76,7 +76,7 @@ function ContactsPage() {
 
   return (
     <div style={{ padding: '18px 16px' }}>
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
       <h1 style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 800, color: TEXT }}>Project Team</h1>
       <p style={{ margin: '0 0 14px', fontSize: 13, color: DIM }}>{projectName}</p>
 
@@ -179,12 +179,12 @@ function ContactCard({ member: m }: { member: TeamMember }) {
 }
 
 export default function FieldContactsPage() {
-  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><ContactsPage /></Suspense>;
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}><ContactsPage /></Suspense>;
 }
 
-const inp: React.CSSProperties = { width: '100%', background: '#0f1d2b', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
-const secLbl: React.CSSProperties = { margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#8fa3c0', textTransform: 'uppercase', letterSpacing: 0.8 };
+const inp: React.CSSProperties = { width: '100%', background: '#0D1D2E', border: '1px solid #1E3A5F', borderRadius: 10, padding: '11px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const secLbl: React.CSSProperties = { margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#8BAAC8', textTransform: 'uppercase', letterSpacing: 0.8 };
 
 function hexRgb(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);

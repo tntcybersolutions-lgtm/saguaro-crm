@@ -7,10 +7,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const BLUE   = '#3B82F6';
@@ -185,7 +185,7 @@ export default function FieldHome() {
   return (
     <div style={{ paddingBottom: 8 }}>
       {/* ── Project header bar ─────────────────────────────────── */}
-      <div style={{ background: 'linear-gradient(160deg,#0d1e30 0%,#09111A 70%)', borderBottom: '1px solid rgba(212,160,23,.2)', padding: '14px 16px 12px' }}>
+      <div style={{ background: 'linear-gradient(160deg,#0d1e30 0%,#07101C 70%)', borderBottom: '1px solid rgba(212,160,23,.2)', padding: '14px 16px 12px' }}>
         {/* Top row: date + desktop link */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <span style={{ fontSize: 11, color: DIM, fontWeight: 600, letterSpacing: 0.3 }}>{todayStr()}{userName ? ` · ${userName}` : ''}</span>
@@ -199,7 +199,7 @@ export default function FieldHome() {
         {/* Project name / selector */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {loadingProjects ? (
-            <div style={{ height: 26, background: '#1e3148', borderRadius: 4, width: '60%' }} />
+            <div style={{ height: 26, background: '#1E3A5F', borderRadius: 4, width: '60%' }} />
           ) : projects.length === 0 ? (
             <div style={{ flex: 1 }}>
               <p style={{ margin: 0, fontSize: 13, color: AMBER, fontWeight: 700 }}>No projects yet</p>
@@ -216,7 +216,7 @@ export default function FieldHome() {
                 style={{ width: '100%', background: 'transparent', border: 'none', color: TEXT, fontSize: 19, fontWeight: 900, outline: 'none', cursor: 'pointer', padding: '2px 0 0', appearance: 'none', WebkitAppearance: 'none', letterSpacing: -0.3 }}
               >
                 {projects.map((p) => (
-                  <option key={p.id} value={p.id} style={{ background: '#0f1d2b' }}>{p.name}</option>
+                  <option key={p.id} value={p.id} style={{ background: '#0D1D2E' }}>{p.name}</option>
                 ))}
               </select>
             </div>
@@ -316,7 +316,7 @@ export default function FieldHome() {
             {/* Drawer handle + header */}
             <div style={{ padding: '10px 16px 0', flexShrink: 0 }}>
               <div style={{ width: 36, height: 4, background: '#2a3e57', borderRadius: 2, margin: '0 auto 12px' }} />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid #1e3148' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid #1E3A5F' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ color: GOLD, display: 'flex' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
                   <span style={{ fontSize: 16, fontWeight: 800, color: GOLD }}>Sage AI</span>

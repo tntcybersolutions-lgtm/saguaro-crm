@@ -8,10 +8,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD   = '#D4A017';
-const RAISED = '#0f1d2b';
-const BORDER = '#1e3148';
-const TEXT   = '#e8edf8';
-const DIM    = '#8fa3c0';
+const RAISED = '#0D1D2E';
+const BORDER = '#1E3A5F';
+const TEXT   = '#F0F4FF';
+const DIM    = '#8BAAC8';
 const RED    = '#EF4444';
 const AMBER  = '#F59E0B';
 const GREEN  = '#22C55E';
@@ -305,7 +305,7 @@ function PhotosPage() {
   return (
     <div style={{ padding: '18px 16px' }}>
       {/* Header */}
-      <button onClick={() => router.back()} style={backBtn}>← Back</button>
+      <button onClick={() => router.back()} style={backBtn}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg></button>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: TEXT }}>Photos</h1>
@@ -358,7 +358,7 @@ function PhotosPage() {
                 type="button"
                 onClick={uploadPhoto}
                 disabled={uploading}
-                style={{ flex: 2, background: uploading ? '#1e3148' : GOLD, border: 'none', borderRadius: 10, padding: 14, color: uploading ? DIM : '#000', fontSize: 15, fontWeight: 800, cursor: uploading ? 'wait' : 'pointer' }}
+                style={{ flex: 2, background: uploading ? '#1E3A5F' : GOLD, border: 'none', borderRadius: 10, padding: 14, color: uploading ? DIM : '#000', fontSize: 15, fontWeight: 800, cursor: uploading ? 'wait' : 'pointer' }}
               >
                 {uploading ? 'Uploading...' : online ? 'Upload Photo' : 'Save Offline'}
               </button>
@@ -536,12 +536,12 @@ function PhotosPage() {
 }
 
 export default function FieldPhotosPage() {
-  return <Suspense fallback={<div style={{ padding: 32, color: '#8fa3c0', textAlign: 'center' }}>Loading...</div>}><PhotosPage /></Suspense>;
+  return <Suspense fallback={<div style={{ padding: 32, color: '#8BAAC8', textAlign: 'center' }}>Loading...</div>}><PhotosPage /></Suspense>;
 }
 
-const lbl: React.CSSProperties = { fontSize: 12, color: '#8fa3c0', fontWeight: 600 };
-const inp: React.CSSProperties = { width: '100%', background: '#09111A', border: '1px solid #1e3148', borderRadius: 10, padding: '11px 14px', color: '#e8edf8', fontSize: 15, outline: 'none' };
-const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8fa3c0', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
+const lbl: React.CSSProperties = { fontSize: 12, color: '#8BAAC8', fontWeight: 600 };
+const inp: React.CSSProperties = { width: '100%', background: '#07101C', border: '1px solid #1E3A5F', borderRadius: 10, padding: '11px 14px', color: '#F0F4FF', fontSize: 15, outline: 'none' };
+const backBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#8BAAC8', fontSize: 14, cursor: 'pointer', padding: '0 0 10px', display: 'block' };
 
 function hexRgb(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);
