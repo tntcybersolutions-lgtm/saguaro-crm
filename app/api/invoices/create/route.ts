@@ -15,12 +15,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('invoices').insert(body).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, invoice: data });
-  } catch (err: any) {
-    console.error('[invoices/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      invoice: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Draft', ...body },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[invoices/create] error:', msg);
+    return NextResponse.json({ error: `Failed to create invoice: ${msg}` }, { status: 500 });
   }
 }

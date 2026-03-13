@@ -16,8 +16,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .eq('id', params.id);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error('[bills/approve] error:', err?.message);
-    return NextResponse.json({ success: true, demo: true });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[bills/approve] error:', msg);
+    return NextResponse.json({ error: `Failed to approve bill: ${msg}` }, { status: 500 });
   }
 }

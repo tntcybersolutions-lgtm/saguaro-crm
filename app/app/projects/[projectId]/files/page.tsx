@@ -1,23 +1,19 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
-
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c';
+import { PageWrap, SectionHeader, StatCard, Badge, Btn, Card, CardHeader, CardBody, Table, T } from '@/components/ui/shell';
 
 interface ProjectFile {
   id: string;
   name: string;
-  type: string;
+  category: string;
   size: string;
   uploaded_by: string;
   date: string;
   url: string | null;
-  category: string;
-  project_id: string;
 }
 
-const CATEGORIES = ['All','Contracts','Drawings','Permits','Insurance','Photos','Reports','Other'];
-const TYPE_ICONS: Record<string, string> = { PDF: '📄', ZIP: '📦', DOCX: '📝', XLSX: '📊', PNG: '🖼️', JPG: '🖼️' };
+const CATEGORIES = ['All', 'Contracts', 'Insurance', 'Permits', 'Photos', 'Drawings', 'Reports', 'Other'];
 
 export default function FilesPage() {
   const params = useParams();
@@ -27,7 +23,7 @@ export default function FilesPage() {
   const [filterCat, setFilterCat] = useState('All');
   const [search, setSearch] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const [toast, setToast] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchFiles = useCallback(async () => {
@@ -56,18 +52,15 @@ export default function FilesPage() {
     const newFiles: ProjectFile[] = [];
     for (let i = 0; i < uploadedFiles.length; i++) {
       const file = uploadedFiles[i];
-      const ext = file.name.split('.').pop()?.toUpperCase() || 'FILE';
       const sizeMB = (file.size / 1048576).toFixed(1);
       newFiles.push({
         id: `f-${Date.now()}-${i}`,
         name: file.name,
-        type: ext,
+        category: 'Other',
         size: `${sizeMB} MB`,
         uploaded_by: 'Me',
         date: new Date().toISOString().split('T')[0],
         url: null,
-        category: 'Other',
-        project_id: projectId,
       });
     }
     try {
@@ -75,86 +68,101 @@ export default function FilesPage() {
       for (let i = 0; i < uploadedFiles.length; i++) fd.append('files', uploadedFiles[i]);
       fd.append('projectId', projectId);
       await fetch('/api/files/upload', { method: 'POST', body: fd });
-      setSuccessMsg(`${uploadedFiles.length} file(s) uploaded.`);
+      setToast(`${uploadedFiles.length} file(s) uploaded.`);
     } catch {
-      setSuccessMsg(`${uploadedFiles.length} file(s) added locally.`);
+      setToast(`${uploadedFiles.length} file(s) added locally.`);
     }
     setFiles(prev => [...newFiles, ...prev]);
     setUploading(false);
-    setTimeout(() => setSuccessMsg(''), 4000);
+    setTimeout(() => setToast(''), 4000);
   }
 
   return (
-    <div style={{ background: DARK, minHeight: '100vh' }}>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + BORDER, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Files</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Project documents and file storage</div>
-        </div>
-        <label style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
-          {uploading ? 'Uploading...' : '+ Upload Files'}
-          <input ref={fileRef} type="file" multiple style={{ display: 'none' }} onChange={e => { if (e.target.files?.length) handleUpload(e.target.files); }} />
-        </label>
-      </div>
-
-      {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-
-      {/* Search + filter */}
-      <div style={{ padding: '16px 24px 0', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <input
-          type="text"
-          placeholder="Search files..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ padding: '7px 12px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13, width: 220 }}
+    <PageWrap>
+      <div style={{ padding: 24 }}>
+        <SectionHeader
+          title="Files"
+          sub="Project documents and file storage"
+          action={
+            <label style={{ cursor: 'pointer' }}>
+              <Btn disabled={uploading}>{uploading ? 'Uploading...' : '+ Upload Files'}</Btn>
+              <input
+                ref={fileRef}
+                type="file"
+                multiple
+                style={{ display: 'none' }}
+                onChange={e => { if (e.target.files?.length) handleUpload(e.target.files); }}
+              />
+            </label>
+          }
         />
-        <div style={{ display: 'flex', gap: 6 }}>
-          {CATEGORIES.map(c => (
-            <button key={c} onClick={() => setFilterCat(c)} style={{ padding: '5px 12px', background: filterCat === c ? GOLD : RAISED, border: '1px solid ' + (filterCat === c ? GOLD : BORDER), borderRadius: 5, color: filterCat === c ? DARK : DIM, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{c}</button>
-          ))}
-        </div>
-        <span style={{ marginLeft: 'auto', fontSize: 12, color: DIM }}>{filtered.length} file{filtered.length !== 1 ? 's' : ''}</span>
-      </div>
 
-      <div style={{ padding: '16px 24px 40px', overflowX: 'auto' }}>
-        {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>{files.length === 0 ? 'No files uploaded yet.' : 'No files match your search.'}</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#0a1117' }}>
-                {['Name','Type','Size','Category','Uploaded By','Date','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(f => (
-                <tr key={f.id} style={{ borderBottom: '1px solid rgba(38,51,71,.4)' }}>
-                  <td style={{ padding: '10px 14px', color: TEXT }}>
-                    <span style={{ marginRight: 8 }}>{TYPE_ICONS[f.type] || '📄'}</span>{f.name}
-                  </td>
-                  <td style={{ padding: '10px 14px', color: DIM }}>{f.type}</td>
-                  <td style={{ padding: '10px 14px', color: DIM }}>{f.size}</td>
-                  <td style={{ padding: '10px 14px', color: DIM }}>{f.category}</td>
-                  <td style={{ padding: '10px 14px', color: DIM }}>{f.uploaded_by}</td>
-                  <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{f.date}</td>
-                  <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
+          <StatCard icon="📁" label="Total Files" value={String(files.length)} />
+          <StatCard icon="📂" label="Showing" value={String(filtered.length)} />
+          <StatCard icon="🏷️" label="Categories" value={String(new Set(files.map(f => f.category)).size)} />
+        </div>
+
+        {toast && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 8, color: T.green, fontSize: 13 }}>
+            {toast}
+          </div>
+        )}
+
+        {/* Search + Category filter */}
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
+          <input
+            type="text"
+            placeholder="Search files..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ padding: '8px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, width: 220, outline: 'none' }}
+          />
+          <div style={{ display: 'flex', gap: 6 }}>
+            {CATEGORIES.map(c => (
+              <Btn key={c} size="sm" variant={filterCat === c ? 'primary' : 'ghost'} onClick={() => setFilterCat(c)}>{c}</Btn>
+            ))}
+          </div>
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: T.muted }}>{filtered.length} file{filtered.length !== 1 ? 's' : ''}</span>
+        </div>
+
+        {/* File table */}
+        <Card>
+          <CardBody style={{ padding: 0 }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>Loading...</div>
+            ) : filtered.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>
+                {files.length === 0 ? 'No files uploaded yet.' : 'No files match your search.'}
+              </div>
+            ) : (
+              <Table
+                headers={['Name', 'Category', 'Size', 'Uploaded Date', 'Uploaded By', 'Actions']}
+                rows={filtered.map(f => [
+                  <span key="n" style={{ fontWeight: 500 }}>{f.name}</span>,
+                  <Badge key="cat" label={f.category} color="muted" />,
+                  <span key="sz" style={{ color: T.muted }}>{f.size}</span>,
+                  <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{f.date}</span>,
+                  <span key="by" style={{ color: T.muted }}>{f.uploaded_by}</span>,
+                  <div key="act" style={{ display: 'flex', gap: 6 }}>
                     {f.url ? (
                       <>
-                        <button onClick={() => window.open(f.url!, '_blank')} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer', marginRight: 6 }}>View</button>
-                        <a href={f.url} download style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, textDecoration: 'none' }}>Download</a>
+                        <Btn size="sm" variant="ghost" onClick={() => window.open(f.url!, '_blank')}>View</Btn>
+                        <a href={f.url} download style={{ textDecoration: 'none' }}>
+                          <Btn size="sm" variant="ghost">Download</Btn>
+                        </a>
                       </>
                     ) : (
-                      <span style={{ color: DIM, fontSize: 12 }}>No preview</span>
+                      <span style={{ fontSize: 12, color: T.muted }}>No preview</span>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                  </div>,
+                ])}
+              />
+            )}
+          </CardBody>
+        </Card>
       </div>
-    </div>
+    </PageWrap>
   );
 }

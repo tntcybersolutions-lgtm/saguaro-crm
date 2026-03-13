@@ -15,12 +15,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('proposals').insert(body).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, proposal: data });
-  } catch (err: any) {
-    console.error('[proposals/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      proposal: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Draft', ...body },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[proposals/create] error:', msg);
+    return NextResponse.json({ error: `Failed to create proposal: ${msg}` }, { status: 500 });
   }
 }

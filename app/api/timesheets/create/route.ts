@@ -36,10 +36,9 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[timesheets/create] error:', msg);
-    return NextResponse.json({
-      success: true,
-      entry: { id: Date.now().toString(), created_at: new Date().toISOString(), ...body },
-      demo: true,
-    });
+    return NextResponse.json(
+      { error: `[timesheets/create] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

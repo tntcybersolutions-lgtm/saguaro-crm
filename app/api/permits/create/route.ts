@@ -15,12 +15,9 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('permits').insert(body).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, permit: data });
-  } catch (err: any) {
-    console.error('[permits/create] error:', err?.message);
-    return NextResponse.json({
-      success: true,
-      permit: { id: Date.now().toString(), created_at: new Date().toISOString(), status: 'Pending', ...body },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[permits/create] error:', msg);
+    return NextResponse.json({ error: `Failed to create permit: ${msg}` }, { status: 500 });
   }
 }

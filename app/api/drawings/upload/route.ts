@@ -39,14 +39,9 @@ export async function POST(req: NextRequest) {
 
     const { data: dbData } = await supabase.from('drawings').insert(drawing).select().single();
     return NextResponse.json({ success: true, drawing: dbData || drawing, url });
-  } catch (err: any) {
-    console.error('[drawings/upload] error:', err?.message);
-    const filename = `drawing-${Date.now()}`;
-    return NextResponse.json({
-      success: true,
-      url: null,
-      drawing: { id: Date.now().toString(), filename, url: null, uploaded_at: new Date().toISOString() },
-      demo: true,
-    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[drawings/upload] error:', msg);
+    return NextResponse.json({ error: `Failed to upload drawing: ${msg}` }, { status: 500 });
   }
 }

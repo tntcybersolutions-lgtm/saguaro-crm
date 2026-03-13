@@ -1,34 +1,35 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
-
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c';
+import { PageWrap, SectionHeader, Btn, Card, CardBody, T } from '@/components/ui/shell';
 
 interface Message {
   id: string;
-  from: string;
-  to: string;
-  subject: string;
-  body: string;
-  date: string;
-  priority: string;
-  read: boolean;
+  sender: string;
+  text: string;
+  timestamp: string;
   project_id: string;
 }
 
-const EMPTY_FORM = { to: '', subject: '', body: '', priority: 'Normal' };
+function relativeTime(ts: string): string {
+  const now = Date.now();
+  const then = new Date(ts).getTime();
+  const diff = Math.floor((now - then) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return new Date(ts).toLocaleDateString();
+}
 
 export default function MessagesPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [selected, setSelected] = useState<string | null>(null);
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = useCallback(async () => {
     setLoading(true);
@@ -45,112 +46,109 @@ export default function MessagesPage() {
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
   async function handleSend() {
-    if (!form.to || !form.subject || !form.body) { setErrorMsg('To, subject, and body are required.'); return; }
-    setSaving(true);
-    setErrorMsg('');
+    if (!text.trim()) return;
+    setSending(true);
     const newMsg: Message = {
       id: `m-${Date.now()}`,
-      from: 'Me',
-      to: form.to,
-      subject: form.subject,
-      body: form.body,
-      date: new Date().toISOString().split('T')[0],
-      priority: form.priority,
-      read: true,
+      sender: 'Me',
+      text: text.trim(),
+      timestamp: new Date().toISOString(),
       project_id: projectId,
     };
     try {
-      await fetch('/api/messages/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, ...form }) });
+      await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, text: text.trim() }),
+      });
     } catch { /* demo */ }
-    setMessages(prev => [newMsg, ...prev]);
-    setShowForm(false);
-    setForm(EMPTY_FORM);
-    setSaving(false);
-    setSuccessMsg('Message sent.');
-    setTimeout(() => setSuccessMsg(''), 4000);
+    setMessages(prev => [...prev, newMsg]);
+    setText('');
+    setSending(false);
   }
 
-  const selectedMsg = messages.find(m => m.id === selected);
-  const unread = messages.filter(m => !m.read).length;
-
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
 
   return (
-    <div style={{ background: DARK, minHeight: '100vh' }}>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + BORDER, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Messages</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Team communication — {unread} unread</div>
-        </div>
-        <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>+ New Message</button>
-      </div>
+    <PageWrap>
+      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)' }}>
+        <SectionHeader
+          title="Messages"
+          sub="Project team communication"
+        />
 
-      {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: '#ef4444', fontSize: 13 }}>{errorMsg}</div>}
-
-      {showForm && (
-        <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>New Message</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 14 }}>
-            <div><label style={label}>To *</label><input type="text" value={form.to} onChange={e => setForm(p => ({ ...p, to: e.target.value }))} placeholder="Recipient or group" style={inp} /></div>
-            <div><label style={label}>Priority</label>
-              <select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={inp}>
-                <option>Normal</option><option>High</option><option>Urgent</option>
-              </select>
-            </div>
-            <div style={{ gridColumn: 'span 2' }}><label style={label}>Subject *</label><input type="text" value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))} style={inp} /></div>
-            <div style={{ gridColumn: 'span 2' }}><label style={label}>Message *</label><textarea value={form.body} onChange={e => setForm(p => ({ ...p, body: e.target.value }))} rows={4} style={{ ...inp, resize: 'vertical' }} /></div>
+        {/* Message thread */}
+        <Card style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div
+            ref={scrollRef}
+            style={{ flex: 1, overflowY: 'auto', padding: 20 }}
+          >
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>Loading...</div>
+            ) : messages.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>No messages yet. Start the conversation.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {messages.map(msg => {
+                  const isMe = msg.sender === 'Me';
+                  return (
+                    <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: isMe ? T.gold : T.white }}>{msg.sender}</span>
+                        <span style={{ fontSize: 11, color: T.muted }}>{relativeTime(msg.timestamp)}</span>
+                      </div>
+                      <div style={{
+                        maxWidth: '70%',
+                        padding: '10px 16px',
+                        borderRadius: 12,
+                        background: isMe ? T.goldDim : T.surface2,
+                        border: `1px solid ${isMe ? T.borderGold : T.border}`,
+                        color: T.white,
+                        fontSize: 14,
+                        lineHeight: 1.5,
+                        wordBreak: 'break-word',
+                      }}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={handleSend} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Sending...' : 'Send Message'}
-            </button>
-            <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={{ padding: '9px 16px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+
+          {/* Send bar */}
+          <div style={{ padding: '12px 20px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 10, alignItems: 'center' }}>
+            <input
+              type="text"
+              value={text}
+              onChange={e => setText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message..."
+              style={{
+                flex: 1, padding: '10px 14px',
+                background: T.surface2, border: `1px solid ${T.border}`,
+                borderRadius: 8, color: T.white, fontSize: 14, outline: 'none',
+              }}
+            />
+            <Btn onClick={handleSend} disabled={sending || !text.trim()}>
+              {sending ? 'Sending...' : 'Send'}
+            </Btn>
           </div>
-        </div>
-      )}
-
-      <div style={{ display: 'flex', height: 'calc(100vh - 200px)', minHeight: 400 }}>
-        {/* Message list */}
-        <div style={{ width: 360, borderRight: '1px solid ' + BORDER, overflowY: 'auto', flexShrink: 0 }}>
-          {loading ? <div style={{ padding: 20, color: DIM }}>Loading...</div> : messages.map(msg => (
-            <div
-              key={msg.id}
-              onClick={() => { setSelected(msg.id); setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, read: true } : m)); }}
-              style={{ padding: '14px 16px', borderBottom: '1px solid ' + BORDER, cursor: 'pointer', background: selected === msg.id ? 'rgba(212,160,23,.08)' : !msg.read ? 'rgba(255,255,255,.03)' : 'transparent' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                <span style={{ color: TEXT, fontWeight: !msg.read ? 700 : 500, fontSize: 13 }}>{msg.from}</span>
-                <span style={{ color: DIM, fontSize: 11 }}>{msg.date}</span>
-              </div>
-              <div style={{ color: !msg.read ? TEXT : DIM, fontSize: 13, fontWeight: !msg.read ? 600 : 400, marginBottom: 2 }}>{msg.subject}</div>
-              <div style={{ color: DIM, fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.body}</div>
-              {msg.priority === 'High' && <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700 }}>HIGH PRIORITY</span>}
-            </div>
-          ))}
-        </div>
-
-        {/* Message detail */}
-        <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
-          {selectedMsg ? (
-            <>
-              <div style={{ marginBottom: 20 }}>
-                <h3 style={{ margin: '0 0 8px', color: TEXT, fontSize: 18 }}>{selectedMsg.subject}</h3>
-                <div style={{ fontSize: 13, color: DIM, marginBottom: 4 }}><strong style={{ color: TEXT }}>From:</strong> {selectedMsg.from}</div>
-                <div style={{ fontSize: 13, color: DIM, marginBottom: 4 }}><strong style={{ color: TEXT }}>To:</strong> {selectedMsg.to}</div>
-                <div style={{ fontSize: 13, color: DIM }}><strong style={{ color: TEXT }}>Date:</strong> {selectedMsg.date}</div>
-              </div>
-              <div style={{ background: RAISED, borderRadius: 8, padding: 20, border: '1px solid ' + BORDER, color: TEXT, fontSize: 14, lineHeight: 1.6 }}>
-                {selectedMsg.body}
-              </div>
-            </>
-          ) : (
-            <div style={{ textAlign: 'center', color: DIM, marginTop: 60 }}>Select a message to read</div>
-          )}
-        </div>
+        </Card>
       </div>
-    </div>
+    </PageWrap>
   );
 }

@@ -1,127 +1,193 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { getAuthHeaders, getTenantId } from '../../../../../lib/supabase-browser';
-const GOLD='#D4A017',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#3dd68c',RED='#ef4444';
+import { PageWrap, SectionHeader, StatCard, Badge, Btn, Card, CardHeader, CardBody, Table, T } from '@/components/ui/shell';
 
-interface ComplianceSub { id:string; name:string; trade:string; contract_amount:number; coi_status:string; coi_expiry:string|null; w9_status:string; lien_waiver_status:string; }
+interface ComplianceSub {
+  id: string;
+  name: string;
+  trade: string;
+  contract_amount: number;
+  coi_status: string;
+  coi_expiry: string | null;
+  license_status: string;
+  license_number: string;
+  w9_status: string;
+  is_prevailing_wage: boolean;
+}
 
-export default function CompliancePage(){
-  const params=useParams(); const pid=params['projectId'] as string;
-  const [data,setData]=useState<{subs?:ComplianceSub[]}>({});
-  const [loading,setLoading]=useState(true);
-  const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
+const STATUS_BADGE: Record<string, 'green' | 'amber' | 'red' | 'muted'> = {
+  active: 'green', on_file: 'green', current: 'green', valid: 'green',
+  expiring: 'amber', pending: 'amber',
+  expired: 'red', missing: 'red', invalid: 'red',
+  not_requested: 'muted',
+};
 
-  useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),4000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
+const STATUS_LABEL: Record<string, string> = {
+  active: 'Active', on_file: 'On File', current: 'Current', valid: 'Valid',
+  expiring: 'Expiring', pending: 'Pending',
+  expired: 'Expired', missing: 'Missing', invalid: 'Invalid',
+  not_requested: 'Not Requested',
+};
 
-  async function requestAllCOIs(){
-    try{
-      const tenantId=await getTenantId();
-      const headers=await getAuthHeaders();
-      await fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json',...headers},body:JSON.stringify({projectId:pid,tenantId})});
-      setToast({msg:'COI request emails sent to all subcontractors.',type:'success'});
-    }catch{
-      setToast({msg:'Failed to send COI requests.',type:'error'});
+export default function CompliancePage() {
+  const params = useParams();
+  const projectId = params.projectId as string;
+  const [subs, setSubs] = useState<ComplianceSub[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState('');
+  const [isPublicProject, setIsPublicProject] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}`);
+      const data = await res.json();
+      const project = data.project || data;
+      setIsPublicProject(project.is_public || project.prevailing_wage || false);
+      const subList = project.subcontractors || project.subs || [];
+      setSubs(subList.map((s: any) => ({
+        id: s.id || s.sub_id,
+        name: s.name || s.company_name,
+        trade: s.trade || s.specialty || '',
+        contract_amount: s.contract_amount || 0,
+        coi_status: s.coi_status || 'pending',
+        coi_expiry: s.coi_expiry || s.coi_expiration || null,
+        license_status: s.license_status || 'pending',
+        license_number: s.license_number || '',
+        w9_status: s.w9_status || 'pending',
+        is_prevailing_wage: s.is_prevailing_wage || false,
+      })));
+    } catch {
+      setSubs([]);
+    } finally {
+      setLoading(false);
     }
+  }, [projectId]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const compliantCount = subs.filter(s => s.coi_status === 'active' && s.license_status !== 'expired' && s.license_status !== 'missing').length;
+  const expiredCOIs = subs.filter(s => s.coi_status === 'expired' || s.coi_status === 'expiring').length;
+  const missingLicenses = subs.filter(s => s.license_status === 'missing' || s.license_status === 'expired').length;
+  const wageViolations = subs.filter(s => s.is_prevailing_wage && isPublicProject).length;
+
+  async function requestCOI(subId: string, subName: string) {
+    try {
+      await fetch('/api/insurance/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subId, projectId }),
+      });
+      setToast(`COI request sent to ${subName}`);
+    } catch {
+      setToast(`Failed to send COI request to ${subName}`);
+    }
+    setTimeout(() => setToast(''), 4000);
   }
 
-  async function requestCOI(subId:string,subName:string){
-    try{
-      await fetch('/api/insurance/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subId,projectId:pid,tenantId:pid})});
-      setToast({msg:`COI request sent to ${subName}`,type:'success'});
-    }catch{
-      setToast({msg:`Failed to send COI request to ${subName}`,type:'error'});
+  async function generatePrevailingWage() {
+    try {
+      const res = await fetch('/api/documents/prevailing-wage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId }),
+      });
+      const data = await res.json();
+      const url = data.url || data.pdfUrl;
+      if (url) window.open(url, '_blank');
+      setToast('Prevailing wage rate sheet generated.');
+    } catch {
+      setToast('Prevailing wage rate sheet request sent.');
     }
+    setTimeout(() => setToast(''), 4000);
   }
 
-  async function requestW9(subId:string,subName:string){
-    try{
-      await fetch('/api/documents/w9-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subId,projectId:pid,tenantId:pid})});
-      setToast({msg:`W-9 request sent to ${subName}`,type:'success'});
-    }catch{
-      setToast({msg:`Failed to send W-9 request to ${subName}`,type:'error'});
-    }
-  }
+  return (
+    <PageWrap>
+      <div style={{ padding: 24 }}>
+        <SectionHeader
+          title="Compliance Dashboard"
+          sub={`Insurance, licensing, and wage compliance - ${subs.length} subcontractors`}
+          action={
+            <div style={{ display: 'flex', gap: 8 }}>
+              {isPublicProject && (
+                <Btn variant="ghost" onClick={generatePrevailingWage}>Generate Prevailing Wage Rate Sheet</Btn>
+              )}
+              <Btn onClick={async () => {
+                try {
+                  await fetch('/api/insurance/request', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ projectId }),
+                  });
+                  setToast('COI request emails sent to all subcontractors.');
+                } catch {
+                  setToast('Failed to send COI requests.');
+                }
+                setTimeout(() => setToast(''), 4000);
+              }}>
+                Request All COIs
+              </Btn>
+            </div>
+          }
+        />
 
-  useEffect(()=>{
-    (async () => {
-      try {
-        const tenantId = await getTenantId();
-        const headers = await getAuthHeaders();
-        const r = await fetch('/api/compliance/'+pid+'?tenantId='+tenantId, { headers });
-        const d = await r.json();
-        setData(d);
-      } catch { /* use demo fallback */ } finally { setLoading(false); }
-    })();
-  },[pid]);
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+          <StatCard icon="✅" label="Compliant Subs" value={String(compliantCount)} />
+          <StatCard icon="🔴" label="Expired COIs" value={String(expiredCOIs)} />
+          <StatCard icon="📋" label="Missing Licenses" value={String(missingLicenses)} />
+          <StatCard icon="⚠️" label="Wage Flags" value={String(wageViolations)} />
+        </div>
 
-  const subs:ComplianceSub[] = data.subs ?? [
-    {id:'1',name:'Desert Electric LLC',trade:'Electrical',contract_amount:185000,coi_status:'active',coi_expiry:'2026-12-31',w9_status:'on_file',lien_waiver_status:'current'},
-    {id:'2',name:'AZ Plumbing & Mech',trade:'Plumbing',contract_amount:122000,coi_status:'expiring',coi_expiry:'2026-03-25',w9_status:'on_file',lien_waiver_status:'pending'},
-    {id:'3',name:'Southwest Concrete',trade:'Concrete',contract_amount:98500,coi_status:'active',coi_expiry:'2027-01-15',w9_status:'pending',lien_waiver_status:'current'},
-    {id:'4',name:'Mesa Roofing Co',trade:'Roofing',contract_amount:76000,coi_status:'expired',coi_expiry:'2026-02-28',w9_status:'on_file',lien_waiver_status:'missing'},
-  ];
+        {toast && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 8, color: T.green, fontSize: 13 }}>
+            {toast}
+          </div>
+        )}
 
-  const statusColor=(s:string)=>s==='active'||s==='on_file'||s==='current'?GREEN:s==='expiring'||s==='pending'?GOLD:RED;
-  const statusLabel=(s:string)=>({active:'Active',on_file:'On File',current:'Current',expiring:'Expiring Soon',pending:'Pending',expired:'Expired',missing:'Missing'}[s]??s.toUpperCase());
+        {isPublicProject && (
+          <Card style={{ marginBottom: 24, borderColor: 'rgba(245,158,11,0.3)' }}>
+            <CardBody>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <Badge label="Public Project" color="amber" />
+                <span style={{ fontSize: 13, color: T.amber }}>Prevailing wage requirements apply to this project.</span>
+              </div>
+            </CardBody>
+          </Card>
+        )}
 
-  const issues=subs.filter(s=>s.coi_status==='expired'||s.coi_status==='expiring'||s.w9_status==='pending'||s.lien_waiver_status==='missing');
-
-  return <div>
-    {toast && (
-      <div style={{position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',zIndex:99999,padding:'12px 20px',borderRadius:'8px',background:toast.type==='success'?'rgba(34,197,94,0.9)':'rgba(239,68,68,0.9)',color:'#fff',fontWeight:600,fontSize:'14px',pointerEvents:'none'}}>
-        {toast.msg}
+        {/* Table */}
+        <Card>
+          <CardHeader><span style={{ fontWeight: 700, color: T.white }}>Subcontractor Compliance</span></CardHeader>
+          <CardBody style={{ padding: 0 }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>Loading...</div>
+            ) : (
+              <Table
+                headers={['Subcontractor', 'Trade', 'Contract', 'COI Status', 'COI Expiry', 'License', 'W-9', 'Actions']}
+                rows={subs.map(s => [
+                  <span key="n" style={{ fontWeight: 600 }}>{s.name}</span>,
+                  <span key="t" style={{ color: T.muted }}>{s.trade}</span>,
+                  <span key="c" style={{ color: T.white }}>${s.contract_amount.toLocaleString()}</span>,
+                  <Badge key="cs" label={STATUS_LABEL[s.coi_status] || s.coi_status} color={STATUS_BADGE[s.coi_status] || 'muted'} />,
+                  <span key="ce" style={{ color: s.coi_status === 'expired' ? T.red : s.coi_status === 'expiring' ? T.amber : T.muted, whiteSpace: 'nowrap' }}>
+                    {s.coi_expiry || '---'}
+                  </span>,
+                  <Badge key="ls" label={STATUS_LABEL[s.license_status] || s.license_status} color={STATUS_BADGE[s.license_status] || 'muted'} />,
+                  <Badge key="ws" label={STATUS_LABEL[s.w9_status] || s.w9_status} color={STATUS_BADGE[s.w9_status] || 'muted'} />,
+                  <div key="act" style={{ display: 'flex', gap: 6 }}>
+                    {(s.coi_status === 'expired' || s.coi_status === 'expiring') && (
+                      <Btn size="sm" variant="ghost" onClick={() => requestCOI(s.id, s.name)}>Request COI</Btn>
+                    )}
+                  </div>,
+                ])}
+              />
+            )}
+          </CardBody>
+        </Card>
       </div>
-    )}
-    <div style={{padding:'16px 24px',borderBottom:'1px solid '+BORDER,display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0d1117'}}>
-      <div><h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>Compliance Dashboard</h2><div style={{fontSize:12,color:DIM,marginTop:3}}>COI tracking, W-9 status, lien waivers — {subs.length} subcontractors</div></div>
-      <button onClick={requestAllCOIs} style={{padding:'8px 16px',background:'linear-gradient(135deg,'+GOLD+',#F0C040)',border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>Request All COIs</button>
-    </div>
-
-    {issues.length>0&&<div style={{margin:24,background:'rgba(192,48,48,.08)',border:'1px solid rgba(192,48,48,.25)',borderRadius:10,padding:'14px 18px'}}>
-      <div style={{fontWeight:700,color:RED,fontSize:13,marginBottom:10}}>⚠️ {issues.length} Compliance Issue{issues.length>1?'s':''} Require Attention</div>
-      <div style={{display:'flex',flexDirection:'column',gap:6}}>
-        {issues.map(s=><div key={s.id} style={{fontSize:12,color:TEXT}}>
-          <strong>{s.name}</strong> — {s.coi_status==='expired'?'COI expired':s.coi_status==='expiring'?'COI expiring '+s.coi_expiry:s.w9_status==='pending'?'W-9 not on file':s.lien_waiver_status==='missing'?'Lien waiver missing':'Issue'}
-        </div>)}
-      </div>
-    </div>}
-
-    {loading?<div style={{padding:40,textAlign:'center',color:DIM}}>Loading...</div>:(
-    <div style={{padding:'0 24px 24px'}}>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24,paddingTop:24}}>
-        {[
-          {l:'Total Subs',v:subs.length.toString(),color:GOLD},
-          {l:'COI Active',v:subs.filter(s=>s.coi_status==='active').length.toString(),color:GREEN},
-          {l:'W-9 On File',v:subs.filter(s=>s.w9_status==='on_file').length.toString(),color:GREEN},
-          {l:'Issues',v:issues.length.toString(),color:issues.length>0?RED:GREEN},
-        ].map(k=><div key={k.l} style={{background:RAISED,border:'1px solid '+BORDER,borderRadius:10,padding:'16px 18px'}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',color:DIM,marginBottom:6}}>{k.l}</div>
-          <div style={{fontSize:24,fontWeight:800,color:k.color}}>{k.v}</div>
-        </div>)}
-      </div>
-      <table style={{width:'100%',borderCollapse:'collapse',fontSize:12}}>
-        <thead><tr style={{background:'#0a1117'}}>
-          {['Subcontractor','Trade','Contract','COI Status','COI Expiry','W-9','Lien Waiver','Actions'].map(h=>(
-            <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:.5,color:DIM,borderBottom:'1px solid '+BORDER}}>{h}</th>
-          ))}
-        </tr></thead>
-        <tbody>{subs.map(s=>(
-          <tr key={s.id} style={{borderBottom:'1px solid rgba(38,51,71,.5)'}}>
-            <td style={{padding:'12px 14px',fontWeight:600,color:TEXT}}>{s.name}</td>
-            <td style={{padding:'12px 14px',color:DIM}}>{s.trade}</td>
-            <td style={{padding:'12px 14px',color:TEXT}}>${s.contract_amount.toLocaleString()}</td>
-            <td style={{padding:'12px 14px'}}><span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:statusColor(s.coi_status)+'22',color:statusColor(s.coi_status)}}>{statusLabel(s.coi_status)}</span></td>
-            <td style={{padding:'12px 14px',color:s.coi_status==='expired'?RED:s.coi_status==='expiring'?GOLD:DIM}}>{s.coi_expiry??'—'}</td>
-            <td style={{padding:'12px 14px'}}><span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:statusColor(s.w9_status)+'22',color:statusColor(s.w9_status)}}>{statusLabel(s.w9_status)}</span></td>
-            <td style={{padding:'12px 14px'}}><span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:statusColor(s.lien_waiver_status)+'22',color:statusColor(s.lien_waiver_status)}}>{statusLabel(s.lien_waiver_status)}</span></td>
-            <td style={{padding:'12px 14px',display:'flex',gap:6}}>
-              {(s.coi_status==='expired'||s.coi_status==='expiring')&&<button onClick={()=>requestCOI(s.id,s.name)} style={{padding:'3px 8px',background:'none',border:'1px solid rgba(212,160,23,.4)',borderRadius:4,color:GOLD,fontSize:10,cursor:'pointer'}}>Request COI</button>}
-              {s.w9_status==='pending'&&<button onClick={()=>requestW9(s.id,s.name)} style={{padding:'3px 8px',background:'none',border:'1px solid rgba(26,95,168,.4)',borderRadius:4,color:'#4a9de8',fontSize:10,cursor:'pointer'}}>Request W-9</button>}
-            </td>
-          </tr>
-        ))}</tbody>
-      </table>
-    </div>)}
-  </div>;
+    </PageWrap>
+  );
 }

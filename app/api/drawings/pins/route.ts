@@ -31,6 +31,9 @@ export async function GET(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[drawings/pins] error:', msg);
-    return NextResponse.json({ pins: [], demo: true });
+    return NextResponse.json(
+      { error: `[drawings/pins] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

@@ -24,8 +24,9 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch {
-    // Non-fatal — return success so UI can remove the alert
-    return NextResponse.json({ success: true, source: 'fallback' });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[autopilot/dismiss] error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

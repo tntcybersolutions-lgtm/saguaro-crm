@@ -47,14 +47,9 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[messages/send] error:', msg);
-    return NextResponse.json({
-      success: true,
-      message: {
-        id: Date.now().toString(),
-        ...row,
-        created_at: new Date().toISOString(),
-      },
-      demo: true,
-    });
+    return NextResponse.json(
+      { error: `[messages/send] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

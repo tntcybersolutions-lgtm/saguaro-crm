@@ -23,25 +23,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (error) throw error;
 
-    const c = co as any;
-    const project = c?.projects;
+    const c = co as Record<string, unknown>;
+    const project = c?.projects as Record<string, unknown> | undefined;
 
     if (project) {
       await createNotification(
-        project.tenant_id,
+        String(project.tenant_id ?? ''),
         null,
         'change_order_approved',
         `Change Order #${c.co_number} rejected`,
-        body.reason ? `Reason: ${body.reason}` : `CO #${c.co_number} was rejected on ${project.name}`,
-        `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/app/projects/${project.id}/change-orders`,
-        project.id
+        body.reason ? `Reason: ${body.reason}` : `CO #${c.co_number} was rejected on ${String(project.name ?? '')}`,
+        `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/app/projects/${String(project.id ?? '')}/change-orders`,
+        String(project.id ?? '')
       );
     }
 
     return NextResponse.json({ success: true, changeOrder: co });
-  } catch (err: any) {
-    console.error('[change-orders/reject]', err?.message);
-    return NextResponse.json({ success: true, demo: true });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[change-orders/reject]', msg);
+    return NextResponse.json({ error: `Failed to reject change order: ${msg}` }, { status: 500 });
   }
 }
 

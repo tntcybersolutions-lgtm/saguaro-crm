@@ -1,9 +1,14 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { PageWrap, SectionHeader, StatCard, Badge, Btn, Card, CardHeader, CardBody, Table, T } from '@/components/ui/shell';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
+interface LineItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+}
 
 interface PurchaseOrder {
   id: string;
@@ -12,26 +17,24 @@ interface PurchaseOrder {
   description: string;
   amount: number;
   issued_date: string;
-  expected_delivery: string | null;
+  delivery_date: string | null;
   status: string;
-  notes: string;
+  line_items: LineItem[];
   project_id: string;
 }
 
-const STATUSES = ['Draft','Ordered','In Transit','Delivered','Cancelled'];
-const STATUS_MAP: Record<string, { bg: string; color: string }> = {
-  Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
-  Ordered: { bg: 'rgba(59,130,246,.2)', color: '#60a5fa' },
-  'In Transit': { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
-  Delivered: { bg: 'rgba(61,214,140,.2)', color: GREEN },
-  Cancelled: { bg: 'rgba(239,68,68,.2)', color: RED },
+const STATUS_BADGE: Record<string, 'muted' | 'blue' | 'green' | 'amber' | 'red'> = {
+  draft: 'muted',
+  sent: 'blue',
+  received: 'green',
+  closed: 'muted',
 };
 
-const EMPTY_FORM = { vendor: '', description: '', amount: 0, issued_date: '', expected_delivery: '', notes: '' };
+const EMPTY_LINE: LineItem = { description: '', quantity: 1, unit_price: 0 };
+const EMPTY_FORM = { vendor: '', description: '', delivery_date: '', line_items: [{ ...EMPTY_LINE }] };
 
 export default function PurchaseOrdersPage() {
-  const params = useParams();
-  const projectId = params.projectId as string;
+  const { projectId } = useParams() as { projectId: string };
   const [pos, setPos] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -55,18 +58,53 @@ export default function PurchaseOrdersPage() {
 
   useEffect(() => { fetchPos(); }, [fetchPos]);
 
-  const total = pos.reduce((s, p) => s + (p.amount || 0), 0);
-  const delivered = pos.filter(p => p.status === 'Delivered').length;
-  const inTransit = pos.filter(p => p.status === 'In Transit' || p.status === 'Ordered').length;
+  const totalValue = pos.reduce((s, p) => s + (p.amount || 0), 0);
+  const draftCount = pos.filter(p => p.status === 'draft').length;
+  const sentCount = pos.filter(p => p.status === 'sent').length;
+  const receivedCount = pos.filter(p => p.status === 'received').length;
+
+  function updateLineItem(index: number, field: keyof LineItem, value: string | number) {
+    setForm(prev => {
+      const items = [...prev.line_items];
+      items[index] = { ...items[index], [field]: value };
+      return { ...prev, line_items: items };
+    });
+  }
+
+  function addLineItem() {
+    setForm(prev => ({ ...prev, line_items: [...prev.line_items, { ...EMPTY_LINE }] }));
+  }
+
+  function removeLineItem(index: number) {
+    setForm(prev => ({ ...prev, line_items: prev.line_items.filter((_, i) => i !== index) }));
+  }
+
+  const formTotal = form.line_items.reduce((s, li) => s + li.quantity * li.unit_price, 0);
 
   async function handleSave() {
-    if (!form.vendor || !form.description || !form.amount) { setErrorMsg('Vendor, description, and amount are required.'); return; }
+    if (!form.vendor || !form.description) { setErrorMsg('Vendor and description are required.'); return; }
     setSaving(true);
     setErrorMsg('');
     const num = `PO-${String(pos.length + 1).padStart(3, '0')}`;
-    const newPo: PurchaseOrder = { id: `po-${Date.now()}`, project_id: projectId, po_num: num, status: 'Ordered', ...form, expected_delivery: form.expected_delivery || null };
+    const amount = formTotal;
+    const newPo: PurchaseOrder = {
+      id: `po-${Date.now()}`,
+      project_id: projectId,
+      po_num: num,
+      status: 'draft',
+      issued_date: new Date().toISOString().split('T')[0],
+      amount,
+      vendor: form.vendor,
+      description: form.description,
+      delivery_date: form.delivery_date || null,
+      line_items: form.line_items,
+    };
     try {
-      const res = await fetch('/api/purchase-orders/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, ...newPo }) });
+      const res = await fetch('/api/purchase-orders/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, ...newPo }),
+      });
       const json = await res.json();
       setPos(prev => [...prev, json.po || newPo]);
     } catch {
@@ -79,99 +117,153 @@ export default function PurchaseOrdersPage() {
     setTimeout(() => setSuccessMsg(''), 4000);
   }
 
-  async function handleMarkDelivered(id: string) {
-    try { await fetch(`/api/purchase-orders/${id}/deliver`, { method: 'PATCH' }); } catch { /* demo */ }
-    setPos(prev => prev.map(p => p.id === id ? { ...p, status: 'Delivered' } : p));
-    setSuccessMsg('PO marked as delivered.');
+  async function handleGeneratePdf(po: PurchaseOrder) {
+    try {
+      const res = await fetch('/api/documents/purchase-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, poId: po.id }),
+      });
+      const json = await res.json();
+      if (json.url) window.open(json.url, '_blank');
+      else { setSuccessMsg('PDF generation queued.'); setTimeout(() => setSuccessMsg(''), 4000); }
+    } catch {
+      setSuccessMsg('PDF generation requested (demo mode).');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    }
+  }
+
+  async function handleStatusChange(id: string, status: string) {
+    try {
+      await fetch(`/api/purchase-orders/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+    } catch { /* demo */ }
+    setPos(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+    setSuccessMsg(`PO status updated to ${status}.`);
     setTimeout(() => setSuccessMsg(''), 3000);
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '8px 12px', background: T.surface,
+    border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
+  };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
 
   return (
-    <div style={{ background: DARK, minHeight: '100vh' }}>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + BORDER, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Purchase Orders</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Vendor and supplier purchase orders</div>
-        </div>
-        <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>+ New PO</button>
+    <PageWrap>
+      <div style={{ padding: '24px 24px 0' }}>
+        <SectionHeader
+          title="Purchase Orders"
+          sub="Vendor and supplier purchase orders"
+          action={
+            <Btn onClick={() => { setShowForm(p => !p); setErrorMsg(''); }}>
+              {showForm ? 'Cancel' : '+ New PO'}
+            </Btn>
+          }
+        />
       </div>
 
-      {/* KPIs */}
-      <div style={{ padding: '20px 24px 0', display: 'flex', gap: 12 }}>
-        {[
-          { label: 'Total PO Value', value: `$${total.toLocaleString()}`, color: GOLD },
-          { label: 'Delivered', value: delivered, color: GREEN },
-          { label: 'In Transit / Ordered', value: inTransit, color: '#f59e0b' },
-        ].map(k => (
-          <div key={k.label} style={{ background: RAISED, borderRadius: 8, padding: '12px 20px', border: '1px solid ' + BORDER }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: k.color }}>{k.value}</div>
-            <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{k.label}</div>
-          </div>
-        ))}
+      {/* Stat Cards */}
+      <div style={{ padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+        <StatCard icon="💰" label="Total PO Value" value={`$${totalValue.toLocaleString()}`} />
+        <StatCard icon="📝" label="Draft" value={String(draftCount)} />
+        <StatCard icon="📤" label="Sent" value={String(sentCount)} />
+        <StatCard icon="📦" label="Received" value={String(receivedCount)} />
       </div>
 
-      {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 8, color: T.green, fontSize: 13 }}>{successMsg}</div>
+      )}
+      {errorMsg && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 8, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+      )}
 
+      {/* Create Form */}
       {showForm && (
-        <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>New Purchase Order</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div><label style={label}>Vendor *</label><input type="text" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Amount ($) *</label><input type="number" value={form.amount} onChange={e => setForm(p => ({ ...p, amount: Number(e.target.value) }))} style={inp} /></div>
-            <div><label style={label}>Issue Date</label><SaguaroDatePicker value={form.issued_date} onChange={v => setForm(p => ({ ...p, issued_date: v }))} style={inp} /></div>
-            <div style={{ gridColumn: 'span 2' }}><label style={label}>Description *</label><input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Expected Delivery</label><SaguaroDatePicker value={form.expected_delivery} onChange={v => setForm(p => ({ ...p, expected_delivery: v }))} style={inp} /></div>
-            <div style={{ gridColumn: 'span 3' }}><label style={label}>Notes</label><input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} style={inp} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Create PO'}
-            </button>
-            <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={{ padding: '9px 16px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          </div>
+        <div style={{ padding: '0 24px 16px' }}>
+          <Card>
+            <CardHeader><span style={{ fontWeight: 700, color: T.white }}>New Purchase Order</span></CardHeader>
+            <CardBody>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                <div>
+                  <label style={lbl}>Vendor *</label>
+                  <input value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Description *</label>
+                  <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Delivery Date</label>
+                  <SaguaroDatePicker value={form.delivery_date} onChange={v => setForm(p => ({ ...p, delivery_date: v }))} style={inp} />
+                </div>
+              </div>
+
+              {/* Line Items */}
+              <div style={{ marginTop: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: T.white }}>Line Items</span>
+                  <Btn size="sm" variant="ghost" onClick={addLineItem}>+ Add Line</Btn>
+                </div>
+                {form.line_items.map((li, idx) => (
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: 10, marginBottom: 8 }}>
+                    <input placeholder="Description" value={li.description} onChange={e => updateLineItem(idx, 'description', e.target.value)} style={inp} />
+                    <input type="number" placeholder="Qty" value={li.quantity} onChange={e => updateLineItem(idx, 'quantity', Number(e.target.value))} style={inp} />
+                    <input type="number" placeholder="Unit Price" value={li.unit_price} onChange={e => updateLineItem(idx, 'unit_price', Number(e.target.value))} style={inp} />
+                    <Btn variant="danger" size="sm" onClick={() => removeLineItem(idx)} disabled={form.line_items.length <= 1}>X</Btn>
+                  </div>
+                ))}
+                <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 700, color: T.gold, marginTop: 8 }}>
+                  Total: ${formTotal.toLocaleString()}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <Btn onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Create PO'}</Btn>
+                <Btn variant="ghost" onClick={() => { setShowForm(false); setErrorMsg(''); }}>Cancel</Btn>
+              </div>
+            </CardBody>
+          </Card>
         </div>
       )}
 
-      <div style={{ padding: '16px 24px 40px', overflowX: 'auto' }}>
-        {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#0a1117' }}>
-                {['PO #','Vendor','Description','Amount','Issued','Expected Delivery','Status','Notes','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pos.map(p => {
-                const sc = STATUS_MAP[p.status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-                return (
-                  <tr key={p.id} style={{ borderBottom: '1px solid rgba(38,51,71,.4)' }}>
-                    <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{p.po_num}</td>
-                    <td style={{ padding: '10px 14px', color: TEXT }}>{p.vendor}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{p.description}</td>
-                    <td style={{ padding: '10px 14px', color: TEXT, fontWeight: 700 }}>${p.amount?.toLocaleString()}</td>
-                    <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{p.issued_date}</td>
-                    <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{p.expected_delivery || '—'}</td>
-                    <td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{p.status}</span></td>
-                    <td style={{ padding: '10px 14px', color: DIM, fontSize: 12 }}>{p.notes || '—'}</td>
-                    <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                      {p.status !== 'Delivered' && p.status !== 'Cancelled' && (
-                        <button onClick={() => handleMarkDelivered(p.id)} style={{ padding: '4px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 5, color: GREEN, fontSize: 12, cursor: 'pointer' }}>Mark Delivered</button>
-                      )}
-                      {p.status === 'Delivered' && <span style={{ color: GREEN, fontSize: 12 }}>Delivered</span>}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+      {/* Table */}
+      <div style={{ padding: '0 24px 40px' }}>
+        <Card>
+          <CardBody style={{ padding: 0 }}>
+            {loading ? (
+              <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading...</div>
+            ) : (
+              <Table
+                headers={['PO #', 'Vendor', 'Description', 'Amount', 'Status', 'Date', 'Actions']}
+                rows={pos.map(p => [
+                  <span key="n" style={{ color: T.gold, fontWeight: 700 }}>{p.po_num}</span>,
+                  p.vendor,
+                  <span key="d" style={{ color: T.muted }}>{p.description}</span>,
+                  <span key="a" style={{ fontWeight: 700 }}>${(p.amount || 0).toLocaleString()}</span>,
+                  <Badge key="s" label={p.status} color={STATUS_BADGE[p.status] || 'muted'} />,
+                  <span key="dt" style={{ color: T.muted }}>{p.issued_date}</span>,
+                  <div key="act" style={{ display: 'flex', gap: 6 }}>
+                    <Btn size="sm" variant="ghost" onClick={() => handleGeneratePdf(p)}>PDF</Btn>
+                    {p.status === 'draft' && (
+                      <Btn size="sm" onClick={() => handleStatusChange(p.id, 'sent')}>Send</Btn>
+                    )}
+                    {p.status === 'sent' && (
+                      <Btn size="sm" onClick={() => handleStatusChange(p.id, 'received')}>Received</Btn>
+                    )}
+                    {p.status === 'received' && (
+                      <Btn size="sm" variant="ghost" onClick={() => handleStatusChange(p.id, 'closed')}>Close</Btn>
+                    )}
+                  </div>,
+                ])}
+              />
+            )}
+          </CardBody>
+        </Card>
       </div>
-    </div>
+    </PageWrap>
   );
 }

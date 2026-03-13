@@ -1,36 +1,31 @@
 'use client';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c';
+import { PageWrap, SectionHeader, StatCard, Badge, Btn, Card, CardHeader, CardBody, Table, T } from '@/components/ui/shell';
 
 interface Spec {
   id: string;
   division: string;
   section: string;
   title: string;
-  version: string;
-  date: string;
   status: string;
+  last_updated: string;
   url: string | null;
+  related_submittals: string[];
   project_id: string;
 }
 
-const EMPTY_FORM = { division: '', section: '', title: '', version: '' };
+const STATUS_BADGE: Record<string, 'muted' | 'blue' | 'amber' | 'green'> = {
+  draft: 'muted',
+  issued: 'blue',
+  revised: 'amber',
+  approved: 'green',
+};
 
-function statusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Current: { bg: 'rgba(61,214,140,.2)', color: GREEN },
-    Superseded: { bg: 'rgba(143,163,192,.2)', color: DIM },
-    'For Review': { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
-  };
-  const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-  return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{status}</span>;
-}
+const EMPTY_FORM = { division: '', section: '', title: '' };
 
 export default function SpecsPage() {
-  const params = useParams();
-  const projectId = params.projectId as string;
+  const { projectId } = useParams() as { projectId: string };
   const [specs, setSpecs] = useState<Spec[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -40,7 +35,6 @@ export default function SpecsPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
   const [uploading, setUploading] = useState<string | null>(null);
-  const uploadRef = useRef<HTMLInputElement>(null);
 
   const fetchSpecs = useCallback(async () => {
     setLoading(true);
@@ -61,14 +55,30 @@ export default function SpecsPage() {
     !search || s.title.toLowerCase().includes(search.toLowerCase()) || s.section.includes(search) || s.division.includes(search)
   );
 
+  const draftCount = specs.filter(s => s.status === 'draft').length;
+  const issuedCount = specs.filter(s => s.status === 'issued').length;
+  const approvedCount = specs.filter(s => s.status === 'approved').length;
+
   async function handleSave() {
     if (!form.section || !form.title) { setErrorMsg('Section number and title are required.'); return; }
     setSaving(true);
     setErrorMsg('');
     const today = new Date().toISOString().split('T')[0];
-    const newSpec: Spec = { id: `s-${Date.now()}`, project_id: projectId, date: today, status: 'For Review', url: null, ...form };
+    const newSpec: Spec = {
+      id: `s-${Date.now()}`,
+      project_id: projectId,
+      last_updated: today,
+      status: 'draft',
+      url: null,
+      related_submittals: [],
+      ...form,
+    };
     try {
-      const res = await fetch('/api/specs/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, ...newSpec }) });
+      const res = await fetch('/api/specs/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, ...newSpec }),
+      });
       const json = await res.json();
       setSpecs(prev => [...prev, json.spec || newSpec].sort((a, b) => a.section.localeCompare(b.section)));
     } catch {
@@ -96,85 +106,119 @@ export default function SpecsPage() {
     setTimeout(() => setSuccessMsg(''), 4000);
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '8px 12px', background: T.surface,
+    border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
+  };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
 
   return (
-    <div style={{ background: DARK, minHeight: '100vh' }}>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + BORDER, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Specifications</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Project specifications by CSI division</div>
-        </div>
-        <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>+ Add Section</button>
+    <PageWrap>
+      <div style={{ padding: '24px 24px 0' }}>
+        <SectionHeader
+          title="Specifications"
+          sub="Project specifications by CSI division"
+          action={
+            <Btn onClick={() => { setShowForm(p => !p); setErrorMsg(''); }}>
+              {showForm ? 'Cancel' : '+ Add Section'}
+            </Btn>
+          }
+        />
       </div>
 
-      {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: '#ef4444', fontSize: 13 }}>{errorMsg}</div>}
+      {/* Stat Cards */}
+      <div style={{ padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+        <StatCard icon="📄" label="Total Sections" value={String(specs.length)} />
+        <StatCard icon="📝" label="Draft" value={String(draftCount)} />
+        <StatCard icon="📤" label="Issued" value={String(issuedCount)} />
+        <StatCard icon="✅" label="Approved" value={String(approvedCount)} />
+      </div>
 
+      {successMsg && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 8, color: T.green, fontSize: 13 }}>{successMsg}</div>
+      )}
+      {errorMsg && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 8, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+      )}
+
+      {/* Create Form */}
       {showForm && (
-        <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Add Spec Section</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div><label style={label}>Division #</label><input type="text" value={form.division} onChange={e => setForm(p => ({ ...p, division: e.target.value }))} placeholder="e.g. 03" style={inp} /></div>
-            <div><label style={label}>Section # *</label><input type="text" value={form.section} onChange={e => setForm(p => ({ ...p, section: e.target.value }))} placeholder="e.g. 03 31 00" style={inp} /></div>
-            <div><label style={label}>Version Date</label><input type="text" value={form.version} onChange={e => setForm(p => ({ ...p, version: e.target.value }))} placeholder="e.g. 2026-01-15" style={inp} /></div>
-            <div style={{ gridColumn: 'span 3' }}><label style={label}>Title *</label><input type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} style={inp} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Save Section'}
-            </button>
-            <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={{ padding: '9px 16px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          </div>
+        <div style={{ padding: '0 24px 16px' }}>
+          <Card>
+            <CardHeader><span style={{ fontWeight: 700, color: T.white }}>Add Spec Section</span></CardHeader>
+            <CardBody>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                <div>
+                  <label style={lbl}>Division #</label>
+                  <input value={form.division} onChange={e => setForm(p => ({ ...p, division: e.target.value }))} placeholder="e.g. 03" style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Section # *</label>
+                  <input value={form.section} onChange={e => setForm(p => ({ ...p, section: e.target.value }))} placeholder="e.g. 03 31 00" style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Title *</label>
+                  <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} style={inp} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <Btn onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Section'}</Btn>
+                <Btn variant="ghost" onClick={() => { setShowForm(false); setErrorMsg(''); }}>Cancel</Btn>
+              </div>
+            </CardBody>
+          </Card>
         </div>
       )}
 
-      <div style={{ padding: '16px 24px 0', display: 'flex', gap: 12 }}>
+      {/* Search */}
+      <div style={{ padding: '0 24px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
         <input
           type="text"
           placeholder="Search sections..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ padding: '7px 12px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13, width: 240 }}
+          style={{ padding: '7px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, width: 240, outline: 'none' }}
         />
-        <span style={{ alignSelf: 'center', fontSize: 12, color: DIM }}>{filtered.length} section{filtered.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 12, color: T.muted }}>{filtered.length} section{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
-      <div style={{ padding: '16px 24px 40px', overflowX: 'auto' }}>
-        {loading ? <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div> : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#0a1117' }}>
-                {['Div','Section #','Title','Version','Date','Status','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(s => (
-                <tr key={s.id} style={{ borderBottom: '1px solid rgba(38,51,71,.4)' }}>
-                  <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{s.division}</td>
-                  <td style={{ padding: '10px 14px', color: GOLD }}>{s.section}</td>
-                  <td style={{ padding: '10px 14px', color: TEXT }}>{s.title}</td>
-                  <td style={{ padding: '10px 14px', color: DIM }}>{s.version}</td>
-                  <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{s.date}</td>
-                  <td style={{ padding: '10px 14px' }}>{statusBadge(s.status)}</td>
-                  <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                    {s.url ? (
-                      <button onClick={() => window.open(s.url!, '_blank')} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer', marginRight: 6 }}>View</button>
-                    ) : null}
-                    <label style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>
-                      {uploading === s.id ? 'Uploading...' : 'Upload PDF'}
+      {/* Table */}
+      <div style={{ padding: '0 24px 40px' }}>
+        <Card>
+          <CardBody style={{ padding: 0 }}>
+            {loading ? (
+              <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading...</div>
+            ) : (
+              <Table
+                headers={['Section #', 'Title', 'Division', 'Status', 'Last Updated', 'Submittals', 'Actions']}
+                rows={filtered.map(s => [
+                  <span key="sec" style={{ color: T.gold, fontWeight: 700 }}>{s.section}</span>,
+                  s.title,
+                  <span key="div" style={{ color: T.muted }}>{s.division || '—'}</span>,
+                  <Badge key="st" label={s.status} color={STATUS_BADGE[s.status] || 'muted'} />,
+                  <span key="upd" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{s.last_updated || '—'}</span>,
+                  <span key="sub" style={{ color: T.muted, fontSize: 12 }}>
+                    {s.related_submittals && s.related_submittals.length > 0
+                      ? s.related_submittals.join(', ')
+                      : '—'}
+                  </span>,
+                  <div key="act" style={{ display: 'flex', gap: 6 }}>
+                    {s.url && (
+                      <Btn size="sm" variant="ghost" onClick={() => window.open(s.url!, '_blank')}>View</Btn>
+                    )}
+                    <label style={{ cursor: 'pointer' }}>
+                      <Btn size="sm" variant="ghost" disabled={uploading === s.id}>
+                        {uploading === s.id ? 'Uploading...' : 'Upload'}
+                      </Btn>
                       <input type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUploadSpec(s.id, e.target.files[0]); }} />
                     </label>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+                  </div>,
+                ])}
+              />
+            )}
+          </CardBody>
+        </Card>
       </div>
-    </div>
+    </PageWrap>
   );
 }

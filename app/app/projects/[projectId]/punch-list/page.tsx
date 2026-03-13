@@ -1,44 +1,41 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { PageWrap, SectionHeader, StatCard, Badge, Btn, Card, CardHeader, CardBody, Table, T } from '@/components/ui/shell';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
 
 interface PunchItem {
   id: string;
   number: string;
   description: string;
   location: string;
-  assigned_sub: string;
+  trade: string;
+  assigned_to: string;
   due_date: string;
   priority: string;
   status: string;
   project_id: string;
 }
 
-const PRIORITIES = ['Critical','High','Medium','Low'];
-const STATUSES = ['Open','In Progress','Ready to Inspect','Complete'];
+const PRIORITIES = ['Critical', 'High', 'Medium', 'Low'];
 
-const PRIORITY_COLORS: Record<string, string> = {
-  Critical: RED,
-  High: '#f97316',
-  Medium: '#f59e0b',
-  Low: DIM,
+const PRIORITY_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'muted'> = {
+  Critical: 'red',
+  High: 'amber',
+  Medium: 'gold',
+  Low: 'muted',
 };
 
-const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
-  Open: { bg: 'rgba(239,68,68,.2)', color: RED },
-  'In Progress': { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
-  'Ready to Inspect': { bg: 'rgba(59,130,246,.2)', color: '#60a5fa' },
-  Complete: { bg: 'rgba(61,214,140,.2)', color: GREEN },
+const STATUS_BADGE: Record<string, 'red' | 'amber' | 'blue' | 'green' | 'muted'> = {
+  Open: 'red',
+  'In Progress': 'amber',
+  Complete: 'green',
 };
 
-const EMPTY_FORM = { description: '', location: '', assigned_sub: '', due_date: '', priority: 'Medium' };
+const EMPTY_FORM = { description: '', location: '', trade: '', assigned_to: '', due_date: '', priority: 'Medium' };
 
 export default function PunchListPage() {
-  const params = useParams();
-  const projectId = params.projectId as string;
+  const { projectId } = useParams() as { projectId: string };
   const [items, setItems] = useState<PunchItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -46,7 +43,6 @@ export default function PunchListPage() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchItems = useCallback(async () => {
@@ -64,13 +60,10 @@ export default function PunchListPage() {
 
   useEffect(() => { fetchItems(); }, [fetchItems]);
 
-  const filtered = filterStatus === 'All' ? items : items.filter(i => i.status === filterStatus);
-
   const total = items.length;
   const open = items.filter(i => i.status === 'Open').length;
   const inProgress = items.filter(i => i.status === 'In Progress').length;
   const complete = items.filter(i => i.status === 'Complete').length;
-  const pctDone = total ? Math.round((complete / total) * 100) : 0;
 
   async function handleSave() {
     if (!form.description) { setErrorMsg('Description is required.'); return; }
@@ -81,7 +74,7 @@ export default function PunchListPage() {
       const res = await fetch('/api/punch-list/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, number: num, ...form }),
+        body: JSON.stringify({ projectId, number: num, status: 'Open', ...form }),
       });
       const json = await res.json();
       const newItem: PunchItem = json.item || { id: `p-${Date.now()}`, project_id: projectId, number: num, status: 'Open', ...form };
@@ -113,132 +106,131 @@ export default function PunchListPage() {
     setTimeout(() => setSuccessMsg(''), 3000);
   }
 
-  async function handleExport() {
+  async function handleReopen(id: string) {
+    setActionLoading(id);
     try {
-      const res = await fetch('/api/reports/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'punch_list', projectId }),
-      });
-      const json = await res.json();
-      if (json.url) window.open(json.url, '_blank');
-      else { setSuccessMsg('PDF export queued.'); setTimeout(() => setSuccessMsg(''), 4000); }
-    } catch {
-      setSuccessMsg('Export requested (demo mode).');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    }
+      await fetch(`/api/punch-list/${id}/reopen`, { method: 'PATCH' });
+    } catch { /* demo */ }
+    setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'Open' } : i));
+    setActionLoading(null);
+    setSuccessMsg('Item reopened.');
+    setTimeout(() => setSuccessMsg(''), 3000);
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = {
+    width: '100%', padding: '8px 12px', background: T.surface,
+    border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
+  };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
 
   return (
-    <div style={{ background: DARK, minHeight: '100vh' }}>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + BORDER, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Punch List</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Items before substantial completion</div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleExport} style={{ padding: '8px 14px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Export PDF</button>
-          <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>+ Add Item</button>
-        </div>
+    <PageWrap>
+      <div style={{ padding: '24px 24px 0' }}>
+        <SectionHeader
+          title="Punch List"
+          sub="Items before substantial completion"
+          action={
+            <Btn onClick={() => { setShowForm(p => !p); setErrorMsg(''); }}>
+              {showForm ? 'Cancel' : '+ Add Item'}
+            </Btn>
+          }
+        />
       </div>
 
-      {/* KPIs */}
-      <div style={{ padding: '20px 24px 0', display: 'grid', gridTemplateColumns: 'repeat(5, auto)', gap: 12, width: 'fit-content' }}>
-        {[
-          { label: 'Total', value: total, color: TEXT },
-          { label: 'Open', value: open, color: RED },
-          { label: 'In Progress', value: inProgress, color: '#f59e0b' },
-          { label: 'Complete', value: complete, color: GREEN },
-          { label: '% Done', value: `${pctDone}%`, color: GOLD },
-        ].map(k => (
-          <div key={k.label} style={{ background: RAISED, borderRadius: 8, padding: '12px 20px', border: '1px solid ' + BORDER, textAlign: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: k.color }}>{k.value}</div>
-            <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{k.label}</div>
-          </div>
-        ))}
-      </div>
-      {/* Progress bar */}
-      <div style={{ padding: '12px 24px 0' }}>
-        <div style={{ height: 6, background: RAISED, borderRadius: 3, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${pctDone}%`, background: 'linear-gradient(90deg,' + GREEN + ',#22d3ee)', borderRadius: 3, transition: 'width .4s' }} />
-        </div>
+      {/* Stat Cards */}
+      <div style={{ padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+        <StatCard icon="📋" label="Total" value={String(total)} />
+        <StatCard icon="🔴" label="Open" value={String(open)} />
+        <StatCard icon="🔄" label="In Progress" value={String(inProgress)} />
+        <StatCard icon="✅" label="Complete" value={String(complete)} />
       </div>
 
-      {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
+      {successMsg && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 8, color: T.green, fontSize: 13 }}>{successMsg}</div>
+      )}
+      {errorMsg && (
+        <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 8, color: T.red, fontSize: 13 }}>{errorMsg}</div>
+      )}
 
+      {/* Create Form */}
       {showForm && (
-        <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Add Punch List Item</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div style={{ gridColumn: 'span 2' }}><label style={label}>Description *</label><input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Priority</label>
-              <select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={inp}>
-                {PRIORITIES.map(pr => <option key={pr}>{pr}</option>)}
-              </select>
-            </div>
-            <div><label style={label}>Location / Room</label><input type="text" value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Assigned Sub</label><input type="text" value={form.assigned_sub} onChange={e => setForm(p => ({ ...p, assigned_sub: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Due Date</label><SaguaroDatePicker value={form.due_date} onChange={v => setForm(p => ({ ...p, due_date: v }))} style={inp} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Save Item'}
-            </button>
-            <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={{ padding: '9px 16px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          </div>
+        <div style={{ padding: '0 24px 16px' }}>
+          <Card>
+            <CardHeader><span style={{ fontWeight: 700, color: T.white }}>Add Punch List Item</span></CardHeader>
+            <CardBody>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={lbl}>Description *</label>
+                  <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Priority</label>
+                  <select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value }))} style={inp}>
+                    {PRIORITIES.map(pr => <option key={pr}>{pr}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={lbl}>Location</label>
+                  <input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Trade</label>
+                  <input value={form.trade} onChange={e => setForm(p => ({ ...p, trade: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Assigned To</label>
+                  <input value={form.assigned_to} onChange={e => setForm(p => ({ ...p, assigned_to: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Due Date</label>
+                  <SaguaroDatePicker value={form.due_date} onChange={v => setForm(p => ({ ...p, due_date: v }))} style={inp} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <Btn onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Item'}</Btn>
+                <Btn variant="ghost" onClick={() => { setShowForm(false); setErrorMsg(''); }}>Cancel</Btn>
+              </div>
+            </CardBody>
+          </Card>
         </div>
       )}
 
-      {/* Filter */}
-      <div style={{ padding: '16px 24px 0', display: 'flex', gap: 8 }}>
-        {['All', ...STATUSES].map(s => (
-          <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '5px 12px', background: filterStatus === s ? GOLD : RAISED, border: '1px solid ' + (filterStatus === s ? GOLD : BORDER), borderRadius: 5, color: filterStatus === s ? DARK : DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{s}</button>
-        ))}
+      {/* Table */}
+      <div style={{ padding: '0 24px 40px' }}>
+        <Card>
+          <CardBody style={{ padding: 0 }}>
+            {loading ? (
+              <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading...</div>
+            ) : (
+              <Table
+                headers={['Item #', 'Description', 'Location', 'Trade', 'Priority', 'Status', 'Assigned To', 'Due Date', 'Actions']}
+                rows={items.map(item => [
+                  <span key="n" style={{ color: T.gold, fontWeight: 700 }}>{item.number}</span>,
+                  item.description,
+                  <span key="l" style={{ color: T.muted }}>{item.location || '—'}</span>,
+                  <span key="t" style={{ color: T.muted }}>{item.trade || '—'}</span>,
+                  <Badge key="p" label={item.priority} color={PRIORITY_BADGE[item.priority] || 'muted'} />,
+                  <Badge key="s" label={item.status} color={STATUS_BADGE[item.status] || 'muted'} />,
+                  <span key="a" style={{ color: T.muted }}>{item.assigned_to || '—'}</span>,
+                  <span key="d" style={{ color: T.muted }}>{item.due_date || '—'}</span>,
+                  <div key="act" style={{ display: 'flex', gap: 6 }}>
+                    {item.status !== 'Complete' && (
+                      <Btn size="sm" onClick={() => handleComplete(item.id)} disabled={actionLoading === item.id}>
+                        {actionLoading === item.id ? '...' : 'Complete'}
+                      </Btn>
+                    )}
+                    {item.status === 'Complete' && (
+                      <Btn size="sm" variant="ghost" onClick={() => handleReopen(item.id)} disabled={actionLoading === item.id}>
+                        Reopen
+                      </Btn>
+                    )}
+                  </div>,
+                ])}
+              />
+            )}
+          </CardBody>
+        </Card>
       </div>
-
-      <div style={{ padding: '16px 24px 24px', overflowX: 'auto' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#0a1117' }}>
-                {['#','Description','Location','Assigned Sub','Due Date','Priority','Status','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(item => {
-                const sc = STATUS_COLORS[item.status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-                return (
-                  <tr key={item.id} style={{ borderBottom: '1px solid rgba(38,51,71,.4)' }}>
-                    <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{item.number}</td>
-                    <td style={{ padding: '10px 14px', color: TEXT }}>{item.description}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{item.location}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{item.assigned_sub}</td>
-                    <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{item.due_date || '—'}</td>
-                    <td style={{ padding: '10px 14px' }}><span style={{ color: PRIORITY_COLORS[item.priority] || DIM, fontWeight: 700, fontSize: 12 }}>{item.priority}</span></td>
-                    <td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{item.status}</span></td>
-                    <td style={{ padding: '10px 14px' }}>
-                      {item.status !== 'Complete' && (
-                        <button onClick={() => handleComplete(item.id)} disabled={actionLoading === item.id} style={{ padding: '4px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 5, color: GREEN, fontSize: 12, cursor: 'pointer' }}>
-                          {actionLoading === item.id ? '...' : 'Complete'}
-                        </button>
-                      )}
-                      {item.status === 'Complete' && <span style={{ color: GREEN, fontSize: 12 }}>Done</span>}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
+    </PageWrap>
   );
 }

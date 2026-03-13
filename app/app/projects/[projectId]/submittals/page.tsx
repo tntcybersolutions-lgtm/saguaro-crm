@@ -1,9 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
+import { PageWrap, SectionHeader, StatCard, Badge, Btn, Card, CardHeader, CardBody, Table, T } from '@/components/ui/shell';
 
 interface Submittal {
   id: string;
@@ -12,23 +10,34 @@ interface Submittal {
   spec_section: string;
   submitted_by: string;
   submitted_date: string;
-  to_architect: string;
   required_by: string;
   status: string;
   days_in_review: number;
   project_id: string;
 }
 
-const STATUS_MAP: Record<string, { bg: string; color: string }> = {
-  Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
-  Submitted: { bg: 'rgba(59,130,246,.2)', color: '#60a5fa' },
-  'Under Review': { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
-  Approved: { bg: 'rgba(61,214,140,.2)', color: GREEN },
-  'Revise & Resubmit': { bg: 'rgba(249,115,22,.2)', color: '#f97316' },
-  Rejected: { bg: 'rgba(239,68,68,.2)', color: RED },
+const STATUS_BADGE: Record<string, 'muted' | 'blue' | 'amber' | 'green' | 'red' | 'gold'> = {
+  pending: 'muted',
+  submitted: 'blue',
+  under_review: 'amber',
+  approved: 'green',
+  rejected: 'red',
+  revise_resubmit: 'gold',
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: 'Pending',
+  submitted: 'Submitted',
+  under_review: 'Under Review',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  revise_resubmit: 'Revise & Resubmit',
 };
 
 const EMPTY_FORM = { description: '', spec_section: '', submitted_by: '', required_by: '' };
+
+const inp: React.CSSProperties = { width: '100%', padding: '8px 12px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none' };
+const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 };
 
 export default function SubmittalsPage() {
   const params = useParams();
@@ -38,10 +47,9 @@ export default function SubmittalsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
+  const [toast, setToast] = useState('');
   const [respondId, setRespondId] = useState<string | null>(null);
-  const [respondStatus, setRespondStatus] = useState('Approved');
+  const [respondStatus, setRespondStatus] = useState('approved');
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -60,44 +68,31 @@ export default function SubmittalsPage() {
 
   useEffect(() => { fetchSubmittals(); }, [fetchSubmittals]);
 
-  function isOverdue(s: Submittal) {
-    return s.required_by < today && s.status !== 'Approved' && s.status !== 'Rejected';
-  }
-
   const total = submittals.length;
-  const pending = submittals.filter(s => ['Submitted','Under Review','Draft'].includes(s.status)).length;
-  const approved = submittals.filter(s => s.status === 'Approved').length;
-  const overdue = submittals.filter(isOverdue).length;
+  const pending = submittals.filter(s => ['pending', 'submitted', 'under_review'].includes(s.status)).length;
+  const approved = submittals.filter(s => s.status === 'approved').length;
+  const overdue = submittals.filter(s => s.required_by < today && !['approved', 'rejected'].includes(s.status)).length;
 
   async function handleSave() {
-    if (!form.description || !form.spec_section) { setErrorMsg('Description and spec section are required.'); return; }
+    if (!form.description || !form.spec_section) return;
     setSaving(true);
-    setErrorMsg('');
     const num = `S-${String(submittals.length + 1).padStart(3, '0')}`;
-    const now = today;
     try {
       const res = await fetch('/api/submittals/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, number: num, submitted_date: now, to_architect: now, status: 'Submitted', days_in_review: 0, ...form }),
+        body: JSON.stringify({ projectId, number: num, submitted_date: today, status: 'submitted', days_in_review: 0, ...form }),
       });
       const json = await res.json();
-      const newSub: Submittal = json.submittal || { id: `sub-${Date.now()}`, project_id: projectId, number: num, submitted_date: now, to_architect: now, status: 'Submitted', days_in_review: 0, ...form };
-      setSubmittals(prev => [newSub, ...prev]);
-      setShowForm(false);
-      setForm(EMPTY_FORM);
-      setSuccessMsg('Submittal created.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      setSubmittals(prev => [json.submittal || { id: `sub-${Date.now()}`, project_id: projectId, number: num, submitted_date: today, status: 'submitted', days_in_review: 0, ...form }, ...prev]);
     } catch {
-      const newSub: Submittal = { id: `sub-${Date.now()}`, project_id: projectId, number: num, submitted_date: now, to_architect: now, status: 'Submitted', days_in_review: 0, ...form };
-      setSubmittals(prev => [newSub, ...prev]);
-      setShowForm(false);
-      setForm(EMPTY_FORM);
-      setSuccessMsg('Submittal created (demo mode).');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } finally {
-      setSaving(false);
+      setSubmittals(prev => [{ id: `sub-${Date.now()}`, project_id: projectId, number: num, submitted_date: today, status: 'submitted', days_in_review: 0, ...form }, ...prev]);
     }
+    setShowForm(false);
+    setForm(EMPTY_FORM);
+    setSaving(false);
+    setToast('Submittal created.');
+    setTimeout(() => setToast(''), 4000);
   }
 
   async function handleRespond(id: string) {
@@ -110,108 +105,102 @@ export default function SubmittalsPage() {
     } catch { /* demo */ }
     setSubmittals(prev => prev.map(s => s.id === id ? { ...s, status: respondStatus } : s));
     setRespondId(null);
-    setSuccessMsg(`Submittal ${respondStatus}.`);
-    setTimeout(() => setSuccessMsg(''), 4000);
+    setToast(`Submittal ${STATUS_LABEL[respondStatus] || respondStatus}.`);
+    setTimeout(() => setToast(''), 4000);
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-
   return (
-    <div style={{ background: DARK, minHeight: '100vh' }}>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + BORDER, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Submittals</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Shop drawings, product data, and submittals log</div>
+    <PageWrap>
+      <div style={{ padding: 24 }}>
+        <SectionHeader
+          title="Submittals"
+          sub="Shop drawings, product data, and submittals log"
+          action={<Btn onClick={() => setShowForm(p => !p)}>+ New Submittal</Btn>}
+        />
+
+        {/* KPIs */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
+          <StatCard icon="📋" label="Total" value={String(total)} />
+          <StatCard icon="⏳" label="Pending" value={String(pending)} />
+          <StatCard icon="✅" label="Approved" value={String(approved)} />
+          <StatCard icon="🚨" label="Overdue" value={String(overdue)} />
         </div>
-        <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>+ New Submittal</button>
-      </div>
 
-      {/* KPIs */}
-      <div style={{ padding: '20px 24px 0', display: 'flex', gap: 12 }}>
-        {[
-          { label: 'Total', value: total, color: TEXT },
-          { label: 'Pending', value: pending, color: '#f59e0b' },
-          { label: 'Approved', value: approved, color: GREEN },
-          { label: 'Overdue', value: overdue, color: RED },
-        ].map(k => (
-          <div key={k.label} style={{ background: RAISED, borderRadius: 8, padding: '12px 20px', border: '1px solid ' + BORDER, textAlign: 'center' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: k.color }}>{k.value}</div>
-            <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{k.label}</div>
+        {toast && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 8, color: T.green, fontSize: 13 }}>
+            {toast}
           </div>
-        ))}
-      </div>
-
-      {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: RED, fontSize: 13 }}>{errorMsg}</div>}
-
-      {showForm && (
-        <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>New Submittal</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-            <div style={{ gridColumn: 'span 2' }}><label style={label}>Description *</label><input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Spec Section *</label><input type="text" value={form.spec_section} onChange={e => setForm(p => ({ ...p, spec_section: e.target.value }))} placeholder="e.g. 03 31 00" style={inp} /></div>
-            <div><label style={label}>Submitted By</label><input type="text" value={form.submitted_by} onChange={e => setForm(p => ({ ...p, submitted_by: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Required By Date</label><SaguaroDatePicker value={form.required_by} onChange={v => setForm(p => ({ ...p, required_by: v }))} style={inp} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Save Submittal'}
-            </button>
-            <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={{ padding: '9px 16px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      <div style={{ padding: '16px 24px 24px', overflowX: 'auto' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#0a1117' }}>
-                {['#','Description','Spec Section','Submitted By','Submitted','Required By','Status','Days In Review','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {submittals.map(s => {
-                const od = isOverdue(s);
-                const sc = STATUS_MAP[s.status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-                return (
-                  <tr key={s.id} style={{ borderBottom: '1px solid rgba(38,51,71,.4)', background: od ? 'rgba(239,68,68,.04)' : 'transparent' }}>
-                    <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{s.number}</td>
-                    <td style={{ padding: '10px 14px', color: TEXT }}>{s.description}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{s.spec_section}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{s.submitted_by}</td>
-                    <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{s.submitted_date}</td>
-                    <td style={{ padding: '10px 14px', color: od ? RED : DIM, whiteSpace: 'nowrap' }}>{s.required_by}</td>
-                    <td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{s.status}</span></td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{s.days_in_review}d</td>
-                    <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                      {(s.status === 'Submitted' || s.status === 'Under Review') && respondId !== s.id && (
-                        <button onClick={() => { setRespondId(s.id); setRespondStatus('Approved'); }} style={{ padding: '4px 10px', background: 'rgba(59,130,246,.2)', border: '1px solid rgba(59,130,246,.4)', borderRadius: 5, color: '#60a5fa', fontSize: 12, cursor: 'pointer' }}>Respond</button>
-                      )}
-                      {respondId === s.id && (
-                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                          <select value={respondStatus} onChange={e => setRespondStatus(e.target.value)} style={{ padding: '3px 8px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 4, color: TEXT, fontSize: 12 }}>
-                            <option>Approved</option>
-                            <option>Revise &amp; Resubmit</option>
-                            <option>Rejected</option>
-                          </select>
-                          <button onClick={() => handleRespond(s.id)} style={{ padding: '3px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 4, color: GREEN, fontSize: 12, cursor: 'pointer' }}>Submit</button>
-                          <button onClick={() => setRespondId(null)} style={{ padding: '3px 8px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 4, color: DIM, fontSize: 12, cursor: 'pointer' }}>X</button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         )}
+
+        {/* Create Form */}
+        {showForm && (
+          <Card style={{ marginBottom: 24, borderColor: T.borderGold }}>
+            <CardHeader><span style={{ fontWeight: 700, color: T.white }}>New Submittal</span></CardHeader>
+            <CardBody>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={lbl}>Description *</label>
+                  <input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Spec Section *</label>
+                  <input type="text" value={form.spec_section} onChange={e => setForm(p => ({ ...p, spec_section: e.target.value }))} placeholder="e.g. 03 31 00" style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Subcontractor</label>
+                  <input type="text" value={form.submitted_by} onChange={e => setForm(p => ({ ...p, submitted_by: e.target.value }))} style={inp} />
+                </div>
+                <div>
+                  <label style={lbl}>Due Date</label>
+                  <input type="date" value={form.required_by} onChange={e => setForm(p => ({ ...p, required_by: e.target.value }))} style={inp} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <Btn onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Submittal'}</Btn>
+                <Btn variant="ghost" onClick={() => setShowForm(false)}>Cancel</Btn>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
+        {/* Table */}
+        <Card>
+          <CardBody style={{ padding: 0 }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: T.muted }}>Loading...</div>
+            ) : (
+              <Table
+                headers={['#', 'Spec Section', 'Description', 'Sub', 'Status', 'Due Date', 'Returned', 'Actions']}
+                rows={submittals.map(s => [
+                  <span key="n" style={{ color: T.gold, fontWeight: 700 }}>{s.number}</span>,
+                  <span key="ss" style={{ color: T.muted }}>{s.spec_section}</span>,
+                  s.description,
+                  <span key="sb" style={{ color: T.muted }}>{s.submitted_by}</span>,
+                  <Badge key="st" label={STATUS_LABEL[s.status] || s.status} color={STATUS_BADGE[s.status] || 'muted'} />,
+                  <span key="dd" style={{ color: s.required_by < today && !['approved', 'rejected'].includes(s.status) ? T.red : T.muted, whiteSpace: 'nowrap' }}>{s.required_by || '---'}</span>,
+                  <span key="sd" style={{ color: T.muted }}>{s.submitted_date}</span>,
+                  <div key="act" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    {['submitted', 'under_review'].includes(s.status) && respondId !== s.id && (
+                      <Btn size="sm" variant="ghost" onClick={() => { setRespondId(s.id); setRespondStatus('approved'); }}>Respond</Btn>
+                    )}
+                    {respondId === s.id && (
+                      <>
+                        <select value={respondStatus} onChange={e => setRespondStatus(e.target.value)} style={{ padding: '4px 8px', background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 6, color: T.white, fontSize: 12 }}>
+                          <option value="approved">Approved</option>
+                          <option value="revise_resubmit">Revise & Resubmit</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                        <Btn size="sm" onClick={() => handleRespond(s.id)}>Submit</Btn>
+                        <Btn size="sm" variant="ghost" onClick={() => setRespondId(null)}>X</Btn>
+                      </>
+                    )}
+                  </div>,
+                ])}
+              />
+            )}
+          </CardBody>
+        </Card>
       </div>
-    </div>
+    </PageWrap>
   );
 }

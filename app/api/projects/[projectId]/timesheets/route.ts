@@ -11,9 +11,11 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     let query = supabase.from('timesheets').select('*').eq('project_id', params.projectId);
     if (week) query = query.eq('week_start', week);
     const { data, error } = await query.order('employee', { ascending: true });
-    if (error || !data?.length) return NextResponse.json({ entries: [], demo: true });
-    return NextResponse.json({ entries: data });
-  } catch {
-    return NextResponse.json({ entries: [], demo: true });
+    if (error) throw error;
+    return NextResponse.json({ entries: data || [] });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[projects/timesheets] error:', msg);
+    return NextResponse.json({ error: `Failed to fetch timesheets: ${msg}` }, { status: 500 });
   }
 }

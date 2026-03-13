@@ -13,7 +13,7 @@ function isConfigured() {
 
 export async function GET(req: NextRequest) {
   if (!isConfigured()) {
-    return NextResponse.json({ ok: true, demo: true });
+    return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 });
   }
 
   const refreshToken = req.cookies.get('sb-refresh-token')?.value;

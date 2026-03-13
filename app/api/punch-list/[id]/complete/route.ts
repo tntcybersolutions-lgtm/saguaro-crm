@@ -30,6 +30,9 @@ export async function PATCH(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     console.error('[punch-list/complete] error:', msg);
-    return NextResponse.json({ success: true, demo: true });
+    return NextResponse.json(
+      { error: `[punch-list/complete] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

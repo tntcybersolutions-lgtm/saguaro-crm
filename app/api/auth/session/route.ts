@@ -12,9 +12,8 @@ function isConfigured() {
 }
 
 export async function POST(req: NextRequest) {
-  // Demo mode — no Supabase configured
   if (!isConfigured()) {
-    return NextResponse.json({ ok: true, demo: true });
+    return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 });
   }
 
   let body: { email?: string; password?: string } = {};

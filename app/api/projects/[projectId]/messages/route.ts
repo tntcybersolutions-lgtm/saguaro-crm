@@ -38,7 +38,10 @@ export async function GET(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[projects/messages GET] error:', msg);
-    return NextResponse.json({ messages: [], demo: true });
+    return NextResponse.json(
+      { error: `[projects/messages GET] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }
 
@@ -93,14 +96,9 @@ export async function POST(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[projects/messages POST] error:', msg);
-    return NextResponse.json({
-      success: true,
-      message: {
-        id: Date.now().toString(),
-        ...row,
-        created_at: new Date().toISOString(),
-      },
-      demo: true,
-    });
+    return NextResponse.json(
+      { error: `[projects/messages POST] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

@@ -13,7 +13,7 @@ function isConfigured() {
 
 export async function POST(req: NextRequest) {
   if (!isConfigured()) {
-    return NextResponse.json({ ok: true, demo: true, confirmed: true });
+    return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 });
   }
 
   let body: Record<string, string> = {};

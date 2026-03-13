@@ -31,6 +31,9 @@ export async function GET(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[equipment] error:', msg);
-    return NextResponse.json({ entries: [], demo: true });
+    return NextResponse.json(
+      { error: `[equipment] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }

@@ -8,9 +8,11 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     const { data, error } = await supabase.from('photos').select('*').eq('project_id', params.projectId).order('date', { ascending: false });
-    if (error || !data?.length) return NextResponse.json({ photos: [], demo: true });
-    return NextResponse.json({ photos: data });
-  } catch {
-    return NextResponse.json({ photos: [], demo: true });
+    if (error) throw error;
+    return NextResponse.json({ photos: data || [] });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[projects/photos] error:', msg);
+    return NextResponse.json({ error: `Failed to fetch photos: ${msg}` }, { status: 500 });
   }
 }

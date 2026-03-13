@@ -47,12 +47,10 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
-    // Client uses localStorage as source of truth — return success so app continues
-    return NextResponse.json({
-      success: true,
-      clockInTime: new Date().toISOString(),
-      demo: true,
-      error: msg,
-    });
+    console.error('[clock/in] error:', msg);
+    return NextResponse.json(
+      { error: `[clock/in] Database error: ${msg}` },
+      { status: 500 }
+    );
   }
 }
