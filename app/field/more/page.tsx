@@ -98,6 +98,12 @@ function MorePage(){
     {href:`/field/chat${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Job Board',desc:'Crew messages and announcements',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
     {href:`/field/sage${projectId?`?projectId=${projectId}`:''}`,icon:'sparkle',label:'Sage AI',desc:'Ask anything about your project',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
     {href:`/field/qr${projectId?`?projectId=${projectId}`:''}`,icon:'qr',label:'QR Scanner',desc:'Scan or generate QR codes',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
+    {href:`/field/rfis${projectId?`?projectId=${projectId}`:''}`,icon:'question',label:'RFIs',desc:'View, respond, and create RFIs',color:'#F97316',bg:'rgba(249,115,22,.1)',border:'rgba(249,115,22,.25)'},
+    {href:`/field/submittals${projectId?`?projectId=${projectId}`:''}`,icon:'document',label:'Submittals',desc:'Review and approve submittals',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
+    {href:`/field/docs${projectId?`?projectId=${projectId}`:''}`,icon:'folder',label:'Documents',desc:'View and markup project documents',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
+    {href:`/field/change-orders${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Change Orders',desc:'View, approve, and create COs from field',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/safety${projectId?`?projectId=${projectId}`:''}`,icon:'shield',label:'Safety',desc:'Incident reports and corrective actions',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
+    {href:`/field/more/notifications${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Notifications',desc:'Push notification settings',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
   ];
   const QUICK=[
     {id:'timesheet',icon:'clock',label:'Quick Timesheet',desc:'Log hours in 10 seconds',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},

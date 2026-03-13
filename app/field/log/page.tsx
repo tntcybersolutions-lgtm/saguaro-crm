@@ -3,10 +3,11 @@
  * Saguaro Field — Daily Log
  * Fixed API endpoint + field mapping. Touch-optimized sections. Offline-first.
  */
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
+import SignaturePad from '@/components/SignaturePad';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -45,6 +46,32 @@ function DailyLogForm() {
   const [delays, setDelays] = useState('');
   const [safetyNotes, setSafetyNotes] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Site photos
+  const sitePhotoRef = useRef<HTMLInputElement>(null);
+  const [sitePhotoPreviews, setSitePhotoPreviews] = useState<string[]>([]);
+  const [sitePhotoFiles, setSitePhotoFiles] = useState<File[]>([]);
+  // Signature
+  const [showSignature, setShowSignature] = useState(false);
+  const [signatureData, setSignatureData] = useState('');
+
+  const handleSitePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setSitePhotoPreviews((prev) => [...prev, String(ev.target?.result || '')]);
+        setSitePhotoFiles((prev) => [...prev, file]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const removeSitePhoto = (idx: number) => {
+    setSitePhotoPreviews((prev) => prev.filter((_, i) => i !== idx));
+    setSitePhotoFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   useEffect(() => {
     const on = () => setOnline(true);
@@ -125,11 +152,28 @@ function DailyLogForm() {
     void aiLoading; void listening;
     setError('');
 
+    // Upload site photos if online
+    const photoUrls: string[] = [];
+    if (sitePhotoFiles.length > 0 && online) {
+      for (const file of sitePhotoFiles) {
+        try {
+          const fd = new FormData();
+          fd.append('file', file, file.name);
+          fd.append('category', 'Progress');
+          fd.append('caption', `Daily Log - ${new Date().toLocaleDateString()}`);
+          if (projectId) fd.append('projectId', projectId);
+          const r = await fetch('/api/photos/upload', { method: 'POST', body: fd });
+          if (r.ok) { const d = await r.json(); photoUrls.push(String(d.photo?.url || '')); }
+        } catch { /* skip */ }
+      }
+    }
+
     // Build notes with superintendent prefix
     const fullNotes = [
       superintendent.trim() ? `Superintendent: ${superintendent.trim()}` : '',
       equipment.trim() ? `Equipment: ${equipment.trim()}` : '',
       notes.trim(),
+      photoUrls.length ? `Site Photos: ${photoUrls.join(', ')}` : '',
     ].filter(Boolean).join('\n');
 
     // FIXED: correct field names matching /api/daily-logs/create
@@ -146,6 +190,8 @@ function DailyLogForm() {
       materialsDelivered: materialsDelivered.trim(),
       visitors: visitors.trim(),
       notes: fullNotes,
+      signature_data: signatureData || null,
+      photo_urls: photoUrls,
     };
 
     try {
@@ -322,6 +368,43 @@ function DailyLogForm() {
           <Field label="Additional Notes">
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Anything else to document..." rows={2} style={inp} />
           </Field>
+        </Section>
+
+        {/* Site Photos */}
+        <Section label="Site Photos">
+          <input ref={sitePhotoRef} type="file" accept="image/*" capture="environment" multiple onChange={handleSitePhoto} style={{ display: 'none' }} />
+          <button type="button" onClick={() => sitePhotoRef.current?.click()} style={{ width: '100%', background: 'transparent', border: `2px dashed rgba(212,160,23,.4)`, borderRadius: 10, padding: '14px', color: GOLD, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: sitePhotoPreviews.length ? 10 : 0 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx={12} cy={13} r={4}/></svg>
+            Take Site Photo
+          </button>
+          {sitePhotoPreviews.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+              {sitePhotoPreviews.map((src, i) => (
+                <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt={`Site photo ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 8, border: '1px solid #1E3A5F' }} />
+                  <button type="button" onClick={() => removeSitePhoto(i)} style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: RED, border: 'none', color: '#fff', fontSize: 12, fontWeight: 900, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>x</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+
+        {/* Superintendent Signature */}
+        <Section label="Superintendent Signature">
+          {signatureData ? (
+            <div style={{ textAlign: 'center' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={signatureData} alt="Signature" style={{ maxWidth: '100%', height: 80, borderRadius: 8, border: '1px solid #1E3A5F' }} />
+              <button type="button" onClick={() => { setSignatureData(''); setShowSignature(true); }} style={{ marginTop: 6, background: 'transparent', border: '1px solid #1E3A5F', borderRadius: 8, padding: '6px 14px', color: DIM, fontSize: 12, cursor: 'pointer' }}>Re-sign</button>
+            </div>
+          ) : showSignature ? (
+            <SignaturePad onSave={(d) => { setSignatureData(d); setShowSignature(false); }} onCancel={() => setShowSignature(false)} label="Superintendent Signature" />
+          ) : (
+            <button type="button" onClick={() => setShowSignature(true)} style={{ width: '100%', background: 'transparent', border: '2px dashed rgba(212,160,23,.4)', borderRadius: 10, padding: '14px', color: GOLD, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              Tap to Sign
+            </button>
+          )}
         </Section>
 
         {error && <ErrorBox msg={error} />}

@@ -23,7 +23,7 @@ const CAT_COLORS: Record<string, string> = {
   Inspection: '#8B5CF6', Safety: RED, Completion: '#22C55E', Other: DIM,
 };
 
-interface Photo { id: string; url: string; filename: string; category: string; caption: string; uploaded: boolean; created_at: string; }
+interface Photo { id: string; url: string; filename: string; category: string; caption: string; uploaded: boolean; created_at: string; latitude?: number; longitude?: number; }
 
 function PhotosPage() {
   const searchParams = useSearchParams();
@@ -50,6 +50,11 @@ function PhotosPage() {
   const [pendingPreview, setPendingPreview] = useState('');
   const [pendingCat, setPendingCat] = useState('Progress');
   const [pendingCaption, setPendingCaption] = useState('');
+
+  // GPS tagging
+  const [gpsLat, setGpsLat] = useState<number | null>(null);
+  const [gpsLng, setGpsLng] = useState<number | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -89,6 +94,17 @@ function PhotosPage() {
     reader.onload = (ev) => setPendingPreview(String(ev.target?.result || ''));
     reader.readAsDataURL(file);
     e.target.value = '';
+    // Auto-capture GPS
+    setGpsLat(null);
+    setGpsLng(null);
+    if (navigator.geolocation) {
+      setGpsLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { setGpsLat(pos.coords.latitude); setGpsLng(pos.coords.longitude); setGpsLoading(false); },
+        () => setGpsLoading(false),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
   };
 
   const cancelPending = () => {
@@ -110,6 +126,8 @@ function PhotosPage() {
       caption: pendingCaption,
       uploaded: false,
       created_at: new Date().toISOString(),
+      latitude: gpsLat ?? undefined,
+      longitude: gpsLng ?? undefined,
     };
 
     try {
@@ -119,6 +137,8 @@ function PhotosPage() {
       fd.append('category', pendingCat);
       fd.append('caption', pendingCaption);
       if (projectId) fd.append('projectId', projectId);
+      if (gpsLat !== null) fd.append('latitude', String(gpsLat));
+      if (gpsLng !== null) fd.append('longitude', String(gpsLng));
 
       const res = await fetch('/api/photos/upload', { method: 'POST', body: fd });
       if (!res.ok) throw new Error('Upload failed');
@@ -133,6 +153,8 @@ function PhotosPage() {
         caption: pendingCaption,
         uploaded: true,
         created_at: String(data.photo?.created_at || new Date().toISOString()),
+        latitude: gpsLat ?? undefined,
+        longitude: gpsLng ?? undefined,
       };
       setPhotos((prev) => [savedPhoto, ...prev]);
     } catch {
@@ -352,6 +374,13 @@ function PhotosPage() {
               <label style={lbl}>Caption</label>
               <input type="text" value={pendingCaption} onChange={(e) => setPendingCaption(e.target.value)} placeholder="Describe what you're capturing..." style={{ ...inp, marginTop: 5 }} />
             </div>
+            {/* GPS indicator */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke={gpsLat ? GREEN : DIM} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx={12} cy={10} r={3}/></svg>
+              <span style={{ fontSize: 12, color: gpsLat ? GREEN : DIM }}>
+                {gpsLoading ? 'Getting GPS...' : gpsLat ? `${gpsLat.toFixed(5)}, ${gpsLng?.toFixed(5)}` : 'No GPS data'}
+              </span>
+            </div>
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" onClick={cancelPending} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 14, color: DIM, fontSize: 15, cursor: 'pointer' }}>Cancel</button>
               <button
@@ -526,6 +555,21 @@ function PhotosPage() {
                 <p style={{ margin: '6px 0 0', color: DIM, fontSize: 12 }}>
                   {new Date(selected.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · Tap outside to close
                 </p>
+                {selected.latitude && selected.longitude && (
+                  <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx={12} cy={10} r={3}/></svg>
+                    <span style={{ fontSize: 11, color: GREEN }}>{selected.latitude.toFixed(5)}, {selected.longitude.toFixed(5)}</span>
+                    <a
+                      href={`https://www.google.com/maps?q=${selected.latitude},${selected.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ fontSize: 11, color: BLUE, textDecoration: 'underline', cursor: 'pointer' }}
+                    >
+                      View Map
+                    </a>
+                  </div>
+                )}
               </>
             )}
           </div>

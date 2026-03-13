@@ -3,9 +3,10 @@
  * Saguaro Field — Inspection
  * Enhanced checklist, per-item photo notes, better result picker. Offline queue.
  */
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import SignaturePad from '@/components/SignaturePad';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -15,6 +16,7 @@ const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const AMBER  = '#F59E0B';
+const BLUE   = '#3B82F6';
 
 const INSPECTION_TYPES = [
   'Foundation', 'Pre-Pour Concrete', 'Framing', 'Rough Electrical', 'Rough Plumbing',
@@ -45,7 +47,7 @@ function getChecklist(type: string) {
   return items.map((item) => ({ item, checked: false, note: '', deficiency: false }));
 }
 
-type CheckItem = { item: string; checked: boolean; note: string; deficiency: boolean };
+type CheckItem = { item: string; checked: boolean; note: string; deficiency: boolean; photoPreview?: string };
 
 function InspectionForm() {
   const searchParams = useSearchParams();
@@ -65,6 +67,28 @@ function InspectionForm() {
   const [notes, setNotes] = useState('');
   const [checklist, setChecklist] = useState<CheckItem[]>(() => getChecklist('Foundation'));
   const [deficiencyNote, setDeficiencyNote] = useState('');
+  const [showSignature, setShowSignature] = useState(false);
+  const [signatureData, setSignatureData] = useState('');
+  const itemPhotoRef = useRef<HTMLInputElement>(null);
+  const [photoTargetIdx, setPhotoTargetIdx] = useState(-1);
+
+  const captureItemPhoto = (idx: number) => {
+    setPhotoTargetIdx(idx);
+    setTimeout(() => itemPhotoRef.current?.click(), 50);
+  };
+
+  const handleItemPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || photoTargetIdx < 0) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const preview = String(ev.target?.result || '');
+      setChecklist((prev) => prev.map((x, i) => i === photoTargetIdx ? { ...x, photoPreview: preview } : x));
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+    setPhotoTargetIdx(-1);
+  };
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -116,6 +140,7 @@ function InspectionForm() {
       checklist_total: checklist.length,
       checklist_passed: checked,
       deficiency_count: deficiencies,
+      signature_data: signatureData || null,
     };
 
     try {
@@ -213,6 +238,14 @@ function InspectionForm() {
                 </span>
                 <button
                   type="button"
+                  onClick={(e) => { e.stopPropagation(); captureItemPhoto(idx); }}
+                  style={{ background: item.photoPreview ? 'rgba(59,130,246,.2)' : 'transparent', border: `1px solid ${item.photoPreview ? BLUE : BORDER}`, borderRadius: 6, padding: '2px 7px', fontSize: 11, color: item.photoPreview ? BLUE : DIM, cursor: 'pointer', flexShrink: 0 }}
+                  title="Attach photo"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx={12} cy={13} r={4}/></svg>
+                </button>
+                <button
+                  type="button"
                   onClick={(e) => { e.stopPropagation(); toggleDeficiency(idx); }}
                   style={{ background: item.deficiency ? 'rgba(239,68,68,.2)' : 'transparent', border: `1px solid ${item.deficiency ? RED : BORDER}`, borderRadius: 6, padding: '2px 7px', fontSize: 11, color: item.deficiency ? RED : DIM, cursor: 'pointer', flexShrink: 0, fontWeight: item.deficiency ? 700 : 400 }}
                   title="Mark as deficiency"
@@ -220,6 +253,10 @@ function InspectionForm() {
                   ⚠
                 </button>
               </div>
+              {item.photoPreview && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.photoPreview} alt="Item photo" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6, marginTop: 6, border: `1px solid ${BORDER}` }} />
+              )}
               <input
                 type="text"
                 value={item.note}
@@ -260,6 +297,27 @@ function InspectionForm() {
           )}
           <Label>General Notes / Comments</Label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Follow-up actions, reinspection required, approvals granted..." rows={3} style={inp} />
+        </div>
+
+        {/* Hidden file input for checklist item photos */}
+        <input ref={itemPhotoRef} type="file" accept="image/*" capture="environment" onChange={handleItemPhoto} style={{ display: 'none' }} />
+
+        {/* Inspector Signature */}
+        <div style={card}>
+          <p style={sectionLabel}>Inspector Signature</p>
+          {signatureData ? (
+            <div style={{ textAlign: 'center' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={signatureData} alt="Signature" style={{ maxWidth: '100%', height: 80, borderRadius: 8, border: `1px solid ${BORDER}` }} />
+              <button type="button" onClick={() => { setSignatureData(''); setShowSignature(true); }} style={{ marginTop: 6, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 14px', color: DIM, fontSize: 12, cursor: 'pointer' }}>Re-sign</button>
+            </div>
+          ) : showSignature ? (
+            <SignaturePad onSave={(d) => { setSignatureData(d); setShowSignature(false); }} onCancel={() => setShowSignature(false)} label="Inspector Signature" />
+          ) : (
+            <button type="button" onClick={() => setShowSignature(true)} style={{ width: '100%', background: 'transparent', border: `2px dashed rgba(212,160,23,.4)`, borderRadius: 10, padding: '14px', color: GOLD, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              Tap to Sign
+            </button>
+          )}
         </div>
 
         {error && <div style={{ background: 'rgba(239,68,68,.1)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 8, padding: '10px 14px', color: RED, fontSize: 14, marginBottom: 12 }}>{error}</div>}

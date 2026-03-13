@@ -15,6 +15,19 @@ interface Incident {
   project_id: string;
 }
 
+interface CorrectiveAction {
+  id: string;
+  description: string;
+  assigned_to: string;
+  due_date: string;
+  status: string;
+  verification_date?: string;
+  verified_by?: string;
+  incident_id?: string;
+  created_at?: string;
+  project_id?: string;
+}
+
 const TYPES = ['Near Miss', 'First Aid', 'Recordable', 'Lost Time'];
 
 const SEVERITY_BADGE: Record<string, 'amber' | 'gold' | 'red' | 'muted'> = {
@@ -29,7 +42,29 @@ const STATUS_BADGE: Record<string, 'red' | 'green' | 'muted'> = {
   Resolved: 'green',
 };
 
+const CA_STATUS_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'green' | 'muted'> = {
+  open: 'red',
+  in_progress: 'amber',
+  verified: 'gold',
+  closed: 'green',
+};
+
+const CA_STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
+  in_progress: 'In Progress',
+  verified: 'Verified',
+  closed: 'Closed',
+};
+
+const CA_STATUS_FLOW: Record<string, string> = {
+  open: 'in_progress',
+  in_progress: 'verified',
+  verified: 'closed',
+};
+
 const EMPTY_FORM = { date: '', type: 'Near Miss', description: '', severity: 'Near Miss', corrective_action: '' };
+
+const EMPTY_CA_FORM = { description: '', assigned_to: '', due_date: '' };
 
 export default function SafetyPage() {
   const { projectId } = useParams() as { projectId: string };
@@ -40,6 +75,13 @@ export default function SafetyPage() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Corrective Actions state
+  const [actions, setActions] = useState<CorrectiveAction[]>([]);
+  const [actionsLoading, setActionsLoading] = useState(true);
+  const [showCAForm, setShowCAForm] = useState(false);
+  const [caForm, setCaForm] = useState(EMPTY_CA_FORM);
+  const [caSaving, setCaSaving] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -54,11 +96,31 @@ export default function SafetyPage() {
     }
   }, [projectId]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const fetchActions = useCallback(async () => {
+    setActionsLoading(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/safety/corrective-actions`);
+      const json = await res.json();
+      setActions(json.actions || []);
+    } catch {
+      setActions([]);
+    } finally {
+      setActionsLoading(false);
+    }
+  }, [projectId]);
+
+  useEffect(() => { fetchData(); fetchActions(); }, [fetchData, fetchActions]);
 
   const totalIncidents = incidents.length;
   const openCount = incidents.filter(i => i.status === 'Open').length;
   const resolvedCount = incidents.filter(i => i.status === 'Resolved').length;
+
+  const openActionsCount = actions.filter(a => a.status === 'open' || a.status === 'in_progress').length;
+  const overdueActionsCount = actions.filter(a => {
+    if (a.status === 'closed' || a.status === 'verified') return false;
+    if (!a.due_date) return false;
+    return new Date(a.due_date) < new Date();
+  }).length;
 
   const lastIncident = incidents
     .filter(i => i.severity !== 'Near Miss')
@@ -73,6 +135,7 @@ export default function SafetyPage() {
     if (!form.description || !form.date) { setErrorMsg('Date and description are required.'); return; }
     setSaving(true);
     setErrorMsg('');
+    let newIncident: Incident;
     try {
       const res = await fetch('/api/safety/incidents/create', {
         method: 'POST',
@@ -80,14 +143,80 @@ export default function SafetyPage() {
         body: JSON.stringify({ projectId, status: 'Open', ...form }),
       });
       const json = await res.json();
-      setIncidents(prev => [json.incident || { id: `i-${Date.now()}`, project_id: projectId, status: 'Open', ...form }, ...prev]);
+      newIncident = json.incident || { id: `i-${Date.now()}`, project_id: projectId, status: 'Open', ...form };
+      setIncidents(prev => [newIncident, ...prev]);
     } catch {
-      setIncidents(prev => [{ id: `i-${Date.now()}`, project_id: projectId, status: 'Open', ...form }, ...prev]);
+      newIncident = { id: `i-${Date.now()}`, project_id: projectId, status: 'Open', ...form };
+      setIncidents(prev => [newIncident, ...prev]);
     }
+
+    // Auto-create corrective action if corrective_action text is provided
+    if (form.corrective_action && form.corrective_action.trim()) {
+      try {
+        const caRes = await fetch(`/api/projects/${projectId}/safety/corrective-actions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            description: form.corrective_action,
+            incident_id: newIncident.id,
+            due_date: '',
+            assigned_to: '',
+          }),
+        });
+        const caJson = await caRes.json();
+        if (caJson.action) {
+          setActions(prev => [caJson.action, ...prev]);
+        }
+      } catch {
+        // Corrective action creation failed silently -- incident was still recorded
+      }
+    }
+
     setShowForm(false);
     setForm(EMPTY_FORM);
     setSaving(false);
     setSuccessMsg('Incident reported.');
+    setTimeout(() => setSuccessMsg(''), 4000);
+  }
+
+  async function handleCreateCA() {
+    if (!caForm.description) { setErrorMsg('Corrective action description is required.'); return; }
+    setCaSaving(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch(`/api/projects/${projectId}/safety/corrective-actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(caForm),
+      });
+      const json = await res.json();
+      const newAction = json.action || { id: `ca-${Date.now()}`, project_id: projectId, status: 'open', ...caForm, created_at: new Date().toISOString() };
+      setActions(prev => [newAction, ...prev]);
+    } catch {
+      setActions(prev => [{ id: `ca-${Date.now()}`, project_id: projectId, status: 'open', ...caForm, created_at: new Date().toISOString() } as CorrectiveAction, ...prev]);
+    }
+    setShowCAForm(false);
+    setCaForm(EMPTY_CA_FORM);
+    setCaSaving(false);
+    setSuccessMsg('Corrective action created.');
+    setTimeout(() => setSuccessMsg(''), 4000);
+  }
+
+  async function handleAdvanceCAStatus(action: CorrectiveAction) {
+    const nextStatus = CA_STATUS_FLOW[action.status];
+    if (!nextStatus) return;
+    try {
+      const res = await fetch(`/api/projects/${projectId}/safety/corrective-actions/${action.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const json = await res.json();
+      setActions(prev => prev.map(a => a.id === action.id ? { ...a, ...json.action, status: nextStatus } : a));
+    } catch {
+      setActions(prev => prev.map(a => a.id === action.id ? { ...a, status: nextStatus } : a));
+    }
+    setSuccessMsg(`Action updated to ${CA_STATUS_LABELS[nextStatus]}.`);
     setTimeout(() => setSuccessMsg(''), 4000);
   }
 
@@ -105,6 +234,12 @@ export default function SafetyPage() {
       setSuccessMsg('JHA generation requested (demo mode).');
       setTimeout(() => setSuccessMsg(''), 4000);
     }
+  }
+
+  function isOverdue(action: CorrectiveAction): boolean {
+    if (action.status === 'closed' || action.status === 'verified') return false;
+    if (!action.due_date) return false;
+    return new Date(action.due_date) < new Date();
   }
 
   const inp: React.CSSProperties = {
@@ -131,15 +266,22 @@ export default function SafetyPage() {
       </div>
 
       {/* Stat Cards */}
-      <div style={{ padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
-        <StatCard icon="📋" label="Total Incidents" value={String(totalIncidents)} />
-        <StatCard icon="🔴" label="Open" value={String(openCount)} />
-        <StatCard icon="✅" label="Resolved" value={String(resolvedCount)} />
+      <div style={{ padding: '0 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 16 }}>
+        <StatCard icon="&#128203;" label="Total Incidents" value={String(totalIncidents)} />
+        <StatCard icon="&#128308;" label="Open" value={String(openCount)} />
+        <StatCard icon="&#9989;" label="Resolved" value={String(resolvedCount)} />
         <StatCard
-          icon="🛡️"
+          icon="&#128737;"
           label="Days Since Last Incident"
           value={String(daysSinceLast)}
           sub={daysSinceLast > 30 ? 'Excellent record' : undefined}
+        />
+        <StatCard icon="&#9888;" label="Open Actions" value={String(openActionsCount)} />
+        <StatCard
+          icon="&#9200;"
+          label="Overdue Actions"
+          value={String(overdueActionsCount)}
+          sub={overdueActionsCount > 0 ? 'Needs attention' : undefined}
         />
       </div>
 
@@ -150,7 +292,7 @@ export default function SafetyPage() {
         <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 8, color: T.red, fontSize: 13 }}>{errorMsg}</div>
       )}
 
-      {/* Create Form */}
+      {/* Create Incident Form */}
       {showForm && (
         <div style={{ padding: '0 24px 16px' }}>
           <Card>
@@ -191,8 +333,8 @@ export default function SafetyPage() {
         </div>
       )}
 
-      {/* Table */}
-      <div style={{ padding: '0 24px 40px' }}>
+      {/* Incidents Table */}
+      <div style={{ padding: '0 24px 24px' }}>
         <Card>
           <CardBody style={{ padding: 0 }}>
             {loading ? (
@@ -213,6 +355,92 @@ export default function SafetyPage() {
                   <Badge key="sev" label={i.severity} color={SEVERITY_BADGE[i.severity] || 'muted'} />,
                   <Badge key="st" label={i.status} color={STATUS_BADGE[i.status] || 'muted'} />,
                 ])}
+              />
+            )}
+          </CardBody>
+        </Card>
+      </div>
+
+      {/* Corrective Actions Section */}
+      <div style={{ padding: '0 24px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.white }}>Corrective Actions</h2>
+            <p style={{ margin: '2px 0 0', fontSize: 12, color: T.muted }}>Track and verify corrective actions from incidents</p>
+          </div>
+          <Btn onClick={() => { setShowCAForm(p => !p); setErrorMsg(''); }}>
+            {showCAForm ? 'Cancel' : '+ New Action'}
+          </Btn>
+        </div>
+      </div>
+
+      {/* Create Corrective Action Form */}
+      {showCAForm && (
+        <div style={{ padding: '0 24px 16px' }}>
+          <Card>
+            <CardHeader><span style={{ fontWeight: 700, color: T.gold }}>New Corrective Action</span></CardHeader>
+            <CardBody>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={lbl}>Description *</label>
+                  <textarea value={caForm.description} onChange={e => setCaForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inp, resize: 'vertical' }} />
+                </div>
+                <div>
+                  <label style={lbl}>Assigned To</label>
+                  <input value={caForm.assigned_to} onChange={e => setCaForm(p => ({ ...p, assigned_to: e.target.value }))} style={inp} placeholder="Name or email" />
+                </div>
+                <div>
+                  <label style={lbl}>Due Date</label>
+                  <SaguaroDatePicker value={caForm.due_date} onChange={v => setCaForm(p => ({ ...p, due_date: v }))} style={inp} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <Btn onClick={handleCreateCA} disabled={caSaving}>{caSaving ? 'Creating...' : 'Create Action'}</Btn>
+                <Btn variant="ghost" onClick={() => { setShowCAForm(false); setErrorMsg(''); }}>Cancel</Btn>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      )}
+
+      {/* Corrective Actions Table */}
+      <div style={{ padding: '0 24px 40px' }}>
+        <Card>
+          <CardBody style={{ padding: 0 }}>
+            {actionsLoading ? (
+              <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>Loading corrective actions...</div>
+            ) : actions.length === 0 ? (
+              <div style={{ padding: 40, textAlign: 'center', color: T.muted }}>
+                No corrective actions recorded.
+              </div>
+            ) : (
+              <Table
+                headers={['Description', 'Assigned To', 'Due Date', 'Status', 'Actions']}
+                rows={actions.map(a => {
+                  const overdue = isOverdue(a);
+                  const nextStatus = CA_STATUS_FLOW[a.status];
+                  const nextLabel = nextStatus ? CA_STATUS_LABELS[nextStatus] : null;
+                  return [
+                    <span key="desc" style={{ maxWidth: 280, display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {a.description}
+                    </span>,
+                    <span key="assign" style={{ color: a.assigned_to ? T.white : T.muted }}>{a.assigned_to || 'Unassigned'}</span>,
+                    <span key="due" style={{ color: overdue ? T.red : T.muted, fontWeight: overdue ? 700 : 400, whiteSpace: 'nowrap' }}>
+                      {a.due_date || 'No date'}
+                      {overdue && <span style={{ display: 'block', fontSize: 10, color: T.red }}>OVERDUE</span>}
+                    </span>,
+                    <Badge key="st" label={CA_STATUS_LABELS[a.status] || a.status} color={CA_STATUS_BADGE[a.status] || 'muted'} />,
+                    <span key="action">
+                      {nextLabel ? (
+                        <Btn variant="ghost" onClick={() => handleAdvanceCAStatus(a)} style={{ fontSize: 11, padding: '4px 10px' }}>
+                          {'\u2192'} {nextLabel}
+                        </Btn>
+                      ) : (
+                        <span style={{ fontSize: 11, color: T.green, fontWeight: 600 }}>Complete</span>
+                      )}
+                    </span>,
+                  ];
+                })}
               />
             )}
           </CardBody>
