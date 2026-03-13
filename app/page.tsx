@@ -183,9 +183,20 @@ export default function HomePage() {
                 </h1>
 
                 {/* Subheadline */}
-                <p className="hero-animate-delay" style={{ fontSize: 16, color: 'rgba(255,255,255,0.58)', maxWidth: 460, margin: '0 0 32px', lineHeight: 1.65, textAlign: 'left' }}>
-                  AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll &amp; Bid Intelligence — everything a GC needs to run profitable projects, in one platform.
+                <p className="hero-animate-delay" style={{ fontSize: 16, color: 'rgba(255,255,255,0.58)', maxWidth: 460, margin: '0 0 20px', lineHeight: 1.65, textAlign: 'left' }}>
+                  AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll &amp; Bid Intelligence — plus a <strong style={{ color: TEXT }}>full mobile field app</strong> your crew uses on any phone, offline, no App Store required.
                 </p>
+
+                {/* Field app mini-callout */}
+                <div className="hero-animate-delay" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 28, maxWidth: 420 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, flexShrink: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Saguaro Field — Mobile App Included Free</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>GPS clock-in · Daily logs · Offline · No App Store · AI assistant</div>
+                  </div>
+                </div>
 
                 {/* CTA row */}
                 <div className="hero-cta-row hero-animate-delay" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
@@ -193,8 +204,9 @@ export default function HomePage() {
                     Start Free Trial
                     <span style={{ fontSize: 16 }}>→</span>
                   </a>
-                  <a href="#demo" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 22px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 14, textDecoration: 'none' }}>
-                    <span style={{ fontSize: 12 }}>▶</span> How It Works
+                  <a href="#field-app" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 22px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 14, textDecoration: 'none' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
+                    See Field App
                   </a>
                 </div>
 
@@ -321,6 +333,37 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Field Tools Competition Strip ──────────────────────────────── */}
+        <div style={{ background: 'rgba(34,197,94,0.05)', borderTop: '1px solid rgba(34,197,94,0.12)', borderBottom: '1px solid rgba(34,197,94,0.12)' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 48px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, flexShrink: 0 }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Procore charges $600+/mo for field tools. Buildertrend makes you pay per seat. Saguaro Field is <span style={{ color: GREEN }}>included free</span> with every plan.</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {[
+                  { label: 'Works Offline', ok: true },
+                  { label: 'No App Store', ok: true },
+                  { label: 'GPS Clock-In', ok: true },
+                  { label: 'AI Assistant', ok: true },
+                  { label: 'Free with plan', ok: true },
+                ].map(f => (
+                  <span key={f.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: GREEN, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 20, padding: '4px 10px' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={10} height={10}><polyline points="20 6 9 17 4 12"/></svg>
+                    {f.label}
+                  </span>
+                ))}
+              </div>
+              <a href="/field-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: GREEN, borderRadius: 7, color: '#000', fontSize: 12, fontWeight: 800, textDecoration: 'none', whiteSpace: 'nowrap' as const }}>
+                See Field App →
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* ── Mobile Field App Section ─────────────────────────────────── */}
         <section id="field-app" style={{ background: 'rgba(212,160,23,0.04)', borderTop: '1px solid rgba(212,160,23,0.15)', borderBottom: '1px solid rgba(212,160,23,0.15)' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 48px' }}>
@@ -444,6 +487,50 @@ export default function HomePage() {
               </div>
             </div>
 
+          </div>
+
+          {/* ── Field App vs Competition table ── */}
+          <div style={{ marginTop: 56, borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 48 }}>
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase' as const, letterSpacing: '0.12em', marginBottom: 8 }}>How We Compare</div>
+              <h3 style={{ fontSize: 'clamp(18px, 2.5vw, 26px)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>Saguaro Field beats every field tool on the market</h3>
+            </div>
+            <div style={{ borderRadius: 12, overflow: 'hidden', border: `1px solid ${BORDER}`, maxWidth: 860, margin: '0 auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', background: RAISED }}>
+                {['Field Feature', 'Saguaro', 'Procore', 'Buildertrend'].map((h, i) => (
+                  <div key={h} style={{ padding: '13px 16px', fontSize: 11, fontWeight: 800, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: i === 1 ? GOLD : DIM, borderRight: i < 3 ? `1px solid ${BORDER}` : 'none', textAlign: i > 0 ? 'center' as const : 'left' as const }}>{h}</div>
+                ))}
+              </div>
+              {([
+                { feature: 'Works 100% Offline', saguaro: true, procore: false, bt: false },
+                { feature: 'No App Store Required', saguaro: true, procore: false, bt: false },
+                { feature: 'GPS Clock-In / Verification', saguaro: true, procore: true, bt: false },
+                { feature: 'AI Field Assistant (Sage)', saguaro: true, procore: false, bt: false },
+                { feature: 'Daily Logs + Site Photos', saguaro: true, procore: true, bt: true },
+                { feature: 'Punch List (mobile)', saguaro: true, procore: true, bt: false },
+                { feature: 'RFI Submission from Field', saguaro: true, procore: true, bt: false },
+                { feature: 'Included in Base Plan', saguaro: true, procore: false, bt: false },
+                { feature: 'No Per-Seat Fees', saguaro: true, procore: false, bt: false },
+                { feature: 'Installs in 30 seconds', saguaro: true, procore: false, bt: false },
+              ] as { feature: string; saguaro: boolean; procore: boolean; bt: boolean }[]).map((row, i) => (
+                <div key={row.feature} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderTop: `1px solid ${BORDER}` }}>
+                  <div style={{ padding: '11px 16px', fontSize: 13, color: TEXT, borderRight: `1px solid ${BORDER}` }}>{row.feature}</div>
+                  {[row.saguaro, row.procore, row.bt].map((v, j) => (
+                    <div key={j} style={{ padding: '11px 16px', textAlign: 'center' as const, borderRight: j < 2 ? `1px solid ${BORDER}` : 'none' }}>
+                      {v
+                        ? <span style={{ color: j === 0 ? GREEN : 'rgba(34,197,94,0.5)', fontSize: 15, fontWeight: 700 }}>✓</span>
+                        : <span style={{ color: 'rgba(239,68,68,0.5)', fontSize: 15 }}>✕</span>
+                      }
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 20 }}>
+              <a href="/field-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 28px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 8, color: '#000', fontSize: 13, fontWeight: 800, textDecoration: 'none' }}>
+                See Full Field App Features →
+              </a>
+            </div>
           </div>
           </div>
         </section>
