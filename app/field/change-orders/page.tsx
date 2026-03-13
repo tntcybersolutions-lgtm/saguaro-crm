@@ -131,6 +131,107 @@ function ChangeOrdersPage() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
 
+  // ─── Advanced Filters & Sorting ─────────────────────────────
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false);
+  const [drawerMounted, setDrawerMounted] = useState(false);
+  const [advFilterStatuses, setAdvFilterStatuses] = useState<string[]>([]);
+  const [advFilterType, setAdvFilterType] = useState<'all' | 'pco' | 'co'>('all');
+  const [advFilterAmtMin, setAdvFilterAmtMin] = useState('');
+  const [advFilterAmtMax, setAdvFilterAmtMax] = useState('');
+  const [advFilterDateFrom, setAdvFilterDateFrom] = useState('');
+  const [advFilterDateTo, setAdvFilterDateTo] = useState('');
+  const [advSortField, setAdvSortField] = useState<'date' | 'amount' | 'status'>('date');
+  const [advSortDir, setAdvSortDir] = useState<'asc' | 'desc'>('desc');
+  const [coSavedPresets, setCoSavedPresets] = useState<Array<{ name: string; f: Record<string, unknown>; sf: string; sd: string }>>([]);
+  const [coPresetName, setCoPresetName] = useState('');
+  const CO_FILTER_STATUSES = ['Draft', 'Pending', 'Approved', 'Rejected', 'Void'];
+
+  // Drawer animation helpers
+  const openDrawer = () => { setDrawerMounted(true); requestAnimationFrame(() => { requestAnimationFrame(() => { setShowFilterDrawer(true); }); }); };
+  const closeDrawer = () => { setShowFilterDrawer(false); setTimeout(() => setDrawerMounted(false), 320); };
+  const toggleDrawer = () => { if (showFilterDrawer) closeDrawer(); else openDrawer(); };
+
+  useEffect(() => {
+    try { const raw = localStorage.getItem(`saguaro_filters_cos_${projectId}`); if (raw) setCoSavedPresets(JSON.parse(raw)); } catch { /* */ }
+  }, [projectId]);
+  const persistCoPresets = (p: typeof coSavedPresets) => { setCoSavedPresets(p); try { localStorage.setItem(`saguaro_filters_cos_${projectId}`, JSON.stringify(p)); } catch { /* */ } };
+  const saveCoPreset = () => { if (!coPresetName.trim()) return; persistCoPresets([...coSavedPresets, { name: coPresetName.trim(), f: { st: advFilterStatuses, tp: advFilterType, amin: advFilterAmtMin, amax: advFilterAmtMax, d1: advFilterDateFrom, d2: advFilterDateTo }, sf: advSortField, sd: advSortDir }]); setCoPresetName(''); };
+  const loadCoPreset = (p: typeof coSavedPresets[0]) => { const f = p.f; setAdvFilterStatuses((f.st as string[]) || []); setAdvFilterType((f.tp as typeof advFilterType) || 'all'); setAdvFilterAmtMin((f.amin as string) || ''); setAdvFilterAmtMax((f.amax as string) || ''); setAdvFilterDateFrom((f.d1 as string) || ''); setAdvFilterDateTo((f.d2 as string) || ''); setAdvSortField((p.sf as typeof advSortField) || 'date'); setAdvSortDir((p.sd as typeof advSortDir) || 'desc'); };
+  const deleteCoPreset = (idx: number) => persistCoPresets(coSavedPresets.filter((_, i) => i !== idx));
+  const clearCoFilters = () => { setAdvFilterStatuses([]); setAdvFilterType('all'); setAdvFilterAmtMin(''); setAdvFilterAmtMax(''); setAdvFilterDateFrom(''); setAdvFilterDateTo(''); setAdvSortField('date'); setAdvSortDir('desc'); };
+  const toggleCoStatusFilter = (val: string) => setAdvFilterStatuses(prev => prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]);
+  const coActiveFilterCount = [advFilterStatuses.length > 0, advFilterType !== 'all', !!advFilterAmtMin || !!advFilterAmtMax, !!advFilterDateFrom || !!advFilterDateTo].filter(Boolean).length;
+
+  // Status ordering for sort-by-status
+  const STATUS_ORDER: Record<string, number> = { draft: 0, pending: 1, approved: 2, rejected: 3, void: 4, identified: 0, pricing: 1, submitted: 2, converted: 3 };
+
+  const getAdvFilteredCOs = (): ChangeOrder[] => {
+    let result = filter === 'all' ? [...cos] : cos.filter(c => c.status === filter);
+    if (advFilterStatuses.length > 0) {
+      result = result.filter(c => advFilterStatuses.some(fs => fs.toLowerCase() === (c.status || '').toLowerCase()));
+    }
+    if (advFilterAmtMin) result = result.filter(c => c.amount >= parseFloat(advFilterAmtMin));
+    if (advFilterAmtMax) result = result.filter(c => c.amount <= parseFloat(advFilterAmtMax));
+    if (advFilterDateFrom || advFilterDateTo) {
+      result = result.filter(c => { if (!c.created_at) return false; const dt = new Date(c.created_at).getTime(); if (advFilterDateFrom && dt < new Date(advFilterDateFrom).getTime()) return false; if (advFilterDateTo && dt > new Date(advFilterDateTo + 'T23:59:59').getTime()) return false; return true; });
+    }
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (advSortField === 'date') cmp = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      else if (advSortField === 'amount') cmp = (a.amount || 0) - (b.amount || 0);
+      else if (advSortField === 'status') cmp = (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99);
+      return advSortDir === 'desc' ? -cmp : cmp;
+    });
+    return result;
+  };
+
+  const getAdvFilteredPCOs = (): PCO[] => {
+    let result = pcoFilter === 'all' ? [...pcos] : pcos.filter(p => p.status === pcoFilter);
+    if (advFilterStatuses.length > 0) {
+      result = result.filter(p => advFilterStatuses.some(fs => fs.toLowerCase() === (p.status || '').toLowerCase()));
+    }
+    const getAmt = (p: PCO) => (p.estimated_min + p.estimated_max) / 2;
+    if (advFilterAmtMin) result = result.filter(p => getAmt(p) >= parseFloat(advFilterAmtMin));
+    if (advFilterAmtMax) result = result.filter(p => getAmt(p) <= parseFloat(advFilterAmtMax));
+    if (advFilterDateFrom || advFilterDateTo) {
+      result = result.filter(p => { if (!p.created_at) return false; const dt = new Date(p.created_at).getTime(); if (advFilterDateFrom && dt < new Date(advFilterDateFrom).getTime()) return false; if (advFilterDateTo && dt > new Date(advFilterDateTo + 'T23:59:59').getTime()) return false; return true; });
+    }
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (advSortField === 'date') cmp = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+      else if (advSortField === 'amount') cmp = getAmt(a) - getAmt(b);
+      else if (advSortField === 'status') cmp = (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99);
+      return advSortDir === 'desc' ? -cmp : cmp;
+    });
+    return result;
+  };
+
+  const applyCoQuickPreset = (key: string) => {
+    clearCoFilters();
+    if (key === 'pending') { setAdvFilterStatuses(['Pending']); }
+    else if (key === 'high_value') { setAdvFilterAmtMin('10000'); setAdvSortField('amount'); setAdvSortDir('desc'); }
+    else if (key === 'approved_this_month') { const d = new Date(); setAdvFilterStatuses(['Approved']); setAdvFilterDateFrom(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`); }
+  };
+  const advFilteredCOs = getAdvFilteredCOs();
+  const advFilteredPCOs = getAdvFilteredPCOs();
+  const coChipStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(212,160,23,.12)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: GOLD, cursor: 'pointer', whiteSpace: 'nowrap' };
+
+  // ─── Drawer overlay + panel styles ──────────────────────────
+  const drawerOverlayStyle: React.CSSProperties = {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 900,
+    background: showFilterDrawer ? 'rgba(0,0,0,.55)' : 'rgba(0,0,0,0)',
+    transition: 'background 300ms ease',
+    pointerEvents: showFilterDrawer ? 'auto' : 'none',
+  };
+  const drawerPanelStyle: React.CSSProperties = {
+    position: 'fixed', top: 0, right: 0, bottom: 0, width: '85%', maxWidth: 380, zIndex: 910,
+    background: '#0A1929', borderLeft: `1px solid ${BORDER}`,
+    transform: showFilterDrawer ? 'translateX(0)' : 'translateX(100%)',
+    transition: 'transform 300ms cubic-bezier(.4,0,.2,1)',
+    display: 'flex', flexDirection: 'column' as const, overflowY: 'auto' as const,
+    boxShadow: showFilterDrawer ? '-8px 0 30px rgba(0,0,0,.4)' : 'none',
+  };
+
   useEffect(() => {
     setOnline(navigator.onLine);
     const on = () => setOnline(true);
@@ -625,12 +726,10 @@ function ChangeOrdersPage() {
     setPdfLoading(false);
   };
 
-  const filtered = filter === 'all' ? cos : cos.filter((c) => c.status === filter);
   const totalValue = cos.reduce((sum, c) => sum + (c.amount || 0), 0);
   const approvedValue = cos.filter((c) => c.status === 'approved').reduce((sum, c) => sum + (c.amount || 0), 0);
   const pendingCount = cos.filter((c) => c.status === 'pending').length;
 
-  const filteredPCOs = pcoFilter === 'all' ? pcos : pcos.filter((p) => p.status === pcoFilter);
   const pcoTotalEstimated = pcos.reduce((sum, p) => sum + ((p.estimated_min + p.estimated_max) / 2), 0);
   const pcoPendingCount = pcos.filter((p) => !['converted', 'rejected'].includes(p.status)).length;
 
@@ -716,6 +815,150 @@ function ChangeOrdersPage() {
       <div style={{ padding: '18px 16px' }}>
         <EmailModal />
 
+        {/* ─── Filter Drawer (slides from right) ─── */}
+        {drawerMounted && (
+          <>
+            <div style={drawerOverlayStyle} onClick={closeDrawer} />
+            <div style={drawerPanelStyle}>
+              <div style={{ padding: '18px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: GOLD }}>Filters &amp; Sort</h2>
+                <button onClick={closeDrawer} style={{ background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer', padding: 4, lineHeight: 1 }}>&times;</button>
+              </div>
+
+              <div style={{ padding: '14px 16px', flex: 1, overflowY: 'auto' }}>
+                {/* Status multi-select */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Status</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {CO_FILTER_STATUSES.map(s => (
+                      <button key={s} onClick={() => toggleCoStatusFilter(s)} style={{
+                        background: advFilterStatuses.includes(s) ? 'rgba(212,160,23,.2)' : 'transparent',
+                        border: `1px solid ${advFilterStatuses.includes(s) ? GOLD : BORDER}`, borderRadius: 20,
+                        padding: '6px 14px', color: advFilterStatuses.includes(s) ? GOLD : DIM, fontSize: 12,
+                        fontWeight: advFilterStatuses.includes(s) ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' as const,
+                      }}>{s}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Type filter (PCO / CO) */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Type</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {(['all', 'co', 'pco'] as const).map(t => (
+                      <button key={t} onClick={() => setAdvFilterType(t)} style={{
+                        background: advFilterType === t ? 'rgba(212,160,23,.2)' : 'transparent',
+                        border: `1px solid ${advFilterType === t ? GOLD : BORDER}`, borderRadius: 20,
+                        padding: '6px 14px', color: advFilterType === t ? GOLD : DIM, fontSize: 12,
+                        fontWeight: advFilterType === t ? 700 : 400, cursor: 'pointer',
+                      }}>{t === 'all' ? 'All' : t.toUpperCase()}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Amount range */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Amount Range</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input type="number" value={advFilterAmtMin} onChange={e => setAdvFilterAmtMin(e.target.value)} placeholder="Min $" style={{ ...inp, fontSize: 13, padding: '8px 10px', flex: 1 }} />
+                    <span style={{ color: DIM, fontSize: 12, flexShrink: 0 }}>to</span>
+                    <input type="number" value={advFilterAmtMax} onChange={e => setAdvFilterAmtMax(e.target.value)} placeholder="Max $" style={{ ...inp, fontSize: 13, padding: '8px 10px', flex: 1 }} />
+                  </div>
+                </div>
+
+                {/* Date range */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Date Range</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input type="date" value={advFilterDateFrom} onChange={e => setAdvFilterDateFrom(e.target.value)} style={{ ...inp, fontSize: 13, padding: '8px 10px', flex: 1 }} />
+                    <span style={{ color: DIM, fontSize: 12, flexShrink: 0 }}>to</span>
+                    <input type="date" value={advFilterDateTo} onChange={e => setAdvFilterDateTo(e.target.value)} style={{ ...inp, fontSize: 13, padding: '8px 10px', flex: 1 }} />
+                  </div>
+                </div>
+
+                {/* Sort by field + direction toggle */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Sort By</label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <select value={advSortField} onChange={e => setAdvSortField(e.target.value as typeof advSortField)} style={{ ...inp, fontSize: 13, padding: '8px 12px', flex: 1 }}>
+                      <option value="date">Date</option>
+                      <option value="amount">Amount</option>
+                      <option value="status">Status</option>
+                    </select>
+                    <button onClick={() => setAdvSortDir(prev => prev === 'asc' ? 'desc' : 'asc')} style={{
+                      background: 'rgba(212,160,23,.1)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 10,
+                      padding: '8px 12px', color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
+                    }}>
+                      {advSortDir === 'asc' ? (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={19} x2={12} y2={5}/><polyline points="5 12 12 5 19 12"/></svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={5} x2={12} y2={19}/><polyline points="19 12 12 19 5 12"/></svg>
+                      )}
+                      {advSortDir === 'asc' ? 'Asc' : 'Desc'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ borderTop: `1px solid ${BORDER}`, margin: '4px 0 14px' }} />
+
+                {/* Quick presets */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Quick Presets</label>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <button onClick={() => applyCoQuickPreset('pending')} style={coChipStyle}>Pending Approval</button>
+                    <button onClick={() => applyCoQuickPreset('approved_this_month')} style={coChipStyle}>Approved This Month</button>
+                    <button onClick={() => applyCoQuickPreset('high_value')} style={coChipStyle}>High Value (&gt;$10K)</button>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div style={{ borderTop: `1px solid ${BORDER}`, margin: '4px 0 14px' }} />
+
+                {/* Save preset */}
+                <div style={{ marginBottom: 14 }}>
+                  <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Save Current as Preset</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input value={coPresetName} onChange={e => setCoPresetName(e.target.value)} placeholder="Preset name..." style={{ ...inp, fontSize: 13, padding: '8px 12px', flex: 1 }} />
+                    <button onClick={saveCoPreset} disabled={!coPresetName.trim()} style={{
+                      background: coPresetName.trim() ? GOLD : '#1E3A5F', border: 'none', borderRadius: 10,
+                      padding: '8px 16px', color: coPresetName.trim() ? '#000' : DIM, fontSize: 13, fontWeight: 700, cursor: coPresetName.trim() ? 'pointer' : 'not-allowed',
+                    }}>Save</button>
+                  </div>
+                </div>
+
+                {/* Saved presets list */}
+                {coSavedPresets.length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 0.8, marginBottom: 8 }}>Saved Presets</label>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {coSavedPresets.map((p, i) => (
+                        <span key={i} style={{ ...coChipStyle, gap: 6 }}>
+                          <span onClick={() => { loadCoPreset(p); }} style={{ cursor: 'pointer' }}>{p.name}</span>
+                          <span onClick={() => deleteCoPreset(i)} style={{ cursor: 'pointer', opacity: 0.6, fontSize: 13, lineHeight: 1 }}>&times;</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Drawer footer */}
+              <div style={{ padding: '12px 16px', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 10, flexShrink: 0 }}>
+                <button onClick={() => { clearCoFilters(); }} style={{
+                  flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 12,
+                  padding: '12px', color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                }}>Reset All</button>
+                <button onClick={closeDrawer} style={{
+                  flex: 2, background: GOLD, border: 'none', borderRadius: 12,
+                  padding: '12px', color: '#000', fontSize: 14, fontWeight: 800, cursor: 'pointer',
+                }}>Apply Filters</button>
+              </div>
+            </div>
+          </>
+        )}
+
         <button onClick={() => router.back()} style={backBtn}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
             <line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/>
@@ -761,21 +1004,68 @@ function ChangeOrdersPage() {
               ))}
             </div>
 
+            {/* ─── Advanced Filters ─── */}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+              <button onClick={toggleDrawer} style={{
+                background: coActiveFilterCount > 0 ? 'rgba(212,160,23,.15)' : 'transparent',
+                border: `1px solid ${coActiveFilterCount > 0 ? GOLD : BORDER}`,
+                borderRadius: 10, padding: '8px 14px', color: coActiveFilterCount > 0 ? GOLD : DIM,
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Filters {coActiveFilterCount > 0 ? `(${coActiveFilterCount})` : ''}
+              </button>
+              {coActiveFilterCount > 0 && (
+                <button onClick={clearCoFilters} style={{
+                  background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10,
+                  padding: '8px 12px', color: DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}>Clear All</button>
+              )}
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: DIM, fontWeight: 600 }}>
+                Showing {advFilteredCOs.length} of {cos.length}
+              </span>
+            </div>
+
+            {coActiveFilterCount > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                {advFilterStatuses.map(s => (
+                  <span key={s} style={coChipStyle}>
+                    {s} <span onClick={() => setAdvFilterStatuses(prev => prev.filter(v => v !== s))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+                  </span>
+                ))}
+                {advFilterType !== 'all' && (
+                  <span style={coChipStyle}>
+                    Type: {advFilterType.toUpperCase()} <span onClick={() => setAdvFilterType('all')} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+                  </span>
+                )}
+                {(advFilterAmtMin || advFilterAmtMax) && (
+                  <span style={coChipStyle}>
+                    Amount: {advFilterAmtMin ? `$${advFilterAmtMin}` : '...'} - {advFilterAmtMax ? `$${advFilterAmtMax}` : '...'} <span onClick={() => { setAdvFilterAmtMin(''); setAdvFilterAmtMax(''); }} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+                  </span>
+                )}
+                {(advFilterDateFrom || advFilterDateTo) && (
+                  <span style={coChipStyle}>
+                    Date: {advFilterDateFrom || '...'} - {advFilterDateTo || '...'} <span onClick={() => { setAdvFilterDateFrom(''); setAdvFilterDateTo(''); }} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* List */}
             {loading ? (
               <div style={{ textAlign: 'center', padding: '40px 0', color: DIM }}>Loading change orders...</div>
-            ) : filtered.length === 0 ? (
+            ) : advFilteredCOs.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 16px', color: DIM }}>
                 <div style={{ marginBottom: 8, color: GOLD, display: 'flex', justifyContent: 'center', opacity: 0.6 }}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}>
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1={12} y1={18} x2={12} y2={12}/><line x1={9} y1={15} x2={15} y2={15}/>
                   </svg>
                 </div>
-                <p style={{ margin: 0, fontSize: 14 }}>{filter === 'all' ? 'No change orders yet. Tap "+ New CO" to create one.' : 'No change orders match this filter.'}</p>
+                <p style={{ margin: 0, fontSize: 14 }}>{filter === 'all' && coActiveFilterCount === 0 ? 'No change orders yet. Tap "+ New CO" to create one.' : 'No change orders match your filters.'}</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {filtered.map((co) => {
+                {advFilteredCOs.map((co) => {
                   const sc = STATUS_COLORS[co.status] || DIM;
                   return (
                     <button
@@ -839,21 +1129,63 @@ function ChangeOrdersPage() {
               ))}
             </div>
 
+            {/* ─── PCO Advanced Filters ─── */}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+              <button onClick={toggleDrawer} style={{
+                background: coActiveFilterCount > 0 ? 'rgba(168,85,247,.15)' : 'transparent',
+                border: `1px solid ${coActiveFilterCount > 0 ? PURPLE : BORDER}`,
+                borderRadius: 10, padding: '8px 14px', color: coActiveFilterCount > 0 ? PURPLE : DIM,
+                fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Filters {coActiveFilterCount > 0 ? `(${coActiveFilterCount})` : ''}
+              </button>
+              {coActiveFilterCount > 0 && (
+                <button onClick={clearCoFilters} style={{
+                  background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10,
+                  padding: '8px 12px', color: DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                }}>Clear All</button>
+              )}
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: DIM, fontWeight: 600 }}>
+                Showing {advFilteredPCOs.length} of {pcos.length}
+              </span>
+            </div>
+
+            {coActiveFilterCount > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                {advFilterStatuses.map(s => (
+                  <span key={s} style={{ ...coChipStyle, color: PURPLE, borderColor: 'rgba(168,85,247,.3)', background: 'rgba(168,85,247,.12)' }}>
+                    {s} <span onClick={() => setAdvFilterStatuses(prev => prev.filter(v => v !== s))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+                  </span>
+                ))}
+                {(advFilterAmtMin || advFilterAmtMax) && (
+                  <span style={{ ...coChipStyle, color: PURPLE, borderColor: 'rgba(168,85,247,.3)', background: 'rgba(168,85,247,.12)' }}>
+                    Amount: {advFilterAmtMin ? `$${advFilterAmtMin}` : '...'} - {advFilterAmtMax ? `$${advFilterAmtMax}` : '...'} <span onClick={() => { setAdvFilterAmtMin(''); setAdvFilterAmtMax(''); }} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+                  </span>
+                )}
+                {(advFilterDateFrom || advFilterDateTo) && (
+                  <span style={{ ...coChipStyle, color: PURPLE, borderColor: 'rgba(168,85,247,.3)', background: 'rgba(168,85,247,.12)' }}>
+                    Date: {advFilterDateFrom || '...'} - {advFilterDateTo || '...'} <span onClick={() => { setAdvFilterDateFrom(''); setAdvFilterDateTo(''); }} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+                  </span>
+                )}
+              </div>
+            )}
+
             {/* PCO List */}
             {pcoLoading ? (
               <div style={{ textAlign: 'center', padding: '40px 0', color: DIM }}>Loading PCOs...</div>
-            ) : filteredPCOs.length === 0 ? (
+            ) : advFilteredPCOs.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px 16px', color: DIM }}>
                 <div style={{ marginBottom: 8, color: PURPLE, display: 'flex', justifyContent: 'center', opacity: 0.6 }}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}>
                     <circle cx={12} cy={12} r={10}/><line x1={12} y1={8} x2={12} y2={12}/><line x1={12} y1={16} x2={12.01} y2={16}/>
                   </svg>
                 </div>
-                <p style={{ margin: 0, fontSize: 14 }}>{pcoFilter === 'all' ? 'No potential change orders yet. Tap "+ New PCO" to create one.' : 'No PCOs match this filter.'}</p>
+                <p style={{ margin: 0, fontSize: 14 }}>{pcoFilter === 'all' && coActiveFilterCount === 0 ? 'No potential change orders yet. Tap "+ New PCO" to create one.' : 'No PCOs match your filters.'}</p>
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {filteredPCOs.map((pco) => {
+                {advFilteredPCOs.map((pco) => {
                   const sc = PCO_STATUS_COLORS[pco.status] || DIM;
                   const midEst = (pco.estimated_min + pco.estimated_max) / 2;
                   return (

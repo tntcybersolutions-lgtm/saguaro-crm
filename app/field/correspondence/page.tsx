@@ -4,7 +4,7 @@
  * Full-featured correspondence management: Letters, Transmittals, Notices,
  * Memos, and Email Records with read receipts, threading, and offline support.
  */
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
@@ -78,9 +78,58 @@ interface Correspondence {
   direction?: 'inbound' | 'outbound';
 }
 
+type SortField = 'date' | 'type' | 'status';
+type SortDir = 'asc' | 'desc';
+
+interface AdvancedFilters {
+  types: CorrespondenceType[];
+  statuses: CorrespondenceStatus[];
+  fromTo: string;
+  dateFrom: string;
+  dateTo: string;
+  sortField: SortField;
+  sortDir: SortDir;
+}
+
+interface SavedPreset {
+  name: string;
+  filters: AdvancedFilters;
+}
+
 const TYPES: CorrespondenceType[] = ['Letter', 'Transmittal', 'Notice', 'Memo', 'Email Record'];
 const STATUSES: CorrespondenceStatus[] = ['Draft', 'Sent', 'Read', 'Replied'];
 const PURPOSES: TransmittalPurpose[] = ['For Review', 'For Approval', 'For Record', 'As Requested'];
+
+const EMPTY_FILTERS: AdvancedFilters = {
+  types: [], statuses: [], fromTo: '', dateFrom: '', dateTo: '',
+  sortField: 'date', sortDir: 'desc',
+};
+
+const PRESETS_STORAGE_KEY_BASE = 'saguaro_filters_corr_';
+
+function loadSavedPresets(pid: string): SavedPreset[] {
+  try {
+    const raw = localStorage.getItem(PRESETS_STORAGE_KEY_BASE + pid);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function savePersistentPresets(pid: string, presets: SavedPreset[]) {
+  try { localStorage.setItem(PRESETS_STORAGE_KEY_BASE + pid, JSON.stringify(presets)); } catch { /* silent */ }
+}
+
+function isFiltersActive(f: AdvancedFilters): boolean {
+  return f.types.length > 0 || f.statuses.length > 0 || f.fromTo.trim() !== ''
+    || f.dateFrom !== '' || f.dateTo !== '';
+}
+
+function startOfWeek(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d.setDate(diff));
+  return monday.toISOString().split('T')[0];
+}
 
 /* ─── Helpers ─── */
 function formatDate(d: string | undefined): string {
@@ -152,6 +201,15 @@ function CorrespondencePage() {
   const [filterStatus, setFilterStatus] = useState<CorrespondenceStatus | ''>('');
   const [search, setSearch] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Advanced filter state
+  const [advFilters, setAdvFilters] = useState<AdvancedFilters>({ ...EMPTY_FILTERS });
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [savedPresets, setSavedPresets] = useState<SavedPreset[]>([]);
+  const [presetName, setPresetName] = useState('');
+
+  // Load saved presets from localStorage on mount
+  useEffect(() => { setSavedPresets(loadSavedPresets(projectId)); }, [projectId]);
   const [submitMsg, setSubmitMsg] = useState('');
 
   // Create form state
@@ -205,20 +263,139 @@ function CorrespondencePage() {
   /* ─── Derived data ─── */
   const unreadCount = items.filter(i => i.direction === 'inbound' && i.status !== 'Read' && i.status !== 'Replied').length;
 
-  const filtered = items.filter(i => {
-    if (tab === 'Inbox' && i.direction !== 'inbound') return false;
-    if (tab === 'Sent' && i.direction !== 'outbound') return false;
-    if (filterType && i.type !== filterType) return false;
-    if (filterStatus && i.status !== filterStatus) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      const inSubject = i.subject?.toLowerCase().includes(q);
-      const inTo = i.to?.some(r => r.name?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q));
-      const inFrom = i.from_name?.toLowerCase().includes(q) || i.from_email?.toLowerCase().includes(q);
-      if (!inSubject && !inTo && !inFrom) return false;
+  const filtered = useMemo(() => {
+    let result = items.filter(i => {
+      if (tab === 'Inbox' && i.direction !== 'inbound') return false;
+      if (tab === 'Sent' && i.direction !== 'outbound') return false;
+      // Legacy simple filters (still used by dropdowns)
+      if (filterType && i.type !== filterType) return false;
+      if (filterStatus && i.status !== filterStatus) return false;
+      // Advanced multi-select type filter
+      if (advFilters.types.length > 0 && !advFilters.types.includes(i.type)) return false;
+      // Advanced multi-select status filter
+      if (advFilters.statuses.length > 0 && !advFilters.statuses.includes(i.status)) return false;
+      // From/To text filter
+      if (advFilters.fromTo.trim()) {
+        const q = advFilters.fromTo.toLowerCase();
+        const inFrom = i.from_name?.toLowerCase().includes(q) || i.from_email?.toLowerCase().includes(q);
+        const inTo = i.to?.some(r => r.name?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q));
+        if (!inFrom && !inTo) return false;
+      }
+      // Date range
+      if (advFilters.dateFrom) {
+        const itemDate = new Date(i.sent_at || i.created_at).toISOString().split('T')[0];
+        if (itemDate < advFilters.dateFrom) return false;
+      }
+      if (advFilters.dateTo) {
+        const itemDate = new Date(i.sent_at || i.created_at).toISOString().split('T')[0];
+        if (itemDate > advFilters.dateTo) return false;
+      }
+      // Search
+      if (search) {
+        const q = search.toLowerCase();
+        const inSubject = i.subject?.toLowerCase().includes(q);
+        const inTo = i.to?.some(r => r.name?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q));
+        const inFrom = i.from_name?.toLowerCase().includes(q) || i.from_email?.toLowerCase().includes(q);
+        if (!inSubject && !inTo && !inFrom) return false;
+      }
+      return true;
+    });
+    // Sort
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (advFilters.sortField === 'date') {
+        const da = new Date(a.sent_at || a.created_at).getTime();
+        const db = new Date(b.sent_at || b.created_at).getTime();
+        cmp = da - db;
+      } else if (advFilters.sortField === 'type') {
+        cmp = a.type.localeCompare(b.type);
+      } else if (advFilters.sortField === 'status') {
+        cmp = a.status.localeCompare(b.status);
+      }
+      return advFilters.sortDir === 'asc' ? cmp : -cmp;
+    });
+    return result;
+  }, [items, tab, filterType, filterStatus, advFilters, search]);
+
+  const filtersAreActive = isFiltersActive(advFilters) || !!filterType || !!filterStatus || !!search;
+
+  /* ─── Preset helpers ─── */
+  const savePreset = () => {
+    if (!presetName.trim()) return;
+    const newPreset: SavedPreset = { name: presetName.trim(), filters: { ...advFilters } };
+    const updated = [...savedPresets.filter(p => p.name !== newPreset.name), newPreset];
+    setSavedPresets(updated);
+    savePersistentPresets(projectId, updated);
+    setPresetName('');
+  };
+
+  const deletePreset = (name: string) => {
+    const updated = savedPresets.filter(p => p.name !== name);
+    setSavedPresets(updated);
+    savePersistentPresets(projectId, updated);
+  };
+
+  const applyPreset = (filters: AdvancedFilters) => {
+    setAdvFilters({ ...filters });
+    setFilterType('');
+    setFilterStatus('');
+  };
+
+  const clearAllFilters = () => {
+    setAdvFilters({ ...EMPTY_FILTERS });
+    setFilterType('');
+    setFilterStatus('');
+    setSearch('');
+  };
+
+  const applyQuickPreset = (key: 'unread' | 'urgent' | 'transmittals' | 'sentThisWeek' | 'notices' | 'pendingReply') => {
+    const base: AdvancedFilters = { ...EMPTY_FILTERS };
+    setFilterType('');
+    setFilterStatus('');
+    setSearch('');
+    switch (key) {
+      case 'unread':
+        base.statuses = ['Sent'];
+        setTab('Inbox');
+        break;
+      case 'urgent':
+        setSearch('');
+        setTab('All');
+        break;
+      case 'transmittals':
+        base.types = ['Transmittal'];
+        setTab('All');
+        break;
+      case 'sentThisWeek':
+        base.dateFrom = startOfWeek();
+        base.dateTo = new Date().toISOString().split('T')[0];
+        setTab('Sent');
+        break;
+      case 'notices':
+        base.types = ['Notice'];
+        setTab('All');
+        break;
+      case 'pendingReply':
+        base.statuses = ['Sent', 'Read'];
+        setTab('Inbox');
+        break;
     }
-    return true;
-  });
+    setAdvFilters(base);
+  };
+
+  const toggleAdvType = (t: CorrespondenceType) => {
+    setAdvFilters(prev => ({
+      ...prev,
+      types: prev.types.includes(t) ? prev.types.filter(x => x !== t) : [...prev.types, t],
+    }));
+  };
+
+  const toggleAdvStatus = (s: CorrespondenceStatus) => {
+    setAdvFilters(prev => ({
+      ...prev,
+      statuses: prev.statuses.includes(s) ? prev.statuses.filter(x => x !== s) : [...prev.statuses, s],
+    }));
+  };
 
   /* ─── Read receipt ─── */
   const markRead = useCallback(async (item: Correspondence) => {
@@ -479,23 +656,244 @@ function CorrespondencePage() {
         ))}
       </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-        <select value={filterType} onChange={e => setFilterType(e.target.value as CorrespondenceType | '')}
-          style={{ ...selectStyle, width: 'auto', minWidth: 120, flex: '0 0 auto' }}>
-          <option value="">All Types</option>
-          {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value as CorrespondenceStatus | '')}
-          style={{ ...selectStyle, width: 'auto', minWidth: 120, flex: '0 0 auto' }}>
-          <option value="">All Statuses</option>
-          {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
+      {/* Search bar + filter toggle */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           placeholder="Search subject, recipient..."
           value={search} onChange={e => setSearch(e.target.value)}
           style={{ ...input, flex: 1, minWidth: 160 }}
         />
+        <button
+          onClick={() => setFilterDrawerOpen(prev => !prev)}
+          style={{
+            ...btn(filterDrawerOpen ? GOLD : BORDER, true),
+            color: filterDrawerOpen ? '#000' : (filtersAreActive ? GOLD : DIM),
+            border: filtersAreActive ? `1px solid ${GOLD}` : `1px solid ${BORDER}`,
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}
+        >
+          {'\u2699'} Filters {filtersAreActive ? '\u2022' : ''}
+        </button>
+        {filtersAreActive && (
+          <button onClick={clearAllFilters} style={{ ...btn('transparent', true), color: RED, fontSize: 11, padding: '6px 8px' }}>
+            Clear All
+          </button>
+        )}
+      </div>
+
+      {/* Quick presets row */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+        {([
+          { key: 'unread' as const, label: 'Unread' },
+          { key: 'urgent' as const, label: 'Urgent' },
+          { key: 'transmittals' as const, label: 'Transmittals' },
+          { key: 'sentThisWeek' as const, label: 'Sent This Week' },
+          { key: 'notices' as const, label: 'Notices' },
+          { key: 'pendingReply' as const, label: 'Pending Reply' },
+        ]).map(qp => (
+          <button key={qp.key} onClick={() => applyQuickPreset(qp.key)} style={{
+            background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 14,
+            color: DIM, fontSize: 11, fontWeight: 600, padding: '4px 12px', cursor: 'pointer',
+            letterSpacing: 0.3,
+          }}>
+            {qp.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Filter drawer */}
+      {filterDrawerOpen && (
+        <div style={{
+          background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14,
+          padding: 16, marginBottom: 14,
+          animation: 'none',
+          overflow: 'hidden',
+        }}>
+          {/* Type multi-select */}
+          <div style={{ marginBottom: 14 }}>
+            <span style={label}>Type</span>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {TYPES.map(t => (
+                <button key={t} onClick={() => toggleAdvType(t)} style={{
+                  background: advFilters.types.includes(t) ? GOLD : 'transparent',
+                  color: advFilters.types.includes(t) ? '#000' : DIM,
+                  border: `1px solid ${advFilters.types.includes(t) ? GOLD : BORDER}`,
+                  borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600,
+                  cursor: 'pointer',
+                }}>
+                  {typeIcon(t)} {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Status multi-select */}
+          <div style={{ marginBottom: 14 }}>
+            <span style={label}>Status</span>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {STATUSES.map(s => (
+                <button key={s} onClick={() => toggleAdvStatus(s)} style={{
+                  background: advFilters.statuses.includes(s) ? statusColor(s) : 'transparent',
+                  color: advFilters.statuses.includes(s) ? '#fff' : DIM,
+                  border: `1px solid ${advFilters.statuses.includes(s) ? statusColor(s) : BORDER}`,
+                  borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600,
+                  cursor: 'pointer',
+                }}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* From/To text filter */}
+          <div style={{ marginBottom: 14 }}>
+            <span style={label}>From / To</span>
+            <input
+              placeholder="Filter by sender or recipient name/email..."
+              value={advFilters.fromTo}
+              onChange={e => setAdvFilters(prev => ({ ...prev, fromTo: e.target.value }))}
+              style={input}
+            />
+          </div>
+
+          {/* Date range */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 140 }}>
+              <span style={label}>Date From</span>
+              <input type="date" value={advFilters.dateFrom}
+                onChange={e => setAdvFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+                style={{ ...input, colorScheme: 'dark' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 140 }}>
+              <span style={label}>Date To</span>
+              <input type="date" value={advFilters.dateTo}
+                onChange={e => setAdvFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+                style={{ ...input, colorScheme: 'dark' }} />
+            </div>
+          </div>
+
+          {/* Sort */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ flex: 1, minWidth: 140 }}>
+              <span style={label}>Sort By</span>
+              <select value={advFilters.sortField}
+                onChange={e => setAdvFilters(prev => ({ ...prev, sortField: e.target.value as SortField }))}
+                style={{ ...selectStyle, width: '100%' }}>
+                <option value="date">Date</option>
+                <option value="type">Type</option>
+                <option value="status">Status</option>
+              </select>
+            </div>
+            <button
+              onClick={() => setAdvFilters(prev => ({ ...prev, sortDir: prev.sortDir === 'asc' ? 'desc' : 'asc' }))}
+              style={{
+                ...btn(BORDER, true), display: 'flex', alignItems: 'center', gap: 5,
+                color: GOLD, border: `1px solid ${BORDER}`, height: 38,
+              }}
+            >
+              {advFilters.sortDir === 'asc' ? '\u2191 Ascending' : '\u2193 Descending'}
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div style={{ borderTop: `1px solid ${BORDER}`, margin: '14px 0' }} />
+
+          {/* Save preset */}
+          <div style={{ marginBottom: 10 }}>
+            <span style={label}>Save Current Filters as Preset</span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <input
+                placeholder="Preset name..."
+                value={presetName}
+                onChange={e => setPresetName(e.target.value)}
+                style={{ ...input, flex: 1 }}
+              />
+              <button onClick={savePreset} disabled={!presetName.trim()}
+                style={{ ...btn(GOLD, true), opacity: presetName.trim() ? 1 : 0.4 }}>
+                Save
+              </button>
+            </div>
+          </div>
+
+          {/* Saved presets list */}
+          {savedPresets.length > 0 && (
+            <div>
+              <span style={label}>Saved Presets</span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {savedPresets.map(sp => (
+                  <div key={sp.name} style={{
+                    display: 'flex', alignItems: 'center', gap: 4,
+                    background: '#0A1628', border: `1px solid ${BORDER}`, borderRadius: 8,
+                    padding: '4px 6px 4px 12px',
+                  }}>
+                    <button onClick={() => applyPreset(sp.filters)} style={{
+                      background: 'none', border: 'none', color: GOLD, fontSize: 12,
+                      fontWeight: 600, cursor: 'pointer', padding: 0,
+                    }}>
+                      {sp.name}
+                    </button>
+                    <button onClick={() => deletePreset(sp.name)} style={{
+                      background: 'none', border: 'none', color: RED, fontSize: 14,
+                      fontWeight: 700, cursor: 'pointer', padding: '0 4px', lineHeight: 1,
+                    }}>
+                      {'\u00D7'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Active filter chips */}
+      {filtersAreActive && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          {advFilters.types.map(t => (
+            <span key={t} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(212,160,23,.12)',
+              border: `1px solid rgba(212,160,23,.3)`, borderRadius: 20, padding: '4px 10px',
+              fontSize: 11, fontWeight: 600, color: GOLD, whiteSpace: 'nowrap' as const,
+            }}>
+              {t} <span onClick={() => toggleAdvType(t)} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          ))}
+          {advFilters.statuses.map(s => (
+            <span key={s} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(212,160,23,.12)',
+              border: `1px solid rgba(212,160,23,.3)`, borderRadius: 20, padding: '4px 10px',
+              fontSize: 11, fontWeight: 600, color: GOLD, whiteSpace: 'nowrap' as const,
+            }}>
+              {s} <span onClick={() => toggleAdvStatus(s)} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          ))}
+          {advFilters.fromTo && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(212,160,23,.12)',
+              border: `1px solid rgba(212,160,23,.3)`, borderRadius: 20, padding: '4px 10px',
+              fontSize: 11, fontWeight: 600, color: GOLD, whiteSpace: 'nowrap' as const,
+            }}>
+              From/To: {advFilters.fromTo} <span onClick={() => setAdvFilters(prev => ({ ...prev, fromTo: '' }))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          )}
+          {(advFilters.dateFrom || advFilters.dateTo) && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(212,160,23,.12)',
+              border: `1px solid rgba(212,160,23,.3)`, borderRadius: 20, padding: '4px 10px',
+              fontSize: 11, fontWeight: 600, color: GOLD, whiteSpace: 'nowrap' as const,
+            }}>
+              Date: {advFilters.dateFrom || '...'} - {advFilters.dateTo || '...'} <span onClick={() => setAdvFilters(prev => ({ ...prev, dateFrom: '', dateTo: '' }))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Results count */}
+      <div style={{
+        color: DIM, fontSize: 12, fontWeight: 600, marginBottom: 10,
+        display: 'flex', alignItems: 'center', gap: 6,
+      }}>
+        Showing <span style={{ color: GOLD, fontWeight: 700 }}>{filtered.length}</span> of {items.length}
       </div>
 
       {/* Items */}

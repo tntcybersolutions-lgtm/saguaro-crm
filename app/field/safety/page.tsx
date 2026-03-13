@@ -501,6 +501,82 @@ function SafetyPage() {
     }
   };
 
+  // ─── Advanced Filters & Sorting ─────────────────────────────
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [filterDrawerMounted, setFilterDrawerMounted] = useState(false);
+  const [sfFilterSeverities, setSfFilterSeverities] = useState<number[]>([]);
+  const [sfFilterTypes, setSfFilterTypes] = useState<string[]>([]);
+  const [sfFilterStatuses, setSfFilterStatuses] = useState<string[]>([]);
+  const [sfFilterAssignedTo, setSfFilterAssignedTo] = useState('');
+  const [sfFilterDateFrom, setSfFilterDateFrom] = useState('');
+  const [sfFilterDateTo, setSfFilterDateTo] = useState('');
+  const [sfSortKey, setSfSortKey] = useState<'date'|'severity'|'status'>('date');
+  const [sfSortDir, setSfSortDir] = useState<'asc'|'desc'>('desc');
+  const [sfSavedPresets, setSfSavedPresets] = useState<Array<{ name: string; f: Record<string, unknown>; s: string; d: string }>>([]);
+  const [sfPresetName, setSfPresetName] = useState('');
+
+  // Drawer open/close with slide animation
+  const toggleFilterDrawer = () => {
+    if (showFilterPanel) {
+      // closing
+      setShowFilterPanel(false);
+      setTimeout(() => setFilterDrawerMounted(false), 320);
+    } else {
+      // opening
+      setFilterDrawerMounted(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setShowFilterPanel(true));
+      });
+    }
+  };
+
+  useEffect(() => {
+    try { const raw = localStorage.getItem(`saguaro_filters_safety_${projectId}`); if (raw) setSfSavedPresets(JSON.parse(raw)); } catch { /* */ }
+  }, [projectId]);
+  const persistSfPresets = (p: typeof sfSavedPresets) => { setSfSavedPresets(p); try { localStorage.setItem(`saguaro_filters_safety_${projectId}`, JSON.stringify(p)); } catch { /* */ } };
+  const saveSfPreset = () => { if (!sfPresetName.trim()) return; persistSfPresets([...sfSavedPresets, { name: sfPresetName.trim(), f: { sev: sfFilterSeverities, tp: sfFilterTypes, st: sfFilterStatuses, at: sfFilterAssignedTo, d1: sfFilterDateFrom, d2: sfFilterDateTo }, s: sfSortKey, d: sfSortDir }]); setSfPresetName(''); };
+  const loadSfPreset = (p: typeof sfSavedPresets[0]) => { const f = p.f; setSfFilterSeverities((f.sev as number[]) || []); setSfFilterTypes((f.tp as string[]) || []); setSfFilterStatuses((f.st as string[]) || []); setSfFilterAssignedTo((f.at as string) || ''); setSfFilterDateFrom((f.d1 as string) || ''); setSfFilterDateTo((f.d2 as string) || ''); setSfSortKey((p.s as typeof sfSortKey) || 'date'); setSfSortDir((p.d as typeof sfSortDir) || 'desc'); };
+  const deleteSfPreset = (idx: number) => persistSfPresets(sfSavedPresets.filter((_, i) => i !== idx));
+  const clearSfFilters = () => { setSfFilterSeverities([]); setSfFilterTypes([]); setSfFilterStatuses([]); setSfFilterAssignedTo(''); setSfFilterDateFrom(''); setSfFilterDateTo(''); setSfSortKey('date'); setSfSortDir('desc'); };
+  const toggleSfArr = <T,>(arr: T[], val: T, setter: React.Dispatch<React.SetStateAction<T[]>>) => setter(arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val]);
+  const sfActiveFilterCount = [sfFilterSeverities.length > 0, sfFilterTypes.length > 0, sfFilterStatuses.length > 0, !!sfFilterAssignedTo.trim(), !!sfFilterDateFrom || !!sfFilterDateTo].filter(Boolean).length;
+
+  const SEVERITY_LABELS: Record<number, string> = { 1: 'Low', 2: 'Medium', 3: 'High', 4: 'Critical', 5: 'Critical+' };
+  const STATUS_OPTIONS = ['Open', 'In Progress', 'Resolved', 'Closed'];
+
+  const getFilteredIncidents = (): Incident[] => {
+    let result = [...incidents];
+    if (sfFilterSeverities.length > 0) result = result.filter(i => sfFilterSeverities.includes(i.severity));
+    if (sfFilterTypes.length > 0) result = result.filter(i => sfFilterTypes.includes(i.type));
+    if (sfFilterStatuses.length > 0) result = result.filter(i => sfFilterStatuses.some(fs => fs.toLowerCase().replace(' ', '_') === (i.status || 'open').toLowerCase()));
+    if (sfFilterAssignedTo.trim()) {
+      const needle = sfFilterAssignedTo.trim().toLowerCase();
+      result = result.filter(i =>
+        (i.corrective_actions || []).some(ca => (ca.assigned_to || '').toLowerCase().includes(needle))
+      );
+    }
+    if (sfFilterDateFrom || sfFilterDateTo) {
+      result = result.filter(i => { if (!i.date) return false; const dt = new Date(i.date).getTime(); if (sfFilterDateFrom && dt < new Date(sfFilterDateFrom).getTime()) return false; if (sfFilterDateTo && dt > new Date(sfFilterDateTo + 'T23:59:59').getTime()) return false; return true; });
+    }
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sfSortKey === 'date') cmp = new Date(a.date || a.created_at || 0).getTime() - new Date(b.date || b.created_at || 0).getTime();
+      else if (sfSortKey === 'severity') cmp = (a.severity || 0) - (b.severity || 0);
+      else if (sfSortKey === 'status') { const order: Record<string, number> = { open: 0, in_progress: 1, resolved: 2, closed: 3 }; cmp = (order[(a.status||'open')] ?? 1) - (order[(b.status||'open')] ?? 1); }
+      return sfSortDir === 'desc' ? -cmp : cmp;
+    });
+    return result;
+  };
+  const applySfQuickPreset = (key: string) => {
+    clearSfFilters();
+    if (key === 'critical') { setSfFilterSeverities([4, 5]); setSfSortKey('severity'); setSfSortDir('desc'); }
+    else if (key === 'open') { setSfFilterStatuses(['open']); }
+    else if (key === 'my_assignments') { setSfFilterAssignedTo(''); /* user fills in their name */ }
+    else if (key === 'this_week') { const d = new Date(); d.setDate(d.getDate() - d.getDay()); setSfFilterDateFrom(d.toISOString().slice(0,10)); }
+  };
+  const filteredIncidents = getFilteredIncidents();
+  const sfChipStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(212,160,23,.10)', border: `1px solid rgba(212,160,23,.35)`, borderRadius: 20, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: GOLD, cursor: 'pointer', whiteSpace: 'nowrap' };
+
   // Stats
   const totalIncidents = incidents.length;
   const openIncidents = incidents.filter((i) => i.status !== 'closed').length;
@@ -588,6 +664,232 @@ function SafetyPage() {
           <StatCard label="Open CAs" value={String(openCAs)} color={openCAs > 0 ? AMBER : GREEN} />
         </div>
 
+        {/* ─── Advanced Filters ─── */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 10 }}>
+          <button onClick={toggleFilterDrawer} style={{
+            background: showFilterPanel || sfActiveFilterCount > 0 ? 'rgba(212,160,23,.12)' : 'transparent',
+            border: `1px solid ${showFilterPanel || sfActiveFilterCount > 0 ? GOLD : BORDER}`,
+            borderRadius: 10, padding: '8px 14px', color: showFilterPanel || sfActiveFilterCount > 0 ? GOLD : DIM,
+            fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+            transition: 'all .2s ease',
+          }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filters {sfActiveFilterCount > 0 ? `(${sfActiveFilterCount})` : ''}
+          </button>
+          {sfActiveFilterCount > 0 && (
+            <button onClick={clearSfFilters} style={{
+              background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10,
+              padding: '8px 12px', color: DIM, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            }}>Clear All</button>
+          )}
+          {(sfActiveFilterCount > 0 || sfSortKey !== 'date' || sfSortDir !== 'desc') && (
+            <span style={{ marginLeft: 'auto', fontSize: 12, color: GOLD, fontWeight: 700, background: 'rgba(212,160,23,.08)', border: `1px solid rgba(212,160,23,.2)`, borderRadius: 8, padding: '4px 10px' }}>
+              {filteredIncidents.length} of {incidents.length} shown
+            </span>
+          )}
+          {sfActiveFilterCount === 0 && sfSortKey === 'date' && sfSortDir === 'desc' && (
+            <span style={{ marginLeft: 'auto', fontSize: 12, color: DIM, fontWeight: 600 }}>
+              {incidents.length} incident{incidents.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        {/* Filter Drawer - slides open/closed */}
+        {filterDrawerMounted && (
+          <div style={{
+            background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 14, marginBottom: 14,
+            maxHeight: showFilterPanel ? 900 : 0, overflow: 'hidden', opacity: showFilterPanel ? 1 : 0,
+            transition: 'max-height .3s ease, opacity .25s ease, padding .3s ease',
+            paddingTop: showFilterPanel ? 14 : 0, paddingBottom: showFilterPanel ? 14 : 0,
+          }}>
+            {/* Section: Status */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Status</label>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {STATUS_OPTIONS.map(s => {
+                  const key = s.toLowerCase().replace(' ', '_');
+                  const active = sfFilterStatuses.includes(key);
+                  const statusColor = key === 'open' ? RED : key === 'in_progress' ? AMBER : key === 'resolved' ? BLUE : GREEN;
+                  return (
+                    <button key={s} onClick={() => toggleSfArr(sfFilterStatuses, key, setSfFilterStatuses)} style={{
+                      background: active ? `rgba(${hexRgb(statusColor)},.15)` : 'transparent',
+                      border: `1px solid ${active ? statusColor : BORDER}`, borderRadius: 20,
+                      padding: '5px 14px', color: active ? statusColor : DIM, fontSize: 12,
+                      fontWeight: active ? 700 : 500, cursor: 'pointer', transition: 'all .15s ease',
+                    }}>{s}</button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section: Severity */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Severity</label>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[1, 2, 3, 4, 5].map(s => {
+                  const active = sfFilterSeverities.includes(s);
+                  return (
+                    <button key={s} onClick={() => toggleSfArr(sfFilterSeverities, s, setSfFilterSeverities)} style={{
+                      background: active ? `${SEVERITY_COLORS[s-1]}22` : 'transparent',
+                      border: `1px solid ${active ? SEVERITY_COLORS[s-1] : BORDER}`, borderRadius: 20,
+                      padding: '5px 12px', color: active ? SEVERITY_COLORS[s-1] : DIM, fontSize: 12,
+                      fontWeight: active ? 700 : 500, cursor: 'pointer', transition: 'all .15s ease',
+                    }}>{SEVERITY_LABELS[s]} ({s})</button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section: Type/Category */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Type / Category</label>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {INCIDENT_TYPES.map(t => {
+                  const active = sfFilterTypes.includes(t);
+                  const tc = TYPE_COLORS[t] || DIM;
+                  return (
+                    <button key={t} onClick={() => toggleSfArr(sfFilterTypes, t, setSfFilterTypes)} style={{
+                      background: active ? `rgba(${hexRgb(tc)},.15)` : 'transparent',
+                      border: `1px solid ${active ? tc : BORDER}`, borderRadius: 20,
+                      padding: '5px 12px', color: active ? tc : DIM, fontSize: 12,
+                      fontWeight: active ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap' as const, transition: 'all .15s ease',
+                    }}>{TYPE_LABELS[t] || t}</button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Section: Assigned To */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Assigned To</label>
+              <input
+                value={sfFilterAssignedTo}
+                onChange={e => setSfFilterAssignedTo(e.target.value)}
+                placeholder="Search by assignee name..."
+                style={{ ...inp, fontSize: 13, padding: '8px 12px' }}
+              />
+            </div>
+
+            {/* Section: Date Range */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Date Range</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ ...lbl, fontSize: 10, marginBottom: 2 }}>From</label>
+                  <input type="date" value={sfFilterDateFrom} onChange={e => setSfFilterDateFrom(e.target.value)} style={{ ...inp, fontSize: 12, padding: '7px 8px' }} />
+                </div>
+                <span style={{ color: DIM, fontSize: 12, marginTop: 14 }}>to</span>
+                <div style={{ flex: 1 }}>
+                  <label style={{ ...lbl, fontSize: 10, marginBottom: 2 }}>To</label>
+                  <input type="date" value={sfFilterDateTo} onChange={e => setSfFilterDateTo(e.target.value)} style={{ ...inp, fontSize: 12, padding: '7px 8px' }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Sort */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Sort By</label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <select value={sfSortKey} onChange={e => setSfSortKey(e.target.value as typeof sfSortKey)} style={{ ...inp, fontSize: 13, padding: '8px 12px', flex: 1 }}>
+                  <option value="date" style={{ background: '#07101C' }}>Date</option>
+                  <option value="severity" style={{ background: '#07101C' }}>Severity</option>
+                  <option value="status" style={{ background: '#07101C' }}>Status</option>
+                </select>
+                <button onClick={() => setSfSortDir(d => d === 'asc' ? 'desc' : 'asc')} style={{
+                  background: 'rgba(212,160,23,.08)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 10,
+                  padding: '8px 14px', color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' as const, transition: 'all .15s ease',
+                }}>
+                  {sfSortDir === 'asc' ? (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={19} x2={12} y2={5}/><polyline points="5 12 12 5 19 12"/></svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={5} x2={12} y2={19}/><polyline points="19 12 12 19 5 12"/></svg>
+                  )}
+                  {sfSortDir === 'asc' ? 'Ascending' : 'Descending'}
+                </button>
+              </div>
+            </div>
+
+            {/* Section: Quick Presets */}
+            <div style={{ marginBottom: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
+              <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Quick Presets</label>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <button onClick={() => applySfQuickPreset('open')} style={{
+                  ...sfChipStyle, background: 'rgba(239,68,68,.10)', border: '1px solid rgba(239,68,68,.3)', color: RED,
+                }}>Open Issues</button>
+                <button onClick={() => applySfQuickPreset('critical')} style={{
+                  ...sfChipStyle, background: 'rgba(220,38,38,.10)', border: '1px solid rgba(220,38,38,.3)', color: '#DC2626',
+                }}>Critical / High</button>
+                <button onClick={() => { applySfQuickPreset('my_assignments'); /* Focus the assigned-to input */ }} style={sfChipStyle}>My Assignments</button>
+                <button onClick={() => applySfQuickPreset('this_week')} style={{
+                  ...sfChipStyle, background: 'rgba(59,130,246,.10)', border: '1px solid rgba(59,130,246,.3)', color: BLUE,
+                }}>This Week</button>
+              </div>
+            </div>
+
+            {/* Section: Save Preset */}
+            <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
+              <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Save Current Filters as Preset</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={sfPresetName} onChange={e => setSfPresetName(e.target.value)} placeholder="Preset name..." style={{ ...inp, fontSize: 12, padding: '7px 10px', flex: 1 }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveSfPreset(); } }} />
+                <button onClick={saveSfPreset} disabled={!sfPresetName.trim()} style={{
+                  background: sfPresetName.trim() ? GOLD : '#1E3A5F', border: 'none', borderRadius: 8,
+                  padding: '7px 16px', color: sfPresetName.trim() ? '#000' : DIM, fontSize: 12, fontWeight: 700,
+                  cursor: sfPresetName.trim() ? 'pointer' : 'not-allowed', transition: 'all .15s ease',
+                }}>Save</button>
+              </div>
+            </div>
+
+            {/* Section: Saved Presets */}
+            {sfSavedPresets.length > 0 && (
+              <div style={{ marginTop: 12 }}>
+                <label style={{ ...lbl, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 }}>Saved Presets</label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {sfSavedPresets.map((p, i) => (
+                    <span key={i} style={{ ...sfChipStyle, gap: 6 }}>
+                      <span onClick={() => loadSfPreset(p)} style={{ cursor: 'pointer' }}>{p.name}</span>
+                      <span onClick={() => deleteSfPreset(i)} style={{ cursor: 'pointer', opacity: 0.6, fontSize: 13, lineHeight: 1 }}>&times;</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {sfActiveFilterCount > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+            {sfFilterStatuses.map(s => {
+              const statusColor = s === 'open' ? RED : s === 'in_progress' ? AMBER : s === 'resolved' ? BLUE : GREEN;
+              return (
+                <span key={s} style={{ ...sfChipStyle, background: `rgba(${hexRgb(statusColor)},.12)`, border: `1px solid rgba(${hexRgb(statusColor)},.3)`, color: statusColor }}>
+                  {s.replace('_', ' ')} <span onClick={() => setSfFilterStatuses(prev => prev.filter(v => v !== s))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+                </span>
+              );
+            })}
+            {sfFilterSeverities.map(s => (
+              <span key={s} style={{ ...sfChipStyle, background: `${SEVERITY_COLORS[s-1]}18`, border: `1px solid ${SEVERITY_COLORS[s-1]}44`, color: SEVERITY_COLORS[s-1] }}>
+                {SEVERITY_LABELS[s]} <span onClick={() => setSfFilterSeverities(prev => prev.filter(v => v !== s))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+              </span>
+            ))}
+            {sfFilterTypes.map(t => (
+              <span key={t} style={{ ...sfChipStyle, background: `rgba(${hexRgb(TYPE_COLORS[t] || DIM)},.12)`, border: `1px solid rgba(${hexRgb(TYPE_COLORS[t] || DIM)},.3)`, color: TYPE_COLORS[t] || DIM }}>
+                {TYPE_LABELS[t] || t} <span onClick={() => setSfFilterTypes(prev => prev.filter(v => v !== t))} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+              </span>
+            ))}
+            {sfFilterAssignedTo.trim() && (
+              <span style={sfChipStyle}>
+                Assigned: {sfFilterAssignedTo} <span onClick={() => setSfFilterAssignedTo('')} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+              </span>
+            )}
+            {(sfFilterDateFrom || sfFilterDateTo) && (
+              <span style={{ ...sfChipStyle, background: 'rgba(59,130,246,.10)', border: '1px solid rgba(59,130,246,.3)', color: BLUE }}>
+                {sfFilterDateFrom || '...'} - {sfFilterDateTo || '...'} <span onClick={() => { setSfFilterDateFrom(''); setSfFilterDateTo(''); }} style={{ cursor: 'pointer', marginLeft: 2, fontSize: 13 }}>&times;</span>
+              </span>
+            )}
+          </div>
+        )}
+
         {/* List */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: DIM }}>Loading incidents...</div>
@@ -598,12 +900,25 @@ function SafetyPage() {
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
             </div>
-            <p style={{ margin: 0, fontSize: 14 }}>No incidents reported. Tap "+ Report" to log one.</p>
+            <p style={{ margin: 0, fontSize: 14 }}>No incidents reported. Tap &quot;+ Report&quot; to log one.</p>
+          </div>
+        ) : filteredIncidents.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px 16px', color: DIM }}>
+            <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center', opacity: 0.5 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={36} height={36}>
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+              </svg>
+            </div>
+            <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600 }}>No incidents match your filters</p>
+            <button onClick={clearSfFilters} style={{
+              background: 'rgba(212,160,23,.12)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 10,
+              padding: '8px 16px', color: GOLD, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}>Clear All Filters</button>
           </div>
         ) : (
           <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {incidents.map((incident) => {
+            {filteredIncidents.map((incident) => {
               const tc = TYPE_COLORS[incident.type] || DIM;
               const isChecked = selectedIds.has(incident.id);
               return (
