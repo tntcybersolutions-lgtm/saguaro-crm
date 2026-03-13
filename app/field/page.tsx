@@ -46,13 +46,13 @@ const COND_CONFIG = {
   stop:    { label: 'Consider Stopping',  color: RED,    bg: 'rgba(239,68,68,.1)',     border: 'rgba(239,68,68,.25)' },
 };
 
-const QUICK_ACTIONS = [
-  { label: 'Daily Log',   href: '/field/log',     bg: 'rgba(212,160,23,.12)',  border: 'rgba(212,160,23,.25)',  color: GOLD,  emoji: '📋' },
-  { label: 'Take Photo',  href: '/field/photos',  bg: 'rgba(59,130,246,.12)',  border: 'rgba(59,130,246,.25)',  color: BLUE,  emoji: '📸' },
-  { label: 'Inspection',  href: '/field/inspect', bg: 'rgba(34,197,94,.12)',   border: 'rgba(34,197,94,.25)',   color: GREEN, emoji: '✅' },
-  { label: 'File RFI',    href: '/field/more',    bg: 'rgba(139,92,246,.12)',  border: 'rgba(139,92,246,.25)',  color: '#8B5CF6', emoji: '❓' },
-  { label: 'Timesheet',   href: '/field/more',    bg: 'rgba(245,158,11,.12)',  border: 'rgba(245,158,11,.25)',  color: AMBER, emoji: '⏱' },
-  { label: 'Safety',      href: '/field/more',    bg: 'rgba(239,68,68,.12)',   border: 'rgba(239,68,68,.25)',   color: RED,   emoji: '🦺' },
+const QUICK_ACTIONS: { label: string; href: string; bg: string; border: string; color: string; icon: React.ReactNode }[] = [
+  { label: 'Daily Log',   href: '/field/log',     bg: 'rgba(212,160,23,.12)',  border: 'rgba(212,160,23,.25)',  color: GOLD,      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1={16} y1={13} x2={8} y2={13}/><line x1={16} y1={17} x2={8} y2={17}/></svg> },
+  { label: 'Take Photo',  href: '/field/photos',  bg: 'rgba(59,130,246,.12)',  border: 'rgba(59,130,246,.25)',  color: BLUE,      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx={12} cy={13} r={4}/></svg> },
+  { label: 'Inspection',  href: '/field/inspect', bg: 'rgba(34,197,94,.12)',   border: 'rgba(34,197,94,.25)',   color: GREEN,     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> },
+  { label: 'File RFI',    href: '/field/more',    bg: 'rgba(139,92,246,.12)',  border: 'rgba(139,92,246,.25)',  color: '#8B5CF6', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><circle cx={12} cy={12} r={10}/><line x1={12} y1={8} x2={12} y2={12}/><line x1={12} y1={16} x2={12.01} y2={16}/></svg> },
+  { label: 'Timesheet',   href: '/field/more',    bg: 'rgba(245,158,11,.12)',  border: 'rgba(245,158,11,.25)',  color: AMBER,     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><circle cx={12} cy={12} r={10}/><polyline points="12 6 12 12 16 14"/></svg> },
+  { label: 'Safety',      href: '/field/more',    bg: 'rgba(239,68,68,.12)',   border: 'rgba(239,68,68,.25)',   color: RED,       icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> },
 ];
 
 function todayStr() {
@@ -231,7 +231,7 @@ export default function FieldHome() {
             href={active ? `${a.href}?projectId=${active.id}` : a.href}
             style={{ background: a.bg, border: `1px solid ${a.border}`, borderRadius: 14, padding: '16px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textDecoration: 'none' }}
           >
-            <span style={{ fontSize: 26 }}>{a.emoji}</span>
+            <span style={{ color: a.color, display: 'flex' }}>{a.icon}</span>
             <span style={{ fontSize: 11, fontWeight: 700, color: a.color, textAlign: 'center', letterSpacing: 0.2 }}>{a.label}</span>
           </Link>
         ))}
@@ -245,7 +245,7 @@ export default function FieldHome() {
           </p>
           {openRFIs.map((r) => (
             <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderTop: '1px solid rgba(245,158,11,.1)' }}>
-              <span style={{ fontSize: 13 }}>❓</span>
+              <span style={{ color: '#8B5CF6', display: 'flex', flexShrink: 0 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><circle cx={12} cy={12} r={10}/><line x1={12} y1={8} x2={12} y2={12}/><line x1={12} y1={16} x2={12.01} y2={16}/></svg></span>
               <span style={{ fontSize: 13, color: TEXT, flex: 1 }}>{r.subject}</span>
             </div>
           ))}

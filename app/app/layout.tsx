@@ -181,20 +181,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* Nav links — hidden on mobile via .desktop-nav-links */}
         <div className="desktop-nav-links" style={{ display: 'flex', gap: 2, marginLeft: 8 }}>
-          {[
-            { label: 'Projects',   href: '/app/projects' },
-            { label: 'AI Takeoff', href: '/app/takeoff' },
-            { label: 'Bids',       href: '/app/bids' },
-            { label: 'Documents',  href: '/app/documents' },
-            { label: 'Autopilot',  href: '/app/autopilot' },
-            { label: 'Reports',    href: '/app/reports' },
-            { label: 'Intelligence', href: '/app/intelligence' },
-            { label: '📱 Field App', href: '/field' },
-          ].map(item => (
-            <Link key={item.href} href={item.href} style={{ padding: '6px 12px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: pathname.startsWith(item.href) ? GOLD : DIM, background: pathname.startsWith(item.href) ? 'rgba(212,160,23,.1)' : 'transparent', textDecoration: 'none', transition: 'all .15s' }}>
+          {([
+            { label: 'Projects',     href: '/app/projects',     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> },
+            { label: 'AI Takeoff',   href: '/app/takeoff',      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg> },
+            { label: 'Bids',         href: '/app/bids',         icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><line x1={12} y1={1} x2={12} y2={23}/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+            { label: 'Documents',    href: '/app/documents',    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1={16} y1={13} x2={8} y2={13}/><line x1={16} y1={17} x2={8} y2={17}/></svg> },
+            { label: 'Autopilot',    href: '/app/autopilot',    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
+            { label: 'Reports',      href: '/app/reports',      icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><line x1={18} y1={20} x2={18} y2={10}/><line x1={12} y1={20} x2={12} y2={4}/><line x1={6} y1={20} x2={6} y2={14}/></svg> },
+            { label: 'Intelligence', href: '/app/intelligence',  icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> },
+            { label: 'Field App',    href: '/field',             icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg> },
+          ] as { label: string; href: string; icon: React.ReactNode }[]).map(item => {
+            const active = item.href === '/field' ? pathname.startsWith('/field') : pathname.startsWith(item.href);
+            return (
+            <Link key={item.href} href={item.href} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 6, fontSize: 13, fontWeight: 600, color: active ? GOLD : DIM, background: active ? 'rgba(212,160,23,.1)' : 'transparent', textDecoration: 'none', transition: 'color .15s, background .15s' }}>
+              <span style={{ display: 'flex', opacity: active ? 1 : 0.7 }}>{item.icon}</span>
               {item.label}
             </Link>
-          ))}
+            );
+          })}
         </div>
 
         <div style={{ flex: 1 }} />
@@ -216,7 +220,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           onClick={() => setAiOpen(!aiOpen)}
           style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 14px', background: aiOpen ? 'rgba(212,160,23,.25)' : 'rgba(212,160,23,.12)', border: `1px solid rgba(212,160,23,.3)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'background .15s' }}
         >
-          🤖 AI Expert
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          Sage Expert
         </button>
 
         {/* Avatar + user menu */}
@@ -234,9 +239,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <button
                 onClick={handleLogout}
-                style={{ display: 'block', width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '12px 16px', background: 'none', border: 'none', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}
               >
-                🚪 Sign Out
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1={21} y1={12} x2={9} y2={12}/></svg>
+                Sign Out
               </button>
             </div>
           )}
@@ -256,20 +262,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile menu drawer */}
       {mobileMenuOpen && (
         <div style={{ position: 'fixed', top: 56, left: 0, right: 0, zIndex: 99, background: 'rgba(13,17,23,.98)', borderBottom: '1px solid #263347', padding: '8px 0', backdropFilter: 'blur(12px)' }}>
-          {[
-            { label: '📁 Projects', href: '/app/projects' },
-            { label: '📐 AI Takeoff', href: '/app/takeoff' },
-            { label: '💰 Bids', href: '/app/bids' },
-            { label: '📄 Documents', href: '/app/documents' },
-            { label: '🤖 Autopilot', href: '/app/autopilot' },
-            { label: '📊 Reports', href: '/app/reports' },
-            { label: '🧠 Intelligence', href: '/app/intelligence' },
-            { label: '📱 Field App', href: '/field' },
-          ].map(item => (
+          {([
+            { label: 'Projects',     href: '/app/projects',    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> },
+            { label: 'AI Takeoff',   href: '/app/takeoff',     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg> },
+            { label: 'Bids',         href: '/app/bids',        icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><line x1={12} y1={1} x2={12} y2={23}/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> },
+            { label: 'Documents',    href: '/app/documents',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> },
+            { label: 'Autopilot',    href: '/app/autopilot',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
+            { label: 'Reports',      href: '/app/reports',     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><line x1={18} y1={20} x2={18} y2={10}/><line x1={12} y1={20} x2={12} y2={4}/><line x1={6} y1={20} x2={6} y2={14}/></svg> },
+            { label: 'Intelligence', href: '/app/intelligence', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> },
+            { label: 'Field App',    href: '/field',            icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg> },
+          ] as { label: string; href: string; icon: React.ReactNode }[]).map(item => (
             <Link key={item.href} href={item.href}
               onClick={() => setMobileMenuOpen(false)}
-              style={{ display: 'block', padding: '14px 24px', fontSize: 15, fontWeight: 600, color: TEXT, textDecoration: 'none', borderBottom: '1px solid rgba(38,51,71,.4)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 24px', fontSize: 15, fontWeight: 600, color: pathname.startsWith(item.href) ? GOLD : TEXT, textDecoration: 'none', borderBottom: '1px solid rgba(38,51,71,.4)', background: pathname.startsWith(item.href) ? 'rgba(212,160,23,.06)' : 'transparent' }}
             >
+              <span style={{ color: pathname.startsWith(item.href) ? GOLD : DIM, display: 'flex' }}>{item.icon}</span>
               {item.label}
             </Link>
           ))}
@@ -292,7 +299,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {/* Header */}
           <div style={{ background: '#0d1117', padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
             <div>
-              <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>🤖 Saguaro AI Expert</div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: TEXT, display: 'flex', alignItems: 'center', gap: 7 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ color: GOLD }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Sage AI Expert</div>
               <div style={{ fontSize: 11, color: DIM, marginTop: 1 }}>Construction · Bidding · Contracts · Finance · Safety</div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -313,8 +320,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {aiMessages.length === 0 ? (
               <div>
                 <div style={{ textAlign: 'center', padding: '20px 0 16px' }}>
-                  <div style={{ fontSize: 36, marginBottom: 8 }}>🏗️</div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, marginBottom: 4 }}>Construction AI Expert</div>
+                  <div style={{ marginBottom: 8, color: GOLD, display: 'flex', justifyContent: 'center' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" width={40} height={40}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: TEXT, marginBottom: 4 }}>Sage AI Expert</div>
                   <div style={{ fontSize: 12, color: DIM, lineHeight: 1.6 }}>Expert in bidding, AIA contracts, lien law, finance,<br/>subcontractors, OSHA, estimating & more.</div>
                 </div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Quick Actions</div>
@@ -336,7 +343,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <div key={i} style={{ display: 'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', gap: 10, alignItems: 'flex-start' }}>
                   {/* Avatar */}
                   <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, background: msg.role === 'user' ? `linear-gradient(135deg,${GOLD},#B85C2A)` : '#1a3a5c', color: msg.role === 'user' ? '#0d1117' : GOLD }}>
-                    {msg.role === 'user' ? userInitials : '🤖'}
+                    {msg.role === 'user' ? userInitials : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
                   </div>
                   {/* Bubble */}
                   <div style={{ maxWidth: '82%', background: msg.role === 'user' ? 'rgba(212,160,23,.12)' : '#0d1117', border: `1px solid ${msg.role === 'user' ? 'rgba(212,160,23,.25)' : BORDER}`, borderRadius: msg.role === 'user' ? '12px 4px 12px 12px' : '4px 12px 12px 12px', padding: '10px 14px', fontSize: 13, lineHeight: 1.65, color: TEXT }}>
@@ -385,13 +392,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {aiLoading ? '...' : 'Send'}
               </button>
             </div>
-            <div style={{ fontSize: 10, color: '#3a4f6a', marginTop: 6 }}>Powered by Claude · Enter to send · Expert in construction law, finance & operations</div>
+            <div style={{ fontSize: 10, color: '#3a4f6a', marginTop: 6 }}>Powered by Sage · Enter to send · Expert in construction law, finance & operations</div>
           </div>
         </div>
       )}
 
       {/* ── Main Content (offset for fixed nav) ─────────────────────────── */}
       <main style={{ paddingTop: 56 }}>
+        <Breadcrumb pathname={pathname} />
         {children}
       </main>
 
@@ -410,7 +418,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px rgba(0,0,0,.6)', overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: 16, color: TEXT }}>🎯 Score a Bid</div>
+                <div style={{ fontWeight: 800, fontSize: 16, color: TEXT, display: 'flex', alignItems: 'center', gap: 8 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ color: GOLD }}><circle cx={12} cy={12} r={10}/><circle cx={12} cy={12} r={6}/><circle cx={12} cy={12} r={2}/></svg>Score a Bid</div>
                 <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>Navigate to the Bids tab to use the full AI scorer</div>
               </div>
               <button onClick={() => setShowScoreModal(false)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4 }}>×</button>
@@ -430,6 +438,40 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+const BREADCRUMB_LABELS: Record<string, string> = {
+  app: 'Dashboard', projects: 'Projects', takeoff: 'AI Takeoff', bids: 'Bids',
+  documents: 'Documents', autopilot: 'Autopilot', reports: 'Reports',
+  intelligence: 'Intelligence', overview: 'Overview', rfis: 'RFIs',
+  contracts: 'Contracts', 'pay-apps': 'Pay Apps', 'lien-waivers': 'Lien Waivers',
+  'daily-logs': 'Daily Logs', 'bid-packages': 'Bid Packages', bills: 'Bills',
+  drawings: 'Drawings', schedule: 'Schedule', settings: 'Settings',
+};
+
+function Breadcrumb({ pathname }: { pathname: string }) {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length <= 1) return null;
+  const crumbs = segments.map((seg, i) => ({
+    label: BREADCRUMB_LABELS[seg] || (seg.length > 24 ? seg.slice(0, 10) + '…' : seg),
+    href: '/' + segments.slice(0, i + 1).join('/'),
+    isLast: i === segments.length - 1,
+  }));
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 20px', borderBottom: '1px solid rgba(38,51,71,.4)', background: 'rgba(13,17,23,.5)', fontSize: 12 }}>
+      {crumbs.map((c) => (
+        <React.Fragment key={c.href}>
+          {crumbs.indexOf(c) > 0 && <span style={{ color: '#3a4f6a', fontSize: 10 }}>›</span>}
+          {c.isLast
+            ? <span style={{ color: TEXT, fontWeight: 600 }}>{c.label}</span>
+            : <Link href={c.href} style={{ color: DIM, textDecoration: 'none', transition: 'color .15s' }}
+                onMouseEnter={e => (e.currentTarget.style.color = TEXT)}
+                onMouseLeave={e => (e.currentTarget.style.color = DIM)}>{c.label}</Link>
+          }
+        </React.Fragment>
+      ))}
     </div>
   );
 }
