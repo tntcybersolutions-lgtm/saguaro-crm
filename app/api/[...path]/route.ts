@@ -9,17 +9,7 @@ import { generatePreliminaryNoticeHandler } from '../../../wh347-generator';
 import { createCertifiedPayrollHandler, getCertifiedPayrollHandler } from '../../../wh347-generator';
 import { loginHandler } from '../../../sandbox-manager-route';
 import { POST as bidJacketPost, GET as bidJacketGet } from '../../../bid-jacket-route';
-import {
-  isDemoMode,
-  DEMO_PROJECT,
-  DEMO_SUBS,
-  DEMO_PAY_APPS,
-  DEMO_RFIS,
-  DEMO_CHANGE_ORDERS,
-  DEMO_BUDGET_LINES,
-  DEMO_AUTOPILOT_ALERTS,
-  DEMO_CONTEXT,
-} from '../../../demo-data';
+
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
@@ -38,14 +28,6 @@ function corsHeaders() {
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-interface DashStats {
-  activeProjects: number;
-  openBids: number;
-  pendingPayApps: number;
-  totalContractValue: number;
-  monthlyRevenue: number;
-}
 
 interface ActionItem {
   type: 'pay-app' | 'insurance' | 'rfi' | 'compliance';
@@ -113,15 +95,6 @@ interface SubSuggestion {
   suggestedReason: string;
 }
 
-interface SovItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unit: string;
-  unit_cost: number;
-  total: number;
-}
-
 interface InvitedSub {
   id: string;
   company_name: string;
@@ -133,57 +106,7 @@ interface InvitedSub {
   responded_at: string | null;
 }
 
-interface BidPackageDetail {
-  id: string;
-  code: string;
-  name: string;
-  trade: string;
-  scope: string;
-  status: string;
-  bid_due_date: string | null;
-  project_id: string;
-  sov_items: SovItem[];
-  invited_subs: InvitedSub[];
-  awarded_to: string | null;
-  awarded_amount: number | null;
-  created_at: string;
-}
-
-// ─── Demo data constants ──────────────────────────────────────────────────────
-
-const DEMO_STATS: DashStats = {
-  activeProjects: 1,
-  openBids: 3,
-  pendingPayApps: 1,
-  totalContractValue: 2_850_000,
-  monthlyRevenue: 257_400,
-};
-
 const URGENCY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
-
-const DEMO_TODAY_ITEMS: ActionItem[] = [
-  { type: 'pay-app', title: 'Pay App #4 Pending', subtitle: 'Mesa Office Tower — Submitted 2 days ago', urgency: 'high', actionUrl: '/app/projects/demo/pay-apps', actionLabel: 'Review' },
-  { type: 'insurance', title: 'COI Expiring Soon', subtitle: 'AZ Steel Fabricators — expires in 18 days', urgency: 'high', actionUrl: '/app/projects/demo/insurance', actionLabel: 'Request Renewal' },
-  { type: 'rfi', title: 'RFI Overdue', subtitle: 'RFI-047 — No response in 5 days', urgency: 'medium', actionUrl: '/app/projects/demo/rfis', actionLabel: 'View RFI' },
-  { type: 'compliance', title: 'W-9 Missing', subtitle: 'Desert Iron Works — not on file', urgency: 'low', actionUrl: '/app/projects/demo/w9', actionLabel: 'Request W-9' },
-];
-
-const DEMO_BIDS: BidRecord[] = [
-  { id: 'demo-1', project_name: 'Scottsdale Medical Office Build-Out', project_type: 'Commercial TI', bid_date: '2025-11-15', bid_amount: 2_850_000, actual_cost: 2_610_000, margin_pct: 17.2, outcome: 'won', loss_reason: null, awarded_to: null, location: 'Scottsdale, AZ', state: 'AZ', trades: ['Drywall', 'Electrical', 'Plumbing', 'HVAC'], notes: 'Fast-track 14-week schedule.' },
-  { id: 'demo-2', project_name: 'Phoenix Logistics Warehouse', project_type: 'Industrial', bid_date: '2025-10-02', bid_amount: 8_400_000, actual_cost: null, margin_pct: 12.5, outcome: 'lost', loss_reason: 'Low bid by competitor', awarded_to: 'Southwest General Contractors', location: 'Phoenix, AZ', state: 'AZ', trades: ['Structural Steel', 'Concrete', 'Roofing', 'Electrical'], notes: 'Missed by $320k.' },
-  { id: 'demo-3', project_name: 'Mesa Elementary School Renovation', project_type: 'Education', bid_date: '2025-09-20', bid_amount: 1_650_000, actual_cost: 1_498_000, margin_pct: 15.8, outcome: 'won', loss_reason: null, awarded_to: null, location: 'Mesa, AZ', state: 'AZ', trades: ['Rough Framing', 'Drywall', 'Painting', 'Flooring'], notes: 'Prevailing wage project.' },
-  { id: 'demo-4', project_name: 'Tempe Mixed-Use Retail & Office', project_type: 'Mixed-Use', bid_date: '2025-08-08', bid_amount: 5_200_000, actual_cost: null, margin_pct: 11.0, outcome: 'lost', loss_reason: 'Budget cut — project scope reduced', awarded_to: 'Horizon Builders LLC', location: 'Tempe, AZ', state: 'AZ', trades: ['Concrete', 'Masonry', 'Electrical', 'Plumbing', 'HVAC'], notes: null },
-  { id: 'demo-5', project_name: 'Chandler Data Center Shell', project_type: 'Industrial', bid_date: '2025-07-14', bid_amount: 12_750_000, actual_cost: 11_600_000, margin_pct: 19.3, outcome: 'won', loss_reason: null, awarded_to: null, location: 'Chandler, AZ', state: 'AZ', trades: ['Structural Steel', 'Roofing', 'Electrical', 'Low Voltage', 'HVAC'], notes: 'Design-build delivery.' },
-  { id: 'demo-6', project_name: 'Gilbert Multifamily Phase 2', project_type: 'Multifamily', bid_date: '2025-06-30', bid_amount: 3_100_000, actual_cost: 2_875_000, margin_pct: 13.4, outcome: 'won', loss_reason: null, awarded_to: null, location: 'Gilbert, AZ', state: 'AZ', trades: ['Rough Framing', 'Roofing', 'Drywall', 'Painting', 'Flooring'], notes: '48-unit garden-style complex.' },
-  { id: 'demo-7', project_name: 'Peoria Senior Living Center', project_type: 'Healthcare', bid_date: '2025-05-19', bid_amount: 6_800_000, actual_cost: null, margin_pct: 9.5, outcome: 'pending', loss_reason: null, awarded_to: null, location: 'Peoria, AZ', state: 'AZ', trades: ['Concrete', 'Masonry', 'Electrical', 'Plumbing', 'Medical Gas'], notes: 'Decision expected Q1 2026.' },
-  { id: 'demo-8', project_name: 'Downtown Tucson Hotel Renovation', project_type: 'Hospitality', bid_date: '2025-04-07', bid_amount: 4_350_000, actual_cost: null, margin_pct: 22.0, outcome: 'lost', loss_reason: 'Owner selected preferred contractor', awarded_to: 'Legacy Construction Group', location: 'Tucson, AZ', state: 'AZ', trades: ['Drywall', 'Painting', 'Flooring', 'Tile', 'Millwork'], notes: 'Incumbent relationship.' },
-];
-
-const DEMO_SUGGEST_SUBS = [
-  { id: 's1', name: 'Desert Iron Works', trade: 'Metals', email: 'bids@desertironworks.com', winRate: 72, lastProject: 'Scottsdale Medical Center', lastProjectDate: '2025-11-15', rating: 4.8 },
-  { id: 's2', name: 'SunState Concrete', trade: 'Concrete', email: 'estimating@sunstateconcrete.com', winRate: 65, lastProject: 'Phoenix Office Tower', lastProjectDate: '2025-09-22', rating: 4.6 },
-  { id: 's3', name: 'AZ Electric Solutions', trade: 'Electrical', email: 'bids@azelectric.com', winRate: 81, lastProject: 'Mesa School District', lastProjectDate: '2026-01-08', rating: 4.9 },
-];
 
 // ─── Helper functions ─────────────────────────────────────────────────────────
 
@@ -199,73 +122,6 @@ function computeBidStats(bids: BidRecord[]): BidStats {
   return { totalBids, wonBids: wonBids.length, lostBids: lostBids.length, pendingBids: pendingBids.length, winRate, avgMargin: parseFloat(avgMargin.toFixed(1)), totalValue };
 }
 
-function demoScore(body: ScoreRequest): ScoreResponse {
-  const { estimatedValue, ourMargin, competitorCount = 4 } = body;
-  let score = 70;
-  if (ourMargin <= 10) score += 15;
-  else if (ourMargin <= 15) score += 8;
-  else if (ourMargin >= 20) score -= 10;
-  if (competitorCount <= 2) score += 10;
-  else if (competitorCount >= 6) score -= 12;
-  if (estimatedValue > 10_000_000) score -= 5;
-  if (estimatedValue < 500_000) score += 5;
-  score = Math.max(10, Math.min(98, score));
-  const winProbability = Math.round(score * 0.85);
-  let recommendation: 'bid' | 'pass' | 'negotiate' = 'bid';
-  if (score < 35) recommendation = 'pass';
-  else if (score < 55) recommendation = 'negotiate';
-  const suggestedMargin = ourMargin > 18 ? parseFloat((ourMargin * 0.88).toFixed(1)) : ourMargin;
-  const riskFactors: string[] = [];
-  if (competitorCount >= 5) riskFactors.push(`High competition (${competitorCount} bidders expected)`);
-  if (ourMargin > 18) riskFactors.push('Margin above typical win zone — consider sharpening');
-  if (estimatedValue > 8_000_000) riskFactors.push('Large project value increases risk exposure');
-  if (!body.location) riskFactors.push('Location not specified — verify prevailing wage requirements');
-  return { score, recommendation, reasoning: `Based on your margin of ${ourMargin}% against ~${competitorCount} competitors on a $${estimatedValue.toLocaleString()} ${body.projectType ?? 'project'}, your competitiveness score is ${score}/100.`, suggestedMargin, riskFactors, winProbability };
-}
-
-function demoBidPackage(id: string): BidPackageDetail {
-  const packages: Record<string, Partial<BidPackageDetail>> = {
-    'bp-1': { code: 'BP-01', name: 'Electrical Package', trade: 'Electrical', awarded_to: 'Desert Electrical', awarded_amount: 385000 },
-    'bp-2': { code: 'BP-02', name: 'Concrete & Foundation', trade: 'Concrete', awarded_to: 'AZ Concrete', awarded_amount: 290000 },
-    'bp-3': { code: 'BP-03', name: 'Structural Framing', trade: 'Framing', awarded_to: 'Rio Framing', awarded_amount: 480000 },
-    'bp-4': { code: 'BP-04', name: 'Mechanical HVAC', trade: 'HVAC', awarded_to: 'Pinnacle Mechanical', awarded_amount: 340000 },
-    'bp-5': { code: 'BP-05', name: 'Plumbing Rough-In & Trim', trade: 'Plumbing', awarded_to: 'Blue River Plumbing', awarded_amount: 220000 },
-    'bp-6': { code: 'BP-06', name: 'Roofing — TPO System', trade: 'Roofing', awarded_to: 'Southwest Roofing', awarded_amount: 195000 },
-  };
-  const p = packages[id] || { code: 'BP-XX', name: 'Bid Package', trade: 'General', awarded_to: null, awarded_amount: null };
-  return {
-    id, code: p.code || 'BP-XX', name: p.name || 'Bid Package', trade: p.trade || 'General',
-    scope: `Complete ${p.trade || 'general'} scope per plans and specifications.`,
-    status: 'awarded', bid_due_date: '2025-12-15',
-    project_id: 'demo-project-00000000-0000-0000-0000-000000000001',
-    awarded_to: p.awarded_to || null, awarded_amount: p.awarded_amount || null,
-    created_at: '2025-11-10T00:00:00Z',
-    sov_items: [
-      { id: 'sov-1', description: 'Mobilization & Setup', quantity: 1, unit: 'LS', unit_cost: 12500, total: 12500 },
-      { id: 'sov-2', description: `${p.trade || 'Rough'} Rough-In`, quantity: 1, unit: 'LS', unit_cost: Math.round((p.awarded_amount || 200000) * 0.45), total: Math.round((p.awarded_amount || 200000) * 0.45) },
-      { id: 'sov-3', description: `${p.trade || 'Finish'} Finish Work`, quantity: 1, unit: 'LS', unit_cost: Math.round((p.awarded_amount || 200000) * 0.40), total: Math.round((p.awarded_amount || 200000) * 0.40) },
-      { id: 'sov-4', description: 'Inspection & Testing', quantity: 1, unit: 'LS', unit_cost: Math.round((p.awarded_amount || 200000) * 0.10), total: Math.round((p.awarded_amount || 200000) * 0.10) },
-      { id: 'sov-5', description: 'Cleanup & Demobilization', quantity: 1, unit: 'LS', unit_cost: Math.round((p.awarded_amount || 200000) * 0.05), total: Math.round((p.awarded_amount || 200000) * 0.05) },
-    ],
-    invited_subs: [
-      { id: 'sub-1', company_name: p.awarded_to || 'Awarded Contractor', contact_name: 'Mike Johnson', email: 'mike@contractor.com', status: 'submitted', bid_amount: p.awarded_amount || null, invited_at: '2025-11-15T00:00:00Z', responded_at: '2025-12-08T00:00:00Z' },
-      { id: 'sub-2', company_name: 'Mesa Specialty Contractors', contact_name: 'Sarah Lee', email: 'sarah@mesa.com', status: 'submitted', bid_amount: p.awarded_amount ? Math.round(p.awarded_amount * 1.08) : null, invited_at: '2025-11-15T00:00:00Z', responded_at: '2025-12-10T00:00:00Z' },
-      { id: 'sub-3', company_name: 'Phoenix Pro Services', contact_name: 'Tom Rivera', email: 'tom@phoenixpro.com', status: 'viewed', bid_amount: null, invited_at: '2025-11-15T00:00:00Z', responded_at: null },
-      { id: 'sub-4', company_name: 'Sonoran Specialty Group', contact_name: 'Dana White', email: 'dana@sonoran.com', status: 'declined', bid_amount: null, invited_at: '2025-11-15T00:00:00Z', responded_at: '2025-11-20T00:00:00Z' },
-    ],
-  };
-}
-
-function buildDemoSubSuggestions(trade: string): SubSuggestion[] {
-  const tradeLabel = trade || 'General';
-  return [
-    { id: 'demo-sub-1', name: `${tradeLabel} Pro Solutions LLC`, trade: tradeLabel, winRate: 72, lastProjectDate: '2025-10-15', email: 'bids@tradeproaz.com', phone: '(602) 555-0141', suggestedReason: 'Highest win rate for this trade in your history' },
-    { id: 'demo-sub-2', name: `Desert ${tradeLabel} Contractors`, trade: tradeLabel, winRate: 61, lastProjectDate: '2025-09-02', email: 'estimating@deserttrade.com', phone: '(480) 555-0198', suggestedReason: 'Consistent pricing within 5% of award value' },
-    { id: 'demo-sub-3', name: `Southwest ${tradeLabel} Group`, trade: tradeLabel, winRate: 55, lastProjectDate: '2025-07-22', email: 'quotes@swtrade.net', phone: '(602) 555-0223', suggestedReason: 'Competitive rates and strong schedule compliance' },
-    { id: 'demo-sub-4', name: `Valley ${tradeLabel} Inc.`, trade: tradeLabel, winRate: 48, lastProjectDate: '2025-05-10', email: 'bids@valleytrade.com', phone: '(623) 555-0077', suggestedReason: 'New to your roster — competitive entry pricing' },
-    { id: 'demo-sub-5', name: `AZ ${tradeLabel} Specialists`, trade: tradeLabel, winRate: 44, lastProjectDate: '2024-12-18', email: 'office@azspecialists.com', phone: '(480) 555-0312', suggestedReason: 'Good ratings on past projects, available for this schedule' },
-  ];
-}
 
 function buildSuggestedReason(sub: Record<string, unknown>): string {
   if ((sub.win_rate as number) >= 65) return 'Top performer by win rate for this trade';
@@ -283,17 +139,9 @@ export async function GET(
   const { path } = await params;
   const [seg0, seg1, seg2, seg3, seg4] = path;
 
-  // GET /api/demo
+  // GET /api/demo — demo mode removed
   if (seg0 === 'demo' && !seg1) {
-    if (!isDemoMode()) {
-      return NextResponse.json({ error: 'Demo mode not enabled' }, { status: 403 });
-    }
-    return NextResponse.json({
-      mode: 'DEMO', project: DEMO_PROJECT, subs: DEMO_SUBS, payApplications: DEMO_PAY_APPS,
-      rfis: DEMO_RFIS, changeOrders: DEMO_CHANGE_ORDERS, budgetLines: DEMO_BUDGET_LINES,
-      alerts: DEMO_AUTOPILOT_ALERTS, context: DEMO_CONTEXT,
-      message: 'Running in demo mode. Connect real Supabase for full functionality.',
-    });
+    return NextResponse.json({ error: 'Demo mode is no longer available' }, { status: 410 });
   }
 
   // GET /api/marketing
@@ -317,7 +165,7 @@ export async function GET(
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseKey || supabaseUrl === 'https://demo.supabase.co') throw new Error('demo-mode');
+      if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
       const supabase = createClient(supabaseUrl, supabaseKey);
       const [{ count: activeProjects }, { count: openBids }, { count: pendingPayApps }, { data: contractData }] = await Promise.all([
         supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
@@ -330,8 +178,10 @@ export async function GET(
       const { data: revenueRows } = await supabase.from('pay_applications').select('current_payment_due').eq('status', 'approved').gte('submitted_at', startOfMonth.toISOString());
       const monthlyRevenue = (revenueRows ?? []).reduce((sum: number, r: { current_payment_due: number }) => sum + (r.current_payment_due ?? 0), 0);
       return NextResponse.json({ activeProjects: activeProjects ?? 0, openBids: openBids ?? 0, pendingPayApps: pendingPayApps ?? 0, totalContractValue, monthlyRevenue });
-    } catch {
-      return NextResponse.json(DEMO_STATS);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] dashboard/stats error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -341,7 +191,7 @@ export async function GET(
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseKey || supabaseUrl === 'https://demo.supabase.co') throw new Error('demo-mode');
+      if (!supabaseUrl || !supabaseKey) throw new Error('Supabase not configured');
       const supabase = createClient(supabaseUrl, supabaseKey);
       const { data: payApps } = await supabase.from('pay_applications').select('id, application_number, status, project_id, projects(name)').eq('status', 'submitted').limit(5);
       if (payApps && payApps.length > 0) {
@@ -364,14 +214,15 @@ export async function GET(
         for (const n of notifications) {
           const nType = n.type as ActionItem['type'];
           if (!['pay-app', 'insurance', 'rfi', 'compliance'].includes(nType)) continue;
-          items.push({ type: nType, title: n.title ?? 'Notification', subtitle: n.message ?? '', urgency: (n.urgency as ActionItem['urgency']) ?? 'medium', actionUrl: `/app/projects/${n.entity_id ?? 'demo'}`, actionLabel: 'View' });
+          items.push({ type: nType, title: n.title ?? 'Notification', subtitle: n.message ?? '', urgency: (n.urgency as ActionItem['urgency']) ?? 'medium', actionUrl: `/app/projects/${n.entity_id ?? 'unknown'}`, actionLabel: 'View' });
         }
       }
-      if (items.length === 0) return NextResponse.json({ items: DEMO_TODAY_ITEMS });
       items.sort((a, b) => (URGENCY_ORDER[a.urgency] ?? 2) - (URGENCY_ORDER[b.urgency] ?? 2));
       return NextResponse.json({ items });
-    } catch {
-      return NextResponse.json({ items: DEMO_TODAY_ITEMS });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] dashboard/today error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -388,12 +239,7 @@ export async function GET(
       let tenantId: string | null = null;
       if (token) { const { data: { user } } = await supabase.auth.getUser(token); tenantId = user?.id ?? null; }
       if (!tenantId) {
-        let demoBids = [...DEMO_BIDS];
-        if (outcome) demoBids = demoBids.filter((b) => b.outcome === outcome);
-        if (projectType) demoBids = demoBids.filter((b) => b.project_type === projectType);
-        if (trade) demoBids = demoBids.filter((b) => b.trades?.includes(trade));
-        demoBids = demoBids.slice(0, limit);
-        return NextResponse.json({ bids: demoBids, stats: computeBidStats(demoBids), source: 'demo' });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       let q = supabase.from('bid_history').select('*').eq('tenant_id', tenantId).order('bid_date', { ascending: false }).limit(limit);
       if (outcome) q = q.eq('outcome', outcome);
@@ -402,7 +248,7 @@ export async function GET(
       const { data, error } = await q;
       if (error) {
         if (error.code === '42P01' || error.message?.includes('does not exist') || error.message?.includes('relation')) {
-          return NextResponse.json({ bids: DEMO_BIDS.slice(0, limit), stats: computeBidStats(DEMO_BIDS), source: 'demo', notice: 'bid_history table not yet created — showing demo data.' });
+          return NextResponse.json({ error: 'bid_history table not yet created', bids: [], stats: computeBidStats([]) }, { status: 500 });
         }
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
@@ -428,7 +274,7 @@ export async function GET(
         tenantId = user?.id ?? null;
       }
       if (!tenantId) {
-        return NextResponse.json({ projects: [DEMO_PROJECT], source: 'demo' });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
       const { data, error } = await supabaseAdmin
         .from('projects')
@@ -437,9 +283,11 @@ export async function GET(
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
-      return NextResponse.json({ projects: data ?? [], source: 'live' });
-    } catch {
-      return NextResponse.json({ projects: [DEMO_PROJECT], source: 'demo' });
+      return NextResponse.json({ projects: data ?? [] });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] projects error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -455,7 +303,7 @@ export async function GET(
   if (seg0 === 'rfis' && !seg1) {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId') || '';
-    if (!projectId) return NextResponse.json({ rfis: DEMO_RFIS, source: 'demo' });
+    if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
     try {
       const { data, error } = await supabaseAdmin
         .from('rfis')
@@ -463,10 +311,11 @@ export async function GET(
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      if (!data || data.length === 0) return NextResponse.json({ rfis: DEMO_RFIS, source: 'demo' });
-      return NextResponse.json({ rfis: data, source: 'live' });
-    } catch {
-      return NextResponse.json({ rfis: DEMO_RFIS, source: 'demo' });
+      return NextResponse.json({ rfis: data || [] });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] rfis error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -474,7 +323,7 @@ export async function GET(
   if (seg0 === 'change-orders' && !seg1) {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId') || '';
-    if (!projectId) return NextResponse.json({ changeOrders: DEMO_CHANGE_ORDERS, source: 'demo' });
+    if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
     try {
       const { data, error } = await supabaseAdmin
         .from('change_orders')
@@ -482,10 +331,11 @@ export async function GET(
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      if (!data || data.length === 0) return NextResponse.json({ changeOrders: DEMO_CHANGE_ORDERS, source: 'demo' });
-      return NextResponse.json({ changeOrders: data, source: 'live' });
-    } catch {
-      return NextResponse.json({ changeOrders: DEMO_CHANGE_ORDERS, source: 'demo' });
+      return NextResponse.json({ changeOrders: data || [] });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] change-orders error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -508,9 +358,11 @@ export async function GET(
       if (tenantId) q = q.eq('tenant_id', tenantId);
       const { data, error } = await q;
       if (error) throw error;
-      return NextResponse.json({ alerts: data ?? [], source: 'live' });
-    } catch {
-      return NextResponse.json({ alerts: DEMO_AUTOPILOT_ALERTS, source: 'demo' });
+      return NextResponse.json({ alerts: data ?? [] });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] autopilot/alerts error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -538,7 +390,7 @@ export async function GET(
   if (seg0 === 'bid-packages' && !seg1) {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId') || '';
-    if (!projectId) return NextResponse.json({ packages: [], source: 'demo' });
+    if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
     try {
       const { data, error } = await supabaseAdmin
         .from('bid_packages')
@@ -546,9 +398,11 @@ export async function GET(
         .eq('project_id', projectId)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return NextResponse.json({ packages: data ?? [], source: 'live' });
-    } catch {
-      return NextResponse.json({ packages: [], source: 'demo' });
+      return NextResponse.json({ packages: data ?? [] });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] bid-packages error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -557,11 +411,13 @@ export async function GET(
     const id = seg1;
     try {
       const { data, error } = await supabaseAdmin.from('bid_packages').select(`id, code, name, trade, scope, status, bid_due_date, project_id, awarded_to, awarded_amount, created_at, sov_items(*), bid_package_invites(id, sub_id, status, bid_amount, invited_at, responded_at, subs(id, company_name, contact_name, email))`).eq('id', id).single();
-      if (error || !data) return NextResponse.json({ bidPackage: demoBidPackage(id), source: 'demo' });
+      if (error || !data) return NextResponse.json({ error: 'Bid package not found' }, { status: 404 });
       const invitedSubs: InvitedSub[] = (data.bid_package_invites || []).map((inv: any) => ({ id: inv.id, company_name: inv.subs?.company_name || 'Unknown', contact_name: inv.subs?.contact_name || '', email: inv.subs?.email || '', status: inv.status, bid_amount: inv.bid_amount, invited_at: inv.invited_at, responded_at: inv.responded_at }));
-      return NextResponse.json({ bidPackage: { ...data, invited_subs: invitedSubs, sov_items: data.sov_items || [] }, source: 'live' });
-    } catch {
-      return NextResponse.json({ bidPackage: demoBidPackage(id), source: 'demo' });
+      return NextResponse.json({ bidPackage: { ...data, invited_subs: invitedSubs, sov_items: data.sov_items || [] } });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] bid-packages/:id error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -623,8 +479,10 @@ export async function POST(
       const { data, error } = await supabaseAdmin.from('bid_packages').insert({ project_id: projectId, code: autoCode, name, scope: scope || '', status: 'draft', bid_due_date: bidDue || null }).select().single();
       if (error) throw error;
       return NextResponse.json({ success: true, bidPackage: data });
-    } catch {
-      return NextResponse.json({ success: true, bidPackage: { id: `bp-demo-${Date.now()}`, code: code || 'BP-07', name, status: 'draft' } });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] bid-packages/create error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -636,11 +494,12 @@ export async function POST(
       const tradeKeyword = trade.replace(/^Division \d+ — /, '').toLowerCase();
       const { data, error } = await supabaseAdmin.from('sub_performance').select('id, name, trade, email, win_rate, last_project, last_project_date, rating').ilike('trade', `%${tradeKeyword}%`).order('win_rate', { ascending: false }).limit(10);
       if (error) throw error;
-      if (!data || data.length === 0) return NextResponse.json({ subs: DEMO_SUGGEST_SUBS });
-      const subs = data.map((row: { id: string; name: string; trade: string; email: string; win_rate: number; last_project: string; last_project_date: string; rating: number }) => ({ id: row.id, name: row.name, trade: row.trade, email: row.email, winRate: row.win_rate, lastProject: row.last_project, lastProjectDate: row.last_project_date, rating: row.rating }));
+      const subs = (data || []).map((row: { id: string; name: string; trade: string; email: string; win_rate: number; last_project: string; last_project_date: string; rating: number }) => ({ id: row.id, name: row.name, trade: row.trade, email: row.email, winRate: row.win_rate, lastProject: row.last_project, lastProjectDate: row.last_project_date, rating: row.rating }));
       return NextResponse.json({ subs });
-    } catch {
-      return NextResponse.json({ subs: DEMO_SUGGEST_SUBS });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] suggest-subs error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -657,22 +516,23 @@ export async function POST(
       let tenantId: string | null = null;
       if (token) { const { data: { user } } = await supabase.auth.getUser(token); tenantId = user?.id ?? null; }
       let suggestions: SubSuggestion[] = [];
-      let source = 'demo';
-      if (tenantId) {
-        const { data: perfData, error: perfError } = await supabase.from('sub_performance').select('*').eq('tenant_id', tenantId).ilike('trade', `%${tradeRequired}%`).order('win_rate', { ascending: false }).limit(5);
-        if (!perfError && perfData?.length) {
-          suggestions = perfData.map((sub: Record<string, unknown>) => ({ id: sub.id as string, name: sub.sub_name as string, trade: sub.trade as string, winRate: sub.win_rate as number | null, lastProjectDate: sub.last_project_date as string | null, email: sub.email as string | null, phone: sub.phone as string | null, suggestedReason: buildSuggestedReason(sub) }));
-          source = 'sub_performance';
-        } else {
-          const { data: subData, error: subError } = await supabase.from('subcontractors').select('id, name, trade, email, phone, rating').eq('tenant_id', tenantId).ilike('trade', `%${tradeRequired}%`).limit(5);
-          if (!subError && subData?.length) {
-            suggestions = subData.map((sub: Record<string, unknown>) => ({ id: sub.id as string, name: sub.name as string, trade: sub.trade as string, winRate: null, lastProjectDate: null, email: sub.email as string | null, phone: sub.phone as string | null, suggestedReason: 'Matching sub in your database' }));
-            source = 'subcontractors';
-          } else { suggestions = buildDemoSubSuggestions(tradeRequired); source = 'demo'; }
+      let source = 'none';
+      if (!tenantId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const { data: perfData, error: perfError } = await supabase.from('sub_performance').select('*').eq('tenant_id', tenantId).ilike('trade', `%${tradeRequired}%`).order('win_rate', { ascending: false }).limit(5);
+      if (!perfError && perfData?.length) {
+        suggestions = perfData.map((sub: Record<string, unknown>) => ({ id: sub.id as string, name: sub.sub_name as string, trade: sub.trade as string, winRate: sub.win_rate as number | null, lastProjectDate: sub.last_project_date as string | null, email: sub.email as string | null, phone: sub.phone as string | null, suggestedReason: buildSuggestedReason(sub) }));
+        source = 'sub_performance';
+      } else {
+        const { data: subData, error: subError } = await supabase.from('subcontractors').select('id, name, trade, email, phone, rating').eq('tenant_id', tenantId).ilike('trade', `%${tradeRequired}%`).limit(5);
+        if (!subError && subData?.length) {
+          suggestions = subData.map((sub: Record<string, unknown>) => ({ id: sub.id as string, name: sub.name as string, trade: sub.trade as string, winRate: null, lastProjectDate: null, email: sub.email as string | null, phone: sub.phone as string | null, suggestedReason: 'Matching sub in your database' }));
+          source = 'subcontractors';
         }
-      } else { suggestions = buildDemoSubSuggestions(tradeRequired); source = 'demo'; }
+      }
       let invitesSent = 0;
-      if (sendInvites && tenantId && source !== 'demo') {
+      if (sendInvites && tenantId) {
         const now = new Date().toISOString();
         const inviteRows = suggestions.map((sub) => ({ tenant_id: tenantId, bid_package_id: bidPackageId, sub_id: sub.id.startsWith('demo-') ? null : sub.id, sub_name: sub.name, sub_email: sub.email, trade: sub.trade, status: 'invited', invited_at: now }));
         const { error: insertError } = await supabase.from('bid_package_invites').upsert(inviteRows, { onConflict: 'bid_package_id,sub_email' });
@@ -690,7 +550,7 @@ export async function POST(
       const body: ScoreRequest = await req.json();
       const { projectName, projectType, estimatedValue, trade, location, competitorCount, ourMargin } = body;
       if (!projectName || typeof estimatedValue !== 'number' || typeof ourMargin !== 'number') return NextResponse.json({ error: 'projectName, estimatedValue, and ourMargin are required.' }, { status: 400 });
-      if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ ...demoScore(body), source: 'demo' });
+      if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: 'Bid scoring requires project data' }, { status: 400 });
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const token = req.headers.get('authorization')?.replace('Bearer ', '');
       let tenantId: string | null = null;
@@ -703,7 +563,7 @@ export async function POST(
       const message = await anthropic.messages.create({ model: 'claude-sonnet-4-6', max_tokens: 600, messages: [{ role: 'user', content: userPrompt }], system: systemPrompt });
       const rawText = message.content[0].type === 'text' ? message.content[0].text : '';
       const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return NextResponse.json({ ...demoScore(body), source: 'ai-fallback' });
+      if (!jsonMatch) return NextResponse.json({ error: 'AI scoring returned an unparseable response' }, { status: 502 });
       const parsed: ScoreResponse = JSON.parse(jsonMatch[0]);
       const result: ScoreResponse = { score: Math.max(0, Math.min(100, Math.round(parsed.score ?? 50))), recommendation: ['bid', 'pass', 'negotiate'].includes(parsed.recommendation) ? parsed.recommendation : 'bid', reasoning: parsed.reasoning ?? '', suggestedMargin: parseFloat((parsed.suggestedMargin ?? ourMargin).toFixed(1)), riskFactors: Array.isArray(parsed.riskFactors) ? parsed.riskFactors : [], winProbability: Math.max(0, Math.min(100, Math.round(parsed.winProbability ?? 50))) };
       return NextResponse.json({ ...result, source: 'ai' });
@@ -723,8 +583,10 @@ export async function POST(
       const { data, error } = await supabaseAdmin.from('change_orders').insert({ project_id: projectId, co_number: coNumber, title, description: description || '', status: 'pending', cost_impact: Number(costImpact) || 0, schedule_impact_days: Number(scheduleImpactDays) || 0, reason: reason || null, initiated_by: initiatedBy || null }).select().single();
       if (error) throw error;
       return NextResponse.json({ success: true, changeOrder: data });
-    } catch {
-      return NextResponse.json({ success: true, changeOrder: { id: `co-demo-${Date.now()}`, co_number: 'CO-003', title, status: 'pending' } });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] change-orders/create error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -733,10 +595,13 @@ export async function POST(
     const body = await req.json().catch(() => ({}));
     const { tenantId } = body;
     try {
-      const { data: projects } = await supabaseAdmin.from('projects').select('id, name').eq('tenant_id', tenantId || 'demo').eq('status', 'active');
+      if (!tenantId) return NextResponse.json({ error: 'tenantId required' }, { status: 400 });
+      const { data: projects } = await supabaseAdmin.from('projects').select('id, name').eq('tenant_id', tenantId).eq('status', 'active');
       return NextResponse.json({ success: true, scanned: projects?.length || 0, message: `Autopilot scan complete. Analyzed ${projects?.length || 0} active projects.` });
-    } catch {
-      return NextResponse.json({ success: true, scanned: 1, message: 'Autopilot scan complete (demo mode).' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] autopilot/run error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -772,7 +637,7 @@ export async function POST(
       const { data: { user } } = await supabaseAdmin.auth.getUser(token);
       tenantId = user?.user_metadata?.tenant_id ?? user?.id ?? tenantId;
     }
-    if (!tenantId) tenantId = 'demo';
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized — tenantId required' }, { status: 401 });
     if (!name) return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
     const year = new Date().getFullYear();
     const { count } = await supabaseAdmin.from('projects').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId);
@@ -781,8 +646,8 @@ export async function POST(
     const now = new Date().toISOString();
     const { data: project, error } = await supabaseAdmin.from('projects').insert({ tenant_id: tenantId, name, address: address || null, project_number: projectNumber, project_type: projectType, contract_amount: contractAmount || null, start_date: startDate, substantial_completion_date: subDate, owner_name: ownerName, owner_email: ownerEmail, architect_name: archName, architect_email: archEmail, description, retainage_percent: retainage, prevailing_wage: prevailingWage, public_project: publicProject, contract_type: contractType, state, status: 'active', created_at: now, updated_at: now }).select('id, project_number, name').single();
     if (error || !project) {
-      const fakeId = 'demo-project-' + Date.now();
-      return NextResponse.json({ projectId: fakeId, projectNumber, name });
+      console.error('[api/catch-all] projects/create error:', error?.message);
+      return NextResponse.json({ error: error?.message || 'Failed to create project' }, { status: 500 });
     }
     return NextResponse.json({ projectId: project.id, projectNumber: project.project_number, name: project.name });
   }
@@ -842,8 +707,10 @@ export async function POST(
       const { data, error } = await supabaseAdmin.from('rfis').insert({ project_id: projectId, number, title, description: description || '', status: 'open', priority: priority || 'normal', assigned_to: assignedTo || null, response_due_date: responseDue || null, drawing_reference: drawingRef || null, spec_section: specSection || null }).select().single();
       if (error) throw error;
       return NextResponse.json({ success: true, rfi: data });
-    } catch {
-      return NextResponse.json({ success: true, rfi: { id: `rfi-demo-${Date.now()}`, number: 'RFI-004', title, status: 'open' } });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[api/catch-all] rfis/create error:', msg);
+      return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
@@ -856,7 +723,7 @@ export async function POST(
     for (const invite of invites) {
       if (!invite.email) continue;
       try {
-        const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(invite.email, { data: { role: invite.role || 'member', tenant_id: tenantId || 'demo' } });
+        const { error } = await supabaseAdmin.auth.admin.inviteUserByEmail(invite.email, { data: { role: invite.role || 'member', tenant_id: tenantId || '' } });
         results.push({ email: invite.email, status: error ? 'failed' : 'sent' });
       } catch {
         results.push({ email: invite.email, status: 'queued' });
