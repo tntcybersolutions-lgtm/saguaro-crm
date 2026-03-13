@@ -116,6 +116,18 @@ function MorePage(){
     {href:`/field/notifications${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Notification Center',desc:'Activity feed & alerts',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
     {href:`/field/favorites${projectId?`?projectId=${projectId}`:''}`,icon:'sparkle',label:'Favorites & Recents',desc:'Pinned items & recent activity',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
     {href:`/field/activity${projectId?`?projectId=${projectId}`:''}`,icon:'calendar',label:'Activity Log',desc:'Audit trail — who changed what',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
+    {href:`/field/timesheets${projectId?`?projectId=${projectId}`:''}`,icon:'clock',label:'Timesheets',desc:'Weekly timesheet entry & approval',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/permits${projectId?`?projectId=${projectId}`:''}`,icon:'document',label:'Permits',desc:'Permit tracking & expiration alerts',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
+    {href:`/field/purchase-orders${projectId?`?projectId=${projectId}`:''}`,icon:'box',label:'Purchase Orders',desc:'PO creation, line items & receiving',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
+    {href:`/field/contracts${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Contracts',desc:'Prime & sub contracts, compliance',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
+    {href:`/field/invoices${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Invoices',desc:'Invoice approval, aging & payment',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/specs${projectId?`?projectId=${projectId}`:''}`,icon:'folder',label:'Specifications',desc:'CSI MasterFormat spec sections',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
+    {href:`/field/todos${projectId?`?projectId=${projectId}`:''}`,icon:'check',label:'Action Items',desc:'Tasks, assignments & due dates',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
+    {href:`/field/incidents${projectId?`?projectId=${projectId}`:''}`,icon:'shield',label:'Incidents',desc:'OSHA tracking, investigation & corrective actions',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
+    {href:`/field/commissioning${projectId?`?projectId=${projectId}`:''}`,icon:'check',label:'Commissioning',desc:'System startup, testing & turnover',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
+    {href:`/field/closeout${projectId?`?projectId=${projectId}`:''}`,icon:'folder',label:'Closeout',desc:'Warranties, O&M, as-builts & attic stock',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
+    {href:`/field/coordination${projectId?`?projectId=${projectId}`:''}`,icon:'plan',label:'Coordination Issues',desc:'BIM clashes, field conflicts & resolution',color:'#F97316',bg:'rgba(249,115,22,.1)',border:'rgba(249,115,22,.25)'},
+    {href:`/field/waste${projectId?`?projectId=${projectId}`:''}`,icon:'truck',label:'Waste & Recycling',desc:'Diversion tracking, LEED compliance',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
   ];
   const QUICK=[
     {id:'timesheet',icon:'clock',label:'Quick Timesheet',desc:'Log hours in 10 seconds',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
