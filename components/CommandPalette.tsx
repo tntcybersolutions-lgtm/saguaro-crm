@@ -38,10 +38,10 @@ const NAV_ITEMS: Omit<PaletteItem, 'section'>[] = [
 
 const ACTION_ITEMS: Omit<PaletteItem, 'section'>[] = [
   { id: 'act-new-project',  icon: '🏗️', label: 'New Project',     description: 'Create a new construction project',    shortcut: 'N', href: '/app/projects/new' },
-  { id: 'act-new-pay-app',  icon: '💰', label: 'New Pay App',      description: 'Start a payment application',          shortcut: 'P', href: '/app/projects' },
+  { id: 'act-new-pay-app',  icon: '💰', label: 'New Pay App',      description: 'Select a project to create pay app',   shortcut: 'P', href: '/app/projects' },
   { id: 'act-score-bid',    icon: '🎯', label: 'Score a Bid',      description: 'AI-powered bid scoring',               shortcut: 'S', href: '/app/bids' },
-  { id: 'act-new-rfi',      icon: '❓', label: 'New RFI',          description: 'Submit a request for information',     shortcut: 'R', href: '/app/projects' },
-  { id: 'act-create-bid',   icon: '📦', label: 'Create Bid Package', description: 'Start bid package wizard',           shortcut: 'B', href: '/app/projects' },
+  { id: 'act-new-rfi',      icon: '❓', label: 'New RFI',          description: 'Select a project to submit an RFI',    shortcut: 'R', href: '/app/projects' },
+  { id: 'act-create-bid',   icon: '📦', label: 'Create Bid Package', description: 'Select a project to start bid pkg', shortcut: 'B', href: '/app/projects' },
   { id: 'act-gen-doc',      icon: '📄', label: 'Generate Document', description: 'AI-powered document generation',      shortcut: 'D', href: '/app/documents' },
   { id: 'act-invite-sub',   icon: '🤝', label: 'Invite Subcontractor', description: 'Send a sub portal invite',         shortcut: 'I', href: '/app/subs/invite' },
 ];
