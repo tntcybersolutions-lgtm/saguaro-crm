@@ -1,686 +1,1268 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Get the App — Saguaro Field',
-  description: 'Install Saguaro Field on iPhone, Android, iPad, Mac, or Windows. No App Store required — one tap from your browser.',
+  title: 'Get the App — Saguaro Field | No App Store Required',
+  description:
+    'Install Saguaro Field on iPhone, Android, iPad, Mac, or Windows in 30 seconds. No App Store. GPS clock-in, daily logs, offline mode, AI field assistant — free for your whole crew.',
+  keywords: [
+    'construction field app',
+    'PWA construction',
+    'no app store field app',
+    'GPS clock in construction',
+    'daily logs app',
+    'construction mobile app',
+  ],
+  openGraph: {
+    title: 'Saguaro Field — Install in 30 Seconds, No App Store',
+    description:
+      'Free field app for construction crews. Works offline. Installs instantly. No IT required.',
+  },
 };
 
 export default function GetTheAppPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-          --navy:      #07101C;
-          --navy-mid:  #0D1D30;
-          --navy-lite: #162844;
-          --gold:      #C8A84B;
-          --gold-lt:   #E3C86E;
-          --gold-dim:  rgba(200,168,75,0.14);
-          --border:    rgba(200,168,75,0.22);
-          --text:      #EEF2F8;
-          --muted:     #7A8FA8;
-          --teal:  #0DD4AA;
-          --green: #3DDB7C;
-          --blue:  #4A9EFF;
-          --red:   #FF5F5F;
-          --amber: #FFAB2E;
-          --purple:#A78BFA;
+          --dark:   #0d1117;
+          --gold:   #F59E0B;
+          --text:   #F8FAFC;
+          --dim:    #CBD5E1;
+          --border: #1E3A5F;
+          --raised: #0F172A;
+          --green:  #22c55e;
+          --gold-dim: rgba(245,158,11,0.12);
+          --gold-glow: rgba(245,158,11,0.25);
         }
 
-        .gta-body { font-family: 'DM Sans', sans-serif; background: var(--navy); color: var(--text); min-height: 100vh; }
+        body { background: var(--dark); }
 
-        .gta-wrap {
-          max-width: 1160px;
-          margin: 0 auto;
-          padding: 100px 24px 120px;
-        }
-
-        .eyebrow {
-          display: inline-flex;
+        /* ── NAV ── */
+        .nav {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 100;
+          display: flex;
           align-items: center;
-          gap: 8px;
-          border: 1px solid var(--border);
-          background: var(--gold-dim);
-          border-radius: 100px;
-          padding: 5px 16px 5px 10px;
-          margin-bottom: 30px;
-          font-size: 11px;
+          padding: 0 32px;
+          height: 64px;
+          background: rgba(13,17,23,0.92);
+          backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(30,58,95,0.6);
+        }
+        .nav-logo { display: flex; align-items: center; text-decoration: none; }
+        .nav-logo img { height: 40px; mix-blend-mode: screen; }
+        .nav-spacer { flex: 1; }
+        .nav-login {
+          color: var(--dim);
+          text-decoration: none;
+          font-size: 14px;
           font-weight: 500;
-          color: var(--gold-lt);
-          letter-spacing: .09em;
-          text-transform: uppercase;
+          margin-right: 20px;
+          transition: color .2s;
         }
-        .eyebrow-dot {
-          width: 22px; height: 22px;
-          border-radius: 50%;
-          background: var(--gold-dim);
-          border: 1px solid var(--border);
-          display: flex; align-items: center; justify-content: center;
-        }
-        .eyebrow-dot span {
-          width: 8px; height: 8px;
-          border-radius: 50%;
+        .nav-login:hover { color: var(--text); }
+        .nav-cta {
           background: var(--gold);
-          display: block;
-          animation: blink 2s ease-in-out infinite;
+          color: #0d1117;
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 700;
+          padding: 9px 20px;
+          border-radius: 8px;
+          letter-spacing: .02em;
+          transition: opacity .2s, transform .15s;
         }
-        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+        .nav-cta:hover { opacity: .9; transform: translateY(-1px); }
 
+        /* ── PAGE ── */
+        .page {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+          background: var(--dark);
+          color: var(--text);
+          min-height: 100vh;
+        }
+
+        /* ── HERO ── */
         .hero {
+          position: relative;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          overflow: hidden;
+          padding: 100px 32px 80px;
+        }
+        .hero-bg-gold {
+          position: absolute;
+          bottom: -100px; left: -150px;
+          width: 700px; height: 700px;
+          background: radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 65%);
+          pointer-events: none;
+        }
+        .hero-bg-blue {
+          position: absolute;
+          top: -80px; right: -100px;
+          width: 600px; height: 600px;
+          background: radial-gradient(circle, rgba(30,58,95,0.5) 0%, transparent 65%);
+          pointer-events: none;
+        }
+        .hero-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+          width: 100%;
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 80px;
           align-items: center;
+          position: relative;
+          z-index: 1;
         }
-        @media(max-width:860px){
-          .hero{grid-template-columns:1fr;gap:60px;}
-          .devices{order:-1;}
-        }
-
-        .gta-h1 {
-          font-family:'Syne',sans-serif;
-          font-size: clamp(36px,5vw,56px);
-          font-weight: 800;
-          line-height: 1.06;
-          letter-spacing: -.02em;
-          margin-bottom: 18px;
-        }
-        .gta-h1 em { font-style: normal; color: var(--gold); }
-
-        .sub {
-          font-size: 16px;
-          font-weight: 300;
-          color: var(--muted);
-          line-height: 1.75;
-          max-width: 420px;
-          margin-bottom: 40px;
-        }
-
-        .install-grid {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 38px;
-        }
-
-        .install-card {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          background: var(--navy-mid);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 14px;
-          padding: 14px 18px;
-          text-decoration: none;
-          color: var(--text);
-          transition: border-color .2s, transform .2s, box-shadow .2s;
-          cursor: pointer;
-        }
-        .install-card:hover {
-          border-color: var(--border);
-          transform: translateY(-2px);
-          box-shadow: 0 16px 40px rgba(0,0,0,.35);
-        }
-
-        .platform-logo {
-          width: 40px; height: 40px;
-          border-radius: 10px;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-        }
-        .platform-logo.apple { background: #fff; }
-        .platform-logo.android { background: #1C2B3A; border: 1px solid rgba(255,255,255,.08); }
-        .platform-logo.pwa { background: linear-gradient(135deg,#1a3a5c,#0d2035); border: 1px solid rgba(255,255,255,.08); }
-
-        .install-info { flex: 1; }
-        .install-info h4 {
-          font-family: 'Syne', sans-serif;
-          font-size: 14px;
-          font-weight: 700;
-          color: var(--text);
-          margin-bottom: 2px;
-        }
-        .install-info p {
-          font-size: 12px;
-          color: var(--muted);
-          font-weight: 300;
-        }
-
-        .install-arrow {
-          width: 28px; height: 28px;
-          border-radius: 8px;
-          background: rgba(200,168,75,.1);
-          border: 1px solid var(--border);
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0;
-        }
-        .install-arrow svg { width:12px;height:12px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
-
-        .tags {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          flex-wrap: wrap;
-        }
-        .tags-label { font-size:12px;color:var(--muted);margin-right:2px; }
-        .tag {
+        .hero-badge {
           display: inline-flex;
           align-items: center;
-          gap: 5px;
+          gap: 8px;
+          background: rgba(34,197,94,0.12);
+          border: 1px solid rgba(34,197,94,0.35);
           border-radius: 100px;
-          padding: 5px 13px;
-          font-size: 11.5px;
-          font-weight: 600;
-          letter-spacing: .02em;
+          padding: 6px 16px;
+          margin-bottom: 28px;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--green);
+          letter-spacing: .08em;
+          text-transform: uppercase;
         }
-        .tag svg { width:11px;height:11px; }
-        .tag-ios     { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.18); color:#fff; }
-        .tag-ios svg { fill:#fff; }
-        .tag-android { background:rgba(61,220,132,.12); border:1px solid rgba(61,220,132,.35); color:#3DDC84; }
-        .tag-android svg { fill:#3DDC84; }
-        .tag-ipad    { background:rgba(74,158,255,.12); border:1px solid rgba(74,158,255,.35); color:#4A9EFF; }
-        .tag-ipad svg { fill:#4A9EFF; }
-        .tag-mac     { background:rgba(200,168,75,.13); border:1px solid rgba(200,168,75,.38); color:var(--gold-lt); }
-        .tag-mac svg { fill:var(--gold-lt); }
-        .tag-win     { background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.35); color:#A78BFA; }
-        .tag-win svg { fill:#A78BFA; }
+        .hero-badge-dot {
+          width: 7px; height: 7px;
+          border-radius: 50%;
+          background: var(--green);
+          animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(0.85)} }
+        .hero-h1 {
+          font-size: clamp(38px, 5vw, 64px);
+          font-weight: 800;
+          line-height: 1.05;
+          letter-spacing: -.025em;
+          margin-bottom: 24px;
+          color: var(--text);
+        }
+        .hero-h1 .gold-gradient {
+          background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 50%, #F59E0B 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .hero-sub {
+          font-size: 17px;
+          font-weight: 400;
+          color: var(--dim);
+          line-height: 1.75;
+          max-width: 480px;
+          margin-bottom: 44px;
+        }
+        .hero-ctas {
+          display: flex;
+          gap: 14px;
+          flex-wrap: wrap;
+          margin-bottom: 40px;
+        }
+        .btn-primary {
+          background: var(--gold);
+          color: #0d1117;
+          text-decoration: none;
+          font-size: 15px;
+          font-weight: 700;
+          padding: 14px 28px;
+          border-radius: 10px;
+          letter-spacing: .01em;
+          transition: opacity .2s, transform .15s, box-shadow .2s;
+          box-shadow: 0 4px 20px rgba(245,158,11,0.35);
+        }
+        .btn-primary:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245,158,11,0.45); }
+        .btn-ghost {
+          background: transparent;
+          color: var(--text);
+          text-decoration: none;
+          font-size: 15px;
+          font-weight: 600;
+          padding: 14px 28px;
+          border-radius: 10px;
+          border: 1px solid var(--border);
+          transition: border-color .2s, background .2s;
+        }
+        .btn-ghost:hover { border-color: var(--gold); background: rgba(245,158,11,0.06); }
+        .trust-pills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .trust-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(15,23,42,0.8);
+          border: 1px solid var(--border);
+          border-radius: 100px;
+          padding: 6px 14px;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--dim);
+        }
 
+        /* ── DEVICE SHOWCASE ── */
         .devices {
           position: relative;
           height: 520px;
         }
 
-        .tablet {
+        /* Phone */
+        .dev-phone {
           position: absolute;
-          left: 0; top: 50px;
-          width: 275px; height: 385px;
-          background: #1A2A3E;
-          border-radius: 22px;
-          border: 2px solid rgba(255,255,255,.14);
-          box-shadow: 0 40px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07);
+          right: 20px; top: 0;
+          width: 168px; height: 360px;
+          background: linear-gradient(160deg, #1a2840 0%, #0f1a2e 100%);
+          border-radius: 38px;
+          border: 2px solid rgba(255,255,255,0.12);
+          box-shadow: 0 32px 72px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 1px rgba(0,0,0,0.3);
           overflow: hidden;
-          animation: floatT 5.5s ease-in-out infinite .4s;
+          animation: floatPhone 5s ease-in-out infinite;
         }
-        @keyframes floatT { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-10px) rotate(-2deg)} }
-        .tablet::after {
+        @keyframes floatPhone { 0%,100%{transform:translateY(0) rotate(3deg)} 50%{transform:translateY(-14px) rotate(3deg)} }
+        .dev-phone::before {
           content:'';
           position:absolute;
-          top:50%; right:7px;
-          transform:translateY(-50%);
-          width:5px; height:5px;
-          border-radius:50%;
-          background:rgba(255,255,255,.15);
-          z-index:10;
-        }
-        .tablet-screen {
-          position:absolute;
-          top:8px; left:16px; right:16px; bottom:8px;
-          background: #0A1622;
-          border-radius: 16px;
-          overflow: hidden;
-        }
-
-        .phone {
-          position: absolute;
-          right: 30px; top: 0;
-          width: 172px; height: 368px;
-          background: #1A2A3E;
-          border-radius: 36px;
-          border: 2px solid rgba(255,255,255,.14);
-          box-shadow: 0 40px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07);
-          overflow: hidden;
-          animation: floatP 5s ease-in-out infinite;
-        }
-        @keyframes floatP { 0%,100%{transform:translateY(0) rotate(3deg)} 50%{transform:translateY(-14px) rotate(3deg)} }
-        .phone::before {
-          content:'';
-          position:absolute;
-          top:10px; left:50%;
+          top:11px; left:50%;
           transform:translateX(-50%);
-          width:55px; height:7px;
-          background:#0A1622;
+          width:52px; height:6px;
+          background:#080f1a;
           border-radius:10px;
           z-index:10;
         }
-        .phone-screen {
+        .dev-phone-screen {
           position:absolute;
-          top:28px; left:7px; right:7px; bottom:7px;
-          background: #0A1622;
-          border-radius: 30px;
-          overflow: hidden;
+          top:26px; left:6px; right:6px; bottom:6px;
+          background: #080f1a;
+          border-radius:32px;
+          overflow:hidden;
+          display:flex;
+          flex-direction:column;
+        }
+        .ps-bar {
+          padding: 10px 14px 6px;
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          flex-shrink:0;
+        }
+        .ps-time { font-size:9px;font-weight:700;color:rgba(248,250,252,0.9); }
+        .ps-header {
+          background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.08));
+          border-bottom: 1px solid rgba(245,158,11,0.2);
+          padding: 10px 12px;
+          flex-shrink:0;
+        }
+        .ps-label { font-size:8px;color:rgba(245,158,11,0.7);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px; }
+        .ps-big { font-size:20px;font-weight:800;color:#FCD34D;line-height:1; }
+        .ps-small { font-size:7.5px;color:rgba(248,250,252,0.4);margin-top:2px; }
+        .ps-body { padding:10px 12px;flex:1;overflow:hidden; }
+        .ps-section { font-size:8px;color:rgba(248,250,252,0.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px; }
+        .ps-row {
+          display:flex;align-items:center;gap:8px;
+          padding:6px 8px;border-radius:8px;
+          background:rgba(255,255,255,0.04);
+          margin-bottom:5px;
+        }
+        .ps-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
+        .ps-row-text { flex:1; }
+        .ps-row-name { font-size:8px;color:rgba(248,250,252,0.75); }
+        .ps-row-sub { font-size:6.5px;color:rgba(248,250,252,0.3);margin-top:1px; }
+        .ps-badge { padding:2px 6px;border-radius:4px;font-size:6.5px;font-weight:600; }
+        .ps-badge-green { background:rgba(34,197,94,0.15);color:#22c55e; }
+        .ps-badge-amber { background:rgba(245,158,11,0.15);color:#F59E0B; }
+        .ps-nav {
+          position:absolute;bottom:0;left:0;right:0;
+          height:42px;
+          background:rgba(8,15,26,0.96);
+          border-top:1px solid rgba(255,255,255,0.06);
+          display:flex;align-items:center;justify-content:space-around;
+        }
+        .ps-nav-i { width:16px;height:16px;stroke:rgba(255,255,255,0.25);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round; }
+        .ps-nav-i.act { stroke:var(--gold); }
+
+        /* Tablet */
+        .dev-tablet {
+          position:absolute;
+          left:0; top:60px;
+          width:268px; height:370px;
+          background: linear-gradient(160deg, #1a2840 0%, #0f1a2e 100%);
+          border-radius:20px;
+          border:2px solid rgba(255,255,255,0.12);
+          box-shadow: 0 32px 72px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07);
+          overflow:hidden;
+          animation: floatTablet 5.5s ease-in-out infinite 0.4s;
+        }
+        @keyframes floatTablet { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-10px) rotate(-2deg)} }
+        .dev-tablet-screen {
+          position:absolute;
+          top:8px;left:14px;right:14px;bottom:8px;
+          background:#080f1a;
+          border-radius:14px;
+          overflow:hidden;
+        }
+        .ts-header {
+          padding:10px 12px 8px;
+          border-bottom:1px solid rgba(255,255,255,0.05);
+          display:flex;align-items:center;justify-content:space-between;
+        }
+        .ts-logo { font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.06em; }
+        .ts-dots { display:flex;gap:4px; }
+        .ts-dot { width:5px;height:5px;border-radius:50%; }
+        .ts-body { padding:10px 12px; }
+        .ts-greeting { font-size:8px;color:rgba(248,250,252,0.35);margin-bottom:1px; }
+        .ts-title { font-size:11px;font-weight:700;color:var(--text);margin-bottom:10px; }
+        .ts-grid { display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:9px; }
+        .ts-card { border-radius:8px;padding:8px 9px; }
+        .ts-card.c-gold { background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.25); }
+        .ts-card.c-green { background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2); }
+        .ts-card.c-blue { background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2); }
+        .ts-card.c-purple { background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2); }
+        .ts-card-n { font-size:14px;font-weight:800;line-height:1;margin-bottom:2px; }
+        .c-gold .ts-card-n { color:#FCD34D; }
+        .c-green .ts-card-n { color:#22c55e; }
+        .c-blue .ts-card-n { color:#60a5fa; }
+        .c-purple .ts-card-n { color:#a78bfa; }
+        .ts-card-l { font-size:7px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:.06em; }
+        .ts-bars-label { font-size:7px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px; }
+        .ts-bars { display:flex;align-items:flex-end;gap:4px;height:36px; }
+        .ts-bar { flex:1;border-radius:3px 3px 0 0; }
+        .ts-row { display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:8px; }
+        .ts-row-name { color:rgba(255,255,255,0.6); }
+        .ts-bge { padding:2px 6px;border-radius:4px;font-size:7px;font-weight:600; }
+        .bg-gn { background:rgba(34,197,94,0.15);color:#22c55e; }
+        .bg-am { background:rgba(245,158,11,0.15);color:#F59E0B; }
+        .bg-bl { background:rgba(59,130,246,0.15);color:#60a5fa; }
+
+        /* Laptop */
+        .dev-laptop {
+          position:absolute;
+          bottom:0; left:10px; right:0;
+          height:160px;
+          animation: floatLaptop 6s ease-in-out infinite 1s;
+        }
+        @keyframes floatLaptop { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        .dev-laptop-body {
+          height:112px;
+          background:linear-gradient(160deg,#1a2840,#0f1a2e);
+          border-radius:10px 10px 0 0;
+          border:2px solid rgba(255,255,255,0.12);
+          border-bottom:none;
+          padding:7px;
+        }
+        .dev-laptop-screen {
+          width:100%;height:100%;
+          background:#080f1a;
+          border-radius:5px;
+          overflow:hidden;
+          display:flex;
+        }
+        .ls-sidebar {
+          width:30%;
+          background:rgba(245,158,11,0.04);
+          border-right:1px solid rgba(255,255,255,0.05);
+          padding:6px 4px;
+        }
+        .ls-logo { font-size:7px;font-weight:800;color:var(--gold);padding:0 3px;margin-bottom:7px; }
+        .ls-item { padding:3px 5px;border-radius:4px;font-size:6px;color:rgba(255,255,255,0.3);margin-bottom:1px;display:flex;align-items:center;gap:3px; }
+        .ls-item.act { background:rgba(245,158,11,0.15);color:var(--gold); }
+        .ls-dot { width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5; }
+        .ls-main { flex:1;padding:7px 8px; }
+        .ls-top { display:flex;justify-content:space-between;align-items:center;margin-bottom:5px; }
+        .ls-title { font-size:8px;font-weight:700;color:var(--text); }
+        .ls-badge { padding:2px 5px;border-radius:4px;font-size:5.5px;background:rgba(34,197,94,0.15);color:#22c55e; }
+        .ls-cards { display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:4px; }
+        .ls-card { border-radius:4px;padding:5px 6px; }
+        .ls-card.lc1 { background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.2); }
+        .ls-card.lc2 { background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.18); }
+        .ls-card.lc3 { background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.18); }
+        .ls-card.lc4 { background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.18); }
+        .ls-card-n { font-size:9px;font-weight:800;line-height:1; }
+        .lc1 .ls-card-n { color:#FCD34D; }
+        .lc2 .ls-card-n { color:#22c55e; }
+        .lc3 .ls-card-n { color:#60a5fa; }
+        .lc4 .ls-card-n { color:#a78bfa; }
+        .ls-card-l { font-size:5px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.05em;margin-top:1px; }
+        .ls-row { display:flex;gap:4px;padding:2.5px 0;border-bottom:1px solid rgba(255,255,255,0.04); }
+        .ls-td { font-size:5.5px;color:rgba(255,255,255,0.35);flex:1; }
+        .ls-td.bold { color:rgba(255,255,255,0.7); }
+        .dev-laptop-hinge {
+          height:10px;
+          background:linear-gradient(160deg,#1a2840,#0f1a2e);
+          border-left:2px solid rgba(255,255,255,0.1);
+          border-right:2px solid rgba(255,255,255,0.1);
+          border-bottom:2px solid rgba(255,255,255,0.08);
+          border-radius:0 0 6px 6px;
+          width:108%; margin-left:-4%;
+        }
+        .dev-laptop-base {
+          height:7px;
+          background:#090f1b;
+          width:52%;
+          margin:0 auto;
+          border-radius:0 0 6px 6px;
+          border:1px solid rgba(255,255,255,0.06);
+          border-top:none;
         }
 
-        .mac { position: absolute; bottom: 0; left: 10px; right: 0; height: 165px; animation: floatM 6s ease-in-out infinite 1s; }
-        @keyframes floatM { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
-        .mac-body { height: 115px; background: #1A2A3E; border-radius: 10px 10px 0 0; border: 2px solid rgba(255,255,255,.13); border-bottom: none; overflow: hidden; padding: 7px; }
-        .mac-body-screen { width: 100%; height: 100%; background: #0A1622; border-radius: 5px; overflow: hidden; }
-        .mac-hinge { height: 11px; background: #1A2A3E; border-left: 2px solid rgba(255,255,255,.12); border-right: 2px solid rgba(255,255,255,.12); width: 108%; margin-left: -4%; border-radius: 0 0 6px 6px; border-bottom: 2px solid rgba(255,255,255,.1); }
-        .mac-stand { height: 8px; background: #162030; width: 55%; margin: 0 auto; border-radius: 0 0 8px 8px; border: 1px solid rgba(255,255,255,.07); border-top: none; }
+        /* ── NUMBERS BAR ── */
+        .numbers-bar {
+          background: var(--raised);
+          border-top: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+          padding: 40px 32px;
+        }
+        .numbers-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: repeat(4,1fr);
+          gap: 16px;
+        }
+        .stat-item {
+          text-align: center;
+          padding: 24px 16px;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid var(--border);
+        }
+        .stat-number {
+          font-size: clamp(32px, 4vw, 48px);
+          font-weight: 800;
+          color: var(--gold);
+          line-height: 1;
+          margin-bottom: 8px;
+          letter-spacing: -.02em;
+        }
+        .stat-label {
+          font-size: 13px;
+          color: var(--dim);
+          font-weight: 500;
+        }
 
-        .t-header { padding: 12px 12px 8px; border-bottom: 1px solid rgba(255,255,255,.06); display: flex; align-items: center; justify-content: space-between; }
-        .t-logo { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 800; color: var(--gold); letter-spacing: .05em; }
-        .t-dots { display:flex;gap:4px; }
-        .t-dot { width:5px;height:5px;border-radius:50%; }
-        .t-body { padding: 10px 12px; }
-        .t-greeting { font-size: 8px; color: var(--muted); margin-bottom: 2px; }
-        .t-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 9px; }
-        .t-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
-        .t-stat { border-radius: 8px; padding: 8px 9px; }
-        .t-stat.gold  { background: rgba(200,168,75,.18); border:1px solid rgba(200,168,75,.3); }
-        .t-stat.teal  { background: rgba(13,212,170,.12); border:1px solid rgba(13,212,170,.25); }
-        .t-stat.green { background: rgba(61,219,124,.12); border:1px solid rgba(61,219,124,.25); }
-        .t-stat.blue  { background: rgba(74,158,255,.12); border:1px solid rgba(74,158,255,.25); }
-        .t-stat-n { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; line-height: 1; margin-bottom: 2px; }
-        .gold  .t-stat-n { color: var(--gold-lt); }
-        .teal  .t-stat-n { color: var(--teal); }
-        .green .t-stat-n { color: var(--green); }
-        .blue  .t-stat-n { color: var(--blue); }
-        .t-stat-l { font-size: 7px; font-weight: 400; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing:.06em; }
-        .t-chart { padding: 0 0 8px; }
-        .t-chart-label { font-size:7px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em; }
-        .t-bars { display:flex;align-items:flex-end;gap:4px;height:36px; }
-        .t-bar { flex:1; border-radius: 3px 3px 0 0; min-width: 0; animation: grow 1s ease-out forwards; transform-origin: bottom; }
-        @keyframes grow { from{transform:scaleY(0)} to{transform:scaleY(1)} }
-        .t-bar.b1{background:rgba(200,168,75,.7);height:55%;animation-delay:.1s}
-        .t-bar.b2{background:rgba(200,168,75,.7);height:80%;animation-delay:.2s}
-        .t-bar.b3{background:rgba(200,168,75,.5);height:65%;animation-delay:.3s}
-        .t-bar.b4{background:rgba(13,212,170,.6);height:90%;animation-delay:.4s}
-        .t-bar.b5{background:rgba(13,212,170,.7);height:100%;animation-delay:.5s}
-        .t-bar.b6{background:rgba(13,212,170,.5);height:75%;animation-delay:.6s}
-        .t-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 8px; }
-        .t-row-name { color: rgba(255,255,255,.6); }
-        .t-badge { padding: 2px 7px; border-radius: 100px; font-size: 7px; font-weight: 600; letter-spacing:.04em; text-transform: uppercase; }
-        .badge-green { background: rgba(61,219,124,.18); color: var(--green); }
-        .badge-amber { background: rgba(255,171,46,.15); color: var(--amber); }
-        .badge-blue  { background: rgba(74,158,255,.15); color: var(--blue); }
-        .badge-red   { background: rgba(255,95,95,.15);  color: var(--red);  }
+        /* ── SECTION HEADER ── */
+        .section-wrap {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 80px 32px;
+        }
+        .section-header {
+          text-align: center;
+          margin-bottom: 56px;
+        }
+        .section-h2 {
+          font-size: clamp(28px, 3.5vw, 44px);
+          font-weight: 800;
+          letter-spacing: -.02em;
+          color: var(--text);
+          margin-bottom: 14px;
+          line-height: 1.1;
+        }
+        .section-sub {
+          font-size: 17px;
+          color: var(--dim);
+          line-height: 1.65;
+          max-width: 560px;
+          margin: 0 auto;
+        }
 
-        .p-statusbar { padding: 10px 12px 6px; display: flex; justify-content: space-between; align-items: center; }
-        .p-time { font-size:9px;font-weight:600;color:var(--text);font-family:'Syne',sans-serif; }
-        .p-icons { display:flex;gap:3px;align-items:center; }
-        .p-icon { width:9px;height:6px; }
-        .p-hero-card { margin: 0 10px 8px; background: linear-gradient(135deg, rgba(200,168,75,.22), rgba(200,168,75,.08)); border: 1px solid rgba(200,168,75,.35); border-radius: 12px; padding: 10px 12px; }
-        .p-hero-label { font-size:8px;color:rgba(200,168,75,.7);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px; }
-        .p-hero-amount { font-family:'Syne',sans-serif;font-size:19px;font-weight:800;color:var(--gold-lt);line-height:1; }
-        .p-hero-sub { font-size:7.5px;color:rgba(255,255,255,.35);margin-top:3px; }
-        .p-progress-row { margin: 0 10px 8px; display: flex; flex-direction: column; gap: 5px; }
-        .p-prog-item { display:flex;align-items:center;gap:5px; }
-        .p-prog-label { font-size:7.5px;color:rgba(255,255,255,.4);width:40px;flex-shrink:0; }
-        .p-prog-track { flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden; }
-        .p-prog-fill { height:100%;border-radius:10px; }
-        .fill-green  { background:var(--green);  width:82%; }
-        .fill-teal   { background:var(--teal);   width:67%; }
-        .fill-amber  { background:var(--amber);  width:45%; }
-        .fill-blue   { background:var(--blue);   width:91%; }
-        .p-prog-pct { font-size:7px;color:rgba(255,255,255,.3);width:20px;text-align:right;flex-shrink:0; }
-        .p-divider { height:1px;background:rgba(255,255,255,.05);margin:0 10px 8px; }
-        .p-section-label { padding:0 10px 5px;font-size:8px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.07em; }
-        .p-item { margin: 0 10px 6px; background: rgba(255,255,255,.04); border-radius: 9px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
-        .p-item-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
-        .p-item-info { flex:1;min-width:0; }
-        .p-item-name { font-size:8.5px;color:rgba(255,255,255,.75);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-        .p-item-sub  { font-size:7px;color:rgba(255,255,255,.3); }
-        .p-item-amt  { font-size:8.5px;font-weight:600;font-family:'Syne',sans-serif;color:var(--gold-lt);flex-shrink:0; }
-        .p-nav { position: absolute; bottom: 0; left:0; right:0; height: 44px; background: rgba(10,22,34,.95); border-top: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; justify-content: space-around; padding: 0 4px; }
-        .p-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-        .p-nav-icon { width:14px;height:14px;stroke:rgba(255,255,255,.3);fill:none;stroke-width:1.5;stroke-linecap:round; }
-        .p-nav-icon.active { stroke:var(--gold); }
-        .p-nav-dot { width:4px;height:4px;border-radius:50%;background:var(--gold);display:none; }
-        .p-nav-item.active .p-nav-dot { display:block; }
+        /* ── FEATURE GRID ── */
+        .feature-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1px;
+          background: var(--border);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+        .feat-card {
+          background: var(--raised);
+          padding: 32px 28px;
+          transition: background .2s;
+        }
+        .feat-card:hover { background: #131d2e; }
+        .feat-icon-wrap {
+          width: 44px; height: 44px;
+          border-radius: 11px;
+          background: var(--gold-dim);
+          border: 1px solid rgba(245,158,11,0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 16px;
+        }
+        .feat-icon-wrap svg {
+          width: 20px; height: 20px;
+          stroke: var(--gold);
+          fill: none;
+          stroke-width: 1.6;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        .feat-title {
+          font-size: 16px;
+          font-weight: 700;
+          color: var(--text);
+          margin-bottom: 8px;
+        }
+        .feat-desc {
+          font-size: 14px;
+          color: var(--dim);
+          line-height: 1.7;
+          font-weight: 400;
+        }
 
-        .m-screen { width: 100%; height: 100%; display: flex; }
-        .m-sidebar { width: 28%; background: rgba(200,168,75,.04); border-right: 1px solid rgba(255,255,255,.05); padding: 7px 5px; }
-        .m-logo-row { display:flex;align-items:center;gap:3px;margin-bottom:7px;padding:0 3px; }
-        .m-logo-text { font-family:'Syne',sans-serif;font-size:7px;font-weight:800;color:var(--gold);letter-spacing:.05em; }
-        .m-nav-item { padding: 3px 5px; border-radius: 4px; font-size: 6.5px; color: rgba(255,255,255,.3); margin-bottom: 1px; display: flex; align-items: center; gap: 3px; }
-        .m-nav-item.active { background:rgba(200,168,75,.14);color:var(--gold); }
-        .m-nav-dot { width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5; }
-        .m-main { flex:1;padding:7px 8px; }
-        .m-top { display:flex;justify-content:space-between;align-items:center;margin-bottom:6px; }
-        .m-page-title { font-family:'Syne',sans-serif;font-size:8px;font-weight:700;color:var(--text); }
-        .m-badge { padding:1.5px 5px;border-radius:4px;font-size:6px;background:rgba(13,212,170,.15);color:var(--teal); }
-        .m-cards { display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:5px; }
-        .m-card { border-radius:5px;padding:5px 6px; }
-        .m-card.c1 { background:rgba(200,168,75,.15);border:1px solid rgba(200,168,75,.25); }
-        .m-card.c2 { background:rgba(13,212,170,.1);border:1px solid rgba(13,212,170,.2); }
-        .m-card.c3 { background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2); }
-        .m-card.c4 { background:rgba(61,219,124,.1);border:1px solid rgba(61,219,124,.2); }
-        .m-card-n  { font-family:'Syne',sans-serif;font-size:10px;font-weight:800;line-height:1; }
-        .c1 .m-card-n { color:var(--gold-lt); }
-        .c2 .m-card-n { color:var(--teal); }
-        .c3 .m-card-n { color:var(--blue); }
-        .c4 .m-card-n { color:var(--green); }
-        .m-card-l  { font-size:5.5px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.06em;margin-top:1px; }
-        .m-table { width:100%; }
-        .m-tr { display:flex;border-bottom:1px solid rgba(255,255,255,.04);padding:3px 0; }
-        .m-td { font-size:6px;color:rgba(255,255,255,.4);flex:1; }
-        .m-td.bold { color:rgba(255,255,255,.7); }
-        .m-dot-g { display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--green);margin-right:3px; }
-        .m-dot-a { display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--amber);margin-right:3px; }
+        /* ── HOW TO INSTALL ── */
+        .install-section {
+          background: var(--raised);
+          border-top: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
+        }
+        .platform-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 20px;
+        }
+        .platform-card {
+          background: var(--dark);
+          border: 1px solid var(--border);
+          border-radius: 14px;
+          padding: 28px;
+          transition: border-color .2s, box-shadow .2s;
+        }
+        .platform-card:hover {
+          border-color: rgba(245,158,11,0.4);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .platform-header {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          margin-bottom: 24px;
+        }
+        .platform-icon {
+          width: 48px; height: 48px;
+          border-radius: 12px;
+          background: var(--gold-dim);
+          border: 1px solid rgba(245,158,11,0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .platform-icon svg {
+          width: 24px; height: 24px;
+          stroke: var(--gold);
+          fill: none;
+          stroke-width: 1.5;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        .platform-name {
+          font-size: 17px;
+          font-weight: 700;
+          color: var(--text);
+        }
+        .steps-list {
+          list-style: none;
+          margin-bottom: 20px;
+        }
+        .step-item {
+          display: flex;
+          gap: 14px;
+          align-items: flex-start;
+          margin-bottom: 14px;
+        }
+        .step-num {
+          width: 26px; height: 26px;
+          border-radius: 50%;
+          background: var(--gold-dim);
+          border: 1px solid rgba(245,158,11,0.3);
+          color: var(--gold);
+          font-size: 12px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          margin-top: 1px;
+        }
+        .step-text {
+          font-size: 14px;
+          color: var(--dim);
+          line-height: 1.6;
+          padding-top: 3px;
+        }
+        .platform-note {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(34,197,94,0.08);
+          border: 1px solid rgba(34,197,94,0.2);
+          border-radius: 8px;
+          padding: 10px 14px;
+          font-size: 12px;
+          color: var(--green);
+          font-weight: 500;
+        }
+        .platform-note::before {
+          content: '✓';
+          font-weight: 700;
+          font-size: 13px;
+        }
 
-        .features { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: rgba(200,168,75,.12); border: 1px solid rgba(200,168,75,.16); border-radius: 18px; overflow: hidden; margin-top: 80px; }
-        @media(max-width:680px){.features{grid-template-columns:1fr;}}
-        .feat { background: var(--navy-mid); padding: 28px 28px 30px; }
-        .feat-icon { width:38px;height:38px; border-radius:10px; background:var(--gold-dim); border:1px solid var(--border); display:flex;align-items:center;justify-content:center; margin-bottom:14px; }
-        .feat-icon svg { width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round; }
-        .feat h3 { font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px; }
-        .feat p  { font-size:13px;color:var(--muted);line-height:1.65;font-weight:300; }
+        /* ── COMPARISON ── */
+        .compare-table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
+          border-radius: 14px;
+          overflow: hidden;
+          border: 1px solid var(--border);
+        }
+        .compare-table thead tr { background: #0a1520; }
+        .compare-table th {
+          padding: 16px 24px;
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--dim);
+          text-align: left;
+          border-bottom: 1px solid var(--border);
+          letter-spacing: .03em;
+          text-transform: uppercase;
+        }
+        .compare-table th.saguaro-col {
+          background: rgba(245,158,11,0.08);
+          color: var(--gold);
+          border-left: 2px solid var(--gold);
+        }
+        .compare-table td {
+          padding: 14px 24px;
+          font-size: 14px;
+          color: var(--dim);
+          border-bottom: 1px solid rgba(30,58,95,0.5);
+          background: var(--raised);
+        }
+        .compare-table tr:last-child td { border-bottom: none; }
+        .compare-table td.feature-col {
+          color: var(--text);
+          font-weight: 500;
+        }
+        .compare-table td.app-store-col { color: #94a3b8; }
+        .compare-table td.saguaro-col {
+          background: rgba(245,158,11,0.05);
+          color: var(--text);
+          font-weight: 600;
+          border-left: 2px solid rgba(245,158,11,0.3);
+        }
+        .compare-table tr:hover td.saguaro-col { background: rgba(245,158,11,0.09); }
+        .compare-table td.bad { color: #f87171; }
+        .compare-table td.good { color: var(--green); }
 
-        .bottom { margin-top: 54px; display: flex; gap: 14px; flex-wrap: wrap; align-items: stretch; }
-        .qr-card { flex: 0 0 auto; background: var(--navy-mid); border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; display: flex; align-items: center; gap: 20px; }
-        .qr-img { width: 72px; height: 72px; background: white; border-radius: 9px; padding: 7px; flex-shrink: 0; }
-        .qr-img svg { width:100%;height:100%; }
-        .qr-info h4 { font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:4px; }
-        .qr-info p  { font-size:12px;color:var(--muted);font-weight:300;max-width:180px;line-height:1.5; }
-        .pwa-note { flex: 1; background: var(--gold-dim); border: 1px solid var(--border); border-radius: 16px; padding: 22px 26px; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
-        .pwa-note h4 { font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--gold-lt); }
-        .pwa-note p  { font-size:12px;color:rgba(200,168,75,.65);font-weight:300;line-height:1.55;max-width:340px; }
+        /* ── TESTIMONIALS ── */
+        .testimonials-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+        }
+        .testi-card {
+          background: var(--raised);
+          border: 1px solid var(--border);
+          border-left: 3px solid var(--green);
+          border-radius: 12px;
+          padding: 28px 24px;
+        }
+        .testi-quote {
+          font-size: 15px;
+          color: var(--text);
+          line-height: 1.7;
+          margin-bottom: 20px;
+          font-style: italic;
+        }
+        .testi-author {
+          font-size: 13px;
+          color: var(--dim);
+          font-weight: 600;
+        }
+
+        /* ── FINAL CTA ── */
+        .final-cta {
+          background: var(--raised);
+          border-top: 1px solid var(--border);
+        }
+        .final-cta-inner {
+          max-width: 700px;
+          margin: 0 auto;
+          padding: 100px 32px;
+          text-align: center;
+        }
+        .final-h2 {
+          font-size: clamp(28px, 4vw, 48px);
+          font-weight: 800;
+          color: var(--text);
+          letter-spacing: -.025em;
+          margin-bottom: 36px;
+          line-height: 1.1;
+        }
+        .final-sub {
+          margin-top: 20px;
+          font-size: 14px;
+          color: var(--dim);
+        }
+        .final-sub a {
+          color: var(--gold);
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+        .trust-note {
+          margin-top: 28px;
+          font-size: 13px;
+          color: rgba(203,213,225,0.6);
+          line-height: 1.6;
+        }
+
+        /* ── FOOTER ── */
+        .footer {
+          background: #080d13;
+          border-top: 1px solid var(--border);
+          padding: 48px 32px;
+        }
+        .footer-inner {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 24px;
+        }
+        .footer-left { display:flex;align-items:center;gap:16px; }
+        .footer-logo img { height:32px;mix-blend-mode:screen; }
+        .footer-copy { font-size:13px;color:rgba(203,213,225,0.4); }
+        .footer-links { display:flex;gap:24px;flex-wrap:wrap; }
+        .footer-link {
+          font-size:13px;
+          color:rgba(203,213,225,0.5);
+          text-decoration:none;
+          transition:color .2s;
+        }
+        .footer-link:hover { color:var(--text); }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+          .numbers-inner { grid-template-columns: repeat(2,1fr); }
+          .feature-grid { grid-template-columns: repeat(2,1fr); }
+          .testimonials-grid { grid-template-columns: 1fr; gap: 14px; }
+        }
+        @media (max-width: 768px) {
+          .nav { padding: 0 16px; }
+          .hero { padding: 80px 16px 60px; }
+          .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+          .devices { height: 340px; order: -1; }
+          .dev-phone { right: 10px; top: 0; width: 136px; height: 292px; }
+          .dev-tablet { width: 215px; height: 295px; top: 40px; }
+          .dev-laptop { height: 130px; }
+          .dev-laptop-body { height: 90px; }
+          .numbers-bar { padding: 32px 16px; }
+          .numbers-inner { grid-template-columns: repeat(2,1fr); }
+          .section-wrap { padding: 56px 16px; }
+          .feature-grid { grid-template-columns: 1fr; }
+          .platform-grid { grid-template-columns: 1fr; }
+          .compare-table th, .compare-table td { padding: 12px 14px; font-size: 13px; }
+          .footer-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+          .hero-ctas { flex-direction: column; }
+          .btn-primary, .btn-ghost { text-align: center; }
+        }
+        @media (max-width: 480px) {
+          .numbers-inner { grid-template-columns: 1fr 1fr; }
+          .stat-number { font-size: 28px; }
+          .hero-h1 { font-size: 34px; }
+          .devices { display: none; }
+        }
       `}</style>
 
-      <div className="gta-body">
-        <div className="gta-wrap">
+      <div className="page">
 
-          {/* EYEBROW */}
-          <div className="eyebrow">
-            <div className="eyebrow-dot"><span /></div>
-            Works on every device you own
-          </div>
+        {/* ── NAV ── */}
+        <nav className="nav">
+          <a href="/" className="nav-logo">
+            <img src="/logo-full.jpg" alt="Saguaro" height={40} style={{ mixBlendMode: 'screen' }} />
+          </a>
+          <div className="nav-spacer" />
+          <a href="/login" className="nav-login">Log In</a>
+          <a href="/signup" className="nav-cta">Start Free Trial</a>
+        </nav>
 
-          {/* HERO */}
-          <div className="hero">
+        {/* ── HERO ── */}
+        <section className="hero">
+          <div className="hero-bg-gold" />
+          <div className="hero-bg-blue" />
+          <div className="hero-inner">
 
-            {/* COPY */}
+            {/* Copy */}
             <div>
-              <h1 className="gta-h1">Run the job<br /><em>from anywhere.</em></h1>
-              <p className="sub">
-                Punch lists, pay apps, lien waivers, certified payroll — everything in Saguaro runs natively on iPhone, Android, iPad, and Mac. No download required.
-              </p>
-
-              {/* INSTALL OPTIONS */}
-              <div className="install-grid">
-
-                {/* iOS */}
-                <a href="/field/install?platform=ios" className="install-card">
-                  <div className="platform-logo apple">
-                    <svg width="22" height="27" viewBox="0 0 22 27" fill="none">
-                      <path d="M18.13 14.13c-.04-2.87 2.34-4.25 2.45-4.32-1.34-1.95-3.42-2.22-4.16-2.25-1.77-.18-3.46 1.04-4.36 1.04-.9 0-2.28-1.02-3.75-.99-1.92.03-3.69 1.12-4.68 2.83-2 3.46-.52 8.6 1.44 11.41.96 1.38 2.1 2.93 3.6 2.87 1.44-.06 1.98-.93 3.72-.93 1.74 0 2.22.93 3.74.9 1.55-.03 2.54-1.4 3.49-2.79.04-.06 1.52-2.97 1.5-2.97-.03-.01-2.99-1.16-3.03-4.58-.01-.01 0-.01.04-.22zM15.36 5.36c.8-.97 1.33-2.3 1.18-3.63-1.14.05-2.51.76-3.33 1.72-.73.84-1.37 2.19-1.2 3.48 1.27.1 2.55-.64 3.35-1.57z" fill="#1a1a1a" />
-                    </svg>
-                  </div>
-                  <div className="install-info">
-                    <h4>iPhone &amp; iPad — iOS 16+</h4>
-                    <p>Tap Share → Add to Home Screen for a native app experience</p>
-                  </div>
-                  <div className="install-arrow">
-                    <svg viewBox="0 0 12 12"><path d="M2 6h8M6 2l4 4-4 4" /></svg>
-                  </div>
-                </a>
-
-                {/* Android */}
-                <a href="/field/install?platform=android" className="install-card">
-                  <div className="platform-logo android">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <circle cx="8.5" cy="10.5" r="1" fill="#3DDC84" />
-                      <circle cx="15.5" cy="10.5" r="1" fill="#3DDC84" />
-                      <path d="M5.5 13.5h13v5a2 2 0 01-2 2h-9a2 2 0 01-2-2v-5z" fill="#3DDC84" fillOpacity=".2" stroke="#3DDC84" strokeWidth="1.2" />
-                      <path d="M5.5 9a6.5 3 0 0113 0v4.5h-13V9z" fill="#3DDC84" fillOpacity=".2" stroke="#3DDC84" strokeWidth="1.2" />
-                      <line x1="4" y1="10" x2="5.5" y2="10" stroke="#3DDC84" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="18.5" y1="10" x2="20" y2="10" stroke="#3DDC84" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="8.5" y1="3.5" x2="6.5" y2="6" stroke="#3DDC84" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="15.5" y1="3.5" x2="17.5" y2="6" stroke="#3DDC84" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="9" y1="18.5" x2="9" y2="21" stroke="#3DDC84" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="15" y1="18.5" x2="15" y2="21" stroke="#3DDC84" strokeWidth="1.4" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                  <div className="install-info">
-                    <h4>Android — Chrome or Samsung Browser</h4>
-                    <p>Tap the menu → Install app — one tap, done</p>
-                  </div>
-                  <div className="install-arrow">
-                    <svg viewBox="0 0 12 12"><path d="M2 6h8M6 2l4 4-4 4" /></svg>
-                  </div>
-                </a>
-
-                {/* macOS / Desktop */}
-                <a href="/field/install?platform=desktop-chrome" className="install-card">
-                  <div className="platform-logo pwa">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <rect x="3" y="3" width="18" height="13" rx="2" stroke="#4A9EFF" strokeWidth="1.4" />
-                      <rect x="3" y="3" width="18" height="2" fill="#4A9EFF" fillOpacity=".25" rx="2" />
-                      <line x1="8" y1="19" x2="16" y2="19" stroke="#4A9EFF" strokeWidth="1.4" strokeLinecap="round" />
-                      <line x1="12" y1="16" x2="12" y2="19" stroke="#4A9EFF" strokeWidth="1.4" strokeLinecap="round" />
-                      <circle cx="5.5" cy="4.5" r=".7" fill="#4A9EFF" fillOpacity=".5" />
-                      <circle cx="7.5" cy="4.5" r=".7" fill="#4A9EFF" fillOpacity=".5" />
-                      <circle cx="9.5" cy="4.5" r=".7" fill="#4A9EFF" fillOpacity=".5" />
-                    </svg>
-                  </div>
-                  <div className="install-info">
-                    <h4>macOS, Windows &amp; Desktop</h4>
-                    <p>Open in Chrome or Edge → click the install icon in the address bar</p>
-                  </div>
-                  <div className="install-arrow">
-                    <svg viewBox="0 0 12 12"><path d="M2 6h8M6 2l4 4-4 4" /></svg>
-                  </div>
-                </a>
-
+              <div className="hero-badge">
+                <div className="hero-badge-dot" />
+                LIVE IN 30 SECONDS — NO APP STORE REQUIRED
               </div>
 
-              {/* PLATFORM TAGS */}
-              <div className="tags">
-                <span className="tags-label">Works on</span>
-                <span className="tag tag-ios">
-                  <svg viewBox="0 0 11 11"><path d="M8.2 5.5c0-1 .85-1.5.87-1.5-.5-.7-1.28-.8-1.56-.8-.66-.07-1.29.38-1.63.38s-.84-.36-1.37-.36c-.74 0-1.37.43-1.74 1.09-.74 1.27-.19 3.16.52 4.19.35.52.77 1.1 1.32 1.08.53-.02.74-.34 1.39-.34.65 0 .84.34 1.38.33.56 0 .92-.52 1.26-.99.4-.56.56-1.12.56-1.14-.01 0-1.01-.38-1.01-1.28zM6.92 2.87c.33-.36.52-.84.46-1.33-.47.01-.97.31-1.28.67-.28.32-.53.82-.47 1.3.48.03.97-.22 1.29-.64z" /></svg>
-                  iOS
-                </span>
-                <span className="tag tag-android">
-                  <svg viewBox="0 0 11 11"><circle cx="3.8" cy="5" r=".6" /><circle cx="7.2" cy="5" r=".6" /><path d="M2 6h7v2.5a.8.8 0 01-.8.8H2.8a.8.8 0 01-.8-.8V6z" fill="currentColor" fillOpacity=".2" stroke="currentColor" strokeWidth=".8" /><path d="M2 4.5a3.5 1.5 0 017 0V6H2V4.5z" fill="currentColor" fillOpacity=".2" stroke="currentColor" strokeWidth=".8" /><line x1="1.2" y1="5" x2="2" y2="5" stroke="currentColor" strokeWidth=".9" strokeLinecap="round" /><line x1="9" y1="5" x2="9.8" y2="5" stroke="currentColor" strokeWidth=".9" strokeLinecap="round" /><line x1="4" y1="2" x2="3" y2="3.5" stroke="currentColor" strokeWidth=".9" strokeLinecap="round" /><line x1="7" y1="2" x2="8" y2="3.5" stroke="currentColor" strokeWidth=".9" strokeLinecap="round" /></svg>
-                  Android
-                </span>
-                <span className="tag tag-ipad">
-                  <svg viewBox="0 0 11 11"><rect x="1.5" y="1" width="8" height="9.5" rx="1.2" stroke="currentColor" fill="none" strokeWidth=".9" /><circle cx="5.5" cy="9" r=".4" fill="currentColor" /></svg>
-                  iPad
-                </span>
-                <span className="tag tag-mac">
-                  <svg viewBox="0 0 11 11"><rect x="1" y="1.5" width="9" height="6" rx="1" stroke="currentColor" fill="none" strokeWidth=".9" /><path d="M3.5 9h4M5.5 7.5V9" stroke="currentColor" strokeWidth=".9" strokeLinecap="round" /></svg>
-                  macOS
-                </span>
-                <span className="tag tag-win">
-                  <svg viewBox="0 0 11 11"><path d="M1.5 2.5l3.8-.55V5.4H1.5zm0 6l3.8.55V6.6H1.5zM5.8 1.8L9.5 1.2V5.4H5.8zm0 7.4l3.7-.6V6.6H5.8z" fill="currentColor" /></svg>
-                  Windows
-                </span>
+              <h1 className="hero-h1">
+                The Field App That<br />
+                <span className="gold-gradient">Actually Works on</span><br />
+                Job Sites.
+              </h1>
+
+              <p className="hero-sub">
+                GPS clock-in. Daily logs. Photos. RFIs. Punch lists. Offline mode. AI field assistant. Works on every phone, tablet, and laptop — no App Store, no IT department, no extra cost.
+              </p>
+
+              <div className="hero-ctas">
+                <a href="/app" className="btn-primary">Install Now — It&apos;s Free</a>
+                <a href="#how-to-install" className="btn-ghost">See How It Works</a>
+              </div>
+
+              <div className="trust-pills">
+                <span className="trust-pill">✓ iOS · Android · iPad · Desktop</span>
+                <span className="trust-pill">✓ Works Offline</span>
+                <span className="trust-pill">✓ No App Store</span>
+                <span className="trust-pill">✓ Free Forever</span>
               </div>
             </div>
 
-            {/* DEVICES */}
+            {/* Devices */}
             <div className="devices">
 
               {/* TABLET */}
-              <div className="tablet">
-                <div className="tablet-screen">
-                  <div className="t-header">
-                    <span className="t-logo">SAGUARO</span>
-                    <div className="t-dots">
-                      <div className="t-dot" style={{ background: 'var(--red)' }} />
-                      <div className="t-dot" style={{ background: 'var(--amber)' }} />
-                      <div className="t-dot" style={{ background: 'var(--green)' }} />
+              <div className="dev-tablet">
+                <div className="dev-tablet-screen">
+                  <div className="ts-header">
+                    <span className="ts-logo">SAGUARO</span>
+                    <div className="ts-dots">
+                      <div className="ts-dot" style={{ background: '#f87171' }} />
+                      <div className="ts-dot" style={{ background: '#fbbf24' }} />
+                      <div className="ts-dot" style={{ background: '#22c55e' }} />
                     </div>
                   </div>
-                  <div className="t-body">
-                    <div className="t-greeting">Good morning, Chad</div>
-                    <div className="t-title">Dashboard</div>
-                    <div className="t-stats">
-                      <div className="t-stat gold"><div className="t-stat-n">$2.8M</div><div className="t-stat-l">Contract Value</div></div>
-                      <div className="t-stat teal"><div className="t-stat-n">94%</div><div className="t-stat-l">Compliance</div></div>
-                      <div className="t-stat green"><div className="t-stat-n">12</div><div className="t-stat-l">Active Jobs</div></div>
-                      <div className="t-stat blue"><div className="t-stat-n">$48K</div><div className="t-stat-l">Retainage Due</div></div>
+                  <div className="ts-body">
+                    <div className="ts-greeting">Good morning, Jake</div>
+                    <div className="ts-title">Field Dashboard</div>
+                    <div className="ts-grid">
+                      <div className="ts-card c-gold"><div className="ts-card-n">14</div><div className="ts-card-l">Crew Clocked In</div></div>
+                      <div className="ts-card c-green"><div className="ts-card-n">100%</div><div className="ts-card-l">Logs Submitted</div></div>
+                      <div className="ts-card c-blue"><div className="ts-card-n">3</div><div className="ts-card-l">Open RFIs</div></div>
+                      <div className="ts-card c-purple"><div className="ts-card-n">7</div><div className="ts-card-l">Punch Items</div></div>
                     </div>
-                    <div className="t-chart">
-                      <div className="t-chart-label">Billings — last 6 months</div>
-                      <div className="t-bars">
-                        <div className="t-bar b1" /><div className="t-bar b2" /><div className="t-bar b3" />
-                        <div className="t-bar b4" /><div className="t-bar b5" /><div className="t-bar b6" />
-                      </div>
+                    <div className="ts-bars-label">Daily Logs — This Week</div>
+                    <div className="ts-bars" style={{ marginBottom: '8px' }}>
+                      <div className="ts-bar" style={{ height:'60%', background:'rgba(245,158,11,0.6)', borderRadius:'3px 3px 0 0' }} />
+                      <div className="ts-bar" style={{ height:'90%', background:'rgba(245,158,11,0.7)', borderRadius:'3px 3px 0 0' }} />
+                      <div className="ts-bar" style={{ height:'75%', background:'rgba(245,158,11,0.6)', borderRadius:'3px 3px 0 0' }} />
+                      <div className="ts-bar" style={{ height:'100%', background:'rgba(34,197,94,0.7)', borderRadius:'3px 3px 0 0' }} />
+                      <div className="ts-bar" style={{ height:'85%', background:'rgba(34,197,94,0.6)', borderRadius:'3px 3px 0 0' }} />
                     </div>
-                    <div className="t-row" style={{ paddingTop: 6 }}><span className="t-row-name">Mesa Commerce Center</span><span className="t-badge badge-green">On Track</span></div>
-                    <div className="t-row"><span className="t-row-name">Scottsdale Medical</span><span className="t-badge badge-amber">Pay App Due</span></div>
-                    <div className="t-row"><span className="t-row-name">Chandler Industrial</span><span className="t-badge badge-blue">In Review</span></div>
+                    <div className="ts-row"><span className="ts-row-name">Mesa Commerce — Phase 2</span><span className="ts-bge bg-gn">On Track</span></div>
+                    <div className="ts-row"><span className="ts-row-name">Chandler Industrial</span><span className="ts-bge bg-am">Log Due</span></div>
+                    <div className="ts-row"><span className="ts-row-name">Scottsdale Medical</span><span className="ts-bge bg-bl">RFI Pending</span></div>
                   </div>
                 </div>
               </div>
 
               {/* PHONE */}
-              <div className="phone">
-                <div className="phone-screen">
-                  <div className="p-statusbar">
-                    <span className="p-time">9:41</span>
-                    <div className="p-icons">
-                      <svg className="p-icon" viewBox="0 0 9 6" fill="rgba(255,255,255,.7)"><rect x="0" y="2" width="2" height="4" rx=".5" /><rect x="2.5" y="1" width="2" height="5" rx=".5" /><rect x="5" y="0" width="2" height="6" rx=".5" /><rect x="7.5" y="0" width="1.5" height="6" rx=".5" fill="rgba(255,255,255,.2)" /></svg>
+              <div className="dev-phone">
+                <div className="dev-phone-screen">
+                  <div className="ps-bar">
+                    <span className="ps-time">9:41</span>
+                    <span style={{ fontSize:'8px', color:'rgba(255,255,255,0.5)' }}>●●●</span>
+                  </div>
+                  <div className="ps-header">
+                    <div className="ps-label">GPS Clock-In</div>
+                    <div className="ps-big">Clocked In</div>
+                    <div className="ps-small">7:02 AM · Mesa Commerce Center</div>
+                  </div>
+                  <div className="ps-body">
+                    <div className="ps-section">Today&apos;s Crew</div>
+                    <div className="ps-row">
+                      <div className="ps-dot" style={{ background: '#22c55e' }} />
+                      <div className="ps-row-text">
+                        <div className="ps-row-name">Mike R.</div>
+                        <div className="ps-row-sub">In · 6:58 AM</div>
+                      </div>
+                      <span className="ps-badge ps-badge-green">GPS ✓</span>
+                    </div>
+                    <div className="ps-row">
+                      <div className="ps-dot" style={{ background: '#22c55e' }} />
+                      <div className="ps-row-text">
+                        <div className="ps-row-name">Sofia M.</div>
+                        <div className="ps-row-sub">In · 7:01 AM</div>
+                      </div>
+                      <span className="ps-badge ps-badge-green">GPS ✓</span>
+                    </div>
+                    <div className="ps-row">
+                      <div className="ps-dot" style={{ background: '#F59E0B' }} />
+                      <div className="ps-row-text">
+                        <div className="ps-row-name">Daily Log</div>
+                        <div className="ps-row-sub">3 photos · submitted</div>
+                      </div>
+                      <span className="ps-badge ps-badge-amber">Done</span>
                     </div>
                   </div>
-                  <div className="p-hero-card">
-                    <div className="p-hero-label">Current Pay App</div>
-                    <div className="p-hero-amount">$48,200</div>
-                    <div className="p-hero-sub">Application #7 · Mesa Commerce</div>
-                  </div>
-                  <div className="p-progress-row">
-                    <div className="p-prog-item"><span className="p-prog-label">Concrete</span><div className="p-prog-track"><div className="p-prog-fill fill-green" /></div><span className="p-prog-pct">82%</span></div>
-                    <div className="p-prog-item"><span className="p-prog-label">Framing</span><div className="p-prog-track"><div className="p-prog-fill fill-teal" /></div><span className="p-prog-pct">67%</span></div>
-                    <div className="p-prog-item"><span className="p-prog-label">MEP</span><div className="p-prog-track"><div className="p-prog-fill fill-amber" /></div><span className="p-prog-pct">45%</span></div>
-                    <div className="p-prog-item"><span className="p-prog-label">Sitework</span><div className="p-prog-track"><div className="p-prog-fill fill-blue" /></div><span className="p-prog-pct">91%</span></div>
-                  </div>
-                  <div className="p-divider" />
-                  <div className="p-section-label">Lien Waivers</div>
-                  <div className="p-item">
-                    <div className="p-item-dot" style={{ background: 'var(--amber)' }} />
-                    <div className="p-item-info"><div className="p-item-name">Southwest Concrete Co.</div><div className="p-item-sub">Conditional · Due in 3 days</div></div>
-                    <span className="p-item-amt">$24K</span>
-                  </div>
-                  <div className="p-item">
-                    <div className="p-item-dot" style={{ background: 'var(--green)' }} />
-                    <div className="p-item-info"><div className="p-item-name">Desert Steel Fab</div><div className="p-item-sub">Unconditional · Signed</div></div>
-                    <span className="p-item-amt">$11K</span>
-                  </div>
-                  <div className="p-nav">
-                    <div className="p-nav-item active">
-                      <svg className="p-nav-icon active" viewBox="0 0 16 16"><path d="M2 6l6-4 6 4v8a1 1 0 01-1 1H3a1 1 0 01-1-1V6z" /></svg>
-                      <div className="p-nav-dot" />
-                    </div>
-                    <div className="p-nav-item"><svg className="p-nav-icon" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1" /><rect x="9" y="2" width="5" height="5" rx="1" /><rect x="2" y="9" width="5" height="5" rx="1" /><rect x="9" y="9" width="5" height="5" rx="1" /></svg><div className="p-nav-dot" /></div>
-                    <div className="p-nav-item"><svg className="p-nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 2" /></svg><div className="p-nav-dot" /></div>
-                    <div className="p-nav-item"><svg className="p-nav-icon" viewBox="0 0 16 16"><circle cx="8" cy="6" r="3" /><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" /></svg><div className="p-nav-dot" /></div>
+                  <div className="ps-nav">
+                    <svg className="ps-nav-i act" viewBox="0 0 16 16"><path d="M2 6l6-4 6 4v8a1 1 0 01-1 1H3a1 1 0 01-1-1V6z" /></svg>
+                    <svg className="ps-nav-i" viewBox="0 0 16 16"><circle cx="8" cy="6" r="3" /><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" /></svg>
+                    <svg className="ps-nav-i" viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1" /><rect x="9" y="9" width="5" height="5" rx="1" /><rect x="2" y="9" width="5" height="5" rx="1" /><rect x="9" y="2" width="5" height="5" rx="1" /></svg>
+                    <svg className="ps-nav-i" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 2" /></svg>
                   </div>
                 </div>
               </div>
 
-              {/* MAC */}
-              <div className="mac">
-                <div className="mac-body">
-                  <div className="mac-body-screen">
-                    <div className="m-screen">
-                      <div className="m-sidebar">
-                        <div className="m-logo-row"><span className="m-logo-text">S</span></div>
-                        <div className="m-nav-item active"><div className="m-nav-dot" />Dashboard</div>
-                        <div className="m-nav-item"><div className="m-nav-dot" />Projects</div>
-                        <div className="m-nav-item"><div className="m-nav-dot" />Pay Apps</div>
-                        <div className="m-nav-item"><div className="m-nav-dot" />Lien Waivers</div>
-                        <div className="m-nav-item"><div className="m-nav-dot" />Payroll</div>
+              {/* LAPTOP */}
+              <div className="dev-laptop">
+                <div className="dev-laptop-body">
+                  <div className="dev-laptop-screen">
+                    <div className="ls-sidebar">
+                      <div className="ls-logo">SAGUARO</div>
+                      <div className="ls-item act"><div className="ls-dot" />Dashboard</div>
+                      <div className="ls-item"><div className="ls-dot" />Field Logs</div>
+                      <div className="ls-item"><div className="ls-dot" />Punch Lists</div>
+                      <div className="ls-item"><div className="ls-dot" />RFIs</div>
+                      <div className="ls-item"><div className="ls-dot" />Sage AI</div>
+                    </div>
+                    <div className="ls-main">
+                      <div className="ls-top"><span className="ls-title">Dashboard</span><span className="ls-badge">Live</span></div>
+                      <div className="ls-cards">
+                        <div className="ls-card lc1"><div className="ls-card-n">14</div><div className="ls-card-l">On Site</div></div>
+                        <div className="ls-card lc2"><div className="ls-card-n">100%</div><div className="ls-card-l">Logs In</div></div>
+                        <div className="ls-card lc3"><div className="ls-card-n">3</div><div className="ls-card-l">RFIs</div></div>
+                        <div className="ls-card lc4"><div className="ls-card-n">7</div><div className="ls-card-l">Punch</div></div>
                       </div>
-                      <div className="m-main">
-                        <div className="m-top"><span className="m-page-title">Dashboard</span><span className="m-badge">Live</span></div>
-                        <div className="m-cards">
-                          <div className="m-card c1"><div className="m-card-n">$2.8M</div><div className="m-card-l">Contract</div></div>
-                          <div className="m-card c2"><div className="m-card-n">94%</div><div className="m-card-l">Compliance</div></div>
-                          <div className="m-card c3"><div className="m-card-n">12</div><div className="m-card-l">Jobs</div></div>
-                          <div className="m-card c4"><div className="m-card-n">$48K</div><div className="m-card-l">Retainage</div></div>
-                        </div>
-                        <div className="m-table">
-                          <div className="m-tr"><div className="m-td bold">Mesa Commerce</div><div className="m-td"><span className="m-dot-g" />On Track</div></div>
-                          <div className="m-tr"><div className="m-td bold">Scottsdale Med</div><div className="m-td"><span className="m-dot-a" />Pay App Due</div></div>
-                        </div>
-                      </div>
+                      <div className="ls-row"><div className="ls-td bold">Mesa Commerce</div><div className="ls-td" style={{ color:'#22c55e' }}>On Track</div></div>
+                      <div className="ls-row"><div className="ls-td bold">Chandler Ind.</div><div className="ls-td" style={{ color:'#F59E0B' }}>Log Due</div></div>
                     </div>
                   </div>
                 </div>
-                <div className="mac-hinge" />
-                <div className="mac-stand" />
+                <div className="dev-laptop-hinge" />
+                <div className="dev-laptop-base" />
               </div>
 
             </div>
           </div>
+        </section>
 
-          {/* FEATURE STRIP */}
-          <div className="features">
-            <div className="feat">
-              <div className="feat-icon">
-                <svg viewBox="0 0 18 18"><path d="M9 1v10M5 7l4 4 4-4M2 14h14v2a1 1 0 01-1 1H3a1 1 0 01-1-1v-2z" /></svg>
-              </div>
-              <h3>Installs in one tap</h3>
-              <p>No App Store, no approvals. Tap your browser menu and add to home screen — it&apos;s a full app in under 10 seconds.</p>
+        {/* ── NUMBERS BAR ── */}
+        <div className="numbers-bar">
+          <div className="numbers-inner">
+            <div className="stat-item">
+              <div className="stat-number">30 sec</div>
+              <div className="stat-label">Average install time</div>
             </div>
-            <div className="feat">
-              <div className="feat-icon">
-                <svg viewBox="0 0 18 18"><path d="M1 9a8 8 0 1016 0A8 8 0 001 9zM9 5v4l3 3" /></svg>
-              </div>
-              <h3>Real-time everywhere</h3>
-              <p>Every change on mobile updates instantly on desktop. The office and field always see the same data, zero lag.</p>
+            <div className="stat-item">
+              <div className="stat-number">100%</div>
+              <div className="stat-label">Offline capable</div>
             </div>
-            <div className="feat">
-              <div className="feat-icon">
-                <svg viewBox="0 0 18 18"><path d="M9 1l2 5.5h5.5l-4.5 3.3 1.7 5.4L9 12.1l-4.7 3.1 1.7-5.4L1.5 6.5H7z" /></svg>
-              </div>
-              <h3>Push alerts</h3>
-              <p>Lien deadlines, insurance expiry, and pay app reminders arrive as native push notifications — even when the app is closed.</p>
+            <div className="stat-item">
+              <div className="stat-number">0 MB</div>
+              <div className="stat-label">App Store download</div>
+            </div>
+            <div className="stat-item">
+              <div className="stat-number">Free</div>
+              <div className="stat-label">Forever for your crew</div>
             </div>
           </div>
-
-          {/* BOTTOM */}
-          <div className="bottom">
-            <div className="qr-card">
-              <div className="qr-img">
-                <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="1" y="1" width="7" height="7" rx="1" fill="#07101C" />
-                  <rect x="2" y="2" width="5" height="5" rx=".5" fill="white" />
-                  <rect x="3" y="3" width="3" height="3" fill="#07101C" />
-                  <rect x="13" y="1" width="7" height="7" rx="1" fill="#07101C" />
-                  <rect x="14" y="2" width="5" height="5" rx=".5" fill="white" />
-                  <rect x="15" y="3" width="3" height="3" fill="#07101C" />
-                  <rect x="1" y="13" width="7" height="7" rx="1" fill="#07101C" />
-                  <rect x="2" y="14" width="5" height="5" rx=".5" fill="white" />
-                  <rect x="3" y="15" width="3" height="3" fill="#07101C" />
-                  <rect x="9" y="1" width="2" height="2" fill="#07101C" />
-                  <rect x="9" y="4" width="1" height="1" fill="#07101C" />
-                  <rect x="11" y="3" width="1" height="1" fill="#07101C" />
-                  <rect x="1" y="9" width="2" height="2" fill="#07101C" />
-                  <rect x="4" y="9" width="1" height="1" fill="#07101C" />
-                  <rect x="6" y="11" width="1" height="1" fill="#07101C" />
-                  <rect x="9" y="9" width="3" height="3" fill="#07101C" />
-                  <rect x="13" y="9" width="1" height="2" fill="#07101C" />
-                  <rect x="15" y="10" width="2" height="1" fill="#07101C" />
-                  <rect x="18" y="9" width="2" height="1" fill="#07101C" />
-                  <rect x="9" y="13" width="2" height="1" fill="#07101C" />
-                  <rect x="12" y="14" width="1" height="2" fill="#07101C" />
-                  <rect x="14" y="13" width="3" height="1" fill="#07101C" />
-                  <rect x="18" y="14" width="2" height="2" fill="#07101C" />
-                  <rect x="9" y="16" width="1" height="2" fill="#07101C" />
-                  <rect x="11" y="17" width="2" height="2" fill="#07101C" />
-                  <rect x="16" y="17" width="3" height="2" fill="#07101C" />
-                </svg>
-              </div>
-              <div className="qr-info">
-                <h4>Scan to open on your phone</h4>
-                <p>Point your camera here — no App Store search needed.</p>
-              </div>
-            </div>
-            <div className="pwa-note">
-              <h4>Why no App Store?</h4>
-              <p>Saguaro is a Progressive Web App — it installs directly from your browser in one tap, updates automatically, and works offline. Same experience, zero gatekeeping, always the latest version.</p>
-            </div>
-          </div>
-
         </div>
+
+        {/* ── WHAT'S INCLUDED ── */}
+        <div className="section-wrap">
+          <div className="section-header">
+            <h2 className="section-h2">Everything Your Crew Needs on Site</h2>
+            <p className="section-sub">Six tools that replace the clipboard, the group text, and the Friday timesheet chase — all in one app that installs in 30 seconds.</p>
+          </div>
+
+          <div className="feature-grid">
+            <div className="feat-card">
+              <div className="feat-icon-wrap">
+                <svg viewBox="0 0 20 20"><path d="M10 2a5 5 0 100 10A5 5 0 0010 2zm0 7a2 2 0 110-4 2 2 0 010 4z" /><path d="M10 12v6M7 16h6" /></svg>
+              </div>
+              <div className="feat-title">GPS Clock-In</div>
+              <p className="feat-desc">Crew taps once. Location verified. Time stamped. No paper timesheets. Syncs to payroll automatically.</p>
+            </div>
+            <div className="feat-card">
+              <div className="feat-icon-wrap">
+                <svg viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" /><path d="M7 9h6M7 13h4" /></svg>
+              </div>
+              <div className="feat-title">Daily Logs</div>
+              <p className="feat-desc">Photo + notes in 60 seconds. Auto-dated, job-stamped, searchable forever. Your office sees it instantly.</p>
+            </div>
+            <div className="feat-card">
+              <div className="feat-icon-wrap">
+                <svg viewBox="0 0 20 20"><path d="M5 10l4 4 6-7" /><circle cx="10" cy="10" r="8" /></svg>
+              </div>
+              <div className="feat-title">Punch Lists</div>
+              <p className="feat-desc">Create, assign, and resolve punch list items from the field. Attach photos, set due dates, notify subs.</p>
+            </div>
+            <div className="feat-card">
+              <div className="feat-icon-wrap">
+                <svg viewBox="0 0 20 20"><path d="M3 6l7-3 7 3v9a2 2 0 01-2 2H5a2 2 0 01-2-2V6z" /><path d="M8 17v-6h4v6" /></svg>
+              </div>
+              <div className="feat-title">AI Field Assistant (Sage)</div>
+              <p className="feat-desc">Ask Sage anything: &quot;Where&apos;s the approved RFI for door 201?&quot; She finds it. Draft RFIs by photo — snap a problem, Sage writes the RFI.</p>
+            </div>
+            <div className="feat-card">
+              <div className="feat-icon-wrap">
+                <svg viewBox="0 0 20 20"><path d="M2 10a8 8 0 1016 0A8 8 0 002 10z" /><path d="M10 6v4l3 3" /><path d="M6 2l-2-2M14 2l2-2" /></svg>
+              </div>
+              <div className="feat-title">Works Completely Offline</div>
+              <p className="feat-desc">Signal dead on site? Keeps working. Daily logs, photos, clock-ins — everything queues and syncs the moment you&apos;re back online.</p>
+            </div>
+            <div className="feat-card">
+              <div className="feat-icon-wrap">
+                <svg viewBox="0 0 20 20"><path d="M4 4h12v8H4z" /><path d="M8 16h4M10 12v4" /><path d="M7 8l2 2 4-4" /></svg>
+              </div>
+              <div className="feat-title">RFIs + Inspections</div>
+              <p className="feat-desc">Submit RFIs from the field with photos. Run inspection checklists. Get instant notifications when responses come back.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── HOW TO INSTALL ── */}
+        <section className="install-section" id="how-to-install">
+          <div className="section-wrap">
+            <div className="section-header">
+              <h2 className="section-h2">Install in 30 Seconds on Any Device</h2>
+              <p className="section-sub">No App Store. No download. Just open your browser and tap.</p>
+            </div>
+
+            <div className="platform-grid">
+
+              {/* iPhone / iPad */}
+              <div className="platform-card">
+                <div className="platform-header">
+                  <div className="platform-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="5" y="1" width="14" height="22" rx="3" />
+                      <circle cx="12" cy="19.5" r="1" fill="currentColor" stroke="none" style={{ fill: '#F59E0B' }} />
+                      <path d="M9 4h6" />
+                    </svg>
+                  </div>
+                  <div className="platform-name">iPhone / iPad</div>
+                </div>
+                <ol className="steps-list">
+                  <li className="step-item"><div className="step-num">1</div><span className="step-text">Open <strong>Safari</strong> and go to <strong>saguarocontrol.net/app</strong></span></li>
+                  <li className="step-item"><div className="step-num">2</div><span className="step-text">Tap the <strong>Share button</strong> (box with arrow pointing up)</span></li>
+                  <li className="step-item"><div className="step-num">3</div><span className="step-text">Tap <strong>&quot;Add to Home Screen&quot;</strong></span></li>
+                  <li className="step-item"><div className="step-num">4</div><span className="step-text">Tap <strong>&quot;Add&quot;</strong> — done. Icon appears instantly.</span></li>
+                </ol>
+                <div className="platform-note">Works on iOS 14+ · No App Store · Updates automatically</div>
+              </div>
+
+              {/* Android */}
+              <div className="platform-card">
+                <div className="platform-header">
+                  <div className="platform-icon">
+                    <svg viewBox="0 0 24 24">
+                      <path d="M6 18V10a6 6 0 0112 0v8" />
+                      <rect x="4" y="10" width="16" height="10" rx="2" />
+                      <line x1="2" y1="13" x2="4" y2="13" />
+                      <line x1="20" y1="13" x2="22" y2="13" />
+                      <line x1="8" y1="21" x2="8" y2="23" />
+                      <line x1="16" y1="21" x2="16" y2="23" />
+                      <circle cx="9" cy="13" r="1" fill="#F59E0B" stroke="none" />
+                      <circle cx="15" cy="13" r="1" fill="#F59E0B" stroke="none" />
+                    </svg>
+                  </div>
+                  <div className="platform-name">Android</div>
+                </div>
+                <ol className="steps-list">
+                  <li className="step-item"><div className="step-num">1</div><span className="step-text">Open <strong>Chrome</strong> and go to <strong>saguarocontrol.net/app</strong></span></li>
+                  <li className="step-item"><div className="step-num">2</div><span className="step-text">Tap the <strong>three-dot menu ⋮</strong> at top right</span></li>
+                  <li className="step-item"><div className="step-num">3</div><span className="step-text">Tap <strong>&quot;Add to Home screen&quot;</strong></span></li>
+                  <li className="step-item"><div className="step-num">4</div><span className="step-text">Tap <strong>&quot;Add&quot;</strong> — app icon appears immediately.</span></li>
+                </ol>
+                <div className="platform-note">Works on Android 8+ · Chrome, Edge, Samsung Browser</div>
+              </div>
+
+              {/* iPad / Tablet */}
+              <div className="platform-card">
+                <div className="platform-header">
+                  <div className="platform-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="3" y="2" width="18" height="20" rx="2" />
+                      <circle cx="12" cy="19" r="1" fill="#F59E0B" stroke="none" />
+                      <line x1="8" y1="5" x2="16" y2="5" />
+                    </svg>
+                  </div>
+                  <div className="platform-name">iPad / Tablet</div>
+                </div>
+                <ol className="steps-list">
+                  <li className="step-item"><div className="step-num">1</div><span className="step-text">Open <strong>Safari</strong> (iOS) or <strong>Chrome</strong> (Android)</span></li>
+                  <li className="step-item"><div className="step-num">2</div><span className="step-text">Go to <strong>saguarocontrol.net/app</strong></span></li>
+                  <li className="step-item"><div className="step-num">3</div><span className="step-text">Tap Share → <strong>&quot;Add to Home Screen&quot;</strong> (iOS) or ⋮ → <strong>&quot;Add to Home screen&quot;</strong> (Android)</span></li>
+                  <li className="step-item"><div className="step-num">4</div><span className="step-text">Full tablet UI loads automatically — optimized layout.</span></li>
+                </ol>
+                <div className="platform-note">Full tablet UI · Landscape + portrait · Offline capable</div>
+              </div>
+
+              {/* Desktop / Laptop */}
+              <div className="platform-card">
+                <div className="platform-header">
+                  <div className="platform-icon">
+                    <svg viewBox="0 0 24 24">
+                      <rect x="2" y="3" width="20" height="14" rx="2" />
+                      <line x1="8" y1="21" x2="16" y2="21" />
+                      <line x1="12" y1="17" x2="12" y2="21" />
+                      <circle cx="5" cy="6" r=".8" fill="#F59E0B" stroke="none" />
+                      <circle cx="8" cy="6" r=".8" fill="#F59E0B" stroke="none" />
+                    </svg>
+                  </div>
+                  <div className="platform-name">Desktop / Laptop</div>
+                </div>
+                <ol className="steps-list">
+                  <li className="step-item"><div className="step-num">1</div><span className="step-text">Open <strong>Chrome, Edge, or Safari</strong> on your computer</span></li>
+                  <li className="step-item"><div className="step-num">2</div><span className="step-text">Go to <strong>saguarocontrol.net/app</strong></span></li>
+                  <li className="step-item"><div className="step-num">3</div><span className="step-text">Click the <strong>install icon ⊞</strong> in the address bar — or use the menu</span></li>
+                  <li className="step-item"><div className="step-num">4</div><span className="step-text">Click <strong>&quot;Install&quot;</strong> — app opens in its own window.</span></li>
+                </ol>
+                <div className="platform-note">Windows, Mac, Linux · Works in Chrome, Edge, Safari</div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* ── COMPARISON ── */}
+        <div className="section-wrap">
+          <div className="section-header">
+            <h2 className="section-h2">Why Not Just Use the App Store?</h2>
+            <p className="section-sub">App store apps are slow to install, require IT approval, eat storage, and charge per user. Saguaro Field is different.</p>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table className="compare-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '30%' }}></th>
+                  <th>App Store App</th>
+                  <th className="saguaro-col">Saguaro Field (PWA)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="feature-col">Install time</td>
+                  <td className="app-store-col bad">5–15 minutes</td>
+                  <td className="saguaro-col good">30 seconds</td>
+                </tr>
+                <tr>
+                  <td className="feature-col">App Store required</td>
+                  <td className="app-store-col bad">Yes</td>
+                  <td className="saguaro-col good">No</td>
+                </tr>
+                <tr>
+                  <td className="feature-col">IT approval needed</td>
+                  <td className="app-store-col bad">Often</td>
+                  <td className="saguaro-col good">Never</td>
+                </tr>
+                <tr>
+                  <td className="feature-col">Storage used</td>
+                  <td className="app-store-col bad">200–500 MB</td>
+                  <td className="saguaro-col good">~5 MB</td>
+                </tr>
+                <tr>
+                  <td className="feature-col">Updates</td>
+                  <td className="app-store-col bad">Manual</td>
+                  <td className="saguaro-col good">Automatic</td>
+                </tr>
+                <tr>
+                  <td className="feature-col">Works offline</td>
+                  <td className="app-store-col bad">Sometimes</td>
+                  <td className="saguaro-col good">Always</td>
+                </tr>
+                <tr>
+                  <td className="feature-col">Cost</td>
+                  <td className="app-store-col bad">$5–30/user/mo</td>
+                  <td className="saguaro-col good">Free</td>
+                </tr>
+                <tr>
+                  <td className="feature-col">Works on any browser</td>
+                  <td className="app-store-col bad">No</td>
+                  <td className="saguaro-col good">Yes</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── TESTIMONIALS ── */}
+        <div style={{ background: 'var(--raised)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+          <div className="section-wrap">
+            <div className="section-header">
+              <h2 className="section-h2">Field Crews Love It</h2>
+              <p className="section-sub">From superintendents to foremen — real feedback from the job site.</p>
+            </div>
+
+            <div className="testimonials-grid">
+              <div className="testi-card">
+                <p className="testi-quote">&quot;I had the whole crew of 14 installed in under 10 minutes. Just texted them the link. No IT. No App Store. The GPS clock-in alone saves me an hour of timesheet chasing every Friday.&quot;</p>
+                <div className="testi-author">Jake T., Superintendent — Mesa, AZ</div>
+              </div>
+              <div className="testi-card">
+                <p className="testi-quote">&quot;The offline mode is huge. We work in basements and dead zones constantly. With Procore we lost data. With this we lose nothing.&quot;</p>
+                <div className="testi-author">Maria S., Foreman — Las Vegas, NV</div>
+              </div>
+              <div className="testi-card">
+                <p className="testi-quote">&quot;My foremen submit daily logs and photos before they even leave the job site. I used to beg for them on Fridays.&quot;</p>
+                <div className="testi-author">Carlos M., Project Manager — San Antonio, TX</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── FINAL CTA ── */}
+        <section className="final-cta">
+          <div className="final-cta-inner">
+            <h2 className="final-h2">30 Seconds Away From a Better Job Site</h2>
+            <a href="/app" className="btn-primary" style={{ display: 'inline-block', fontSize: '17px', padding: '18px 40px' }}>
+              Install Saguaro Field Free →
+            </a>
+            <div className="final-sub">
+              Or <a href="/signup">start a full company trial →</a>
+            </div>
+            <div className="trust-note">
+              Your crew gets the app free. Managers get the full platform free for 30 days.<br />
+              No credit card. No App Store. No IT department.
+            </div>
+          </div>
+        </section>
+
+        {/* ── FOOTER ── */}
+        <footer className="footer">
+          <div className="footer-inner">
+            <div className="footer-left">
+              <div className="footer-logo">
+                <img src="/logo-full.jpg" alt="Saguaro" height={32} style={{ mixBlendMode: 'screen' }} />
+              </div>
+              <span className="footer-copy">© {new Date().getFullYear()} Saguaro Control. All rights reserved.</span>
+            </div>
+            <div className="footer-links">
+              <a href="/pricing" className="footer-link">Pricing</a>
+              <a href="/field-app" className="footer-link">Field App</a>
+              <a href="/compare/procore" className="footer-link">vs Procore</a>
+              <a href="/privacy" className="footer-link">Privacy</a>
+              <a href="/terms" className="footer-link">Terms</a>
+            </div>
+          </div>
+        </footer>
+
       </div>
     </>
   );

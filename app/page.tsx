@@ -170,6 +170,8 @@ export default function HomePage() {
     return () => { cancelled = true; clearTimeout(initialTimer); };
   }, [toastDismissed]);
 
+  const [announcementDismissed, setAnnouncementDismissed] = useState(false);
+
   const [contactModal, setContactModal] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', company: '', message: '' });
   const [contactSent, setContactSent] = useState(false);
@@ -187,8 +189,19 @@ export default function HomePage() {
   return (
     <div style={{ minHeight: '100vh', background: DARK, color: TEXT, fontFamily: 'system-ui,-apple-system,sans-serif' }}>
 
+      {/* ── Announcement Bar ─────────────────────────────────────────────── */}
+      {!announcementDismissed && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 101, height: 36, background: 'rgba(245,158,11,0.12)', borderBottom: '1px solid rgba(245,158,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 48px' }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: TEXT, textAlign: 'center' }}>
+            🔥 Procore users: Switch in 1 day — Free migration included.{' '}
+            <a href="/roi-calculator" style={{ color: '#F59E0B', fontWeight: 700, textDecoration: 'underline' }}>Calculate your savings →</a>
+          </span>
+          <button onClick={() => setAnnouncementDismissed(true)} style={{ position: 'absolute', right: 16, background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '4px 8px' }} aria-label="Dismiss">✕</button>
+        </div>
+      )}
+
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 64, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 48px', gap: 24, backdropFilter: 'blur(12px)' }}>
+      <nav style={{ position: 'fixed', top: announcementDismissed ? 0 : 36, left: 0, right: 0, zIndex: 100, height: 64, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 48px', gap: 24, backdropFilter: 'blur(12px)' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
           <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 48, width: 'auto', objectFit: 'contain', flexShrink: 0, mixBlendMode: 'screen' as const }} />
         </a>
@@ -352,7 +365,7 @@ export default function HomePage() {
         .cta-secondary:hover { border-color: rgba(255,255,255,0.4) !important; color: #fff !important; transition: all .15s ease; }
       `}</style>
 
-      <div style={{ paddingTop: 64 }}>
+      <div style={{ paddingTop: announcementDismissed ? 64 : 100 }}>
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <section style={{ position: 'relative', overflow: 'hidden' }} className="hero-section">
@@ -382,7 +395,7 @@ export default function HomePage() {
 
                 {/* Subheadline */}
                 <p className="hero-animate-delay" style={{ fontSize: 17, color: 'rgba(255,255,255,0.85)', maxWidth: 480, margin: '0 0 16px', lineHeight: 1.58, textAlign: 'left' }}>
-                  AI Blueprint Takeoff. AIA Pay Apps. Lien Waivers in all 50 states. Certified Payroll. Bid Intelligence — and a <strong style={{ color: TEXT }}>free mobile field app</strong> that works offline on any phone. No App Store required.
+                  Upload any blueprint PDF. Sage AI reads every dimension, calculates all materials, and generates a full bid estimate in 41 seconds. No manual measuring. No spreadsheets. No Procore.
                 </p>
 
                 {/* Field app mini-callout */}
@@ -398,12 +411,11 @@ export default function HomePage() {
 
                 {/* CTA row */}
                 <div className="hero-cta-row hero-animate-delay" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 14 }}>
-                  <a href="/signup" className="cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 34px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, border: 'none', borderRadius: 8, color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 8px 40px rgba(245,158,11,0.55), 0 2px 8px rgba(0,0,0,0.4)` }}>
-                    Start Free Trial — No CC Required
+                  <a href="/sandbox" className="cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 38px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, border: 'none', borderRadius: 8, color: '#fff', fontSize: 16, fontWeight: 900, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 8px 40px rgba(245,158,11,0.55), 0 2px 8px rgba(0,0,0,0.4)` }}>
+                    ⚡ Try AI Takeoff Free →
                   </a>
-                  <a href="/sandbox" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 22px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    Watch 2-Min Demo
+                  <a href="/signup" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 22px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                    Start Free Trial
                   </a>
                 </div>
 
@@ -507,6 +519,31 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* ── Live AI Demo teaser strip ─────────────────────────────────── */}
+        <div style={{ background: 'rgba(245,158,11,0.06)', borderBottom: '1px solid rgba(245,158,11,0.18)', borderTop: '1px solid rgba(245,158,11,0.18)' }}>
+          <div style={{ maxWidth: 1140, margin: '0 auto', padding: '16px 48px', display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 280 }}>
+              {/* Lightning bolt icon */}
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" fill="#F59E0B" width={16} height={16}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: '#F8FAFC' }}>Try the AI Takeoff — Live</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 1 }}>Upload your own blueprint and see Sage analyze it in real time. Free. No credit card.</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              {['PDF blueprints', 'Image plans', 'CAD exports', 'Any page count'].map(tag => (
+                <span key={tag} style={{ fontSize: 11, fontWeight: 600, color: 'rgba(245,158,11,0.8)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 20, padding: '3px 10px' }}>{tag}</span>
+              ))}
+            </div>
+            <a href="/sandbox" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 22px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 7, color: '#000', fontSize: 13, fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 16px rgba(245,158,11,0.35)', flexShrink: 0 }}>
+              Run Free Takeoff
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+          </div>
+        </div>
 
         {/* ── Social proof strip ───────────────────────────────────────────── */}
         <div style={{ borderTop: '1px solid rgba(245,158,11,0.2)', background: 'rgba(245,158,11,0.04)' }}>

@@ -124,6 +124,8 @@ function NeutralIcon({ size = 16 }: { size?: number }) {
 
 export default function CompareProcorePage() {
   const [activeDeep, setActiveDeep] = useState<number | null>(null);
+  const [procoreCost, setProcoreCost] = useState<number>(1850);
+  const [teamSizeCalc, setTeamSizeCalc] = useState<number>(15);
 
   return (
     <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -455,6 +457,193 @@ export default function CompareProcorePage() {
         </div>
       </div>
 
+      {/* ── ROI MINI-CALCULATOR ── */}
+      <div style={{
+        background: 'linear-gradient(180deg, #0F172A 0%, #0d1117 100%)',
+        padding: '64px 24px',
+        borderTop: `1px solid ${C.border}`,
+        borderBottom: `1px solid ${C.border}`,
+      }}>
+        <div style={{ maxWidth: 860, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <h2 style={{
+              fontSize: 'clamp(28px, 4vw, 42px)',
+              fontWeight: 900,
+              margin: '0 0 14px',
+              letterSpacing: -0.8,
+              background: `linear-gradient(135deg, ${C.gold}, #fde68a)`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>
+              Calculate Your Exact Savings
+            </h2>
+            <p style={{ color: C.dim, fontSize: 16, margin: 0 }}>
+              Tell us what you&apos;re paying. We&apos;ll show you the math.
+            </p>
+          </div>
+
+          {/* Inputs row */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 20,
+            marginBottom: 32,
+          }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.dim, marginBottom: 8 }}>
+                Current monthly software cost
+              </label>
+              <div style={{ position: 'relative' }}>
+                <span style={{
+                  position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                  fontSize: 15, fontWeight: 700, color: C.gold, pointerEvents: 'none',
+                }}>$</span>
+                <input
+                  type="number"
+                  value={procoreCost}
+                  onChange={(e) => setProcoreCost(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px 14px 30px',
+                    background: 'rgba(15,23,42,0.8)',
+                    border: `1px solid rgba(245,158,11,0.3)`,
+                    borderRadius: 10,
+                    color: C.text,
+                    fontSize: 18,
+                    fontWeight: 700,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.boxShadow = `0 0 0 2px rgba(245,158,11,0.15)`; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.3)'; e.currentTarget.style.boxShadow = 'none'; }}
+                />
+              </div>
+              <button
+                onClick={() => setProcoreCost(1850)}
+                style={{
+                  marginTop: 8,
+                  padding: '5px 14px',
+                  background: 'rgba(245,158,11,0.1)',
+                  border: `1px solid rgba(245,158,11,0.25)`,
+                  borderRadius: 100,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: C.gold,
+                  cursor: 'pointer',
+                }}
+              >
+                I use Procore — fill $1,850
+              </button>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: C.dim, marginBottom: 8 }}>
+                Team size (users)
+              </label>
+              <input
+                type="number"
+                value={teamSizeCalc}
+                onChange={(e) => setTeamSizeCalc(Number(e.target.value))}
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  background: 'rgba(15,23,42,0.8)',
+                  border: `1px solid rgba(245,158,11,0.3)`,
+                  borderRadius: 10,
+                  color: C.text,
+                  fontSize: 18,
+                  fontWeight: 700,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.boxShadow = `0 0 0 2px rgba(245,158,11,0.15)`; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.3)'; e.currentTarget.style.boxShadow = 'none'; }}
+              />
+              <div style={{ marginTop: 8, fontSize: 12, color: C.dim }}>
+                Saguaro is flat-rate — {teamSizeCalc} users, same price
+              </div>
+            </div>
+          </div>
+
+          {/* Live results */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 1,
+            background: C.border,
+            border: `1px solid ${C.border}`,
+            borderRadius: 14,
+            overflow: 'hidden',
+            marginBottom: 32,
+          }}>
+            {[
+              {
+                label: 'Monthly Savings',
+                value: Math.max(0, procoreCost - 399),
+                suffix: '/mo',
+                highlight: true,
+              },
+              {
+                label: 'Annual Savings',
+                value: Math.max(0, (procoreCost - 399) * 12),
+                suffix: '/yr',
+                highlight: false,
+              },
+              {
+                label: '3-Year Savings',
+                value: Math.max(0, (procoreCost - 399) * 36),
+                suffix: ' total',
+                highlight: false,
+              },
+            ].map((item) => (
+              <div key={item.label} style={{
+                background: C.raised,
+                padding: '28px 20px',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 10 }}>
+                  {item.label}
+                </div>
+                <div style={{
+                  fontSize: 'clamp(24px, 3vw, 36px)',
+                  fontWeight: 900,
+                  color: item.highlight ? C.gold : C.green,
+                  letterSpacing: -1,
+                  lineHeight: 1,
+                }}>
+                  ${item.value.toLocaleString()}
+                </div>
+                <div style={{ fontSize: 12, color: C.dim, marginTop: 4 }}>{item.suffix}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div style={{ textAlign: 'center' }}>
+            <a href="/signup" style={{
+              display: 'inline-block',
+              padding: '15px 40px',
+              background: `linear-gradient(135deg, ${C.gold}, #D97706)`,
+              borderRadius: 10,
+              color: '#0d1117',
+              fontWeight: 800,
+              fontSize: 16,
+              textDecoration: 'none',
+              boxShadow: `0 0 32px rgba(245,158,11,0.25)`,
+              marginBottom: 16,
+            }}>
+              Claim This Savings — Start Free →
+            </a>
+            <div style={{ fontSize: 13, color: C.dim }}>
+              <a href="/roi-calculator" style={{ color: C.gold, textDecoration: 'none', fontWeight: 600 }}>
+                Or see our full ROI calculator →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── WHERE WE WIN DEEP DIVE ── */}
       <div style={{
         background: C.raised,
@@ -675,6 +864,138 @@ export default function CompareProcorePage() {
         </div>
       </div>
 
+      {/* ── READY TO SWITCH / MIGRATION CTA ── */}
+      <div style={{
+        padding: '80px 24px',
+        background: C.dark,
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{
+            background: C.raised,
+            border: `1px solid ${C.border}`,
+            borderTop: `4px solid ${C.gold}`,
+            borderRadius: 16,
+            padding: '56px 48px',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 48,
+            alignItems: 'start',
+          }}>
+            {/* LEFT */}
+            <div>
+              <div style={{
+                display: 'inline-block',
+                padding: '5px 14px',
+                background: 'rgba(245,158,11,0.12)',
+                border: `1px solid rgba(245,158,11,0.3)`,
+                borderRadius: 100,
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#FCD34D',
+                letterSpacing: 1.2,
+                textTransform: 'uppercase',
+                marginBottom: 20,
+              }}>
+                Procore Migration
+              </div>
+              <h2 style={{
+                fontSize: 'clamp(24px, 3vw, 36px)',
+                fontWeight: 900,
+                color: C.text,
+                margin: '0 0 16px',
+                lineHeight: 1.2,
+                letterSpacing: -0.5,
+              }}>
+                We&apos;ll Move You Over in 1 Business Day
+              </h2>
+              <p style={{ fontSize: 15, color: C.dim, lineHeight: 1.7, margin: '0 0 28px' }}>
+                Our migration team exports your Procore data, imports it into Saguaro, and trains your team — all for free. You&apos;ll be live before the end of the week.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  'Free data migration — projects, contacts, documents',
+                  '1-day setup vs. Procore\'s 6-month implementation',
+                  'Dedicated onboarding call with your team',
+                  'Month-to-month — cancel if you\'re not blown away',
+                ].map((item) => (
+                  <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <div style={{ marginTop: 1, flexShrink: 0 }}>
+                      <CheckIcon size={15} />
+                    </div>
+                    <span style={{ fontSize: 14, color: C.text, lineHeight: 1.5 }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT */}
+            <div style={{
+              background: 'rgba(13,17,23,0.7)',
+              border: `1px solid rgba(245,158,11,0.3)`,
+              borderRadius: 14,
+              padding: '32px 28px',
+              boxShadow: `0 0 40px rgba(245,158,11,0.06)`,
+            }}>
+              <div style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: C.gold,
+                textTransform: 'uppercase',
+                letterSpacing: 0.8,
+                marginBottom: 20,
+              }}>
+                What you get on day 1:
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
+                {[
+                  'Full AI takeoff with your blueprints',
+                  'All 50-state lien waivers activated',
+                  'Field app installed on your crew\'s phones',
+                  'Your Procore data fully imported',
+                  'G702 pay app template ready',
+                ].map((item) => (
+                  <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <CheckIcon size={15} />
+                    <span style={{ fontSize: 14, color: C.text }}>{item}</span>
+                  </div>
+                ))}
+              </div>
+              <a href="/switch-from-procore" style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '14px 24px',
+                background: `linear-gradient(135deg, ${C.gold}, #D97706)`,
+                borderRadius: 9,
+                color: '#0d1117',
+                fontWeight: 800,
+                fontSize: 15,
+                textDecoration: 'none',
+                marginBottom: 12,
+                boxShadow: `0 0 24px rgba(245,158,11,0.2)`,
+              }}>
+                Start My Free Migration →
+              </a>
+              <a href="/sandbox" style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '13px 24px',
+                background: 'transparent',
+                border: `1px solid rgba(245,158,11,0.3)`,
+                borderRadius: 9,
+                color: C.gold,
+                fontWeight: 700,
+                fontSize: 14,
+                textDecoration: 'none',
+              }}>
+                Talk to Sales First
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* ── TESTIMONIALS ── */}
       <div style={{
         background: C.raised,
@@ -809,6 +1130,24 @@ export default function CompareProcorePage() {
           </a>
         </div>
       </div>
+
+      {/* ── MOBILE STICKY CTA ── */}
+      <div className="mobile-sticky-cta" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(13,17,23,0.97)', borderTop: '1px solid rgba(245,158,11,0.3)', padding: '12px 16px', backdropFilter: 'blur(12px)' }}>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <a href="/signup" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, textDecoration: 'none' }}>
+            Start Free Trial
+          </a>
+          <a href="/switch-from-procore" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, color: '#F59E0B', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+            Free Migration
+          </a>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .mobile-sticky-cta { display: block !important; }
+        }
+      `}</style>
 
     </div>
   );
