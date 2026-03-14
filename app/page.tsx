@@ -274,9 +274,9 @@ export default function HomePage() {
                 </div>
 
                 {/* Headline */}
-                <h1 className="hero-animate" style={{ fontSize: 'clamp(38px, 4.8vw, 68px)', fontWeight: 900, margin: '0 0 14px', lineHeight: 1.04, letterSpacing: '-0.03em', textAlign: 'left' }}>
+                <h1 className="hero-animate" style={{ fontSize: 'clamp(36px, 3.8vw, 56px)', fontWeight: 900, margin: '0 0 14px', lineHeight: 1.06, letterSpacing: '-0.03em', textAlign: 'left' }}>
                   The Smarter CRM<br />
-                  <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Built for GCs</span>
+                  <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Built for General Contractors</span>
                 </h1>
 
                 {/* Subheadline */}

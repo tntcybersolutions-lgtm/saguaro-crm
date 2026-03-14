@@ -1,132 +1,528 @@
-import React from 'react';
+'use client';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#22c55e',RED='#ef4444';
+import React, { useState } from 'react';
+import Image from 'next/image';
 
-const NAV = (
-  <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(13,17,23,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 32px',gap:24,backdropFilter:'blur(12px)'}}>
-    <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
-      <span style={{fontSize:22}}>🌵</span>
-      <span style={{fontWeight:800,fontSize:16,letterSpacing:1,color:GOLD}}>SAGUARO</span>
-      <span style={{fontSize:10,background:GOLD,color:'#0d1117',padding:'1px 6px',borderRadius:4,fontWeight:700}}>CRM</span>
-    </a>
-    <div style={{flex:1}}/>
-    <a href="/login" style={{padding:'7px 16px',background:'rgba(212,160,23,.12)',border:`1px solid rgba(212,160,23,.3)`,borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none'}}>Log In</a>
-    <a href="/signup" style={{padding:'7px 16px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,textDecoration:'none'}}>Start Free</a>
-  </nav>
-);
+const C = {
+  dark: '#0d1117',
+  gold: '#F59E0B',
+  text: '#F8FAFC',
+  dim: '#CBD5E1',
+  border: '#1E3A5F',
+  raised: '#0F172A',
+  green: '#22c55e',
+  red: '#ef4444',
+};
 
-const ROWS = [
-  {feature:'Starting Price',saguaro:'$49/mo',procore:'$375/mo',saguaroWin:true,note:'Procore pricing requires annual contract'},
-  {feature:'Setup Time',saguaro:'< 1 day',procore:'3–6 months',saguaroWin:true,note:'Procore requires dedicated implementation team'},
-  {feature:'AI Autopilot',saguaro:'✓ Included',procore:'✗ Not available',saguaroWin:true,note:'Saguaro automates RFI routing, CO tracking, and alerts'},
-  {feature:'Built-in Doc Generator',saguaro:'✓ Included',procore:'Limited',saguaroWin:true,note:'G702/G703, lien waivers, WH-347 all built in'},
-  {feature:'Takeoff Tool',saguaro:'✓ AI-powered',procore:'Add-on ($$$)',saguaroWin:true,note:'Procore takeoff is a separate paid module'},
-  {feature:'Contract Required',saguaro:'Month-to-month',procore:'Annual required',saguaroWin:true,note:'Cancel Saguaro anytime with no penalty'},
-  {feature:'Support',saguaro:'Email + Chat',procore:'Enterprise only',saguaroWin:true,note:'Procore support tiers can exceed $1,000/mo'},
-  {feature:'Mobile App',saguaro:'✓',procore:'✓',saguaroWin:false,note:'Both offer mobile apps'},
-  {feature:'Lien Waivers (all 50 states)',saguaro:'✓ Included',procore:'Add-on',saguaroWin:true,note:''},
-  {feature:'Certified Payroll WH-347',saguaro:'✓ Included',procore:'✗ Not available',saguaroWin:true,note:''},
-  {feature:'Per-seat pricing',saguaro:'✗ Flat rate',procore:'✓ Per user',saguaroWin:true,note:'Procore charges per user — costs grow with your team'},
+const ROWS: {
+  feature: string;
+  saguaro: string;
+  procore: string;
+  saguaroWin: boolean | 'neutral';
+  note?: string;
+}[] = [
+  { feature: 'Starting Price', saguaro: '$199/mo', procore: '$375–600/mo+', saguaroWin: true, note: 'Procore pricing requires annual contract and implementation fees' },
+  { feature: 'Annual Contract Required', saguaro: 'Month-to-month', procore: 'Annual required', saguaroWin: true, note: 'Cancel Saguaro anytime — no penalty, no lock-in' },
+  { feature: 'Setup Time', saguaro: '< 1 day', procore: '3–6 months', saguaroWin: true, note: 'Procore requires a dedicated implementation team and onboarding process' },
+  { feature: 'Per-Seat Pricing', saguaro: 'Flat rate', procore: 'Per user (costs grow)', saguaroWin: true, note: 'Add 50 users on Saguaro — same price. Procore charges per seat.' },
+  { feature: 'AI Blueprint Takeoff', saguaro: 'Included', procore: 'Add-on ($$$)', saguaroWin: true, note: 'Procore Takeoff is a separate paid module' },
+  { feature: 'AIA Pay Apps G702/G703', saguaro: 'Included', procore: 'Included', saguaroWin: 'neutral' },
+  { feature: 'Lien Waivers (all 50 states)', saguaro: 'Included', procore: 'Add-on', saguaroWin: true, note: 'Saguaro generates state-compliant lien waivers instantly' },
+  { feature: 'Certified Payroll WH-347', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Procore does not natively generate WH-347 forms' },
+  { feature: 'AI Autopilot / Automation', saguaro: 'Included', procore: 'Limited', saguaroWin: true, note: 'Saguaro automates RFI routing, CO triggers, insurance alerts, and more' },
+  { feature: 'Mobile Field App', saguaro: 'Free PWA', procore: 'Native (extra cost)', saguaroWin: true, note: 'Saguaro PWA installs instantly — no app store required' },
+  { feature: 'Offline Mode', saguaro: 'Full offline', procore: 'Limited', saguaroWin: true, note: 'Saguaro works without signal — syncs when back online' },
+  { feature: 'No App Store Required', saguaro: 'Yes', procore: 'No', saguaroWin: true, note: 'Saguaro installs as a PWA — no IT approval needed' },
+  { feature: 'AI Field Assistant (Sage)', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Sage answers field questions, drafts RFIs, and surfaces project data' },
+  { feature: 'Bid Intelligence Scoring', saguaro: 'Included', procore: 'Not available', saguaroWin: true },
+  { feature: 'Owner + Sub Portals', saguaro: 'Included', procore: 'Included', saguaroWin: 'neutral' },
+  { feature: 'ACORD 25 COI Parser', saguaro: 'Included', procore: 'Add-on', saguaroWin: true, note: 'Saguaro auto-reads COI PDFs and flags expiring coverage' },
+  { feature: 'OSHA 300 Log', saguaro: 'Included', procore: 'Included', saguaroWin: 'neutral' },
+  { feature: 'QuickBooks Sync', saguaro: 'Enterprise', procore: 'Included', saguaroWin: false },
+  { feature: 'White Label', saguaro: 'Enterprise', procore: 'Not available', saguaroWin: true, note: 'Saguaro Enterprise supports full white-label branding' },
+  { feature: 'Customer Support', saguaro: 'Email + Chat', procore: 'Enterprise only', saguaroWin: true, note: 'Procore support tiers can exceed $1,000/mo' },
 ];
 
 const DEEP_DIVE = [
   {
-    title:'AI That Actually Works on Job Sites',
-    icon:'🤖',
-    saguaro:'Saguaro\'s Autopilot uses Claude AI to read every RFI and suggest responses based on your project specs, flag change order triggers in emails, and alert you when a sub\'s insurance expires — before it becomes a problem.',
-    procore:'Procore has limited AI capabilities and no automated document workflow intelligence. AI features are in early access and only available on certain tiers.',
+    title: 'AI That Works on Job Sites',
+    body: "Saguaro's Sage AI answers field questions, drafts RFIs from photos, surfaces budget alerts, and automates document workflows — all without leaving the field app. Procore has limited AI capabilities with no automated workflow intelligence, and AI features are restricted to certain enterprise tiers.",
+    procoreBody: "Procore's AI features are in early access and limited to select tiers. There is no native AI field assistant, no automated RFI routing, and no AI-driven document generation.",
   },
   {
-    title:'Document Generation at the Speed of Construction',
-    icon:'📄',
-    saguaro:'Generate G702/G703 pay apps, AIA A310/A312 bonds, lien waivers for all 50 states, WH-347 certified payroll, preliminary notices, and ACORD 25 insurance certificates — all in seconds, all included in your plan.',
-    procore:'Procore requires integrations, third-party vendors, or manual PDF uploads for most document types. Certified payroll and lien waivers require separate tools or add-ons.',
+    title: 'Document Generation Speed',
+    body: 'Generate G702/G703 pay apps, lien waivers for all 50 states, WH-347 certified payroll, ACORD 25 COI forms, preliminary notices, and AIA A310/A312 bonds — all in seconds, all included in your plan price.',
+    procoreBody: 'Procore requires integrations, third-party vendors, or manual PDF uploads for most document types. Certified payroll and state-compliant lien waivers require separate tools or paid add-ons.',
   },
   {
-    title:'Pricing That Scales With You — Not Against You',
-    icon:'💰',
-    saguaro:'One flat monthly rate. Add 50 users, 50 projects — same price. Month-to-month. Cancel anytime. Start free with no credit card. Starter at $49/mo, Professional at $399/mo.',
-    procore:'Procore pricing starts at $375/month and scales by user count and project count. Annual contracts are required. Total cost of ownership for a mid-size GC can exceed $60,000/year.',
+    title: 'Pricing That Grows With You',
+    body: 'One flat monthly rate. Add 50 users and 50 projects — same price. No annual contract. Cancel anytime. Start free with no credit card required. Starter at $199/mo, Professional at $399/mo.',
+    procoreBody: "Procore's per-user, per-module pricing scales sharply as your team grows. Annual contracts are required. Total cost of ownership for a mid-size GC typically exceeds $50,000–$80,000/year when add-ons and implementation are included.",
   },
 ];
 
-export default function CompareProcorePage() {
+const TESTIMONIALS = [
+  {
+    quote: 'We were paying $1,800/mo for Procore and still doing lien waivers in Word. Switched to Saguaro and cut admin time by 60% in the first week.',
+    author: 'General Contractor',
+    location: 'Phoenix, AZ',
+    size: '45 employees',
+    initials: 'RC',
+  },
+  {
+    quote: 'The AI takeoff alone paid for the subscription in the first month. We estimated a $2M medical building in 41 seconds.',
+    author: 'Estimator, Commercial GC',
+    location: 'Denver, CO',
+    size: 'ENR Regional 250',
+    initials: 'MK',
+  },
+  {
+    quote: 'Setup took 3 hours, not 3 months. We were live the same day we signed up. The Procore migration was painless.',
+    author: 'Owner, Mid-Size GC',
+    location: 'Las Vegas, NV',
+    size: '28 employees',
+    initials: 'TW',
+  },
+];
+
+function StarRating() {
   return (
-    <div style={{minHeight:'100vh',background:DARK,color:TEXT,fontFamily:'system-ui,sans-serif'}}>
-      {NAV}
+    <div style={{ display: 'flex', gap: 2, marginBottom: 12 }}>
+      {[1, 2, 3, 4, 5].map((s) => (
+        <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill={C.gold}>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
 
-      {/* Hero */}
-      <div style={{paddingTop:80,textAlign:'center',padding:'100px 24px 60px'}}>
-        <div style={{fontSize:12,fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:2,marginBottom:14}}>Saguaro vs Procore</div>
-        <h1 style={{fontSize:52,fontWeight:900,margin:'0 0 16px',lineHeight:1.1}}>Enterprise Power.<br/>Without Enterprise Complexity.</h1>
-        <p style={{fontSize:18,color:DIM,maxWidth:580,margin:'0 auto 32px',lineHeight:1.6}}>
-          Procore is the industry giant built for ENR 400 firms. Saguaro is built for the GC that wants to run tight, move fast, and keep margins high.
-        </p>
-        <div style={{display:'inline-flex',gap:16,alignItems:'center'}}>
-          <a href="/signup" style={{padding:'14px 32px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,borderRadius:9,color:'#0d1117',fontWeight:800,fontSize:15,textDecoration:'none'}}>Try Saguaro Free →</a>
-          <a href="/pricing" style={{padding:'14px 28px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:9,color:TEXT,fontWeight:700,fontSize:14,textDecoration:'none'}}>See Pricing</a>
+function CheckIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function XIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={C.red} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function NeutralIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={C.dim} strokeWidth="2.5" strokeLinecap="round">
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+export default function CompareProcorePage() {
+  const [activeDeep, setActiveDeep] = useState<number | null>(null);
+
+  return (
+    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+
+      {/* ── NAV ── */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        height: 64, background: 'rgba(13,17,23,0.85)',
+        borderBottom: `1px solid ${C.border}`,
+        backdropFilter: 'blur(16px)',
+        display: 'flex', alignItems: 'center',
+        padding: '0 32px', gap: 32,
+      }}>
+        <a href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+          <Image
+            src="/logo-full.jpg"
+            alt="Saguaro"
+            width={132}
+            height={44}
+            style={{ height: 44, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }}
+          />
+        </a>
+        <div style={{ flex: 1 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+          {['Features', 'Field App', 'Pricing', 'How It Works'].map((link) => (
+            <a
+              key={link}
+              href={`/${link.toLowerCase().replace(/\s+/g, '-')}`}
+              style={{ color: C.dim, fontSize: 14, fontWeight: 500, textDecoration: 'none', letterSpacing: 0.2 }}
+            >
+              {link}
+            </a>
+          ))}
         </div>
-        <div style={{marginTop:16,fontSize:12,color:DIM}}>No credit card required. 30-day free trial.</div>
-      </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginLeft: 8 }}>
+          <a href="/login" style={{
+            padding: '8px 18px',
+            background: 'transparent',
+            border: `1px solid ${C.border}`,
+            borderRadius: 8,
+            color: C.text,
+            fontSize: 13,
+            fontWeight: 600,
+            textDecoration: 'none',
+          }}>
+            Log In
+          </a>
+          <a href="/signup" style={{
+            padding: '9px 20px',
+            background: C.gold,
+            borderRadius: 8,
+            color: '#0d1117',
+            fontSize: 13,
+            fontWeight: 800,
+            textDecoration: 'none',
+            letterSpacing: 0.2,
+          }}>
+            Free Trial
+          </a>
+        </div>
+      </nav>
 
-      {/* Comparison Table */}
-      <div style={{maxWidth:1000,margin:'0 auto',padding:'0 24px 80px'}}>
-        <div style={{border:`1px solid ${BORDER}`,borderRadius:14,overflow:'hidden'}}>
-          {/* Table header */}
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',background:'#0d1117',borderBottom:`1px solid ${BORDER}`}}>
-            <div style={{padding:'18px 24px',fontWeight:700,fontSize:13,color:DIM,textTransform:'uppercase',letterSpacing:.5}}>Feature</div>
-            <div style={{padding:'18px 24px',textAlign:'center',borderLeft:`1px solid ${BORDER}`}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                <span style={{fontSize:18}}>🌵</span>
-                <span style={{fontWeight:800,fontSize:16,color:GOLD}}>Saguaro</span>
-              </div>
-            </div>
-            <div style={{padding:'18px 24px',textAlign:'center',borderLeft:`1px solid ${BORDER}`}}>
-              <div style={{fontWeight:800,fontSize:16,color:DIM}}>Procore</div>
-            </div>
-          </div>
+      {/* ── HERO ── */}
+      <div style={{
+        paddingTop: 120,
+        paddingBottom: 72,
+        textAlign: 'center',
+        padding: '128px 24px 72px',
+        maxWidth: 860,
+        margin: '0 auto',
+      }}>
+        {/* Badge */}
+        <div style={{
+          display: 'inline-block',
+          padding: '6px 18px',
+          background: 'rgba(245,158,11,0.1)',
+          border: `1px solid rgba(245,158,11,0.35)`,
+          borderRadius: 100,
+          fontSize: 12,
+          fontWeight: 700,
+          color: C.gold,
+          letterSpacing: 1.2,
+          textTransform: 'uppercase',
+          marginBottom: 28,
+        }}>
+          Saguaro vs Procore — 2026 Comparison
+        </div>
 
-          {ROWS.map((row,i)=>(
-            <div key={row.feature} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',borderBottom:i<ROWS.length-1?`1px solid ${BORDER}`:'none',background:i%2===0?'transparent':'rgba(255,255,255,.01)'}}>
-              <div style={{padding:'16px 24px'}}>
-                <div style={{fontWeight:600,color:TEXT,fontSize:13}}>{row.feature}</div>
-                {row.note&&<div style={{fontSize:11,color:DIM,marginTop:3}}>{row.note}</div>}
+        <h1 style={{
+          fontSize: 'clamp(40px, 6vw, 68px)',
+          fontWeight: 900,
+          lineHeight: 1.08,
+          margin: '0 0 24px',
+          letterSpacing: -1.5,
+        }}>
+          All the Power.{' '}
+          <span style={{
+            background: `linear-gradient(135deg, ${C.gold}, #fde68a)`,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
+            None of the Price Tag.
+          </span>
+        </h1>
+
+        <p style={{
+          fontSize: 18,
+          color: C.dim,
+          maxWidth: 620,
+          margin: '0 auto 40px',
+          lineHeight: 1.7,
+        }}>
+          Procore is built for ENR 400 firms with 6-figure IT budgets. Saguaro gives mid-size GCs enterprise features at a price that makes sense.
+        </p>
+
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
+          <a href="/signup" style={{
+            padding: '14px 36px',
+            background: C.gold,
+            borderRadius: 10,
+            color: '#0d1117',
+            fontWeight: 800,
+            fontSize: 16,
+            textDecoration: 'none',
+            letterSpacing: 0.2,
+            boxShadow: `0 0 32px rgba(245,158,11,0.25)`,
+          }}>
+            Try Saguaro Free →
+          </a>
+          <a href="/pricing" style={{
+            padding: '14px 32px',
+            background: 'transparent',
+            border: `1px solid ${C.border}`,
+            borderRadius: 10,
+            color: C.text,
+            fontWeight: 700,
+            fontSize: 15,
+            textDecoration: 'none',
+          }}>
+            See Pricing
+          </a>
+        </div>
+
+        <div style={{ fontSize: 13, color: C.dim, marginBottom: 52, letterSpacing: 0.3 }}>
+          No credit card &nbsp;·&nbsp; 30-day free trial &nbsp;·&nbsp; No annual contract
+        </div>
+
+        {/* Key win stats */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 1,
+          background: C.border,
+          border: `1px solid ${C.border}`,
+          borderRadius: 14,
+          overflow: 'hidden',
+          maxWidth: 720,
+          margin: '0 auto',
+        }}>
+          {[
+            { stat: '82%', label: 'lower cost than Procore' },
+            { stat: '1 day', label: 'deployed vs 6 months' },
+            { stat: 'AI features', label: "Procore doesn't have" },
+          ].map((item) => (
+            <div key={item.stat} style={{
+              background: C.raised,
+              padding: '24px 20px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 28, fontWeight: 900, color: C.gold, letterSpacing: -0.5, marginBottom: 4 }}>
+                {item.stat}
               </div>
-              <div style={{padding:'16px 24px',borderLeft:`1px solid ${BORDER}`,textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                {row.saguaroWin&&<span style={{color:GREEN,fontSize:14}}>★</span>}
-                <span style={{color:row.saguaroWin?GREEN:TEXT,fontWeight:row.saguaroWin?700:400,fontSize:13}}>{row.saguaro}</span>
-              </div>
-              <div style={{padding:'16px 24px',borderLeft:`1px solid ${BORDER}`,textAlign:'center',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <span style={{color:row.procore.startsWith('✗')?RED:DIM,fontSize:13}}>{row.procore}</span>
-              </div>
+              <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.4 }}>{item.label}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Deep Dive Sections */}
-      <div style={{background:RAISED,borderTop:`1px solid ${BORDER}`,borderBottom:`1px solid ${BORDER}`,padding:'60px 24px'}}>
-        <div style={{maxWidth:1000,margin:'0 auto'}}>
-          <h2 style={{fontSize:32,fontWeight:900,textAlign:'center',marginBottom:12}}>Where Saguaro Wins</h2>
-          <p style={{color:DIM,textAlign:'center',marginBottom:48,fontSize:15}}>A deeper look at the features that matter most on the job.</p>
-          <div style={{display:'flex',flexDirection:'column',gap:40}}>
-            {DEEP_DIVE.map(d=>(
-              <div key={d.title} style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'start'}}>
-                <div style={{background:'rgba(212,160,23,.06)',border:`1px solid rgba(212,160,23,.25)`,borderRadius:12,padding:'24px 26px'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-                    <span style={{fontSize:24}}>{d.icon}</span>
-                    <div style={{fontWeight:800,color:GOLD,fontSize:14,textTransform:'uppercase',letterSpacing:.5}}>Saguaro</div>
-                  </div>
-                  <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:10}}>{d.title}</div>
-                  <div style={{fontSize:13,color:DIM,lineHeight:1.75}}>{d.saguaro}</div>
+      {/* ── QUICK WINS BAR ── */}
+      <div style={{
+        background: 'rgba(245,158,11,0.06)',
+        borderTop: `1px solid rgba(245,158,11,0.15)`,
+        borderBottom: `1px solid rgba(245,158,11,0.15)`,
+        padding: '18px 24px',
+        overflowX: 'auto',
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: 12,
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          maxWidth: 1100,
+          margin: '0 auto',
+        }}>
+          {[
+            'No per-seat fees',
+            'AI Blueprint Takeoff',
+            'Offline field app',
+            'Lien waivers all 50 states',
+            'Certified Payroll WH-347',
+          ].map((item) => (
+            <div key={item} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 18px',
+              background: 'rgba(245,158,11,0.08)',
+              border: `1px solid rgba(245,158,11,0.2)`,
+              borderRadius: 100,
+              fontSize: 13,
+              fontWeight: 600,
+              color: C.gold,
+              whiteSpace: 'nowrap',
+            }}>
+              <CheckIcon size={13} />
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── COMPARISON TABLE ── */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '0 0 14px', letterSpacing: -0.8 }}>
+            Feature-by-Feature Comparison
+          </h2>
+          <p style={{ color: C.dim, fontSize: 16, margin: 0 }}>
+            20 features that matter most to mid-size general contractors.
+          </p>
+        </div>
+
+        <div style={{
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          overflow: 'hidden',
+        }}>
+          {/* Table header */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '2fr 1.1fr 1.1fr',
+            background: C.raised,
+            borderBottom: `1px solid ${C.border}`,
+          }}>
+            <div style={{ padding: '18px 28px', fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+              Feature
+            </div>
+            <div style={{
+              padding: '18px 24px',
+              textAlign: 'center',
+              borderLeft: `1px solid ${C.border}`,
+              background: 'rgba(245,158,11,0.05)',
+            }}>
+              <div style={{ fontWeight: 800, fontSize: 16, color: C.gold }}>Saguaro</div>
+              <div style={{ fontSize: 11, color: C.gold, opacity: 0.7, marginTop: 2 }}>Recommended</div>
+            </div>
+            <div style={{
+              padding: '18px 24px',
+              textAlign: 'center',
+              borderLeft: `1px solid ${C.border}`,
+            }}>
+              <div style={{ fontWeight: 700, fontSize: 16, color: C.dim }}>Procore</div>
+            </div>
+          </div>
+
+          {ROWS.map((row, i) => {
+            const saguaroGood = row.saguaroWin === true;
+            const neutral = row.saguaroWin === 'neutral';
+            const procoreBad = row.saguaroWin === true;
+            return (
+              <div
+                key={row.feature}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1.1fr 1.1fr',
+                  borderBottom: i < ROWS.length - 1 ? `1px solid ${C.border}` : 'none',
+                  background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)',
+                }}
+              >
+                <div style={{ padding: '16px 28px' }}>
+                  <div style={{ fontWeight: 600, color: C.text, fontSize: 14 }}>{row.feature}</div>
+                  {row.note && (
+                    <div style={{ fontSize: 11, color: C.dim, marginTop: 4, lineHeight: 1.5 }}>{row.note}</div>
+                  )}
                 </div>
-                <div style={{background:'rgba(255,255,255,.02)',border:`1px solid ${BORDER}`,borderRadius:12,padding:'24px 26px'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
-                    <span style={{fontSize:24}}>{d.icon}</span>
-                    <div style={{fontWeight:800,color:DIM,fontSize:14,textTransform:'uppercase',letterSpacing:.5}}>Procore</div>
+
+                {/* Saguaro cell */}
+                <div style={{
+                  padding: '16px 24px',
+                  borderLeft: `1px solid ${C.border}`,
+                  background: saguaroGood ? 'rgba(34,197,94,0.04)' : undefined,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}>
+                  {saguaroGood ? <CheckIcon /> : neutral ? <NeutralIcon /> : <NeutralIcon />}
+                  <span style={{
+                    color: saguaroGood ? C.green : C.text,
+                    fontWeight: saguaroGood ? 700 : 400,
+                    fontSize: 13,
+                  }}>
+                    {row.saguaro}
+                  </span>
+                </div>
+
+                {/* Procore cell */}
+                <div style={{
+                  padding: '16px 24px',
+                  borderLeft: `1px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}>
+                  {procoreBad ? <XIcon /> : neutral ? <NeutralIcon /> : <CheckIcon />}
+                  <span style={{
+                    color: procoreBad ? C.red : C.dim,
+                    fontSize: 13,
+                    fontWeight: 400,
+                  }}>
+                    {row.procore}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── WHERE WE WIN DEEP DIVE ── */}
+      <div style={{
+        background: C.raised,
+        borderTop: `1px solid ${C.border}`,
+        borderBottom: `1px solid ${C.border}`,
+        padding: '80px 24px',
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 52 }}>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '0 0 14px', letterSpacing: -0.8 }}>
+              Where We Win
+            </h2>
+            <p style={{ color: C.dim, fontSize: 16, margin: 0 }}>
+              A deeper look at the capabilities that change how your business runs.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            {DEEP_DIVE.map((card, idx) => (
+              <div
+                key={card.title}
+                onClick={() => setActiveDeep(activeDeep === idx ? null : idx)}
+                style={{
+                  background: C.dark,
+                  border: `1px solid ${activeDeep === idx ? 'rgba(245,158,11,0.5)' : C.border}`,
+                  borderRadius: 14,
+                  padding: '28px 26px',
+                  cursor: 'pointer',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                  boxShadow: activeDeep === idx ? `0 0 24px rgba(245,158,11,0.1)` : 'none',
+                }}
+              >
+                <div style={{
+                  display: 'inline-flex',
+                  padding: '6px 12px',
+                  background: 'rgba(245,158,11,0.1)',
+                  border: `1px solid rgba(245,158,11,0.2)`,
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: C.gold,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.8,
+                  marginBottom: 16,
+                }}>
+                  Saguaro Advantage
+                </div>
+                <h3 style={{ fontSize: 17, fontWeight: 800, color: C.text, margin: '0 0 14px', lineHeight: 1.3 }}>
+                  {card.title}
+                </h3>
+                <p style={{ fontSize: 13, color: C.dim, lineHeight: 1.75, margin: '0 0 20px' }}>
+                  {card.body}
+                </p>
+                {activeDeep === idx && (
+                  <div style={{
+                    background: 'rgba(239,68,68,0.05)',
+                    border: `1px solid rgba(239,68,68,0.15)`,
+                    borderRadius: 8,
+                    padding: '14px 16px',
+                  }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.red, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                      Procore
+                    </div>
+                    <p style={{ fontSize: 12, color: C.dim, lineHeight: 1.7, margin: 0 }}>{card.procoreBody}</p>
                   </div>
-                  <div style={{fontSize:16,fontWeight:800,color:DIM,marginBottom:10}}>{d.title}</div>
-                  <div style={{fontSize:13,color:DIM,lineHeight:1.75}}>{d.procore}</div>
+                )}
+                <div style={{ fontSize: 12, color: C.gold, marginTop: 12 }}>
+                  {activeDeep === idx ? 'Hide Procore comparison ↑' : 'Compare with Procore →'}
                 </div>
               </div>
             ))}
@@ -134,27 +530,286 @@ export default function CompareProcorePage() {
         </div>
       </div>
 
-      {/* Quote / Social proof */}
-      <div style={{maxWidth:720,margin:'60px auto',padding:'0 24px'}}>
-        <div style={{background:RAISED,border:`1px solid rgba(212,160,23,.25)`,borderRadius:14,padding:'32px 36px',textAlign:'center'}}>
-          <div style={{fontSize:28,color:GOLD,marginBottom:16}}>"</div>
-          <p style={{fontSize:17,color:TEXT,lineHeight:1.7,fontStyle:'italic',margin:'0 0 20px'}}>
-            We were paying $1,800/month for Procore and still doing lien waivers in Word. Switched to Saguaro and cut our admin time by 60% in the first week.
+      {/* ── COST CALCULATOR ── */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '80px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '0 0 14px', letterSpacing: -0.8 }}>
+            What Would You Pay?
+          </h2>
+          <p style={{ color: C.dim, fontSize: 16, margin: 0 }}>
+            Real numbers for a real team. No asterisks.
           </p>
-          <div style={{fontSize:13,color:DIM}}>— General Contractor, Phoenix AZ · 45 employees</div>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
+          gap: 24,
+          alignItems: 'stretch',
+          maxWidth: 900,
+          margin: '0 auto',
+        }}>
+          {/* Procore card */}
+          <div style={{
+            background: C.raised,
+            border: `1px solid ${C.border}`,
+            borderRadius: 16,
+            padding: '32px 28px',
+            opacity: 0.85,
+          }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: C.dim, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20 }}>
+              Procore
+            </div>
+            <div style={{ fontSize: 11, color: C.dim, marginBottom: 20, lineHeight: 1.6 }}>
+              Team of 25 users, 15 active projects
+            </div>
+            <div style={{ fontSize: 42, fontWeight: 900, color: C.red, letterSpacing: -1, marginBottom: 4 }}>
+              $1,850
+              <span style={{ fontSize: 16, fontWeight: 500, color: C.dim }}>/mo</span>
+            </div>
+            <div style={{ fontSize: 12, color: C.dim, marginBottom: 24 }}>Estimated — before add-ons and implementation</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                'Annual contract required',
+                '3–6 month implementation',
+                'Per-user pricing scales up',
+                'Add-ons billed separately',
+              ].map((item) => (
+                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <XIcon size={13} />
+                  <span style={{ fontSize: 13, color: C.dim }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* VS divider */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 8px',
+          }}>
+            <div style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: C.raised,
+              border: `2px solid ${C.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 13,
+              fontWeight: 800,
+              color: C.dim,
+            }}>
+              VS
+            </div>
+          </div>
+
+          {/* Saguaro card */}
+          <div style={{
+            background: 'rgba(245,158,11,0.05)',
+            border: `2px solid rgba(245,158,11,0.4)`,
+            borderRadius: 16,
+            padding: '32px 28px',
+            boxShadow: `0 0 40px rgba(245,158,11,0.08)`,
+          }}>
+            <div style={{ fontWeight: 700, fontSize: 13, color: C.gold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20 }}>
+              Saguaro Professional
+            </div>
+            <div style={{ fontSize: 11, color: C.dim, marginBottom: 20, lineHeight: 1.6 }}>
+              Team of 25 users, 15 active projects
+            </div>
+            <div style={{ fontSize: 42, fontWeight: 900, color: C.green, letterSpacing: -1, marginBottom: 4 }}>
+              $399
+              <span style={{ fontSize: 16, fontWeight: 500, color: C.dim }}>/mo</span>
+            </div>
+            <div style={{ fontSize: 12, color: C.dim, marginBottom: 24 }}>All features included. No add-ons.</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[
+                'Month-to-month, cancel anytime',
+                'Live in under 1 day',
+                'Flat rate — unlimited users',
+                'AI takeoff, Sage, docs included',
+              ].map((item) => (
+                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <CheckIcon size={13} />
+                  <span style={{ fontSize: 13, color: C.text }}>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Savings banner */}
+        <div style={{
+          maxWidth: 900,
+          margin: '24px auto 0',
+          background: 'rgba(34,197,94,0.08)',
+          border: `1px solid rgba(34,197,94,0.25)`,
+          borderRadius: 12,
+          padding: '20px 28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          flexWrap: 'wrap',
+        }}>
+          <div>
+            <div style={{ fontSize: 13, color: C.dim, marginBottom: 2 }}>Estimated annual savings vs Procore</div>
+            <div style={{ fontSize: 28, fontWeight: 900, color: C.green, letterSpacing: -0.5 }}>$17,412 / year</div>
+          </div>
+          <a href="/signup" style={{
+            padding: '12px 28px',
+            background: C.gold,
+            borderRadius: 9,
+            color: '#0d1117',
+            fontWeight: 800,
+            fontSize: 14,
+            textDecoration: 'none',
+            flexShrink: 0,
+          }}>
+            Start Saving Today →
+          </a>
         </div>
       </div>
 
-      {/* Final CTA */}
-      <div style={{textAlign:'center',padding:'60px 24px',background:RAISED,borderTop:`1px solid ${BORDER}`}}>
-        <h2 style={{fontSize:36,fontWeight:900,marginBottom:12}}>Ready to make the switch?</h2>
-        <p style={{color:DIM,fontSize:16,marginBottom:8}}>Start your free trial today. No credit card. No annual contract. No sales call required.</p>
-        <p style={{color:DIM,fontSize:13,marginBottom:32}}>We'll even help you migrate your data from Procore.</p>
-        <a href="/signup" style={{display:'inline-block',padding:'15px 40px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,borderRadius:10,color:'#0d1117',fontWeight:800,fontSize:16,textDecoration:'none'}}>Try Saguaro Free →</a>
-        <div style={{marginTop:20,fontSize:13,color:DIM}}>
-          Also compare: <a href="/compare/buildertrend" style={{color:GOLD,textDecoration:'none'}}>Saguaro vs Buildertrend</a>
+      {/* ── TESTIMONIALS ── */}
+      <div style={{
+        background: C.raised,
+        borderTop: `1px solid ${C.border}`,
+        borderBottom: `1px solid ${C.border}`,
+        padding: '80px 24px',
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 52 }}>
+            <h2 style={{ fontSize: 'clamp(26px, 4vw, 38px)', fontWeight: 900, margin: '0 0 12px', letterSpacing: -0.6 }}>
+              GCs Who Made the Switch
+            </h2>
+            <p style={{ color: C.dim, fontSize: 15, margin: 0 }}>Real results from real contractors.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+            {TESTIMONIALS.map((t) => (
+              <div key={t.author} style={{
+                background: C.dark,
+                border: `1px solid ${C.border}`,
+                borderRadius: 14,
+                padding: '28px 26px',
+              }}>
+                <StarRating />
+                <p style={{
+                  fontSize: 14,
+                  color: C.text,
+                  lineHeight: 1.75,
+                  margin: '0 0 24px',
+                  fontStyle: 'italic',
+                }}>
+                  "{t.quote}"
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${C.gold}, #fde68a)`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: '#0d1117',
+                    flexShrink: 0,
+                  }}>
+                    {t.initials}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{t.author}</div>
+                    <div style={{ fontSize: 11, color: C.dim }}>{t.location} &nbsp;·&nbsp; {t.size}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* ── FINAL CTA ── */}
+      <div style={{
+        padding: '96px 24px',
+        textAlign: 'center',
+        background: `radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.06) 0%, transparent 70%), ${C.dark}`,
+      }}>
+        <div style={{
+          display: 'inline-block',
+          padding: '6px 18px',
+          background: 'rgba(245,158,11,0.1)',
+          border: `1px solid rgba(245,158,11,0.3)`,
+          borderRadius: 100,
+          fontSize: 11,
+          fontWeight: 700,
+          color: C.gold,
+          letterSpacing: 1.2,
+          textTransform: 'uppercase',
+          marginBottom: 24,
+        }}>
+          Ready to switch?
+        </div>
+
+        <h2 style={{
+          fontSize: 'clamp(32px, 5vw, 52px)',
+          fontWeight: 900,
+          margin: '0 0 16px',
+          letterSpacing: -1,
+          lineHeight: 1.1,
+        }}>
+          Make the Switch Today.
+        </h2>
+
+        <p style={{ fontSize: 17, color: C.dim, marginBottom: 8, lineHeight: 1.6 }}>
+          Start your free trial. No credit card. No annual contract. No sales call required.
+        </p>
+        <p style={{ fontSize: 14, color: C.dim, marginBottom: 44 }}>
+          We'll help migrate your data from Procore — at no additional cost.
+        </p>
+
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 48 }}>
+          <a href="/signup" style={{
+            padding: '16px 44px',
+            background: C.gold,
+            borderRadius: 10,
+            color: '#0d1117',
+            fontWeight: 800,
+            fontSize: 17,
+            textDecoration: 'none',
+            boxShadow: `0 0 48px rgba(245,158,11,0.3)`,
+            letterSpacing: 0.2,
+          }}>
+            Start Free Trial →
+          </a>
+          <a href="/contact" style={{
+            padding: '16px 36px',
+            background: 'transparent',
+            border: `1px solid ${C.border}`,
+            borderRadius: 10,
+            color: C.text,
+            fontWeight: 700,
+            fontSize: 16,
+            textDecoration: 'none',
+          }}>
+            Talk to Sales
+          </a>
+        </div>
+
+        <div style={{ fontSize: 13, color: C.dim }}>
+          Also compare:&nbsp;
+          <a href="/compare/buildertrend" style={{ color: C.gold, textDecoration: 'none', fontWeight: 600 }}>
+            Saguaro vs Buildertrend
+          </a>
+        </div>
+      </div>
+
     </div>
   );
 }
