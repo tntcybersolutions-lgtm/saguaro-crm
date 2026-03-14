@@ -365,6 +365,43 @@ export default function HomePage() {
         .cta-secondary:hover { border-color: rgba(255,255,255,0.4) !important; color: #fff !important; transition: all .15s ease; }
       `}</style>
 
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How long does AI blueprint takeoff take?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Saguaro's AI completes a full material takeoff in 41 seconds on average for commercial projects. A manual takeoff typically takes 4–8 hours." }
+          },
+          {
+            "@type": "Question",
+            "name": "How does Saguaro compare to Procore?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Saguaro starts at $199/month flat rate for your whole team, vs Procore's $1,850+/month per-seat pricing. Saguaro also includes AI blueprint takeoff, lien waivers in all 50 states, and certified payroll WH-347 — features Procore doesn't offer or charges extra for." }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need the App Store to use the mobile field app?",
+            "acceptedAnswer": { "@type": "Answer", "text": "No. Saguaro Field is a PWA (Progressive Web App) that installs directly from your browser in 30 seconds. No App Store, no IT approval, no device management required." }
+          },
+          {
+            "@type": "Question",
+            "name": "What is Saguaro's pricing?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Saguaro offers Starter at $199/month, Professional at $399/month, and Enterprise at custom pricing. All plans include your whole team at a flat rate — no per-seat fees. Month-to-month, cancel anytime." }
+          },
+          {
+            "@type": "Question",
+            "name": "Does Saguaro generate WH-347 certified payroll?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Saguaro automatically generates DOL-compliant WH-347 certified payroll reports with live Davis-Bacon wage rates for prevailing wage projects. Procore does not include this feature." }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I switch from Procore to Saguaro?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Saguaro offers free data migration from Procore. Our team handles the export and import, and most customers go live within 1 business day — vs Procore's typical 4–6 month implementation." }
+          }
+        ]
+      })}} />
+
       <div style={{ paddingTop: announcementDismissed ? 64 : 100 }}>
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
