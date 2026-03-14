@@ -230,7 +230,7 @@ export default function HomePage() {
           .hero-cta-row { justify-content: center !important; }
           .hero-trust { justify-content: center !important; }
           .hero-right { flex: 0 0 100% !important; max-width: 100% !important; display: none !important; }
-          .hero-section { padding: 56px 24px 48px !important; }
+          .hero-section > div > div { padding: 40px 20px 44px !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .testimonials-grid { grid-template-columns: 1fr !important; }
@@ -260,42 +260,33 @@ export default function HomePage() {
           {/* Grid texture */}
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none', maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)' }} />
 
-          <div style={{ maxWidth: 1140, margin: '0 auto', padding: '88px 48px 80px', position: 'relative' }}>
+          <div style={{ maxWidth: 1140, margin: '0 auto', padding: '52px 48px 56px', position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 56 }} className="hero-flex">
 
               {/* ── Left column ── */}
               <div style={{ flex: '0 0 52%', maxWidth: '52%' }} className="hero-left">
 
-                {/* Logo */}
-                <div className="hero-animate" style={{ marginBottom: 20 }}>
-                  <img
-                    src="/logo-full.jpg"
-                    alt="Saguaro Control Systems"
-                    style={{ height: 100, width: 'auto', objectFit: 'contain', mixBlendMode: 'screen' as const, filter: 'drop-shadow(0 4px 24px rgba(245,158,11,0.4))' }}
-                  />
-                </div>
-
                 {/* Badge */}
-                <div className="hero-animate" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: 24, padding: '5px 14px 5px 8px', marginBottom: 24 }}>
+                <div className="hero-animate" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: 24, padding: '5px 14px 5px 8px', marginBottom: 16 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,160,23,0.2)', fontSize: 10 }}>✦</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.1em', textTransform: 'uppercase' }}>AI-Powered Construction CRM</span>
                 </div>
 
                 {/* Headline */}
-                <h1 className="hero-animate" style={{ fontSize: 'clamp(36px, 4.2vw, 58px)', fontWeight: 900, margin: '0 0 20px', lineHeight: 1.06, letterSpacing: '-0.03em', textAlign: 'left' }}>
+                <h1 className="hero-animate" style={{ fontSize: 'clamp(36px, 4.2vw, 58px)', fontWeight: 900, margin: '0 0 14px', lineHeight: 1.06, letterSpacing: '-0.03em', textAlign: 'left' }}>
                   The CRM Built<br />
                   <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>for General Contractors</span>
                 </h1>
 
                 {/* Subheadline */}
-                <p className="hero-animate-delay" style={{ fontSize: 16, color: 'rgba(255,255,255,0.82)', maxWidth: 460, margin: '0 0 20px', lineHeight: 1.65, textAlign: 'left' }}>
+                <p className="hero-animate-delay" style={{ fontSize: 16, color: 'rgba(255,255,255,0.82)', maxWidth: 460, margin: '0 0 16px', lineHeight: 1.6, textAlign: 'left' }}>
                   AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll &amp; Bid Intelligence — plus a <strong style={{ color: TEXT }}>full mobile field app</strong> your crew uses on any phone, offline, no App Store required.
                 </p>
 
                 {/* Field app mini-callout */}
-                <div className="hero-animate-delay" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 28, maxWidth: 420 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, flexShrink: 0 }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
+                <div className="hero-animate-delay" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: '9px 14px', marginBottom: 20, maxWidth: 420 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GREEN, flexShrink: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
                   </div>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Saguaro Field — Mobile App Included Free</div>
@@ -304,7 +295,7 @@ export default function HomePage() {
                 </div>
 
                 {/* CTA row */}
-                <div className="hero-cta-row hero-animate-delay" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
+                <div className="hero-cta-row hero-animate-delay" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 16 }}>
                   <a href="/signup" className="cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, border: 'none', borderRadius: 8, color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 8px 40px rgba(245,158,11,0.55), 0 2px 8px rgba(0,0,0,0.4)` }}>
                     Start Free Trial
                     <span style={{ fontSize: 16 }}>→</span>
