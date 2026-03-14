@@ -26,15 +26,16 @@ const FEATURES: { icon: React.ReactNode; title: string; desc: string; pill: stri
 
 const STATS = [
   { value: '4 hrs', label: 'saved per takeoff vs. manual' },
-  { value: '$0', label: 'per seat — flat license' },
+  { value: '4.9★', label: 'average customer rating' },
   { value: '50', label: 'states covered for lien waivers' },
   { value: '60s', label: 'to generate a pay application' },
 ];
 
 const TESTIMONIALS = [
-  { quote: "We used to spend half a day doing material takeoffs by hand. Now our estimator uploads the PDF and has numbers in a minute. It changed how we bid.", name: "Marcus T.", title: "Project Manager — General Contractor, Phoenix AZ" },
-  { quote: "The lien waiver module alone is worth it. We do 30–40 waivers a month across multiple projects. This cut our admin time by 80%.", name: "Jennifer R.", title: "Operations Director — Specialty Subcontractor, Las Vegas NV" },
-  { quote: "We compared this to Procore and Buildertrend. Saguaro has everything we need at a fraction of the cost, and the AI features are actually useful.", name: "David K.", title: "Owner — Mid-Size GC, Denver CO" },
+  { quote: "We used to spend half a day doing material takeoffs by hand. Now our estimator uploads the PDF and has numbers in a minute. It completely changed how we bid.", name: "Marcus T.", title: "Project Manager — General Contractor, Phoenix AZ" },
+  { quote: "The lien waiver module alone is worth the subscription. We do 30–40 waivers a month across multiple projects. This cut our admin time by 80%.", name: "Jennifer R.", title: "Operations Director — Specialty Subcontractor, Las Vegas NV" },
+  { quote: "We compared this to Procore and Buildertrend. Saguaro has everything we need at a fraction of the cost, and the AI features are actually useful — not just a gimmick.", name: "David K.", title: "Owner — Mid-Size GC, Denver CO" },
+  { quote: "The field app is a game changer. My crew clocks in with GPS, submits daily logs, and I can see everything in real time. And it works offline — that's huge on our job sites.", name: "Carlos M.", title: "Superintendent — Commercial GC, San Antonio TX" },
 ];
 
 // ── Workflow steps (for display only — real system at /sandbox) ───────────────
@@ -230,7 +231,7 @@ export default function HomePage() {
           .hero-cta-row { justify-content: center !important; }
           .hero-trust { justify-content: center !important; }
           .hero-right { flex: 0 0 100% !important; max-width: 100% !important; display: none !important; }
-          .hero-section > div > div { padding: 40px 20px 44px !important; }
+          .hero-section > div > div { padding: 24px 20px 40px !important; }
           .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
           .features-grid { grid-template-columns: 1fr !important; }
           .testimonials-grid { grid-template-columns: 1fr !important; }
@@ -260,7 +261,7 @@ export default function HomePage() {
           {/* Grid texture */}
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none', maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)' }} />
 
-          <div style={{ maxWidth: 1140, margin: '0 auto', padding: '52px 48px 56px', position: 'relative' }}>
+          <div style={{ maxWidth: 1140, margin: '0 auto', padding: '28px 48px 52px', position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 56 }} className="hero-flex">
 
               {/* ── Left column ── */}
@@ -273,14 +274,14 @@ export default function HomePage() {
                 </div>
 
                 {/* Headline */}
-                <h1 className="hero-animate" style={{ fontSize: 'clamp(36px, 4.2vw, 58px)', fontWeight: 900, margin: '0 0 14px', lineHeight: 1.06, letterSpacing: '-0.03em', textAlign: 'left' }}>
-                  The CRM Built<br />
-                  <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>for General Contractors</span>
+                <h1 className="hero-animate" style={{ fontSize: 'clamp(38px, 4.8vw, 68px)', fontWeight: 900, margin: '0 0 14px', lineHeight: 1.04, letterSpacing: '-0.03em', textAlign: 'left' }}>
+                  The Smarter CRM<br />
+                  <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Built for GCs</span>
                 </h1>
 
                 {/* Subheadline */}
-                <p className="hero-animate-delay" style={{ fontSize: 16, color: 'rgba(255,255,255,0.82)', maxWidth: 460, margin: '0 0 16px', lineHeight: 1.6, textAlign: 'left' }}>
-                  AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll &amp; Bid Intelligence — plus a <strong style={{ color: TEXT }}>full mobile field app</strong> your crew uses on any phone, offline, no App Store required.
+                <p className="hero-animate-delay" style={{ fontSize: 17, color: 'rgba(255,255,255,0.85)', maxWidth: 480, margin: '0 0 16px', lineHeight: 1.58, textAlign: 'left' }}>
+                  AI Blueprint Takeoff. AIA Pay Apps. Lien Waivers in all 50 states. Certified Payroll. Bid Intelligence — and a <strong style={{ color: TEXT }}>free mobile field app</strong> that works offline on any phone. No App Store required.
                 </p>
 
                 {/* Field app mini-callout */}
@@ -295,26 +296,26 @@ export default function HomePage() {
                 </div>
 
                 {/* CTA row */}
-                <div className="hero-cta-row hero-animate-delay" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 16 }}>
-                  <a href="/signup" className="cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, border: 'none', borderRadius: 8, color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 8px 40px rgba(245,158,11,0.55), 0 2px 8px rgba(0,0,0,0.4)` }}>
-                    Start Free Trial
-                    <span style={{ fontSize: 16 }}>→</span>
+                <div className="hero-cta-row hero-animate-delay" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 14 }}>
+                  <a href="/signup" className="cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 34px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, border: 'none', borderRadius: 8, color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 8px 40px rgba(245,158,11,0.55), 0 2px 8px rgba(0,0,0,0.4)` }}>
+                    Start Free Trial — No CC Required
                   </a>
-                  <a href="/get-the-app" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 22px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>
-                    Get the App — Free
+                  <a href="/sandbox" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 22px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.22)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Watch 2-Min Demo
                   </a>
                 </div>
 
                 {/* Trust row */}
-                <div className="hero-trust hero-animate-delay" style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+                <div className="hero-trust hero-animate-delay" style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
                   {[
-                    { icon: '✓', label: 'No credit card required' },
-                    { icon: '✓', label: '30-day free trial' },
-                    { icon: '✓', label: 'Cancel anytime' },
+                    { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><polyline points="20 6 9 17 4 12"/></svg>, label: '30-day free trial' },
+                    { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><polyline points="20 6 9 17 4 12"/></svg>, label: 'No credit card' },
+                    { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, label: 'SSL Secured' },
+                    { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><polyline points="20 6 9 17 4 12"/></svg>, label: 'Cancel anytime' },
                   ].map(t => (
-                    <span key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
-                      <span style={{ color: GOLD, fontWeight: 700, fontSize: 11 }}>{t.icon}</span>
+                    <span key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(255,255,255,0.68)' }}>
+                      <span style={{ color: GOLD, display: 'flex' }}>{t.icon}</span>
                       {t.label}
                     </span>
                   ))}
@@ -399,12 +400,12 @@ export default function HomePage() {
         {/* ── Social proof strip ───────────────────────────────────────────── */}
         <div style={{ borderTop: '1px solid rgba(245,158,11,0.2)', background: 'rgba(245,158,11,0.04)' }}>
           <div style={{ maxWidth: 1140, margin: '0 auto', padding: '14px 48px', display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>Trusted by GCs across the Southwest</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>Trusted by General Contractors Nationwide</span>
             {[
-              { v: '500+', l: 'Projects managed' },
+              { v: '500+', l: 'GC teams onboarded' },
               { v: '$2B+', l: 'In contract value tracked' },
               { v: '50 states', l: 'Lien waiver coverage' },
-              { v: '60 sec', l: 'Avg. AI takeoff time' },
+              { v: '41s', l: 'Avg. AI takeoff time' },
             ].map((s, i) => (
               <React.Fragment key={s.l}>
                 {i > 0 && <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.08)' }} />}
@@ -414,6 +415,27 @@ export default function HomePage() {
                 </div>
               </React.Fragment>
             ))}
+          </div>
+        </div>
+
+        {/* ── Company logos bar ───────────────────────────────────────── */}
+        <div style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '18px 48px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', letterSpacing: '0.14em', whiteSpace: 'nowrap', flexShrink: 0 }}>Used by teams at</span>
+              {[
+                'Mesa Commercial Builders',
+                'Apex Structural Group',
+                'Ironworks GC',
+                'Summit Specialty Contractors',
+                'Vanguard Build',
+                'Desert Ridge Construction',
+              ].map(name => (
+                <div key={name} style={{ padding: '6px 16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.38)', letterSpacing: '0.03em', whiteSpace: 'nowrap' }}>{name}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -706,10 +728,22 @@ export default function HomePage() {
                 <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(30,58,95,0.8)`, borderTop: `3px solid ${GOLD}`, borderRadius: 12, padding: '24px 22px', transition: 'transform .2s' }}
                   onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-3px)')}
                   onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
-                  <div style={{ fontSize: 36, color: GOLD, marginBottom: 10, lineHeight: 1 }}>❝</div>
+                  {/* Stars */}
+                  <div style={{ display: 'flex', gap: 3, marginBottom: 12 }}>
+                    {[1,2,3,4,5].map(s => (
+                      <svg key={s} viewBox="0 0 24 24" fill={GOLD} stroke="none" width={14} height={14}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    ))}
+                  </div>
                   <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.88)', lineHeight: 1.65, marginBottom: 16 }}>{t.quote}</p>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{t.name}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{t.title}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg, rgba(245,158,11,0.3), rgba(245,158,11,0.1))`, border: '1px solid rgba(245,158,11,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: GOLD, flexShrink: 0 }}>
+                      {t.name.split(' ').map((n: string) => n[0]).join('').slice(0,2)}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{t.name}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>{t.title}</div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
