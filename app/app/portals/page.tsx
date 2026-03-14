@@ -61,13 +61,16 @@ export default function PortalsPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const [resending, setResending] = useState<string | null>(null);
+  const [resendMsg, setResendMsg] = useState<{ id: string; msg: string; ok: boolean } | null>(null);
+  const emailConfigured = true; // always show resend — API handles missing key gracefully
 
   // Invite modal state
   const [showInvite, setShowInvite] = useState(false);
   const [inviteTab, setInviteTab] = useState<Tab>('client');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
-  const [inviteSuccess, setInviteSuccess] = useState<{ url: string; name: string } | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState<{ url: string; name: string; emailSent?: boolean } | null>(null);
 
   // Client invite form
   const [clientForm, setClientForm] = useState({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
@@ -110,6 +113,29 @@ export default function PortalsPage() {
     setRevoking(null);
   }
 
+  async function resendInvite(sessionId: string, type: Tab) {
+    setResending(sessionId);
+    setResendMsg(null);
+    try {
+      const res = await fetch('/api/portal/resend-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, type }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResendMsg({ id: sessionId, msg: `Invite resent to ${data.sentTo}`, ok: true });
+      } else {
+        setResendMsg({ id: sessionId, msg: data.error || 'Failed to resend', ok: false });
+      }
+      setTimeout(() => setResendMsg(null), 4000);
+    } catch {
+      setResendMsg({ id: sessionId, msg: 'Connection error', ok: false });
+      setTimeout(() => setResendMsg(null), 3000);
+    }
+    setResending(null);
+  }
+
   async function submitInvite(e: React.FormEvent) {
     e.preventDefault();
     setInviteLoading(true);
@@ -131,7 +157,7 @@ export default function PortalsPage() {
       if (!res.ok) {
         setInviteError(data.error || 'Failed to create portal access');
       } else {
-        setInviteSuccess({ url: data.portalUrl, name: isClient ? clientForm.clientName : subForm.companyName });
+        setInviteSuccess({ url: data.portalUrl, name: isClient ? clientForm.clientName : subForm.companyName, emailSent: data.emailSent });
         if (isClient) setClientForm({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
         else setSubForm({ projectId: '', companyName: '', contactName: '', email: '' });
         await loadData();
@@ -209,9 +235,23 @@ export default function PortalsPage() {
         {loading ? (
           <div style={{ padding: 40, textAlign: 'center', color: DIM, fontSize: 14 }}>Loading sessions…</div>
         ) : tab === 'client' ? (
-          <ClientTable sessions={clientSessions} copied={copied} revoking={revoking} onCopy={copyLink} onRevoke={revoke} onInvite={() => openInvite('client')} />
+          <>
+            {resendMsg && (
+              <div style={{ margin: '0 16px', padding: '10px 14px', background: resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${resendMsg.ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, borderRadius: 8, fontSize: 13, color: resendMsg.ok ? GREEN : RED, marginTop: 12 }}>
+                {resendMsg.ok ? '✓ ' : '✗ '}{resendMsg.msg}
+              </div>
+            )}
+            <ClientTable sessions={clientSessions} copied={copied} revoking={revoking} resending={resending} resendMsg={resendMsg} onCopy={copyLink} onRevoke={revoke} onResend={resendInvite} onInvite={() => openInvite('client')} emailConfigured={emailConfigured} />
+          </>
         ) : (
-          <SubTable sessions={subSessions} copied={copied} revoking={revoking} onCopy={copyLink} onRevoke={revoke} onInvite={() => openInvite('sub')} />
+          <>
+            {resendMsg && (
+              <div style={{ margin: '0 16px', padding: '10px 14px', background: resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${resendMsg.ok ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`, borderRadius: 8, fontSize: 13, color: resendMsg.ok ? GREEN : RED, marginTop: 12 }}>
+                {resendMsg.ok ? '✓ ' : '✗ '}{resendMsg.msg}
+              </div>
+            )}
+            <SubTable sessions={subSessions} copied={copied} revoking={revoking} resending={resending} resendMsg={resendMsg} onCopy={copyLink} onRevoke={revoke} onResend={resendInvite} onInvite={() => openInvite('sub')} emailConfigured={emailConfigured} />
+          </>
         )}
       </div>
 
@@ -246,7 +286,7 @@ export default function PortalsPage() {
 
             <div style={{ padding: 20 }}>
               {inviteSuccess ? (
-                <SuccessCard url={inviteSuccess.url} name={inviteSuccess.name} type={inviteTab}
+                <SuccessCard url={inviteSuccess.url} name={inviteSuccess.name} type={inviteTab} emailSent={inviteSuccess.emailSent}
                   onAnother={() => setInviteSuccess(null)}
                   onClose={() => { setShowInvite(false); setInviteSuccess(null); }} />
               ) : (
@@ -342,7 +382,7 @@ const selectStyle: React.CSSProperties = {
   outline: 'none', boxSizing: 'border-box', cursor: 'pointer',
 };
 
-function SuccessCard({ url, name, type, onAnother, onClose }: { url: string; name: string; type: Tab; onAnother: () => void; onClose: () => void; }) {
+function SuccessCard({ url, name, type, emailSent, onAnother, onClose }: { url: string; name: string; type: Tab; emailSent?: boolean; onAnother: () => void; onClose: () => void; }) {
   const [linkCopied, setLinkCopied] = useState(false);
 
   function copyUrl() {
@@ -358,9 +398,22 @@ function SuccessCard({ url, name, type, onAnother, onClose }: { url: string; nam
         <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Portal Access Created!</div>
-      <div style={{ fontSize: 13, color: DIM, marginBottom: 20 }}>
+      <div style={{ fontSize: 13, color: DIM, marginBottom: 12 }}>
         {name} can now access their {type === 'client' ? 'client' : 'subcontractor'} portal.
       </div>
+
+      {/* Email status banner */}
+      {emailSent ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ flexShrink: 0 }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Invitation email sent automatically</span>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke={AMBER} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ flexShrink: 0 }}><circle cx={12} cy={12} r={10}/><line x1={12} y1={8} x2={12} y2={12}/><line x1={12} y1={16} x2={12.01} y2={16}/></svg>
+          <span style={{ fontSize: 12, color: AMBER, fontWeight: 600 }}>Email not sent — add RESEND_API_KEY to Vercel env vars to enable auto-emails</span>
+        </div>
+      )}
 
       {/* Link box */}
       <div style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', marginBottom: 12, textAlign: 'left' }}>
@@ -393,8 +446,8 @@ function SuccessCard({ url, name, type, onAnother, onClose }: { url: string; nam
   );
 }
 
-function ClientTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
-  { sessions: ClientSession[]; copied: string | null; revoking: string | null; onCopy: (t: string, type: Tab) => void; onRevoke: (id: string, type: Tab) => void; onInvite: () => void; }) {
+function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy, onRevoke, onResend, onInvite, emailConfigured }:
+  { sessions: ClientSession[]; copied: string | null; revoking: string | null; resending: string | null; resendMsg: { id: string; ok: boolean } | null; onCopy: (t: string, type: Tab) => void; onRevoke: (id: string, type: Tab) => void; onResend: (id: string, type: Tab) => void; onInvite: () => void; emailConfigured: boolean; }) {
   if (sessions.length === 0) {
     return (
       <div style={{ padding: 48, textAlign: 'center' }}>
@@ -413,7 +466,7 @@ function ClientTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: 'rgba(0,0,0,0.2)' }}>
-            {['Client', 'Project', 'Status', 'Last Access', 'Expires', 'Actions'].map(h => (
+            {['Client', 'Project', 'Status', 'Last Access', 'Expires', 'Invite', 'Actions'].map(h => (
               <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
@@ -429,11 +482,21 @@ function ClientTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
               <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
               <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{fmt(s.last_accessed_at)}</td>
               <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{fmt(s.expires_at)}</td>
+              {/* Resend invite column */}
+              <td style={{ padding: '12px 16px' }}>
+                {s.status === 'active' && (
+                  <button onClick={() => onResend(s.id, 'client')} disabled={resending === s.id}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.25)' : BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: resendMsg?.id === s.id && resendMsg.ok ? GREEN : DIM, cursor: 'pointer', opacity: resending === s.id ? 0.5 : 1 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    {resending === s.id ? 'Sending…' : resendMsg?.id === s.id && resendMsg.ok ? '✓ Sent' : 'Resend Invite'}
+                  </button>
+                )}
+              </td>
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button onClick={() => onCopy(s.token, 'client')}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'rgba(212,160,23,0.1)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'rgba(212,160,23,0.25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : GOLD, cursor: 'pointer' }}>
-                    {copied === s.token ? '✓ Copied' : '⎘ Copy'}
+                    {copied === s.token ? '✓ Copied' : '⎘ Copy Link'}
                   </button>
                   <a href={`/portals/client/${s.token}`} target="_blank" rel="noreferrer"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: DIM, textDecoration: 'none' }}>
@@ -455,8 +518,8 @@ function ClientTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
   );
 }
 
-function SubTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
-  { sessions: SubSession[]; copied: string | null; revoking: string | null; onCopy: (t: string, type: Tab) => void; onRevoke: (id: string, type: Tab) => void; onInvite: () => void; }) {
+function SubTable({ sessions, copied, revoking, resending, resendMsg, onCopy, onRevoke, onResend, onInvite, emailConfigured }:
+  { sessions: SubSession[]; copied: string | null; revoking: string | null; resending: string | null; resendMsg: { id: string; ok: boolean } | null; onCopy: (t: string, type: Tab) => void; onRevoke: (id: string, type: Tab) => void; onResend: (id: string, type: Tab) => void; onInvite: () => void; emailConfigured: boolean; }) {
   if (sessions.length === 0) {
     return (
       <div style={{ padding: 48, textAlign: 'center' }}>
@@ -475,7 +538,7 @@ function SubTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ background: 'rgba(0,0,0,0.2)' }}>
-            {['Company', 'Project', 'Status', 'Last Login', 'Actions'].map(h => (
+            {['Company', 'Project', 'Status', 'Last Login', 'Invite', 'Actions'].map(h => (
               <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
@@ -490,11 +553,21 @@ function SubTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
               <td style={{ padding: '12px 16px', color: DIM, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project_name || '—'}</td>
               <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
               <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{fmt(s.last_login_at)}</td>
+              {/* Resend invite column */}
+              <td style={{ padding: '12px 16px' }}>
+                {s.status === 'active' && (
+                  <button onClick={() => onResend(s.id, 'sub')} disabled={resending === s.id}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${resendMsg?.id === s.id && resendMsg.ok ? 'rgba(34,197,94,0.25)' : BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: resendMsg?.id === s.id && resendMsg.ok ? GREEN : DIM, cursor: 'pointer', opacity: resending === s.id ? 0.5 : 1 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    {resending === s.id ? 'Sending…' : resendMsg?.id === s.id && resendMsg.ok ? '✓ Sent' : 'Resend Invite'}
+                  </button>
+                )}
+              </td>
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button onClick={() => onCopy(s.token, 'sub')}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'rgba(59,130,246,0.25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : BLUE, cursor: 'pointer' }}>
-                    {copied === s.token ? '✓ Copied' : '⎘ Copy'}
+                    {copied === s.token ? '✓ Copied' : '⎘ Copy Link'}
                   </button>
                   <a href={`/portals/subcontractor/${s.token}`} target="_blank" rel="noreferrer"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: DIM, textDecoration: 'none' }}>

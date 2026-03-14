@@ -264,6 +264,121 @@ export async function sendInviteTeamMember(to: string, inviterName: string, comp
   `));
 }
 
+// ─── Portal Invite Emails ─────────────────────────────────────────────────────
+
+/**
+ * Sent to a client when a GC grants them portal access.
+ * Replaces the "copy link manually" workflow — fires automatically on invite.
+ */
+export async function sendClientPortalInvite(opts: {
+  to: string;
+  clientName: string;
+  gcCompanyName: string;
+  projectName: string;
+  portalUrl: string;
+  expiresAt?: string | null;
+  isResend?: boolean;
+}): Promise<void> {
+  const { to, clientName, gcCompanyName, projectName, portalUrl, expiresAt, isResend } = opts;
+  const subjectPrefix = isResend ? 'Reminder: ' : '';
+  const expiryLine = expiresAt
+    ? `<tr><td style="padding:8px 0;font-size:13px;color:#6b7280;width:180px;">Access Valid Until</td><td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;">${new Date(expiresAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td></tr>`
+    : '';
+
+  await send(to, `${subjectPrefix}Your Project Portal is Ready — ${projectName}`, layout(`
+    <div style="background:#0D1116;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+      <p style="margin:0;font-size:12px;color:#D4A017;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Client Portal Access</p>
+      <h1 style="margin:6px 0 0;font-size:24px;font-weight:800;color:#ffffff;line-height:1.2;">${projectName}</h1>
+      <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.55);">Managed by ${gcCompanyName}</p>
+    </div>
+
+    ${p(`Hi <strong>${clientName}</strong>,`)}
+    ${p(`<strong>${gcCompanyName}</strong> has granted you access to your dedicated project portal for <strong>${projectName}</strong>. Your portal is ready — no password or account required.`)}
+
+    <p style="margin:0 0 8px;font-size:14px;color:#374151;font-weight:600;">What you can do in your portal:</p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 20px;">
+      ${[
+        ['✓', 'View live project status, schedule, and milestones'],
+        ['✓', 'Approve change orders and pay applications digitally'],
+        ['✓', 'See budget tracking and financial summaries in real time'],
+        ['✓', 'Send and receive messages directly with your GC team'],
+        ['✓', 'Download project documents and photos'],
+        ['✓', 'Submit and track warranty claims after completion'],
+      ].map(([icon, text]) => `<tr><td style="padding:5px 0;width:20px;font-size:14px;color:#22c55e;vertical-align:top;">${icon}</td><td style="padding:5px 0;font-size:14px;color:#374151;">${text}</td></tr>`).join('')}
+    </table>
+
+    <div style="margin:0 0 20px;">${table(
+      row('Project', projectName) +
+      row('General Contractor', gcCompanyName) +
+      expiryLine
+    )}</div>
+
+    <a href="${portalUrl}" style="display:block;text-align:center;padding:16px 30px;background:#D4A017;color:#0D1116;font-weight:800;font-size:16px;text-decoration:none;border-radius:8px;letter-spacing:0.02em;">
+      Access Your Project Portal →
+    </a>
+
+    <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;">
+      This link is unique to you. Bookmark it for easy access.<br>
+      You can also log in any time at <a href="${APP_URL}/portals/client/login" style="color:#9ca3af;">${APP_URL.replace('https://', '')}/portals/client/login</a> using this email address.
+    </p>
+  `));
+}
+
+/**
+ * Sent to a subcontractor when a GC grants them portal access.
+ */
+export async function sendSubPortalInvite(opts: {
+  to: string;
+  contactName: string;
+  companyName: string;
+  gcCompanyName: string;
+  projectName: string;
+  portalUrl: string;
+  isResend?: boolean;
+}): Promise<void> {
+  const { to, contactName, companyName, gcCompanyName, projectName, portalUrl, isResend } = opts;
+  const subjectPrefix = isResend ? 'Reminder: ' : '';
+  const displayName = contactName || companyName;
+
+  await send(to, `${subjectPrefix}Subcontractor Portal Access — ${projectName}`, layout(`
+    <div style="background:#0D1116;border-radius:8px;padding:20px 24px;margin-bottom:24px;">
+      <p style="margin:0;font-size:12px;color:#3B82F6;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Subcontractor Portal Access</p>
+      <h1 style="margin:6px 0 0;font-size:24px;font-weight:800;color:#ffffff;line-height:1.2;">${projectName}</h1>
+      <p style="margin:6px 0 0;font-size:13px;color:rgba(255,255,255,0.55);">Managed by ${gcCompanyName}</p>
+    </div>
+
+    ${p(`Hi <strong>${displayName}</strong>,`)}
+    ${p(`<strong>${gcCompanyName}</strong> has granted <strong>${companyName}</strong> access to the subcontractor portal for <strong>${projectName}</strong>. Manage everything from bids to pay apps — all in one place.`)}
+
+    <p style="margin:0 0 8px;font-size:14px;color:#374151;font-weight:600;">Your portal includes:</p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 20px;">
+      ${[
+        ['✓', 'View and respond to bid invitations with scope documents'],
+        ['✓', 'Submit daily logs, crew counts, and site photos'],
+        ['✓', 'Track your schedule and flag conflicts'],
+        ['✓', 'Submit and track pay applications with line-item detail'],
+        ['✓', 'Upload compliance documents — COI, bonds, licenses'],
+        ['✓', 'View your performance scorecard and RFI tracking'],
+      ].map(([icon, text]) => `<tr><td style="padding:5px 0;width:20px;font-size:14px;color:#3B82F6;vertical-align:top;">${icon}</td><td style="padding:5px 0;font-size:14px;color:#374151;">${text}</td></tr>`).join('')}
+    </table>
+
+    <div style="margin:0 0 20px;">${table(
+      row('Project', projectName) +
+      row('General Contractor', gcCompanyName) +
+      row('Your Company', companyName)
+    )}</div>
+
+    <a href="${portalUrl}" style="display:block;text-align:center;padding:16px 30px;background:#3B82F6;color:#ffffff;font-weight:800;font-size:16px;text-decoration:none;border-radius:8px;letter-spacing:0.02em;">
+      Access Your Sub Portal →
+    </a>
+
+    <p style="margin:20px 0 0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.6;">
+      This link is unique to your company. Do not forward.<br>
+      You can also log in at <a href="${APP_URL}/portals/sub/login" style="color:#9ca3af;">${APP_URL.replace('https://', '')}/portals/sub/login</a> using this email address.
+    </p>
+  `));
+}
+
 // Re-export the existing specialized functions from send.ts
 export {
   sendEmail,

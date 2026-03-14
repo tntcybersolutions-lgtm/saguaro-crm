@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { sendClientPortalInvite } from '@/lib/email';
 import { randomUUID } from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -74,12 +75,34 @@ export async function POST(req: NextRequest) {
 
     if (insertError) throw insertError;
 
-    const portalUrl = `${req.nextUrl.origin}/portals/client/${token}`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin;
+    const portalUrl = `${appUrl}/portals/client/${token}`;
+
+    // Get GC company name for the email
+    const { data: profile } = await db
+      .from('user_profiles')
+      .select('full_name, company_name')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    const gcCompanyName = (profile as { company_name?: string; full_name?: string } | null)?.company_name
+      || (profile as { company_name?: string; full_name?: string } | null)?.full_name
+      || 'Your General Contractor';
+
+    // Fire invite email — non-blocking, never fails the request
+    sendClientPortalInvite({
+      to: clientEmail.toLowerCase().trim(),
+      clientName: clientName.trim(),
+      gcCompanyName,
+      projectName: project.name,
+      portalUrl,
+      expiresAt: expiresAt,
+    }).catch(err => console.warn('[portal/client/create] email send failed (non-fatal):', err));
 
     return NextResponse.json({
       session,
       portalUrl,
       projectName: project.name,
+      emailSent: !!process.env.RESEND_API_KEY,
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Failed to create portal access';
