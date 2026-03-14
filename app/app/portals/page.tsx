@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 
 const GOLD = '#D4A017';
 const DARK = '#0d1117';
@@ -8,259 +8,510 @@ const BORDER = '#263347';
 const DIM = '#8fa3c0';
 const TEXT = '#e8edf8';
 const GREEN = '#22c55e';
+const RED = '#ef4444';
 const BLUE = '#3B82F6';
+const AMBER = '#F59E0B';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Project { id: string; name: string; status: string; }
 
 interface ClientSession {
-  id: string;
-  client_name: string;
-  client_email: string;
-  project_id: string;
-  token: string;
-  status: string;
-  expires_at: string | null;
-  last_accessed_at: string | null;
-  created_at: string;
-  project_name?: string;
+  id: string; client_name: string; client_email: string; project_id: string;
+  token: string; status: string; expires_at: string | null;
+  last_accessed_at: string | null; created_at: string; project_name?: string;
 }
 
 interface SubSession {
-  id: string;
-  sub_id: string;
-  project_id: string;
-  token: string;
-  status: string;
-  last_login_at: string | null;
-  created_at: string;
-  company_name?: string;
-  contact_name?: string;
-  project_name?: string;
+  id: string; sub_id: string; project_id: string; token: string; status: string;
+  last_login_at: string | null; created_at: string;
+  company_name?: string; contact_name?: string; project_name?: string;
 }
 
+type Tab = 'client' | 'sub';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function fmt(d: string | null) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { bg: string; color: string }> = {
+    active:   { bg: 'rgba(34,197,94,0.12)',  color: GREEN },
+    inactive: { bg: 'rgba(239,68,68,0.12)',  color: RED },
+    expired:  { bg: 'rgba(245,158,11,0.12)', color: AMBER },
+  };
+  const c = map[status] || map.inactive;
+  return (
+    <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: c.bg, color: c.color, textTransform: 'capitalize' }}>
+      {status}
+    </span>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function PortalsPage() {
+  const [tab, setTab] = useState<Tab>('client');
   const [clientSessions, setClientSessions] = useState<ClientSession[]>([]);
   const [subSessions, setSubSessions] = useState<SubSession[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'client' | 'sub'>('client');
   const [copied, setCopied] = useState<string | null>(null);
+  const [revoking, setRevoking] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSessions();
-  }, []);
+  // Invite modal state
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteTab, setInviteTab] = useState<Tab>('client');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState('');
+  const [inviteSuccess, setInviteSuccess] = useState<{ url: string; name: string } | null>(null);
 
-  async function loadSessions() {
+  // Client invite form
+  const [clientForm, setClientForm] = useState({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
+
+  // Sub invite form
+  const [subForm, setSubForm] = useState({ projectId: '', companyName: '', contactName: '', email: '' });
+
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [clientRes, subRes] = await Promise.all([
+      const [projRes, clientRes, subRes] = await Promise.all([
+        fetch('/api/projects/list'),
         fetch('/api/portal/client/sessions'),
         fetch('/api/portal/sub/sessions'),
       ]);
-      if (clientRes.ok) {
-        const data = await clientRes.json();
-        setClientSessions(data.sessions || []);
-      }
-      if (subRes.ok) {
-        const data = await subRes.json();
-        setSubSessions(data.sessions || []);
-      }
+      if (projRes.ok) { const d = await projRes.json(); setProjects(d.projects || []); }
+      if (clientRes.ok) { const d = await clientRes.json(); setClientSessions(d.sessions || []); }
+      if (subRes.ok) { const d = await subRes.json(); setSubSessions(d.sessions || []); }
     } catch { /* non-fatal */ }
     setLoading(false);
-  }
+  }, []);
 
-  function copyLink(token: string, type: 'client' | 'sub') {
-    const path = type === 'client'
-      ? `/portals/client/${token}`
-      : `/portals/subcontractor/${token}`;
-    const url = `${window.location.origin}${path}`;
-    navigator.clipboard.writeText(url).then(() => {
+  useEffect(() => { loadData(); }, [loadData]);
+
+  function copyLink(token: string, type: Tab) {
+    const path = type === 'client' ? `/portals/client/${token}` : `/portals/subcontractor/${token}`;
+    navigator.clipboard.writeText(`${window.location.origin}${path}`).then(() => {
       setCopied(token);
-      setTimeout(() => setCopied(null), 2000);
+      setTimeout(() => setCopied(null), 2200);
     });
   }
 
-  function formatDate(d: string | null) {
-    if (!d) return '—';
-    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  async function revoke(sessionId: string, type: Tab) {
+    if (!confirm('Revoke this portal access? The link will stop working immediately.')) return;
+    setRevoking(sessionId);
+    try {
+      await fetch('/api/portal/revoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, type }) });
+      await loadData();
+    } catch { /* non-fatal */ }
+    setRevoking(null);
   }
 
-  const statusBadge = (status: string) => {
-    const colors: Record<string, { bg: string; color: string }> = {
-      active:   { bg: 'rgba(34,197,94,0.12)',  color: GREEN },
-      inactive: { bg: 'rgba(239,68,68,0.12)',  color: '#ef4444' },
-      expired:  { bg: 'rgba(245,158,11,0.12)', color: '#F59E0B' },
-    };
-    const c = colors[status] || colors.inactive;
-    return (
-      <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, background: c.bg, color: c.color, textTransform: 'capitalize' }}>
-        {status}
-      </span>
-    );
+  async function submitInvite(e: React.FormEvent) {
+    e.preventDefault();
+    setInviteLoading(true);
+    setInviteError('');
+    setInviteSuccess(null);
+
+    try {
+      const isClient = inviteTab === 'client';
+      const url = isClient ? '/api/portal/client/create' : '/api/portal/sub/create';
+      const body = isClient ? clientForm : subForm;
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setInviteError(data.error || 'Failed to create portal access');
+      } else {
+        setInviteSuccess({ url: data.portalUrl, name: isClient ? clientForm.clientName : subForm.companyName });
+        if (isClient) setClientForm({ projectId: '', clientName: '', clientEmail: '', expiresInDays: '365' });
+        else setSubForm({ projectId: '', companyName: '', contactName: '', email: '' });
+        await loadData();
+      }
+    } catch {
+      setInviteError('Connection error. Please try again.');
+    }
+    setInviteLoading(false);
+  }
+
+  const openInvite = (t: Tab) => {
+    setInviteTab(t);
+    setInviteSuccess(null);
+    setInviteError('');
+    setShowInvite(true);
   };
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div style={{ padding: '32px 24px', maxWidth: 1100, margin: '0 auto', fontFamily: 'system-ui,-apple-system,sans-serif', color: TEXT }}>
+    <div style={{ padding: '28px 24px', maxWidth: 1100, margin: '0 auto', fontFamily: 'system-ui,-apple-system,sans-serif', color: TEXT }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: TEXT, margin: 0 }}>Portal Management</h1>
-        <p style={{ fontSize: 14, color: DIM, margin: '6px 0 0' }}>
-          Manage client and subcontractor portal access links. Share these links so clients and subs can access their dedicated portals.
-        </p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: TEXT, margin: 0 }}>Portal Access Manager</h1>
+          <p style={{ fontSize: 13, color: DIM, margin: '4px 0 0', lineHeight: 1.5 }}>
+            Grant and manage portal access for clients and subcontractors. Each person gets a unique secure link.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={() => openInvite('client')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: `rgba(212,160,23,0.12)`, border: `1px solid rgba(212,160,23,0.3)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={5} x2={12} y2={19}/><line x1={5} y1={12} x2={19} y2={12}/></svg>
+            Invite Client
+          </button>
+          <button onClick={() => openInvite('sub')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: `rgba(59,130,246,0.12)`, border: `1px solid rgba(59,130,246,0.3)`, borderRadius: 8, color: BLUE, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><line x1={12} y1={5} x2={12} y2={19}/><line x1={5} y1={12} x2={19} y2={12}/></svg>
+            Invite Subcontractor
+          </button>
+        </div>
       </div>
 
-      {/* Quick access cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </div>
+      {/* Workflow explainer */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12, marginBottom: 28 }}>
+        {[
+          { n: '1', title: 'Create Access', desc: 'Click Invite Client or Invite Subcontractor above', color: GOLD },
+          { n: '2', title: 'Copy the Link', desc: 'Copy the generated portal URL after creating access', color: GOLD },
+          { n: '3', title: 'Send to Them', desc: 'Email or text the link — no password needed', color: GOLD },
+          { n: '4', title: 'They Log In', desc: 'They go to the link or enter email at the portal login', color: GREEN },
+        ].map(s => (
+          <div key={s.n} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10 }}>
+            <div style={{ width: 26, height: 26, borderRadius: '50%', background: `rgba(212,160,23,0.15)`, border: `1.5px solid rgba(212,160,23,0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, color: GOLD, flexShrink: 0 }}>{s.n}</div>
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Client Portal</div>
-              <div style={{ fontSize: 12, color: DIM }}>Project owners &amp; clients</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{s.title}</div>
+              <div style={{ fontSize: 12, color: DIM, lineHeight: 1.4 }}>{s.desc}</div>
             </div>
           </div>
-          <p style={{ fontSize: 13, color: DIM, margin: '0 0 14px', lineHeight: 1.5 }}>
-            Clients see project status, approve change orders &amp; pay apps, view financials, and communicate with your team.
-          </p>
-          <a href="/portals/client/login" target="_blank" rel="noreferrer"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.25)', borderRadius: 6, fontSize: 12, fontWeight: 600, color: GOLD, textDecoration: 'none' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Preview Login Page
-          </a>
-        </div>
-
-        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-            <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>Subcontractor Portal</div>
-              <div style={{ fontSize: 12, color: DIM }}>Subs, suppliers &amp; vendors</div>
-            </div>
-          </div>
-          <p style={{ fontSize: 13, color: DIM, margin: '0 0 14px', lineHeight: 1.5 }}>
-            Subs manage bids, submit daily logs &amp; pay apps, upload compliance docs, and track their performance scorecard.
-          </p>
-          <a href="/portals/sub/login" target="_blank" rel="noreferrer"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 6, fontSize: 12, fontWeight: 600, color: BLUE, textDecoration: 'none' }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Preview Login Page
-          </a>
-        </div>
+        ))}
       </div>
 
       {/* Sessions table */}
       <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden' }}>
-        {/* Tabs */}
         <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}` }}>
-          {(['client', 'sub'] as const).map(t => (
+          {(['client', 'sub'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ flex: 1, padding: '14px 20px', background: tab === t ? 'rgba(212,160,23,0.06)' : 'transparent', border: 'none', borderBottom: tab === t ? `2px solid ${GOLD}` : '2px solid transparent', color: tab === t ? GOLD : DIM, fontSize: 14, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
-              {t === 'client' ? `Client Sessions (${clientSessions.length})` : `Subcontractor Sessions (${subSessions.length})`}
+              style={{ flex: 1, padding: '13px 20px', background: tab === t ? 'rgba(212,160,23,0.05)' : 'transparent', border: 'none', borderBottom: `2px solid ${tab === t ? GOLD : 'transparent'}`, color: tab === t ? GOLD : DIM, fontSize: 13, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+              {t === 'client'
+                ? `Client Access (${clientSessions.filter(s => s.status === 'active').length} active)`
+                : `Subcontractor Access (${subSessions.filter(s => s.status === 'active').length} active)`}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: DIM }}>Loading portal sessions…</div>
+          <div style={{ padding: 40, textAlign: 'center', color: DIM, fontSize: 14 }}>Loading sessions…</div>
         ) : tab === 'client' ? (
-          clientSessions.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🏠</div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 6 }}>No client sessions yet</div>
-              <div style={{ fontSize: 13, color: DIM }}>Client portal links are generated from individual project pages when you invite a client.</div>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: 'rgba(0,0,0,0.2)' }}>
-                    {['Client', 'Project', 'Status', 'Last Access', 'Expires', 'Portal Link'].map(h => (
-                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {clientSessions.map((s, i) => (
-                    <tr key={s.id} style={{ borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: 600, color: TEXT }}>{s.client_name}</div>
-                        <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.client_email}</div>
-                      </td>
-                      <td style={{ padding: '12px 16px', color: DIM }}>{s.project_name || s.project_id.slice(0, 8) + '…'}</td>
-                      <td style={{ padding: '12px 16px' }}>{statusBadge(s.status)}</td>
-                      <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{formatDate(s.last_accessed_at)}</td>
-                      <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{formatDate(s.expires_at)}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button onClick={() => copyLink(s.token, 'client')}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'rgba(212,160,23,0.1)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'rgba(212,160,23,0.25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: copied === s.token ? GREEN : GOLD, cursor: 'pointer' }}>
-                            {copied === s.token ? '✓ Copied' : '⎘ Copy Link'}
-                          </button>
-                          <a href={`/portals/client/${s.token}`} target="_blank" rel="noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: DIM, textDecoration: 'none' }}>
-                            Open →
-                          </a>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
+          <ClientTable sessions={clientSessions} copied={copied} revoking={revoking} onCopy={copyLink} onRevoke={revoke} onInvite={() => openInvite('client')} />
         ) : (
-          subSessions.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>👷</div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 6 }}>No subcontractor sessions yet</div>
-              <div style={{ fontSize: 13, color: DIM }}>Sub portal links are generated from bid packages when you invite a subcontractor.</div>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: 'rgba(0,0,0,0.2)' }}>
-                    {['Company', 'Project', 'Status', 'Last Login', 'Portal Link'].map(h => (
-                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {subSessions.map((s, i) => (
-                    <tr key={s.id} style={{ borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: 600, color: TEXT }}>{s.company_name || '—'}</div>
-                        <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.contact_name}</div>
-                      </td>
-                      <td style={{ padding: '12px 16px', color: DIM }}>{s.project_name || s.project_id.slice(0, 8) + '…'}</td>
-                      <td style={{ padding: '12px 16px' }}>{statusBadge(s.status)}</td>
-                      <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{formatDate(s.last_login_at)}</td>
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button onClick={() => copyLink(s.token, 'sub')}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'rgba(59,130,246,0.25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: copied === s.token ? GREEN : BLUE, cursor: 'pointer' }}>
-                            {copied === s.token ? '✓ Copied' : '⎘ Copy Link'}
-                          </button>
-                          <a href={`/portals/subcontractor/${s.token}`} target="_blank" rel="noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 10px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: DIM, textDecoration: 'none' }}>
-                            Open →
-                          </a>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
+          <SubTable sessions={subSessions} copied={copied} revoking={revoking} onCopy={copyLink} onRevoke={revoke} onInvite={() => openInvite('sub')} />
         )}
       </div>
 
-      <div style={{ marginTop: 16, padding: 14, background: 'rgba(212,160,23,0.06)', border: `1px solid rgba(212,160,23,0.15)`, borderRadius: 8, fontSize: 12, color: DIM, lineHeight: 1.6 }}>
-        <strong style={{ color: TEXT }}>How portal access works:</strong> Portal links are created automatically when you invite a client or subcontractor to a project. Each link contains a unique secure token. Share the link via email — recipients click it to access their portal with no password required.
+      {/* ── Invite Modal ──────────────────────────────────────────────────────── */}
+      {showInvite && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={e => { if (e.target === e.currentTarget) { setShowInvite(false); setInviteSuccess(null); } }}>
+          <div style={{ width: '100%', maxWidth: 480, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,0.7)', overflow: 'hidden' }}>
+
+            {/* Modal header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', borderBottom: `1px solid ${BORDER}` }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: TEXT }}>
+                  {inviteTab === 'client' ? 'Invite Client to Portal' : 'Invite Subcontractor to Portal'}
+                </div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
+                  Creates a secure access link for this person
+                </div>
+              </div>
+              <button onClick={() => { setShowInvite(false); setInviteSuccess(null); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 4 }}>×</button>
+            </div>
+
+            {/* Tab switcher in modal */}
+            <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}` }}>
+              {(['client', 'sub'] as Tab[]).map(t => (
+                <button key={t} onClick={() => { setInviteTab(t); setInviteSuccess(null); setInviteError(''); }}
+                  style={{ flex: 1, padding: '10px', background: inviteTab === t ? 'rgba(212,160,23,0.06)' : 'transparent', border: 'none', borderBottom: `2px solid ${inviteTab === t ? GOLD : 'transparent'}`, color: inviteTab === t ? GOLD : DIM, fontSize: 13, fontWeight: inviteTab === t ? 700 : 400, cursor: 'pointer' }}>
+                  {t === 'client' ? 'Client Portal' : 'Sub Portal'}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ padding: 20 }}>
+              {inviteSuccess ? (
+                <SuccessCard url={inviteSuccess.url} name={inviteSuccess.name} type={inviteTab}
+                  onAnother={() => setInviteSuccess(null)}
+                  onClose={() => { setShowInvite(false); setInviteSuccess(null); }} />
+              ) : (
+                <form onSubmit={submitInvite}>
+                  {/* Project select */}
+                  <FormField label="Project">
+                    <select
+                      value={inviteTab === 'client' ? clientForm.projectId : subForm.projectId}
+                      onChange={e => inviteTab === 'client'
+                        ? setClientForm(f => ({ ...f, projectId: e.target.value }))
+                        : setSubForm(f => ({ ...f, projectId: e.target.value }))}
+                      required
+                      style={selectStyle}>
+                      <option value="">Select a project…</option>
+                      {projects.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </FormField>
+
+                  {inviteTab === 'client' ? (
+                    <>
+                      <FormField label="Client Full Name">
+                        <input type="text" value={clientForm.clientName} onChange={e => setClientForm(f => ({ ...f, clientName: e.target.value }))} required placeholder="John Smith" style={inputStyle} />
+                      </FormField>
+                      <FormField label="Client Email Address">
+                        <input type="email" value={clientForm.clientEmail} onChange={e => setClientForm(f => ({ ...f, clientEmail: e.target.value }))} required placeholder="client@company.com" style={inputStyle} />
+                      </FormField>
+                      <FormField label="Access Expires In">
+                        <select value={clientForm.expiresInDays} onChange={e => setClientForm(f => ({ ...f, expiresInDays: e.target.value }))} style={selectStyle}>
+                          <option value="30">30 days</option>
+                          <option value="90">90 days</option>
+                          <option value="180">6 months</option>
+                          <option value="365">1 year</option>
+                          <option value="">Never expires</option>
+                        </select>
+                      </FormField>
+                    </>
+                  ) : (
+                    <>
+                      <FormField label="Company Name">
+                        <input type="text" value={subForm.companyName} onChange={e => setSubForm(f => ({ ...f, companyName: e.target.value }))} required placeholder="ABC Electrical LLC" style={inputStyle} />
+                      </FormField>
+                      <FormField label="Contact Name">
+                        <input type="text" value={subForm.contactName} onChange={e => setSubForm(f => ({ ...f, contactName: e.target.value }))} placeholder="Jane Doe" style={inputStyle} />
+                      </FormField>
+                      <FormField label="Email Address">
+                        <input type="email" value={subForm.email} onChange={e => setSubForm(f => ({ ...f, email: e.target.value }))} required placeholder="contact@abcelectrical.com" style={inputStyle} />
+                      </FormField>
+                    </>
+                  )}
+
+                  {inviteError && (
+                    <div style={{ marginBottom: 14, padding: '10px 12px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 8, fontSize: 13, color: '#fca5a5' }}>
+                      {inviteError}
+                    </div>
+                  )}
+
+                  <button type="submit" disabled={inviteLoading}
+                    style={{ width: '100%', padding: '12px', background: inviteLoading ? 'rgba(212,160,23,0.4)' : `linear-gradient(135deg,${GOLD},#C8960F)`, border: 'none', borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, cursor: inviteLoading ? 'not-allowed' : 'pointer' }}>
+                    {inviteLoading ? 'Creating Access…' : 'Generate Portal Link →'}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function FormField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 12px', background: 'rgba(255,255,255,0.05)',
+  border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 14,
+  outline: 'none', boxSizing: 'border-box',
+};
+
+const selectStyle: React.CSSProperties = {
+  width: '100%', padding: '10px 12px', background: '#0d1117',
+  border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 14,
+  outline: 'none', boxSizing: 'border-box', cursor: 'pointer',
+};
+
+function SuccessCard({ url, name, type, onAnother, onClose }: { url: string; name: string; type: Tab; onAnother: () => void; onClose: () => void; }) {
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  function copyUrl() {
+    navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2500);
+    });
+  }
+
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1.5px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+        <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}><polyline points="20 6 9 17 4 12"/></svg>
       </div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Portal Access Created!</div>
+      <div style={{ fontSize: 13, color: DIM, marginBottom: 20 }}>
+        {name} can now access their {type === 'client' ? 'client' : 'subcontractor'} portal.
+      </div>
+
+      {/* Link box */}
+      <div style={{ background: 'rgba(0,0,0,0.3)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', marginBottom: 12, textAlign: 'left' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Portal Link</div>
+        <div style={{ fontSize: 12, color: DIM, wordBreak: 'break-all', lineHeight: 1.5, marginBottom: 10 }}>{url}</div>
+        <button onClick={copyUrl}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: linkCopied ? 'rgba(34,197,94,0.12)' : `rgba(212,160,23,0.12)`, border: `1px solid ${linkCopied ? 'rgba(34,197,94,0.3)' : 'rgba(212,160,23,0.3)'}`, borderRadius: 6, fontSize: 12, fontWeight: 700, color: linkCopied ? GREEN : GOLD, cursor: 'pointer' }}>
+          {linkCopied
+            ? <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polyline points="20 6 9 17 4 12"/></svg> Copied!</>
+            : <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={9} y={9} width={13} height={13} rx={2}/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Portal Link</>}
+        </button>
+      </div>
+
+      <div style={{ fontSize: 12, color: DIM, marginBottom: 16, lineHeight: 1.5 }}>
+        Send this link via email or text. They can also log in at<br />
+        <a href={type === 'client' ? '/portals/client/login' : '/portals/sub/login'} target="_blank" rel="noreferrer" style={{ color: GOLD }}>
+          {type === 'client' ? '/portals/client/login' : '/portals/sub/login'}
+        </a> using their email address.
+      </div>
+
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button onClick={onAnother} style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 7, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          + Invite Another
+        </button>
+        <button onClick={onClose} style={{ flex: 1, padding: '10px', background: `rgba(212,160,23,0.1)`, border: `1px solid rgba(212,160,23,0.25)`, borderRadius: 7, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ClientTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
+  { sessions: ClientSession[]; copied: string | null; revoking: string | null; onCopy: (t: string, type: Tab) => void; onRevoke: (id: string, type: Tab) => void; onInvite: () => void; }) {
+  if (sessions.length === 0) {
+    return (
+      <div style={{ padding: 48, textAlign: 'center' }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>🏠</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 6 }}>No client portal access yet</div>
+        <div style={{ fontSize: 13, color: DIM, marginBottom: 20 }}>Create access for a client to get started.</div>
+        <button onClick={onInvite} style={{ padding: '10px 20px', background: `rgba(212,160,23,0.12)`, border: `1px solid rgba(212,160,23,0.3)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          + Invite First Client
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <thead>
+          <tr style={{ background: 'rgba(0,0,0,0.2)' }}>
+            {['Client', 'Project', 'Status', 'Last Access', 'Expires', 'Actions'].map(h => (
+              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sessions.map((s, i) => (
+            <tr key={s.id} style={{ borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
+              <td style={{ padding: '12px 16px' }}>
+                <div style={{ fontWeight: 600, color: TEXT }}>{s.client_name}</div>
+                <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.client_email}</div>
+              </td>
+              <td style={{ padding: '12px 16px', color: DIM, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project_name || '—'}</td>
+              <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
+              <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{fmt(s.last_accessed_at)}</td>
+              <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{fmt(s.expires_at)}</td>
+              <td style={{ padding: '12px 16px' }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button onClick={() => onCopy(s.token, 'client')}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'rgba(212,160,23,0.1)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'rgba(212,160,23,0.25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : GOLD, cursor: 'pointer' }}>
+                    {copied === s.token ? '✓ Copied' : '⎘ Copy'}
+                  </button>
+                  <a href={`/portals/client/${s.token}`} target="_blank" rel="noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: DIM, textDecoration: 'none' }}>
+                    View →
+                  </a>
+                  {s.status === 'active' && (
+                    <button onClick={() => onRevoke(s.id, 'client')} disabled={revoking === s.id}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 5, fontSize: 11, fontWeight: 600, color: RED, cursor: 'pointer', opacity: revoking === s.id ? 0.5 : 1 }}>
+                      Revoke
+                    </button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function SubTable({ sessions, copied, revoking, onCopy, onRevoke, onInvite }:
+  { sessions: SubSession[]; copied: string | null; revoking: string | null; onCopy: (t: string, type: Tab) => void; onRevoke: (id: string, type: Tab) => void; onInvite: () => void; }) {
+  if (sessions.length === 0) {
+    return (
+      <div style={{ padding: 48, textAlign: 'center' }}>
+        <div style={{ fontSize: 36, marginBottom: 12 }}>👷</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 6 }}>No subcontractor portal access yet</div>
+        <div style={{ fontSize: 13, color: DIM, marginBottom: 20 }}>Create access for a subcontractor to get started.</div>
+        <button onClick={onInvite} style={{ padding: '10px 20px', background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 8, color: BLUE, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          + Invite First Subcontractor
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <thead>
+          <tr style={{ background: 'rgba(0,0,0,0.2)' }}>
+            {['Company', 'Project', 'Status', 'Last Login', 'Actions'].map(h => (
+              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sessions.map((s, i) => (
+            <tr key={s.id} style={{ borderTop: i > 0 ? `1px solid ${BORDER}` : 'none' }}>
+              <td style={{ padding: '12px 16px' }}>
+                <div style={{ fontWeight: 600, color: TEXT }}>{s.company_name || '—'}</div>
+                <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{s.contact_name}</div>
+              </td>
+              <td style={{ padding: '12px 16px', color: DIM, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project_name || '—'}</td>
+              <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
+              <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>{fmt(s.last_login_at)}</td>
+              <td style={{ padding: '12px 16px' }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button onClick={() => onCopy(s.token, 'sub')}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'rgba(59,130,246,0.1)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'rgba(59,130,246,0.25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : BLUE, cursor: 'pointer' }}>
+                    {copied === s.token ? '✓ Copied' : '⎘ Copy'}
+                  </button>
+                  <a href={`/portals/subcontractor/${s.token}`} target="_blank" rel="noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 5, fontSize: 11, fontWeight: 600, color: DIM, textDecoration: 'none' }}>
+                    View →
+                  </a>
+                  {s.status === 'active' && (
+                    <button onClick={() => onRevoke(s.id, 'sub')} disabled={revoking === s.id}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 5, fontSize: 11, fontWeight: 600, color: RED, cursor: 'pointer', opacity: revoking === s.id ? 0.5 : 1 }}>
+                      Revoke
+                    </button>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
