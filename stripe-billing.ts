@@ -134,7 +134,7 @@ export async function createCheckoutHandler(request: NextRequest) {
     discounts:  discounts.length ? discounts : undefined,
     allow_promotion_codes: !discounts.length,
     subscription_data: {
-      trial_period_days: 14,
+      trial_period_days: 30,
       metadata: { tenantId, planId, interval, email },
     },
     metadata: { tenantId, planId, interval, email },
@@ -763,7 +763,7 @@ async function sendWelcomeEmail(
         </div>
         <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:28px 32px;border-radius:0 0 8px 8px">
           ${trialEnd
-            ? `<p>Your <strong>14-day free trial</strong> is now active. No charge until ${new Date(trialEnd).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}.</p>`
+            ? `<p>Your <strong>30-day free trial</strong> is now active. No charge until ${new Date(trialEnd).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}.</p>`
             : `<p>Your <strong>${planName}</strong> subscription is now active.</p>`
           }
           <p>Here's what to do first:</p>
