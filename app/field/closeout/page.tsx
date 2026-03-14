@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -52,12 +53,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: DIM, submitted: BLUE, under_review: AMBER, accepted: GREEN, rejected: RED, na: '#6B7280',
 };
 
-const TRADES = [
-  'General Contractor', 'Concrete', 'Framing / Carpentry', 'Roofing',
-  'Electrical', 'Plumbing', 'HVAC', 'Drywall', 'Painting', 'Flooring',
-  'Tile', 'Fire Protection', 'Landscaping', 'Elevator', 'Steel', 'Glazing',
-  'Insulation', 'Waterproofing', 'Other',
-];
+// TRADES imported from @/lib/contractor-trades
 
 /* ── interface ────────────────────────────────────────────────────── */
 

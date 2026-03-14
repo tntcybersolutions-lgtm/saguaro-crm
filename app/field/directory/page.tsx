@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 const GOLD = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -58,12 +59,7 @@ const PERMISSION_COLORS: Record<string, string> = {
   'Read-Only': DIM,
 };
 
-const TRADES = [
-  'General Contractor', 'Electrical', 'Plumbing', 'HVAC', 'Concrete', 'Steel',
-  'Framing', 'Roofing', 'Drywall', 'Painting', 'Flooring', 'Glazing',
-  'Landscaping', 'Fire Protection', 'Elevator', 'Demolition', 'Excavation',
-  'Masonry', 'Insulation', 'Waterproofing', 'Other',
-];
+// TRADES imported from @/lib/contractor-trades
 
 const PERMISSION_ROLES = ['Admin', 'PM', 'Superintendent', 'Foreman', 'Read-Only'] as const;
 

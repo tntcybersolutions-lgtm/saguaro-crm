@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 /* ─── Palette ─── */
 const GOLD = '#D4A017', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F',
@@ -30,7 +31,7 @@ interface Invite { id: string; email: string; sub_name: string; template_id: str
 
 /* ─── Constants ─── */
 const CATEGORIES = ['Insurance', 'Bonding', 'Safety', 'References', 'Certifications'] as const;
-const TRADES = ['Electrical', 'Plumbing', 'HVAC', 'Concrete', 'Framing', 'Roofing', 'Drywall', 'Painting', 'Flooring', 'Steel', 'Masonry', 'Demolition', 'Landscaping', 'Fire Protection', 'General'] as const;
+// TRADES imported from @/lib/contractor-trades
 const DEFAULT_DOCS = ['Certificate of Insurance (COI)', 'Performance Bond Letter', 'Safety Record / OSHA Logs', 'References (3+)', 'W-9 Form', 'Business License', 'EMR Letter', 'OSHA 300 Log'];
 const CATEGORY_COLORS: Record<string, string> = { Insurance: BLUE, Bonding: PURPLE, Safety: GREEN, References: GOLD, Certifications: AMBER };
 const STATUS_COLORS: Record<string, string> = { pending: AMBER, under_review: BLUE, approved: GREEN, rejected: RED };

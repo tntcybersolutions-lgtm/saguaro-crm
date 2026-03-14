@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'reac
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 import EmailComposer from '@/components/EmailComposer';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -46,12 +47,7 @@ const CA_STATUSES: { key: CAStatus; label: string; color: string }[] = [
   { key: 'verified',    label: 'Verified',    color: GREEN },
 ];
 
-const TRADES = [
-  'General Contractor', 'Electrical', 'Plumbing', 'HVAC', 'Structural Steel',
-  'Concrete', 'Masonry', 'Roofing', 'Drywall / Framing', 'Painting',
-  'Fire Protection', 'Elevator', 'Landscaping', 'Earthwork / Grading',
-  'Glazing', 'Flooring', 'Insulation', 'Demolition', 'Other',
-];
+// TRADES imported from @/lib/contractor-trades
 
 interface ChecklistItem {
   id: string;

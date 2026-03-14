@@ -238,16 +238,24 @@ export default function TakeoffPage() {
 
       await new Promise<void>((resolve, reject) => {
         const evtSource = new EventSource(`/api/takeoff/${takeoffId}/analyze`);
+        let sseResolved = false;
 
         evtSource.onmessage = (e) => {
           try {
             const evt = JSON.parse(e.data);
             if (evt.event === 'progress') {
               setProgress({ pct: evt.pct, message: evt.message, step: evt.step });
+            } else if (evt.event === 'result') {
+              // result means done — resolve here so reload happens immediately
+              sseResolved = true;
+              evtSource.close();
+              resolve();
             } else if (evt.event === 'error') {
+              sseResolved = true;
               evtSource.close();
               reject(new Error(evt.message));
             } else if (evt.event === 'done') {
+              sseResolved = true;
               evtSource.close();
               resolve();
             }
@@ -258,7 +266,10 @@ export default function TakeoffPage() {
 
         evtSource.onerror = () => {
           evtSource.close();
-          reject(new Error('Connection lost during analysis. Please try again.'));
+          // Natural SSE stream close fires onerror — only reject if we never got a result
+          if (!sseResolved) {
+            reject(new Error('Connection lost during analysis. Please try again.'));
+          }
         };
       });
 

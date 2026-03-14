@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { CONTRACTOR_TRADES as TRADES, TRADESPERSON_ROLES as ROLES } from '@/lib/contractor-trades';
 
 const GOLD='#D4A017',BG='#07101C',RAISED='#0D1D2E',BORDER='#1E3A5F',TEXT='#F0F4FF',DIM='#8BAAC8',GREEN='#22C55E',RED='#EF4444',AMBER='#F59E0B',BLUE='#3B82F6',PURPLE='#8B5CF6';
 
@@ -23,8 +24,7 @@ interface Assignment {
 interface Project { id: string; name: string; status?: string; }
 
 /* ===== CONSTANTS ===== */
-const TRADES = ['General','Electrical','Plumbing','HVAC','Framing','Concrete','Roofing','Painting','Drywall','Flooring','Excavation','Steel','Masonry','Glazing','Fire Protection','Landscaping'];
-const ROLES = ['Superintendent','Foreman','Journeyman','Apprentice','Laborer','Project Manager','Safety Officer','Inspector','Estimator','Equipment Operator'];
+// TRADES and ROLES imported from @/lib/contractor-trades
 const CERTS = ['OSHA 10','OSHA 30','First Aid/CPR','Confined Space','Fall Protection','Crane Operator','Welding','CDL','Master Electrician','Master Plumber','EPA 608','Rigging','Scaffolding'];
 const STATUS_COLORS: { [k: string]: string } = { assigned: BLUE, tentative: AMBER, confirmed: GREEN, released: DIM, unavailable: RED };
 const STATUS_OPTS: Assignment['status'][] = ['assigned','tentative','confirmed','released','unavailable'];

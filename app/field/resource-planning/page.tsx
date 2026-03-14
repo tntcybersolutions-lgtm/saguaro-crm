@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 /* ── colour palette ────────────────────────────────────────────────── */
 const GOLD = '#D4A017', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F';
@@ -102,7 +103,7 @@ function timeDisplay(iso: string | null): string {
 }
 function uid(): string { return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`; }
 
-const TRADES = ['Electrical', 'Plumbing', 'HVAC', 'Framing', 'Concrete', 'Roofing', 'Drywall', 'Painting', 'Flooring', 'Steel', 'Fire Protection', 'General Labor', 'Supervision', 'Other'];
+// TRADES imported from @/lib/contractor-trades
 const AREAS = ['Building A', 'Building B', 'Site Work', 'Parking', 'Utility', 'Interior', 'Exterior', 'Roof', 'Basement', 'Mechanical Room'];
 const STATUS_COLORS: Record<WorkerStatus, string> = { 'on-site': GREEN, 'off-site': AMBER, absent: RED };
 const PRIORITIES = ['Low', 'Medium', 'High', 'Critical'];

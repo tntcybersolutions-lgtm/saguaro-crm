@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -57,12 +58,7 @@ const ISSUE_TYPES: { value: string; label: string; icon: string }[] = [
   { value: 'other',            label: 'Other',             icon: '📌' },
 ];
 
-const TRADES = [
-  'General Contractor', 'Electrical', 'Mechanical', 'Plumbing', 'HVAC',
-  'Fire Protection', 'Structural Steel', 'Concrete', 'Framing', 'Drywall',
-  'Roofing', 'Glazing', 'Elevators', 'Low Voltage', 'Controls',
-  'Insulation', 'Painting', 'Flooring', 'Landscaping', 'Sitework',
-];
+// TRADES imported from @/lib/contractor-trades
 
 const STATUSES = ['open', 'in_review', 'resolved', 'closed', 'deferred'];
 const PRIORITIES = ['low', 'medium', 'high', 'critical'];

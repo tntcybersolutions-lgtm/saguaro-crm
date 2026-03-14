@@ -79,9 +79,10 @@ export async function GET(
         // ── 1. Load takeoff + materials ─────────────────────────────────────
         send('progress', { step: 1, pct: 5, message: 'Loading takeoff data...' });
 
+        // Two separate queries — avoid FK join (can fail with PGRST200)
         const { data: takeoff } = await supabase
           .from('takeoffs')
-          .select('*, takeoff_materials(*)')
+          .select('*')
           .eq('id', takeoffId)
           .single();
 
@@ -90,7 +91,13 @@ export async function GET(
           return done();
         }
 
-        const materials = (takeoff.takeoff_materials || []) as RawMaterial[];
+        const { data: materialsData } = await supabase
+          .from('takeoff_materials')
+          .select('*')
+          .eq('takeoff_id', takeoffId)
+          .order('sort_order', { ascending: true });
+
+        const materials = (materialsData || []) as RawMaterial[];
         if (materials.length === 0) {
           send('error', { message: 'No materials found in this takeoff.' });
           return done();
@@ -384,7 +391,7 @@ Rules:
             .eq('project_id', takeoff.project_id)
             .order('app_number', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
 
           const appNumber = (((lastApp as any)?.app_number as number) || 0) + 1;
 

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a';
 
@@ -38,7 +39,7 @@ export default function SandboxPage() {
     setLoading(false);
   }
 
-  const TRADES = ['General Contractor','Residential Builder','Commercial GC','Electrical','Plumbing','HVAC/Mechanical','Framing/Carpentry','Concrete','Roofing','Drywall','Other'];
+  // TRADES imported from @/lib/contractor-trades
 
   if (success) {
     return (

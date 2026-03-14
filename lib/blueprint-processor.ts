@@ -204,7 +204,7 @@ async function processPdf(buffer: Buffer): Promise<ProcessedBlueprint> {
 
   // Rule 1: pdf-lib trim to 8 pages
   try {
-    const { buffer: trimmed, trimmed: wasTrimmed } = await trimPdf(buffer, 8);
+    const { buffer: trimmed, trimmed: wasTrimmed } = await trimPdf(buffer, 4);
 
     // If trimmed result is under 20MB, send as document
     if (trimmed.byteLength <= 20 * MB) {

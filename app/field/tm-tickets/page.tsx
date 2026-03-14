@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback, Suspense, useRef } from 'react
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 import EmailComposer from '@/components/EmailComposer';
+import { TRADESPERSON_ROLES as TRADES } from '@/lib/contractor-trades';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -22,11 +23,7 @@ const BLUE   = '#3B82F6';
 const STATUS_COLORS: Record<string, string> = { draft: DIM, submitted: AMBER, approved: GREEN, disputed: RED };
 const STATUS_LABELS: Record<string, string> = { draft: 'Draft', submitted: 'Submitted', approved: 'Approved', disputed: 'Disputed' };
 
-const TRADES = [
-  'General Labor', 'Electrician', 'Plumber', 'HVAC', 'Carpenter', 'Iron Worker',
-  'Welder', 'Painter', 'Mason', 'Roofer', 'Sheet Metal', 'Insulator',
-  'Pipefitter', 'Operator', 'Foreman', 'Superintendent', 'Other',
-];
+// TRADES imported from @/lib/contractor-trades (as TRADESPERSON_ROLES)
 const UNITS = ['EA', 'LF', 'SF', 'CY', 'TON', 'GAL', 'LS', 'HR', 'BAG', 'ROLL', 'SHEET', 'BOX'];
 
 interface LaborLine {

@@ -187,6 +187,7 @@ export default function TakeoffPage() {
       // 3. Connect SSE analysis stream
       setProgress({ step: 3, message: 'Connecting to AI...', pct: 15 });
       const eventSource = new EventSource(`/api/takeoff/${newTakeoff.id}/analyze`);
+      let analysisResolved = false;
 
       eventSource.onmessage = (e) => {
         try {
@@ -197,6 +198,7 @@ export default function TakeoffPage() {
           }
 
           if (data.event === 'result') {
+            analysisResolved = true;
             eventSource.close();
             setResult(data as TakeoffResult);
             setState('results');
@@ -204,6 +206,7 @@ export default function TakeoffPage() {
           }
 
           if (data.event === 'error') {
+            analysisResolved = true;
             eventSource.close();
             showToast(String(data.message) || 'Analysis failed', 'error');
             setState('upload');
@@ -211,6 +214,7 @@ export default function TakeoffPage() {
           }
 
           if (data.event === 'done') {
+            analysisResolved = true;
             eventSource.close();
           }
         } catch { /* ignore parse errors on malformed chunks */ }
@@ -218,8 +222,12 @@ export default function TakeoffPage() {
 
       eventSource.onerror = () => {
         eventSource.close();
-        showToast('Connection lost during analysis. Please try again.', 'error');
-        setState('upload');
+        // Guard: natural SSE stream close also fires onerror — only act if we never got a result
+        if (!analysisResolved) {
+          showToast('Connection lost during analysis. Please try again.', 'error');
+          setState('upload');
+          setProgress({ step: 0, message: '', pct: 0 });
+        }
       };
 
     } catch (err: unknown) {
@@ -347,18 +355,23 @@ export default function TakeoffPage() {
     }
   };
 
-  const exportCSV = () => {
-    if (!result) return;
-    const headers = 'CSI Code,Description,Quantity,Unit,Unit Cost,Total Cost,Labor Hours';
-    const rows = result.items.map(i =>
-      `"${i.csiCode}","${i.description.replace(/"/g, '""')}",${i.quantity},"${i.unit}",${i.unitCost},${i.totalCost},${i.laborHours}`
-    );
-    const csv = [headers, ...rows].join('\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-    a.download = `takeoff-${projectId}-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(a.href);
+  const exportXLS = async () => {
+    if (!result || !takeoffId) return;
+    setGenerating('xls');
+    try {
+      const res = await fetch(`/api/takeoff/${takeoffId}/export-xls`);
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `takeoff-${projectId}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : 'Export failed', 'error');
+    } finally {
+      setGenerating(null);
+    }
   };
 
   // Group items by CSI division
@@ -595,7 +608,7 @@ export default function TakeoffPage() {
       </div>
 
       {/* Cost breakdown cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
         {[
           { label: 'Material Cost', value: result?.totalMaterialCost || 0, color: GOLD },
           { label: 'Labor Cost', value: result?.totalLaborCost || 0, color: '#60A5FA' },
@@ -603,6 +616,12 @@ export default function TakeoffPage() {
             label: `Contingency (${result?.contingency ?? 10}%)`,
             value: (result?.totalProjectCost || 0) * ((result?.contingency ?? 10) / 100),
             color: '#A78BFA',
+          },
+          { label: 'Sell Price (+15%)', value: (result?.totalProjectCost || 0) * 1.15, color: '#22C55E' },
+          {
+            label: 'Gross Margin',
+            value: (result?.totalProjectCost || 0) * 1.15 - (result?.totalProjectCost || 0),
+            color: '#34D399',
           },
         ].map((card) => (
           <div key={card.label} style={{
@@ -612,12 +631,130 @@ export default function TakeoffPage() {
             <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
               {card.label}
             </div>
-            <div style={{ color: card.color, fontWeight: 700, fontSize: 22 }}>
+            <div style={{ color: card.color, fontWeight: 700, fontSize: 20 }}>
               {fmt$(card.value)}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Building visualization */}
+      {result && (result.estimatedSF > 0 || result.itemCount > 0) && (() => {
+        const floors  = Math.max(1, result.estimatedSF > 0 ? Math.min(result.itemCount > 0 ? (Object.keys(groupedItems).length > 5 ? 2 : 1) : 1, 6) : 1);
+        const floorCount = result.itemCount > 0 ? Math.ceil(result.totalProjectCost / 1_000_000) || 1 : 1;
+        const displayFloors = Math.min(floorCount, 8);
+        const bldgW   = 180;
+        const floorH  = 28;
+        const bldgH   = displayFloors * floorH;
+        const padX    = 20;
+        const padY    = 20;
+        const svgH    = bldgH + padY * 2 + 40;
+        const totalSell = (result.totalProjectCost || 0) * 1.15;
+
+        // Compute division breakdown for bar chart
+        const divTotals = Object.entries(groupedItems)
+          .map(([div, items]) => ({
+            div,
+            name: CSI_DIVISION_NAMES[div] || `Div ${div}`,
+            total: items.reduce((s, i) => s + i.totalCost, 0),
+          }))
+          .sort((a, b) => b.total - a.total)
+          .slice(0, 8);
+        const maxDiv = divTotals[0]?.total || 1;
+
+        return (
+          <div style={{
+            display: 'grid', gridTemplateColumns: '260px 1fr',
+            gap: 16, marginBottom: 20,
+          }}>
+            {/* Building diagram */}
+            <div style={{
+              background: SURFACE, border: `1px solid ${BORDER}`,
+              borderRadius: 12, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center',
+            }}>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+                Building Profile
+              </div>
+              <svg width={bldgW + padX * 2} height={svgH} viewBox={`0 0 ${bldgW + padX * 2} ${svgH}`}>
+                {/* Ground line */}
+                <line x1={padX - 10} y1={padY + bldgH + 2} x2={padX + bldgW + 10} y2={padY + bldgH + 2}
+                  stroke="rgba(255,255,255,0.15)" strokeWidth={2} />
+                {/* Building floors */}
+                {Array.from({ length: displayFloors }).map((_, fi) => {
+                  const y = padY + fi * floorH;
+                  const isGround = fi === displayFloors - 1;
+                  return (
+                    <g key={fi}>
+                      <rect x={padX} y={y} width={bldgW} height={floorH}
+                        fill={isGround ? 'rgba(212,160,23,0.12)' : `rgba(212,160,23,${0.04 + (displayFloors - fi) * 0.01})`}
+                        stroke="rgba(212,160,23,0.25)" strokeWidth={1} />
+                      {/* Windows */}
+                      {[0.2, 0.45, 0.7].map((wx, wi) => (
+                        <rect key={wi}
+                          x={padX + bldgW * wx - 8} y={y + 6}
+                          width={16} height={floorH - 12}
+                          fill="rgba(96,165,250,0.2)" stroke="rgba(96,165,250,0.4)" strokeWidth={0.5} />
+                      ))}
+                      {/* Floor label */}
+                      <text x={padX + bldgW + 6} y={y + floorH / 2 + 4}
+                        fill="rgba(255,255,255,0.3)" fontSize={9}>
+                        {`L${displayFloors - fi}`}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Roof triangle */}
+                <polygon
+                  points={`${padX},${padY} ${padX + bldgW / 2},${padY - 24} ${padX + bldgW},${padY}`}
+                  fill="rgba(212,160,23,0.18)" stroke="rgba(212,160,23,0.4)" strokeWidth={1.5} />
+                {/* SF label */}
+                <text x={padX + bldgW / 2} y={svgH - 6}
+                  fill="rgba(255,255,255,0.3)" fontSize={10} textAnchor="middle">
+                  {fmtN(result.estimatedSF)} SF · {displayFloors} {displayFloors === 1 ? 'Story' : 'Stories'}
+                </text>
+              </svg>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginTop: 4 }}>
+                {result.buildingType || 'Commercial'} · {result.confidence}% confidence
+              </div>
+            </div>
+
+            {/* Division cost bar chart */}
+            <div style={{
+              background: SURFACE, border: `1px solid ${BORDER}`,
+              borderRadius: 12, padding: '16px 20px',
+            }}>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>
+                Cost by CSI Division
+              </div>
+              {divTotals.map(({ div, name, total }) => {
+                const pct = total / maxDiv;
+                const sellAmt = total * 1.15;
+                return (
+                  <div key={div} style={{ marginBottom: 10 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                      <span style={{ color: 'rgba(255,255,255,0.65)', fontSize: 12 }}>
+                        <span style={{ color: GOLD, fontFamily: 'monospace', marginRight: 6 }}>{div}</span>
+                        {name}
+                      </span>
+                      <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
+                        {fmt$(total)}
+                        <span style={{ color: '#22C55E', marginLeft: 8 }}>{fmt$(sellAmt)}</span>
+                      </span>
+                    </div>
+                    <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct * 100}%`, background: `linear-gradient(90deg, ${GOLD}, #22C55E)`, borderRadius: 4, transition: 'width 0.6s ease' }} />
+                    </div>
+                  </div>
+                );
+              })}
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
+                <span style={{ color: 'rgba(255,255,255,0.4)' }}>Cost → Sell breakdown across {Object.keys(groupedItems).length} divisions</span>
+                <span style={{ color: '#22C55E', fontWeight: 600 }}>Sell Total: {fmt$(totalSell)}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Results table */}
       <div style={{
@@ -627,7 +764,7 @@ export default function TakeoffPage() {
         {/* Table header */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '100px 1fr 80px 56px 80px 110px',
+          gridTemplateColumns: '100px 1fr 80px 56px 80px 110px 110px',
           padding: '10px 16px',
           background: 'rgba(255,255,255,0.04)',
           borderBottom: `1px solid ${BORDER}`,
@@ -641,7 +778,8 @@ export default function TakeoffPage() {
           <div style={{ textAlign: 'right' }}>Qty</div>
           <div style={{ textAlign: 'right' }}>Unit</div>
           <div style={{ textAlign: 'right' }}>$/Unit</div>
-          <div style={{ textAlign: 'right' }}>Total</div>
+          <div style={{ textAlign: 'right' }}>Cost</div>
+          <div style={{ textAlign: 'right', color: '#22C55E' }}>Sell (+15%)</div>
         </div>
 
         {/* Grouped rows */}
@@ -669,7 +807,7 @@ export default function TakeoffPage() {
                 {items.map((item, idx) => (
                   <div key={idx} style={{
                     display: 'grid',
-                    gridTemplateColumns: '100px 1fr 80px 56px 80px 110px',
+                    gridTemplateColumns: '100px 1fr 80px 56px 80px 110px 110px',
                     padding: '10px 16px',
                     borderBottom: `1px solid rgba(255,255,255,0.04)`,
                     fontSize: 13, alignItems: 'center',
@@ -691,6 +829,9 @@ export default function TakeoffPage() {
                     <div style={{ textAlign: 'right', color: GOLD, fontWeight: 600 }}>
                       {fmt$(item.totalCost)}
                     </div>
+                    <div style={{ textAlign: 'right', color: '#22C55E', fontWeight: 600 }}>
+                      {fmt$(item.totalCost * 1.15)}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -700,7 +841,7 @@ export default function TakeoffPage() {
         {/* Grand total row */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '100px 1fr 80px 56px 80px 110px',
+          gridTemplateColumns: '100px 1fr 80px 56px 80px 110px 110px',
           padding: '12px 16px',
           background: 'rgba(212,160,23,0.08)',
           borderTop: `2px solid rgba(212,160,23,0.3)`,
@@ -711,6 +852,9 @@ export default function TakeoffPage() {
           </div>
           <div style={{ textAlign: 'right', color: GOLD, fontSize: 16 }}>
             {fmt$(result?.totalProjectCost || 0)}
+          </div>
+          <div style={{ textAlign: 'right', color: '#22C55E', fontSize: 16 }}>
+            {fmt$((result?.totalProjectCost || 0) * 1.15)}
           </div>
         </div>
       </div>
@@ -785,16 +929,19 @@ export default function TakeoffPage() {
           {generating === 'sov' ? 'Creating...' : '📋 Auto-Generate SOV'}
         </button>
         <button
-          onClick={exportCSV}
+          onClick={exportXLS}
+          disabled={!!generating}
           style={{
             padding: '11px 22px',
-            background: 'rgba(255,255,255,0.07)',
-            border: `1px solid rgba(255,255,255,0.15)`,
-            borderRadius: 8, color: '#fff',
-            fontWeight: 600, fontSize: 13, cursor: 'pointer',
+            background: 'rgba(34,197,94,0.12)',
+            border: `1px solid rgba(34,197,94,0.3)`,
+            borderRadius: 8, color: '#22C55E',
+            fontWeight: 600, fontSize: 13,
+            cursor: generating ? 'wait' : 'pointer',
+            opacity: (generating && generating !== 'xls') ? 0.5 : 1,
           }}
         >
-          📊 Export to CSV
+          {generating === 'xls' ? 'Generating...' : '📊 Export to Excel'}
         </button>
         <button
           onClick={() => {

@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 /* ── colour tokens ─────────────────────────────────────────────── */
 const GOLD   = '#D4A017';
@@ -76,12 +77,7 @@ interface Subcontractor {
 type View = 'list' | 'detail' | 'add_note' | 'add_flag';
 
 /* ── helpers ───────────────────────────────────────────────────── */
-const TRADES = [
-  'Electrical', 'Plumbing', 'HVAC', 'Mechanical', 'Concrete',
-  'Framing', 'Drywall', 'Roofing', 'Painting', 'Landscaping',
-  'Fire Protection', 'Demolition', 'Excavation', 'Steel', 'Glazing',
-  'Flooring', 'Masonry', 'Insulation', 'General', 'Other',
-];
+// TRADES imported from @/lib/contractor-trades
 
 const STATUS_LABELS: Record<string, string> = {
   approved: 'Approved', pending: 'Pending', rejected: 'Rejected', under_review: 'Under Review',

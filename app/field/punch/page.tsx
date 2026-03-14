@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -25,7 +26,7 @@ const STATUS_LABELS: Record<string, string> = { open: 'Open', in_progress: 'In P
 const PRIORITY_COLORS: Record<string, string> = { Critical: RED, High: AMBER, Medium: BLUE, Low: DIM };
 const STATUS_COLORS: Record<string, string>   = { open: RED, in_progress: AMBER, ready_to_inspect: BLUE, complete: GREEN };
 
-const TRADES = ['General Contractor', 'Concrete', 'Framing / Carpentry', 'Roofing', 'Electrical', 'Plumbing', 'HVAC', 'Drywall', 'Painting', 'Flooring', 'Tile', 'Landscaping', 'Other'];
+// TRADES imported from @/lib/contractor-trades
 
 interface PunchItem {
   id: string;

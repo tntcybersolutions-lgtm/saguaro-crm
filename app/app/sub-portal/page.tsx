@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { CONTRACTOR_TRADES as ALL_TRADES } from '@/lib/contractor-trades';
 
 /* ── palette ── */
 const GOLD = '#D4A017';
@@ -85,7 +86,7 @@ function fmtDateTime(d: string): string {
   return dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-const ALL_TRADES = ['Electrical', 'Plumbing', 'HVAC', 'Framing', 'Concrete', 'Roofing', 'Drywall', 'Painting', 'Flooring', 'Steel', 'Landscaping', 'Fire Protection'];
+// ALL_TRADES imported from @/lib/contractor-trades
 const ALL_PROJECTS = ['Mesa Gateway Phase II', 'Scottsdale Office Tower', 'Tempe Mixed-Use', 'Chandler Medical Center', 'Gilbert Town Center'];
 const ALL_PERMISSIONS_LIST: { key: PortalPermission; label: string }[] = [
   { key: 'contract', label: 'Their Contract' },

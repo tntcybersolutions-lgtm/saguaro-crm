@@ -73,11 +73,10 @@ export async function POST(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Detect PDF page count
-    let pageCount = 0;
-    if (file.type === 'application/pdf') {
-      pageCount = await getPdfPageCount(buffer);
-    }
+    // Detect PDF page count (non-blocking — kicked off but not awaited yet)
+    const pageCountPromise = file.type === 'application/pdf'
+      ? getPdfPageCount(buffer)
+      : Promise.resolve(0);
 
     // Upload blueprint to Supabase Storage
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
@@ -92,33 +91,31 @@ export async function POST(
 
     if (uploadError) throw uploadError;
 
+    // Resolve page count now (upload was the slow part, this is fast)
+    const pageCount = await pageCountPromise;
+
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('blueprints')
       .getPublicUrl(storagePath);
 
-    // Generate thumbnail (non-blocking — don't fail upload if this fails)
-    let thumbnailUrl: string | null = null;
-    try {
-      const thumb = await generateThumbnail(buffer, file.type);
-      if (thumb) {
-        const thumbPath = `${takeoff.project_id}/blueprints/${takeoffId}/thumbnail.jpg`;
-        const { error: thumbErr } = await supabase.storage
-          .from('blueprints')
-          .upload(thumbPath, thumb, {
-            contentType: 'image/jpeg',
-            upsert: true,
-          });
-        if (!thumbErr) {
-          const { data: { publicUrl: thumbUrl } } = supabase.storage
-            .from('blueprints')
-            .getPublicUrl(thumbPath);
-          thumbnailUrl = thumbUrl;
-        }
+    // Thumbnail — truly fire-and-forget, never blocks the upload response
+    generateThumbnail(buffer, file.type).then(async (thumb) => {
+      if (!thumb) return;
+      const thumbPath = `${takeoff.project_id}/blueprints/${takeoffId}/thumbnail.jpg`;
+      const { error: thumbErr } = await supabase.storage
+        .from('blueprints')
+        .upload(thumbPath, thumb, { contentType: 'image/jpeg', upsert: true });
+      if (!thumbErr) {
+        const { data: { publicUrl: thumbUrl } } = supabase.storage
+          .from('blueprints').getPublicUrl(thumbPath);
+        await supabase.from('takeoffs')
+          .update({ thumbnail_url: thumbUrl })
+          .eq('id', takeoffId);
       }
-    } catch (err) {
-      console.warn('[takeoff/upload] Thumbnail generation failed (non-fatal):', err instanceof Error ? err.message : err);
-    }
+    }).catch((err) => {
+      console.warn('[takeoff/upload] thumbnail (non-fatal):', err instanceof Error ? err.message : err);
+    });
 
     // Update takeoff record
     const updatePayload: Record<string, unknown> = {
@@ -132,9 +129,6 @@ export async function POST(
 
     if (pageCount > 0) {
       updatePayload.page_count = pageCount;
-    }
-    if (thumbnailUrl) {
-      updatePayload.thumbnail_url = thumbnailUrl;
     }
 
     const { data: updated, error: updateError } = await supabase
@@ -150,7 +144,6 @@ export async function POST(
       success: true,
       takeoff: updated,
       fileUrl: publicUrl,
-      thumbnailUrl,
       fileSize: file.size,
       fileSizeFormatted: formatSize(file.size),
       pageCount: pageCount || undefined,
