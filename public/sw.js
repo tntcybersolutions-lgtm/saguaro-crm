@@ -1,5 +1,5 @@
-/* Saguaro Field — Service Worker v5 */
-const CACHE = 'saguaro-field-v5';
+/* Saguaro Field — Service Worker v6 */
+const CACHE = 'saguaro-field-v6';
 const OFFLINE_URL = '/field';
 
 const PRECACHE = [

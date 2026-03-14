@@ -94,8 +94,24 @@ export default function HomePage() {
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
           <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 48, width: 'auto', objectFit: 'contain', flexShrink: 0, mixBlendMode: 'screen' as const }} />
         </a>
-        <div style={{ display: 'flex', gap: 28 }} className="desktop-nav">
-          {NAV_LINKS.map(l => (
+        <div style={{ display: 'flex', gap: 28, alignItems: 'center' }} className="desktop-nav">
+          {NAV_LINKS.map(l => l.label === 'Field App' ? (
+            /* Field App — green learn pill */
+            <a key={l.href} href={l.href} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 700, letterSpacing: '0.03em', color: GREEN, textDecoration: 'none', background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.35)', borderRadius: 20, padding: '3px 11px 3px 8px', transition: 'background 0.2s, border-color 0.2s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(34,197,94,.2)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(34,197,94,.6)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(34,197,94,.1)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(34,197,94,.35)'; }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
+              {l.label}
+            </a>
+          ) : l.label === 'Get the App' ? (
+            /* Get the App — amber action button */
+            <a key={l.href} href={l.href} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 800, letterSpacing: '0.02em', color: '#000', textDecoration: 'none', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 8, padding: '6px 14px', boxShadow: '0 2px 12px rgba(245,158,11,.35)', transition: 'box-shadow 0.2s, transform 0.15s', flexShrink: 0 }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(245,158,11,.55)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 12px rgba(245,158,11,.35)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>
+              Get the App
+            </a>
+          ) : (
             <a key={l.href} href={l.href} style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.88)', textDecoration: 'none', transition: 'color 0.2s' }}
               onMouseEnter={e => (e.currentTarget.style.color = '#F59E0B')}
               onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}>
@@ -167,10 +183,23 @@ export default function HomePage() {
       {/* Mobile drawer */}
       {mobileMenuOpen && (
         <div style={{ position: 'fixed', top: 64, left: 0, right: 0, zIndex: 99, background: 'rgba(13,17,23,.99)', borderBottom: `1px solid ${BORDER}`, padding: '8px 0', backdropFilter: 'blur(12px)' }}>
-          {[...NAV_LINKS, { label: 'Log In', href: '/login' }].map(l => (
+          {[...NAV_LINKS, { label: 'Log In', href: '/login' }].map(l => l.label === 'Get the App' ? (
+            /* Get the App — full-width amber button row in mobile menu */
             <a key={l.href} href={l.href} onClick={() => setMobileMenuOpen(false)}
-              style={{ display: 'block', padding: '14px 24px', fontSize: 15, fontWeight: 600, color: TEXT, textDecoration: 'none', borderBottom: `1px solid rgba(38,51,71,.5)` }}>
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '8px 16px', padding: '14px 24px', fontSize: 15, fontWeight: 900, color: '#000', textDecoration: 'none', borderBottom: 'none', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 10, boxShadow: '0 4px 20px rgba(245,158,11,.4)' }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>
+              Get the App — Free
+            </a>
+          ) : (
+            <a key={l.href} href={l.href} onClick={() => setMobileMenuOpen(false)}
+              style={{ display: 'flex', alignItems: 'center', gap: l.label === 'Field App' ? 8 : 0, padding: '14px 24px', fontSize: 15, fontWeight: 600, color: l.label === 'Field App' ? GREEN : TEXT, textDecoration: 'none', borderBottom: `1px solid rgba(38,51,71,.5)` }}>
+              {l.label === 'Field App' && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
+              )}
               {l.label}
+              {l.label === 'Field App' && (
+                <span style={{ marginLeft: 4, fontSize: 11, fontWeight: 800, background: 'rgba(34,197,94,.15)', border: '1px solid rgba(34,197,94,.3)', borderRadius: 10, padding: '1px 7px', color: GREEN, letterSpacing: 0.3 }}>FREE</span>
+              )}
             </a>
           ))}
           <div style={{ padding: '8px 0', borderBottom: `1px solid rgba(38,51,71,.5)` }}>
@@ -280,9 +309,9 @@ export default function HomePage() {
                     Start Free Trial
                     <span style={{ fontSize: 16 }}>→</span>
                   </a>
-                  <a href="#field-app" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 22px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
-                    See Field App
+                  <a href="/get-the-app" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 22px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>
+                    Get the App — Free
                   </a>
                 </div>
 
@@ -541,13 +570,13 @@ export default function HomePage() {
               </div>
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <a href="/field-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 8, color: '#000', fontSize: 13, fontWeight: 800, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 4px 20px rgba(212,160,23,0.3)` }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
-                  See Field App Features →
+                <a href="/get-the-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 28px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 6px 28px rgba(245,158,11,0.45)` }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>
+                  Get the App — Free →
                 </a>
-                <a href="/get-the-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(212,160,23,0.1)', border: `1px solid rgba(212,160,23,0.35)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>
-                  Get the App
+                <a href="/field-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(212,160,23,0.1)', border: `1px solid rgba(212,160,23,0.35)`, borderRadius: 8, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
+                  See All Features
                 </a>
                 <a href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 13, textDecoration: 'none' }}>
                   Open Field App
@@ -726,6 +755,22 @@ export default function HomePage() {
 
         {/* ── Footer ───────────────────────────────────────────────────── */}
         <footer style={{ borderTop: `1px solid ${BORDER}`, padding: '40px 24px', background: 'rgba(13,17,23,.8)' }}>
+          {/* App install callout strip */}
+          <div style={{ maxWidth: 1100, margin: '0 auto 36px', background: 'linear-gradient(135deg, rgba(245,158,11,.1), rgba(239,68,68,.07))', border: '1px solid rgba(245,158,11,.22)', borderRadius: 14, padding: '20px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: TEXT }}>Saguaro Field — Free Mobile App</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,.65)', marginTop: 2 }}>iPhone · Android · iPad · Mac · Windows · No App Store required</div>
+              </div>
+            </div>
+            <a href="/get-the-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 22px', background: 'linear-gradient(135deg,#F59E0B,#EF4444)', borderRadius: 8, color: '#fff', fontSize: 13, fontWeight: 900, textDecoration: 'none', boxShadow: '0 4px 16px rgba(245,158,11,.4)', flexShrink: 0 }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>
+              Get the App Free
+            </a>
+          </div>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 32 }}>
             <div>
               <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 12 }}>

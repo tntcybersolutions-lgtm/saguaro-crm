@@ -6,7 +6,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { getQueueCount, replayQueue } from '@/lib/field-db';
+import { getQueueCount, getDeadLetterCount, replayQueue, purgeExpired } from '@/lib/field-db';
 
 const GOLD   = '#D4A017';
 const DARK   = '#07101C';
@@ -29,6 +29,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
   const [online, setOnline] = useState(true);
   const [queueCount, setQueueCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
+  const [deadCount, setDeadCount] = useState(0);
   const [installEvent, setInstallEvent] = useState<Event | null>(null);
   const [showInstall, setShowInstall] = useState(false);
   const [isIos, setIsIos] = useState(false);
@@ -41,6 +42,8 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
         if (e.data?.type === 'SYNC_NOW') triggerSync();
       });
     }
+    // Purge stale items (>72h) on mount — silent, no user impact
+    purgeExpired().catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -89,7 +92,10 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
   }, []);
 
   const refreshQueue = async () => {
-    try { setQueueCount(await getQueueCount()); } catch { /* no IndexedDB */ }
+    try {
+      setQueueCount(await getQueueCount());
+      setDeadCount(await getDeadLetterCount());
+    } catch { /* no IndexedDB */ }
   };
 
   const triggerSync = useCallback(async () => {
@@ -100,11 +106,6 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
   }, [syncing]);
 
   const handleInstall = async () => {
-    if (isIos) {
-      // iOS: navigate to install guide
-      window.location.href = '/field/install';
-      return;
-    }
     if (!installEvent) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (installEvent as any).prompt();
@@ -147,32 +148,101 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      {/* Install prompt — hidden when already standalone */}
+      {/* Install modal — full-screen bottom sheet */}
       {showInstall && !isStandalone && (
-        <div style={{ background: 'rgba(212,160,23,.1)', borderBottom: `1px solid rgba(212,160,23,.25)`, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1={12} y1={15} x2={12} y2={3}/></svg>{isIos ? 'Install on iPhone/iPad' : 'Install Saguaro Field'}</span>
-            </span>
-            {isIos && (
-              <p style={{ margin: '2px 0 0', fontSize: 11, color: DIM }}>
-                Tap Share ↑ then &quot;Add to Home Screen&quot;
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={dismissInstall}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 200 }}
+          />
+          {/* Bottom sheet card */}
+          <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#0F1E30', borderRadius: '20px 20px 0 0', border: '1px solid rgba(212,160,23,.22)', borderBottom: 'none', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))', zIndex: 201, boxShadow: '0 -10px 48px rgba(0,0,0,0.7)' }}>
+            {/* Drag handle */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
+              <div style={{ width: 38, height: 4, borderRadius: 2, background: 'rgba(255,255,255,.14)' }} />
+            </div>
+            {/* App icon + name */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 24px 0' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/icon-192x192.png" alt="Saguaro Field" width={72} height={72} style={{ borderRadius: 18, border: '2px solid rgba(212,160,23,.45)', boxShadow: '0 4px 24px rgba(212,160,23,.28)' }} />
+              <h2 style={{ margin: '12px 0 4px', fontSize: 22, fontWeight: 900, color: TEXT, letterSpacing: -0.5, textAlign: 'center' }}>
+                Install Saguaro Field
+              </h2>
+              <p style={{ margin: 0, fontSize: 14, color: DIM, textAlign: 'center', lineHeight: 1.4 }}>
+                Your crew&apos;s field app — lives on the home screen,<br />opens instantly, works without signal.
               </p>
+            </div>
+            {/* Benefit pills */}
+            <div style={{ display: 'flex', gap: 8, padding: '14px 24px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {['Works offline', 'No app store needed', 'Instant access'].map((b) => (
+                <span key={b} style={{ background: 'rgba(212,160,23,.12)', border: '1px solid rgba(212,160,23,.28)', borderRadius: 20, padding: '4px 13px', fontSize: 12, fontWeight: 700, color: GOLD }}>
+                  {b}
+                </span>
+              ))}
+            </div>
+            {/* Divider */}
+            <div style={{ height: 1, background: 'rgba(255,255,255,.07)', margin: '0 24px' }} />
+
+            {isIos ? (
+              /* iOS — step-by-step visual guide */
+              <div style={{ padding: '16px 24px 0' }}>
+                <p style={{ margin: '0 0 14px', fontSize: 13, color: DIM, textAlign: 'center', fontWeight: 600, letterSpacing: 0.2 }}>
+                  3 steps in Safari — takes 15 seconds
+                </p>
+                {[
+                  { num: '1', icon: <ShareIcon />, label: 'Tap the Share button', sub: 'The box-with-arrow icon at the bottom of Safari' },
+                  { num: '2', icon: <HomeAddIcon />, label: 'Tap "Add to Home Screen"', sub: 'Scroll down in the share sheet to find it' },
+                  { num: '3', icon: <CheckIcon />, label: 'Tap "Add" — you\'re done!', sub: 'The app icon will appear on your home screen' },
+                ].map((step) => (
+                  <div key={step.num} style={{ display: 'flex', gap: 14, marginBottom: 16, alignItems: 'center' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(212,160,23,.13)', border: '1.5px solid rgba(212,160,23,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: GOLD }}>
+                      {step.icon}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{step.label}</div>
+                      <div style={{ fontSize: 12, color: DIM, marginTop: 2, lineHeight: 1.4 }}>{step.sub}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* Android / Chrome — one tap install */
+              <div style={{ padding: '20px 24px 0' }}>
+                <button
+                  onClick={handleInstall}
+                  style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017 0%, #EF8C1A 100%)', border: 'none', borderRadius: 14, padding: '16px', color: '#000', fontSize: 17, fontWeight: 900, cursor: 'pointer', boxShadow: '0 6px 28px rgba(212,160,23,.5)', letterSpacing: 0.2 }}
+                >
+                  Install App
+                </button>
+                <p style={{ margin: '9px 0 0', textAlign: 'center', fontSize: 12, color: DIM }}>
+                  Takes 2 seconds · Works exactly like a native app
+                </p>
+              </div>
             )}
+
+            {/* Dismiss */}
+            <div style={{ padding: '14px 24px 0', textAlign: 'center' }}>
+              <button onClick={dismissInstall} style={{ background: 'none', border: 'none', color: DIM, fontSize: 14, cursor: 'pointer', padding: '8px 20px' }}>
+                Not now
+              </button>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={dismissInstall} style={{ background: 'none', border: 'none', color: DIM, fontSize: 13, cursor: 'pointer', padding: '4px' }}>✕</button>
-            <button onClick={handleInstall} style={{ background: GOLD, border: 'none', borderRadius: 6, padding: '5px 12px', color: '#000', fontSize: 13, fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              {isIos ? 'How to' : 'Install'}
-            </button>
-          </div>
-        </div>
+        </>
       )}
 
       {/* Offline banner */}
       {!online && (
         <div style={{ background: 'rgba(239,68,68,.1)', borderBottom: '1px solid rgba(239,68,68,.2)', padding: '7px 16px', textAlign: 'center', fontSize: 13, color: RED, fontWeight: 600 }}>
           Offline — changes will sync when reconnected
+        </div>
+      )}
+
+      {/* Dead-letter alert — items that failed 5+ times */}
+      {deadCount > 0 && (
+        <div style={{ background: 'rgba(245,158,11,.1)', borderBottom: '1px solid rgba(245,158,11,.3)', padding: '7px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: GOLD }}>
+          <span style={{ fontWeight: 700 }}>⚠ {deadCount} item{deadCount > 1 ? 's' : ''} failed to sync after 5 attempts</span>
+          <span style={{ color: DIM, fontSize: 11 }}>Contact support if this persists</span>
         </div>
       )}
 
@@ -203,6 +273,17 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
       `}</style>
     </div>
   );
+}
+
+// Install modal icons
+function ShareIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>;
+}
+function HomeAddIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg>;
+}
+function CheckIcon() {
+  return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 }
 
 // Nav icons
