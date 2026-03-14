@@ -10,6 +10,8 @@ const NAV_LINKS = [
   { label: 'How It Works', href: '/#demo' },
   { label: 'Pricing',   href: '/pricing' },
   { label: 'Compare',   href: '/compare/procore' },
+  { label: 'ROI Calculator', href: '/roi-calculator' },
+  { label: 'Switch from Procore', href: '/switch-from-procore' },
 ];
 
 const FEATURES: { icon: React.ReactNode; title: string; desc: string; pill: string }[] = [
@@ -36,6 +38,17 @@ const TESTIMONIALS = [
   { quote: "The lien waiver module alone is worth the subscription. We do 30–40 waivers a month across multiple projects. This cut our admin time by 80%.", name: "Jennifer R.", title: "Operations Director — Specialty Subcontractor, Las Vegas NV" },
   { quote: "We compared this to Procore and Buildertrend. Saguaro has everything we need at a fraction of the cost, and the AI features are actually useful — not just a gimmick.", name: "David K.", title: "Owner — Mid-Size GC, Denver CO" },
   { quote: "The field app is a game changer. My crew clocks in with GPS, submits daily logs, and I can see everything in real time. And it works offline — that's huge on our job sites.", name: "Carlos M.", title: "Superintendent — Commercial GC, San Antonio TX" },
+];
+
+const SOCIAL_PROOF_TOASTS = [
+  { name: "Marcus T.", city: "Phoenix, AZ", action: "just ran an AI takeoff", detail: "24,200 SF commercial — 47 items in 38s" },
+  { name: "Jennifer R.", city: "Las Vegas, NV", action: "saved 3 hours", detail: "Generated 12 lien waivers automatically" },
+  { name: "David K.", city: "Denver, CO", action: "switched from Procore", detail: "Saved $1,451/mo on day one" },
+  { name: "Carlos M.", city: "San Antonio, TX", action: "clocked in his crew", detail: "18 workers — GPS verified in 30 seconds" },
+  { name: "Rachel B.", city: "Austin, TX", action: "submitted a G702", detail: "Pay app generated + sent in 2 minutes" },
+  { name: "Tom H.", city: "Scottsdale, AZ", action: "won a $2.8M bid", detail: "AI scoring flagged a 34% win probability boost" },
+  { name: "Luis V.", city: "San Diego, CA", action: "started a free trial", detail: "Comparing vs. Procore + Buildertrend" },
+  { name: "Sarah M.", city: "Dallas, TX", action: "ran certified payroll", detail: "WH-347 generated for 23 workers" },
 ];
 
 // ── Workflow steps (for display only — real system at /sandbox) ───────────────
@@ -73,6 +86,90 @@ export default function HomePage() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+  // Takeoff animation state
+  const [visibleRows, setVisibleRows] = useState(0);
+  const [animProgress, setAnimProgress] = useState(0);
+  const [animDone, setAnimDone] = useState(false);
+  const [animMsg, setAnimMsg] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    function runAnim() {
+      if (cancelled) return;
+      setVisibleRows(0);
+      setAnimProgress(0);
+      setAnimDone(false);
+      setAnimMsg('');
+      const t = (ms: number, fn: () => void) => setTimeout(() => { if (!cancelled) fn(); }, ms);
+      t(800,  () => { setAnimProgress(15); setAnimMsg('Reading dimensions...'); });
+      t(1600, () => { setAnimProgress(35); setAnimMsg('Analyzing CSI divisions...'); });
+      t(2400, () => { setAnimProgress(55); setAnimMsg('Calculating quantities...'); });
+      t(3000, () => { setAnimProgress(70); setAnimMsg('Applying material costs...'); });
+      t(3400, () => setVisibleRows(1));
+      t(4000, () => setVisibleRows(2));
+      t(4600, () => setVisibleRows(3));
+      t(5200, () => setVisibleRows(4));
+      t(5800, () => setVisibleRows(5));
+      t(6400, () => { setAnimDone(true); setAnimProgress(100); setAnimMsg('Completed in 41s'); });
+    }
+    runAnim();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!animDone) return;
+    const timer = setTimeout(() => {
+      setVisibleRows(0);
+      setAnimProgress(0);
+      setAnimDone(false);
+      setAnimMsg('');
+      let cancelled = false;
+      const t = (ms: number, fn: () => void) => setTimeout(() => { if (!cancelled) fn(); }, ms);
+      t(800,  () => { setAnimProgress(15); setAnimMsg('Reading dimensions...'); });
+      t(1600, () => { setAnimProgress(35); setAnimMsg('Analyzing CSI divisions...'); });
+      t(2400, () => { setAnimProgress(55); setAnimMsg('Calculating quantities...'); });
+      t(3000, () => { setAnimProgress(70); setAnimMsg('Applying material costs...'); });
+      t(3400, () => setVisibleRows(1));
+      t(4000, () => setVisibleRows(2));
+      t(4600, () => setVisibleRows(3));
+      t(5200, () => setVisibleRows(4));
+      t(5800, () => setVisibleRows(5));
+      t(6400, () => { setAnimDone(true); setAnimProgress(100); setAnimMsg('Completed in 41s'); });
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [animDone]);
+
+  // Social proof toast state
+  const [toastIdx, setToastIdx] = useState(0);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastDismissed, setToastDismissed] = useState(false);
+
+  useEffect(() => {
+    if (toastDismissed) return;
+    let cancelled = false;
+    const initialTimer = setTimeout(() => {
+      if (cancelled) return;
+      setToastVisible(true);
+      function cycle(idx: number) {
+        const showTimer = setTimeout(() => {
+          if (cancelled) return;
+          setToastVisible(false);
+          const nextTimer = setTimeout(() => {
+            if (cancelled) return;
+            const next = (idx + 1) % SOCIAL_PROOF_TOASTS.length;
+            setToastIdx(next);
+            setToastVisible(true);
+            cycle(next);
+          }, 1000);
+          return nextTimer;
+        }, 5000);
+        return showTimer;
+      }
+      cycle(0);
+    }, 8000);
+    return () => { cancelled = true; clearTimeout(initialTimer); };
+  }, [toastDismissed]);
+
   const [contactModal, setContactModal] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', company: '', message: '' });
   const [contactSent, setContactSent] = useState(false);
@@ -243,6 +340,10 @@ export default function HomePage() {
           from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
         .hero-animate { animation: fadeInUp .6s ease both; }
         .hero-animate-delay { animation: fadeInUp .6s ease .15s both; }
         .hero-animate-panel { animation: fadeInUp .7s ease .1s both; }
@@ -345,14 +446,24 @@ export default function HomePage() {
                         <div style={{ fontSize: 12, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>AI Blueprint Takeoff</div>
                         <div style={{ fontSize: 10, color: DIM, marginTop: 2 }}>Riverside Medical Pavilion · 48 pages · 24,200 SF</div>
                       </div>
-                      <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.12)', color: '#3dd68c', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 5, padding: '3px 8px', fontWeight: 700, letterSpacing: '0.05em' }}>✓ COMPLETE</span>
+                      {animDone
+                        ? <span style={{ fontSize: 9, background: 'rgba(34,197,94,0.12)', color: '#3dd68c', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 5, padding: '3px 8px', fontWeight: 700, letterSpacing: '0.05em' }}>✓ COMPLETE</span>
+                        : <div style={{ borderRadius: '50%', border: '2px solid rgba(245,158,11,0.3)', borderTopColor: '#F59E0B', width: 10, height: 10, animation: 'spin 0.8s linear infinite' }} />
+                      }
                     </div>
                     {/* AI bar */}
-                    <div style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.18)', borderRadius: 7, padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+                    <div style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.18)', borderRadius: 7, padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
                       <span style={{ color: GOLD, display: 'flex' }}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
                       <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', lineHeight: 1.45 }}>
-                        Sage analyzed 847 dimensions · 5 CSI divisions · <span style={{ color: GOLD, fontWeight: 700 }}>Completed in 41s</span>
+                        {animDone
+                          ? <>Sage analyzed 847 dimensions · 5 CSI divisions · <span style={{ color: GOLD, fontWeight: 700 }}>Completed in 41s</span></>
+                          : animMsg || <span style={{ color: 'rgba(255,255,255,0.35)' }}>Initializing...</span>
+                        }
                       </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div style={{ height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 2, marginBottom: 12, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${animProgress}%`, background: 'linear-gradient(90deg, #F59E0B, #F5D060)', borderRadius: 2, transition: 'width 0.5s ease' }} />
                     </div>
                   </div>
 
@@ -364,7 +475,7 @@ export default function HomePage() {
                       ))}
                     </div>
                     {TAKEOFF_MATERIALS.map((row, i) => (
-                      <div key={row.csi} style={{ display: 'grid', gridTemplateColumns: '68px 1fr 52px 36px 54px 62px', gap: '0 6px', padding: '6px 6px', background: i % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.035)' }}>
+                      <div key={row.csi} style={{ display: 'grid', gridTemplateColumns: '68px 1fr 52px 36px 54px 62px', gap: '0 6px', padding: '6px 6px', background: i % 2 === 0 ? 'rgba(255,255,255,0.025)' : 'transparent', borderBottom: '1px solid rgba(255,255,255,0.035)', opacity: visibleRows > i ? 1 : 0, transform: visibleRows > i ? 'none' : 'translateX(-8px)', transition: 'all 0.35s ease' }}>
                         <div style={{ fontSize: 9, color: GOLD, fontFamily: 'monospace', fontWeight: 700 }}>{row.csi}</div>
                         <div style={{ fontSize: 9, color: TEXT, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.desc}</div>
                         <div style={{ fontSize: 9, color: TEXT, textAlign: 'right' }}>{row.qty}</div>
@@ -841,6 +952,35 @@ export default function HomePage() {
           </div>
         </footer>
       </div>
+
+      {/* ── Social Proof Toast ───────────────────────────────────────── */}
+      {!toastDismissed && toastVisible && (
+        <div style={{
+          position: 'fixed', bottom: 24, left: 24, zIndex: 1000,
+          background: '#0F172A', border: '1px solid rgba(245,158,11,0.35)',
+          borderRadius: 12, padding: '12px 14px', maxWidth: 300,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,158,11,0.1)',
+          opacity: toastVisible ? 1 : 0,
+          transform: toastVisible ? 'translateY(0)' : 'translateY(8px)',
+          transition: 'all 0.4s ease',
+          display: 'flex', gap: 10, alignItems: 'flex-start'
+        }}>
+          {/* Green pulse dot */}
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', flexShrink: 0, marginTop: 5, boxShadow: '0 0 0 3px rgba(34,197,94,0.2)' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#F8FAFC' }}>
+              {SOCIAL_PROOF_TOASTS[toastIdx].name} · {SOCIAL_PROOF_TOASTS[toastIdx].city}
+            </div>
+            <div style={{ fontSize: 11, color: '#F59E0B', fontWeight: 600, marginTop: 1 }}>
+              {SOCIAL_PROOF_TOASTS[toastIdx].action}
+            </div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+              {SOCIAL_PROOF_TOASTS[toastIdx].detail}
+            </div>
+          </div>
+          <button onClick={() => setToastDismissed(true)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: '2px 4px', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>✕</button>
+        </div>
+      )}
 
       {/* ── Contact Modal ─────────────────────────────────────────────── */}
       {contactModal && (
