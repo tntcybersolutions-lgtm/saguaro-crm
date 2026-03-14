@@ -298,11 +298,13 @@ export default function FieldAppPage() {
               <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>Works on every device</span>
               <div className="fa-devices" style={{ display: 'flex', gap: 8 }}>
                 {DEVICES.map(d => (
-                  <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '5px 12px' }}>
-                    <span style={{ color: DIM }}><d.Icon /></span>
+                  <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: '6px 14px', transition: 'all .15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.15)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.5)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.08)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.25)'; }}>
+                    <span style={{ color: GOLD }}><d.Icon /></span>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: TEXT }}>{d.label}</div>
-                      <div style={{ fontSize: 9, color: DIM }}>{d.sub}</div>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: TEXT }}>{d.label}</div>
+                      <div style={{ fontSize: 9, color: '#F59E0B', opacity: 0.75 }}>{d.sub}</div>
                     </div>
                   </div>
                 ))}
