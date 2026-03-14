@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#22c55e';
 
@@ -59,6 +59,19 @@ const TAKEOFF_MATERIALS = [
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [portalsOpen, setPortalsOpen] = useState(false);
+  const portalsRef = useRef<HTMLDivElement>(null);
+
+  // Close portals dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (portalsRef.current && !portalsRef.current.contains(e.target as Node)) {
+        setPortalsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
   const [contactModal, setContactModal] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', company: '', message: '' });
   const [contactSent, setContactSent] = useState(false);
@@ -96,6 +109,55 @@ export default function HomePage() {
         </div>
         <div style={{ flex: 1 }} />
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          {/* Portals dropdown */}
+          <div ref={portalsRef} className="desktop-nav" style={{ position: 'relative' }}>
+            <button
+              onClick={() => setPortalsOpen(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'transparent', border: `1px solid ${portalsOpen ? GOLD : 'rgba(255,255,255,0.15)'}`, borderRadius: 6, color: portalsOpen ? GOLD : 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.color = GOLD; }}
+              onMouseLeave={e => { if (!portalsOpen) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; } }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={3} y={3} width={7} height={7}/><rect x={14} y={3} width={7} height={7}/><rect x={14} y={14} width={7} height={7}/><rect x={3} y={14} width={7} height={7}/></svg>
+              Portals
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={11} height={11} style={{ transform: portalsOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+
+            {portalsOpen && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, minWidth: 242, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, boxShadow: '0 16px 48px rgba(0,0,0,0.6)', overflow: 'hidden', zIndex: 200 }}>
+                <div style={{ padding: '6px 16px 10px', fontSize: 10, fontWeight: 700, color: DIM, letterSpacing: '0.1em', textTransform: 'uppercase', borderBottom: `1px solid ${BORDER}`, paddingTop: 12 }}>Portal Access</div>
+                <a href="/portals/client/login" onClick={() => setPortalsOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', textDecoration: 'none', transition: 'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(212,160,23,0.08)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <div style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>Client Portal</div>
+                    <div style={{ fontSize: 11, color: DIM, marginTop: 1 }}>Project updates &amp; approvals</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12} style={{ marginLeft: 'auto' }}><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="/portals/sub/login" onClick={() => setPortalsOpen(false)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', textDecoration: 'none', transition: 'background 0.15s', borderTop: `1px solid ${BORDER}` }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(59,130,246,0.08)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <div style={{ width: 34, height: 34, borderRadius: 8, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>Subcontractor Portal</div>
+                    <div style={{ fontSize: 11, color: DIM, marginTop: 1 }}>Bids, pay apps &amp; compliance</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12} style={{ marginLeft: 'auto' }}><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <div style={{ padding: '10px 16px 12px', borderTop: `1px solid ${BORDER}`, background: 'rgba(0,0,0,0.2)' }}>
+                  <div style={{ fontSize: 11, color: DIM, lineHeight: 1.5 }}>Enter your email to find your access link.</div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <a href="/login" className="desktop-nav" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 6, color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 400, textDecoration: 'none' }}>Log In</a>
           <a href="/signup" style={{ padding: '7px 18px', background: GOLD, border: 'none', borderRadius: 6, color: '#000', fontSize: 13, fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none', flexShrink: 0 }}>Free Trial</a>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="mobile-only"
@@ -115,6 +177,15 @@ export default function HomePage() {
               {l.label}
             </a>
           ))}
+          <div style={{ padding: '8px 0', borderBottom: `1px solid rgba(38,51,71,.5)` }}>
+            <div style={{ padding: '8px 24px 6px', fontSize: 10, fontWeight: 700, color: DIM, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Portals</div>
+            <a href="/portals/client/login" onClick={() => setMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 24px', fontSize: 14, fontWeight: 600, color: TEXT, textDecoration: 'none' }}>
+              <span style={{ fontSize: 16 }}>🏠</span> Client Portal
+            </a>
+            <a href="/portals/sub/login" onClick={() => setMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 24px', fontSize: 14, fontWeight: 600, color: TEXT, textDecoration: 'none' }}>
+              <span style={{ fontSize: 16 }}>👷</span> Subcontractor Portal
+            </a>
+          </div>
           <div style={{ padding: 16 }}>
             <a href="/signup" style={{ display: 'block', textAlign: 'center', padding: '13px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, borderRadius: 9, color: '#0d1117', fontWeight: 800, textDecoration: 'none' }}>
               Start Free Trial →
