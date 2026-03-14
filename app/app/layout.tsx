@@ -10,6 +10,7 @@ import { usePathname } from 'next/navigation';
 import NotificationBell from '../../components/NotificationBell';
 import CommandPalette from '../../components/CommandPalette';
 import SaguaroChatWidget from '../../components/SaguaroChatWidget';
+import SubscriptionWall from '../../components/SubscriptionWall';
 
 const GOLD   = '#D4A017';
 const DARK   = '#0d1117';
@@ -403,7 +404,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* ── Main Content (offset for fixed nav) ─────────────────────────── */}
       <main style={{ paddingTop: 56 }}>
         <Breadcrumb pathname={pathname} />
-        {children}
+        <SubscriptionWall>{children}</SubscriptionWall>
       </main>
 
       {/* ── Sage CRM Chat Widget ─────────────────────────────────────────── */}
