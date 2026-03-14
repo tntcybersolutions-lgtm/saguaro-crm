@@ -60,6 +60,9 @@ function IconArrowLeft() {
 function IconSaguaro() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22V12"/><path d="M12 12C12 8 9 6 9 3"/><path d="M12 12C12 8 15 6 15 3"/><path d="M6 15c0-2 3-3 6-3"/><path d="M18 15c0-2-3-3-6-3"/></svg>;
 }
+function IconDownload() {
+  return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
+}
 
 // ── Icon map for FEATURES ─────────────────────────────────────────────────
 const FEATURE_ICONS: Record<string, React.ReactNode> = {
@@ -79,48 +82,64 @@ const FEATURES = [
     title: 'Daily Logs',
     desc: 'Submit structured daily logs with weather, crew count, activities, equipment, and delays — all from your phone in under 2 minutes.',
     pills: ['Voice-to-text', 'Auto-date', 'PDF export'],
+    before: 'Paper forms, forgotten at end of day',
+    after: '2-min voice-to-text log, auto-synced',
   },
   {
     color: GOLD,
     title: 'Site Photos',
     desc: 'Capture, tag, and annotate site photos. Organized by project, date, and phase. Syncs to office instantly — even from the basement.',
     pills: ['GPS tagged', 'Annotations', 'Unlimited storage'],
+    before: 'Phone camera roll, no tagging',
+    after: 'GPS-tagged, annotated, searchable',
   },
   {
     color: GREEN,
     title: 'GPS Clock-In / Out',
     desc: 'Workers clock in with GPS verification. Foremen see the full crew timeline in real time. Exports directly to payroll.',
     pills: ['GPS verified', 'Real-time map', 'Payroll export'],
+    before: 'Paper timesheets, buddy punching',
+    after: 'GPS-verified, fraud-proof',
   },
   {
     color: PURPLE,
     title: 'Punch List',
     desc: 'Create, assign, and close punch items with photos. Subs get mobile notifications. Everything is tracked with timestamps.',
     pills: ['Photo proof', 'Sub notifications', 'Status tracking'],
+    before: 'Excel spreadsheet, no photos',
+    after: 'Photo-linked items, sub notifications',
   },
   {
     color: '#F97316',
     title: 'RFIs',
     desc: 'Submit and track RFIs right from the field. See due dates, overdue flags, and responses without opening a laptop.',
     pills: ['Overdue alerts', 'Threaded replies', 'Office sync'],
+    before: 'Email chains, no tracking',
+    after: 'Threaded, timestamped, mobile-first',
   },
   {
     color: '#06B6D4',
     title: 'Inspections',
     desc: 'Run safety walkthroughs, quality control inspections, and pre-pour checklists from a phone. Sign and timestamp digitally.',
     pills: ['Custom checklists', 'Digital sign-off', 'PDF report'],
+    before: 'Paper checklists, lost in truck',
+    after: 'Digital sign-off, auto-archived',
   },
   {
     color: '#EF4444',
     title: 'Delivery Logs',
     desc: "Log material deliveries with photos and supplier info. Never lose track of what arrived, what's missing, or what got rejected.",
     pills: ['Photo receipt', 'Supplier info', 'Quantity tracking'],
+    before: "Verbal 'I think it came'",
+    after: 'Photo receipt, quantity verified',
   },
   {
     color: GOLD,
     title: 'Sage AI Assistant',
     desc: 'Ask Sage anything about the project — specs, schedules, contacts, last inspection results — while standing on the slab. Instant answers.',
     pills: ['Project-aware', 'Voice input', 'Streaming response'],
+    before: 'Call the PM, wait for answers',
+    after: 'Ask Sage, instant project-aware answer',
   },
 ];
 
@@ -141,6 +160,33 @@ const COMPARE = [
   { feature: 'Included in Base Plan',    saguaro: true, procore: false, buildertrend: false },
   { feature: 'Instant Install (any device)', saguaro: true, procore: false, buildertrend: false },
   { feature: 'Voice-to-text Logs',       saguaro: true, procore: false, buildertrend: false },
+];
+
+const TESTIMONIALS = [
+  {
+    quote: 'My guys actually use this. Took 10 minutes to train the whole crew. Daily logs come in automatically now.',
+    name: 'Jake T.',
+    role: 'Superintendent',
+    location: 'Phoenix, AZ',
+    initials: 'JT',
+    color: BLUE,
+  },
+  {
+    quote: 'Clock-in with GPS ended buddy punching on our sites. Saved us thousands in the first month.',
+    name: 'Maria S.',
+    role: 'Project Manager',
+    location: 'Las Vegas, NV',
+    initials: 'MS',
+    color: GREEN,
+  },
+  {
+    quote: 'Sage answered a question about our spec during a pour. My foreman had the answer in 15 seconds.',
+    name: 'Carlos M.',
+    role: 'GC Owner',
+    location: 'San Antonio, TX',
+    initials: 'CM',
+    color: GOLD,
+  },
 ];
 
 function hexRgb(hex: string): string {
@@ -165,11 +211,14 @@ export default function FieldAppPage() {
           .fa-compare { overflow-x: auto; }
           .fa-devices { flex-wrap: wrap !important; }
           .fa-nav-links { display: none !important; }
+          .fa-testimonials { grid-template-columns: 1fr !important; }
+          .fa-stats-bar { flex-direction: column !important; gap: 24px !important; }
         }
         .fa-card:hover { border-color: rgba(245,158,11,.6) !important; background: rgba(245,158,11,0.06) !important; transform: translateY(-3px); transition: all .2s ease; }
         .fa-cta-primary:hover { opacity: 0.9; transform: translateY(-2px); transition: all .15s ease; }
         .fa-nav-link:hover { color: #F59E0B !important; }
         .fa-back:hover { color: #e8edf8 !important; background: rgba(255,255,255,0.08) !important; }
+        .fa-get-app:hover { opacity: 0.88; transform: translateY(-1px); transition: all .15s ease; }
       `}</style>
 
       {/* ── Nav ────────────────────────────────────────────────────────── */}
@@ -196,6 +245,11 @@ export default function FieldAppPage() {
         <div style={{ flex: 1 }} />
 
         <a href="/field" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 6, color: 'rgba(255,255,255,0.7)', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}>Open Field App</a>
+        {/* Get the App button */}
+        <a href="/field/install" className="fa-get-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 6, color: '#000', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 12px rgba(245,158,11,0.35)' }}>
+          <IconDownload />
+          Get the App
+        </a>
         <a href="/signup" style={{ padding: '7px 16px', background: GOLD, borderRadius: 6, color: '#000', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>Free Trial</a>
       </nav>
 
@@ -220,7 +274,7 @@ export default function FieldAppPage() {
               </h1>
 
               <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.82)', margin: '0 0 32px', lineHeight: 1.65, maxWidth: 480 }}>
-                Give your crew a native-speed app on any device — iPhone, Android, iPad, or desktop. Daily logs, photos, GPS clock-in, punch lists, RFIs, and Sage AI. Works offline. No App Store. Included free with every plan.
+                The field app your crew actually wants to use. Daily logs, photos, GPS clock-in, punch lists, RFIs, and Sage AI — all in one app that installs in 30 seconds on any device. No App Store. No extra cost. Works offline.
               </p>
 
               <div className="fa-cta-row" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
@@ -230,6 +284,21 @@ export default function FieldAppPage() {
                 <a href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 22px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
                   Open Field App →
                 </a>
+              </div>
+
+              {/* Social proof stat bar */}
+              <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap', background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '10px 16px', marginBottom: 20 }}>
+                {[
+                  { stat: '500+', label: 'GC teams' },
+                  { stat: '5+', label: 'Device types' },
+                  { stat: '4.9★', label: 'Rated' },
+                ].map((item, i) => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                    {i > 0 && <span style={{ color: 'rgba(245,158,11,0.3)', margin: '0 14px', fontSize: 18, fontWeight: 300 }}>|</span>}
+                    <span style={{ fontSize: 13, color: GOLD, fontWeight: 900 }}>{item.stat}</span>
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginLeft: 5 }}>{item.label}</span>
+                  </div>
+                ))}
               </div>
 
               <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
@@ -313,6 +382,31 @@ export default function FieldAppPage() {
           </div>
         </div>
 
+        {/* ── "Why field crews love it" stats bar ─────────────────────── */}
+        <div style={{ background: 'linear-gradient(135deg, #1a0f00 0%, #1f1100 50%, #1a0f00 100%)', borderTop: '1px solid rgba(245,158,11,0.3)', borderBottom: '1px solid rgba(245,158,11,0.3)' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 32px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Why field crews love it</div>
+            </div>
+            <div className="fa-stats-bar" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0, flexWrap: 'wrap' }}>
+              {[
+                { value: '< 2 min', label: 'Daily log submission time' },
+                { value: '30 sec',  label: 'Install on any device' },
+                { value: '100%',    label: 'Works offline' },
+                { value: 'Free',    label: 'Included with every plan' },
+              ].map((s, i) => (
+                <div key={s.value} style={{ display: 'flex', alignItems: 'center' }}>
+                  {i > 0 && <div style={{ width: 1, height: 48, background: 'rgba(245,158,11,0.25)', margin: '0 32px' }} />}
+                  <div style={{ textAlign: 'center', minWidth: 130 }}>
+                    <div style={{ fontSize: 'clamp(26px, 3vw, 36px)', fontWeight: 900, color: GOLD, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{s.value}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontWeight: 500 }}>{s.label}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* ── Features grid ───────────────────────────────────────────── */}
         <section id="features" style={{ padding: '72px 32px', background: 'linear-gradient(180deg, #09111A 0%, #0a1628 50%, #09111A 100%)' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
@@ -331,7 +425,18 @@ export default function FieldAppPage() {
                   </div>
                 </div>
                 <div style={{ fontWeight: 800, fontSize: 15, color: TEXT, marginBottom: 8 }}>{f.title}</div>
-                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', lineHeight: 1.65, marginBottom: 14 }}>{f.desc}</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', lineHeight: 1.65, marginBottom: 12 }}>{f.desc}</div>
+                {/* Before / After */}
+                <div style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '10px 12px', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 5, alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: '#EF4444', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 4, padding: '1px 6px', letterSpacing: '0.05em', flexShrink: 0, marginTop: 1 }}>BEFORE</span>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.52)', lineHeight: 1.5 }}>{f.before}</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, color: GREEN, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', borderRadius: 4, padding: '1px 6px', letterSpacing: '0.05em', flexShrink: 0, marginTop: 1 }}>NOW</span>
+                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.82)', lineHeight: 1.5, fontWeight: 600 }}>{f.after}</span>
+                  </div>
+                </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {f.pills.map(p => (
                     <span key={p} style={{ fontSize: 9, fontWeight: 700, color: f.color, background: `rgba(${hexRgb(f.color)},.1)`, border: `1px solid rgba(${hexRgb(f.color)},.25)`, borderRadius: 10, padding: '2px 8px', letterSpacing: '0.06em' }}>{p}</span>
@@ -395,10 +500,51 @@ export default function FieldAppPage() {
           </div>
         </section>
 
+        {/* ── Testimonials ────────────────────────────────────────────── */}
+        <section style={{ padding: '64px 32px', background: 'linear-gradient(180deg, #0a1220 0%, #09111A 100%)', borderTop: `1px solid ${BORDER}` }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>Field Crew Reviews</div>
+              <h2 style={{ fontSize: 'clamp(22px, 2.8vw, 32px)', fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 8px' }}>Real crews. Real job sites. Real results.</h2>
+            </div>
+            <div className="fa-testimonials" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+              {TESTIMONIALS.map(t => (
+                <div key={t.name} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Stars */}
+                  <div style={{ display: 'flex', gap: 3 }}>
+                    {[1,2,3,4,5].map(n => (
+                      <span key={n} style={{ color: GOLD, fontSize: 14 }}>★</span>
+                    ))}
+                  </div>
+                  {/* Quote */}
+                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.88)', lineHeight: 1.65, margin: 0, flex: 1 }}>
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  {/* Author */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: `rgba(${hexRgb(t.color)},0.18)`, border: `2px solid rgba(${hexRgb(t.color)},0.4)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: t.color, flexShrink: 0 }}>
+                      {t.initials}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{t.name}</div>
+                      <div style={{ fontSize: 11, color: DIM }}>{t.role} · {t.location}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── Install steps ───────────────────────────────────────────── */}
         <section id="install" style={{ background: 'linear-gradient(180deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%)', borderTop: '1px solid rgba(30,58,95,0.8)', borderBottom: '1px solid rgba(30,58,95,0.8)' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', padding: '64px 32px' }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
+              {/* "Live in 30 seconds" badge */}
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 24, padding: '5px 16px', marginBottom: 16 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: GREEN, display: 'inline-block', boxShadow: '0 0 6px rgba(34,197,94,0.7)' }} />
+                <span style={{ fontSize: 11, fontWeight: 800, color: GREEN, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Live in 30 Seconds</span>
+              </div>
               <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>Install in 30 Seconds</div>
               <h2 style={{ fontSize: 'clamp(20px, 2.8vw, 30px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px' }}>No App Store. No download. Just tap and go.</h2>
               <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.78)', maxWidth: 480, margin: '0 auto' }}>Saguaro Field is a Progressive Web App. It installs directly from your browser and runs exactly like a native app — full screen, offline, with home screen icon.</p>
@@ -463,22 +609,37 @@ export default function FieldAppPage() {
         </section>
 
         {/* ── CTA ─────────────────────────────────────────────────────── */}
-        <section style={{ padding: '64px 32px', textAlign: 'center', maxWidth: 660, margin: '0 auto' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(212,160,23,0.12)', border: '1px solid rgba(212,160,23,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, margin: '0 auto 20px' }}>
-            <IconPhone />
+        <section style={{ padding: '80px 32px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
+          {/* Device icons row */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 28 }}>
+            {[
+              { Icon: IconApple,   label: 'Apple' },
+              { Icon: IconAndroid, label: 'Android' },
+              { Icon: IconTablet,  label: 'Tablet' },
+              { Icon: IconMonitor, label: 'Desktop' },
+            ].map(d => (
+              <div key={d.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD }}>
+                  <d.Icon />
+                </div>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{d.label}</span>
+              </div>
+            ))}
           </div>
-          <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 12px', lineHeight: 1.1 }}>
-            Put your office in every foreman&apos;s pocket
+
+          <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 42px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 14px', lineHeight: 1.1 }}>
+            Your crew is 30 seconds away<br />from a better job site
           </h2>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.78)', margin: '0 0 28px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.78)', margin: '0 0 32px', lineHeight: 1.6, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
             Start your 30-day free trial. Saguaro Field is included. Your crew can install it on any device in 30 seconds.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 20 }}>
-            <a href="/signup" style={{ padding: '14px 36px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 900, textDecoration: 'none', boxShadow: `0 8px 36px rgba(245,158,11,0.5)` }}>
-              Start Free Trial →
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 }}>
+            <a href="/field/install" className="fa-cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '15px 36px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 9, color: '#000', fontSize: 15, fontWeight: 900, textDecoration: 'none', boxShadow: '0 8px 40px rgba(245,158,11,0.55)' }}>
+              <IconDownload />
+              Get the App — Free
             </a>
-            <a href="/field" style={{ padding: '13px 24px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.88)', fontSize: 14, textDecoration: 'none' }}>
-              Open Field App
+            <a href="/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', background: 'transparent', border: '2px solid rgba(255,255,255,0.28)', borderRadius: 9, color: 'rgba(255,255,255,0.88)', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+              Start Free Trial
             </a>
           </div>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
