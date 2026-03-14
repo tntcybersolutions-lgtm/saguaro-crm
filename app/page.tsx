@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#22c55e';
+const GOLD='#F59E0B', DARK='#0d1117', RAISED='#0F172A', BORDER='#1E3A5F', DIM='#CBD5E1', TEXT='#F8FAFC', GREEN='#22c55e';
 
 const NAV_LINKS = [
   { label: 'Features',  href: '/#features' },
@@ -100,9 +100,9 @@ export default function HomePage() {
         </a>
         <div style={{ display: 'flex', gap: 28 }} className="desktop-nav">
           {NAV_LINKS.map(l => (
-            <a key={l.href} href={l.href} style={{ fontSize: 13, fontWeight: 400, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.65)', textDecoration: 'none', transition: 'color 0.2s' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,1)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.65)')}>
+            <a key={l.href} href={l.href} style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.04em', color: 'rgba(255,255,255,0.88)', textDecoration: 'none', transition: 'color 0.2s' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#F59E0B')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.88)')}>
               {l.label}
             </a>
           ))}
@@ -231,9 +231,9 @@ export default function HomePage() {
         <section style={{ position: 'relative', overflow: 'hidden' }} className="hero-section">
 
           {/* Atmospheric background */}
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 60% at 15% 50%, rgba(212,160,23,0.07) 0%, transparent 65%), radial-gradient(ellipse 50% 50% at 85% 30%, rgba(37,99,235,0.06) 0%, transparent 60%)', pointerEvents: 'none' }} />
-          {/* Subtle grid texture */}
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none', maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 70% at 10% 50%, rgba(245,158,11,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 90% 20%, rgba(37,99,235,0.14) 0%, transparent 55%), radial-gradient(ellipse 50% 50% at 50% 100%, rgba(245,158,11,0.06) 0%, transparent 60%)', pointerEvents: 'none' }} />
+          {/* Grid texture */}
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)', backgroundSize: '64px 64px', pointerEvents: 'none', maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)' }} />
 
           <div style={{ maxWidth: 1140, margin: '0 auto', padding: '88px 48px 80px', position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 56 }} className="hero-flex">
@@ -254,7 +254,7 @@ export default function HomePage() {
                 </h1>
 
                 {/* Subheadline */}
-                <p className="hero-animate-delay" style={{ fontSize: 16, color: 'rgba(255,255,255,0.58)', maxWidth: 460, margin: '0 0 20px', lineHeight: 1.65, textAlign: 'left' }}>
+                <p className="hero-animate-delay" style={{ fontSize: 16, color: 'rgba(255,255,255,0.82)', maxWidth: 460, margin: '0 0 20px', lineHeight: 1.65, textAlign: 'left' }}>
                   AI Blueprint Takeoff, AIA Pay Applications, Lien Waivers, Certified Payroll &amp; Bid Intelligence — plus a <strong style={{ color: TEXT }}>full mobile field app</strong> your crew uses on any phone, offline, no App Store required.
                 </p>
 
@@ -265,17 +265,17 @@ export default function HomePage() {
                   </div>
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 800, color: TEXT }}>Saguaro Field — Mobile App Included Free</div>
-                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>GPS clock-in · Daily logs · Offline · No App Store · AI assistant</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)', marginTop: 1 }}>GPS clock-in · Daily logs · Offline · No App Store · AI assistant</div>
                   </div>
                 </div>
 
                 {/* CTA row */}
                 <div className="hero-cta-row hero-animate-delay" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
-                  <a href="/signup" className="cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 28px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, border: 'none', borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 4px 24px rgba(212,160,23,0.35)` }}>
+                  <a href="/signup" className="cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, border: 'none', borderRadius: 8, color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '0.02em', textDecoration: 'none', boxShadow: `0 8px 40px rgba(245,158,11,0.55), 0 2px 8px rgba(0,0,0,0.4)` }}>
                     Start Free Trial
                     <span style={{ fontSize: 16 }}>→</span>
                   </a>
-                  <a href="#field-app" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 22px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.72)', fontSize: 14, textDecoration: 'none' }}>
+                  <a href="#field-app" className="cta-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 22px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}><rect x={5} y={2} width={14} height={20} rx={2} ry={2}/><line x1={12} y1={18} x2={12.01} y2={18}/></svg>
                     See Field App
                   </a>
@@ -288,7 +288,7 @@ export default function HomePage() {
                     { icon: '✓', label: '30-day free trial' },
                     { icon: '✓', label: 'Cancel anytime' },
                   ].map(t => (
-                    <span key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(255,255,255,0.38)' }}>
+                    <span key={t.label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'rgba(255,255,255,0.72)' }}>
                       <span style={{ color: GOLD, fontWeight: 700, fontSize: 11 }}>{t.icon}</span>
                       {t.label}
                     </span>
@@ -372,9 +372,9 @@ export default function HomePage() {
         </section>
 
         {/* ── Social proof strip ───────────────────────────────────────────── */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+        <div style={{ borderTop: '1px solid rgba(245,158,11,0.2)', background: 'rgba(245,158,11,0.04)' }}>
           <div style={{ maxWidth: 1140, margin: '0 auto', padding: '14px 48px', display: 'flex', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>Trusted by GCs across the Southwest</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>Trusted by GCs across the Southwest</span>
             {[
               { v: '500+', l: 'Projects managed' },
               { v: '$2B+', l: 'In contract value tracked' },
@@ -385,7 +385,7 @@ export default function HomePage() {
                 {i > 0 && <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.08)' }} />}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                   <span style={{ fontSize: 15, fontWeight: 800, color: TEXT }}>{s.v}</span>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{s.l}</span>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)' }}>{s.l}</span>
                 </div>
               </React.Fragment>
             ))}
@@ -393,12 +393,12 @@ export default function HomePage() {
         </div>
 
         {/* ── Stats bar ─────────────────────────────────────────────────── */}
-        <section style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.03)' }}>
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', maxWidth: 1100, margin: '0 auto', padding: '28px 48px', textAlign: 'center' }}>
+        <section style={{ borderTop: '1px solid rgba(245,158,11,0.25)', borderBottom: '1px solid rgba(245,158,11,0.25)', background: 'linear-gradient(180deg, rgba(245,158,11,0.07) 0%, rgba(245,158,11,0.03) 100%)' }}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', maxWidth: 1100, margin: '0 auto', padding: '36px 48px', textAlign: 'center' }}>
             {STATS.map((s, i) => (
-              <div key={s.label} style={{ borderRight: i < STATS.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none', padding: '0 24px' }}>
-                <div style={{ fontSize: 28, fontWeight: 700, color: GOLD, lineHeight: 1 }}>{s.value}</div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, lineHeight: 1.4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{s.label}</div>
+              <div key={s.label} style={{ borderRight: i < STATS.length - 1 ? '1px solid rgba(245,158,11,0.2)' : 'none', padding: '0 24px' }}>
+                <div style={{ fontSize: 42, fontWeight: 900, color: GOLD, lineHeight: 1, letterSpacing: '-0.02em' }}>{s.value}</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 6, lineHeight: 1.4, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -514,7 +514,7 @@ export default function HomePage() {
                 <span style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #F5D060 50%, #C8960F 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>is their phone</span>
               </h2>
 
-              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.58)', margin: '0 0 28px', lineHeight: 1.65, maxWidth: 460 }}>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.82)', margin: '0 0 28px', lineHeight: 1.65, maxWidth: 460 }}>
                 Saguaro Field gives your crew everything they need in the field — daily logs, photos, GPS clock-in, punch lists, RFIs, and safety inspections. Works offline on any device. No App Store. No extra license fees.
               </p>
 
@@ -529,7 +529,7 @@ export default function HomePage() {
                     <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD, flexShrink: 0 }}>{f.icon}</div>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{f.title}</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.48)', lineHeight: 1.5 }}>{f.desc}</div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>{f.desc}</div>
                     </div>
                   </div>
                 ))}
@@ -610,9 +610,9 @@ export default function HomePage() {
         <section id="demo" style={{ padding: '56px 48px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>How It Works</div>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px' }}>From Blueprint to Paid — in One Platform</h2>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', maxWidth: 560, margin: '0 auto 28px' }}>Upload any PDF blueprint. Sage reads every dimension, calculates all materials, and drives the entire project lifecycle.</p>
-            <a href="/sandbox" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 32px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, letterSpacing: '0.04em', textDecoration: 'none' }}>
+            <h2 style={{ fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 12px' }}>From Blueprint to Paid — in One Platform</h2>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.78)', maxWidth: 560, margin: '0 auto 28px' }}>Upload any PDF blueprint. Sage reads every dimension, calculates all materials, and drives the entire project lifecycle.</p>
+            <a href="/sandbox" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 36px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 900, letterSpacing: '0.04em', textDecoration: 'none', boxShadow: '0 6px 32px rgba(245,158,11,0.45)' }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><rect x={2} y={2} width={20} height={20} rx={2}/><path d="M2 9h20M9 2v20"/></svg>
               Try Free — Upload Your Blueprint
             </a>
@@ -627,7 +627,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: GOLD, display: 'flex' }}>{s.icon}</span>{s.label}</div>
-                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', lineHeight: 1.55 }}>{s.desc}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', lineHeight: 1.55 }}>{s.desc}</div>
                 </div>
               </div>
             ))}
@@ -645,42 +645,46 @@ export default function HomePage() {
         </section>
 
         {/* ── Features ─────────────────────────────────────────────────── */}
-        <section id="features" style={{ padding: '56px 48px', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <section id="features" style={{ padding: '72px 48px', background: 'linear-gradient(180deg, #0d1117 0%, #0a1628 50%, #0d1117 100%)' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 10 }}>Everything You Need</div>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px' }}>One platform. Every project document.</h2>
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', maxWidth: 540, margin: '0 auto' }}>No more switching between 6 different tools. Saguaro handles the full construction document lifecycle.</p>
+            <h2 style={{ fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 12px' }}>One platform. Every project document.</h2>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.72)', maxWidth: 540, margin: '0 auto' }}>No more switching between 6 different tools. Saguaro handles the full construction document lifecycle.</p>
           </div>
-          <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 14 }}>
+          <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
             {FEATURES.map(f => (
-              <div key={f.title} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '20px 22px', transition: 'border-color .2s' }}
-                onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(212,160,23,.4)')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)')}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div key={f.title} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderLeft: '3px solid rgba(245,158,11,0.5)', borderRadius: 10, padding: '22px 22px', transition: 'all .2s', cursor: 'default' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.7)'; e.currentTarget.style.background = 'rgba(245,158,11,0.06)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.transform = 'translateY(0)'; }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                   <span style={{ color: GOLD, display: 'flex' }}>{f.icon}</span>
-                  <span style={{ fontSize: 9, fontWeight: 700, color: GOLD, background: 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.25)', borderRadius: 10, padding: '2px 8px', letterSpacing: '0.1em', marginBottom: 8 }}>{f.pill}</span>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: GOLD, background: 'rgba(245,158,11,.15)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 10, padding: '2px 8px', letterSpacing: '0.1em' }}>{f.pill}</span>
                 </div>
-                <div style={{ fontWeight: 600, fontSize: 14, letterSpacing: '0.01em', color: TEXT, marginBottom: 6 }}>{f.title}</div>
-                <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', lineHeight: 1.55 }}>{f.desc}</div>
+                <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: '0.01em', color: TEXT, marginBottom: 7 }}>{f.title}</div>
+                <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6 }}>{f.desc}</div>
               </div>
             ))}
+          </div>
           </div>
         </section>
 
         {/* ── Testimonials ─────────────────────────────────────────────── */}
-        <section style={{ borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(31,44,62,.3)' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '56px 48px' }}>
-            <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <h2 style={{ fontSize: 'clamp(22px, 3vw, 34px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 8px' }}>Built by GCs, for GCs</h2>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>Real feedback from contractors who switched from legacy software</p>
+        <section style={{ borderTop: '1px solid rgba(30,58,95,0.8)', borderBottom: '1px solid rgba(30,58,95,0.8)', background: 'linear-gradient(180deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%)' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '72px 48px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <h2 style={{ fontSize: 'clamp(26px, 3vw, 40px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 10px' }}>Built by GCs, for GCs</h2>
+              <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.72)', margin: 0 }}>Real feedback from contractors who switched from legacy software</p>
             </div>
             <div className="testimonials-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 14 }}>
               {TESTIMONIALS.map((t, i) => (
-                <div key={i} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '20px 22px' }}>
-                  <div style={{ fontSize: 28, color: 'rgba(212,160,23,0.4)', marginBottom: 10 }}>❝</div>
-                  <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: 14 }}>{t.quote}</p>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: TEXT }}>{t.name}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{t.title}</div>
+                <div key={i} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(30,58,95,0.8)`, borderTop: `3px solid ${GOLD}`, borderRadius: 12, padding: '24px 22px', transition: 'transform .2s' }}
+                  onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-3px)')}
+                  onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}>
+                  <div style={{ fontSize: 36, color: GOLD, marginBottom: 10, lineHeight: 1 }}>❝</div>
+                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.88)', lineHeight: 1.65, marginBottom: 16 }}>{t.quote}</p>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{t.name}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{t.title}</div>
                 </div>
               ))}
             </div>
@@ -688,27 +692,30 @@ export default function HomePage() {
         </section>
 
         {/* ── CTA Banner ───────────────────────────────────────────────── */}
-        <section style={{ padding: '56px 48px', textAlign: 'center', maxWidth: 720, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(24px, 3vw, 36px)', fontWeight: 700, letterSpacing: '-0.01em', margin: '0 0 12px', lineHeight: 1.1 }}>
+        <section style={{ padding: '80px 48px', textAlign: 'center', background: 'linear-gradient(180deg, #0d1117 0%, #0a1628 100%)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(245,158,11,0.1) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', maxWidth: 720, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(28px, 3.5vw, 48px)', fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 16px', lineHeight: 1.05 }}>
             Ready to run smarter projects?
           </h2>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: '0 0 24px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.78)', margin: '0 0 32px', lineHeight: 1.65 }}>
             Start your 30-day free trial. No credit card required. Full access to every feature from day one.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <a href="/signup" style={{ padding: '10px 24px', background: `linear-gradient(135deg,${GOLD},#C8960F)`, border: 'none', borderRadius: 7, color: '#000', fontSize: 13, fontWeight: 700, letterSpacing: '0.04em', textDecoration: 'none' }}>
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="/signup" style={{ padding: '15px 36px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, border: 'none', borderRadius: 9, color: '#fff', fontSize: 15, fontWeight: 900, letterSpacing: '0.04em', textDecoration: 'none', boxShadow: '0 8px 40px rgba(245,158,11,0.5)' }}>
               Start Free Trial →
             </a>
-            <button onClick={() => setContactModal(true)} style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 7, color: 'rgba(255,255,255,0.75)', fontSize: 13, cursor: 'pointer' }}>
+            <button onClick={() => setContactModal(true)} style={{ padding: '15px 28px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 9, color: 'rgba(255,255,255,0.92)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
               Talk to Sales
             </button>
           </div>
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 20, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
             {['30 days free', 'Cancel anytime', 'No per-seat fees', 'Unlimited users'].map(t => (
-              <span key={t} style={{ fontSize: 12, color: DIM, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span key={t} style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={11} height={11} style={{ color: GOLD }}><polyline points="20 6 9 17 4 12"/></svg>{t}
               </span>
             ))}
+          </div>
           </div>
         </section>
 
