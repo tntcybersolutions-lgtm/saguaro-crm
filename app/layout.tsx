@@ -74,6 +74,12 @@ export const metadata: Metadata = {
     locale: 'en_US',
   },
 
+  verification: {
+    other: {
+      'msvalidate.01': 'EE20D7D11C69CE8D4C2AB59DF3D6ADB5',
+    },
+  },
+
   twitter: {
     card: 'summary_large_image',
     site: '@saguarocrm',
