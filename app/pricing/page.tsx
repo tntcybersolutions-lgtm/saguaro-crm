@@ -113,7 +113,7 @@ const PLANS = [
 const ADDONS = [
   {
     name: 'Priority Support',
-    price: 99,
+    price: 300,
     per: 'mo',
     description: 'Live chat + email with 4hr response. Dedicated support agent for your account.',
     icon: '💬',
@@ -172,8 +172,8 @@ const SERVICES = [
   },
   {
     name: 'Guided Onboarding',
-    price: 499,
-    label: '$499',
+    price: 1200,
+    label: '$1,200',
     description: 'Hands-on 3-hour setup session with a Saguaro specialist. Configure your company, import your templates, and train your team.',
     highlight: false,
     icon: '🎓',
@@ -206,7 +206,7 @@ const SUPPORT_TIERS = [
   },
   {
     name: 'Priority',
-    price: '+$99/mo',
+    price: '+$300/mo',
     color: C.gold,
     features: ['Live chat + email', '4hr response time', 'Screen share sessions', 'Dedicated support agent'],
     plans: 'Add-on for Starter',
