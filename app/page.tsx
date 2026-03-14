@@ -90,13 +90,9 @@ export default function HomePage() {
     <div style={{ minHeight: '100vh', background: DARK, color: TEXT, fontFamily: 'system-ui,-apple-system,sans-serif' }}>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 58, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 48px', gap: 24, backdropFilter: 'blur(12px)' }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 64, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 48px', gap: 24, backdropFilter: 'blur(12px)' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4, flexShrink: 0 }} />
-          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-            <span style={{ fontWeight: 700, fontSize: 14, letterSpacing: '0.1em', background: `linear-gradient(90deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
-            <span style={{ fontSize: 7, color: DIM, letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
-          </span>
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 48, width: 'auto', objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 8px rgba(245,158,11,0.35))' }} />
         </a>
         <div style={{ display: 'flex', gap: 28 }} className="desktop-nav">
           {NAV_LINKS.map(l => (
@@ -170,7 +166,7 @@ export default function HomePage() {
 
       {/* Mobile drawer */}
       {mobileMenuOpen && (
-        <div style={{ position: 'fixed', top: 58, left: 0, right: 0, zIndex: 99, background: 'rgba(13,17,23,.99)', borderBottom: `1px solid ${BORDER}`, padding: '8px 0', backdropFilter: 'blur(12px)' }}>
+        <div style={{ position: 'fixed', top: 64, left: 0, right: 0, zIndex: 99, background: 'rgba(13,17,23,.99)', borderBottom: `1px solid ${BORDER}`, padding: '8px 0', backdropFilter: 'blur(12px)' }}>
           {[...NAV_LINKS, { label: 'Log In', href: '/login' }].map(l => (
             <a key={l.href} href={l.href} onClick={() => setMobileMenuOpen(false)}
               style={{ display: 'block', padding: '14px 24px', fontSize: 15, fontWeight: 600, color: TEXT, textDecoration: 'none', borderBottom: `1px solid rgba(38,51,71,.5)` }}>
@@ -225,7 +221,7 @@ export default function HomePage() {
         .cta-secondary:hover { border-color: rgba(255,255,255,0.4) !important; color: #fff !important; transition: all .15s ease; }
       `}</style>
 
-      <div style={{ paddingTop: 58 }}>
+      <div style={{ paddingTop: 64 }}>
 
         {/* ── Hero ─────────────────────────────────────────────────────── */}
         <section style={{ position: 'relative', overflow: 'hidden' }} className="hero-section">
@@ -241,8 +237,17 @@ export default function HomePage() {
               {/* ── Left column ── */}
               <div style={{ flex: '0 0 52%', maxWidth: '52%' }} className="hero-left">
 
+                {/* Logo */}
+                <div className="hero-animate" style={{ marginBottom: 20 }}>
+                  <img
+                    src="/logo-full.jpg"
+                    alt="Saguaro Control Systems"
+                    style={{ height: 100, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 4px 24px rgba(245,158,11,0.5))' }}
+                  />
+                </div>
+
                 {/* Badge */}
-                <div className="hero-animate" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.35)', borderRadius: 24, padding: '5px 14px 5px 8px', marginBottom: 24 }}>
+                <div className="hero-animate" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: 24, padding: '5px 14px 5px 8px', marginBottom: 24 }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: '50%', background: 'rgba(212,160,23,0.2)', fontSize: 10 }}>✦</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.1em', textTransform: 'uppercase' }}>AI-Powered Construction CRM</span>
                 </div>
