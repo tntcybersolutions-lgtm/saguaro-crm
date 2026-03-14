@@ -92,7 +92,7 @@ export default function HomePage() {
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 64, background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 48px', gap: 24, backdropFilter: 'blur(12px)' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 48, width: 'auto', objectFit: 'contain', flexShrink: 0, filter: 'drop-shadow(0 2px 8px rgba(245,158,11,0.35))' }} />
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 48, width: 'auto', objectFit: 'contain', flexShrink: 0, mixBlendMode: 'screen' as const }} />
         </a>
         <div style={{ display: 'flex', gap: 28 }} className="desktop-nav">
           {NAV_LINKS.map(l => (
@@ -242,7 +242,7 @@ export default function HomePage() {
                   <img
                     src="/logo-full.jpg"
                     alt="Saguaro Control Systems"
-                    style={{ height: 100, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 4px 24px rgba(245,158,11,0.5))' }}
+                    style={{ height: 100, width: 'auto', objectFit: 'contain', mixBlendMode: 'screen' as const, filter: 'drop-shadow(0 4px 24px rgba(245,158,11,0.4))' }}
                   />
                 </div>
 
@@ -729,7 +729,7 @@ export default function HomePage() {
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 32 }}>
             <div>
               <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 12 }}>
-                <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
+                <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 44, width: 'auto', objectFit: 'contain', mixBlendMode: 'screen' as const }} />
                 <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
                   <span style={{ fontWeight: 900, fontSize: 14, letterSpacing: 1, background: `linear-gradient(90deg,${GOLD},#F0C040)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
                   <span style={{ fontSize: 10, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
