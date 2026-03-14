@@ -33,8 +33,8 @@ export default function SignupPage(){
       }
 
       if (data.confirmed || data.demo) {
-        // Auto-confirmed or demo mode — go straight to app
-        window.location.href = '/app';
+        // Auto-confirmed or demo mode — go to onboarding for new users
+        window.location.href = '/onboarding/step-1';
         return;
       }
 
