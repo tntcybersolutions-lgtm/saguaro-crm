@@ -149,18 +149,21 @@ export async function POST(req: NextRequest) {
       }
 
       if (reportType === 'autopilot-alerts') {
-        let q = db.from('autopilot_alerts').select('*, projects(name)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(100);
-        if (projectId) q = q.eq('project_id', projectId);
-        const { data: alerts } = await q;
+        const { data: alerts } = await db
+          .from('notifications')
+          .select('id, title, message, created_at, type')
+          .eq('tenant_id', tenantId)
+          .order('created_at', { ascending: false })
+          .limit(50);
         return NextResponse.json({
           message: `Autopilot Alert History — ${(alerts || []).length} alerts (${timestamp})`,
           reportType, format, title: config.title, columns: config.columns,
           rows: (alerts || []).map((a: any) => [
-            a.title ?? a.message ?? '',
-            (a.severity ?? a.urgency ?? 'medium').toUpperCase(),
+            a.title ?? '',
+            a.message ?? '',
             a.type ?? '',
-            a.projects?.name ?? 'Unknown',
-            (a.status ?? 'open').toUpperCase(),
+            '',
+            '',
             a.created_at ? new Date(a.created_at).toLocaleDateString() : '',
           ]),
           source: 'live',
