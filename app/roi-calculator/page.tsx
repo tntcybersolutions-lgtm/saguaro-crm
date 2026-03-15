@@ -721,7 +721,7 @@ export default function ROICalculatorPage() {
                 {
                   icon: '💻',
                   title: 'Software Comparison',
-                  desc: "Procore pricing from public data and verified customer contracts. Saguaro is $399/mo flat — no per-seat fees, no add-ons, no surprise invoices. Your current spend overrides defaults.",
+                  desc: "Procore pricing from public data and verified customer contracts. Saguaro is $299/mo flat — no per-seat fees, no add-ons, no surprise invoices. Your current spend overrides defaults.",
                 },
               ].map((card) => (
                 <div
@@ -757,7 +757,7 @@ export default function ROICalculatorPage() {
               Feature Comparison
             </div>
             <h2 style={{ fontSize: 36, fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-              {"What's Included in the $399"}
+              {"What's Included in the $299"}
             </h2>
             <p style={{ color: DIM, fontSize: 16, marginTop: 12 }}>
               Everything you need. No per-seat pricing. No hidden add-ons.
@@ -776,7 +776,7 @@ export default function ROICalculatorPage() {
                   <th style={{ textAlign: 'left', color: DIM, padding: '16px 20px' }}>Feature</th>
                   <th style={{ color: DIM }}>Manual</th>
                   <th style={{ color: DIM }}>Procore</th>
-                  <th style={{ color: GOLD, borderBottom: `2px solid ${GOLD}` }}>Saguaro $399/mo</th>
+                  <th style={{ color: GOLD, borderBottom: `2px solid ${GOLD}` }}>Saguaro $299/mo</th>
                 </tr>
               </thead>
               <tbody>

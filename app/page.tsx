@@ -387,7 +387,7 @@ export default function HomePage() {
           {
             "@type": "Question",
             "name": "What is Saguaro's pricing?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Saguaro offers Starter at $199/month, Professional at $399/month, and Enterprise at custom pricing. All plans include your whole team at a flat rate — no per-seat fees. Month-to-month, cancel anytime." }
+            "acceptedAnswer": { "@type": "Answer", "text": "Saguaro offers Starter at $299/month, Professional at $599/month, and Enterprise at custom pricing. All plans include your whole team at a flat rate — no per-seat fees. Month-to-month, cancel anytime." }
           },
           {
             "@type": "Question",

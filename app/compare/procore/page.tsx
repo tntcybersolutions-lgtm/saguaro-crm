@@ -56,7 +56,7 @@ const DEEP_DIVE = [
   },
   {
     title: 'Pricing That Grows With You',
-    body: 'One flat monthly rate. Add 50 users and 50 projects — same price. No annual contract. Cancel anytime. Start free with no credit card required. Starter at $199/mo, Professional at $399/mo.',
+    body: 'One flat monthly rate. Add 50 users and 50 projects — same price. No annual contract. Cancel anytime. Start free with no credit card required. Starter at $299/mo, Professional at $599/mo.',
     procoreBody: "Procore's per-user, per-module pricing scales sharply as your team grows. Annual contracts are required. Total cost of ownership for a mid-size GC typically exceeds $50,000–$80,000/year when add-ons and implementation are included.",
   },
 ];
@@ -811,7 +811,7 @@ export default function CompareProcorePage() {
               Team of 25 users, 15 active projects
             </div>
             <div style={{ fontSize: 42, fontWeight: 900, color: C.green, letterSpacing: -1, marginBottom: 4 }}>
-              $399
+              $299
               <span style={{ fontSize: 16, fontWeight: 500, color: C.dim }}>/mo</span>
             </div>
             <div style={{ fontSize: 12, color: C.dim, marginBottom: 24 }}>All features included. No add-ons.</div>
