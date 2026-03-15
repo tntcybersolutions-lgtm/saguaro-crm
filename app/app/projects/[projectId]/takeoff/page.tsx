@@ -90,40 +90,57 @@ export default function TakeoffPage() {
   // Load latest completed takeoff on mount
   useEffect(() => {
     const load = async () => {
-      const res = await fetch(`/api/takeoffs/latest?projectId=${projectId}`);
-      if (!res.ok) return;
-      const { data } = await res.json();
+      // Step 1: get list of takeoffs for this project
+      const listRes = await fetch(`/api/takeoff?projectId=${projectId}&limit=5`);
+      if (!listRes.ok) return;
+      const { data: list } = await listRes.json();
+      if (!Array.isArray(list) || list.length === 0) return;
+
+      // Find the most recent completed takeoff
+      const completed = list.find((t: { status: string }) => t.status === 'complete');
+      if (!completed) return;
+
+      // Step 2: load full detail (includes materials)
+      const detailRes = await fetch(`/api/takeoff/${completed.id}`);
+      if (!detailRes.ok) return;
+      const { data } = await detailRes.json();
       if (!data || data.status !== 'complete') return;
-      const mats = data.takeoff_materials || [];
+      const mats: Array<Record<string, unknown>> = data.materials || [];
       if (mats.length === 0) return;
 
-      const items: TakeoffItem[] = mats.map((m: Record<string, unknown>) => ({
-        csiCode: String(m.csi_code || ''),
-        csiDivision: String(m.csi_code || '').slice(0, 2),
-        csiName: String(m.csi_name || ''),
-        description: String(m.description || ''),
-        quantity: Number(m.quantity) || 0,
-        unit: String(m.unit || ''),
-        unitCost: Number(m.unit_cost) || 0,
-        totalCost: Number(m.total_cost) || 0,
-        laborHours: Number(m.labor_hours) || 0,
-        notes: String(m.notes || ''),
-      }));
+      const items: TakeoffItem[] = mats
+        .filter((m) => Number(m.quantity) > 0 && Number(m.unit_cost) > 0)
+        .map((m) => ({
+          csiCode:     String(m.csi_code   || ''),
+          csiDivision: String(m.csi_code   || '').slice(0, 2),
+          csiName:     String(m.csi_name   || ''),
+          description: String(m.description || ''),
+          quantity:    Number(m.quantity)  || 0,
+          unit:        String(m.unit       || ''),
+          unitCost:    Number(m.unit_cost) || 0,
+          totalCost:   Number(m.total_cost) || (Number(m.quantity) * Number(m.unit_cost)),
+          laborHours:  Number(m.labor_hours) || 0,
+          notes:       String(m.notes      || ''),
+        }));
+
+      const materialTotal = items.reduce((s, i) => s + i.totalCost, 0);
+      const laborTotal    = Number(data.labor_cost) || 0;
+      const contingencyPct = Number(data.contingency_pct) || 10;
 
       setResult({
-        takeoffId: String(data.id),
-        projectName: String(data.project_name_detected || ''),
-        buildingType: String(data.building_type || ''),
-        estimatedSF: Number(data.building_area) || 0,
-        confidence: Number(data.confidence) || 0,
-        summary: String(data.summary || ''),
+        takeoffId:         String(data.id),
+        projectName:       String(data.project_name_detected || data.project_name || ''),
+        buildingType:      String(data.building_type || ''),
+        estimatedSF:       Number(data.building_area) || 0,
+        confidence:        Number(data.confidence)    || 0,
+        summary:           String(data.summary        || ''),
         items,
-        totalMaterialCost: Number(data.material_cost) || 0,
-        totalLaborCost: Number(data.labor_cost) || 0,
-        totalProjectCost: Number(data.total_cost) || 0,
-        contingency: Number(data.contingency_pct) || 10,
-        recommendations: Array.isArray(data.recommendations) ? data.recommendations : [],
-        itemCount: items.length,
+        totalMaterialCost: materialTotal,
+        totalLaborCost:    laborTotal,
+        totalProjectCost:  Number(data.total_cost) || Math.round((materialTotal + laborTotal) * (1 + contingencyPct / 100)),
+        contingency:       contingencyPct,
+        recommendations:   Array.isArray(data.recommendations) ? data.recommendations : [],
+        itemCount:         items.length,
       });
       setTakeoffId(String(data.id));
       setState('results');
@@ -611,10 +628,10 @@ export default function TakeoffPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
         {[
           { label: 'Material Cost', value: result?.totalMaterialCost || 0, color: GOLD },
-          { label: 'Labor Cost', value: result?.totalLaborCost || 0, color: '#60A5FA' },
+          { label: 'Labor Cost',    value: result?.totalLaborCost    || 0, color: '#60A5FA' },
           {
             label: `Contingency (${result?.contingency ?? 10}%)`,
-            value: (result?.totalProjectCost || 0) * ((result?.contingency ?? 10) / 100),
+            value: ((result?.totalMaterialCost || 0) + (result?.totalLaborCost || 0)) * ((result?.contingency ?? 10) / 100),
             color: '#A78BFA',
           },
           { label: 'Sell Price (+15%)', value: (result?.totalProjectCost || 0) * 1.15, color: '#22C55E' },

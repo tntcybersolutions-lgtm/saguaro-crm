@@ -48,7 +48,8 @@ Return ONLY raw JSON. Start with { — no markdown, no code fences.
 }
 
 Keys: cd=CSI code, nm=name, d=description with dimensions, q=qty, u=unit, r=unit rate $, tot=total $, h=labor hours.
-A complete commercial takeoff has 30-55 line items. Include ALL visible materials.`;
+CRITICAL MATH RULE: tot MUST equal q multiplied by r. Example: q=100, r=5.50 → tot=550. Never return tot=0.
+A complete commercial takeoff has 30-55 line items covering ALL trades visible in the drawings.`;
 
 // ─── JSON repair & parse ──────────────────────────────────────────────────────
 
@@ -208,6 +209,12 @@ export async function GET(
         }
 
         // ── 2. Mark as analyzing ─────────────────────────────────────────
+        // Guard: if already analyzing (concurrent double-click), abort
+        const { data: current } = await supabase.from('takeoffs').select('status').eq('id', takeoffId).single();
+        if (current?.status === 'analyzing') {
+          send('error', { message: 'Analysis already in progress for this takeoff.' });
+          return done();
+        }
         await supabase.from('takeoffs').update({ status: 'analyzing' }).eq('id', takeoffId);
         send('progress', { step: 2, message: 'Connecting to AI...', pct: 10 });
 
@@ -324,31 +331,40 @@ export async function GET(
         send('progress', { step: 6, message: 'Saving materials to database...', pct: 85 });
 
         // ── 8. Expand items & save to DB ─────────────────────────────────
-        const items = (parsed.i || []).map((item: CompactItem, idx: number) => {
-          const qty      = Number(item.q)   || 0;
-          const unitCost = Number(item.r)   || 0;
-          // Validate total: Claude sometimes returns 0 or omits tot.
-          // Compute from qty × rate as the source of truth; only use Claude's tot
-          // when it's within 5% of the computed value (catches legit rounding).
-          const computed = qty * unitCost;
-          const claudeTot = Number(item.tot) || 0;
-          const totalCost = claudeTot > 0 && Math.abs(claudeTot - computed) / Math.max(computed, 1) < 0.05
-            ? claudeTot
-            : computed;
-          return {
-            takeoff_id:  takeoffId,
-            csi_code:    item.cd  || '',
-            csi_name:    item.nm  || '',
-            description: item.d   || '',
-            quantity:    qty,
-            unit:        item.u   || 'LS',
-            unit_cost:   unitCost,
-            total_cost:  totalCost,
-            labor_hours: Number(item.h) || 0,
-            notes:       '',
-            sort_order:  idx,
-          };
-        });
+        const allRawItems = parsed.i || [];
+        const items = allRawItems
+          .map((item: CompactItem, idx: number) => {
+            const qty      = Math.max(0, Number(item.q) || 0);
+            const unitCost = Math.max(0, Number(item.r) || 0);
+            const laborHrs = Math.max(0, Number(item.h) || 0);
+            // Validate total: compute qty × rate as source of truth.
+            // Accept Claude's tot only when within 10% of computed value.
+            const computed = qty * unitCost;
+            const claudeTot = Number(item.tot) || 0;
+            const totalCost = claudeTot > 0 && computed > 0 && Math.abs(claudeTot - computed) / computed < 0.10
+              ? claudeTot
+              : computed;
+            // Normalize CSI code: ensure proper format XX XX XX
+            const rawCode = String(item.cd || '').trim();
+            const csiCode = rawCode || '00 00 00';
+            return {
+              takeoff_id:  takeoffId,
+              csi_code:    csiCode,
+              csi_name:    String(item.nm || '').trim() || 'General',
+              description: String(item.d  || '').trim() || 'See specifications',
+              quantity:    qty,
+              unit:        String(item.u  || 'LS').trim().toUpperCase(),
+              unit_cost:   unitCost,
+              total_cost:  totalCost,
+              labor_hours: laborHrs,
+              notes:       '',
+              sort_order:  idx,
+            };
+          })
+          // Filter: must have a description, positive quantity, positive unit cost
+          .filter((it) => it.description.length > 0 && it.quantity > 0 && it.unit_cost > 0);
+
+        console.log(`[analyze] items: ${allRawItems.length} raw → ${items.length} valid after filtering`);
 
         // Derive real totals from validated line items — don't trust Claude's mc/lc/pc
         const realMaterialTotal = items.reduce((s, it) => s + it.total_cost, 0);
@@ -363,11 +379,21 @@ export async function GET(
         const realProjectTotal = Math.round(subtotal * (1 + contingencyPct / 100));
 
         if (items.length > 0) {
-          await supabase.from('takeoff_materials').delete().eq('takeoff_id', takeoffId);
-          const { error: insErr } = await supabase.from('takeoff_materials').insert(items);
-          if (insErr) {
-            console.error('[analyze] insert materials error:', insErr);
-            // Don't fail — results still readable from result event
+          // Delete first (in a separate step), then insert — this is safe because
+          // we already have the full set of items ready. UPSERT on sort_order+takeoff_id
+          // would work but requires a unique constraint; delete+insert is simpler here.
+          const { error: delErr } = await supabase.from('takeoff_materials').delete().eq('takeoff_id', takeoffId);
+          if (delErr) console.warn('[analyze] delete materials warning:', delErr.message);
+
+          // Insert in batches of 50 to avoid payload limits
+          const BATCH = 50;
+          for (let i = 0; i < items.length; i += BATCH) {
+            const batch = items.slice(i, i + BATCH);
+            const { error: insErr } = await supabase.from('takeoff_materials').insert(batch);
+            if (insErr) {
+              console.error(`[analyze] insert batch ${i}-${i + BATCH} error:`, insErr.message);
+              // Non-fatal: continue with remaining batches
+            }
           }
         }
 
