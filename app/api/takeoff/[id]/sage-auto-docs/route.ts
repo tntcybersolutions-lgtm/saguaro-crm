@@ -129,7 +129,7 @@ export async function GET(
         }
 
         const divisions = Array.from(divisionMap.entries())
-          .filter(([, items]) => items.reduce((s, i) => s + (i.total_cost || 0), 0) >= 500)
+          .filter(([, items]) => items.reduce((s, i) => s + (i.total_cost || 0), 0) >= 100)
           .sort(([a], [b]) => a.localeCompare(b));
 
         if (divisions.length === 0) {
@@ -157,7 +157,7 @@ export async function GET(
           const divName = CSI_DIVISIONS[div]?.name || `Division ${div}`;
           const lines   = items
             .sort((a, b) => (b.total_cost || 0) - (a.total_cost || 0))
-            .slice(0, 6)
+            .slice(0, 10)
             .map(i => `  ${i.description}: ${i.quantity} ${i.unit} @ $${i.unit_cost?.toFixed(2)}`)
             .join('\n');
           return `DIV ${div} — ${divName} (${fmt$(total)})\n${lines}`;
@@ -200,12 +200,20 @@ Rules:
 
         let sagePackages: Record<string, SagePackage> = {};
 
+        let aiHeartbeat: ReturnType<typeof setInterval> | null = null;
         try {
+          aiHeartbeat = setInterval(() => {
+            send('progress', { step: 2, pct: 15 + Math.floor(Math.random() * 10), message: 'Sage is writing bid package content...' });
+          }, 5000);
+
           const aiRes = await client.messages.create({
             model: 'claude-sonnet-4-6',
-            max_tokens: 4096,
+            max_tokens: 6000,
             messages: [{ role: 'user', content: sagePrompt }],
           });
+
+          clearInterval(aiHeartbeat);
+          aiHeartbeat = null;
 
           const rawText = aiRes.content
             .filter(b => b.type === 'text')
@@ -225,8 +233,22 @@ Rules:
             }
           }
         } catch (aiErr) {
+          if (aiHeartbeat) { clearInterval(aiHeartbeat); aiHeartbeat = null; }
           console.error('[sage-auto-docs] Sage AI batch failed:', aiErr);
-          // Non-fatal — continue with rule-based defaults
+          send('progress', { step: 2, pct: 30, message: 'Using rule-based defaults (AI content unavailable)' });
+        }
+
+        // Remove any existing packages for this project before regenerating (idempotent)
+        const { data: existingPkgs } = await supabase
+          .from('bid_packages')
+          .select('id')
+          .eq('project_id', takeoff.project_id);
+
+        if (existingPkgs && existingPkgs.length > 0) {
+          send('progress', { step: 3, pct: 32, message: `Replacing ${existingPkgs.length} existing packages...` });
+          const existingIds = existingPkgs.map((p: { id: string }) => p.id);
+          await supabase.from('bid_package_items').delete().in('bid_package_id', existingIds);
+          await supabase.from('bid_packages').delete().eq('project_id', takeoff.project_id);
         }
 
         send('progress', { step: 3, pct: 35, message: `Creating ${divisions.length} bid packages in database...` });
@@ -330,11 +352,7 @@ Rules:
                 tradeName:            CSI_DIVISIONS[div]?.name || `Division ${div}`,
                 dueDate:              addDays(pkg.total > 250_000 ? 21 : 14),
                 scopeNarrative:       ai?.scope || `${pkg.name} scope of work for ${projectName}.`,
-                csiSections:          [{
-                  code:  div,
-                  name:  CSI_DIVISIONS[div]?.name || '',
-                  items: items.map(i => i.description),
-                }],
+                csiSections:          items.map(i => `${i.csi_code} — ${i.description}`).slice(0, 20),
                 lineItems: items.map(i => ({
                   description: i.description,
                   quantity:    i.quantity,
@@ -343,9 +361,9 @@ Rules:
                 })),
                 requiresBond:         ai?.bond ?? (pkg.total > 100_000),
                 insuranceRequirements: {
-                  general_liability:   ai?.ins_gl  ?? 1_000_000,
-                  auto_liability:      ai?.ins_auto ?? 1_000_000,
-                  workers_compensation: ai?.ins_work ?? 500_000,
+                  gl:   ai?.ins_gl  ?? 1_000_000,
+                  wc:   'Statutory',
+                  auto: ai?.ins_auto ?? 1_000_000,
                 },
               });
 

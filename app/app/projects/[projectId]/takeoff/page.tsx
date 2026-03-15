@@ -336,6 +336,7 @@ export default function TakeoffPage() {
   const handleSageAutoDocs = async () => {
     if (!result || !takeoffId) return;
     setGenerating('sage');
+    setProgress({ step: 1, message: 'Sage is starting...', pct: 5 });
     try {
       await new Promise<void>((resolve, reject) => {
         const es = new EventSource(`/api/takeoff/${takeoffId}/sage-auto-docs`);
@@ -343,10 +344,14 @@ export default function TakeoffPage() {
         es.onmessage = (e) => {
           try {
             const evt = JSON.parse(e.data);
+            if (evt.event === 'progress') {
+              setProgress({ step: evt.step ?? 1, message: evt.message ?? 'Working...', pct: evt.pct ?? 50 });
+            }
             if (evt.event === 'error') { es.close(); reject(new Error(evt.message)); }
             if (evt.event === 'done') {
               es.close();
               resolved = true;
+              setProgress({ step: 0, message: '', pct: 0 });
               const pkgs = evt.packagesCreated ?? 0;
               const jkts = evt.jacketsGenerated ?? 0;
               const sov  = evt.sovCreated ? ' + SOV' : '';
@@ -367,6 +372,7 @@ export default function TakeoffPage() {
       });
     } catch (err: unknown) {
       showToast(err instanceof Error ? err.message : 'Document generation failed', 'error');
+      setProgress({ step: 0, message: '', pct: 0 });
     } finally {
       setGenerating(null);
     }
@@ -893,6 +899,31 @@ export default function TakeoffPage() {
               • {rec}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Sage progress overlay (shown while building documents) */}
+      {generating === 'sage' && progress.pct > 0 && (
+        <div style={{
+          background: 'rgba(212,160,23,0.08)',
+          border: `1px solid rgba(212,160,23,0.25)`,
+          borderRadius: 10, padding: '12px 18px',
+          marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ color: GOLD, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
+              Sage is building your documents...
+            </div>
+            <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${progress.pct}%`, background: `linear-gradient(90deg, ${GOLD}, #F0C040)`, borderRadius: 4, transition: 'width 0.5s ease' }} />
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 5 }}>
+              {progress.message}
+            </div>
+          </div>
+          <div style={{ color: GOLD, fontWeight: 700, fontSize: 16, minWidth: 40, textAlign: 'right' }}>
+            {progress.pct}%
+          </div>
         </div>
       )}
 
