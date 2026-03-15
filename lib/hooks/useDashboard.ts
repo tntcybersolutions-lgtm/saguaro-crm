@@ -39,14 +39,18 @@ export function useDashboardStats() {
 }
 
 export function useTodayItems() {
-  const { data, error, isLoading, mutate } = useSWR<{ items: TodayItem[] }>(
+  const { data, error, isLoading, mutate } = useSWR<{ items: TodayItem[] } | TodayItem[]>(
     '/api/dashboard/today',
     fetcher,
     { refreshInterval: 60_000 }
   );
 
+  const items: TodayItem[] = Array.isArray(data)
+    ? data
+    : (data as { items?: TodayItem[] } | undefined)?.items ?? [];
+
   return {
-    items: data?.items ?? data ?? [],
+    items,
     loading: isLoading,
     error,
     revalidate: mutate,
