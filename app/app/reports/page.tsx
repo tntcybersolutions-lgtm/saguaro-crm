@@ -167,6 +167,7 @@ export default function ReportsPage() {
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [hoveredChip, setHoveredChip] = useState<string | null>(null);
+  const [branding, setBranding] = useState<{ company_name: string; logo_url: string }>({ company_name: '', logo_url: '' });
   const esRef = useRef<EventSource | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -177,7 +178,7 @@ export default function ReportsPage() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Load projects
+  // Load projects and branding
   useEffect(() => {
     fetch('/api/projects')
       .then(r => r.ok ? r.json() : [])
@@ -185,6 +186,11 @@ export default function ReportsPage() {
         const list = Array.isArray(data) ? data : data.projects ?? [];
         setProjects(list.map((p: Record<string, unknown>) => ({ id: String(p.id ?? p._id ?? ''), name: String(p.name ?? p.projectName ?? '') })));
       })
+      .catch(() => {/* non-fatal */});
+
+    fetch('/api/branding')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setBranding({ company_name: d.company_name ?? '', logo_url: d.logo_url ?? '' }); })
       .catch(() => {/* non-fatal */});
   }, []);
 
@@ -293,7 +299,14 @@ export default function ReportsPage() {
       const res = await fetch('/api/reports/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format: 'xlsx', title: reportResult.title, columns: reportResult.columns, rows: reportResult.rows, totals: reportResult.totals }),
+        body: JSON.stringify({
+          format: 'xlsx',
+          title: reportResult.title,
+          columns: reportResult.columns,
+          rows: reportResult.rows,
+          totals: reportResult.totals,
+          companyName: branding.company_name || undefined,
+        }),
       });
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();
@@ -309,7 +322,15 @@ export default function ReportsPage() {
       const res = await fetch('/api/reports/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ format: 'pdf', title: reportResult.title, columns: reportResult.columns, rows: reportResult.rows, totals: reportResult.totals }),
+        body: JSON.stringify({
+          format: 'pdf',
+          title: reportResult.title,
+          columns: reportResult.columns,
+          rows: reportResult.rows,
+          totals: reportResult.totals,
+          companyName: branding.company_name || undefined,
+          logoUrl: branding.logo_url || undefined,
+        }),
       });
       if (!res.ok) throw new Error('Export failed');
       const blob = await res.blob();

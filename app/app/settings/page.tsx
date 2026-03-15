@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 const GOLD  = '#F59E0B';
 const DARK  = '#0d1117';
@@ -60,11 +60,37 @@ function daysLeft(dateStr: string | null): number {
 export default function SettingsPage() {
   const [sub, setSub] = useState<SubInfo | null>(null);
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [branding, setBranding] = useState({ company_name: '', logo_url: '' });
+  const [brandingSaving, setBrandingSaving] = useState(false);
+  const [brandingMsg, setBrandingMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const brandingMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch('/api/billing/subscription').then(r => r.ok ? r.json() : null).then(setSub);
     fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(setUser);
+    fetch('/api/branding').then(r => r.ok ? r.json() : null).then(d => {
+      if (d) setBranding({ company_name: d.company_name ?? '', logo_url: d.logo_url ?? '' });
+    });
   }, []);
+
+  const saveBranding = async () => {
+    setBrandingSaving(true);
+    try {
+      const res = await fetch('/api/branding', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(branding),
+      });
+      const ok = res.ok;
+      setBrandingMsg({ text: ok ? 'Branding saved.' : 'Save failed.', ok });
+    } catch {
+      setBrandingMsg({ text: 'Save failed.', ok: false });
+    } finally {
+      setBrandingSaving(false);
+      if (brandingMsgTimer.current) clearTimeout(brandingMsgTimer.current);
+      brandingMsgTimer.current = setTimeout(() => setBrandingMsg(null), 3500);
+    }
+  };
 
   const trialDays = sub?.trial_ends_at ? daysLeft(sub.trial_ends_at) : null;
   const isTrialing = sub?.status === 'trialing';
@@ -117,6 +143,71 @@ export default function SettingsPage() {
           </a>
         </div>
       )}
+
+      {/* Company Branding */}
+      <div style={{ marginBottom: 36 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 12 }}>
+          Company Branding
+        </div>
+        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '24px 28px' }}>
+          <div style={{ fontSize: 13, color: DIM, marginBottom: 18 }}>
+            Your company name and logo will appear on all exported reports (PDF and Excel).
+          </div>
+
+          {/* Logo preview */}
+          {branding.logo_url && (
+            <div style={{ marginBottom: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
+              <img
+                src={branding.logo_url}
+                alt="Company logo"
+                style={{ maxHeight: 56, maxWidth: 180, objectFit: 'contain', borderRadius: 6, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.04)', padding: 8 }}
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+              <span style={{ fontSize: 12, color: DIM }}>Logo preview</span>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label style={{ fontSize: 12, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>COMPANY NAME</label>
+              <input
+                type="text"
+                value={branding.company_name}
+                onChange={e => setBranding(b => ({ ...b, company_name: e.target.value }))}
+                placeholder="e.g. Acme General Contractors"
+                style={{ width: '100%', maxWidth: 420, background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>LOGO URL</label>
+              <input
+                type="url"
+                value={branding.logo_url}
+                onChange={e => setBranding(b => ({ ...b, logo_url: e.target.value }))}
+                placeholder="https://yoursite.com/logo.png or Supabase storage URL"
+                style={{ width: '100%', maxWidth: 520, background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <div style={{ fontSize: 11, color: DIM, marginTop: 5 }}>
+                Accepts PNG or JPG. Upload your logo to Supabase Storage, Imgur, or any public URL.
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 4 }}>
+              <button
+                onClick={saveBranding}
+                disabled={brandingSaving}
+                style={{ padding: '10px 24px', background: `linear-gradient(135deg, ${GOLD}, #D97706)`, borderRadius: 8, color: '#000', fontWeight: 800, fontSize: 13, cursor: brandingSaving ? 'not-allowed' : 'pointer', border: 'none', opacity: brandingSaving ? 0.7 : 1 }}
+              >
+                {brandingSaving ? 'Saving...' : 'Save Branding'}
+              </button>
+              {brandingMsg && (
+                <span style={{ fontSize: 13, color: brandingMsg.ok ? GREEN : RED, fontWeight: 600 }}>
+                  {brandingMsg.text}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Settings sections */}
       {SETTINGS_SECTIONS.map(section => (
