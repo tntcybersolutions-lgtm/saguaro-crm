@@ -1,25 +1,28 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useDashboardStats, useTodayItems } from '@/lib/hooks/useDashboard';
+import { useProjects } from '@/lib/hooks/useProjects';
+import { useRFIs } from '@/lib/hooks/useRFIs';
+import { useRealtimeDashboard } from '@/lib/useRealtime';
 
-const GOLD  = '#D4A017';
-const DARK  = '#0d1117';
+const GOLD   = '#D4A017';
+const DARK   = '#0d1117';
 const RAISED = '#1f2c3e';
 const BORDER = '#263347';
-const DIM   = '#8fa3c0';
-const TEXT  = '#e8edf8';
-const GREEN = '#1a8a4a';
-const RED   = '#c03030';
-const BLUE  = '#1a5fa8';
+const DIM    = '#8fa3c0';
+const TEXT   = '#e8edf8';
+const GREEN  = '#1a8a4a';
+const RED    = '#c03030';
+const BLUE   = '#1a5fa8';
 const ORANGE = '#B85C2A';
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
-interface DashStats {
-  activeProjects: number;
-  openBids: number;
-  pendingPayApps: number;
-  totalContractValue: number;
-  monthlyRevenue: number;
+interface ScoreResult {
+  score: number;
+  recommendation: string;
+  reasoning: string;
+  suggestedMargin: number;
 }
 
 interface TodayItem {
@@ -31,49 +34,34 @@ interface TodayItem {
   actionLabel: string;
 }
 
-interface ScoreResult {
-  score: number;
-  recommendation: string;
-  reasoning: string;
-  suggestedMargin: number;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  address: string;
-  status: string;
-  contract_amount: number;
-  start_date: string;
-  end_date: string;
-  project_number: string;
-}
-
-interface RFI {
-  id: string;
-  rfi_number: string;
-  subject: string;
-  status: string;
-  due_date: string;
-  project_id: string;
-}
-
-interface Sub {
-  id: string;
-  name: string;
-  trade: string;
-  contract_amount: number;
-}
-
 /* ─── KPI Card ────────────────────────────────────────────────────────── */
-function KPI({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
-  return (
-    <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '18px 20px' }}>
+function KPI({
+  label, value, sub, color, onClick, href,
+}: {
+  label: string; value: string; sub?: string; color?: string;
+  onClick?: () => void; href?: string;
+}) {
+  const inner = (
+    <div
+      onClick={onClick}
+      style={{
+        background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10,
+        padding: '18px 20px', cursor: onClick || href ? 'pointer' : 'default',
+        transition: 'border-color .15s',
+      }}
+      onMouseEnter={e => { if (onClick || href) (e.currentTarget as HTMLDivElement).style.borderColor = GOLD; }}
+      onMouseLeave={e => { if (onClick || href) (e.currentTarget as HTMLDivElement).style.borderColor = BORDER; }}
+    >
       <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: DIM, marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 800, color: color ?? TEXT, lineHeight: 1 }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{sub}</div>}
+      {(onClick || href) && (
+        <div style={{ fontSize: 10, color: GOLD, marginTop: 6, letterSpacing: .5 }}>DRILL DOWN →</div>
+      )}
     </div>
   );
+  if (href) return <Link href={href} style={{ textDecoration: 'none' }}>{inner}</Link>;
+  return inner;
 }
 
 /* ─── Skeleton Row ────────────────────────────────────────────────────── */
@@ -92,29 +80,22 @@ function SkeletonRow() {
 
 /* ─── Today Action Item Card ─────────────────────────────────────────── */
 const TYPE_META: Record<TodayItem['type'], { icon: string; borderColor: string; label: string }> = {
-  'pay-app':   { icon: '💰', borderColor: GOLD,    label: 'Pay App' },
-  'insurance': { icon: '🛡️', borderColor: RED,     label: 'Insurance' },
-  'rfi':       { icon: '📋', borderColor: ORANGE,  label: 'RFI' },
-  'compliance':{ icon: '✅', borderColor: '#2a6db8', label: 'Compliance' },
+  'pay-app':    { icon: '💰', borderColor: GOLD,       label: 'Pay App' },
+  'insurance':  { icon: '🛡️', borderColor: RED,        label: 'Insurance' },
+  'rfi':        { icon: '📋', borderColor: ORANGE,     label: 'RFI' },
+  'compliance': { icon: '✅', borderColor: '#2a6db8',  label: 'Compliance' },
 };
-
-const URGENCY_COLOR: Record<TodayItem['urgency'], string> = {
-  high:   RED,
-  medium: ORANGE,
-  low:    DIM,
-};
+const URGENCY_COLOR: Record<TodayItem['urgency'], string> = { high: RED, medium: ORANGE, low: DIM };
 
 function TodayActionCard({ item }: { item: TodayItem }) {
   const meta = TYPE_META[item.type];
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 14,
-      padding: '14px 18px',
-      borderBottom: `1px solid ${BORDER}`,
-      borderLeft: `4px solid ${meta.borderColor}`,
-      background: 'transparent',
-      transition: 'background .15s',
-    }}
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px',
+        borderBottom: `1px solid ${BORDER}`, borderLeft: `4px solid ${meta.borderColor}`,
+        background: 'transparent', transition: 'background .15s',
+      }}
       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.025)')}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
     >
@@ -150,38 +131,29 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    setResult(null);
+    setLoading(true); setError(''); setResult(null);
     try {
       const res = await fetch('/api/bids/score', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectName: form.projectName,
           estValue: parseFloat(form.estValue.replace(/[^0-9.]/g, '')),
-          trade: form.trade,
-          location: form.location,
+          trade: form.trade, location: form.location,
           targetMargin: parseFloat(form.targetMargin),
         }),
       });
       if (!res.ok) throw new Error('Failed to score bid');
-      const data = await res.json();
-      setResult(data);
-    } catch {
-      setError('Unable to reach scoring engine. Please try again.');
-    }
+      setResult(await res.json());
+    } catch { setError('Unable to reach scoring engine. Please try again.'); }
     setLoading(false);
   }
 
   function f(field: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    return (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm(prev => ({ ...prev, [field]: e.target.value }));
   }
 
-  const scoreColor = result
-    ? result.score >= 70 ? GREEN : result.score >= 45 ? ORANGE : RED
-    : TEXT;
+  const scoreColor = result ? (result.score >= 70 ? GREEN : result.score >= 45 ? ORANGE : RED) : TEXT;
 
   return (
     <div
@@ -189,7 +161,6 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px rgba(0,0,0,.6)', overflow: 'hidden' }}>
-        {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontWeight: 800, fontSize: 16, color: TEXT }}>Score a Bid</div>
@@ -197,25 +168,20 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4 }}>×</button>
         </div>
-
-        {/* Body */}
         <div style={{ padding: 20 }}>
           {!result ? (
             <form onSubmit={handleSubmit}>
-              {[
+              {([
                 { label: 'Project Name', field: 'projectName' as const, placeholder: 'e.g. Tempe Office Complex' },
                 { label: 'Estimated Value ($)', field: 'estValue' as const, placeholder: 'e.g. 2,500,000' },
                 { label: 'Trade / Scope', field: 'trade' as const, placeholder: 'e.g. General Contractor, Electrical' },
                 { label: 'Location', field: 'location' as const, placeholder: 'e.g. Phoenix, AZ' },
                 { label: 'Our Target Margin (%)', field: 'targetMargin' as const, placeholder: 'e.g. 8.5' },
-              ].map(({ label, field, placeholder }) => (
+              ] as const).map(({ label, field, placeholder }) => (
                 <div key={field} style={{ marginBottom: 14 }}>
                   <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 5 }}>{label}</label>
                   <input
-                    value={form[field]}
-                    onChange={f(field)}
-                    placeholder={placeholder}
-                    required
+                    value={form[field]} onChange={f(field)} placeholder={placeholder} required
                     style={{ width: '100%', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, padding: '9px 12px', color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
                     onFocus={e => (e.target.style.borderColor = GOLD)}
                     onBlur={e => (e.target.style.borderColor = BORDER)}
@@ -224,8 +190,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
               ))}
               {error && <div style={{ color: RED, fontSize: 12, marginBottom: 12 }}>{error}</div>}
               <button
-                type="submit"
-                disabled={loading}
+                type="submit" disabled={loading}
                 style={{ width: '100%', padding: '11px', background: loading ? 'rgba(212,160,23,.4)' : GOLD, border: 'none', borderRadius: 8, color: '#0d1117', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4 }}
               >
                 {loading ? 'Analyzing...' : 'Score This Bid →'}
@@ -266,15 +231,78 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+/* ─── Live Pulse Indicator ───────────────────────────────────────────── */
+function LivePulse() {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, color: GREEN }}>
+      <span style={{
+        display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
+        background: GREEN, animation: 'livePulse 2s ease-in-out infinite',
+      }} />
+      LIVE
+    </span>
+  );
+}
+
+/* ─── Drill-Down Panel ───────────────────────────────────────────────── */
+type DrillDownType = 'projects' | 'bids' | 'payapps' | 'rfis' | null;
+
+function DrillDownPanel({ type, onClose }: { type: DrillDownType; onClose: () => void }) {
+  const LINKS: Record<NonNullable<DrillDownType>, { href: string; label: string; desc: string }> = {
+    projects: { href: '/app/projects',               label: 'View All Projects',    desc: 'Full project list with status and financials' },
+    bids:     { href: '/app/bids',                   label: 'View All Bids',        desc: 'Open bids awaiting award' },
+    payapps:  { href: '/app/pay-applications',       label: 'View Pay Applications', desc: 'Submitted and pending pay apps' },
+    rfis:     { href: '/app/projects',               label: 'View Projects',         desc: 'Open RFIs across all projects' },
+  };
+  if (!type) return null;
+  const link = LINKS[type];
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+    >
+      <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderTopLeftRadius: 20, borderTopRightRadius: 20, width: '100%', maxWidth: 600, padding: '20px 24px 32px', animation: 'slideUp 0.2s ease' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: TEXT }}>Drill Down</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 20 }}>×</button>
+        </div>
+        <Link
+          href={link.href}
+          onClick={onClose}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '14px 16px', background: DARK, borderRadius: 10, border: `1px solid ${BORDER}`,
+            textDecoration: 'none', marginBottom: 10,
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{link.label}</div>
+            <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>{link.desc}</div>
+          </div>
+          <span style={{ color: GOLD, fontSize: 18 }}>→</span>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Dashboard ─────────────────────────────────────────────────── */
 export default function DashboardPage() {
-  const [stats, setStats] = useState<DashStats | null>(null);
-  const [todayItems, setTodayItems] = useState<TodayItem[] | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [projects, setProjects] = useState<Project[] | null>(null);
-  const [rfis, setRfis] = useState<RFI[] | null>(null);
-  const [subs, setSubs] = useState<Sub[] | null>(null);
+  const [drillDown, setDrillDown] = useState<DrillDownType>(null);
+
+  // SWR-powered data — auto-refreshes in background
+  const { stats, loading: statsLoading, revalidate: revalidateStats } = useDashboardStats();
+  const { items: todayItems, loading: todayLoading } = useTodayItems();
+  const { projects, loading: projectsLoading } = useProjects();
+  const { openRFIs, loading: rfisLoading } = useRFIs();
+
+  // Realtime: any DB change to critical tables auto-invalidates stats
+  const handleRealtimeChange = useCallback(() => {
+    revalidateStats();
+  }, [revalidateStats]);
+  useRealtimeDashboard(handleRealtimeChange);
 
   const formatCurrency = (n: number) => '$' + n.toLocaleString();
 
@@ -285,48 +313,6 @@ export default function DashboardPage() {
     return 'Good evening';
   })();
 
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then(r => r.json())
-      .then(d => { if (!d.demo && d.name) setUserName(d.name); })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/dashboard/stats')
-      .then(r => r.json())
-      .then(data => setStats(data.stats ?? data))
-      .catch(() => setStats({ activeProjects: 0, openBids: 0, pendingPayApps: 0, totalContractValue: 0, monthlyRevenue: 0 }));
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/dashboard/today')
-      .then(r => r.json())
-      .then(data => setTodayItems(data.items ?? data.actions ?? []))
-      .catch(() => setTodayItems([]));
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/projects/list')
-      .then(r => r.json())
-      .then(d => setProjects(d.projects || []))
-      .catch(() => setProjects([]));
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/rfis/list')
-      .then(r => r.json())
-      .then(d => setRfis((d.rfis || []).filter((r: any) => r.status !== 'closed')))
-      .catch(() => setRfis([]));
-  }, []);
-
-  useEffect(() => {
-    fetch('/api/subs/list')
-      .then(r => r.json())
-      .then(d => setSubs(d.subs || []))
-      .catch(() => setSubs([]));
-  }, []);
-
   const activeProjects = stats?.activeProjects ?? 0;
   const openBids       = stats?.openBids ?? 0;
   const pendingPayApps = stats?.pendingPayApps ?? 0;
@@ -335,11 +321,10 @@ export default function DashboardPage() {
   return (
     <>
       <style>{`
-        @keyframes skeletonPulse {
-          0%,100% { opacity: 1; }
-          50%      { opacity: .35; }
-        }
+        @keyframes skeletonPulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
         .skeleton-pulse { animation: skeletonPulse 1.4s ease-in-out infinite; }
+        @keyframes livePulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(1.4); } }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       `}</style>
 
       <div style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
@@ -347,9 +332,12 @@ export default function DashboardPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: DIM }}>Portfolio Overview</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: DIM }}>Portfolio Overview</div>
+              <LivePulse />
+            </div>
             <h1 style={{ fontSize: 28, fontWeight: 800, margin: '4px 0', color: TEXT }}>
-              {greeting}{userName ? `, ${userName}` : ''}
+              {greeting}
             </h1>
             <div style={{ fontSize: 14, color: DIM }}>Here's what needs your attention today.</div>
           </div>
@@ -366,44 +354,69 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* KPI Row */}
+        {/* KPI Row — every metric is drillable */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 14, marginBottom: 28 }}>
-          <KPI label="Active Projects"      value={String(activeProjects)}        sub={activeProjects === 1 ? '1 in progress' : `${activeProjects} in progress`}  color={GOLD} />
-          <KPI label="Total Contract Value" value={formatCurrency(totalContract)} sub="active projects" />
-          <KPI label="Open Bids"            value={String(openBids)}              sub="awaiting award" color={BLUE} />
-          <KPI label="Pending Pay Apps"     value={String(pendingPayApps)}        sub="submitted / approved" color={pendingPayApps > 0 ? ORANGE : DIM} />
-          <KPI label="Open RFIs"            value={String(rfis?.length ?? '—')}   sub={rfis?.some(r => r.due_date && new Date(r.due_date) < new Date()) ? 'some overdue' : 'none overdue'} color={rfis?.length ? ORANGE : DIM} />
+          {statsLoading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '18px 20px' }}>
+                <div className="skeleton-pulse" style={{ height: 10, width: '60%', borderRadius: 4, background: BORDER, marginBottom: 10 }} />
+                <div className="skeleton-pulse" style={{ height: 28, width: '45%', borderRadius: 4, background: BORDER, marginBottom: 6 }} />
+                <div className="skeleton-pulse" style={{ height: 10, width: '70%', borderRadius: 4, background: BORDER }} />
+              </div>
+            ))
+          ) : (
+            <>
+              <KPI
+                label="Active Projects" value={String(activeProjects)} color={GOLD}
+                sub={activeProjects === 1 ? '1 in progress' : `${activeProjects} in progress`}
+                onClick={() => setDrillDown('projects')}
+              />
+              <KPI
+                label="Total Contract Value" value={formatCurrency(totalContract)}
+                sub="active projects"
+                href="/app/projects"
+              />
+              <KPI
+                label="Open Bids" value={String(openBids)} color={BLUE}
+                sub="awaiting award"
+                onClick={() => setDrillDown('bids')}
+              />
+              <KPI
+                label="Pending Pay Apps" value={String(pendingPayApps)} color={pendingPayApps > 0 ? ORANGE : DIM}
+                sub="submitted / approved"
+                onClick={() => setDrillDown('payapps')}
+              />
+              <KPI
+                label="Open RFIs"
+                value={rfisLoading ? '—' : String(openRFIs.length)}
+                sub={openRFIs.some(r => r.due_date && new Date(r.due_date) < new Date()) ? 'some overdue' : 'none overdue'}
+                color={openRFIs.length ? ORANGE : DIM}
+                onClick={() => setDrillDown('rfis')}
+              />
+            </>
+          )}
         </div>
 
-        {/* ── Today's Priority Actions ──────────────────────────────────── */}
+        {/* Today's Priority Actions */}
         <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', marginBottom: 24 }}>
           <div style={{ padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Today's Priority Actions</span>
               <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>Items requiring your attention</div>
             </div>
-            {todayItems && todayItems.filter(i => i.urgency === 'high').length > 0 && (
+            {!todayLoading && todayItems.filter((i: TodayItem) => i.urgency === 'high').length > 0 && (
               <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 10, background: 'rgba(192,48,48,.15)', color: RED, border: '1px solid rgba(192,48,48,.3)' }}>
-                {todayItems.filter(i => i.urgency === 'high').length} urgent
+                {todayItems.filter((i: TodayItem) => i.urgency === 'high').length} urgent
               </span>
             )}
           </div>
-
-          {todayItems === null && (
-            <div>
-              <SkeletonRow />
-              <SkeletonRow />
-              <SkeletonRow />
-            </div>
-          )}
-
-          {todayItems !== null && todayItems.length === 0 && (
+          {todayLoading && <><SkeletonRow /><SkeletonRow /><SkeletonRow /></>}
+          {!todayLoading && todayItems.length === 0 && (
             <div style={{ padding: '28px 18px', textAlign: 'center', color: DIM, fontSize: 13 }}>
               All caught up — no urgent items right now.
             </div>
           )}
-
-          {todayItems !== null && todayItems.map((item, i) => (
+          {!todayLoading && todayItems.map((item: TodayItem, i: number) => (
             <TodayActionCard key={i} item={item} />
           ))}
         </div>
@@ -418,13 +431,8 @@ export default function DashboardPage() {
               <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>All Projects →</Link>
             </div>
             <div style={{ padding: 16 }}>
-              {projects === null && (
-                <div>
-                  <SkeletonRow />
-                  <SkeletonRow />
-                </div>
-              )}
-              {projects !== null && projects.length === 0 && (
+              {projectsLoading && <><SkeletonRow /><SkeletonRow /></>}
+              {!projectsLoading && projects.length === 0 && (
                 <div style={{ padding: '24px 0', textAlign: 'center' }}>
                   <div style={{ fontSize: 32, marginBottom: 10 }}>📁</div>
                   <div style={{ color: DIM, fontSize: 13, marginBottom: 14 }}>No active projects yet.</div>
@@ -433,9 +441,12 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               )}
-              {projects !== null && projects.slice(0, 3).map(proj => (
+              {!projectsLoading && projects.slice(0, 3).map(proj => (
                 <Link key={proj.id} href={`/app/projects/${proj.id}`} style={{ display: 'block', textDecoration: 'none', marginBottom: 10 }}>
-                  <div style={{ padding: '14px 16px', background: '#0d1117', borderRadius: 8, border: `1px solid ${BORDER}`, cursor: 'pointer', transition: 'border-color .15s' }}>
+                  <div style={{ padding: '14px 16px', background: DARK, borderRadius: 8, border: `1px solid ${BORDER}`, cursor: 'pointer', transition: 'border-color .15s' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = GOLD)}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER)}
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                       <div>
                         <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
@@ -461,94 +472,51 @@ export default function DashboardPage() {
               <span style={{ fontWeight: 700, fontSize: 14 }}>Open RFIs</span>
               <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>View Projects →</Link>
             </div>
-            {rfis === null && (
-              <div>
-                <SkeletonRow />
-                <SkeletonRow />
-              </div>
-            )}
-            {rfis !== null && rfis.length === 0 && (
+            {rfisLoading && <><SkeletonRow /><SkeletonRow /></>}
+            {!rfisLoading && openRFIs.length === 0 && (
               <div style={{ padding: '28px 18px', textAlign: 'center', color: DIM, fontSize: 13 }}>
                 No open RFIs. Add projects to track RFIs here.
               </div>
             )}
-            {rfis !== null && rfis.length > 0 && (
-              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            {!rfisLoading && openRFIs.length > 0 && (
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
-                    <tr style={{ background: '#0d1117' }}>
+                    <tr style={{ background: DARK }}>
                       {['RFI #', 'Subject', 'Status', 'Due'].map(h => (
-                        <th key={h} style={{ padding: '8px 12px', textAlign: 'left', color: DIM, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
+                        <th key={h} style={{ padding: '8px 14px', textAlign: 'left', fontWeight: 700, color: DIM, fontSize: 11, textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {rfis.map(rfi => (
-                      <tr key={rfi.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
-                        <td style={{ padding: '10px 12px', color: GOLD, fontWeight: 700 }}>{rfi.rfi_number}</td>
-                        <td style={{ padding: '10px 12px', color: TEXT, maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rfi.subject}</td>
-                        <td style={{ padding: '10px 12px' }}>
-                          <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, fontWeight: 700, background: rfi.status === 'open' ? 'rgba(212,160,23,.15)' : 'rgba(26,95,168,.15)', color: rfi.status === 'open' ? GOLD : '#4a9de8' }}>
-                            {rfi.status.replace('_', ' ').toUpperCase()}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px 12px', color: rfi.due_date && new Date(rfi.due_date) < new Date() ? RED : DIM }}>
-                          {rfi.due_date || '—'}
-                        </td>
-                      </tr>
-                    ))}
+                    {openRFIs.slice(0, 8).map(rfi => {
+                      const overdue = rfi.due_date && new Date(rfi.due_date) < new Date();
+                      return (
+                        <tr key={rfi.id} style={{ borderBottom: `1px solid ${BORDER}` }}>
+                          <td style={{ padding: '10px 14px', color: DIM }}>{rfi.rfi_number}</td>
+                          <td style={{ padding: '10px 14px', color: TEXT, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rfi.subject}</td>
+                          <td style={{ padding: '10px 14px' }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'rgba(184,92,42,.15)', color: ORANGE, border: `1px solid rgba(184,92,42,.3)`, textTransform: 'uppercase' }}>
+                              {rfi.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px 14px', color: overdue ? RED : DIM, fontWeight: overdue ? 700 : 400 }}>
+                            {rfi.due_date ? new Date(rfi.due_date).toLocaleDateString() : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             )}
           </div>
         </div>
-
-        {/* Subcontractor Compliance */}
-        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>Subcontractors</span>
-            <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>View Projects →</Link>
-          </div>
-          {subs === null && (
-            <div>
-              <SkeletonRow />
-              <SkeletonRow />
-            </div>
-          )}
-          {subs !== null && subs.length === 0 && (
-            <div style={{ padding: '28px 18px', textAlign: 'center', color: DIM, fontSize: 13 }}>
-              No subcontractors yet. Add them to your projects to track compliance here.
-            </div>
-          )}
-          {subs !== null && subs.length > 0 && (
-            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead>
-                  <tr style={{ background: '#0d1117' }}>
-                    {['Subcontractor', 'Trade', 'Contract Value', 'Status'].map(h => (
-                      <th key={h} style={{ padding: '8px 14px', textAlign: 'left', color: DIM, fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {subs.map(sub => (
-                    <tr key={sub.id} style={{ borderBottom: `1px solid rgba(38,51,71,.5)` }}>
-                      <td style={{ padding: '10px 14px', fontWeight: 600, color: TEXT }}>{sub.name}</td>
-                      <td style={{ padding: '10px 14px', color: DIM }}>{sub.trade}</td>
-                      <td style={{ padding: '10px 14px', color: TEXT }}>{formatCurrency(sub.contract_amount || 0)}</td>
-                      <td style={{ padding: '10px 14px' }}><span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 4, background: 'rgba(26,138,74,.15)', color: '#3dd68c', fontWeight: 700 }}>ACTIVE</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
       </div>
 
+      {/* Modals */}
       {showScoreModal && <BidScoreModal onClose={() => setShowScoreModal(false)} />}
+      {drillDown && <DrillDownPanel type={drillDown} onClose={() => setDrillDown(null)} />}
     </>
   );
 }
