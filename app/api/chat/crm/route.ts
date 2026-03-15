@@ -264,6 +264,179 @@ const SAGE_TOOLS: Anthropic.Tool[] = [
       required: ['project_name'],
     },
   },
+  {
+    name: 'analyze_wip_schedule',
+    description: 'Analyze work-in-progress (WIP) schedule to identify over/under-billing, job cost variance, and backlog health. Use when asked about WIP, overbilling, underbilling, or job cost status.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        project_name: { type: 'string', description: 'Name of the project' },
+        contract_amount: { type: 'number', description: 'Total contract value in dollars' },
+        percent_complete: { type: 'number', description: 'Percent complete (0-100)' },
+        billed_to_date: { type: 'number', description: 'Total amount billed to date' },
+        cost_to_date: { type: 'number', description: 'Actual cost incurred to date' },
+        estimated_cost_at_completion: { type: 'number', description: 'Total estimated cost to complete the project' },
+        contract_duration_months: { type: 'number', description: 'Total contract duration in months (optional)' },
+        months_elapsed: { type: 'number', description: 'Number of months elapsed so far (optional)' },
+      },
+      required: ['project_name', 'contract_amount', 'percent_complete', 'billed_to_date', 'cost_to_date', 'estimated_cost_at_completion'],
+    },
+  },
+  {
+    name: 'calculate_bonding_capacity',
+    description: 'Estimate contractor\'s bonding capacity based on financial data. Use when asked about bonding, bond capacity, maximum project size, or how much work they can bond.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        working_capital: { type: 'number', description: 'Current assets minus current liabilities' },
+        net_worth: { type: 'number', description: 'Total equity on the balance sheet' },
+        current_backlog: { type: 'number', description: 'Total value of work currently under contract' },
+        largest_completed_project: { type: 'number', description: 'Dollar value of the largest single project ever completed' },
+        years_in_business: { type: 'number', description: 'Number of years the company has been in business (optional)' },
+        emod: { type: 'number', description: 'Experience modification rate (optional, default 1.0)' },
+      },
+      required: ['working_capital', 'net_worth', 'current_backlog', 'largest_completed_project'],
+    },
+  },
+  {
+    name: 'draft_subcontract_scope',
+    description: 'Draft a detailed subcontract scope of work section for a specific trade. Use when creating subcontract scope exhibits, writing trade scopes, or defining sub responsibilities.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        trade: { type: 'string', description: 'Trade name (e.g., electrical, plumbing, HVAC, framing, drywall, concrete, roofing, painting)' },
+        project_name: { type: 'string', description: 'Name of the project' },
+        project_type: { type: 'string', description: 'Project type (commercial, residential, healthcare, etc.) — optional' },
+        special_requirements: { type: 'string', description: 'Any specific requirements to include — optional' },
+        contract_amount: { type: 'number', description: 'Subcontract dollar amount — optional' },
+      },
+      required: ['trade', 'project_name'],
+    },
+  },
+  {
+    name: 'calculate_bid_markup',
+    description: 'Calculate optimal bid markup and analyze margin at different price points. Use when preparing a bid, analyzing if a job is priced right, or deciding markup strategy.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        direct_cost: { type: 'number', description: 'Sum of all direct costs: labor + materials + subs + equipment' },
+        home_office_overhead_rate: { type: 'number', description: 'Home office overhead percentage (default 12)' },
+        target_profit_rate: { type: 'number', description: 'Target net profit percentage (default 5)' },
+        bond_required: { type: 'boolean', description: 'Whether a performance/payment bond is required — optional' },
+        insurance_rate: { type: 'number', description: 'Insurance rate as percentage of direct cost (default 1.5)' },
+        contingency_rate: { type: 'number', description: 'Contingency as percentage of direct cost (default 3)' },
+        competitive_pressure: { type: 'string', description: 'Market competitiveness: low, medium, high, very_high — optional' },
+      },
+      required: ['direct_cost'],
+    },
+  },
+  {
+    name: 'analyze_project_risk',
+    description: 'Generate a project risk matrix with probability/impact scores and mitigation strategies. Use when starting a project, reviewing a difficult bid, or doing a project health check.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        project_type: { type: 'string', description: 'Project type: commercial, residential, healthcare, federal, heavy_civil, etc.' },
+        contract_type: { type: 'string', description: 'Contract type: lump_sum, gmp, cost_plus, design_build, etc.' },
+        contract_amount: { type: 'number', description: 'Total contract value' },
+        duration_months: { type: 'number', description: 'Project duration in months' },
+        has_design_risk: { type: 'boolean', description: 'Whether contractor carries design risk — optional' },
+        is_occupied_facility: { type: 'boolean', description: 'Whether work is in an occupied building — optional' },
+        has_hazmat: { type: 'boolean', description: 'Whether project involves hazardous materials — optional' },
+        is_remote_location: { type: 'boolean', description: 'Whether project is in a remote location — optional' },
+        is_union: { type: 'boolean', description: 'Whether project is subject to union labor agreements — optional' },
+      },
+      required: ['project_type', 'contract_type', 'contract_amount', 'duration_months'],
+    },
+  },
+  {
+    name: 'calculate_equipment_roi',
+    description: 'Calculate ROI on owning vs. renting equipment. Use when deciding whether to buy equipment, calculating equipment rates, or analyzing fleet ownership costs.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        equipment_name: { type: 'string', description: 'Name or description of the equipment' },
+        purchase_price: { type: 'number', description: 'Purchase price of the equipment' },
+        useful_life_years: { type: 'number', description: 'Expected useful life in years (default 7)' },
+        annual_utilization_hours: { type: 'number', description: 'Estimated hours per year the equipment will be used' },
+        rental_rate_per_hour: { type: 'number', description: 'Current market rental rate per hour' },
+        operating_cost_per_hour: { type: 'number', description: 'Fuel and maintenance estimate per hour — optional' },
+        salvage_value: { type: 'number', description: 'Expected salvage value at end of useful life — optional (default 20% of purchase price)' },
+        financing_rate: { type: 'number', description: 'Annual financing interest rate as percentage — optional (default 6)' },
+      },
+      required: ['equipment_name', 'purchase_price', 'annual_utilization_hours', 'rental_rate_per_hour'],
+    },
+  },
+  {
+    name: 'draft_demand_letter',
+    description: 'Draft a formal demand letter for unpaid invoices, retainage, or contract balance. Use when a client is not paying, retainage is overdue, or final payment has not been received.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        claimant_name: { type: 'string', description: 'Name of the contractor or company sending the letter' },
+        debtor_name: { type: 'string', description: 'Name of the party who owes money' },
+        project_name: { type: 'string', description: 'Name of the project' },
+        amount_owed: { type: 'number', description: 'Total dollar amount owed' },
+        invoice_numbers: { type: 'string', description: 'Comma-separated invoice or pay application numbers — optional' },
+        days_outstanding: { type: 'number', description: 'Number of days the amount has been outstanding' },
+        state: { type: 'string', description: 'State where project is located (for prompt payment statute reference) — optional' },
+        contract_clause: { type: 'string', description: 'Relevant contract payment clause — optional' },
+        prior_communications: { type: 'string', description: 'Brief description of prior attempts to collect — optional' },
+      },
+      required: ['claimant_name', 'debtor_name', 'project_name', 'amount_owed', 'days_outstanding'],
+    },
+  },
+  {
+    name: 'calculate_overhead_rate',
+    description: 'Calculate company overhead rate and break-even revenue. Use when asked about overhead, rates to charge, pricing strategy, or company financial health.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        annual_revenue: { type: 'number', description: 'Total annual revenue' },
+        direct_labor: { type: 'number', description: 'Total annual direct labor cost on jobs' },
+        direct_materials: { type: 'number', description: 'Total annual materials cost' },
+        direct_subcontractors: { type: 'number', description: 'Total annual subcontractor payments' },
+        total_annual_overhead: { type: 'number', description: 'Total home office costs: rent, salaries, insurance, vehicles, etc.' },
+        target_net_profit_percent: { type: 'number', description: 'Target net profit percentage (default 5)' },
+      },
+      required: ['annual_revenue', 'direct_labor', 'direct_materials', 'direct_subcontractors', 'total_annual_overhead'],
+    },
+  },
+  {
+    name: 'generate_schedule_recovery',
+    description: 'Generate a schedule recovery plan when a project is behind schedule. Use when a project is delayed and needs a path back to the original completion date.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        project_name: { type: 'string', description: 'Name of the project' },
+        original_completion_date: { type: 'string', description: 'Original contract completion date (ISO format YYYY-MM-DD)' },
+        current_projected_completion: { type: 'string', description: 'Current projected completion date (ISO format YYYY-MM-DD)' },
+        delay_cause: { type: 'string', description: 'Cause of delay: owner delay, weather, design changes, labor shortage, material delay, etc.' },
+        contract_amount: { type: 'number', description: 'Total contract value' },
+        remaining_work_description: { type: 'string', description: 'Brief description of remaining work' },
+        available_budget_for_acceleration: { type: 'number', description: 'Budget available for acceleration measures — optional' },
+      },
+      required: ['project_name', 'original_completion_date', 'current_projected_completion', 'delay_cause', 'contract_amount', 'remaining_work_description'],
+    },
+  },
+  {
+    name: 'draft_meeting_minutes',
+    description: 'Draft professional construction meeting minutes (OAC, preconstruction, progress meeting, subcontractor coordination). Use when user wants to create meeting minutes or recap a meeting.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        meeting_type: { type: 'string', description: 'Meeting type: oac, preconstruction, progress, subcontractor_coordination, safety, design' },
+        project_name: { type: 'string', description: 'Name of the project' },
+        meeting_date: { type: 'string', description: 'Date of the meeting' },
+        location: { type: 'string', description: 'Meeting location — optional' },
+        attendees: { type: 'string', description: 'Comma-separated list of attendee names and/or companies' },
+        agenda_items: { type: 'string', description: 'Topics discussed during the meeting' },
+        action_items: { type: 'string', description: 'Decisions made and follow-up items with responsible parties' },
+        next_meeting_date: { type: 'string', description: 'Date of next scheduled meeting — optional' },
+      },
+      required: ['meeting_type', 'project_name', 'meeting_date', 'attendees', 'agenda_items', 'action_items'],
+    },
+  },
 ];
 
 // ── Tool execution ────────────────────────────────────────────────────────
@@ -947,6 +1120,945 @@ ${hasFederal ? `━━━ FEDERAL / PREVAILING WAGE CLOSEOUT ━━━
 
 Prepared by: _______________________  Date: __________
 Reviewed by: _______________________  Date: __________
+═══════════════════════════════════════`;
+    }
+
+    case 'analyze_wip_schedule': {
+      const projectName = String(input.project_name);
+      const contractAmount = Number(input.contract_amount);
+      const percentComplete = Number(input.percent_complete);
+      const billedToDate = Number(input.billed_to_date);
+      const costToDate = Number(input.cost_to_date);
+      const estimatedCostAtCompletion = Number(input.estimated_cost_at_completion);
+      const contractDurationMonths = input.contract_duration_months != null ? Number(input.contract_duration_months) : null;
+      const monthsElapsed = input.months_elapsed != null ? Number(input.months_elapsed) : null;
+
+      const earnedValue = contractAmount * (percentComplete / 100);
+      const billingVariance = billedToDate - earnedValue;
+      const costVariance = earnedValue - costToDate;
+      const costPerformanceIndex = costToDate > 0 ? earnedValue / costToDate : null;
+      const remainingContractValue = contractAmount - earnedValue;
+      const estimateAtCompletion = costPerformanceIndex != null && costPerformanceIndex > 0
+        ? costToDate + (remainingContractValue / costPerformanceIndex)
+        : estimatedCostAtCompletion;
+      const projectedProfit = contractAmount - estimateAtCompletion;
+      const projectedGpPercent = contractAmount > 0 ? (projectedProfit / contractAmount) * 100 : 0;
+
+      let schedulePerformanceIndex: number | null = null;
+      if (contractDurationMonths != null && monthsElapsed != null && contractDurationMonths > 0) {
+        const budgetedCostWorkScheduled = contractAmount * (monthsElapsed / contractDurationMonths);
+        schedulePerformanceIndex = budgetedCostWorkScheduled > 0 ? earnedValue / budgetedCostWorkScheduled : null;
+      }
+
+      const billingStatus = billingVariance > 0 ? 'OVER-BILLED' : billingVariance < 0 ? 'UNDER-BILLED' : 'ON TRACK';
+      const costStatus = costVariance >= 0 ? 'UNDER BUDGET' : 'OVER BUDGET';
+      const scheduleStatus = schedulePerformanceIndex == null ? 'N/A' : schedulePerformanceIndex >= 1.0 ? 'ON/AHEAD OF SCHEDULE' : 'BEHIND SCHEDULE';
+
+      return JSON.stringify({
+        project_name: projectName,
+        contract_amount: contractAmount.toFixed(2),
+        percent_complete: `${percentComplete.toFixed(1)}%`,
+        earned_value: earnedValue.toFixed(2),
+        billed_to_date: billedToDate.toFixed(2),
+        billing_variance: billingVariance.toFixed(2),
+        billing_status: billingStatus,
+        cost_to_date: costToDate.toFixed(2),
+        cost_variance: costVariance.toFixed(2),
+        cost_status: costStatus,
+        cost_performance_index: costPerformanceIndex != null ? costPerformanceIndex.toFixed(3) : 'N/A',
+        schedule_performance_index: schedulePerformanceIndex != null ? schedulePerformanceIndex.toFixed(3) : 'N/A',
+        schedule_status: scheduleStatus,
+        estimate_at_completion: estimateAtCompletion.toFixed(2),
+        projected_profit: projectedProfit.toFixed(2),
+        projected_gp_percent: `${projectedGpPercent.toFixed(1)}%`,
+        summary: `${projectName} is ${billingStatus.toLowerCase()} by $${Math.abs(billingVariance).toLocaleString('en-US', { minimumFractionDigits: 2 })} and ${costStatus.toLowerCase()} by $${Math.abs(costVariance).toLocaleString('en-US', { minimumFractionDigits: 2 })}. Projected gross profit is ${projectedGpPercent.toFixed(1)}% ($${projectedProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}).`,
+      });
+    }
+
+    case 'calculate_bonding_capacity': {
+      const workingCapital = Number(input.working_capital);
+      const netWorth = Number(input.net_worth);
+      const currentBacklog = Number(input.current_backlog);
+      const largestCompleted = Number(input.largest_completed_project);
+      const yearsInBusiness = input.years_in_business != null ? Number(input.years_in_business) : null;
+      const emod = Number(input.emod ?? 1.0);
+
+      const singleJobCapacity = workingCapital * 10;
+      const aggregateCapacity = netWorth * 15;
+      const availableCapacity = aggregateCapacity - currentBacklog;
+      const leverageRatio = netWorth > 0 ? currentBacklog / netWorth : null;
+
+      let leverageHealth = 'HEALTHY';
+      let leverageNote = 'Backlog leverage is within normal range.';
+      if (leverageRatio != null) {
+        if (leverageRatio > 20) {
+          leverageHealth = 'DANGER ZONE';
+          leverageNote = 'Backlog leverage exceeds 20x net worth — surety will likely reduce or deny capacity.';
+        } else if (leverageRatio > 15) {
+          leverageHealth = 'CONCERNING';
+          leverageNote = 'Backlog leverage exceeds 15x net worth — surety scrutiny expected; may require additional collateral.';
+        }
+      }
+
+      const emodNote = emod > 1.0
+        ? `Experience mod of ${emod} is above 1.0 — elevated EMR can reduce bonding appetite and raise premiums.`
+        : `Experience mod of ${emod} is at or below 1.0 — good safety record supports bonding capacity.`;
+
+      const recommendations: string[] = [];
+      if (availableCapacity < 0) recommendations.push('Current backlog exceeds aggregate capacity — avoid bidding new bonded work until backlog burns down.');
+      if (leverageRatio != null && leverageRatio > 15) recommendations.push('Improve leverage ratio by reducing backlog or increasing net worth through retained earnings.');
+      if (emod > 1.2) recommendations.push('Reduce EMR below 1.0 to improve surety terms and bonding appetite.');
+      if (yearsInBusiness != null && yearsInBusiness < 3) recommendations.push('Less than 3 years in business — surety may require personal indemnity and additional financial security.');
+      if (recommendations.length === 0) recommendations.push('Financial profile supports current bonding program. Consider growing program gradually with demonstrated performance.');
+
+      return JSON.stringify({
+        working_capital: workingCapital.toFixed(2),
+        net_worth: netWorth.toFixed(2),
+        current_backlog: currentBacklog.toFixed(2),
+        largest_completed_project: largestCompleted.toFixed(2),
+        single_job_capacity_estimate: singleJobCapacity.toFixed(2),
+        aggregate_capacity_estimate: aggregateCapacity.toFixed(2),
+        available_capacity: availableCapacity.toFixed(2),
+        leverage_ratio: leverageRatio != null ? `${leverageRatio.toFixed(1)}x` : 'N/A',
+        leverage_health: leverageHealth,
+        leverage_note: leverageNote,
+        emod_note: emodNote,
+        recommendations,
+        disclaimer: 'Bonding capacity estimates are rule-of-thumb approximations. Actual capacity is determined by your surety based on full underwriting review including financial statements, work history, and character assessment.',
+      });
+    }
+
+    case 'draft_subcontract_scope': {
+      const trade = String(input.trade).toLowerCase().trim();
+      const projectName = String(input.project_name);
+      const projectType = String(input.project_type ?? 'commercial');
+      const specialReqs = input.special_requirements ? String(input.special_requirements) : null;
+      const contractAmt = input.contract_amount ? `$${Number(input.contract_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '[TO BE INSERTED]';
+      const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      const scopeData: Record<string, { included: string[]; excluded: string[]; standards: string; coordination: string }> = {
+        electrical: {
+          included: [
+            'Complete electrical service entrance and main distribution panel(s) per plans and specs',
+            'All branch circuit wiring, conduit, and devices throughout the building',
+            'Lighting fixtures and controls per fixture schedule — including dimming and occupancy sensors',
+            'Exit and emergency lighting — complete and code compliant',
+            'Fire alarm rough-in (conduit and boxes only — programming by others)',
+            'Data/telecom conduit and pull strings (terminations by low-voltage contractor)',
+            'Mechanical equipment connections per equipment schedules',
+            'Exterior lighting and site electrical as shown on plans',
+            'Temporary power and lighting throughout construction',
+            'Arc flash labeling and panel schedules',
+            'Final connections to all electrical equipment furnished by others',
+            'All permits, inspections, and certificates of completion',
+          ],
+          excluded: [
+            'Low-voltage data cabling terminations and infrastructure (by separate low-voltage contractor)',
+            'Fire alarm programming, testing, and acceptance (by fire alarm vendor)',
+            'Specialty equipment wiring not shown on electrical drawings',
+            'POCO (utility company) service fees and transformer installation',
+            'Telephone/cable TV service terminations',
+            'Audio/visual and security system wiring',
+          ],
+          standards: 'All work shall conform to NEC (current adopted edition), local amendments, NFPA 70E, and applicable OSHA standards. UL-listed materials required throughout.',
+          coordination: 'Coordinate panel locations with structural and architectural. Coordinate equipment connections with mechanical and plumbing contractors. Attend all coordination and BIM clash meetings.',
+        },
+        plumbing: {
+          included: [
+            'Complete domestic water distribution — hot, cold, and recirculation',
+            'All sanitary drain, waste, and vent (DWV) piping',
+            'Storm drainage within building and to 5 feet outside building',
+            'Natural gas piping to all equipment requiring gas connections',
+            'All plumbing fixtures, trim, and accessories per fixture schedule',
+            'Water heaters and associated equipment',
+            'Backflow preventers and pressure reducing valves',
+            'Hose bibbs, floor drains, and area drains per plans',
+            'Grease interceptor and related piping (if applicable)',
+            'Sleeves, hangers, supports, and all rough-in work',
+            'All plumbing permits, inspections, and certificates',
+            'Insulation of all domestic hot water and cold water piping',
+          ],
+          excluded: [
+            'Fire suppression/sprinkler systems (by separate fire sprinkler subcontractor)',
+            'Site utilities beyond 5 feet of building foundation',
+            'Medical gas systems (by specialty contractor)',
+            'Process piping for equipment not shown on plumbing drawings',
+            'Roofing drains and leaders (by roofing contractor)',
+          ],
+          standards: 'Comply with IPC (current adopted edition), local amendments, and IAPMO standards. All fixtures to be ADA compliant where required.',
+          coordination: 'Coordinate rough-in dimensions with architectural millwork and tile contractor. Coordinate equipment connections with mechanical. Submit plumbing fixture submittals for architect approval prior to ordering.',
+        },
+        hvac: {
+          included: [
+            'All HVAC equipment — AHUs, RTUs, fan coil units, VAV boxes per equipment schedule',
+            'Complete ductwork distribution system — supply, return, and exhaust',
+            'Hydronic piping, pumps, and associated equipment (if applicable)',
+            'Building automation system (BAS/DDC) controls for HVAC equipment',
+            'Balancing of all air and water systems — TAB report required',
+            'Insulation of all ductwork and hydronic piping',
+            'Kitchen exhaust hoods and make-up air units (if shown on mechanical plans)',
+            'Equipment screens and vibration isolation',
+            'Start-up and commissioning of all mechanical equipment',
+            'Owner training on all HVAC systems',
+            'All mechanical permits, inspections, and certificates',
+            'Refrigerant management plan and certification',
+          ],
+          excluded: [
+            'Plumbing and domestic water connections to equipment (by plumbing contractor)',
+            'Electrical power wiring to equipment (by electrical contractor)',
+            'Specialty lab or clean room HVAC (unless specifically included in scope)',
+            'Process cooling or industrial ventilation not shown on mechanical drawings',
+          ],
+          standards: 'Comply with IMC, ASHRAE 62.1 ventilation standards, SMACNA duct construction standards, and local energy code. All refrigerants to be EPA 608 compliant.',
+          coordination: 'Coordinate duct routing with structural, electrical, and plumbing for clash-free installation. BIM coordination required. Coordinate equipment pads with concrete contractor.',
+        },
+        framing: {
+          included: [
+            'Complete structural and non-structural metal stud framing per architectural and structural drawings',
+            'All exterior wall framing including sheathing and weather-resistive barrier',
+            'Interior partition framing per architectural plans',
+            'Soffit, bulkhead, and ceiling framing',
+            'Backing and blocking for cabinets, toilet accessories, handrails, and wall-mounted equipment',
+            'Door and window rough openings and headers',
+            'Framing around mechanical, electrical, and plumbing penetrations',
+            'All anchors, fasteners, and framing accessories',
+            'Rough-in coordination openings for all trades',
+          ],
+          excluded: [
+            'Structural steel (by structural steel subcontractor)',
+            'Drywall and finishing (by drywall subcontractor)',
+            'Insulation within framing (by insulation subcontractor)',
+            'Doors, frames, and hardware (by separate scope)',
+            'Exterior cladding systems (by separate subcontractor)',
+          ],
+          standards: 'Comply with AISC, AISI, local building code, and structural engineer of record\'s specifications. All light gauge framing per ASTM C645 and C754.',
+          coordination: 'Coordinate framing layout with MEP trades prior to installation. Install all backing and blocking prior to drywall. Provide shop drawings for architect/structural review.',
+        },
+        drywall: {
+          included: [
+            'All gypsum board installation — walls, ceilings, and soffits',
+            'Taping, mudding, and finishing to specified level (Level 4 standard unless noted)',
+            'Texture application where specified',
+            'Corner bead, control joints, and trim accessories',
+            'Shaft wall and area separation wall assemblies (fire-rated)',
+            'Acoustic insulation in partitions for sound attenuation',
+            'Patch and repair of framing contractor\'s rough openings after MEP rough-in',
+            'Preparation of surfaces for paint — sanding, priming',
+          ],
+          excluded: [
+            'Framing (by framing subcontractor)',
+            'Paint and wall coverings (by painting subcontractor)',
+            'Tile backer board installation (by tile subcontractor)',
+            'Exterior EIFS or stucco systems (by separate subcontractor)',
+            'Firestopping of penetrations (by MEP trades or dedicated firestop subcontractor)',
+          ],
+          standards: 'Comply with GA-216 application standards, ASTM C840, and AWCI Technical Manual 12-B. Fire-rated assemblies to UL-listed assemblies per plans.',
+          coordination: 'Verify all MEP rough-in is complete, inspected, and approved prior to closing walls. Coordinate with painter for primer type requirements.',
+        },
+        concrete: {
+          included: [
+            'All cast-in-place concrete per structural drawings — footings, foundations, slabs, walls',
+            'Formwork design, supply, and installation',
+            'Reinforcing steel placement per structural drawings',
+            'Embedded items, anchor bolts, sleeves, and inserts',
+            'Concrete mix design submittals and special inspection coordination',
+            'Curing, joint sealing, and surface finishing',
+            'Slab-on-grade including sub-base preparation (after earthwork by others)',
+            'Flatwork — sidewalks, curbs, and pads as shown on civil/architectural plans',
+            'Concrete pumping and placement equipment',
+          ],
+          excluded: [
+            'Earthwork, excavation, and grading (by civil/earthwork contractor)',
+            'Waterproofing and damp-proofing of foundation walls (by waterproofing contractor)',
+            'Underslab insulation and vapor barrier (by separate scope)',
+            'Post-installed anchors (by trade requiring anchors)',
+            'Decorative concrete overlays and polishing (by specialty contractor)',
+          ],
+          standards: 'ACI 301, ACI 318 (structural), ACI 305 (hot weather), ACI 306 (cold weather). Concrete mix designs to be submitted for EOR approval. Special inspection per IBC Chapter 17.',
+          coordination: 'Coordinate all embedded items with MEP contractors before pour. Provide pour schedule to owner/architect. Coordinate with structural special inspector.',
+        },
+        roofing: {
+          included: [
+            'Complete roofing system per specifications — membrane type, insulation, and coverboard',
+            'Roof insulation — tapered and flat as shown on roof plan',
+            'All roof flashings — base, counter, pitch pocket, and edge metal',
+            'Roof drains, scuppers, and overflow drains (rough-in by plumber; final connection by roofer)',
+            'Penetration flashings for all MEP penetrations',
+            'Walkway pads and equipment support pads',
+            'Manufacturer warranty — 20-year NDL warranty minimum',
+            'All permits and inspections',
+            'Pre-roofing inspection and pre-roofing meeting',
+          ],
+          excluded: [
+            'Roof deck structure (by structural/framing contractor)',
+            'HVAC equipment curbs fabrication (by HVAC contractor — roofing contractor sets and flashes curbs)',
+            'Roof penetration cutting for MEP (by respective MEP contractors)',
+            'Gutters and downspouts (by separate scope unless noted)',
+          ],
+          standards: 'NRCA standards, FM Global approval where required, local building code. All materials to be UL-classified. Contractor shall be a certified installer for specified manufacturer.',
+          coordination: 'Attend pre-roofing meeting with owner and architect. Coordinate MEP penetration schedule to minimize interruptions. Provide installer certification prior to commencement.',
+        },
+        painting: {
+          included: [
+            'Interior painting — walls, ceilings, doors, frames, and trim per finish schedule',
+            'Exterior painting — all painted surfaces per specifications',
+            'Surface preparation — cleaning, sanding, caulking, spot priming',
+            'Primer and finish coats per paint system specified',
+            'Epoxy coatings in mechanical rooms, restrooms, and utility areas where specified',
+            'Line striping in parking areas (if shown on civil plans)',
+            'Protective coatings on structural steel where exposed',
+            'Color samples and mock-ups for architect approval prior to field application',
+          ],
+          excluded: [
+            'Factory-applied coatings on equipment, doors, and millwork',
+            'Staining or clear finishing of wood (unless specifically included)',
+            'Anti-graffiti coatings (unless specified)',
+            'Traffic marking beyond building limits (by civil contractor)',
+            'Wallcovering installation (by separate contractor)',
+          ],
+          standards: 'MPI (Master Painters Institute) standards. Surfaces to be clean, dry, and within specified temperature and humidity ranges. Paint products to be VOC-compliant per local regulations.',
+          coordination: 'Verify all substrates are ready before mobilizing. Coordinate with drywall contractor for primer type. Provide paint schedule and color samples for owner/architect review.',
+        },
+      };
+
+      const tradeKey = Object.keys(scopeData).find(k => trade.includes(k)) ?? '';
+      const scopeInfo = scopeData[tradeKey];
+
+      if (!scopeInfo) {
+        return `
+═══════════════════════════════════════
+SUBCONTRACT SCOPE OF WORK
+${String(input.trade).toUpperCase()} — ${projectName}
+═══════════════════════════════════════
+Date: ${date}
+Project Type: ${projectType}
+${input.contract_amount ? `Subcontract Amount: ${contractAmt}` : ''}
+
+SCOPE OF WORK — GENERAL:
+Subcontractor shall furnish all labor, materials, equipment, tools, supervision, permits, and incidentals necessary to perform and complete all ${input.trade} work for ${projectName} in strict accordance with the contract documents, applicable codes, and good industry practice.
+
+INCLUDED WORK:
+All ${input.trade} work as shown on the contract drawings and described in the project specifications, including but not limited to all work reasonably inferable from the contract documents.
+${specialReqs ? `\nSPECIAL REQUIREMENTS:\n${specialReqs}` : ''}
+
+EXCLUDED WORK:
+Items specifically excluded from this subcontract shall be identified by mutual agreement and listed via written addendum.
+
+QUALITY STANDARDS:
+All work shall comply with applicable local, state, and federal codes and regulations in effect at the time of construction.
+
+COORDINATION:
+Subcontractor shall cooperate and coordinate with all other trades. Attend coordination meetings as required.
+
+Prepared: ${date}
+Project: ${projectName}
+═══════════════════════════════════════`;
+      }
+
+      const includedList = scopeInfo.included.map((item, i) => `  ${i + 1}. ${item}`).join('\n');
+      const excludedList = scopeInfo.excluded.map((item, i) => `  ${i + 1}. ${item}`).join('\n');
+
+      return `
+═══════════════════════════════════════
+SUBCONTRACT SCOPE OF WORK
+${String(input.trade).toUpperCase()} — ${projectName}
+═══════════════════════════════════════
+Date: ${date}
+Project: ${projectName}
+Project Type: ${projectType.charAt(0).toUpperCase() + projectType.slice(1)}
+${input.contract_amount ? `Subcontract Amount: ${contractAmt}` : ''}
+
+GENERAL SCOPE:
+Subcontractor shall furnish all labor, materials, equipment, tools, supervision, permits, and incidentals necessary to perform and complete all ${input.trade} work for ${projectName} in strict accordance with the contract documents, applicable codes, and the following scope.
+
+SPECIFICALLY INCLUDED:
+${includedList}
+${specialReqs ? `\nSPECIAL REQUIREMENTS / PROJECT-SPECIFIC INCLUSIONS:\n${specialReqs}` : ''}
+
+SPECIFICALLY EXCLUDED (unless added by written change order):
+${excludedList}
+
+QUALITY STANDARDS AND CODE COMPLIANCE:
+${scopeInfo.standards}
+
+COORDINATION REQUIREMENTS:
+${scopeInfo.coordination}
+
+GENERAL PROVISIONS:
+  - Subcontractor shall review the full contract documents and clarify any scope questions prior to execution.
+  - All work shall be performed by qualified personnel holding required licenses and certifications.
+  - Subcontractor is responsible for safety of its own employees and compliance with OSHA standards.
+  - Changes to this scope require a written, signed change order prior to performing additional work.
+  - Subcontractor shall maintain as-built markups and deliver to GC at project completion.
+
+Prepared: ${date}
+Project: ${projectName}
+═══════════════════════════════════════`;
+    }
+
+    case 'calculate_bid_markup': {
+      const directCost = Number(input.direct_cost);
+      const overheadRate = Number(input.home_office_overhead_rate ?? 12) / 100;
+      const profitRate = Number(input.target_profit_rate ?? 5) / 100;
+      const bondRequired = Boolean(input.bond_required ?? false);
+      const insuranceRate = Number(input.insurance_rate ?? 1.5) / 100;
+      const contingencyRate = Number(input.contingency_rate ?? 3) / 100;
+      const competitivePressure = String(input.competitive_pressure ?? 'medium');
+
+      const overheadDollars = directCost * overheadRate;
+      const insuranceDollars = directCost * insuranceRate;
+      const contingencyDollars = directCost * contingencyRate;
+      const bondDollars = bondRequired ? (directCost * 1.15) * 0.012 : 0;
+      const subtotalWithOverhead = directCost + overheadDollars + insuranceDollars + contingencyDollars + bondDollars;
+      const profitDollars = subtotalWithOverhead * profitRate;
+      const bidPrice = subtotalWithOverhead + profitDollars;
+      const allInMarkup = directCost > 0 ? ((bidPrice - directCost) / directCost) * 100 : 0;
+      const gpDollars = bidPrice - directCost;
+      const gpPercent = bidPrice > 0 ? (gpDollars / bidPrice) * 100 : 0;
+
+      const competitiveAnalysis: Record<string, string> = {
+        low: 'Low competition — current markup is appropriate. Consider holding or increasing profit.',
+        medium: 'Moderate competition — markup is reasonable for market conditions.',
+        high: 'High competition — consider trimming contingency or profit to sharpen bid. Be cautious not to underprice.',
+        very_high: 'Very high competition — evaluate whether this is a strategic bid or if margin preservation is critical. Consider a GO/NO-GO review.',
+      };
+      const competitiveNote = competitiveAnalysis[competitivePressure] ?? competitiveAnalysis['medium'];
+
+      return JSON.stringify({
+        direct_cost: directCost.toFixed(2),
+        overhead: overheadDollars.toFixed(2),
+        overhead_rate: `${(overheadRate * 100).toFixed(1)}%`,
+        insurance: insuranceDollars.toFixed(2),
+        contingency: contingencyDollars.toFixed(2),
+        bond_cost: bondDollars > 0 ? bondDollars.toFixed(2) : 'N/A (no bond required)',
+        subtotal_with_overhead: subtotalWithOverhead.toFixed(2),
+        profit: profitDollars.toFixed(2),
+        bid_price: bidPrice.toFixed(2),
+        all_in_markup_over_direct: `${allInMarkup.toFixed(1)}%`,
+        gross_profit_dollars: gpDollars.toFixed(2),
+        gross_profit_percent: `${gpPercent.toFixed(1)}%`,
+        competitive_analysis: competitiveNote,
+      });
+    }
+
+    case 'analyze_project_risk': {
+      const projectType = String(input.project_type).toLowerCase();
+      const contractType = String(input.contract_type).toLowerCase();
+      const contractAmount = Number(input.contract_amount);
+      const durationMonths = Number(input.duration_months);
+      const hasDesignRisk = Boolean(input.has_design_risk ?? false);
+      const isOccupied = Boolean(input.is_occupied_facility ?? false);
+      const hasHazmat = Boolean(input.has_hazmat ?? false);
+      const isRemote = Boolean(input.is_remote_location ?? false);
+      const isUnion = Boolean(input.is_union ?? false);
+
+      type RiskItem = { risk: string; probability: number; impact: number; score: number; mitigation: string };
+      const risks: RiskItem[] = [
+        {
+          risk: 'Scope Creep / Undefined Scope',
+          probability: contractType === 'lump_sum' ? 4 : 3,
+          impact: 4,
+          score: 0,
+          mitigation: 'Establish rigorous change order process at kickoff. Define scope boundaries in writing. Require written owner authorization before proceeding with any potential extra.',
+        },
+        {
+          risk: 'Subcontractor Default',
+          probability: contractAmount > 10_000_000 ? 3 : 2,
+          impact: 5,
+          score: 0,
+          mitigation: 'Pre-qualify all subs financially. Require sub bonds on contracts over $500K. Carry subcontractor default insurance (SDI). Maintain backup sub list.',
+        },
+        {
+          risk: 'Material Price Escalation',
+          probability: 3,
+          impact: 3,
+          score: 0,
+          mitigation: 'Include material escalation clause in contract. Lock in prices for long-lead items at award. Consider escalation allowance in bid.',
+        },
+        {
+          risk: 'Schedule Delay / Liquidated Damages',
+          probability: durationMonths > 18 ? 4 : 3,
+          impact: contractType === 'lump_sum' ? 5 : 3,
+          score: 0,
+          mitigation: 'Develop detailed CPM schedule at project start. Identify critical path and float. Submit time impact analyses promptly for all owner-caused delays. Document weather days.',
+        },
+        {
+          risk: 'Owner / Payment Insolvency',
+          probability: 2,
+          impact: 5,
+          score: 0,
+          mitigation: 'Require payment bond or letter of credit on private projects over $1M. File preliminary notice on all projects. Monitor payment pattern and escalate at first missed payment.',
+        },
+        {
+          risk: 'Labor Availability / Shortage',
+          probability: isUnion ? 2 : 3,
+          impact: 3,
+          score: 0,
+          mitigation: 'Pre-book key subcontractors early. Consider prefabrication to reduce field labor. Establish relationships with multiple labor sources including out-of-area crews.',
+        },
+        {
+          risk: 'Adverse Weather',
+          probability: durationMonths > 12 ? 4 : 2,
+          impact: 2,
+          score: 0,
+          mitigation: 'Include weather contingency in schedule. Document weather days contemporaneously. Review contract force majeure and weather day provisions.',
+        },
+        {
+          risk: 'Design Errors / Incomplete Drawings',
+          probability: hasDesignRisk ? 4 : 3,
+          impact: hasDesignRisk ? 5 : 3,
+          score: 0,
+          mitigation: 'Conduct thorough pre-construction design review. Issue RFIs early. Establish clear design responsibility matrix for design-build. Consider professional liability insurance.',
+        },
+      ];
+
+      if (isOccupied) {
+        risks.push({
+          risk: 'Occupied Facility — Phasing / Infection Control',
+          probability: 4,
+          impact: 4,
+          score: 0,
+          mitigation: 'Develop detailed phasing plan with owner. Establish ICRA/ILSM protocols (healthcare). Install dust barriers, negative air, and maintain egress at all times. Conduct safety orientation for all workers.',
+        });
+      }
+      if (hasHazmat) {
+        risks.push({
+          risk: 'Hazardous Materials — Abatement / Environmental',
+          probability: 4,
+          impact: 5,
+          score: 0,
+          mitigation: 'Engage licensed abatement contractor. Develop HASP. Ensure regulatory notifications (EPA, OSHA). Maintain clear chain of custody for all waste manifests.',
+        });
+      }
+      if (isRemote) {
+        risks.push({
+          risk: 'Remote Location — Logistics / Access',
+          probability: 3,
+          impact: 3,
+          score: 0,
+          mitigation: 'Pre-order long-lead materials well in advance. Establish on-site material storage. Plan for mobilization surcharges. Consider worker housing and per diem costs.',
+        });
+      }
+      if (projectType === 'federal') {
+        risks.push({
+          risk: 'Federal Compliance — Davis-Bacon / Certified Payroll',
+          probability: 3,
+          impact: 4,
+          score: 0,
+          mitigation: 'Ensure all subs understand Davis-Bacon requirements. Implement weekly certified payroll review process. Audit subcontractor compliance monthly.',
+        });
+      }
+      if (projectType === 'heavy_civil') {
+        risks.push({
+          risk: 'Differing Site Conditions — Subsurface',
+          probability: 4,
+          impact: 5,
+          score: 0,
+          mitigation: 'Review all geotech reports thoroughly. Include DSC clause protection in contract. Document existing conditions with photos/video before mobilizing.',
+        });
+      }
+
+      const scoredRisks = risks
+        .map(r => ({ ...r, score: r.probability * r.impact }))
+        .sort((a, b) => b.score - a.score);
+
+      const highRisks = scoredRisks.filter(r => r.score >= 12);
+      const medRisks = scoredRisks.filter(r => r.score >= 6 && r.score < 12);
+      const lowRisks = scoredRisks.filter(r => r.score < 6);
+
+      return JSON.stringify({
+        project_summary: {
+          project_type: input.project_type,
+          contract_type: input.contract_type,
+          contract_amount: `$${contractAmount.toLocaleString()}`,
+          duration_months: durationMonths,
+        },
+        risk_matrix: scoredRisks,
+        risk_summary: {
+          high_risks: highRisks.length,
+          medium_risks: medRisks.length,
+          low_risks: lowRisks.length,
+          top_risk: scoredRisks[0]?.risk ?? 'None identified',
+        },
+        scoring_legend: 'Probability and Impact scored 1 (low) to 5 (high). Risk Score = P × I. Score ≥12 = High, 6–11 = Medium, <6 = Low.',
+      });
+    }
+
+    case 'calculate_equipment_roi': {
+      const equipmentName = String(input.equipment_name);
+      const purchasePrice = Number(input.purchase_price);
+      const usefulLifeYears = Number(input.useful_life_years ?? 7);
+      const annualUtilizationHours = Number(input.annual_utilization_hours);
+      const rentalRatePerHour = Number(input.rental_rate_per_hour);
+      const salvageValue = Number(input.salvage_value ?? purchasePrice * 0.20);
+      const financingRate = Number(input.financing_rate ?? 6) / 100;
+
+      const annualDepreciation = (purchasePrice - salvageValue) / usefulLifeYears;
+      const annualInterest = purchasePrice * financingRate * 0.55;
+      const annualMaintenance = purchasePrice * 0.12;
+      const annualInsurance = purchasePrice * 0.015;
+      const totalAnnualOwnershipCost = annualDepreciation + annualInterest + annualMaintenance + annualInsurance;
+      const ownershipCostPerHour = annualUtilizationHours > 0 ? totalAnnualOwnershipCost / annualUtilizationHours : 0;
+      const rentalCostPerYear = rentalRatePerHour * annualUtilizationHours;
+      const annualSavingsIfOwned = rentalCostPerYear - totalAnnualOwnershipCost;
+      const paybackMonths = annualSavingsIfOwned > 0 ? (purchasePrice / (annualSavingsIfOwned / 12)) : null;
+
+      let recommendation = '';
+      if (annualSavingsIfOwned > 0) {
+        recommendation = paybackMonths != null && paybackMonths <= 36
+          ? `RECOMMEND PURCHASE — Positive annual savings of $${annualSavingsIfOwned.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} with payback in ${paybackMonths.toFixed(0)} months.`
+          : `MARGINAL — Positive savings but long payback of ${paybackMonths != null ? paybackMonths.toFixed(0) : 'N/A'} months. Consider rental if utilization may decline.`;
+      } else {
+        recommendation = `RECOMMEND RENTING — Ownership costs exceed rental costs at current utilization. Would need ${Math.ceil(Math.abs(annualSavingsIfOwned / rentalRatePerHour + annualUtilizationHours))} hours/year to break even.`;
+      }
+
+      return JSON.stringify({
+        equipment_name: equipmentName,
+        purchase_price: purchasePrice.toFixed(2),
+        useful_life_years: usefulLifeYears,
+        annual_utilization_hours: annualUtilizationHours,
+        annual_cost_breakdown: {
+          depreciation: annualDepreciation.toFixed(2),
+          interest: annualInterest.toFixed(2),
+          maintenance: annualMaintenance.toFixed(2),
+          insurance: annualInsurance.toFixed(2),
+          total_annual_ownership_cost: totalAnnualOwnershipCost.toFixed(2),
+        },
+        ownership_cost_per_hour: ownershipCostPerHour.toFixed(2),
+        rental_rate_per_hour: rentalRatePerHour.toFixed(2),
+        rental_cost_per_year: rentalCostPerYear.toFixed(2),
+        annual_savings_if_owned: annualSavingsIfOwned.toFixed(2),
+        payback_months: paybackMonths != null ? paybackMonths.toFixed(1) : 'N/A — renting is more economical',
+        recommendation,
+      });
+    }
+
+    case 'draft_demand_letter': {
+      const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const deadlineDate = new Date();
+      deadlineDate.setDate(deadlineDate.getDate() + 14);
+      const deadlineDateStr = deadlineDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      const amountOwed = Number(input.amount_owed);
+      const daysOutstanding = Number(input.days_outstanding);
+      const state = input.state ? String(input.state).toUpperCase() : null;
+      const amountStr = amountOwed.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+      const promptPaymentRates: Record<string, string> = {
+        AZ: '10% per year (A.R.S. §32-1129.02)',
+        CA: '2% per month (Cal. Civil Code §3260)',
+        TX: '18% per year (Tex. Property Code §28.004)',
+        FL: '12% per year on retainage (Fla. Stat. §255.073 / §715.12)',
+        NV: '10% per year (NRS §624.630)',
+        WA: '12% per year (RCW 39.76.011)',
+        CO: '15% per year (C.R.S. §24-91-103)',
+        OR: '12% per year (ORS §701.630)',
+        GA: '12% per year (O.C.G.A. §13-6-13)',
+        NC: '8% per year (N.C.G.S. §22C-6)',
+      };
+
+      const interestText = state && promptPaymentRates[state]
+        ? `Interest accrues on the unpaid balance at ${promptPaymentRates[state]}, calculated from the date payment was originally due.`
+        : 'Interest accrues on the unpaid balance at the applicable legal rate under your state\'s prompt payment statute.';
+
+      const invoiceRef = input.invoice_numbers
+        ? `including Pay Application(s)/Invoice(s) No. ${String(input.invoice_numbers)},`
+        : '';
+
+      const priorCommsText = input.prior_communications
+        ? `\nPRIOR COLLECTION EFFORTS:\nDespite ${String(input.prior_communications)}, payment has not been received.\n`
+        : '';
+
+      return `
+═══════════════════════════════════════
+FORMAL DEMAND FOR PAYMENT
+═══════════════════════════════════════
+${date}
+
+VIA CERTIFIED MAIL, RETURN RECEIPT REQUESTED
+AND EMAIL
+
+${input.debtor_name}
+[Address]
+[City, State ZIP]
+
+RE: FORMAL DEMAND FOR PAYMENT
+    Project: ${input.project_name}
+    Amount Due and Owing: ${amountStr}
+
+Dear ${input.debtor_name}:
+
+This letter constitutes a formal demand for immediate payment of ${amountStr}, which remains due and owing to ${input.claimant_name} for labor, materials, and/or services furnished at the above-referenced project ${invoiceRef} and has been outstanding for ${daysOutstanding} days.
+
+AMOUNT DUE AND OWING:
+  Total Amount Outstanding:       ${amountStr}
+  Days Outstanding:                ${daysOutstanding} days
+${input.invoice_numbers ? `  Invoice/Pay App Reference(s):   ${String(input.invoice_numbers)}` : ''}
+  ${input.contract_clause ? `Contract Clause: ${String(input.contract_clause)}` : ''}
+${priorCommsText}
+DEMAND FOR PAYMENT:
+YOU ARE HEREBY DEMANDED to remit payment in full in the amount of ${amountStr} no later than 10 business days from the date of this letter — by ${deadlineDateStr}.
+
+ACCRUING INTEREST:
+${interestText}
+
+CONSEQUENCES OF NON-PAYMENT:
+If payment in full is not received by ${deadlineDateStr}, ${input.claimant_name} will, without further notice, exercise any and all of the following remedies available under applicable law:
+
+  1. File a mechanic's lien / materialman's lien against the project property;
+  2. Make a claim against any payment bond posted for the project;
+  3. Suspend performance of all work until payment is received in full;
+  4. Refer this matter to legal counsel and commence litigation to recover all amounts owed, including principal, interest, attorneys' fees, and all costs of collection.
+
+RESERVATION OF ALL RIGHTS:
+${input.claimant_name} expressly reserves all rights, claims, and remedies available under the contract, applicable state and federal law, and at equity. This demand letter does not constitute a waiver of any such rights.
+
+Please govern yourself accordingly.
+
+Very truly yours,
+
+${input.claimant_name}
+
+By: _______________________
+Name: _______________________
+Title: _______________________
+Date: ${date}
+
+cc: [Legal Counsel]
+cc: [Surety, if applicable]
+═══════════════════════════════════════`;
+    }
+
+    case 'calculate_overhead_rate': {
+      const annualRevenue = Number(input.annual_revenue);
+      const directLabor = Number(input.direct_labor);
+      const directMaterials = Number(input.direct_materials);
+      const directSubcontractors = Number(input.direct_subcontractors);
+      const totalAnnualOverhead = Number(input.total_annual_overhead);
+      const targetNetProfitPercent = Number(input.target_net_profit_percent ?? 5);
+
+      const directCosts = directLabor + directMaterials + directSubcontractors;
+      const grossProfit = annualRevenue - directCosts;
+      const grossMarginPct = annualRevenue > 0 ? (grossProfit / annualRevenue) * 100 : 0;
+      const overheadAsPctRevenue = annualRevenue > 0 ? (totalAnnualOverhead / annualRevenue) * 100 : 0;
+      const overheadAsPctDirect = directCosts > 0 ? (totalAnnualOverhead / directCosts) * 100 : 0;
+      const netProfit = grossProfit - totalAnnualOverhead;
+      const netMarginPct = annualRevenue > 0 ? (netProfit / annualRevenue) * 100 : 0;
+      const breakEvenRevenue = grossMarginPct > 0 ? totalAnnualOverhead / (grossMarginPct / 100) : 0;
+      const markupToCoverOverhead = directCosts > 0 ? (totalAnnualOverhead / directCosts) * 100 : 0;
+      const fullMarkupForTargetProfit = directCosts > 0
+        ? (((directCosts + totalAnnualOverhead) / directCosts - 1) * 100) + targetNetProfitPercent
+        : 0;
+
+      let benchmarkNotes = '';
+      if (grossMarginPct < 15) benchmarkNotes += 'ALERT: Gross margin below 15% is dangerously thin for most GCs — review field productivity and change order capture. ';
+      if (grossMarginPct > 30) benchmarkNotes += 'Note: Gross margin above 30% is above average — verify that all direct costs are correctly coded. ';
+      if (overheadAsPctRevenue > 15) benchmarkNotes += 'Overhead as % of revenue exceeds 15% — review G&A for reduction opportunities. ';
+      if (netMarginPct < 2) benchmarkNotes += 'ALERT: Net margin below 2% leaves no cushion for errors or claims. ';
+      if (benchmarkNotes === '') benchmarkNotes = 'Financial metrics are within healthy construction industry ranges.';
+
+      return JSON.stringify({
+        annual_revenue: annualRevenue.toFixed(2),
+        direct_costs_breakdown: {
+          direct_labor: directLabor.toFixed(2),
+          direct_materials: directMaterials.toFixed(2),
+          direct_subcontractors: directSubcontractors.toFixed(2),
+          total_direct_costs: directCosts.toFixed(2),
+        },
+        gross_profit: grossProfit.toFixed(2),
+        gross_margin_percent: `${grossMarginPct.toFixed(1)}%`,
+        total_annual_overhead: totalAnnualOverhead.toFixed(2),
+        overhead_as_pct_of_revenue: `${overheadAsPctRevenue.toFixed(1)}%`,
+        overhead_as_pct_of_direct_cost: `${overheadAsPctDirect.toFixed(1)}%`,
+        net_profit: netProfit.toFixed(2),
+        net_margin_percent: `${netMarginPct.toFixed(1)}%`,
+        break_even_revenue: breakEvenRevenue.toFixed(2),
+        markup_to_cover_overhead_only: `${markupToCoverOverhead.toFixed(1)}%`,
+        full_markup_for_target_profit: `${fullMarkupForTargetProfit.toFixed(1)}%`,
+        benchmark_notes: benchmarkNotes,
+      });
+    }
+
+    case 'generate_schedule_recovery': {
+      const projectName = String(input.project_name);
+      const originalDate = new Date(String(input.original_completion_date));
+      const currentDate = new Date(String(input.current_projected_completion));
+      const delayCause = String(input.delay_cause).toLowerCase();
+      const contractAmount = Number(input.contract_amount);
+      const remainingWork = String(input.remaining_work_description);
+      const accelerationBudget = input.available_budget_for_acceleration != null ? Number(input.available_budget_for_acceleration) : null;
+
+      const delayDays = Math.round((currentDate.getTime() - originalDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      const isOwnerCaused = delayCause.includes('owner') || delayCause.includes('design') || delayCause.includes('change');
+      const isWeather = delayCause.includes('weather');
+      const isLabor = delayCause.includes('labor') || delayCause.includes('crew') || delayCause.includes('staffing');
+      const isMaterial = delayCause.includes('material') || delayCause.includes('supply') || delayCause.includes('delivery');
+
+      const overtimeCost = Math.round(contractAmount * 0.02);
+      const secondShiftCost = Math.round(contractAmount * 0.04);
+      const weekendCost = Math.round(contractAmount * 0.015);
+      const crewAugmentCost = Math.round(contractAmount * 0.03);
+
+      const immediateActions = [
+        'Convene schedule recovery meeting with all key subcontractors and owner within 5 business days',
+        'Update and rebaseline the project CPM schedule to reflect current status',
+        'Identify critical path activities and float on all near-critical paths',
+        'Assess current crew sizes and productivity against planned production rates',
+        'Review upcoming material delivery schedule and expedite long-lead items',
+      ];
+
+      const recoveryStrategies = [
+        {
+          strategy: 'Overtime / Extended Work Hours',
+          description: '10-hour days, 6 days/week for critical path crews',
+          estimated_cost_impact: `$${overtimeCost.toLocaleString()}`,
+          schedule_gain_potential: `${Math.round(delayDays * 0.3)}–${Math.round(delayDays * 0.4)} days`,
+          risk: 'Worker fatigue, quality risk after extended periods, premium cost',
+          recommended: !isWeather,
+        },
+        {
+          strategy: 'Second Shift Operations',
+          description: 'Add evening crew for interior work not weather-dependent',
+          estimated_cost_impact: `$${secondShiftCost.toLocaleString()}`,
+          schedule_gain_potential: `${Math.round(delayDays * 0.4)}–${Math.round(delayDays * 0.6)} days`,
+          risk: 'Supervision costs, coordination complexity, noise restrictions',
+          recommended: delayDays > 30,
+        },
+        {
+          strategy: 'Weekend Work',
+          description: 'Saturday and Sunday work for critical path activities',
+          estimated_cost_impact: `$${weekendCost.toLocaleString()}`,
+          schedule_gain_potential: `${Math.round(delayDays * 0.2)}–${Math.round(delayDays * 0.3)} days`,
+          risk: 'Permit restrictions, neighborhood/owner concerns, premium labor cost',
+          recommended: true,
+        },
+        {
+          strategy: 'Crew Augmentation',
+          description: 'Add additional crews to work in parallel on multiple areas',
+          estimated_cost_impact: `$${crewAugmentCost.toLocaleString()}`,
+          schedule_gain_potential: `${Math.round(delayDays * 0.35)}–${Math.round(delayDays * 0.5)} days`,
+          risk: 'Labor availability, site congestion, coordination challenges',
+          recommended: isLabor || delayDays > 45,
+        },
+        {
+          strategy: 'Procurement Acceleration',
+          description: 'Air freight or expedited delivery of long-lead materials',
+          estimated_cost_impact: 'Varies — typically $5K–$50K depending on materials',
+          schedule_gain_potential: `${Math.round(delayDays * 0.15)}–${Math.round(delayDays * 0.25)} days`,
+          risk: 'Premium shipping costs, availability of air cargo',
+          recommended: isMaterial,
+        },
+        {
+          strategy: 'Prefabrication / Modular Substitution',
+          description: 'Substitute field-fabricated work with prefab assemblies',
+          estimated_cost_impact: 'Neutral to slight premium (5–10%)',
+          schedule_gain_potential: `${Math.round(delayDays * 0.2)}–${Math.round(delayDays * 0.35)} days`,
+          risk: 'Lead time for prefab, coordination with design team',
+          recommended: delayDays > 60,
+        },
+      ];
+
+      const ownerCausedNotice = isOwnerCaused ? `
+NOTICE / CLAIM LANGUAGE (OWNER-CAUSED DELAY):
+Because this delay is attributable to owner-caused events (${input.delay_cause}), ${projectName} contractor should:
+  1. Issue a formal Notice of Delay to the owner within the contract-required timeframe
+  2. Document all acceleration costs as a separate line item for future claim
+  3. Reserve the right to seek full time extension AND delay damages / extended general conditions
+  4. Do NOT absorb owner-caused acceleration costs without written authorization` : '';
+
+      return JSON.stringify({
+        project_name: projectName,
+        original_completion_date: input.original_completion_date,
+        current_projected_completion: input.current_projected_completion,
+        delay_days: delayDays,
+        delay_cause: input.delay_cause,
+        contract_amount: `$${contractAmount.toLocaleString()}`,
+        remaining_work: remainingWork,
+        acceleration_budget_available: accelerationBudget != null ? `$${accelerationBudget.toLocaleString()}` : 'Not specified',
+        immediate_actions_week_1_2: immediateActions,
+        recovery_strategies: recoveryStrategies,
+        recommended_approach: recoveryStrategies.filter(s => s.recommended).map(s => s.strategy),
+        owner_caused_notice: ownerCausedNotice.trim() || 'N/A — delay is contractor-risk event',
+        monitoring: 'Issue weekly 3-week look-ahead schedules. Conduct daily standup on critical path. Report recovery progress to owner weekly until original milestone is recovered.',
+      });
+    }
+
+    case 'draft_meeting_minutes': {
+      const meetingTypeLabels: Record<string, string> = {
+        oac: 'OWNER-ARCHITECT-CONTRACTOR (OAC) MEETING',
+        preconstruction: 'PRECONSTRUCTION MEETING',
+        progress: 'PROGRESS MEETING',
+        subcontractor_coordination: 'SUBCONTRACTOR COORDINATION MEETING',
+        safety: 'SAFETY MEETING',
+        design: 'DESIGN COORDINATION MEETING',
+      };
+      const meetingTypeKey = String(input.meeting_type).toLowerCase();
+      const meetingTypeLabel = meetingTypeLabels[meetingTypeKey] ?? `${String(input.meeting_type).toUpperCase()} MEETING`;
+      const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      const attendeeList = String(input.attendees)
+        .split(',')
+        .map((a, i) => `  ${i + 1}. ${a.trim()}`)
+        .join('\n');
+
+      const agendaList = String(input.agenda_items)
+        .split(/[,;\n]/)
+        .filter(a => a.trim().length > 0)
+        .map((item, i) => `  ${i + 1}. ${item.trim()}\n     Discussion: [Notes to be added]\n     Status/Resolution: [Outcome]`)
+        .join('\n\n');
+
+      const actionList = String(input.action_items)
+        .split(/[,;\n]/)
+        .filter(a => a.trim().length > 0)
+        .map((item, i) => {
+          const trimmed = item.trim();
+          return `  ${i + 1}. | ${trimmed.padEnd(50)} | [Responsible Party] | [Due Date]`;
+        })
+        .join('\n');
+
+      return `
+═══════════════════════════════════════
+MEETING MINUTES
+${meetingTypeLabel}
+═══════════════════════════════════════
+Project:        ${input.project_name}
+Meeting Type:   ${meetingTypeLabel}
+Date:           ${input.meeting_date}
+Location:       ${input.location ?? '[Location / Conference Call / Video]'}
+Minutes By:     [Name / Title]
+Distributed:    ${date}
+
+━━━ ATTENDEES ━━━
+${attendeeList}
+
+━━━ PREVIOUS ACTION ITEMS STATUS ━━━
+  [Review action items from previous meeting — mark COMPLETE, IN PROGRESS, or OPEN]
+  All open items from previous meeting are carried forward below.
+
+━━━ AGENDA ITEMS / DISCUSSION ━━━
+${agendaList}
+
+━━━ ACTION ITEMS ━━━
+  #  | Item                                               | Responsible Party   | Due Date
+  ───|────────────────────────────────────────────────────|─────────────────────|──────────
+${actionList}
+
+━━━ NEXT MEETING ━━━
+${input.next_meeting_date
+  ? `  Next meeting scheduled: ${String(input.next_meeting_date)}\n  Location: [To be confirmed]\n  Agenda: [To be distributed 48 hours in advance]`
+  : '  Next meeting date: To be determined — coordinator will issue calendar invite'}
+
+━━━ DISTRIBUTION ━━━
+  All attendees listed above
+  [Project file]
+  [Owner representative]
+  [Architect of record]
+
+Prepared by: _______________________
+Title: _______________________
+Date: ${date}
+
+NOTICE: These minutes are considered accurate unless written corrections are submitted within 5 business days of distribution.
 ═══════════════════════════════════════`;
     }
 
