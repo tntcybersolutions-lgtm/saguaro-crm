@@ -707,18 +707,22 @@ export default function TakeoffPage() {
                             </div>
                             {/* Items table */}
                             <Table
-                              headers={['CSI Code', 'Description', 'Qty', 'Unit', '$/Unit', 'Total', 'Confidence']}
-                              rows={div.items.map(m => [
-                                <span key="code" style={{ fontFamily: 'monospace', fontSize: 12, color: T.muted }}>{m.csi_code}</span>,
-                                <span key="desc" style={{ fontSize: 13 }}>{m.description}</span>,
-                                <span key="qty" style={{ color: T.white, fontWeight: 500 }}>{(m.quantity || 0).toLocaleString()}</span>,
-                                <span key="unit" style={{ color: T.muted, fontSize: 12 }}>{m.unit}</span>,
-                                <span key="uc" style={{ color: T.muted }}>{fmt(m.unit_cost)}</span>,
-                                <span key="tc" style={{ color: T.white, fontWeight: 600 }}>{fmt(m.total_cost)}</span>,
-                                <div key="conf" style={{ minWidth: 80 }}>
-                                  <ProgressBar pct={selectedTakeoff.confidence} color={T.green} height={4} />
-                                </div>,
-                              ])}
+                              headers={['CSI Code', 'Description', 'Qty', 'Unit', '$/Unit', 'Total', '% of Div']}
+                              rows={div.items.map(m => {
+                                const pct = div.totalCost > 0 ? Math.round((m.total_cost / div.totalCost) * 100) : 0;
+                                return [
+                                  <span key="code" style={{ fontFamily: 'monospace', fontSize: 12, color: T.muted }}>{m.csi_code}</span>,
+                                  <span key="desc" style={{ fontSize: 13 }}>{m.description}</span>,
+                                  <span key="qty" style={{ color: T.white, fontWeight: 500 }}>{(m.quantity || 0).toLocaleString()}</span>,
+                                  <span key="unit" style={{ color: T.muted, fontSize: 12 }}>{m.unit}</span>,
+                                  <span key="uc" style={{ color: T.muted }}>{fmt(m.unit_cost)}</span>,
+                                  <span key="tc" style={{ color: T.white, fontWeight: 600 }}>{fmt(m.total_cost)}</span>,
+                                  <div key="pct" style={{ minWidth: 80, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <ProgressBar pct={pct} color={T.gold} height={4} />
+                                    <span style={{ fontSize: 10, color: T.muted, flexShrink: 0 }}>{pct}%</span>
+                                  </div>,
+                                ];
+                              })}
                             />
                           </div>
                         ))}
