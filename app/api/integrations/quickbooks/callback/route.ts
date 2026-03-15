@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+}
 
 const QB_CLIENT_ID     = process.env.QB_CLIENT_ID ?? '';
 const QB_CLIENT_SECRET = process.env.QB_CLIENT_SECRET ?? '';
@@ -49,7 +51,7 @@ export async function GET(req: NextRequest) {
 
   const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
-  await supabase.from('integrations').upsert({
+  await getSupabase().from('integrations').upsert({
     provider: 'quickbooks',
     meta: {
       access_token:  tokens.access_token,

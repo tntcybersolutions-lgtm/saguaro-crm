@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!
+  );
+}
 
 const QB_CLIENT_ID     = process.env.QB_CLIENT_ID ?? '';
 const QB_CLIENT_SECRET = process.env.QB_CLIENT_SECRET ?? '';
@@ -29,7 +31,7 @@ export async function GET(req: NextRequest) {
 
   if (action === 'status') {
     // Check if we have a stored token
-    const { data } = await supabase
+    const { data } = await getSupabase()
       .from('integrations')
       .select('id, meta')
       .eq('provider', 'quickbooks')
@@ -41,13 +43,13 @@ export async function GET(req: NextRequest) {
 
   if (action === 'sync_preview') {
     // Return what would be synced without actually syncing
-    const { data: invoices } = await supabase
+    const { data: invoices } = await getSupabase()
       .from('pay_applications')
       .select('id, pay_app_number, net_amount_due, status, project_id')
       .in('status', ['approved', 'submitted'])
       .limit(20);
 
-    const { data: vendors } = await supabase
+    const { data: vendors } = await getSupabase()
       .from('subcontractors')
       .select('id, name, contract_amount')
       .limit(20);
@@ -98,7 +100,7 @@ export async function POST(req: NextRequest) {
 
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
 
-    await supabase.from('integrations').upsert({
+    await getSupabase().from('integrations').upsert({
       provider: 'quickbooks',
       meta: {
         access_token:  tokens.access_token,
@@ -113,7 +115,7 @@ export async function POST(req: NextRequest) {
 
   if (action === 'sync') {
     // Push approved pay apps as invoices to QuickBooks
-    const { data: integration } = await supabase
+    const { data: integration } = await getSupabase()
       .from('integrations')
       .select('meta')
       .eq('provider', 'quickbooks')
@@ -126,7 +128,7 @@ export async function POST(req: NextRequest) {
     const realmId     = integration.meta.realm_id as string;
     const accessToken = integration.meta.access_token as string;
 
-    const { data: payApps } = await supabase
+    const { data: payApps } = await getSupabase()
       .from('pay_applications')
       .select('id, pay_app_number, net_amount_due, project_id, projects(name)')
       .eq('status', 'approved')
@@ -148,7 +150,7 @@ export async function POST(req: NextRequest) {
         }],
         CustomerRef: { value: '1' }, // TODO: map to QB customer by project
         DocNumber: `PAY-${pa.pay_app_number}`,
-        PrivateNote: `Saguaro Pay App #${pa.pay_app_number} | Project: ${(pa.projects as { name: string } | null)?.name ?? pa.project_id}`,
+        PrivateNote: `Saguaro Pay App #${pa.pay_app_number} | Project: ${(Array.isArray(pa.projects) ? (pa.projects as { name: string }[])[0]?.name : (pa.projects as unknown as { name: string } | null)?.name) ?? pa.project_id}`,
       };
 
       const res = await fetch(`${QB_BASE}/v3/company/${realmId}/invoice`, {
@@ -163,7 +165,7 @@ export async function POST(req: NextRequest) {
 
       if (res.ok) {
         const qbData = await res.json() as { Invoice?: { Id: string } };
-        await supabase
+        await getSupabase()
           .from('pay_applications')
           .update({ qb_synced_at: new Date().toISOString(), qb_invoice_id: qbData.Invoice?.Id })
           .eq('id', pa.id);
@@ -178,7 +180,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'disconnect') {
-    await supabase.from('integrations').delete().eq('provider', 'quickbooks');
+    await getSupabase().from('integrations').delete().eq('provider', 'quickbooks');
     return NextResponse.json({ ok: true });
   }
 
