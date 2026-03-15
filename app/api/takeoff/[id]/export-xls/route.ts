@@ -129,6 +129,16 @@ export async function GET(
     const ws = XLSX.utils.aoa_to_sheet(summaryData);
     ws['!cols'] = [{ wch: 36 }, { wch: 18 }, { wch: 14 }, { wch: 10 }];
 
+    // Apply currency format to B column for cost rows (rows 12-20)
+    const currFmt = '"$"#,##0';
+    const perSfFmt = '"$"#,##0.00';
+    for (let r = 11; r <= 22; r++) {
+      const cellB = ws[XLSX.utils.encode_cell({ r, c: 1 })];
+      if (cellB && cellB.t === 'n') cellB.z = currFmt;
+      const cellC = ws[XLSX.utils.encode_cell({ r, c: 2 })];
+      if (cellC && cellC.t === 'n') cellC.z = perSfFmt;
+    }
+
     // Recommendations sub-sheet embedded at bottom
     const recs = Array.isArray((takeoff as Record<string, unknown>).recommendations)
       ? (takeoff as Record<string, unknown>).recommendations as string[]
@@ -204,6 +214,19 @@ export async function GET(
       { wch: 14 }, { wch: 16 }, { wch: 20 },
     ];
     ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+    // Apply currency format ($#,##0.00) to columns F (unitCost=5), G (totalCost=6),
+    // I (laborCost=8), J (jobCost=9), K (sellPrice=10)
+    const currencyFmt = '"$"#,##0.00';
+    const numRows = data.length;
+    for (let r = 1; r < numRows; r++) {
+      for (const c of [5, 6, 8, 9, 10]) {
+        const addr = XLSX.utils.encode_cell({ r, c });
+        const cell = ws[addr];
+        if (cell && cell.t === 'n') cell.z = currencyFmt;
+      }
+    }
+
     XLSX.utils.book_append_sheet(wb, ws, 'Full Takeoff');
   }
 
@@ -246,6 +269,16 @@ export async function GET(
       { wch: 8 }, { wch: 32 }, { wch: 7 },
       { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 10 },
     ];
+
+    // Currency format for cost columns (D, E, F, G = cols 3,4,5,6)
+    const divRows2 = data.length;
+    for (let r = 1; r < divRows2; r++) {
+      for (const c of [3, 4, 5, 6]) {
+        const addr = XLSX.utils.encode_cell({ r, c });
+        const cell = ws[addr];
+        if (cell && cell.t === 'n') cell.z = '"$"#,##0';
+      }
+    }
 
     // Format % column
     const lastRow = data.length;
