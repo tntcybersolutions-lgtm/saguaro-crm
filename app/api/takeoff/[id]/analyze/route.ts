@@ -291,10 +291,10 @@ export async function GET(
             accumulated += event.delta.text;
 
             const now = Date.now();
-            if (now - lastHeartbeatMs > 5000) {
-              // Progress 25→70 while Claude is writing tokens
-              lastPct = Math.min(70, 25 + Math.floor((accumulated.length / 6000) * 45));
-              send('progress', { step: 4, message: 'AI analyzing blueprint...', pct: lastPct });
+            if (now - lastHeartbeatMs > 4000) {
+              // Progress 25→72 while Claude is writing — use 14000 char estimate for a full takeoff
+              lastPct = Math.min(72, 25 + Math.floor((accumulated.length / 14000) * 47));
+              send('progress', { step: 4, message: `AI analyzing blueprint… (${accumulated.length} chars)`, pct: lastPct });
               lastHeartbeatMs = now;
             }
           }
@@ -324,19 +324,43 @@ export async function GET(
         send('progress', { step: 6, message: 'Saving materials to database...', pct: 85 });
 
         // ── 8. Expand items & save to DB ─────────────────────────────────
-        const items = (parsed.i || []).map((item: CompactItem, idx: number) => ({
-          takeoff_id:  takeoffId,
-          csi_code:    item.cd  || '',
-          csi_name:    item.nm  || '',
-          description: item.d   || '',
-          quantity:    Number(item.q)   || 0,
-          unit:        item.u   || 'LS',
-          unit_cost:   Number(item.r)   || 0,
-          total_cost:  Number(item.tot) || 0,
-          labor_hours: Number(item.h)   || 0,
-          notes:       '',
-          sort_order:  idx,
-        }));
+        const items = (parsed.i || []).map((item: CompactItem, idx: number) => {
+          const qty      = Number(item.q)   || 0;
+          const unitCost = Number(item.r)   || 0;
+          // Validate total: Claude sometimes returns 0 or omits tot.
+          // Compute from qty × rate as the source of truth; only use Claude's tot
+          // when it's within 5% of the computed value (catches legit rounding).
+          const computed = qty * unitCost;
+          const claudeTot = Number(item.tot) || 0;
+          const totalCost = claudeTot > 0 && Math.abs(claudeTot - computed) / Math.max(computed, 1) < 0.05
+            ? claudeTot
+            : computed;
+          return {
+            takeoff_id:  takeoffId,
+            csi_code:    item.cd  || '',
+            csi_name:    item.nm  || '',
+            description: item.d   || '',
+            quantity:    qty,
+            unit:        item.u   || 'LS',
+            unit_cost:   unitCost,
+            total_cost:  totalCost,
+            labor_hours: Number(item.h) || 0,
+            notes:       '',
+            sort_order:  idx,
+          };
+        });
+
+        // Derive real totals from validated line items — don't trust Claude's mc/lc/pc
+        const realMaterialTotal = items.reduce((s, it) => s + it.total_cost, 0);
+        // Labor cost = labor_hours × blended rate $65/hr if Claude's lc looks wrong
+        const claudeLc = Number(parsed.lc) || 0;
+        const computedLc = items.reduce((s, it) => s + it.labor_hours * 65, 0);
+        const realLaborTotal = claudeLc > 0 && claudeLc < realMaterialTotal * 3
+          ? claudeLc
+          : computedLc;
+        const contingencyPct = Number(parsed.ct) || 10;
+        const subtotal = realMaterialTotal + realLaborTotal;
+        const realProjectTotal = Math.round(subtotal * (1 + contingencyPct / 100));
 
         if (items.length > 0) {
           await supabase.from('takeoff_materials').delete().eq('takeoff_id', takeoffId);
@@ -347,20 +371,20 @@ export async function GET(
           }
         }
 
-        // ── 9. Update takeoff summary ────────────────────────────────────
+        // ── 9. Update takeoff summary — use validated totals, not raw AI fields ─
         const { error: updateErr } = await supabase.from('takeoffs').update({
           status:                'complete',
           building_area:         parsed.sf  || 0,
           floor_count:           parsed.fl  || 1,
-          total_cost:            parsed.pc  || 0,
+          total_cost:            realProjectTotal,
           confidence:            parsed.c   || 0,
           project_name_detected: parsed.n   || '',
           building_type:         parsed.t   || '',
           summary:               parsed.s   || '',
           recommendations:       parsed.rec || [],
-          material_cost:         parsed.mc  || 0,
-          labor_cost:            parsed.lc  || 0,
-          contingency_pct:       parsed.ct  || 10,
+          material_cost:         realMaterialTotal,
+          labor_cost:            realLaborTotal,
+          contingency_pct:       contingencyPct,
           analyzed_at:           new Date().toISOString(),
         }).eq('id', takeoffId);
 
@@ -390,10 +414,10 @@ export async function GET(
           confidence:        parsed.c   || 0,
           summary:           parsed.s   || '',
           items:             expandedItems,
-          totalMaterialCost: parsed.mc  || 0,
-          totalLaborCost:    parsed.lc  || 0,
-          totalProjectCost:  parsed.pc  || 0,
-          contingency:       parsed.ct  || 10,
+          totalMaterialCost: realMaterialTotal,
+          totalLaborCost:    realLaborTotal,
+          totalProjectCost:  realProjectTotal,
+          contingency:       contingencyPct,
           recommendations:   parsed.rec || [],
           itemCount:         expandedItems.length,
         });
