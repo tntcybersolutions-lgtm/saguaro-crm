@@ -624,6 +624,42 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* ── How it works ─────────────────────────────────────────────── */}
+        <section style={{ padding: '72px 48px', background: 'linear-gradient(180deg, #0a0f1a 0%, #0d1117 100%)' }}>
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: GREEN, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 10 }}>Zero learning curve</div>
+              <h2 style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 900, color: TEXT, margin: '0 0 14px', letterSpacing: -0.5 }}>Up and running in under 5 minutes</h2>
+              <p style={{ fontSize: 16, color: DIM, maxWidth: 520, margin: '0 auto', lineHeight: 1.65 }}>
+                Saguaro is a web platform — nothing to download. Sign up, log in from any browser, and your whole team is live.
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 2, background: 'rgba(30,58,95,0.3)', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(30,58,95,0.5)' }}>
+              {[
+                { n: '01', icon: '📝', title: 'Sign Up Free', desc: 'Create your account in 30 seconds at saguarocontrol.net/signup. No credit card. 30-day trial starts instantly.' },
+                { n: '02', icon: '🌐', title: 'Log In — No Download', desc: 'Open any browser, go to saguarocontrol.net/app, and log in. That\'s it. Works on PC, Mac, phone, and tablet.' },
+                { n: '03', icon: '⚙️', title: 'Set Up in 5 Minutes', desc: 'Add your company, create a project, upload a blueprint. Sage AI does the heavy lifting from there.' },
+                { n: '04', icon: '📱', title: 'Install on Any Phone', desc: 'Tap "Add to Home Screen" on your iPhone or Android. Your crew gets GPS clock-in, daily logs, and RFIs — offline-capable.' },
+              ].map((s, i) => (
+                <div key={i} style={{ padding: '32px 28px', background: '#0a0f1a', borderRight: '1px solid rgba(30,58,95,0.4)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: GOLD, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>Step {s.n}</div>
+                  <div style={{ fontSize: 28, marginBottom: 14 }}>{s.icon}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 8 }}>{s.title}</div>
+                  <div style={{ fontSize: 13, color: DIM, lineHeight: 1.65 }}>{s.desc}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 32, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <a href="/signup" style={{ padding: '14px 36px', background: `linear-gradient(135deg, ${GOLD}, #D97706)`, borderRadius: 10, color: '#000', fontWeight: 900, fontSize: 15, textDecoration: 'none', boxShadow: '0 4px 20px rgba(245,158,11,0.3)' }}>
+                Start Free Trial →
+              </a>
+              <a href="/how-to-get-started" style={{ padding: '14px 28px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(30,58,95,0.8)', borderRadius: 10, color: DIM, fontWeight: 700, fontSize: 15, textDecoration: 'none' }}>
+                Full Setup Guide →
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* ── Stats bar ─────────────────────────────────────────────────── */}
         <section style={{ borderTop: '1px solid rgba(245,158,11,0.25)', borderBottom: '1px solid rgba(245,158,11,0.25)', background: 'linear-gradient(180deg, rgba(245,158,11,0.07) 0%, rgba(245,158,11,0.03) 100%)' }}>
           <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', maxWidth: 1100, margin: '0 auto', padding: '36px 48px', textAlign: 'center' }}>

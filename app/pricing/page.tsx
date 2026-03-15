@@ -373,6 +373,42 @@ export default function PricingPage() {
           </div>
         </section>
 
+        {/* How it works strip */}
+        <section style={{ padding: '0 24px 64px', maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ background: C.raised, border: `1px solid ${C.border}`, borderRadius: 16, padding: '36px 40px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>How it works</div>
+              <h2 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0 }}>Start using Saguaro in under 5 minutes</h2>
+              <p style={{ fontSize: 14, color: C.dim, margin: '8px 0 0' }}>Saguaro is a web platform — nothing to download on your computer. Sign up, log in, and your whole team is live.</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 0, position: 'relative' }}>
+              {[
+                { step: '1', icon: '📝', title: 'Sign Up Free', desc: 'Create your account in 30 seconds. No credit card required. 30-day free trial starts immediately.' },
+                { step: '2', icon: '🌐', title: 'Log In — It\'s Instant', desc: 'Open any browser and go to saguarocontrol.net. Your full platform is live — no download, no install.' },
+                { step: '3', icon: '⚙️', title: '5-Min Company Setup', desc: 'Enter your company name, logo, and team roles. Our onboarding wizard walks you through every step.' },
+                { step: '4', icon: '📱', title: 'Install on Your Phone', desc: 'Visit the site on your iPhone or Android and tap "Add to Home Screen." Works offline. No App Store.' },
+              ].map((s, i, arr) => (
+                <div key={i} style={{ padding: '0 28px', borderRight: i < arr.length - 1 ? `1px solid ${C.border}` : 'none', position: 'relative' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 14 }}>
+                    {s.icon}
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>Step {s.step}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: C.text, marginBottom: 6 }}>{s.title}</div>
+                  <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.6 }}>{s.desc}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 32, paddingTop: 28, borderTop: `1px solid ${C.border}` }}>
+              <a href="/signup" style={{ display: 'inline-block', padding: '14px 40px', background: `linear-gradient(135deg, ${C.gold}, #D97706)`, borderRadius: 10, color: '#000', fontWeight: 900, fontSize: 15, textDecoration: 'none', boxShadow: '0 4px 20px rgba(245,158,11,0.3)' }}>
+                Start Free Trial — No Credit Card →
+              </a>
+              <div style={{ marginTop: 12, fontSize: 13, color: C.dim }}>
+                30 days free · Unlimited users · Cancel anytime · <a href="/how-to-get-started" style={{ color: C.gold, textDecoration: 'none', fontWeight: 600 }}>See full walkthrough →</a>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Pricing Cards */}
         <section style={{ padding: '0 24px 80px', maxWidth: 1160, margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, alignItems: 'start' }}>
