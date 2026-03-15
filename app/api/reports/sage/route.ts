@@ -15,7 +15,23 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
+
+// Tables that have a direct project_id column
+const TABLES_WITH_PROJECT_ID = new Set([
+  'pay_applications', 'rfis', 'change_orders', 'lien_waivers',
+  'subcontractors', 'insurance_certificates', 'budget_lines',
+  'daily_logs', 'punch_list_items', 'takeoffs', 'timesheets',
+  'bid_packages', 'incidents', 'schedule_phases',
+]);
+
+// Tables that have a direct tenant_id column
+const TABLES_WITH_TENANT_ID = new Set([
+  'projects', 'pay_applications', 'rfis', 'change_orders', 'lien_waivers',
+  'subcontractors', 'insurance_certificates', 'budget_lines',
+  'daily_logs', 'punch_list_items', 'takeoffs', 'timesheets',
+  'bid_packages', 'incidents', 'schedule_phases', 'notifications',
+]);
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -64,22 +80,24 @@ interface ReportPlan {
 
 const SAGE_SYSTEM_PROMPT = `You are Sage, Saguaro CRM's expert construction data analyst. Given a user's report request, determine what data to query.
 
-Available Supabase tables and their key columns:
-- projects: id, name, status('active'|'completed'|'bidding'), contract_amount, address, start_date, end_date
-- pay_applications: id, project_id, app_number, period_to, status('draft'|'submitted'|'approved'|'paid'), contract_sum, total_completed, current_payment_due, retainage_amount
-- rfis: id, project_id, rfi_number, subject, status('open'|'answered'|'closed'), due_date, response_due_date, cost_impact, schedule_impact
+NOTE: All tables are already filtered by tenant_id and project_id server-side — do NOT include tenant_id or project_id in your filters. Focus on business-logic filters only (status, date ranges, etc.).
+
+Available Supabase tables and their queryable columns:
+- projects: id, name, status('active'|'completed'|'bidding'), contract_amount, address, start_date, end_date, created_at
+- pay_applications: id, project_id, app_number, application_number, period_to, status('draft'|'submitted'|'approved'|'paid'), contract_sum, total_completed_and_stored, current_payment_due, retainage_amount, created_at
+- rfis: id, project_id, rfi_number, subject, title, status('open'|'answered'|'closed'), due_date, response_due_date, cost_impact, schedule_impact, created_at
 - change_orders: id, project_id, co_number, title, status('pending'|'approved'|'rejected'), cost_impact, schedule_impact, created_at
-- lien_waivers: id, project_id, subcontractor_id, waiver_type, amount, status('pending'|'signed'|'received'), through_date
-- subcontractors: id, project_id, name, trade, contract_amount, status
-- insurance_certificates: id, subcontractor_id, policy_type, carrier, expiry_date, status
-- budget_lines: id, project_id, cost_code, description, original_budget, committed_cost, actual_cost, forecast_cost
-- daily_logs: id, project_id, log_date, weather, crew_count, work_performed, delays
-- punch_list_items: id, project_id, location, description, trade, status('open'|'in_progress'|'complete'), priority, due_date
-- takeoffs: id, project_id, name, status, total_cost, material_cost, labor_cost, building_area, analyzed_at
-- timesheets: id, project_id, employee_name, week_ending, hours_regular, hours_overtime, status
-- bid_packages: id, project_id, name, trade, status('open'|'awarded'|'closed'), due_date, requires_bond
-- incidents: id, project_id, incident_type, severity, injury_type, osha_reportable, incident_date
-- schedule_phases: id, project_id, name, planned_start, planned_end, actual_start, actual_end, status
+- lien_waivers: id, project_id, subcontractor_id, waiver_type, amount, status('pending'|'signed'|'received'), through_date, signed_at, created_at
+- subcontractors: id, project_id, name, trade, contract_amount, status, created_at
+- insurance_certificates: id, project_id, subcontractor_id, policy_type, carrier, policy_number, expiry_date, coverage_amount, status('active'|'expired'), created_at
+- budget_lines: id, project_id, cost_code, description, original_budget, committed_cost, actual_cost, forecast_cost, created_at
+- daily_logs: id, project_id, log_date, weather, crew_count, work_performed, delays, created_at
+- punch_list_items: id, project_id, location, description, trade, status('open'|'in_progress'|'complete'), priority('low'|'medium'|'high'), due_date, created_at
+- takeoffs: id, project_id, name, status, total_cost, material_cost, labor_cost, building_area, analyzed_at, created_at
+- timesheets: id, project_id, employee_name, week_ending, hours_regular, hours_overtime, status, created_at
+- bid_packages: id, project_id, name, trade, status('open'|'awarded'|'closed'), due_date, requires_bond, created_at
+- incidents: id, project_id, incident_type, severity, injury_type, osha_reportable, incident_date, created_at
+- schedule_phases: id, project_id, name, planned_start, planned_end, actual_start, actual_end, status, created_at
 
 Return ONLY raw JSON like this:
 {
@@ -180,7 +198,8 @@ function safeJsonParse<T = any>(raw: string): T | null {
 async function executeQuery(
   supabase: ReturnType<typeof createServerClient>,
   query: ReportQuery,
-  projectId?: string
+  projectId?: string,
+  tenantId?: string
 ): Promise<{ data: any[]; error: any }> {
   // Build select string — incorporate join selects inline (Supabase PostgREST syntax)
   let selectStr = query.select;
@@ -194,13 +213,18 @@ async function executeQuery(
 
   let q = supabase.from(query.table).select(selectStr);
 
-  // Apply projectId filter if provided and table is not projects itself
-  if (projectId && query.table !== 'projects') {
+  // Apply tenant isolation — always filter by tenant_id when the table supports it
+  if (tenantId && TABLES_WITH_TENANT_ID.has(query.table)) {
+    q = q.eq('tenant_id', tenantId);
+  }
+
+  // Apply projectId filter if provided and table has project_id
+  if (projectId && TABLES_WITH_PROJECT_ID.has(query.table)) {
     q = q.eq('project_id', projectId);
   }
 
-  // Apply Claude's filters
-  for (const f of (query.filters || [])) {
+  // Apply Claude's filters (skip any tenant_id/project_id filters Claude tries to add — we handle those above)
+  for (const f of (query.filters || []).filter(f => f.col !== 'tenant_id' && f.col !== 'project_id')) {
     if (f.op === 'eq')    q = q.eq(f.col, f.val);
     else if (f.op === 'neq')   q = q.neq(f.col, f.val);
     else if (f.op === 'gt')    q = q.gt(f.col, f.val);
@@ -248,7 +272,7 @@ function flattenRow(row: any): Record<string, any> {
 
 // ─── SSE stream builder ───────────────────────────────────────────────────────
 
-function buildSageStream(q: string, projectId?: string): Response {
+function buildSageStream(q: string, projectId?: string, tenantId?: string): Response {
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -270,6 +294,11 @@ function buildSageStream(q: string, projectId?: string): Response {
         // ── 1. Validate input ─────────────────────────────────────────────
         if (!q || q.trim().length === 0) {
           send('error', { message: 'Please provide a report query.' });
+          return done();
+        }
+
+        if (!tenantId) {
+          send('error', { message: 'Not authenticated. Please sign in.' });
           return done();
         }
 
@@ -339,7 +368,7 @@ function buildSageStream(q: string, projectId?: string): Response {
             message: `Querying ${query.table}...`,
           });
 
-          const { data, error } = await executeQuery(supabase, query, projectId);
+          const { data, error } = await executeQuery(supabase, query, projectId, tenantId);
 
           if (error) {
             console.error(`[sage] Query error on table ${query.table}:`, error);
@@ -426,15 +455,17 @@ function buildSageStream(q: string, projectId?: string): Response {
 // ─── GET handler ──────────────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest) {
+  const user = await getUser(req);
   const { searchParams } = new URL(req.url);
   const q         = searchParams.get('q') ?? '';
   const projectId = searchParams.get('projectId') ?? undefined;
-  return buildSageStream(q, projectId);
+  return buildSageStream(q, projectId, user?.tenantId);
 }
 
 // ─── POST handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const user = await getUser(req);
   let q         = '';
   let projectId: string | undefined;
 
@@ -446,5 +477,5 @@ export async function POST(req: NextRequest) {
     // Malformed body — will be caught by empty-q check inside buildSageStream
   }
 
-  return buildSageStream(q, projectId);
+  return buildSageStream(q, projectId, user?.tenantId);
 }

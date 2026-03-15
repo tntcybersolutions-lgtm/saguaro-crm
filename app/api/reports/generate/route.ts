@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (reportType === 'lien-waiver-log') {
-        let q = db.from('lien_waivers').select('*, subcontractors(name, trade), projects(name)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(100);
+        let q = db.from('lien_waivers').select('*, subcontractors!subcontractor_id(name, trade), projects!project_id(name)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(100);
         if (projectId) q = q.eq('project_id', projectId);
         const { data: waivers } = await q;
         return NextResponse.json({
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (reportType === 'insurance-compliance') {
-        let q = db.from('insurance_certificates').select('*, subcontractors(name, trade), projects(name)').eq('tenant_id', tenantId).order('expiry_date', { ascending: true }).limit(100);
+        let q = db.from('insurance_certificates').select('*, subcontractors!subcontractor_id(name, trade), projects!project_id(name)').eq('tenant_id', tenantId).order('expiry_date', { ascending: true }).limit(100);
         if (projectId) q = q.eq('project_id', projectId);
         const { data: certs } = await q;
         const today = new Date().toISOString().split('T')[0];

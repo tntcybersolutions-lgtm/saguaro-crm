@@ -81,8 +81,12 @@ function buildCsv(
   rows: Record<string, unknown>[],
   title: string,
   totals?: Record<string, number>,
+  companyName?: string,
 ): string {
   const BOM = '\uFEFF';
+
+  // Optional company/title meta row
+  const metaRow = companyName ? `${csvField(companyName)} — ${csvField(title)}\r\n` : '';
 
   // Header row
   const headerRow = columns.map(c => csvField(c.label)).join(',');
@@ -93,7 +97,7 @@ function buildCsv(
   );
 
   // Totals row
-  const parts: string[] = [BOM + headerRow, ...dataRows];
+  const parts: string[] = [BOM + metaRow + headerRow, ...dataRows];
   if (totals && Object.keys(totals).length > 0) {
     const totalsRow = columns.map(col => {
       if (col.key in totals) return csvField(String(totals[col.key]));
@@ -497,7 +501,7 @@ export async function POST(req: NextRequest) {
 
     // ---- CSV ---------------------------------------------------------------
     if (format === 'csv') {
-      const csv = buildCsv(columns, rows, title, totals);
+      const csv = buildCsv(columns, rows, title, totals, companyName);
       const filename = `${safeTitle}-${dateStamp}.csv`;
       return new NextResponse(csv, {
         headers: {

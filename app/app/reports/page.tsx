@@ -278,19 +278,27 @@ export default function ReportsPage() {
   };
 
   // ── Export functions ─────────────────────────────────────────
-  const exportCSV = () => {
+  const exportCSV = async () => {
     if (!reportResult) return;
-    const headers = reportResult.columns.map(c => c.label).join(',');
-    const rows = reportResult.rows.map(row =>
-      reportResult.columns.map(col => {
-        const v = row[col.key];
-        if (v === null || v === undefined) return '';
-        const s = String(v);
-        return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
-      }).join(',')
-    ).join('\n');
-    const csv = headers + '\n' + rows;
-    downloadBlob(new Blob([csv], { type: 'text/csv' }), `${reportResult.title.replace(/\s+/g, '-')}-${today()}.csv`);
+    try {
+      const res = await fetch('/api/reports/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          format: 'csv',
+          title: reportResult.title,
+          columns: reportResult.columns,
+          rows: reportResult.rows,
+          totals: reportResult.totals,
+          companyName: branding.company_name || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      downloadBlob(blob, `${reportResult.title.replace(/\s+/g, '-')}-${today()}.csv`);
+    } catch {
+      showError('CSV export failed.');
+    }
   };
 
   const exportXLS = async () => {
