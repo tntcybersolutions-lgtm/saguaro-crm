@@ -8,7 +8,11 @@ import { createServerClient } from './supabase-server';
 
 export { PageSizes, StandardFonts, rgb, PDFDocument };
 
-const supabaseAdmin = createServerClient();
+let _supabaseAdmin: ReturnType<typeof createServerClient> | null = null;
+function getSupabaseAdmin() {
+  if (!_supabaseAdmin) _supabaseAdmin = createServerClient();
+  return _supabaseAdmin;
+}
 
 // ─── Color constants ─────────────────────────────────────────────────────────
 const GOLD  = rgb(0.831, 0.627, 0.090);
@@ -74,11 +78,11 @@ export async function getProjectContext(projectId: string) {
       { data: priorPayApps },
       { data: lienWaivers },
     ] = await Promise.all([
-      supabaseAdmin.from('projects').select('*').eq('id', projectId).single(),
-      supabaseAdmin.from('subcontractors').select('*').eq('project_id', projectId),
-      supabaseAdmin.from('change_orders').select('*').eq('project_id', projectId).eq('status', 'approved'),
-      supabaseAdmin.from('pay_applications').select('*').eq('project_id', projectId).order('app_number', { ascending: false }),
-      supabaseAdmin.from('lien_waivers').select('*').eq('project_id', projectId),
+      getSupabaseAdmin().from('projects').select('*').eq('id', projectId).single(),
+      getSupabaseAdmin().from('subcontractors').select('*').eq('project_id', projectId),
+      getSupabaseAdmin().from('change_orders').select('*').eq('project_id', projectId).eq('status', 'approved'),
+      getSupabaseAdmin().from('pay_applications').select('*').eq('project_id', projectId).order('app_number', { ascending: false }),
+      getSupabaseAdmin().from('lien_waivers').select('*').eq('project_id', projectId),
     ]);
 
     const p = project as any;
@@ -691,7 +695,11 @@ export async function generateBidJacket(input: {
     if (input.csiSections.length > 0) {
       drawText(page, 'APPLICABLE CSI SPEC SECTIONS', 36, y, 10, bold, DARK);
       y -= 15;
-      input.csiSections.forEach(sec => { drawText(page, `• ${sec}`, 46, y, 9, reg, DARK); y -= 13; });
+      input.csiSections.forEach((sec: unknown) => {
+        const label = typeof sec === 'string' ? sec : (sec as Record<string, string>).name || String(sec);
+        drawText(page, `• ${label}`, 46, y, 9, reg, DARK);
+        y -= 13;
+      });
     }
     footerText(page, reg);
   }
@@ -960,14 +968,14 @@ export async function saveDocument(
 ): Promise<string> {
   try {
     const fileName = `${projectId}/${docType}-${Date.now()}.pdf`;
-    await supabaseAdmin.storage
+    await getSupabaseAdmin().storage
       .from('documents')
       .upload(fileName, pdfBytes, { contentType: 'application/pdf', upsert: true });
 
-    const { data: urlData } = supabaseAdmin.storage.from('documents').getPublicUrl(fileName);
+    const { data: urlData } = getSupabaseAdmin().storage.from('documents').getPublicUrl(fileName);
     const pdfUrl = urlData?.publicUrl || '';
 
-    await supabaseAdmin.from('generated_documents').insert({
+    await getSupabaseAdmin().from('generated_documents').insert({
       tenant_id: tenantId || projectId,
       project_id: projectId,
       doc_type: docType,

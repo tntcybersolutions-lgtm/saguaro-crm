@@ -49,6 +49,7 @@ Return ONLY raw JSON. Start with { — no markdown, no code fences.
 
 Keys: cd=CSI code, nm=name, d=description with dimensions, q=qty, u=unit, r=unit rate $, tot=total $, h=labor hours.
 CRITICAL MATH RULE: tot MUST equal q multiplied by r. Example: q=100, r=5.50 → tot=550. Never return tot=0.
+VALID ITEMS ONLY: Every item must have q > 0 and r > 0. Never include items with unknown quantities — estimate from the drawing scale if dimensions are unclear. A 2000 SF floor plan at minimum has: excavation, concrete, framing, roofing, electrical, plumbing, HVAC, drywall, flooring — include ALL of these.
 A complete commercial takeoff has 30-55 line items covering ALL trades visible in the drawings.`;
 
 // ─── JSON repair & parse ──────────────────────────────────────────────────────
@@ -283,7 +284,7 @@ export async function GET(
 
         const claudeStream = await client.messages.create({
           model:      'claude-sonnet-4-6',
-          max_tokens: 6000,
+          max_tokens: 8000,
           system:     SYSTEM,
           messages:   [{ role: 'user', content: buildContent(base64, mimeType, TAKEOFF_PROMPT) as any }],
           stream:     true,
@@ -366,6 +367,18 @@ export async function GET(
 
         console.log(`[analyze] items: ${allRawItems.length} raw → ${items.length} valid after filtering`);
 
+        if (items.length === 0 && allRawItems.length > 0) {
+          console.error('[analyze] All items filtered out. Raw count:', allRawItems.length, 'Sample:', JSON.stringify(allRawItems[0]));
+          send('error', { message: 'AI returned items but all had zero quantity or zero cost. Try a higher-resolution blueprint or a clearer PDF.' });
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          return done();
+        }
+        if (items.length === 0) {
+          send('error', { message: 'No materials extracted from this blueprint. Try a clearer image or a PDF with visible dimensions.' });
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          return done();
+        }
+
         // Derive real totals from validated line items — don't trust Claude's mc/lc/pc
         const realMaterialTotal = items.reduce((s, it) => s + it.total_cost, 0);
         // Labor cost = labor_hours × blended rate $65/hr if Claude's lc looks wrong
@@ -374,7 +387,7 @@ export async function GET(
         const realLaborTotal = claudeLc > 0 && claudeLc < realMaterialTotal * 3
           ? claudeLc
           : computedLc;
-        const contingencyPct = Number(parsed.ct) || 10;
+        const contingencyPct = Math.max(0, Math.min(50, Number(parsed.ct) || 10));
         const subtotal = realMaterialTotal + realLaborTotal;
         const realProjectTotal = Math.round(subtotal * (1 + contingencyPct / 100));
 
