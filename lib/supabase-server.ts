@@ -5,11 +5,22 @@
  */
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://demo.supabase.co';
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'demo';
-const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY || 'demo';
+const _URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const _ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const _SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!_URL || !_ANON || !_SERVICE) {
+  throw new Error(
+    'Missing required Supabase environment variables: ' +
+    [!_URL && 'NEXT_PUBLIC_SUPABASE_URL', !_ANON && 'NEXT_PUBLIC_SUPABASE_ANON_KEY', !_SERVICE && 'SUPABASE_SERVICE_ROLE_KEY']
+      .filter(Boolean).join(', ')
+  );
+}
+
+const URL: string = _URL;
+const ANON: string = _ANON;
+const SERVICE: string = _SERVICE;
 
 let _serviceClient: SupabaseClient | null = null;
 
