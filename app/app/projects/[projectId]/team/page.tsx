@@ -31,6 +31,11 @@ export default function TeamPage(){
   const [members, setMembers] = useState<{name:string,role:string,email:string,access:string,last:string}[]>([]);
   const [subs, setSubs] = useState<{name:string,role:string,email:string,access:string,last:string}[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteRole, setInviteRole] = useState('Member');
+  const [inviting, setInviting] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState('');
 
   useEffect(() => {
     if (!projectId) return;
@@ -49,21 +54,53 @@ export default function TeamPage(){
     })();
   }, [projectId]);
 
+  async function handleInvite() {
+    if (!inviteEmail.trim()) { setInviteMsg('Email is required.'); return; }
+    setInviting(true);
+    setInviteMsg('');
+    try {
+      const res = await fetch('/api/team/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, email: inviteEmail.trim(), name: inviteName.trim(), role: inviteRole }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setInviteMsg(json.error || 'Invite failed.'); }
+      else {
+        setInviteMsg('Invitation sent!');
+        setInviteEmail(''); setInviteName(''); setInviteRole('Member');
+        setTimeout(() => { setShowInvite(false); setInviteMsg(''); }, 1500);
+      }
+    } catch { setInviteMsg('Network error. Please try again.'); }
+    finally { setInviting(false); }
+  }
+
+  const inputStyle = {width:'100%',padding:'8px 12px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box' as const};
+
   return <div>
     <PageHeader title="Team" sub="Manage project team members and access" actions={<button onClick={()=>setShowInvite(!showInvite)} style={{padding:'8px 16px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>+ Invite Member</button>}/>
     {showInvite&&<div style={{margin:24,background:RAISED,border:`1px solid rgba(212,160,23,.3)`,borderRadius:10,padding:24}}>
       <div style={{fontWeight:700,fontSize:15,marginBottom:16,color:TEXT}}>Invite Team Member</div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14,marginBottom:16}}>
-        {[['Email',''],['Name',''],['Role','Member']].map(f=>(
-          <div key={f[0]}><label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>{f[0]}</label>
-            {f[0]==='Role'?<select style={{width:'100%',padding:'8px 12px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,cursor:'pointer'}}>
-              {['Admin','Manager','Member','Guest','Client','Sub'].map(r=><option key={r}>{r}</option>)}
-            </select>:<input placeholder={f[0]} style={{width:'100%',padding:'8px 12px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none'}}/>}</div>
-        ))}
+        <div>
+          <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Email</label>
+          <input type="email" value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="email@company.com" style={inputStyle}/>
+        </div>
+        <div>
+          <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Name</label>
+          <input type="text" value={inviteName} onChange={e=>setInviteName(e.target.value)} placeholder="Full name" style={inputStyle}/>
+        </div>
+        <div>
+          <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Role</label>
+          <select value={inviteRole} onChange={e=>setInviteRole(e.target.value)} style={{...inputStyle,cursor:'pointer'}}>
+            {['Admin','Manager','Member','Guest','Client','Sub'].map(r=><option key={r}>{r}</option>)}
+          </select>
+        </div>
       </div>
+      {inviteMsg&&<div style={{fontSize:13,marginBottom:12,color:inviteMsg==='Invitation sent!'?GREEN:RED}}>{inviteMsg}</div>}
       <div style={{display:'flex',gap:10}}>
-        <button onClick={()=>setShowInvite(false)} style={{padding:'9px 20px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer'}}>Send Invitation</button>
-        <button onClick={()=>setShowInvite(false)} style={{padding:'9px 20px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:7,color:DIM,fontSize:13,cursor:'pointer'}}>Cancel</button>
+        <button onClick={handleInvite} disabled={inviting} style={{padding:'9px 20px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer',opacity:inviting?.6:1}}>{inviting?'Sending...':'Send Invitation'}</button>
+        <button onClick={()=>{setShowInvite(false);setInviteMsg('');}} style={{padding:'9px 20px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:7,color:DIM,fontSize:13,cursor:'pointer'}}>Cancel</button>
       </div>
     </div>}
     <div style={{padding:24}}>

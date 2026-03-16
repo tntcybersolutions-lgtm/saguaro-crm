@@ -46,6 +46,22 @@ export default function MessagesPage() {
 
   useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
+  // Poll for new messages every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/messages`);
+        const json = await res.json();
+        const newMsgs: Message[] = json.messages || [];
+        setMessages(prev => {
+          if (newMsgs.length !== prev.length) return newMsgs;
+          return prev;
+        });
+      } catch { /* non-fatal */ }
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [projectId]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -63,10 +79,10 @@ export default function MessagesPage() {
       project_id: projectId,
     };
     try {
-      await fetch('/api/messages/send', {
+      await fetch(`/api/projects/${projectId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, text: text.trim() }),
+        body: JSON.stringify({ text: text.trim() }),
       });
     } catch { /* demo */ }
     setMessages(prev => [...prev, newMsg]);

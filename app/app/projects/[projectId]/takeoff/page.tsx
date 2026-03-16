@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useToast } from '../../../../../components/Toast';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
 interface TakeoffItem {
   csiCode: string;
@@ -303,9 +304,14 @@ export default function TakeoffPage() {
     if (!result) return;
     setGenerating('sov');
     try {
+      const { data: { session } } = await getSupabaseBrowser().auth.getSession();
+      console.log('SESSION TOKEN:', session?.access_token?.slice(0, 20) ?? 'NULL/UNDEFINED');
       const res = await fetch('/api/pay-apps/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
         body: JSON.stringify({
           projectId,
           periodFrom:    new Date().toISOString().split('T')[0],

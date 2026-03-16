@@ -35,8 +35,9 @@ export async function getUser(req?: NextRequest): Promise<{ id: string; tenantId
     let token: string | undefined;
     if (req) {
       token =
-        req.cookies.get('sb-access-token')?.value ||
         req.headers.get('authorization')?.replace('Bearer ', '') ||
+        req.cookies.get('sb-jddfvugsaosvgllbkzch-auth-token')?.value ||
+        req.cookies.get('sb-access-token')?.value ||
         undefined;
     }
     if (!token) return null;

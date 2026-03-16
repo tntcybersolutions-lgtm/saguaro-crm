@@ -424,6 +424,23 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
       await db.from('projects').update({ contract_amount: newSum }).eq('id', project.id);
     }
 
+    // Sync budget line committed cost if CO has a matching cost_code
+    if (c.cost_code) {
+      const { data: budgetLine } = await db
+        .from('budget_lines')
+        .select('id, committed_cost')
+        .eq('project_id', project.id)
+        .eq('cost_code', c.cost_code)
+        .maybeSingle();
+      if (budgetLine) {
+        const bl = budgetLine as any;
+        await db
+          .from('budget_lines')
+          .update({ committed_cost: (bl.committed_cost || 0) + (c.cost_impact || 0) })
+          .eq('id', bl.id);
+      }
+    }
+
     const ownerEmail = project.owner_entity?.email;
     if (ownerEmail) {
       await sendChangeOrderApproved(ownerEmail, project.name, c.co_number, c.cost_impact || 0);

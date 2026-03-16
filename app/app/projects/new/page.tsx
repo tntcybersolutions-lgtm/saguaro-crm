@@ -59,7 +59,13 @@ export default function NewProjectPage() {
       });
       const d = await r.json();
       if (d.projectId) {
-        router.push(`/app/projects/${d.projectId}`);
+        // Fire autopilot scan async (non-blocking)
+        fetch('/api/autopilot/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId: d.projectId }),
+        }).catch(() => {});
+        router.push(`/app/projects/${d.projectId}/overview`);
       } else {
         setError(d.error || 'Failed to create project');
         setSaving(false);

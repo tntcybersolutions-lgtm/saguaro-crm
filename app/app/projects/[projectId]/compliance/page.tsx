@@ -30,6 +30,15 @@ const STATUS_LABEL: Record<string, string> = {
   not_requested: 'Not Requested',
 };
 
+interface PrequalResult {
+  verdict: 'pass' | 'flag' | 'fail';
+  score: number;
+  flags: string[];
+  strengths: string[];
+  required_before_award: string[];
+  summary: string;
+}
+
 export default function CompliancePage() {
   const params = useParams();
   const projectId = params.projectId as string;
@@ -37,6 +46,8 @@ export default function CompliancePage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
   const [isPublicProject, setIsPublicProject] = useState(false);
+  const [prequaling, setPrequaling] = useState<string | null>(null);
+  const [prequals, setPrequals] = useState<Record<string, PrequalResult>>({});
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -71,6 +82,24 @@ export default function CompliancePage() {
   const expiredCOIs = subs.filter(s => s.coi_status === 'expired' || s.coi_status === 'expiring').length;
   const missingLicenses = subs.filter(s => s.license_status === 'missing' || s.license_status === 'expired').length;
   const wageViolations = subs.filter(s => s.is_prevailing_wage && isPublicProject).length;
+
+  async function scorePrequal(sub: ComplianceSub) {
+    setPrequaling(sub.id);
+    try {
+      const res = await fetch('/api/ai/sub-prequal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subId: sub.id, subData: sub }),
+      });
+      const d = await res.json();
+      setPrequals(prev => ({ ...prev, [sub.id]: d }));
+    } catch {
+      setToast('AI scoring failed. Please try again.');
+      setTimeout(() => setToast(''), 4000);
+    } finally {
+      setPrequaling(null);
+    }
+  }
 
   async function requestCOI(subId: string, subName: string) {
     try {
@@ -177,9 +206,21 @@ export default function CompliancePage() {
                   </span>,
                   <Badge key="ls" label={STATUS_LABEL[s.license_status] || s.license_status} color={STATUS_BADGE[s.license_status] || 'muted'} />,
                   <Badge key="ws" label={STATUS_LABEL[s.w9_status] || s.w9_status} color={STATUS_BADGE[s.w9_status] || 'muted'} />,
-                  <div key="act" style={{ display: 'flex', gap: 6 }}>
+                  <div key="act" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                     {(s.coi_status === 'expired' || s.coi_status === 'expiring') && (
                       <Btn size="sm" variant="ghost" onClick={() => requestCOI(s.id, s.name)}>Request COI</Btn>
+                    )}
+                    <Btn size="sm" variant="ghost" onClick={() => scorePrequal(s)} disabled={prequaling === s.id}>
+                      {prequaling === s.id ? 'Scoring...' : prequals[s.id] ? 'Re-Score' : 'AI Score'}
+                    </Btn>
+                    {prequals[s.id] && (
+                      <span style={{
+                        fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase' as const,
+                        background: prequals[s.id].verdict === 'pass' ? 'rgba(26,138,74,.15)' : prequals[s.id].verdict === 'flag' ? 'rgba(217,119,6,.15)' : 'rgba(192,48,48,.15)',
+                        color: prequals[s.id].verdict === 'pass' ? '#3dd68c' : prequals[s.id].verdict === 'flag' ? '#f59e0b' : '#ff7070',
+                      }}>
+                        {prequals[s.id].verdict} {prequals[s.id].score}/100
+                      </span>
                     )}
                   </div>,
                 ])}
@@ -187,6 +228,52 @@ export default function CompliancePage() {
             )}
           </CardBody>
         </Card>
+        {/* AI Prequal Results */}
+        {Object.keys(prequals).length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.white, marginBottom: 12 }}>AI Prequalification Results</div>
+            {Object.entries(prequals).map(([subId, result]) => {
+              const sub = subs.find(s => s.id === subId);
+              if (!sub) return null;
+              const verdictColor = result.verdict === 'pass' ? '#3dd68c' : result.verdict === 'flag' ? '#f59e0b' : '#ff7070';
+              const verdictBg = result.verdict === 'pass' ? 'rgba(26,138,74,.08)' : result.verdict === 'flag' ? 'rgba(217,119,6,.08)' : 'rgba(192,48,48,.08)';
+              return (
+                <Card key={subId} style={{ marginBottom: 12, borderColor: `${verdictColor}30` }}>
+                  <CardBody>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                      <div style={{ fontWeight: 700, color: T.white }}>{sub.name} — AI Prequalification</div>
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <div style={{ fontSize: 11, color: T.muted }}>Score: <strong style={{ color: verdictColor }}>{result.score}/100</strong></div>
+                        <span style={{ fontSize: 12, fontWeight: 800, padding: '3px 10px', borderRadius: 5, background: verdictBg, color: verdictColor, textTransform: 'uppercase' as const }}>{result.verdict}</span>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.6, marginBottom: 12 }}>{result.summary}</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                      {result.flags.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#ff7070', textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 6 }}>Flags</div>
+                          {result.flags.map((f, i) => <div key={i} style={{ fontSize: 12, color: T.muted, marginBottom: 3 }}>• {f}</div>)}
+                        </div>
+                      )}
+                      {result.strengths.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#3dd68c', textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 6 }}>Strengths</div>
+                          {result.strengths.map((s, i) => <div key={i} style={{ fontSize: 12, color: T.muted, marginBottom: 3 }}>• {s}</div>)}
+                        </div>
+                      )}
+                      {result.required_before_award.length > 0 && (
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 6 }}>Required Before Award</div>
+                          {result.required_before_award.map((r, i) => <div key={i} style={{ fontSize: 12, color: T.muted, marginBottom: 3 }}>• {r}</div>)}
+                        </div>
+                      )}
+                    </div>
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </PageWrap>
   );
