@@ -305,7 +305,6 @@ export default function TakeoffPage() {
     setGenerating('sov');
     try {
       const { data: { session } } = await getSupabaseBrowser().auth.getSession();
-      console.log('SESSION TOKEN:', session?.access_token?.slice(0, 20) ?? 'NULL/UNDEFINED');
       const res = await fetch('/api/pay-apps/create', {
         method: 'POST',
         headers: {

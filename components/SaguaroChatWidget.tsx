@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import {
   loadMemoryProfile,
   saveMemoryProfile,
@@ -389,15 +390,27 @@ export default function SaguaroChatWidget({
       const memoryContext = buildMemoryContextBlock(updatedProfile);
       const styleInstructions = generateStyleMirrorInstructions(updatedProfile);
 
+      // For CRM, attach auth token and extract projectId from URL
+      const requestHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+      let projectId: string | null = null;
+      if (variant === 'crm') {
+        const { data: { session } } = await getSupabaseBrowser().auth.getSession();
+        if (session?.access_token) {
+          requestHeaders['Authorization'] = `Bearer ${session.access_token}`;
+        }
+        projectId = pathname?.match(/\/projects\/([a-f0-9-]{36})/)?.[1] ?? null;
+      }
+
       const response = await fetch(apiPath, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: requestHeaders,
         signal: controller.signal,
         body: JSON.stringify({
           messages: newMessages.map(m => ({ role: m.role, content: m.content })),
           memoryContext,
           styleInstructions,
           currentPage: pathname,
+          ...(projectId ? { projectId } : {}),
         }),
       });
 
