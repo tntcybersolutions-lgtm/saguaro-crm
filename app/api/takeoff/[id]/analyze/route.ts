@@ -205,6 +205,7 @@ export async function GET(
         }
 
         if (!takeoff.storage_path && !takeoff.file_url) {
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
           send('error', { message: 'No blueprint uploaded. Please upload a file first.' });
           return done();
         }

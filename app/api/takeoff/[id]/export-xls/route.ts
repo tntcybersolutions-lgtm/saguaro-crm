@@ -130,8 +130,8 @@ export async function GET(
     ws['!cols'] = [{ wch: 36 }, { wch: 18 }, { wch: 14 }, { wch: 10 }];
 
     // Apply currency format to B column for cost rows (rows 12-20)
-    const currFmt = '"$"#,##0';
-    const perSfFmt = '"$"#,##0.00';
+    const currFmt = '$#,##0';
+    const perSfFmt = '$#,##0.00';
     for (let r = 11; r <= 22; r++) {
       const cellB = ws[XLSX.utils.encode_cell({ r, c: 1 })];
       if (cellB && cellB.t === 'n') cellB.z = currFmt;
@@ -217,7 +217,7 @@ export async function GET(
 
     // Apply currency format ($#,##0.00) to columns F (unitCost=5), G (totalCost=6),
     // I (laborCost=8), J (jobCost=9), K (sellPrice=10)
-    const currencyFmt = '"$"#,##0.00';
+    const currencyFmt = '$#,##0.00';
     const numRows = data.length;
     for (let r = 1; r < numRows; r++) {
       for (const c of [5, 6, 8, 9, 10]) {
@@ -276,7 +276,7 @@ export async function GET(
       for (const c of [3, 4, 5, 6]) {
         const addr = XLSX.utils.encode_cell({ r, c });
         const cell = ws[addr];
-        if (cell && cell.t === 'n') cell.z = '"$"#,##0';
+        if (cell && cell.t === 'n') cell.z = '$#,##0';
       }
     }
 

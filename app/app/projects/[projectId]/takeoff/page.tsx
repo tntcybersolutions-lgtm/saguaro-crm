@@ -124,9 +124,13 @@ export default function TakeoffPage() {
           notes:       String(m.notes      || ''),
         }));
 
-      const materialTotal = items.reduce((s, i) => s + i.totalCost, 0);
-      const laborTotal    = Number(data.labor_cost) || 0;
+      const materialTotal  = items.reduce((s, i) => s + i.totalCost, 0);
+      // Compute labor from hours × $65 if labor_cost not stored
+      const laborFromHrs   = items.reduce((s, i) => s + i.laborHours * 65, 0);
+      const laborTotal     = Number(data.labor_cost) > 0 ? Number(data.labor_cost) : laborFromHrs;
       const contingencyPct = Number(data.contingency_pct) || 10;
+      const subtotal       = materialTotal + laborTotal;
+      const computedTotal  = Math.round(subtotal * (1 + contingencyPct / 100));
 
       setResult({
         takeoffId:         String(data.id),
@@ -138,7 +142,7 @@ export default function TakeoffPage() {
         items,
         totalMaterialCost: materialTotal,
         totalLaborCost:    laborTotal,
-        totalProjectCost:  Number(data.total_cost) || Math.round((materialTotal + laborTotal) * (1 + contingencyPct / 100)),
+        totalProjectCost:  Number(data.total_cost) > 0 ? Number(data.total_cost) : computedTotal,
         contingency:       contingencyPct,
         recommendations:   Array.isArray(data.recommendations) ? data.recommendations : [],
         itemCount:         items.length,
@@ -637,21 +641,21 @@ export default function TakeoffPage() {
 
       {/* Cost breakdown cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 20 }}>
-        {[
-          { label: 'Material Cost', value: result?.totalMaterialCost || 0, color: GOLD },
-          { label: 'Labor Cost',    value: result?.totalLaborCost    || 0, color: '#60A5FA' },
-          {
-            label: `Contingency (${result?.contingency ?? 10}%)`,
-            value: ((result?.totalMaterialCost || 0) + (result?.totalLaborCost || 0)) * ((result?.contingency ?? 10) / 100),
-            color: '#A78BFA',
-          },
-          { label: 'Sell Price (+15%)', value: (result?.totalProjectCost || 0) * 1.15, color: '#22C55E' },
-          {
-            label: 'Gross Margin',
-            value: (result?.totalProjectCost || 0) * 1.15 - (result?.totalProjectCost || 0),
-            color: '#34D399',
-          },
-        ].map((card) => (
+        {(() => {
+          const matCost  = result?.totalMaterialCost || 0;
+          const labCost  = result?.totalLaborCost    || 0;
+          const contPct  = result?.contingency ?? 10;
+          const jobCost  = result?.totalProjectCost  || 0; // mat + lab + contingency
+          const sellPrice = Math.round(jobCost * 1.15);
+          const grossMargin = sellPrice - jobCost;
+          return [
+            { label: 'Material Cost',              value: matCost,     color: GOLD       },
+            { label: 'Labor Cost',                 value: labCost,     color: '#60A5FA'  },
+            { label: `Contingency (${contPct}%)`,  value: Math.round((matCost + labCost) * (contPct / 100)), color: '#A78BFA' },
+            { label: 'Sell Price (+15%)',           value: sellPrice,   color: '#22C55E'  },
+            { label: 'Gross Margin',               value: grossMargin, color: '#34D399'  },
+          ];
+        })().map((card) => (
           <div key={card.label} style={{
             background: SURFACE, border: `1px solid ${BORDER}`,
             borderRadius: 10, padding: '14px 16px',
