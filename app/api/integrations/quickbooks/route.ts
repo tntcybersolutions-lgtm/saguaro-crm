@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     // Return what would be synced without actually syncing
     const { data: invoices } = await getSupabase()
       .from('pay_applications')
-      .select('id, pay_app_number, net_amount_due, status, project_id')
+      .select('id, application_number, net_amount_due, status, project_id')
       .in('status', ['approved', 'submitted'])
       .limit(20);
 
@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     const { data: payApps } = await getSupabase()
       .from('pay_applications')
-      .select('id, pay_app_number, net_amount_due, project_id, projects(name)')
+      .select('id, application_number, net_amount_due, project_id, projects(name)')
       .eq('status', 'approved')
       .is('qb_synced_at', null)
       .limit(50);
@@ -149,8 +149,8 @@ export async function POST(req: NextRequest) {
           },
         }],
         CustomerRef: { value: '1' }, // TODO: map to QB customer by project
-        DocNumber: `PAY-${pa.pay_app_number}`,
-        PrivateNote: `Saguaro Pay App #${pa.pay_app_number} | Project: ${(Array.isArray(pa.projects) ? (pa.projects as { name: string }[])[0]?.name : (pa.projects as unknown as { name: string } | null)?.name) ?? pa.project_id}`,
+        DocNumber: `PAY-${(pa as any).application_number}`,
+        PrivateNote: `Saguaro Pay App #${(pa as any).application_number} | Project: ${(Array.isArray(pa.projects) ? (pa.projects as { name: string }[])[0]?.name : (pa.projects as unknown as { name: string } | null)?.name) ?? pa.project_id}`,
       };
 
       const res = await fetch(`${QB_BASE}/v3/company/${realmId}/invoice`, {
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
         synced++;
       } else {
         const errText = await res.text();
-        errors.push(`PayApp ${pa.pay_app_number}: ${errText.slice(0, 100)}`);
+        errors.push(`PayApp ${(pa as any).application_number}: ${errText.slice(0, 100)}`);
       }
     }
 
