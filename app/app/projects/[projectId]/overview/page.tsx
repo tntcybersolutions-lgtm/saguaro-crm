@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { getAuthHeaders } from '@/lib/supabase-browser';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -31,20 +32,27 @@ export default function OverviewPage(){
   const [scanMsg, setScanMsg] = useState('');
 
   useEffect(()=>{
-    fetch('/api/projects/'+projectId)
-      .then(r=>r.json()).then(d=>setData(d)).catch(()=>{}).finally(()=>setLoading(false));
+    getAuthHeaders().then(auth=>{
+      fetch('/api/projects/'+projectId, { headers: auth })
+        .then(r=>r.json()).then(d=>setData(d)).catch(()=>{}).finally(()=>setLoading(false));
+    });
   },[projectId]);
 
   async function runAutopilot(){
     setScanning(true); setScanMsg('');
     try {
-      const res = await fetch('/api/autopilot/run', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({projectId}) });
+      const auth = await getAuthHeaders();
+      const res = await fetch('/api/autopilot/run', {
+        method:'POST',
+        headers:{'Content-Type':'application/json', ...auth},
+        body: JSON.stringify({projectId}),
+      });
+      if (!res.ok) throw new Error('Scan failed');
       const json = await res.json();
-      setScanMsg(json.summary || 'Scan complete.');
+      setScanMsg(json.summary || 'Autopilot scan complete.');
       // Refresh data to pick up new alerts
-      const r2 = await fetch('/api/projects/'+projectId);
-      const d2 = await r2.json();
-      setData(d2);
+      const r2 = await fetch('/api/projects/'+projectId, { headers: auth });
+      if (r2.ok) { const d2 = await r2.json(); setData(d2); }
     } catch { setScanMsg('Scan failed. Please try again.'); }
     finally { setScanning(false); }
   }
@@ -83,7 +91,10 @@ export default function OverviewPage(){
         <Link href={'/app/projects/'+projectId+'/pay-apps/new'} style={{padding:'9px 16px',background:'linear-gradient(135deg,'+GOLD+',#F0C040)',borderRadius:7,color:'#0d1117',fontSize:12,fontWeight:800,textDecoration:'none'}}>+ New Pay App</Link>
       </div>
     </div>
-    {scanMsg&&<div style={{margin:'0 24px',marginTop:0,padding:'10px 16px',background:'rgba(212,160,23,.06)',border:'1px solid rgba(212,160,23,.2)',borderRadius:8,fontSize:13,color:GOLD,marginBottom:0}}>{scanMsg}</div>}
+    {scanMsg&&<div style={{margin:'12px 24px 0',padding:'12px 18px',background: scanMsg.includes('failed') ? 'rgba(192,48,48,.1)' : 'rgba(26,138,74,.1)',border:`1px solid ${scanMsg.includes('failed') ? 'rgba(192,48,48,.35)' : 'rgba(26,138,74,.35)'}`,borderRadius:8,fontSize:13,fontWeight:600,color: scanMsg.includes('failed') ? RED : GREEN,display:'flex',alignItems:'center',gap:8}}>
+      <span style={{fontSize:16}}>{scanMsg.includes('failed') ? '✕' : '✓'}</span>
+      {scanMsg}
+    </div>}
     <div style={{padding:24}}>
       <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:14,marginBottom:24}}>
         <KPI label="Contract to Date" value={fmt(contractToDate)} sub={approvedCOs>0?'+'+fmt(approvedCOs)+' in COs':'No change orders'}/>

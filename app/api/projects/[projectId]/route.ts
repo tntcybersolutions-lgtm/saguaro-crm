@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       db.from('budget_lines').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('cost_code', { ascending: true }),
       db.from('punch_list_items').select('id, status').eq('project_id', projectId).eq('tenant_id', user.tenantId),
       db.from('schedule_phases').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('planned_start', { ascending: true }),
-      db.from('notifications').select('id, title, message, type, created_at').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }).limit(10),
+      db.from('autopilot_alerts').select('id, alert_type, severity, message, status, created_at').eq('project_id', projectId).eq('tenant_id', user.tenantId).eq('status', 'open').order('created_at', { ascending: false }).limit(10),
     ]);
 
     if (!project) {
@@ -73,7 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       budgetHealth,
       punchSummary,
       schedulePhases: schedulePhases || [],
-      alerts: alerts || [],
+      alerts: (alerts || []).map((a: any) => ({ ...a, title: a.alert_type || a.title })),
     });
   } catch {
     return NextResponse.json({ error: 'Failed to load project' }, { status: 500 });
@@ -90,7 +90,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ proj
     const { data, error } = await db.from('projects').update(body).eq('id', projectId).eq('tenant_id', user.tenantId).select().single();
     if (error) throw error;
     return NextResponse.json({ project: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
