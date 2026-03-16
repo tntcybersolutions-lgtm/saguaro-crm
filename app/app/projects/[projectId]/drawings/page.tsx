@@ -1,224 +1,568 @@
 'use client';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
+import { getAuthHeaders } from '@/lib/supabase-browser';
 
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c';
+const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const GREEN='#1a8a4a',RED='#c03030';
 
-interface Drawing {
-  id: string;
-  sheet: string;
-  title: string;
-  discipline: string;
-  revision: string;
-  date: string;
-  status: string;
-  url: string | null;
-  project_id: string;
+const DISCIPLINES=['Architectural','Structural','Mechanical','Electrical','Plumbing','Civil','Landscape','Other'];
+const STATUSES=['current','superseded','for_review','void'];
+const STATUS_LABELS:Record<string,string>={
+  current:'Current',
+  superseded:'Superseded',
+  for_review:'For Review',
+  void:'Void',
+};
+const STATUS_COLORS:Record<string,string>={
+  current:GREEN,
+  superseded:DIM,
+  for_review:GOLD,
+  void:RED,
+};
+
+const DISCIPLINE_COLORS:Record<string,string>={
+  Architectural:'#60a5fa',
+  Structural:'#f97316',
+  Mechanical:'#a78bfa',
+  Electrical:GOLD,
+  Plumbing:'#22d3ee',
+  Civil:GREEN,
+  Landscape:'#84cc16',
+  Other:DIM,
+};
+
+const inp:React.CSSProperties={
+  width:'100%',padding:'9px 12px',background:'#151f2e',
+  border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,
+  fontSize:13,outline:'none',boxSizing:'border-box',
+};
+
+const EMPTY_FORM={
+  drawing_number:'',title:'',discipline:'Architectural',
+  revision:0,revision_date:'',status:'current',url:'',notes:'',
+};
+
+function Pill({label,color}:{label:string;color:string}){
+  return(
+    <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
+      background:`${color}22`,color,textTransform:'uppercase',letterSpacing:.3,whiteSpace:'nowrap'}}>
+      {label}
+    </span>
+  );
 }
 
-const DISCIPLINES = ['Architectural','Structural','Civil','MEP','Electrical','Plumbing'];
-const STATUSES = ['Current','Superseded','For Review'];
-const EMPTY_FORM = { sheet: '', title: '', discipline: 'Architectural', revision: 'Rev 1', date: '', status: 'Current' };
+function FieldLabel({label}:{label:string}){
+  return(
+    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
+      textTransform:'uppercase',letterSpacing:.5,marginBottom:5}}>{label}</label>
+  );
+}
 
-function statusBadge(status: string) {
-  const map: Record<string, { bg: string; color: string }> = {
-    Current: { bg: 'rgba(61,214,140,.2)', color: GREEN },
-    Superseded: { bg: 'rgba(143,163,192,.2)', color: DIM },
-    'For Review': { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
+function InfoCard({label,value}:{label:string;value:string|undefined|null}){
+  if(!value) return null;
+  return(
+    <div style={{background:'#1a2535',border:`1px solid ${BORDER}`,borderRadius:8,padding:'10px 12px'}}>
+      <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>{label}</div>
+      <div style={{fontSize:13,color:TEXT}}>{value}</div>
+    </div>
+  );
+}
+
+function fmtDate(s:string|null|undefined){
+  if(!s) return '—';
+  return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+export default function DrawingsPage(){
+  const {projectId}=useParams() as {projectId:string};
+  const [drawings,setDrawings]=useState<any[]>([]);
+  const [loading,setLoading]=useState(true);
+  const [loadError,setLoadError]=useState('');
+  const [selected,setSelected]=useState<any>(null);
+  const [mode,setMode]=useState<'view'|'edit'|'create'|null>(null);
+  const [form,setForm]=useState<Record<string,any>>({...EMPTY_FORM});
+  const [saving,setSaving]=useState(false);
+  const [deleting,setDeleting]=useState(false);
+  const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
+  const [search,setSearch]=useState('');
+  const [filterDiscipline,setFilterDiscipline]=useState('all');
+  const [filterStatus,setFilterStatus]=useState('all');
+  const [groupByDiscipline,setGroupByDiscipline]=useState(true);
+
+  const showToast=(msg:string,type:'success'|'error'='success')=>{
+    setToast({msg,type}); setTimeout(()=>setToast(null),4000);
   };
-  const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-  return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{status}</span>;
-}
 
-export default function DrawingsPage() {
-  const params = useParams();
-  const projectId = params.projectId as string;
-  const [drawings, setDrawings] = useState<Drawing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [filterDiscipline, setFilterDiscipline] = useState('All');
-  const [filterStatus, setFilterStatus] = useState('All');
-  const [uploading, setUploading] = useState(false);
-  const uploadRef = useRef<HTMLInputElement>(null);
-
-  const fetchDrawings = useCallback(async () => {
+  const load=useCallback(async()=>{
     setLoading(true);
-    try {
-      const res = await fetch(`/api/projects/${projectId}/drawings`);
-      const json = await res.json();
-      setDrawings(json.drawings || []);
-    } catch {
-      setDrawings([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
+    try{
+      setLoadError('');
+      const h=await getAuthHeaders();
+      const r=await fetch(`/api/drawings/list?projectId=${projectId}`,{headers:h});
+      if (!r.ok) throw new Error('Failed to load data');
+      const d=await r.json();
+      setDrawings(d.drawings||[]);
+    }catch{setDrawings([]);setLoadError('Failed to load. Please try again.');}
+    finally{setLoading(false);}
+  },[projectId]);
 
-  useEffect(() => { fetchDrawings(); }, [fetchDrawings]);
+  useEffect(()=>{load();},[load]);
 
-  const filtered = drawings.filter(d => {
-    if (filterDiscipline !== 'All' && d.discipline !== filterDiscipline) return false;
-    if (filterStatus !== 'All' && d.status !== filterStatus) return false;
-    return true;
-  });
+  function openCreate(){
+    setForm({...EMPTY_FORM});
+    setMode('create');setSelected(null);
+  }
+  function openEdit(drawing:any){
+    setForm({
+      drawing_number:drawing.drawing_number||'',
+      title:drawing.title||'',
+      discipline:drawing.discipline||'Architectural',
+      revision:drawing.revision??0,
+      revision_date:drawing.revision_date?drawing.revision_date.substring(0,10):'',
+      status:drawing.status||'current',
+      url:drawing.url||'',
+      notes:drawing.notes||'',
+    });
+    setSelected(drawing);setMode('edit');
+  }
+  function viewDrawing(drawing:any){setSelected(drawing);setMode('view');}
+  function closePanel(){setSelected(null);setMode(null);}
 
-  async function handleSave() {
-    if (!form.sheet || !form.title) {
-      setErrorMsg('Sheet number and title are required.');
-      return;
+  async function save(){
+    if(!form.drawing_number.trim()||!form.title.trim()){
+      showToast('Drawing number and title are required','error');return;
     }
     setSaving(true);
-    setErrorMsg('');
-    try {
-      const res = await fetch('/api/drawings/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, ...form }),
-      });
-      const json = await res.json();
-      const newDrawing: Drawing = json.drawing || { id: `d-${Date.now()}`, project_id: projectId, url: null, ...form };
-      setDrawings(prev => [...prev, newDrawing].sort((a, b) => a.sheet.localeCompare(b.sheet)));
-      setShowForm(false);
-      setForm(EMPTY_FORM);
-      setSuccessMsg('Drawing added successfully.');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } catch {
-      const newDrawing: Drawing = { id: `d-${Date.now()}`, project_id: projectId, url: null, ...form };
-      setDrawings(prev => [...prev, newDrawing]);
-      setShowForm(false);
-      setForm(EMPTY_FORM);
-      setSuccessMsg('Drawing added (demo mode).');
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } finally {
-      setSaving(false);
+    try{
+      const h=await getAuthHeaders();
+      const payload={
+        ...form,
+        revision:Number(form.revision)||0,
+        revision_date:form.revision_date||null,
+      };
+      if(mode==='create'){
+        const r=await fetch('/api/drawings/create',{
+          method:'POST',
+          headers:{...h,'Content-Type':'application/json'},
+          body:JSON.stringify({...payload,projectId}),
+        });
+        if(!r.ok) throw new Error(await r.text());
+        showToast('Drawing added');
+      }else if(mode==='edit'&&selected){
+        const r=await fetch(`/api/drawings/${selected.id}`,{
+          method:'PUT',
+          headers:{...h,'Content-Type':'application/json'},
+          body:JSON.stringify(payload),
+        });
+        if(!r.ok) throw new Error(await r.text());
+        showToast('Drawing updated');
+      }
+      await load();closePanel();
+    }catch(e:any){showToast(e.message||'Save failed','error');}
+    finally{setSaving(false);}
+  }
+
+  async function deleteDrawing(drawing:any){
+    if(!confirm(`Delete drawing "${drawing.drawing_number} - ${drawing.title}"?`)) return;
+    setDeleting(true);
+    try{
+      const h=await getAuthHeaders();
+      const dr=await fetch(`/api/drawings/${drawing.id}`,{method:'DELETE',headers:h});
+      if (!dr.ok) throw new Error('Delete failed');
+      showToast('Drawing deleted');closePanel();await load();
+    }catch{showToast('Delete failed','error');}
+    finally{setDeleting(false);}
+  }
+
+  const total=drawings.length;
+  const current=drawings.filter(d=>d.status==='current').length;
+  const forReview=drawings.filter(d=>d.status==='for_review').length;
+  const disciplineCount=new Set(drawings.map(d=>d.discipline).filter(Boolean)).size;
+
+  const filtered=drawings.filter(d=>{
+    const ms=!search
+      ||(d.drawing_number||'').toLowerCase().includes(search.toLowerCase())
+      ||(d.title||'').toLowerCase().includes(search.toLowerCase());
+    const md=filterDiscipline==='all'||d.discipline===filterDiscipline;
+    const mst=filterStatus==='all'||d.status===filterStatus;
+    return ms&&md&&mst;
+  });
+
+  // Group by discipline
+  const grouped:Record<string,any[]>={};
+  if(groupByDiscipline){
+    for(const d of filtered){
+      const disc=d.discipline||'Other';
+      if(!grouped[disc]) grouped[disc]=[];
+      grouped[disc].push(d);
     }
   }
 
-  async function handleBulkUpload(files: FileList) {
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      for (let i = 0; i < files.length; i++) fd.append('files', files[i]);
-      fd.append('projectId', projectId);
-      await fetch('/api/drawings/upload', { method: 'POST', body: fd });
-      setSuccessMsg(`${files.length} drawing(s) uploaded.`);
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } catch {
-      setSuccessMsg(`${files.length} drawing(s) received (demo mode).`);
-      setTimeout(() => setSuccessMsg(''), 4000);
-    } finally {
-      setUploading(false);
-    }
+  function DrawingRow({drawing}:{drawing:any}){
+    const isSel=selected?.id===drawing.id&&mode==='view';
+    return(
+      <tr
+        onClick={()=>viewDrawing(drawing)}
+        style={{background:isSel?'rgba(212,160,23,.07)':'transparent',
+          borderBottom:`1px solid rgba(38,51,71,.5)`,cursor:'pointer',transition:'background .1s'}}
+        onMouseEnter={e=>{if(!isSel)e.currentTarget.style.background='rgba(255,255,255,.02)';}}
+        onMouseLeave={e=>{if(!isSel)e.currentTarget.style.background='transparent';}}>
+        <td style={{padding:'11px 14px',color:GOLD,fontWeight:700,whiteSpace:'nowrap'}}>
+          {drawing.drawing_number||'—'}
+        </td>
+        <td style={{padding:'11px 14px',color:TEXT,maxWidth:240}}>
+          <div style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+            {drawing.title||'—'}
+          </div>
+        </td>
+        <td style={{padding:'11px 14px'}}>
+          <Pill label={drawing.discipline||'Other'}
+            color={DISCIPLINE_COLORS[drawing.discipline]||DIM}/>
+        </td>
+        <td style={{padding:'11px 14px',color:DIM,textAlign:'center'}}>
+          R{drawing.revision??0}
+        </td>
+        <td style={{padding:'11px 14px',color:DIM,whiteSpace:'nowrap'}}>
+          {fmtDate(drawing.revision_date)}
+        </td>
+        <td style={{padding:'11px 14px'}}>
+          <Pill label={STATUS_LABELS[drawing.status]||drawing.status}
+            color={STATUS_COLORS[drawing.status]||DIM}/>
+        </td>
+        <td style={{padding:'11px 14px'}}>
+          {drawing.url?(
+            <a href={drawing.url} target="_blank" rel="noreferrer"
+              onClick={e=>e.stopPropagation()}
+              style={{padding:'4px 10px',background:'rgba(59,130,246,.1)',
+                border:'1px solid rgba(59,130,246,.3)',borderRadius:6,
+                color:'#60a5fa',fontSize:11,fontWeight:700,textDecoration:'none',
+                whiteSpace:'nowrap'}}>
+              View PDF
+            </a>
+          ):(
+            <span style={{fontSize:11,color:DIM}}>No link</span>
+          )}
+        </td>
+      </tr>
+    );
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-
-  return (
-    <div style={{ background: DARK, minHeight: '100vh' }}>
-      <div style={{ padding: '16px 24px', borderBottom: '1px solid ' + BORDER, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: DARK, flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Drawings</h2>
-          <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>Architectural and engineering drawing sets</div>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <label style={{ padding: '8px 14px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            {uploading ? 'Uploading...' : 'Upload Drawing Set'}
-            <input ref={uploadRef} type="file" accept=".pdf,.dwg,.dxf" multiple style={{ display: 'none' }} onChange={e => { if (e.target.files?.length) handleBulkUpload(e.target.files); }} />
-          </label>
-          <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={{ padding: '8px 16px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
-            + Add Drawing
-          </button>
-        </div>
-      </div>
-
-      {successMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 7, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ margin: '12px 24px 0', padding: '10px 14px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 7, color: '#ef4444', fontSize: 13 }}>{errorMsg}</div>}
-
-      {showForm && (
-        <div style={{ margin: 24, background: RAISED, border: '1px solid rgba(212,160,23,.3)', borderRadius: 10, padding: 24 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Add Drawing</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            <div><label style={label}>Sheet # *</label><input type="text" value={form.sheet} onChange={e => setForm(p => ({ ...p, sheet: e.target.value }))} placeholder="e.g. A1.0" style={inp} /></div>
-            <div style={{ gridColumn: 'span 2' }}><label style={label}>Title *</label><input type="text" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Discipline</label>
-              <select value={form.discipline} onChange={e => setForm(p => ({ ...p, discipline: e.target.value }))} style={inp}>
-                {DISCIPLINES.map(d => <option key={d}>{d}</option>)}
-              </select>
-            </div>
-            <div><label style={label}>Revision</label><input type="text" value={form.revision} onChange={e => setForm(p => ({ ...p, revision: e.target.value }))} style={inp} /></div>
-            <div><label style={label}>Date</label><SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-            <button onClick={handleSave} disabled={saving} style={{ padding: '9px 20px', background: 'linear-gradient(135deg,' + GOLD + ',#F0C040)', border: 'none', borderRadius: 7, color: DARK, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Save Drawing'}
-            </button>
-            <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={{ padding: '9px 16px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 7, color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-          </div>
+  return(
+    <div style={{display:'flex',height:'100%',minHeight:0,position:'relative',background:DARK}}>
+      {toast&&(
+        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
+          padding:'12px 20px',borderRadius:8,color:'#fff',fontWeight:700,fontSize:14,pointerEvents:'none',
+          background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
+          {toast.msg}
         </div>
       )}
 
-      {/* Filters */}
-      <div style={{ padding: '16px 24px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <span style={{ fontSize: 12, color: DIM, alignSelf: 'center' }}>Discipline:</span>
-          {['All', ...DISCIPLINES].map(d => (
-            <button key={d} onClick={() => setFilterDiscipline(d)} style={{ padding: '5px 12px', background: filterDiscipline === d ? GOLD : RAISED, border: '1px solid ' + (filterDiscipline === d ? GOLD : BORDER), borderRadius: 5, color: filterDiscipline === d ? DARK : DIM, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{d}</button>
-          ))}
+      {/* Main */}
+      <div style={{flex:1,overflow:'auto',minWidth:0}}>
+        <div style={{padding:'18px 24px',borderBottom:`1px solid ${BORDER}`,
+          display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+          <div>
+            <h2 style={{margin:0,fontSize:20,fontWeight:800,color:TEXT}}>Drawings</h2>
+            <div style={{fontSize:12,color:DIM,marginTop:3}}>Architectural and engineering drawing sets</div>
+          </div>
+          <button onClick={openCreate}
+            style={{padding:'9px 20px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,
+              border:'none',borderRadius:7,color:DARK,fontSize:13,fontWeight:800,cursor:'pointer'}}>
+            + Add Drawing
+          </button>
         </div>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <span style={{ fontSize: 12, color: DIM, alignSelf: 'center' }}>Status:</span>
-          {['All', ...STATUSES].map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '5px 12px', background: filterStatus === s ? GOLD : RAISED, border: '1px solid ' + (filterStatus === s ? GOLD : BORDER), borderRadius: 5, color: filterStatus === s ? DARK : DIM, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{s}</button>
-          ))}
+
+        <div style={{padding:24}}>
+          {/* KPIs */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:24}}>
+            {[
+              {l:'Total Drawings',v:String(total),c:'#60a5fa'},
+              {l:'Current',v:String(current),c:GREEN},
+              {l:'For Review',v:String(forReview),c:GOLD},
+              {l:'Disciplines',v:String(disciplineCount),c:'#a78bfa'},
+            ].map(k=>(
+              <div key={k.l} style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 18px'}}>
+                <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',color:DIM,marginBottom:6}}>{k.l}</div>
+                <div style={{fontSize:22,fontWeight:800,color:k.c}}>{k.v}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Filters + view toggle */}
+          <div style={{display:'flex',gap:10,marginBottom:18,flexWrap:'wrap',alignItems:'center'}}>
+            <input value={search} onChange={e=>setSearch(e.target.value)}
+              placeholder="Search drawings..."
+              style={{flex:1,minWidth:180,padding:'8px 12px',background:RAISED,
+                border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none'}}/>
+            <select value={filterDiscipline} onChange={e=>setFilterDiscipline(e.target.value)}
+              style={{padding:'8px 12px',background:RAISED,border:`1px solid ${BORDER}`,
+                borderRadius:7,color:filterDiscipline!=='all'?TEXT:DIM,fontSize:13,outline:'none'}}>
+              <option value="all">All Disciplines</option>
+              {DISCIPLINES.map(d=><option key={d} value={d}>{d}</option>)}
+            </select>
+            <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}
+              style={{padding:'8px 12px',background:RAISED,border:`1px solid ${BORDER}`,
+                borderRadius:7,color:filterStatus!=='all'?TEXT:DIM,fontSize:13,outline:'none'}}>
+              <option value="all">All Statuses</option>
+              {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+            </select>
+            {/* View toggle */}
+            <div style={{display:'flex',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:7,overflow:'hidden'}}>
+              <button onClick={()=>setGroupByDiscipline(true)}
+                style={{padding:'8px 14px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
+                  background:groupByDiscipline?GOLD:'transparent',
+                  color:groupByDiscipline?DARK:DIM}}>
+                By Discipline
+              </button>
+              <button onClick={()=>setGroupByDiscipline(false)}
+                style={{padding:'8px 14px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
+                  background:!groupByDiscipline?GOLD:'transparent',
+                  color:!groupByDiscipline?DARK:DIM}}>
+                Flat List
+              </button>
+            </div>
+          </div>
+
+          {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading drawings...</div>}
+
+          {!loading&&loadError&&(
+            <div style={{background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,padding:'12px 16px',marginBottom:20,color:'#c03030',fontSize:13}}>
+              {loadError}
+            </div>
+          )}
+
+          {!loading&&filtered.length===0&&(
+            <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,
+              padding:56,textAlign:'center'}}>
+              <div style={{fontSize:40,marginBottom:14}}>📐</div>
+              <div style={{fontWeight:800,fontSize:16,color:TEXT,marginBottom:8}}>
+                {drawings.length===0?'No drawings yet':'No drawings match your filters'}
+              </div>
+              <div style={{fontSize:13,color:DIM,marginBottom:24}}>
+                {drawings.length===0?'Add drawing sheets to track the project drawing set.':'Try adjusting your filters.'}
+              </div>
+              {drawings.length===0&&(
+                <button onClick={openCreate}
+                  style={{padding:'10px 24px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,
+                    border:'none',borderRadius:8,color:DARK,fontSize:13,fontWeight:800,cursor:'pointer'}}>
+                  + Add First Drawing
+                </button>
+              )}
+            </div>
+          )}
+
+          {!loading&&filtered.length>0&&groupByDiscipline&&(
+            <div style={{display:'flex',flexDirection:'column',gap:24}}>
+              {Object.entries(grouped).map(([discipline,discDrawings])=>(
+                <div key={discipline}>
+                  <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+                    <Pill label={discipline} color={DISCIPLINE_COLORS[discipline]||DIM}/>
+                    <span style={{fontSize:11,color:DIM}}>({discDrawings.length})</span>
+                    <div style={{flex:1,height:1,background:BORDER}}/>
+                  </div>
+                  <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden',overflowX:'auto'}}>
+                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+                      <thead>
+                        <tr style={{background:'rgba(0,0,0,.3)'}}>
+                          {['Drawing #','Title','Discipline','Rev','Rev Date','Status','Link'].map(h=>(
+                            <th key={h} style={{padding:'9px 14px',textAlign:'left',fontSize:11,fontWeight:700,
+                              textTransform:'uppercase',letterSpacing:.5,color:DIM,
+                              borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {discDrawings.map(d=><DrawingRow key={d.id} drawing={d}/>)}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!loading&&filtered.length>0&&!groupByDiscipline&&(
+            <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,overflow:'hidden',overflowX:'auto'}}>
+              <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+                <thead>
+                  <tr style={{background:'rgba(0,0,0,.3)'}}>
+                    {['Drawing #','Title','Discipline','Rev','Rev Date','Status','Link'].map(h=>(
+                      <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700,
+                        textTransform:'uppercase',letterSpacing:.5,color:DIM,
+                        borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map(d=><DrawingRow key={d.id} drawing={d}/>)}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-        <span style={{ marginLeft: 'auto', fontSize: 12, color: DIM, alignSelf: 'center' }}>{filtered.length} drawing{filtered.length !== 1 ? 's' : ''}</span>
       </div>
 
-      <div style={{ padding: '16px 24px 24px', overflowX: 'auto' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>No drawings found.</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#0a1117' }}>
-                {['Sheet #','Title','Discipline','Rev','Date','Status','Actions'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(d => (
-                <tr key={d.id} style={{ borderBottom: '1px solid rgba(38,51,71,.4)' }}>
-                  <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{d.sheet}</td>
-                  <td style={{ padding: '10px 14px', color: TEXT }}>{d.title}</td>
-                  <td style={{ padding: '10px 14px', color: DIM }}>{d.discipline}</td>
-                  <td style={{ padding: '10px 14px', color: DIM }}>{d.revision}</td>
-                  <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{d.date}</td>
-                  <td style={{ padding: '10px 14px' }}>{statusBadge(d.status)}</td>
-                  <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                    {d.url ? (
-                      <>
-                        <button onClick={() => window.open(d.url!, '_blank')} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer', marginRight: 6 }}>View</button>
-                        <a href={d.url} download style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer', textDecoration: 'none' }}>Download</a>
-                      </>
-                    ) : (
-                      <span style={{ color: DIM, fontSize: 12 }}>No file</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      {/* Side Panel */}
+      {mode!==null&&(
+        <div style={{width:460,borderLeft:`1px solid ${BORDER}`,background:DARK,
+          overflow:'auto',flexShrink:0,display:'flex',flexDirection:'column'}}>
+          <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,
+            display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
+              {mode==='create'?'Add Drawing':mode==='edit'?'Edit Drawing':'Drawing Detail'}
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              {mode==='view'&&selected&&(
+                <>
+                  <button onClick={()=>openEdit(selected)}
+                    style={{padding:'6px 14px',background:'rgba(59,130,246,.1)',
+                      border:'1px solid rgba(59,130,246,.3)',borderRadius:6,
+                      color:'#60a5fa',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    Edit
+                  </button>
+                  <button onClick={()=>deleteDrawing(selected)} disabled={deleting}
+                    style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
+                      border:`1px solid ${RED}44`,borderRadius:6,
+                      color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    {deleting?'...':'Delete'}
+                  </button>
+                </>
+              )}
+              <button onClick={closePanel}
+                style={{padding:'6px 10px',background:'rgba(143,163,192,.1)',
+                  border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>
+                ✕
+              </button>
+            </div>
+          </div>
+
+          <div style={{flex:1,overflow:'auto',padding:20}}>
+            {(mode==='create'||mode==='edit')?(
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  <div>
+                    <FieldLabel label="Drawing # *"/>
+                    <input value={form.drawing_number}
+                      onChange={e=>setForm(f=>({...f,drawing_number:e.target.value}))}
+                      style={inp} placeholder="e.g. A1.01"/>
+                  </div>
+                  <div>
+                    <FieldLabel label="Revision"/>
+                    <input type="number" min={0} value={form.revision}
+                      onChange={e=>setForm(f=>({...f,revision:e.target.value}))}
+                      style={inp}/>
+                  </div>
+                </div>
+                <div>
+                  <FieldLabel label="Title *"/>
+                  <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))}
+                    style={inp} placeholder="e.g. Floor Plan - Level 1"/>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                  <div>
+                    <FieldLabel label="Discipline"/>
+                    <select value={form.discipline}
+                      onChange={e=>setForm(f=>({...f,discipline:e.target.value}))}
+                      style={{...inp,padding:'9px 10px'}}>
+                      {DISCIPLINES.map(d=><option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <FieldLabel label="Status"/>
+                    <select value={form.status}
+                      onChange={e=>setForm(f=>({...f,status:e.target.value}))}
+                      style={{...inp,padding:'9px 10px'}}>
+                      {STATUSES.map(s=><option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <FieldLabel label="Revision Date"/>
+                  <input type="date" value={form.revision_date}
+                    onChange={e=>setForm(f=>({...f,revision_date:e.target.value}))}
+                    style={inp}/>
+                </div>
+                <div>
+                  <FieldLabel label="PDF / Drawing URL"/>
+                  <input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))}
+                    style={inp} placeholder="https://..."/>
+                </div>
+                <div>
+                  <FieldLabel label="Notes"/>
+                  <textarea value={form.notes}
+                    onChange={e=>setForm(f=>({...f,notes:e.target.value}))}
+                    rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
+                    placeholder="Revision notes, superseded by, etc."/>
+                </div>
+                <div style={{display:'flex',gap:10,paddingTop:4}}>
+                  <button onClick={save} disabled={saving}
+                    style={{flex:1,padding:'11px 0',
+                      background:`linear-gradient(135deg,${GOLD},#F0C040)`,
+                      border:'none',borderRadius:8,color:DARK,
+                      fontSize:14,fontWeight:800,cursor:'pointer',opacity:saving?0.6:1}}>
+                    {saving?'Saving...':mode==='create'?'Add Drawing':'Save Changes'}
+                  </button>
+                  <button onClick={closePanel}
+                    style={{padding:'11px 16px',background:'rgba(143,163,192,.1)',
+                      border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,
+                      fontSize:14,cursor:'pointer'}}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ):selected?(
+              <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                {/* Header card */}
+                <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:16}}>
+                  <div style={{fontSize:12,color:GOLD,fontWeight:700,marginBottom:4}}>
+                    {selected.drawing_number||'—'} &bull; R{selected.revision??0}
+                  </div>
+                  <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:10}}>
+                    {selected.title}
+                  </div>
+                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                    <Pill label={selected.discipline||'Other'}
+                      color={DISCIPLINE_COLORS[selected.discipline]||DIM}/>
+                    <Pill label={STATUS_LABELS[selected.status]||selected.status}
+                      color={STATUS_COLORS[selected.status]||DIM}/>
+                  </div>
+                </div>
+
+                {/* Metadata */}
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                  <InfoCard label="Revision #" value={`R${selected.revision??0}`}/>
+                  <InfoCard label="Revision Date" value={fmtDate(selected.revision_date)}/>
+                  <InfoCard label="Status" value={STATUS_LABELS[selected.status]||selected.status}/>
+                  <InfoCard label="Discipline" value={selected.discipline}/>
+                </div>
+
+                {selected.notes&&(
+                  <div style={{background:'#1a2535',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6}}>Notes</div>
+                    <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
+                  </div>
+                )}
+
+                {selected.url&&(
+                  <a href={selected.url} target="_blank" rel="noreferrer"
+                    style={{display:'block',padding:'12px 14px',
+                      background:'rgba(59,130,246,.1)',
+                      border:'1px solid rgba(59,130,246,.3)',borderRadius:8,
+                      color:'#60a5fa',fontSize:13,fontWeight:700,textDecoration:'none',
+                      textAlign:'center'}}>
+                    View PDF / Drawing
+                  </a>
+                )}
+              </div>
+            ):null}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUser } from '@/lib/supabase-server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -9,11 +8,12 @@ export async function POST(req: NextRequest) {
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* empty body */ }
 
+  if (!body.projectId && !body.project_id) {
+    return NextResponse.json({ error: 'projectId is required' }, { status: 400 });
+  }
+
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    const db = createServerClient();
 
     const row = {
       project_id:  body.projectId  || body.project_id,
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       notes:       body.notes       || '',
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('punch_list_items')
       .insert(row)
       .select()
@@ -35,12 +35,7 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true, item: data });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[punch-list/create] error:', msg);
-    return NextResponse.json(
-      { error: `[punch-list/create] Database error: ${msg}` },
-      { status: 500 }
-    );
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

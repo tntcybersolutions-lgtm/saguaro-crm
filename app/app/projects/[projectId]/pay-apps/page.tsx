@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -25,6 +25,7 @@ function statusBadge(s:string){
 export default function PayAppsPage() {
   const params = useParams();
   const projectId = params['projectId'] as string;
+  const router = useRouter();
 
   const [payApps,setPayApps]   = useState<any[]>([]);
   const [loading,setLoading]   = useState(true);
@@ -41,7 +42,7 @@ export default function PayAppsPage() {
       const r = await fetch(`/api/pay-apps/list?projectId=${projectId}`);
       if(!r.ok) throw new Error(await r.text());
       const d = await r.json();
-      setPayApps((d.payApps??[]).sort((a:any,b:any)=>(b.app_number||0)-(a.app_number||0)));
+      setPayApps((d.payApps??[]).sort((a:any,b:any)=>(b.application_number||0)-(a.application_number||0)));
     }catch(e:any){
       setError(e.message||'Failed to load pay applications');
     }finally{
@@ -154,8 +155,14 @@ export default function PayAppsPage() {
               </thead>
               <tbody>
                 {payApps.map((pa:any)=>(
-                  <tr key={pa.id} style={{borderBottom:`1px solid rgba(38,51,71,.5)`}}>
-                    <td style={{padding:'12px 14px',color:GOLD,fontWeight:800}}>#{pa.app_number}</td>
+                  <tr
+                    key={pa.id}
+                    onClick={()=>router.push(`/app/projects/${projectId}/pay-apps/${pa.id}`)}
+                    style={{borderBottom:`1px solid rgba(38,51,71,.5)`,cursor:'pointer',transition:'background .15s'}}
+                    onMouseEnter={e=>(e.currentTarget.style.background='rgba(212,160,23,.06)')}
+                    onMouseLeave={e=>(e.currentTarget.style.background='')}
+                  >
+                    <td style={{padding:'12px 14px',color:GOLD,fontWeight:800}}>#{pa.application_number}</td>
                     <td style={{padding:'12px 14px',color:DIM}}>
                       {pa.period_from ? new Date(pa.period_from+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'}
                     </td>

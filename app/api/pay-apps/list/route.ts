@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ payApps: [], source: 'unauth' }, { status: 401 });
 
     const db = createServerClient();
-    let query = db.from('pay_applications').select('*').eq('tenant_id', user.tenantId).order('app_number', { ascending: false });
+    let query = db.from('pay_applications').select('*').eq('tenant_id', user.tenantId).order('application_number', { ascending: false });
     if (projectId) query = query.eq('project_id', projectId);
     const { data, error } = await query;
     if (error) throw error;
