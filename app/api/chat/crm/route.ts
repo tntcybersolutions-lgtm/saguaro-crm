@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
-import { BASE_CONSTRUCTION_KNOWLEDGE, CRM_EXTENSION } from '@/lib/sage-prompts';
+import { getAuthenticatedSagePrompt, SageContext } from '@/lib/sage-prompts';
 
 const client = new Anthropic();
 
@@ -2088,7 +2088,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { messages, memoryContext, styleInstructions, currentPage } = await req.json();
+    const { messages, memoryContext, styleInstructions, currentPage, projectId } = await req.json();
     const db = createServerClient();
 
     // Pull rich live data from Supabase in parallel
@@ -2099,6 +2099,7 @@ export async function POST(req: NextRequest) {
       { data: changeOrders },
       { data: payApps },
       { data: openRfis },
+      { data: userProfile },
     ] = await Promise.all([
       db.from('projects')
         .select('id, name, status, contract_amount, start_date, end_date, address, owner_name, percent_complete, retainage_percent')
@@ -2130,14 +2131,69 @@ export async function POST(req: NextRequest) {
         .in('status', ['open', 'pending_response', 'submitted'])
         .order('due_date', { ascending: true })
         .limit(10),
+      db.from('user_profiles')
+        .select('full_name, company_name')
+        .eq('user_id', user.id)
+        .maybeSingle(),
     ]);
 
-    const SYSTEM_PROMPT = `${BASE_CONSTRUCTION_KNOWLEDGE}
+    // Build structured context for the Sage prompt
+    const today = new Date().toISOString().split('T')[0];
+    const activeProjects = (projects ?? []).filter((p: any) => p.status === 'active' || p.status === 'in_progress');
+    const currentProjectData = projectId
+      ? (projects ?? []).find((p: any) => p.id === projectId)
+      : null;
 
-${CRM_EXTENSION}
+    // Per-project computed values
+    const projectRFIs = (openRfis ?? []).filter((r: any) => !currentProjectData || r.project_id === currentProjectData.id);
+    const overdueRFIs = projectRFIs.filter((r: any) => r.due_date && r.due_date < today).length;
+    const projectCOs = (changeOrders ?? []).filter((c: any) => !currentProjectData || c.project_id === currentProjectData.id);
+    const pendingCOValue = projectCOs.reduce((sum: number, c: any) => sum + (c.amount ?? 0), 0);
+    const projectPayApps = (payApps ?? []).filter((p: any) => !currentProjectData || p.project_id === currentProjectData.id);
+    const pendingPayAppsCount = projectPayApps.filter((p: any) => p.status === 'pending' || p.status === 'submitted').length;
+    const lastPayApp = projectPayApps[0];
 
+    // Portfolio-wide overdue RFIs
+    const allOverdueRFIs = (openRfis ?? []).filter((r: any) => r.due_date && r.due_date < today).length;
+
+    const ctx: SageContext = {
+      user: {
+        name: (userProfile as any)?.full_name || user.email.split('@')[0],
+        email: user.email,
+        company: (userProfile as any)?.company_name,
+      },
+      currentProject: currentProjectData ? {
+        id: currentProjectData.id,
+        name: currentProjectData.name,
+        contractSum: currentProjectData.contract_amount ?? 0,
+        status: currentProjectData.status,
+        owner: currentProjectData.owner_name,
+        startDate: currentProjectData.start_date,
+        scheduledCompletion: currentProjectData.end_date,
+        percentComplete: currentProjectData.percent_complete,
+        openRFIs: projectRFIs.length,
+        overdueRFIs,
+        openChangeOrders: projectCOs.length,
+        pendingCOValue,
+        pendingPayApps: pendingPayAppsCount,
+        lastPayAppAmount: lastPayApp?.net_payment_due ?? 0,
+      } : undefined,
+      portfolioSummary: {
+        activeProjects: activeProjects.length,
+        totalContractValue: activeProjects.reduce((sum: number, p: any) => sum + (p.contract_amount ?? 0), 0),
+        openBids: (bids ?? []).filter((b: any) => b.status === 'open' || b.status === 'pending').length,
+        pendingPayApps: (payApps ?? []).filter((p: any) => p.status === 'pending' || p.status === 'submitted').length,
+        openRFIs: (openRfis ?? []).length,
+        overdueRFIs: allOverdueRFIs,
+      },
+      currentPage: currentPage ?? 'Dashboard',
+    };
+
+    const SYSTEM_PROMPT = [
+      getAuthenticatedSagePrompt(ctx),
+      `
 ═══════════════════════════════════════
-LIVE ACCOUNT DATA — ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+LIVE ACCOUNT DATA
 ═══════════════════════════════════════
 
 ACTIVE PROJECTS (${projects?.length ?? 0}):
@@ -2157,9 +2213,6 @@ ${JSON.stringify(payApps ?? [], null, 2)}
 
 OPEN RFIs (${openRfis?.length ?? 0}):
 ${JSON.stringify(openRfis ?? [], null, 2)}
-
-CURRENT PAGE: ${currentPage ?? 'unknown'}
-USER: ${user.email} | Tenant: ${user.tenantId}
 
 NAVIGATION PATHS:
   All projects → /app/projects
@@ -2185,9 +2238,10 @@ TOOL USE GUIDANCE:
 - After using a tool, present results clearly and offer the next logical step
 - Reference the user's actual project names in every response
 - If you spot a risk in their data (overdue RFI, pending CO, approaching lien deadline), flag it
-
-${memoryContext ?? ''}
-${styleInstructions ?? ''}`;
+`,
+      memoryContext ?? '',
+      styleInstructions ?? '',
+    ].filter(Boolean).join('\n\n');
 
     const conversationMessages: Anthropic.MessageParam[] = (messages as Array<{ role: 'user' | 'assistant'; content: string }>).slice(-50);
 

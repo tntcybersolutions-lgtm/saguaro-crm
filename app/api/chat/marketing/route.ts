@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
-import { BASE_CONSTRUCTION_KNOWLEDGE, MARKETING_EXTENSION } from '@/lib/sage-prompts';
+import { getPublicSagePrompt } from '@/lib/sage-prompts';
 
 const client = new Anthropic();
 
@@ -33,8 +33,7 @@ export async function POST(req: NextRequest) {
     }
 
     const systemPrompt = [
-      BASE_CONSTRUCTION_KNOWLEDGE,
-      MARKETING_EXTENSION,
+      getPublicSagePrompt(),
       memoryContext ?? '',
       styleInstructions ?? '',
     ].filter(Boolean).join('\n\n');
