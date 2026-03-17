@@ -6,6 +6,14 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import {
+  getCurrentPosition,
+  hapticSuccess,
+  hapticError,
+  hapticMedium,
+  hapticLight,
+  showToast,
+} from '@/lib/native';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -135,18 +143,16 @@ function ClockPage() {
       .finally(() => setCrewLoading(false));
   }, [viewMode, clock.projectId, projectId]);
 
-  // Get GPS
-  const getGPS = useCallback(() => {
-    if (!navigator.geolocation) return;
+  // Get GPS — uses Capacitor on native, Web Geolocation API on web
+  const getGPS = useCallback(async () => {
     setGpsStatus('getting');
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setLocation({ lat: coords.latitude, lng: coords.longitude });
-        setGpsStatus('ok');
-      },
-      () => setGpsStatus('denied'),
-      { timeout: 8000 }
-    );
+    const pos = await getCurrentPosition(8000);
+    if (pos) {
+      setLocation({ lat: pos.lat, lng: pos.lng });
+      setGpsStatus('ok');
+    } else {
+      setGpsStatus('denied');
+    }
   }, []);
 
   const updateClock = (patch: Partial<ClockState>) => {
@@ -156,6 +162,7 @@ function ClockPage() {
   const handleClockIn = async () => {
     if (!clock.employeeName.trim()) { alert('Enter your name first.'); return; }
     setSaving(true);
+    hapticMedium().catch(() => {});
     getGPS();
 
     const clockInTime = new Date().toISOString();
@@ -171,14 +178,19 @@ function ClockPage() {
     try {
       if (!online) throw new Error('offline');
       await fetch('/api/clock/in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      hapticSuccess().catch(() => {});
+      showToast('Clocked in').catch(() => {});
     } catch {
       await enqueue({ url: '/api/clock/in', method: 'POST', body: JSON.stringify(payload), contentType: 'application/json', isFormData: false });
+      hapticLight().catch(() => {});
+      showToast('Queued — will sync when online').catch(() => {});
     }
     setSaving(false);
   };
 
   const handleClockOut = async () => {
     setSaving(true);
+    hapticMedium().catch(() => {});
     const clockOutTime = new Date().toISOString();
     const breakMins = parseInt(breakMinutes) || 0;
     const rawMs = Date.now() - new Date(clock.clockInTime!).getTime();
@@ -208,8 +220,12 @@ function ClockPage() {
     try {
       if (!online) throw new Error('offline');
       await fetch('/api/clock/out', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      hapticSuccess().catch(() => {});
+      showToast(`${formatDuration(Date.now() - new Date(clock.clockInTime!).getTime())} logged`).catch(() => {});
     } catch {
       await enqueue({ url: '/api/clock/out', method: 'POST', body: JSON.stringify(payload), contentType: 'application/json', isFormData: false });
+      hapticLight().catch(() => {});
+      showToast('Queued — will sync when online').catch(() => {});
     }
     setSaving(false);
   };
@@ -243,9 +259,11 @@ function ClockPage() {
       if (!online) throw new Error('offline');
       await fetch('/api/clock/in', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       setCrewMsg(`${crewClockName.trim()} clocked in`);
+      hapticSuccess().catch(() => {});
     } catch {
       await enqueue({ url: '/api/clock/in', method: 'POST', body: JSON.stringify(payload), contentType: 'application/json', isFormData: false });
       setCrewMsg(`${crewClockName.trim()} clock-in queued`);
+      hapticLight().catch(() => {});
     }
 
     setCrewClockName('');
@@ -274,9 +292,11 @@ function ClockPage() {
       if (!online) throw new Error('offline');
       await fetch('/api/clock/out', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       setCrewMsg(`${member.name} clocked out`);
+      hapticSuccess().catch(() => {});
     } catch {
       await enqueue({ url: '/api/clock/out', method: 'POST', body: JSON.stringify(payload), contentType: 'application/json', isFormData: false });
       setCrewMsg(`${member.name} clock-out queued`);
+      hapticLight().catch(() => {});
     }
 
     setCrewSaving(false);

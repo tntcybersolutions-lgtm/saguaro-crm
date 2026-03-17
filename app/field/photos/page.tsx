@@ -6,6 +6,16 @@
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import {
+  takePhoto,
+  pickFromGallery,
+  getCurrentPosition,
+  hapticSuccess,
+  hapticLight,
+  hapticError,
+  shareContent,
+  isNative,
+} from '@/lib/native';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -75,6 +85,7 @@ function PhotosPage() {
 
   const fileRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const native = isNative();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [filterCat, setFilterCat] = useState('All');
   const [selected, setSelected] = useState<Photo | null>(null);
@@ -390,6 +401,39 @@ function PhotosPage() {
     }
   }, [selected, selectedPhotoLinks]);
 
+  /** Native camera tap — uses Capacitor on iOS/Android, file input on web */
+  const handleCameraCapture = useCallback(async () => {
+    hapticLight().catch(() => {});
+    const result = await takePhoto({ quality: 92, source: 'camera' });
+    if (!result) return;
+    setPendingFile(result.file);
+    setPendingPreview(result.dataUrl);
+    setGpsLat(null);
+    setGpsLng(null);
+    setGpsLoading(true);
+    getCurrentPosition().then((pos) => {
+      if (pos) { setGpsLat(pos.lat); setGpsLng(pos.lng); }
+      setGpsLoading(false);
+    });
+  }, []);
+
+  /** Photo library tap — Capacitor gallery / file input fallback */
+  const handleGalleryPick = useCallback(async () => {
+    hapticLight().catch(() => {});
+    const result = await pickFromGallery();
+    if (!result) return;
+    setPendingFile(result.file);
+    setPendingPreview(result.dataUrl);
+    setGpsLat(null);
+    setGpsLng(null);
+    setGpsLoading(true);
+    getCurrentPosition().then((pos) => {
+      if (pos) { setGpsLat(pos.lat); setGpsLng(pos.lng); }
+      setGpsLoading(false);
+    });
+  }, []);
+
+  /** Web fallback — legacy <input> file handler (non-native only) */
   const handleFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -400,14 +444,11 @@ function PhotosPage() {
     e.target.value = '';
     setGpsLat(null);
     setGpsLng(null);
-    if (navigator.geolocation) {
-      setGpsLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        (pos) => { setGpsLat(pos.coords.latitude); setGpsLng(pos.coords.longitude); setGpsLoading(false); },
-        () => setGpsLoading(false),
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    }
+    setGpsLoading(true);
+    getCurrentPosition().then((pos) => {
+      if (pos) { setGpsLat(pos.lat); setGpsLng(pos.lng); }
+      setGpsLoading(false);
+    });
   };
 
   const cancelPending = () => {
@@ -458,7 +499,9 @@ function PhotosPage() {
         longitude: gpsLng ?? undefined,
       };
       setPhotos((prev) => [savedPhoto, ...prev]);
+      hapticSuccess().catch(() => {});
     } catch {
+      hapticError().catch(() => {});
       const base64 = pendingPreview.split(',')[1] || '';
       await enqueue({
         url: `/api/projects/${projectId}/photos`,
@@ -762,17 +805,42 @@ function PhotosPage() {
         </div>
       )}
 
-      {/* Capture button */}
+      {/* Capture / upload buttons */}
       {!pendingPreview && (
         <>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFilePick} style={{ display: 'none' }} />
-          <button
-            onClick={() => fileRef.current?.click()}
-            style={{ width: '100%', background: RAISED, border: `2px dashed rgba(212,160,23,.5)`, borderRadius: 14, padding: '22px', color: GOLD, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={32} height={32}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx={12} cy={13} r={4}/></svg>
-            Take or Upload a Photo
-          </button>
+          {/* Hidden web fallback input (non-native only) */}
+          {!native && (
+            <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFilePick} style={{ display: 'none' }} />
+          )}
+
+          {native ? (
+            /* Native: two distinct buttons — Camera and Library */
+            <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+              <button
+                onClick={handleCameraCapture}
+                style={{ flex: 2, background: RAISED, border: `2px dashed rgba(212,160,23,.5)`, borderRadius: 14, padding: '22px 16px', color: GOLD, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={28} height={28}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx={12} cy={13} r={4}/></svg>
+                Camera
+              </button>
+              <button
+                onClick={handleGalleryPick}
+                style={{ flex: 1, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '22px 10px', color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                Library
+              </button>
+            </div>
+          ) : (
+            /* Web: single file input trigger */
+            <button
+              onClick={() => fileRef.current?.click()}
+              style={{ width: '100%', background: RAISED, border: `2px dashed rgba(212,160,23,.5)`, borderRadius: 14, padding: '22px', color: GOLD, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={32} height={32}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx={12} cy={13} r={4}/></svg>
+              Take or Upload a Photo
+            </button>
+          )}
         </>
       )}
 
@@ -942,6 +1010,12 @@ function PhotosPage() {
                     style={{ background: 'rgba(34,197,94,.15)', border: '1px solid rgba(34,197,94,.4)', borderRadius: 20, padding: '3px 14px', fontSize: 12, color: GREEN, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1={7} y1={7} x2={7.01} y2={7}/></svg> Tags
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); hapticLight().catch(()=>{}); shareContent({ title: selected.caption || 'Site Photo', url: selected.url, dialogTitle: 'Share Photo' }).catch(()=>{}); }}
+                    style={{ background: 'rgba(212,160,23,.12)', border: '1px solid rgba(212,160,23,.35)', borderRadius: 20, padding: '3px 14px', fontSize: 12, color: GOLD, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={12} height={12}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share
                   </button>
                 </>
               ) : (

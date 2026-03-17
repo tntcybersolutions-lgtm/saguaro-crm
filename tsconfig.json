@@ -63,6 +63,7 @@
     "*.ts",
     "*.tsx",
     "supabase/**/*.ts",
+    "types/**/*.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": [
