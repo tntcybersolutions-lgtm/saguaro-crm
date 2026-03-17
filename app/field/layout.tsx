@@ -1,12 +1,28 @@
 'use client';
 /**
- * Saguaro Field — Mobile PWA Shell
+ * Saguaro Field — Mobile Shell
+ * Supports both PWA and Capacitor native (iOS/Android).
  * Bottom nav: Home · Punch · Log · Photos · More
  */
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { getQueueCount, getDeadLetterCount, replayQueue, purgeExpired } from '@/lib/field-db';
+import {
+  isNative,
+  isIOS,
+  isAndroid,
+  hideSplash,
+  setStatusBarDark,
+  onNetworkChange,
+  getNetworkStatus,
+  onAndroidBack,
+  onAppResume,
+  hapticLight,
+  hapticSelection,
+  setupPushListeners,
+  registerForPush,
+} from '@/lib/native';
 
 const GOLD   = '#D4A017';
 const DARK   = '#07101C';
@@ -24,72 +40,133 @@ const NAV = [
   { href: '/field/more',    label: 'More',   Icon: GridIcon },
 ];
 
+
 export default function FieldLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [online, setOnline] = useState(true);
   const [queueCount, setQueueCount] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [deadCount, setDeadCount] = useState(0);
   const [installEvent, setInstallEvent] = useState<Event | null>(null);
   const [showInstall, setShowInstall] = useState(false);
-  const [isIos, setIsIos] = useState(false);
+  const [isIosWeb, setIsIosWeb] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [pushMsg, setPushMsg] = useState<{ title: string; body: string } | null>(null);
+  const native = isNative();
 
+  // ── Capacitor + PWA boot ───────────────────────────────────────
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    // 1. Status bar: dark content on dark bg
+    setStatusBarDark().catch(() => {});
+
+    // 2. Hide splash after layout is ready
+    const splashTimer = setTimeout(() => hideSplash().catch(() => {}), 300);
+
+    // 3. Service worker (PWA / web only)
+    if (!native && 'serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
       navigator.serviceWorker.addEventListener('message', (e) => {
         if (e.data?.type === 'SYNC_NOW') triggerSync();
       });
     }
-    // Purge stale items (>72h) on mount — silent, no user impact
+
+    // 4. Purge stale offline queue items
     purgeExpired().catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    return () => clearTimeout(splashTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Push notifications (native) ───────────────────────────────
   useEffect(() => {
-    const update = () => setOnline(navigator.onLine);
-    window.addEventListener('online', update);
-    window.addEventListener('offline', update);
-    setOnline(navigator.onLine);
-    return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); };
+    if (!native) return;
+    // Register for push and wire foreground banner
+    registerForPush().catch(() => {});
+    const cleanup = setupPushListeners({
+      onMessage: (title, body) => {
+        setPushMsg({ title, body });
+        setTimeout(() => setPushMsg(null), 5000);
+      },
+      onTap: (data) => {
+        // Navigate based on push data
+        if (data?.route) router.push(String(data.route));
+      },
+    });
+    return cleanup;
+  }, [native, router]);
+
+  // ── Network detection ─────────────────────────────────────────
+  useEffect(() => {
+    // Initial state
+    getNetworkStatus().then((s) => setOnline(s.connected)).catch(() => {});
+
+    // Listen for changes (native uses @capacitor/network, web uses window events)
+    const cleanup = onNetworkChange(setOnline);
+    return cleanup;
   }, []);
 
   useEffect(() => {
     if (online && queueCount > 0) triggerSync();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [online]);
 
+  // ── Queue polling ──────────────────────────────────────────────
   useEffect(() => {
     refreshQueue();
     const id = setInterval(refreshQueue, 8000);
     return () => clearInterval(id);
   }, []);
 
+  // ── Sync on app resume (native) ───────────────────────────────
   useEffect(() => {
-    // Detect iOS (Safari on iPhone/iPad)
+    const cleanup = onAppResume(() => {
+      refreshQueue();
+      if (online) triggerSync();
+    });
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [online]);
+
+  // ── Android back button ───────────────────────────────────────
+  useEffect(() => {
+    const cleanup = onAndroidBack(() => {
+      if (pathname === '/field') {
+        // Let Android handle app minimize on root
+        return;
+      }
+      router.back();
+    });
+    return cleanup;
+  }, [pathname, router]);
+
+  // ── PWA install prompts (web only) ────────────────────────────
+  useEffect(() => {
+    if (native) return;
     const ua = navigator.userAgent;
     const ios = /iphone|ipad|ipod/i.test(ua);
-    setIsIos(ios);
-    // Check if already installed as standalone
-    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+    setIsIosWeb(ios);
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (window.navigator as any).standalone === true;
     setIsStandalone(standalone);
-
-    // Show iOS prompt after 3 seconds if not installed
     if (ios && !standalone) {
       const dismissed = sessionStorage.getItem('sag_install_dismissed');
       if (!dismissed) setTimeout(() => setShowInstall(true), 3000);
     }
-  }, []);
+  }, [native]);
 
   useEffect(() => {
-    // Android/Desktop Chrome: beforeinstallprompt
-    const handler = (e: Event) => { e.preventDefault(); setInstallEvent(e); setShowInstall(true); };
+    if (native) return;
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallEvent(e);
+      setShowInstall(true);
+    };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
+  }, [native]);
 
   const refreshQueue = async () => {
     try {
@@ -102,7 +179,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
     if (syncing) return;
     setSyncing(true);
     try { await replayQueue(); await refreshQueue(); } finally { setSyncing(false); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [syncing]);
 
   const handleInstall = async () => {
@@ -120,8 +197,9 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: DARK, color: TEXT, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', maxWidth: 480, margin: '0 auto' }}>
-      {/* Status bar */}
-      <div style={{ background: '#060C15', padding: '10px 16px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 50, paddingTop: 'max(10px,env(safe-area-inset-top))' }}>
+
+      {/* ── Status bar ── */}
+      <div style={{ background: '#060C15', padding: '10px 16px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER}`, position: 'sticky', top: 0, zIndex: 50, paddingTop: `max(${native && isIOS() ? '44px' : '10px'}, env(safe-area-inset-top))` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/icons/icon-96x96.png" alt="Saguaro" width={30} height={30} style={{ borderRadius: 8, border: '1px solid rgba(212,160,23,.2)' }} />
@@ -131,6 +209,12 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Native badge */}
+          {native && (
+            <span style={{ background: 'rgba(212,160,23,.1)', border: '1px solid rgba(212,160,23,.25)', borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 700, color: GOLD, letterSpacing: 0.5 }}>
+              {isIOS() ? 'iOS' : 'Android'}
+            </span>
+          )}
           {queueCount > 0 && (
             <button
               onClick={triggerSync}
@@ -148,114 +232,102 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      {/* Install modal — full-screen bottom sheet */}
-      {showInstall && !isStandalone && (
+      {/* ── Inline push notification banner (native foreground) ── */}
+      {pushMsg && (
+        <div style={{ background: 'rgba(212,160,23,.12)', borderBottom: '1px solid rgba(212,160,23,.3)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🔔</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: GOLD }}>{pushMsg.title}</p>
+            <p style={{ margin: 0, fontSize: 12, color: DIM }}>{pushMsg.body}</p>
+          </div>
+          <button onClick={() => setPushMsg(null)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>
+        </div>
+      )}
+
+      {/* ── PWA install modal — web only ── */}
+      {showInstall && !isStandalone && !native && (
         <>
-          {/* Backdrop */}
-          <div
-            onClick={dismissInstall}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 200 }}
-          />
-          {/* Bottom sheet card */}
+          <div onClick={dismissInstall} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 200 }} />
           <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#0F1E30', borderRadius: '20px 20px 0 0', border: '1px solid rgba(212,160,23,.22)', borderBottom: 'none', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))', zIndex: 201, boxShadow: '0 -10px 48px rgba(0,0,0,0.7)' }}>
-            {/* Drag handle */}
             <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
               <div style={{ width: 38, height: 4, borderRadius: 2, background: 'rgba(255,255,255,.14)' }} />
             </div>
-            {/* App icon + name */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 24px 0' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/icons/icon-192x192.png" alt="Saguaro Field" width={72} height={72} style={{ borderRadius: 18, border: '2px solid rgba(212,160,23,.45)', boxShadow: '0 4px 24px rgba(212,160,23,.28)' }} />
-              <h2 style={{ margin: '12px 0 4px', fontSize: 22, fontWeight: 900, color: TEXT, letterSpacing: -0.5, textAlign: 'center' }}>
-                Install Saguaro Field
-              </h2>
+              <h2 style={{ margin: '12px 0 4px', fontSize: 22, fontWeight: 900, color: TEXT, letterSpacing: -0.5, textAlign: 'center' }}>Install Saguaro Field</h2>
               <p style={{ margin: 0, fontSize: 14, color: DIM, textAlign: 'center', lineHeight: 1.4 }}>
-                Your crew&apos;s field app — lives on the home screen,<br />opens instantly, works without signal.
+                Your crew&apos;s field app — home screen access,<br />instant launch, works without signal.
               </p>
             </div>
-            {/* Benefit pills */}
             <div style={{ display: 'flex', gap: 8, padding: '14px 24px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              {['Works offline', 'No app store needed', 'Instant access'].map((b) => (
-                <span key={b} style={{ background: 'rgba(212,160,23,.12)', border: '1px solid rgba(212,160,23,.28)', borderRadius: 20, padding: '4px 13px', fontSize: 12, fontWeight: 700, color: GOLD }}>
-                  {b}
-                </span>
+              {['Works offline', 'GPS clock-in', 'Instant photos'].map((b) => (
+                <span key={b} style={{ background: 'rgba(212,160,23,.12)', border: '1px solid rgba(212,160,23,.28)', borderRadius: 20, padding: '4px 13px', fontSize: 12, fontWeight: 700, color: GOLD }}>{b}</span>
               ))}
             </div>
-            {/* Divider */}
             <div style={{ height: 1, background: 'rgba(255,255,255,.07)', margin: '0 24px' }} />
-
-            {isIos ? (
-              /* iOS — step-by-step visual guide */
+            {isIosWeb ? (
               <div style={{ padding: '16px 24px 0' }}>
-                <p style={{ margin: '0 0 14px', fontSize: 13, color: DIM, textAlign: 'center', fontWeight: 600, letterSpacing: 0.2 }}>
-                  3 steps in Safari — takes 15 seconds
-                </p>
+                <p style={{ margin: '0 0 14px', fontSize: 13, color: DIM, textAlign: 'center', fontWeight: 600 }}>3 steps in Safari — 15 seconds</p>
                 {[
-                  { num: '1', icon: <ShareIcon />, label: 'Tap the Share button', sub: 'The box-with-arrow icon at the bottom of Safari' },
-                  { num: '2', icon: <HomeAddIcon />, label: 'Tap "Add to Home Screen"', sub: 'Scroll down in the share sheet to find it' },
-                  { num: '3', icon: <CheckIcon />, label: 'Tap "Add" — you\'re done!', sub: 'The app icon will appear on your home screen' },
-                ].map((step) => (
-                  <div key={step.num} style={{ display: 'flex', gap: 14, marginBottom: 16, alignItems: 'center' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(212,160,23,.13)', border: '1.5px solid rgba(212,160,23,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: GOLD }}>
-                      {step.icon}
-                    </div>
+                  { Icon: <ShareIcon />, label: 'Tap the Share button', sub: 'Bottom of Safari — box with arrow icon' },
+                  { Icon: <HomeAddIcon />, label: 'Tap "Add to Home Screen"', sub: 'Scroll down in the share sheet' },
+                  { Icon: <CheckIcon />, label: 'Tap "Add" — you\'re done', sub: 'App icon appears on your home screen' },
+                ].map((step, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 14, marginBottom: 16, alignItems: 'center' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(212,160,23,.13)', border: '1.5px solid rgba(212,160,23,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: GOLD }}>{step.Icon}</div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{step.label}</div>
-                      <div style={{ fontSize: 12, color: DIM, marginTop: 2, lineHeight: 1.4 }}>{step.sub}</div>
+                      <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{step.sub}</div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              /* Android / Chrome — one tap install */
               <div style={{ padding: '20px 24px 0' }}>
-                <button
-                  onClick={handleInstall}
-                  style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017 0%, #EF8C1A 100%)', border: 'none', borderRadius: 14, padding: '16px', color: '#000', fontSize: 17, fontWeight: 900, cursor: 'pointer', boxShadow: '0 6px 28px rgba(212,160,23,.5)', letterSpacing: 0.2 }}
-                >
+                <button onClick={handleInstall} style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017 0%, #EF8C1A 100%)', border: 'none', borderRadius: 14, padding: '16px', color: '#000', fontSize: 17, fontWeight: 900, cursor: 'pointer', boxShadow: '0 6px 28px rgba(212,160,23,.5)' }}>
                   Install App
                 </button>
-                <p style={{ margin: '9px 0 0', textAlign: 'center', fontSize: 12, color: DIM }}>
-                  Takes 2 seconds · Works exactly like a native app
-                </p>
+                <p style={{ margin: '9px 0 0', textAlign: 'center', fontSize: 12, color: DIM }}>Takes 2 seconds · Works like a native app</p>
               </div>
             )}
-
-            {/* Dismiss */}
             <div style={{ padding: '14px 24px 0', textAlign: 'center' }}>
-              <button onClick={dismissInstall} style={{ background: 'none', border: 'none', color: DIM, fontSize: 14, cursor: 'pointer', padding: '8px 20px' }}>
-                Not now
-              </button>
+              <button onClick={dismissInstall} style={{ background: 'none', border: 'none', color: DIM, fontSize: 14, cursor: 'pointer', padding: '8px 20px' }}>Not now</button>
             </div>
           </div>
         </>
       )}
 
-      {/* Offline banner */}
+      {/* ── Offline banner ── */}
       {!online && (
         <div style={{ background: 'rgba(239,68,68,.1)', borderBottom: '1px solid rgba(239,68,68,.2)', padding: '7px 16px', textAlign: 'center', fontSize: 13, color: RED, fontWeight: 600 }}>
           Offline — changes will sync when reconnected
         </div>
       )}
 
-      {/* Dead-letter alert — items that failed 5+ times */}
+      {/* ── Dead-letter alert ── */}
       {deadCount > 0 && (
         <div style={{ background: 'rgba(245,158,11,.1)', borderBottom: '1px solid rgba(245,158,11,.3)', padding: '7px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: GOLD }}>
           <span style={{ fontWeight: 700 }}>⚠ {deadCount} item{deadCount > 1 ? 's' : ''} failed to sync after 5 attempts</span>
-          <span style={{ color: DIM, fontSize: 11 }}>Contact support if this persists</span>
+          <span style={{ color: DIM, fontSize: 11 }}>Contact support</span>
         </div>
       )}
 
-      <main style={{ flex: 1, overflowY: 'auto', paddingBottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
+      <main style={{ flex: 1, overflowY: 'auto', paddingBottom: `calc(${native && isAndroid() ? '72px' : '64px'} + env(safe-area-inset-bottom))` }}>
         {children}
       </main>
 
-      {/* Bottom nav */}
+      {/* ── Bottom nav ── */}
       <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#060C15', borderTop: `1px solid ${BORDER}`, display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 50 }}>
         {NAV.map(({ href, label, Icon }) => {
           const active = href === '/field' ? pathname === '/field' : pathname.startsWith(href);
           return (
-            <Link key={href} href={href} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '10px 4px 8px', color: active ? GOLD : DIM, textDecoration: 'none', position: 'relative', minHeight: 54 }}>
+            <Link
+              key={href}
+              href={href}
+              onClick={() => { hapticSelection().catch(() => {}); }}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '10px 4px 8px', color: active ? GOLD : DIM, textDecoration: 'none', position: 'relative', minHeight: 54 }}
+            >
               {active && <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2.5, background: GOLD, borderRadius: '0 0 3px 3px' }} />}
               <Icon active={active} />
               <span style={{ fontSize: 11, fontWeight: active ? 800 : 500, letterSpacing: 0.1 }}>{label}</span>
@@ -275,7 +347,8 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
   );
 }
 
-// Install modal icons
+// ── Icons ────────────────────────────────────────────────────────────────────
+
 function ShareIcon() {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>;
 }
@@ -285,8 +358,6 @@ function HomeAddIcon() {
 function CheckIcon() {
   return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 }
-
-// Nav icons
 function HomeIcon({ active }: { active: boolean }) {
   return <svg width="25" height="25" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>{!active&&<polyline points="9 22 9 12 15 12 15 22"/>}</svg>;
 }
@@ -302,3 +373,4 @@ function CameraIcon({ active }: { active: boolean }) {
 function GridIcon({ active }: { active: boolean }) {
   return <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" fill={active?'currentColor':'none'}/><rect x="14" y="3" width="7" height="7" fill={active?'currentColor':'none'}/><rect x="3" y="14" width="7" height="7" fill={active?'currentColor':'none'}/><rect x="14" y="14" width="7" height="7" fill={active?'currentColor':'none'}/></svg>;
 }
+
