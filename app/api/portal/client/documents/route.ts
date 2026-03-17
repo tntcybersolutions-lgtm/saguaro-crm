@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       grouped,
       categories: Object.keys(grouped),
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load documents' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

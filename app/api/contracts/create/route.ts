@@ -23,8 +23,8 @@ export async function POST(req: NextRequest) {
     }).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, contract: data });
-  } catch (err: any) {
-    console.error('[contracts/create] error:', err?.message);
-    return NextResponse.json({ error: err.message || 'Failed to create contract' }, { status: 500 });
+  } catch (err) {
+    console.error('[contracts/create]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

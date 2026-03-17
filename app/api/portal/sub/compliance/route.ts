@@ -60,9 +60,9 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({ compliance_docs: annotated });
-  } catch (err: any) {
+  } catch (err) {
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -126,9 +126,9 @@ export async function POST(req: NextRequest) {
       { compliance_doc: doc, message: 'Document uploaded successfully' },
       { status: 201 }
     );
-  } catch (err: any) {
+  } catch (err) {
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

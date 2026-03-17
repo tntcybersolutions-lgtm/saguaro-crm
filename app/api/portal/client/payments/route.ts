@@ -49,8 +49,8 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json({ payments: all, summary });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load payments' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ payment });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to initiate payment' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

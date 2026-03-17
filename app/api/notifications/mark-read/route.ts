@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
       await markRead(body.id);
     }
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

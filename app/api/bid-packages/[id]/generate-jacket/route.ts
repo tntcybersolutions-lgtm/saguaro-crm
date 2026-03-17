@@ -59,7 +59,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     await db.from('bid_packages').update({ jacket_pdf_url: pdfUrl }).eq('id', id);
 
     return NextResponse.json({ pdfUrl, success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

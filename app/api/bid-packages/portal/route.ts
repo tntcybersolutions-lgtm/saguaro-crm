@@ -31,8 +31,8 @@ export async function GET(req: NextRequest) {
         invite: { status: invite.status },
       },
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     await db.from('bid_package_invites').update({ status: 'submitted' }).eq('token', token);
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

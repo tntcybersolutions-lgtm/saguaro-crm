@@ -58,9 +58,9 @@ export async function POST(req: NextRequest) {
       },
       sub: sub || null,
     });
-  } catch (err: any) {
+  } catch (err) {
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -97,9 +97,9 @@ export async function GET(req: NextRequest) {
       },
       sub: sub || null,
     });
-  } catch (err: any) {
+  } catch (err) {
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

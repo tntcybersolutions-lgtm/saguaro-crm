@@ -56,8 +56,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ claims: claims || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load warranty claims' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -104,8 +104,8 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ claim });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to create warranty claim' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -145,7 +145,7 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ claim });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to update warranty claim' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

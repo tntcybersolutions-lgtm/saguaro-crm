@@ -20,8 +20,8 @@ export async function GET(
       project: pa.projects,
       lineItems: pa.schedule_of_values || [],
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -41,7 +41,7 @@ export async function POST(
       .eq('owner_approval_token', token);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

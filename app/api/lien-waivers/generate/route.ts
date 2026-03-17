@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }).select().single();
 
     return NextResponse.json({ pdfUrl, waiver, success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

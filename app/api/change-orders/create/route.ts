@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ changeOrder: co, success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

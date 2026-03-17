@@ -66,8 +66,8 @@ export async function POST(req: NextRequest) {
       },
       project,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Auth failed' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
       },
       project,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to get session' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

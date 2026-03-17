@@ -47,8 +47,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ approvals: approvals || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load approvals' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     if (updateError) throw updateError;
 
     return NextResponse.json({ approval: updated });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to submit approval' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

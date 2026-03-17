@@ -256,7 +256,7 @@ export async function POST(
       });
       return NextResponse.json(result);
     } catch (err) {
-      return NextResponse.json({ error: err instanceof Error ? err.message : 'Auto-fill failed' }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }
 

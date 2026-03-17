@@ -14,8 +14,8 @@ export async function POST(req: NextRequest) {
     }).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, bill: data });
-  } catch (err: any) {
-    console.error('[bills/create] error:', err?.message);
-    return NextResponse.json({ error: err.message || 'Failed to create bill' }, { status: 500 });
+  } catch (err) {
+    console.error('[bills/create]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     await db.from('pay_applications').update({ g702_pdf_url: g702Url, g703_pdf_url: g703Url }).eq('id', body.payAppId);
 
     return NextResponse.json({ g702Url, g703Url, success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

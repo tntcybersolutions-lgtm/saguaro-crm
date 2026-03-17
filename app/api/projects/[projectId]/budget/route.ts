@@ -50,9 +50,9 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     const { data, error } = await supabase.from('budget_lines').insert(record).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, line: data });
-  } catch (err: any) {
-    console.error('[budget/POST] error:', err?.message);
-    return NextResponse.json({ error: err?.message || 'Insert failed' }, { status: 500 });
+  } catch (err) {
+    console.error('[budget/POST]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

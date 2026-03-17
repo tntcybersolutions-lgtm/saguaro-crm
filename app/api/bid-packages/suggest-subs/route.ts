@@ -105,8 +105,8 @@ export async function GET(req: NextRequest) {
     }).sort((a, b) => b.recScore - a.recScore).slice(0, 20);
 
     return NextResponse.json({ subs: results });
-  } catch (err: any) {
-    return NextResponse.json({ subs: [], error: err.message });
+  } catch {
+    return NextResponse.json({ subs: [], error: "Internal server error" });
   }
 }
 

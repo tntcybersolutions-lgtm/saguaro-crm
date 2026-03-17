@@ -15,8 +15,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     ]);
     if (!pkg) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ bidPackage: pkg, items: items || [], invites: invites || [], submissions: submissions || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { data, error } = await db.from('bid_packages').update(body).eq('id', id).eq('tenant_id', user.tenantId).select().single();
     if (error) throw error;
     return NextResponse.json({ bidPackage: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
