@@ -67,10 +67,7 @@ function BidsPageInner() {
       const params = new URLSearchParams();
       if (outcome && outcome !== 'all') params.set('outcome', outcome);
       params.set('limit', '50');
-      const token = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('sb-access-token='))?.split('=')[1]||'';
-      const r = await fetch('/api/bids/history?' + params.toString(), {
-        headers: token ? { 'Authorization': 'Bearer ' + token } : {},
-      });
+      const r = await fetch('/api/bids/history?' + params.toString());
       const d = await r.json();
       setHistoryBids(d.bids || []);
       setHistoryStats(d.stats || null);

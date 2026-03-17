@@ -43,11 +43,10 @@ export default function NewProjectPage() {
     setSaving(true);
     setError('');
     try {
-      const token = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('sb-access-token='))?.split('=')[1]||'';
       const contractAmount = Number(budget.replace(/[^0-9.]/g,''))||0;
       const r = await fetch('/api/projects/create', {
         method:'POST',
-        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           name:name.trim(), address:address.trim(), projectType:type, contractAmount,
           startDate:startDate||null, substantialCompletionDate:subDate||null,

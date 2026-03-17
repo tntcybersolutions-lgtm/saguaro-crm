@@ -38,41 +38,60 @@ export function createBrowserClient(): SupabaseClient {
   return createClient(URL, ANON);
 }
 
+/** Returns true if a string looks like a JWT (3 base64url segments separated by dots) */
+function isJWT(s: string): boolean {
+  return typeof s === 'string' && /^[\w-]+\.[\w-]+\.[\w-]+$/.test(s.trim());
+}
+
 /** Extract authenticated user from cookie-based session.
- *  Returns { id (auth uid), tenantId, email } — always use tenantId for DB queries. */
+ *  Returns { id (auth uid), tenantId, email } — always use tenantId for DB queries.
+ *  Token priority: Authorization header → sb-access-token cookie → Supabase default cookie.
+ *  If access token is expired, falls back to refresh token automatically. */
 export async function getUser(req?: NextRequest): Promise<{ id: string; tenantId: string; email: string } | null> {
   try {
-    // Extract JWT from cookie or Authorization header
     let token: string | undefined;
+    let refreshToken: string | undefined;
+
     if (req) {
-      const rawAuth = req.headers.get('authorization')?.replace('Bearer ', '');
-      // Only use the Authorization header if it looks like a real JWT (has dots)
-      const headerToken = rawAuth && rawAuth.includes('.') && rawAuth !== 'undefined' ? rawAuth : undefined;
+      const rawAuth = req.headers.get('authorization')?.replace('Bearer ', '').trim();
       token =
-        headerToken ||
-        req.cookies.get('sb-jddfvugsaosvgllbkzch-auth-token')?.value ||
+        (rawAuth && isJWT(rawAuth) ? rawAuth : undefined) ||
         req.cookies.get('sb-access-token')?.value ||
+        req.cookies.get('sb-jddfvugsaosvgllbkzch-auth-token')?.value ||
         undefined;
+
+      refreshToken = req.cookies.get('sb-refresh-token')?.value;
     }
-    if (!token) return null;
 
-    // Validate JWT directly — works without a persisted session
-    const supabase = createClient(URL, ANON, {
-      auth: { persistSession: false },
-    });
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) return null;
+    if (!token && !refreshToken) return null;
 
-    // Look up tenant_id from user_profiles (may differ from auth uid)
-    const admin = createServerClient();
-    const { data: profile } = await admin
-      .from('user_profiles')
-      .select('tenant_id')
-      .eq('user_id', user.id)
-      .single();
+    const supabase = createClient(URL, ANON, { auth: { persistSession: false } });
 
-    const tenantId = (profile as any)?.tenant_id || user.id;
-    return { id: user.id, tenantId, email: user.email || '' };
+    // Try access token first
+    if (token) {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (!error && user) {
+        const admin = createServerClient();
+        const { data: profile } = await admin
+          .from('user_profiles').select('tenant_id').eq('user_id', user.id).single();
+        const tenantId = (profile as any)?.tenant_id || user.id;
+        return { id: user.id, tenantId, email: user.email || '' };
+      }
+    }
+
+    // Access token missing or expired — try refresh token fallback
+    if (refreshToken) {
+      const { data, error: refreshError } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+      if (!refreshError && data?.user) {
+        const admin = createServerClient();
+        const { data: profile } = await admin
+          .from('user_profiles').select('tenant_id').eq('user_id', data.user.id).single();
+        const tenantId = (profile as any)?.tenant_id || data.user.id;
+        return { id: data.user.id, tenantId, email: data.user.email || '' };
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }
