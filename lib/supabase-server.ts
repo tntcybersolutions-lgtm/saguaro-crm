@@ -1,13 +1,13 @@
 /**
  * lib/supabase-server.ts
- * Server-side Supabase helpers — service role + user extraction
- * NEVER import this in client components
+ * Server-side Supabase helpers — service role + user extraction.
+ * NEVER import this in client components.
  */
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-const _URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const _ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const _URL     = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const _ANON    = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const _SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!_URL || !_ANON || !_SERVICE) {
@@ -18,8 +18,8 @@ if (!_URL || !_ANON || !_SERVICE) {
   );
 }
 
-const URL: string = _URL;
-const ANON: string = _ANON;
+const URL: string     = _URL;
+const ANON: string    = _ANON;
 const SERVICE: string = _SERVICE;
 
 let _serviceClient: SupabaseClient | null = null;
@@ -33,61 +33,82 @@ export function createServerClient(): SupabaseClient {
   return _serviceClient;
 }
 
-/** Browser-safe anon client (for use in server components with user session) */
+/** Browser-safe anon client */
 export function createBrowserClient(): SupabaseClient {
   return createClient(URL, ANON);
 }
 
-/** Returns true if a string looks like a JWT (3 base64url segments separated by dots) */
+/** Returns true if string looks like a JWT (3 base64url segments). */
 function isJWT(s: string): boolean {
   return typeof s === 'string' && /^[\w-]+\.[\w-]+\.[\w-]+$/.test(s.trim());
 }
 
-/** Extract authenticated user from cookie-based session.
- *  Returns { id (auth uid), tenantId, email } — always use tenantId for DB queries.
- *  Token priority: Authorization header → sb-access-token cookie → Supabase default cookie.
- *  If access token is expired, falls back to refresh token automatically. */
-export async function getUser(req?: NextRequest): Promise<{ id: string; tenantId: string; email: string } | null> {
+/** Look up tenant_id for a given auth user id. Falls back to user.id. */
+async function getTenant(userId: string): Promise<string> {
+  const admin = createServerClient();
+  const { data } = await admin
+    .from('user_profiles')
+    .select('tenant_id')
+    .eq('user_id', userId)
+    .single();
+  return (data as any)?.tenant_id || userId;
+}
+
+/**
+ * Extract authenticated user from a request.
+ * Token priority: Authorization header → sb-access-token cookie → Supabase default cookie.
+ * If the access token is expired, falls back to sb-refresh-token automatically.
+ *
+ * Pass `res` to have fresh cookies written back when a refresh occurs.
+ * Returns { id, tenantId, email } or null.
+ */
+export async function getUser(
+  req?: NextRequest,
+  res?: NextResponse,
+): Promise<{ id: string; tenantId: string; email: string } | null> {
   try {
-    let token: string | undefined;
+    let accessToken: string | undefined;
     let refreshToken: string | undefined;
 
     if (req) {
       const rawAuth = req.headers.get('authorization')?.replace('Bearer ', '').trim();
-      token =
+      accessToken =
         (rawAuth && isJWT(rawAuth) ? rawAuth : undefined) ||
         req.cookies.get('sb-access-token')?.value ||
         req.cookies.get('sb-jddfvugsaosvgllbkzch-auth-token')?.value ||
         undefined;
-
       refreshToken = req.cookies.get('sb-refresh-token')?.value;
     }
 
-    if (!token && !refreshToken) return null;
+    if (!accessToken && !refreshToken) return null;
 
     const supabase = createClient(URL, ANON, { auth: { persistSession: false } });
 
-    // Try access token first
-    if (token) {
-      const { data: { user }, error } = await supabase.auth.getUser(token);
+    // Try access token
+    if (accessToken) {
+      const { data: { user }, error } = await supabase.auth.getUser(accessToken);
       if (!error && user) {
-        const admin = createServerClient();
-        const { data: profile } = await admin
-          .from('user_profiles').select('tenant_id').eq('user_id', user.id).single();
-        const tenantId = (profile as any)?.tenant_id || user.id;
-        return { id: user.id, tenantId, email: user.email || '' };
+        return { id: user.id, tenantId: await getTenant(user.id), email: user.email || '' };
       }
     }
 
-    // Access token missing or expired — try refresh token fallback
+    // Access token invalid or expired — try refresh
     if (refreshToken) {
-      const { data, error: refreshError } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
-      if (!refreshError && data?.user) {
-        const admin = createServerClient();
-        const { data: profile } = await admin
-          .from('user_profiles').select('tenant_id').eq('user_id', data.user.id).single();
-        const tenantId = (profile as any)?.tenant_id || data.user.id;
-        return { id: data.user.id, tenantId, email: data.user.email || '' };
+      const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+      if (!error && data?.session && data.user) {
+        // Write refreshed cookies back to the response if provided
+        if (res) {
+          const cookieOpts = { path: '/', sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production', httpOnly: true };
+          res.cookies.set('sb-access-token', data.session.access_token, {
+            ...cookieOpts,
+            expires: data.session.expires_at ? new Date(data.session.expires_at * 1000) : undefined,
+          });
+          res.cookies.set('sb-refresh-token', data.session.refresh_token, {
+            ...cookieOpts,
+            maxAge: 60 * 60 * 24 * 365,
+          });
+        }
+        return { id: data.user.id, tenantId: await getTenant(data.user.id), email: data.user.email || '' };
       }
     }
 
@@ -97,11 +118,11 @@ export async function getUser(req?: NextRequest): Promise<{ id: string; tenantId
   }
 }
 
-/** Get tenant_id for the current user */
+/** Get tenant_id for the current user. */
 export async function getTenantId(req?: NextRequest): Promise<string | null> {
   const user = await getUser(req);
   return user?.tenantId ?? null;
 }
 
-/** Supabase admin — alias for createServerClient */
+/** Supabase admin client — alias for createServerClient. */
 export const supabaseAdmin = createServerClient();
