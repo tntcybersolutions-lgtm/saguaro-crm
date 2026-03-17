@@ -3,33 +3,33 @@ import type { CapacitorConfig } from '@capacitor/cli';
 /**
  * Saguaro Field — Capacitor Native App Config
  *
+ * The app runs in "server mode" — the native WebView loads the hosted
+ * Next.js app. No static export needed. All API routes work normally.
+ *
  * Build modes:
- *   Dev:   CAPACITOR_SERVER_URL=http://localhost:3000  (live reload from dev server)
- *   Prod:  CAPACITOR_SERVER_URL=https://your-app.vercel.app  (point at deployed URL)
+ *   Dev:   CAPACITOR_SERVER_URL=http://localhost:3000  (live reload)
+ *   Prod:  uses PRODUCTION_URL constant below (update after each deploy)
  *
  * After changing this file run: npx cap sync
  */
 
-const serverUrl = process.env.CAPACITOR_SERVER_URL;
+// Override with env var for dev / CI; falls back to production URL
+const PRODUCTION_URL = 'https://saguaro-crm-rho.vercel.app';
+const serverUrl = process.env.CAPACITOR_SERVER_URL ?? PRODUCTION_URL;
 
 const config: CapacitorConfig = {
   appId: 'com.saguaro.field',
   appName: 'Saguaro Field',
 
-  // webDir is required by CLI; in server mode the live URL is used instead
+  // webDir holds initial web assets; in server mode the live URL takes over
   webDir: 'out',
 
-  // Server mode — loads hosted Next.js app inside the native WebView.
-  // Remove the `server` block entirely to bundle a static build.
-  ...(serverUrl
-    ? {
-        server: {
-          url: serverUrl,
-          cleartext: serverUrl.startsWith('http://'),
-          androidScheme: 'https',
-        },
-      }
-    : {}),
+  // Server mode — loads hosted Next.js app inside the native WebView
+  server: {
+    url: serverUrl,
+    cleartext: serverUrl.startsWith('http://'),
+    androidScheme: 'https',
+  },
 
   plugins: {
     // ── Splash Screen ──────────────────────────────────────────────

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Saguaro Field</string>
+    <string name="title_activity_main">Saguaro Field</string>
+    <string name="package_name">com.saguaro.field</string>
+    <string name="custom_url_scheme">com.saguaro.field</string>
+</resources>
