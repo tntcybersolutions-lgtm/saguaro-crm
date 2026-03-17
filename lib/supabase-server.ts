@@ -45,8 +45,11 @@ export async function getUser(req?: NextRequest): Promise<{ id: string; tenantId
     // Extract JWT from cookie or Authorization header
     let token: string | undefined;
     if (req) {
+      const rawAuth = req.headers.get('authorization')?.replace('Bearer ', '');
+      // Only use the Authorization header if it looks like a real JWT (has dots)
+      const headerToken = rawAuth && rawAuth.includes('.') && rawAuth !== 'undefined' ? rawAuth : undefined;
       token =
-        req.headers.get('authorization')?.replace('Bearer ', '') ||
+        headerToken ||
         req.cookies.get('sb-jddfvugsaosvgllbkzch-auth-token')?.value ||
         req.cookies.get('sb-access-token')?.value ||
         undefined;
