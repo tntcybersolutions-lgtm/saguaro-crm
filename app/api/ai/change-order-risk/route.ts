@@ -60,6 +60,6 @@ Return only the raw JSON object, no markdown or code fences.`;
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[ai/change-order-risk] error:', msg);
-    return NextResponse.json({ risk_level: 'unknown', error: msg });
+    return NextResponse.json({ risk_level: 'unknown', error: 'Internal server error' });
   }
 }

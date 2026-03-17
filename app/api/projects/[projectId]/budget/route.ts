@@ -81,8 +81,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
       .eq('project_id', params.projectId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error('[budget/PATCH] error:', err?.message);
-    return NextResponse.json({ error: err?.message || 'Update failed' }, { status: 500 });
+  } catch (err) {
+    console.error('[budget/PATCH]', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

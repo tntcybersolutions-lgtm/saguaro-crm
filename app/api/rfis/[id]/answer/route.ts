@@ -40,6 +40,6 @@ export async function POST(
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[rfis/answer] error:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

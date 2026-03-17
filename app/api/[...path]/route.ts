@@ -181,7 +181,7 @@ export async function GET(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] dashboard/stats error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -222,7 +222,7 @@ export async function GET(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] dashboard/today error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -287,7 +287,7 @@ export async function GET(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] projects error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -315,7 +315,7 @@ export async function GET(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] rfis error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -335,7 +335,7 @@ export async function GET(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] change-orders error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -362,7 +362,7 @@ export async function GET(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] autopilot/alerts error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -402,7 +402,7 @@ export async function GET(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] bid-packages error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -417,7 +417,7 @@ export async function GET(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] bid-packages/:id error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -459,7 +459,7 @@ export async function POST(
     if (authErr || !authData.user) {
       const msg = authErr?.message ?? 'Signup failed';
       if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) return NextResponse.json({ error: 'An account with this email already exists. Please log in.' }, { status: 409, headers: corsHeaders() });
-      return NextResponse.json({ error: msg }, { status: 400, headers: corsHeaders() });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 400, headers: corsHeaders() });
     }
     const tenantId = authData.user.id;
     await supabaseAdmin.from('tenants').insert({ id: tenantId, company_name: company, phone: phone || null, role, state: state || null, company_size: size || null, plan: 'trial', trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), created_at: new Date().toISOString() }).then(() => null);
@@ -482,7 +482,7 @@ export async function POST(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] bid-packages/create error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -499,7 +499,7 @@ export async function POST(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] suggest-subs error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -586,7 +586,7 @@ export async function POST(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] change-orders/create error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -601,7 +601,7 @@ export async function POST(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] autopilot/run error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
@@ -710,7 +710,7 @@ export async function POST(
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('[api/catch-all] rfis/create error:', msg);
-      return NextResponse.json({ error: msg }, { status: 500 });
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   }
 
