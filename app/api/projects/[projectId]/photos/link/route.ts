@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     if (error) throw error;
     return NextResponse.json({ link: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[photos/link POST]', msg);
     return NextResponse.json({ error: `Failed to link photo: ${msg}` }, { status: 500 });
   }
@@ -64,7 +64,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (error) throw error;
     return NextResponse.json({ links: data || [] });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[photos/link GET]', msg);
     return NextResponse.json({ links: [] });
   }
@@ -105,7 +105,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[photos/link DELETE]', msg);
     return NextResponse.json({ error: `Failed to unlink: ${msg}` }, { status: 500 });
   }

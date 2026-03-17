@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, rfi: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const msg = 'Internal server error';
     console.error('[rfis/create] error:', msg);
     return NextResponse.json(
       { error: `[rfis/create] Database error: ${msg}` },

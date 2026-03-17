@@ -28,7 +28,7 @@ export async function PATCH(
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const msg = 'Internal server error';
     console.error('[punch-list/complete] error:', msg);
     return NextResponse.json(
       { error: `[punch-list/complete] Database error: ${msg}` },

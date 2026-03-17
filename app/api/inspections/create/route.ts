@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, inspection: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const msg = 'Internal server error';
     console.error('[inspections/create] error:', msg);
     return NextResponse.json(
       { error: `[inspections/create] Database error: ${msg}` },

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const { data: dbData } = await supabase.from('drawings').insert(drawing).select().single();
     return NextResponse.json({ success: true, drawing: dbData || drawing, url });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[drawings/upload] error:', msg);
     return NextResponse.json({ error: `Failed to upload drawing: ${msg}` }, { status: 500 });
   }

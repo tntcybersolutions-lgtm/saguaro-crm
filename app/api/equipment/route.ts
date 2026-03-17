@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ entries: data || [] });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[equipment] error:', msg);
     return NextResponse.json(
       { error: `[equipment] Database error: ${msg}` },

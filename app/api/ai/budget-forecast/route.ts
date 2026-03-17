@@ -83,7 +83,7 @@ Return only the raw JSON, no markdown.`;
 
     return NextResponse.json({ ...parsed, totalBudget, totalActual, totalCommitted });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[ai/budget-forecast] error:', msg);
     // Return a rule-based fallback if AI fails
     const runRate = totalBudget > 0 ? totalActual / totalBudget : 0;

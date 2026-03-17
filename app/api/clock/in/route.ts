@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       clockInTime: new Date().toISOString(),
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const msg = 'Internal server error';
     console.error('[clock/in] error:', msg);
     return NextResponse.json(
       { error: `[clock/in] Database error: ${msg}` },

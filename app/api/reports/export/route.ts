@@ -537,7 +537,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: `Unknown format: ${format}` }, { status: 400 });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[reports/export]', msg);
     return NextResponse.json({ error: 'Export failed', details: msg }, { status: 500 });
   }

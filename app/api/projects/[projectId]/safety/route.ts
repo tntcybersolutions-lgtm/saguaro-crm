@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     }
     return NextResponse.json({ incidents: incidents.data || [], inspections: inspections.data || [] });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[projects/safety] error:', msg);
     return NextResponse.json({ error: `Failed to fetch safety data: ${msg}` }, { status: 500 });
   }

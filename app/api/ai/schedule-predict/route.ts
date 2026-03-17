@@ -57,7 +57,7 @@ Return only the raw JSON object, no markdown or code fences.`;
 
     return NextResponse.json(parsed);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[ai/schedule-predict] error:', msg);
     return NextResponse.json({ predicted_delay_days: 0, error: 'Internal server error' });
   }

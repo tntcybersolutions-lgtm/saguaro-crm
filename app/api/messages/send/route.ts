@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (error2) throw error2;
     return NextResponse.json({ success: true, message: data2 });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[messages/send] error:', msg);
     return NextResponse.json(
       { error: `[messages/send] Database error: ${msg}` },

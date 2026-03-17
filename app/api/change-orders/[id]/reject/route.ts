@@ -40,7 +40,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ success: true, changeOrder: co });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[change-orders/reject]', msg);
     return NextResponse.json({ error: `Failed to reject change order: ${msg}` }, { status: 500 });
   }

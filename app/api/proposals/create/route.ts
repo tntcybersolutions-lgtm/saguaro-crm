@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, proposal: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[proposals/create] error:', msg);
     return NextResponse.json({ error: `Failed to create proposal: ${msg}` }, { status: 500 });
   }

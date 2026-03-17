@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const msg = 'Internal server error';
     console.error('[photos/upload] error:', msg);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

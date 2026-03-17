@@ -39,7 +39,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 
     return NextResponse.json({ actions: data || [] });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[safety/corrective-actions] GET error:', msg);
     return NextResponse.json({ actions: [] });
   }
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
 
     return NextResponse.json({ action: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[safety/corrective-actions] POST error:', msg);
     return NextResponse.json({ error: `Failed to create corrective action: ${msg}` }, { status: 500 });
   }

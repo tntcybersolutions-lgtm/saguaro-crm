@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const msg = 'Internal server error';
     // Fallback: calculate hours from the body we already parsed above
     const clockInTime = body.clockInTime ? new Date(body.clockInTime as string) : null;
     const breakMs     = ((body.breakMinutes as number) || 0) * 60_000;

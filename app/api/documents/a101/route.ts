@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ pdfUrl, success: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Document generation failed';
+    const message = 'Document generation failed';
     console.error('[documents/a101]', err);
     return NextResponse.json({ error: message }, { status: 500 });
   }

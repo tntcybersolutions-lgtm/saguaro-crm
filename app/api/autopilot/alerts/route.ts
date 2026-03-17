@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ alerts: data || [], source: 'live' });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[autopilot/alerts] error:', msg);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

@@ -38,7 +38,7 @@ export async function POST(
 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[rfis/answer] error:', msg);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

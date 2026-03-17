@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       alertsCreated: newAlerts.length,
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[autopilot/run] error:', msg);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

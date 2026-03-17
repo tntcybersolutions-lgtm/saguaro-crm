@@ -95,7 +95,7 @@ Return only raw JSON.`;
 
     return NextResponse.json(parsed);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     // Rule-based fallback
     const score = (hasGL ? 30 : 0) + (hasWC ? 30 : 0) + (w9Status === 'submitted' ? 20 : 0) + ((sub.license_number as string) ? 20 : 0);
     const flags: string[] = [];

@@ -107,7 +107,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 
     return NextResponse.json({ photos });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[projects/photos GET]', msg);
     return NextResponse.json({ error: `Failed to fetch photos: ${msg}` }, { status: 500 });
   }
@@ -219,7 +219,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       },
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[projects/photos POST]', msg);
     return NextResponse.json({ error: `Failed to upload photo: ${msg}` }, { status: 500 });
   }

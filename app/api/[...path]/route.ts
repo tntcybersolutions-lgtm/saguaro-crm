@@ -179,7 +179,7 @@ export async function GET(
       const monthlyRevenue = (revenueRows ?? []).reduce((sum: number, r: { current_payment_due: number }) => sum + (r.current_payment_due ?? 0), 0);
       return NextResponse.json({ activeProjects: activeProjects ?? 0, openBids: openBids ?? 0, pendingPayApps: pendingPayApps ?? 0, totalContractValue, monthlyRevenue });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] dashboard/stats error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -220,7 +220,7 @@ export async function GET(
       items.sort((a, b) => (URGENCY_ORDER[a.urgency] ?? 2) - (URGENCY_ORDER[b.urgency] ?? 2));
       return NextResponse.json({ items });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] dashboard/today error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -285,7 +285,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ projects: data ?? [] });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] projects error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -313,7 +313,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ rfis: data || [] });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] rfis error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -333,7 +333,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ changeOrders: data || [] });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] change-orders error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -360,7 +360,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ alerts: data ?? [] });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] autopilot/alerts error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -400,7 +400,7 @@ export async function GET(
       if (error) throw error;
       return NextResponse.json({ packages: data ?? [] });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] bid-packages error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -415,7 +415,7 @@ export async function GET(
       const invitedSubs: InvitedSub[] = (data.bid_package_invites || []).map((inv: any) => ({ id: inv.id, company_name: inv.subs?.company_name || 'Unknown', contact_name: inv.subs?.contact_name || '', email: inv.subs?.email || '', status: inv.status, bid_amount: inv.bid_amount, invited_at: inv.invited_at, responded_at: inv.responded_at }));
       return NextResponse.json({ bidPackage: { ...data, invited_subs: invitedSubs, sov_items: data.sov_items || [] } });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] bid-packages/:id error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -480,7 +480,7 @@ export async function POST(
       if (error) throw error;
       return NextResponse.json({ success: true, bidPackage: data });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] bid-packages/create error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -497,7 +497,7 @@ export async function POST(
       const subs = (data || []).map((row: { id: string; name: string; trade: string; email: string; win_rate: number; last_project: string; last_project_date: string; rating: number }) => ({ id: row.id, name: row.name, trade: row.trade, email: row.email, winRate: row.win_rate, lastProject: row.last_project, lastProjectDate: row.last_project_date, rating: row.rating }));
       return NextResponse.json({ subs });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] suggest-subs error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -584,7 +584,7 @@ export async function POST(
       if (error) throw error;
       return NextResponse.json({ success: true, changeOrder: data });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] change-orders/create error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -599,7 +599,7 @@ export async function POST(
       const { data: projects } = await supabaseAdmin.from('projects').select('id, name').eq('tenant_id', tenantId).eq('status', 'active');
       return NextResponse.json({ success: true, scanned: projects?.length || 0, message: `Autopilot scan complete. Analyzed ${projects?.length || 0} active projects.` });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] autopilot/run error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
@@ -708,7 +708,7 @@ export async function POST(
       if (error) throw error;
       return NextResponse.json({ success: true, rfi: data });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = 'Internal server error';
       console.error('[api/catch-all] rfis/create error:', msg);
       return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }

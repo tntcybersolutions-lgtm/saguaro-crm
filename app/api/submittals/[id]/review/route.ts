@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return NextResponse.json({ status: newStatus, submittal });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[submittals/review] error:', msg);
     return NextResponse.json({ error: `Failed to submit review: ${msg}` }, { status: 500 });
   }

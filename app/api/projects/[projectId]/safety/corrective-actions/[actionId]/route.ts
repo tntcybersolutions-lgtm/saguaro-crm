@@ -60,7 +60,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
 
     return NextResponse.json({ action: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[safety/corrective-actions/PATCH] error:', msg);
     return NextResponse.json({ error: `Failed to update corrective action: ${msg}` }, { status: 500 });
   }

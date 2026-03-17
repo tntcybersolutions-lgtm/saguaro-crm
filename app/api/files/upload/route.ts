@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       file: { id: Date.now().toString(), name: filename, url, created_at: new Date().toISOString() },
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[files/upload] error:', msg);
     return NextResponse.json({ error: `Failed to upload file: ${msg}` }, { status: 500 });
   }

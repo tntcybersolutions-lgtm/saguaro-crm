@@ -77,7 +77,7 @@ Respond ONLY with valid JSON in this exact format:
     return NextResponse.json({ success: true, draft });
 
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Unknown error';
+    const msg = 'Internal server error';
     console.error('[ai-draft]', msg);
     // Return a placeholder so the field app doesn't break
     return NextResponse.json({

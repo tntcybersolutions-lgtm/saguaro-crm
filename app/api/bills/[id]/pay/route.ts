@@ -17,7 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[bills/pay] error:', msg);
     return NextResponse.json({ error: `Failed to mark bill as paid: ${msg}` }, { status: 500 });
   }

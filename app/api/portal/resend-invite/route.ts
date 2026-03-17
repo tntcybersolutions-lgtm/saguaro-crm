@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, sentTo: sub.email });
     }
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Failed to resend invite';
+    const msg = 'Internal server error';
     console.error('[portal/resend-invite]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

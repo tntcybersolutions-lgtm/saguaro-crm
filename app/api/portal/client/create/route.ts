@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
       emailSent: !!process.env.RESEND_API_KEY,
     });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Failed to create portal access';
+    const msg = 'Internal server error';
     console.error('[portal/client/create]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

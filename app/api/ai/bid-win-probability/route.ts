@@ -68,7 +68,7 @@ Return only the raw JSON, no markdown.`;
 
     return NextResponse.json({ ...parsed, historicalWinRate, historicalBidCount: bids.length });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[ai/bid-win-probability] error:', msg);
     return NextResponse.json({
       win_probability: historicalWinRate ?? 50,

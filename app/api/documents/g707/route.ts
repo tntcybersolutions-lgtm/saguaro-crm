@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ pdfUrl: result.pdfUrl, success: true });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Document generation failed';
+    const message = 'Document generation failed';
     console.error('[documents/g707]', err);
     return NextResponse.json({ error: message }, { status: 500 });
   }

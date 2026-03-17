@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (error) throw error;
     return NextResponse.json({ selections: data || [] });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[projects/selections] error:', msg);
     return NextResponse.json({ error: `Failed to fetch selections: ${msg}` }, { status: 500 });
   }

@@ -36,7 +36,7 @@ export async function GET(
     if (error2) throw error2;
     return NextResponse.json({ messages: data2 || [] });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[projects/messages GET] error:', msg);
     return NextResponse.json(
       { error: `[projects/messages GET] Database error: ${msg}` },
@@ -94,7 +94,7 @@ export async function POST(
     if (error2) throw error2;
     return NextResponse.json({ success: true, message: data2 });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = 'Internal server error';
     console.error('[projects/messages POST] error:', msg);
     return NextResponse.json(
       { error: `[projects/messages POST] Database error: ${msg}` },
