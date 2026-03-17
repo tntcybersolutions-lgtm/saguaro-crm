@@ -101,7 +101,7 @@ export async function GET(req: NextRequest) {
       changeOrders: changeOrders || [],
       weather,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load dashboard' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

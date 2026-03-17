@@ -54,8 +54,8 @@ export async function GET(req: NextRequest) {
     };
 
     return NextResponse.json({ items: all, summary });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load punch items' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     if (updateError) throw updateError;
 
     return NextResponse.json({ item: updated });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to sign off punch item' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

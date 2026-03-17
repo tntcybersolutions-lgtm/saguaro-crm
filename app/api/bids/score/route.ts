@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         suggestedMargin: Math.round(suggestedMargin * 10) / 10,
       },
     });
-  } catch (err: any) {
+  } catch {
     const fallback = {
       score: 55,
       reasoning: 'Unable to reach AI scoring engine. This is a neutral score — evaluate the bid on its own merits.',

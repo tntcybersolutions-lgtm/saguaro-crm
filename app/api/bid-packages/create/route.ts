@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     onBidPackageCreated((pkg as any).id).catch(console.error);
     return NextResponse.json({ bidPackage: pkg, success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -17,7 +17,6 @@ export function notFound(message = 'Not found') {
 }
 
 export function serverError(err: unknown) {
-  const message = err instanceof Error ? err.message : 'Internal server error';
   console.error('[api]', err);
-  return NextResponse.json({ error: message }, { status: 500 });
+  return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
 }

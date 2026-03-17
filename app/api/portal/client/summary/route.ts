@@ -37,8 +37,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ summaries: summaries || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load summaries' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     if (saveError) throw saveError;
 
     return NextResponse.json({ summary: saved });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to generate summary' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

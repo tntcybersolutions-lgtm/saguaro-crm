@@ -44,8 +44,8 @@ export async function GET(
 
     // GET /api/portals/w9/:token — handled by specific route file
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -76,7 +76,7 @@ export async function POST(
 
     // POST /api/portals/w9/:token — handled by specific route file
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -53,8 +53,8 @@ export async function GET(req: NextRequest) {
       messages: messages || [],
       unread_count: unreadCount || 0,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load messages' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -93,8 +93,8 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ message });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to send message' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -135,7 +135,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to mark messages as read' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

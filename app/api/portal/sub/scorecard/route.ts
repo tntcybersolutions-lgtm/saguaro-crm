@@ -96,9 +96,9 @@ export async function GET(req: NextRequest) {
       preferred_status: subRecord?.preferred_status || false,
       overall_rating: subRecord?.overall_rating || overallAverage,
     });
-  } catch (err: any) {
+  } catch (err) {
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -195,9 +195,9 @@ export async function POST(req: NextRequest) {
       { scorecard, message: 'Rating submitted successfully' },
       { status: 201 }
     );
-  } catch (err: any) {
+  } catch (err) {
     return NextResponse.json(
-      { error: err.message || 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

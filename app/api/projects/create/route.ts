@@ -56,13 +56,8 @@ export async function POST(req: NextRequest) {
     onProjectCreated(projectId).catch(console.error);
 
     return NextResponse.json({ projectId, project, success: true });
-  } catch (err: any) {
+  } catch (err) {
     console.error('[projects/create]', err);
-    const msg = err.message || String(err);
-    // PostgREST schema cache miss — surface a clear message
-    const userMsg = msg.includes('schema cache') || msg.includes('column') || msg.includes('schema')
-      ? `Database schema error — try again in a moment. If this persists, contact support. (${msg})`
-      : msg;
-    return NextResponse.json({ error: userMsg }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

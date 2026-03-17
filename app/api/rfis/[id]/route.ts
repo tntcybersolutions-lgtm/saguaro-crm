@@ -10,8 +10,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const { data, error } = await db.from('rfis').select('*, projects(name)').eq('id', id).single();
     if (error) throw error;
     return NextResponse.json({ rfi: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -25,7 +25,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { data, error } = await db.from('rfis').update(body).eq('id', id).select().single();
     if (error) throw error;
     return NextResponse.json({ rfi: data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

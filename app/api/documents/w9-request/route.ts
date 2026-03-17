@@ -16,8 +16,8 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
     return NextResponse.json({ w9Requests: data || [] });
-  } catch (err: any) {
-    return NextResponse.json({ w9Requests: [], error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ w9Requests: [], error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     await sendW9Request(body.vendorEmail, body.vendorName, (project as any)?.name || '', portalUrl);
 
     return NextResponse.json({ w9, portalUrl, success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

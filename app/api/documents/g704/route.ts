@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const pdfUrl = await saveDocument(body.projectId, 'g704', pdfBytes, body, user?.id || p?.tenant_id);
     return NextResponse.json({ pdfUrl, success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

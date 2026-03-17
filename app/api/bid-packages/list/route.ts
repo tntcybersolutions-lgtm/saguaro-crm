@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
     if (error) throw error;
     return NextResponse.json({ bidPackages: data || [] });
-  } catch (err: any) {
-    return NextResponse.json({ bidPackages: [], error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ bidPackages: [], error: "Internal server error" }, { status: 500 });
   }
 }

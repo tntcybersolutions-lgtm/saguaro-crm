@@ -143,3 +143,4 @@ bundle-report.html
 *.swp
 .Rproj.user
 .Rhistory
+.claude/settings.local.json

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     if (body.projectId) onSubAddedToProject(body.projectId, (sub as any).id).catch(console.error);
 
     return NextResponse.json({ sub, success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

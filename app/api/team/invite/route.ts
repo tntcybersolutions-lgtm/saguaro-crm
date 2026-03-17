@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true, invite: invite || { email, role, status: 'pending' } });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

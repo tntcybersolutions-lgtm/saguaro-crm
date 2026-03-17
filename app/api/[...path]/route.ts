@@ -255,7 +255,7 @@ export async function GET(
       const bids: BidRecord[] = data ?? [];
       return NextResponse.json({ bids, stats: computeBidStats(bids), source: 'live' });
     } catch (err: unknown) {
-      return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal server error' }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }
 
@@ -540,7 +540,7 @@ export async function POST(
       }
       return NextResponse.json({ bidPackageId, tradeRequired, projectType: projectType ?? null, projectValue: projectValue ?? null, suggestions, totalSuggested: suggestions.length, invitesSent: sendInvites ? invitesSent : 0, source });
     } catch (err: unknown) {
-      return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal server error' }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }
 
@@ -568,7 +568,7 @@ export async function POST(
       const result: ScoreResponse = { score: Math.max(0, Math.min(100, Math.round(parsed.score ?? 50))), recommendation: ['bid', 'pass', 'negotiate'].includes(parsed.recommendation) ? parsed.recommendation : 'bid', reasoning: parsed.reasoning ?? '', suggestedMargin: parseFloat((parsed.suggestedMargin ?? ourMargin).toFixed(1)), riskFactors: Array.isArray(parsed.riskFactors) ? parsed.riskFactors : [], winProbability: Math.max(0, Math.min(100, Math.round(parsed.winProbability ?? 50))) };
       return NextResponse.json({ ...result, source: 'ai' });
     } catch (err: unknown) {
-      return NextResponse.json({ error: err instanceof Error ? err.message : 'Internal server error' }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
   }
 

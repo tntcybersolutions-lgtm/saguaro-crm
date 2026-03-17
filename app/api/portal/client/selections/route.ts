@@ -74,8 +74,8 @@ export async function GET(req: NextRequest) {
       categories: Object.keys(grouped),
       summary,
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to load selections' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -135,7 +135,7 @@ export async function POST(req: NextRequest) {
     if (updateError) throw updateError;
 
     return NextResponse.json({ selection: updated });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to submit selection' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
