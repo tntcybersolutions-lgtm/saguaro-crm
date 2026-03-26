@@ -33,15 +33,11 @@
       "@/lib/*": [
         "lib/*"
       ],
-      "@/hooks/*": [
-        "src/hooks/*"
-      ],
       "@/components/*": [
-        "src/components/*",
         "components/*"
       ],
       "@/app/*": [
-        "src/app/*"
+        "app/*"
       ]
     },
     "incremental": true,

@@ -172,9 +172,9 @@ export async function chatHandler(request: NextRequest) {
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net',
         'Access-Control-Allow-Methods': 'POST,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       },
     });
   }
@@ -251,7 +251,7 @@ export async function chatHandler(request: NextRequest) {
       'Cache-Control':               'no-cache, no-transform',
       'Connection':                  'keep-alive',
       'X-Accel-Buffering':           'no',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net',
     },
   });
 }

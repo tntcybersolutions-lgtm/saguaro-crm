@@ -27,6 +27,37 @@ function corsHeaders() {
   };
 }
 
+/** Extract authenticated user from request using token or cookies. */
+async function getUserFromRequest(req: NextRequest): Promise<{ id: string; tenantId: string; email: string } | null> {
+  try {
+    const token = req.headers.get('authorization')?.replace('Bearer ', '').trim()
+      || req.cookies.get('sb-access-token')?.value;
+    if (!token) return null;
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } },
+    );
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) return null;
+
+    const { data: profile } = await supabaseAdmin
+      .from('user_profiles')
+      .select('tenant_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    return {
+      id: user.id,
+      tenantId: (profile as any)?.tenant_id || user.id,
+      email: user.email || '',
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ActionItem {
@@ -293,9 +324,9 @@ export async function GET(
 
   // GET /api/context/:projectId
   if (seg0 === 'context' && seg1) {
-    const tenantId = req.nextUrl.searchParams.get('tenantId');
-    if (!tenantId) return NextResponse.json({ error: 'tenantId required' }, { status: 400 });
-    const ctx = await getProjectContext(tenantId, seg1);
+    const user = await getUserFromRequest(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const ctx = await getProjectContext(user.tenantId, seg1);
     return NextResponse.json(ctx);
   }
 
@@ -341,9 +372,9 @@ export async function GET(
 
   // GET /api/compliance/:projectId
   if (seg0 === 'compliance' && seg1) {
-    const tenantId = req.nextUrl.searchParams.get('tenantId');
-    if (!tenantId) return NextResponse.json({ error: 'tenantId required' }, { status: 400 });
-    const { data } = await supabaseAdmin.from('project_compliance_dashboard').select('*').eq('project_id', seg1).eq('tenant_id', tenantId).maybeSingle();
+    const user = await getUserFromRequest(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { data } = await supabaseAdmin.from('project_compliance_dashboard').select('*').eq('project_id', seg1).eq('tenant_id', user.tenantId).maybeSingle();
     return NextResponse.json(data ?? {});
   }
 
@@ -550,7 +581,7 @@ export async function POST(
       const body: ScoreRequest = await req.json();
       const { projectName, projectType, estimatedValue, trade, location, competitorCount, ourMargin } = body;
       if (!projectName || typeof estimatedValue !== 'number' || typeof ourMargin !== 'number') return NextResponse.json({ error: 'projectName, estimatedValue, and ourMargin are required.' }, { status: 400 });
-      if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: 'Bid scoring requires project data' }, { status: 400 });
+      if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: 'AI bid scoring is not configured. Please set ANTHROPIC_API_KEY.' }, { status: 503 });
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const token = req.headers.get('authorization')?.replace('Bearer ', '');
       let tenantId: string | null = null;
@@ -659,15 +690,16 @@ export async function POST(
     if (!alertId) return NextResponse.json({ error: 'alertId required' }, { status: 400 });
     try {
       await supabaseAdmin.from('autopilot_alerts').update({ dismissed: true, dismissed_at: new Date().toISOString() }).eq('id', alertId);
-    } catch { /* non-fatal */ }
+    } catch (err) { console.error('[api/autopilot/dismiss] failed:', err); }
     return NextResponse.json({ success: true });
   }
 
   // POST /api/change-orders/:id/approve
   if (seg0 === 'change-orders' && seg1 && seg2 === 'approve') {
     try {
-      await supabaseAdmin.from('change_orders').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', seg1);
-    } catch { /* non-fatal */ }
+      const { error } = await supabaseAdmin.from('change_orders').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', seg1);
+      if (error) throw error;
+    } catch (err) { console.error('[api/change-orders/approve] failed:', err); return NextResponse.json({ error: 'Failed to approve change order' }, { status: 500 }); }
     return NextResponse.json({ success: true });
   }
 
@@ -692,7 +724,10 @@ export async function POST(
       'rfi-log': { title: 'RFI Log', description: 'All RFIs with status and response times' },
     };
     const meta = reportMeta[reportType] || { title: reportType, description: '' };
-    try { await supabaseAdmin.from('report_runs').insert({ tenant_id: tenantId || null, project_id: projectId || null, report_type: reportType, format, status: 'completed' }).single(); } catch { /* non-fatal */ }
+    try {
+      const { error: insertErr } = await supabaseAdmin.from('report_runs').insert({ tenant_id: tenantId || null, project_id: projectId || null, report_type: reportType, format, status: 'completed' });
+      if (insertErr) console.error('[api/reports/generate] report_runs insert failed:', insertErr);
+    } catch (err) { console.error('[api/reports/generate] unexpected error:', err); }
     return NextResponse.json({ success: true, reportType, format, title: meta.title, message: `${meta.title} generated successfully.`, downloadUrl: null });
   }
 

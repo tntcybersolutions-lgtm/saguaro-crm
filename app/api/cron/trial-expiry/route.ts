@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       const daysLeft = Math.ceil((new Date(tenant.trial_ends_at).getTime() - today.getTime()) / 86400000);
       if ([7, 3, 1, 0].includes(daysLeft)) {
         // Get user email
-        const { data: profile } = await db.from('user_profiles').select('email, full_name').eq('tenant_id', tenant.id).limit(1).single();
+        const { data: profile } = await db.from('user_profiles').select('email, full_name').eq('tenant_id', tenant.id).limit(1).maybeSingle();
         if (profile) {
           await sendTrialExpiring(
             (profile as any).email,

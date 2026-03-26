@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { chatSuggestionsHandler } from '../../../../ai-chat-route';
 import { AutoPopulator } from '../../../../auto-populator';
+import { aiLimiter } from '@/lib/rate-limit';
 
 const CONSTRUCTION_SYSTEM_PROMPT = `You are Saguaro Intelligence — a world-class construction industry AI expert embedded in the Saguaro Construction CRM. You have 30+ years of combined expertise across every aspect of the construction industry. You speak like a seasoned senior project executive, attorney, and financial advisor all in one.
 
@@ -236,6 +237,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
+  const limited = aiLimiter.check(req);
+  if (limited) return limited;
+
   const { path } = await params;
   const [segment] = path;
 
@@ -265,8 +269,8 @@ export async function POST(
 
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net',
     'Access-Control-Allow-Methods': 'POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   }});
 }

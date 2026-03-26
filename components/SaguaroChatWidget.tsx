@@ -64,16 +64,10 @@ const QUICK_ACTION_MAP: Record<string, { label: string; icon: string; descriptio
   'reports': { label: 'Reports', icon: '📊', description: 'View all reports', hrefTemplate: '/app/reports' },
 };
 
+import { renderSafeMarkdown } from '@/lib/sanitize-html';
+
 function renderMarkdown(text: string): string {
-  return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/^• (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br />');
+  return renderSafeMarkdown(text);
 }
 
 function extractQuickActions(

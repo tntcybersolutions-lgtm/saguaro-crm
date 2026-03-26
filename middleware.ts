@@ -81,10 +81,15 @@ async function refreshTokens(refreshToken: string): Promise<{
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Demo mode or Supabase not configured — let everything through
+  // Supabase not configured — let everything through (initial setup)
+  if (!isConfigured()) {
+    return NextResponse.next();
+  }
+
+  // Demo mode — only allowed in non-production environments
   if (
-    process.env.NEXT_PUBLIC_DEMO_MODE === 'true' ||
-    !isConfigured()
+    process.env.NEXT_PUBLIC_DEMO_MODE === 'true' &&
+    process.env.NODE_ENV !== 'production'
   ) {
     return NextResponse.next();
   }

@@ -4,6 +4,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { authLimiter } from '@/lib/rate-limit';
 
 function isConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -12,6 +13,9 @@ function isConfigured() {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = authLimiter.check(req);
+  if (limited) return limited;
+
   if (!isConfigured()) {
     return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 });
   }
@@ -63,24 +67,59 @@ export async function POST(req: NextRequest) {
         { auth: { persistSession: false } }
       );
       const slug = company.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 50);
-      const { data: tenant } = await adminClient
+      const { data: tenant, error: tenantError } = await adminClient
         .from('tenants')
         .insert({ name: company, slug: `${slug}-${Date.now()}`, plan: 'trial' })
         .select()
         .single();
-      if (tenant) {
-        await adminClient.from('user_profiles').insert({
-          tenant_id: tenant.id,
-          user_id: data.user.id,
-          email: email.toLowerCase().trim(),
-          full_name: body.name || '',
-          role: 'admin',
-          phone: phone || '',
-          title: role || 'General Contractor',
-        });
+
+      if (tenantError || !tenant) {
+        console.error('[signup] tenant creation failed:', tenantError);
+        // Clean up the auth user since tenant creation failed
+        await adminClient.auth.admin.deleteUser(data.user!.id);
+        return NextResponse.json(
+          { error: 'Account setup failed. Please try again.' },
+          { status: 500 }
+        );
+      }
+
+      const { error: profileError } = await adminClient.from('user_profiles').insert({
+        tenant_id: tenant.id,
+        user_id: data.user.id,
+        email: email.toLowerCase().trim(),
+        full_name: body.name || '',
+        role: 'admin',
+        phone: phone || '',
+        title: role || 'General Contractor',
+      });
+
+      if (profileError) {
+        console.error('[signup] user profile creation failed:', profileError);
+        // Clean up tenant and auth user
+        await adminClient.from('tenants').delete().eq('id', tenant.id);
+        await adminClient.auth.admin.deleteUser(data.user!.id);
+        return NextResponse.json(
+          { error: 'Account setup failed. Please try again.' },
+          { status: 500 }
+        );
       }
     } catch (err) {
       console.error('[signup] tenant creation error:', err);
+      // Clean up the auth user since setup failed
+      try {
+        const cleanupClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          { auth: { persistSession: false } }
+        );
+        await cleanupClient.auth.admin.deleteUser(data.user!.id);
+      } catch (cleanupErr) {
+        console.error('[signup] cleanup failed:', cleanupErr);
+      }
+      return NextResponse.json(
+        { error: 'Account setup failed. Please try again.' },
+        { status: 500 }
+      );
     }
   }
 

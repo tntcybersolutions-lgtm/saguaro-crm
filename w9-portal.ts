@@ -139,13 +139,19 @@ export async function w9PostHandler(req: NextRequest, token: string) {
   const ip   = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? '';
   const last4 = tin.replace(/\D/g,'').slice(-4);
 
-  // Encrypt the full TIN (simple XOR with secret — use a proper encryption lib in production)
-  // In production: use AES-256-GCM via Node.js crypto module
-  const tinHash = (await import('node:crypto'))
-    .createHash('sha256')
-    .update(`${tin}:${process.env.SAGUARO_API_SECRET ?? 'secret'}`)
-    .digest('hex')
-    .slice(0, 32); // store a hash, not the actual TIN
+  // Encrypt the full TIN using AES-256-GCM
+  const crypto = await import('node:crypto');
+  const encryptionKey = process.env.SAGUARO_API_SECRET ?? 'secret';
+  // Derive a proper 32-byte key from the secret using SHA-256
+  const keyBuffer = crypto.createHash('sha256').update(encryptionKey).digest();
+  // Generate a random 12-byte IV (standard for GCM)
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv('aes-256-gcm', keyBuffer, iv);
+  let encrypted = cipher.update(tin.replace(/\D/g, ''), 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+  // Store as iv:authTag:ciphertext — all needed for decryption
+  const tinHash = `${iv.toString('hex')}:${authTag}:${encrypted}`;
 
   await supabaseAdmin.from('w9_requests').update({
     legal_name:       legalName,

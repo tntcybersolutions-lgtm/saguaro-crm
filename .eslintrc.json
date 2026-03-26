@@ -1,0 +1,13 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "plugins": ["@typescript-eslint"],
+  "parser": "@typescript-eslint/parser",
+  "rules": {
+    "@next/next/no-img-element": "warn",
+    "@next/next/no-assign-module-variable": "off",
+    "react/no-unescaped-entities": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "@typescript-eslint/no-explicit-any": "off"
+  },
+  "ignorePatterns": ["node_modules/", ".next/", "ios/", "android/", "public/"]
+}

@@ -343,7 +343,7 @@ export async function GET(
             // Accept Claude's tot only when within 10% of computed value.
             const computed = qty * unitCost;
             const claudeTot = Number(item.tot) || 0;
-            const totalCost = claudeTot > 0 && computed > 0 && Math.abs(claudeTot - computed) / computed < 0.10
+            const totalCost = claudeTot > 0 && computed > 0 && Math.abs(claudeTot - computed) / (computed || 1) < 0.10
               ? claudeTot
               : computed;
             // Normalize CSI code: ensure proper format XX XX XX

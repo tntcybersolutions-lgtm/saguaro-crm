@@ -139,7 +139,61 @@ export async function POST(req: NextRequest) {
     const errors: string[] = [];
 
     for (const pa of payApps ?? []) {
-      // Create invoice in QB
+      // Resolve the QB customer for this project.
+      // Lookup chain: project.qb_customer_id → qb_customer_map by project_id → create new QB customer.
+      const projectName = (Array.isArray(pa.projects)
+        ? (pa.projects as { name: string }[])[0]?.name
+        : (pa.projects as unknown as { name: string } | null)?.name) ?? 'Unknown Project';
+
+      let qbCustomerRef = '1'; // fallback
+
+      // 1. Check if project has a stored QB customer ID
+      const { data: projectRow } = await getSupabase()
+        .from('projects')
+        .select('qb_customer_id, owner_name')
+        .eq('id', pa.project_id)
+        .maybeSingle();
+
+      if (projectRow?.qb_customer_id) {
+        qbCustomerRef = projectRow.qb_customer_id;
+      } else {
+        // 2. Query QB for existing customer by project owner name or project name
+        const customerName = projectRow?.owner_name || projectName;
+        const queryRes = await fetch(
+          `${QB_BASE}/v3/company/${realmId}/query?query=${encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${customerName.replace(/'/g, "\\'")}'`)}`,
+          { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } },
+        );
+
+        let existingCustomerId: string | null = null;
+        if (queryRes.ok) {
+          const queryData = await queryRes.json();
+          existingCustomerId = queryData?.QueryResponse?.Customer?.[0]?.Id ?? null;
+        }
+
+        if (existingCustomerId) {
+          qbCustomerRef = existingCustomerId;
+        } else {
+          // 3. Create customer in QB
+          const createRes = await fetch(`${QB_BASE}/v3/company/${realmId}/customer`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ DisplayName: customerName, CompanyName: customerName }),
+          });
+          if (createRes.ok) {
+            const newCust = await createRes.json() as { Customer?: { Id: string } };
+            qbCustomerRef = newCust.Customer?.Id ?? '1';
+          }
+        }
+
+        // 4. Cache the mapping on the project row for next time
+        if (qbCustomerRef !== '1') {
+          await getSupabase()
+            .from('projects')
+            .update({ qb_customer_id: qbCustomerRef })
+            .eq('id', pa.project_id);
+        }
+      }
+
       const invoicePayload = {
         Line: [{
           Amount: pa.net_amount_due,
@@ -148,9 +202,9 @@ export async function POST(req: NextRequest) {
             ItemRef: { value: '1', name: 'Services' },
           },
         }],
-        CustomerRef: { value: '1' }, // TODO: map to QB customer by project
+        CustomerRef: { value: qbCustomerRef },
         DocNumber: `PAY-${(pa as any).application_number}`,
-        PrivateNote: `Saguaro Pay App #${(pa as any).application_number} | Project: ${(Array.isArray(pa.projects) ? (pa.projects as { name: string }[])[0]?.name : (pa.projects as unknown as { name: string } | null)?.name) ?? pa.project_id}`,
+        PrivateNote: `Saguaro Pay App #${(pa as any).application_number} | Project: ${projectName}`,
       };
 
       const res = await fetch(`${QB_BASE}/v3/company/${realmId}/invoice`, {
