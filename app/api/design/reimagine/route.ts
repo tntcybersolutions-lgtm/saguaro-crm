@@ -99,73 +99,106 @@ export async function POST(req: NextRequest) {
         if (replicateToken) {
           send('progress', { step: 3, message: 'AI is redesigning your space...', pct: 25 });
 
-          // Use awerbin/interior-design model — specifically trained for room redesign
-          // Falls back to SDXL img2img if that model is unavailable
           const imageDataUri = `data:image/${ext === 'png' ? 'png' : 'jpeg'};base64,${base64}`;
 
-          // Enhanced prompt with photorealism keywords
-          const enhancedPrompt = `${fullPrompt}, professional interior photography, shot on Canon EOS R5, natural lighting, ultra detailed, photorealistic, magazine quality, architectural visualization, ray tracing, global illumination`;
-          const enhancedNegative = `${negativePrompt}, cartoon, anime, drawing, painting, sketch, illustration, low resolution, blurry, distorted, deformed, disfigured, watermark, text, logo, bad anatomy, ugly, pixelated, oversaturated, underexposed`;
+          // Enhanced prompts for photorealistic output
+          const enhancedPrompt = `${fullPrompt}, professional interior photography, shot on Canon EOS R5, natural window lighting, ultra detailed, photorealistic, magazine quality, architectural digest, 8k resolution`;
+          const enhancedNegative = `${negativePrompt}, cartoon, anime, drawing, painting, sketch, illustration, low resolution, blurry, distorted, deformed, watermark, text, logo, ugly, pixelated, oversaturated`;
 
-          // Try the dedicated interior design model first
-          let predictionRes = await fetch('https://api.replicate.com/v1/predictions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${replicateToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              version: 'a07bc28a6a3c8ef61e3aca0faafec2c11ff01a76153bb1880fbe972fce0e1e9e', // jagilley/controlnet-interior (ControlNet + SD 1.5 interior)
+          // Model chain — try each until one works:
+          // 1. adirik/interior-design (best for rooms — uses ControlNet + Realistic Vision)
+          // 2. stability-ai/sdxl (high quality general img2img)
+          // 3. stability-ai/stable-diffusion (reliable fallback)
+          const models = [
+            {
+              // adirik/interior-design — purpose-built for room redesign
+              model: 'adirik/interior-design',
               input: {
                 image: imageDataUri,
                 prompt: enhancedPrompt,
                 negative_prompt: enhancedNegative,
-                num_samples: userNumOutputs,
-                image_resolution: 768,
-                num_inference_steps: 40,
-                guidance_scale: 9.0,
-                strength: userIntensity,
-                a_prompt: 'best quality, extremely detailed, photorealistic, 8k uhd, professional photo',
-                n_prompt: enhancedNegative,
+                num_inference_steps: 50,
+                guidance_scale: 10,
+                prompt_strength: userIntensity,
               },
-            }),
-          });
+            },
+            {
+              // stability-ai/sdxl — high quality general purpose
+              model: 'stability-ai/sdxl',
+              input: {
+                image: imageDataUri,
+                prompt: enhancedPrompt,
+                negative_prompt: enhancedNegative,
+                num_outputs: userNumOutputs,
+                prompt_strength: userIntensity,
+                guidance_scale: 9.0,
+                num_inference_steps: 45,
+                scheduler: 'DPMSolverMultistep',
+                refine: 'expert_ensemble_refiner',
+                high_noise_frac: 0.8,
+                apply_watermark: false,
+              },
+            },
+            {
+              // stable-diffusion img2img — reliable fallback
+              model: 'stability-ai/stable-diffusion',
+              input: {
+                image: imageDataUri,
+                prompt: enhancedPrompt,
+                negative_prompt: enhancedNegative,
+                num_outputs: userNumOutputs,
+                prompt_strength: userIntensity,
+                guidance_scale: 9.0,
+                num_inference_steps: 40,
+                scheduler: 'DPMSolverMultistep',
+              },
+            },
+          ];
 
-          // Fallback to SDXL img2img if interior model fails
-          if (!predictionRes.ok) {
-            console.warn('[design/reimagine] Interior model unavailable, falling back to SDXL');
-            predictionRes = await fetch('https://api.replicate.com/v1/predictions', {
+          let predictionRes: Response | null = null;
+          let modelUsed = '';
+
+          for (const m of models) {
+            send('progress', { step: 3, message: `Trying ${m.model}...`, pct: 28 });
+            console.log(`[design/reimagine] Trying model: ${m.model}`);
+
+            const res = await fetch('https://api.replicate.com/v1/models/' + m.model + '/predictions', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${replicateToken}`,
                 'Content-Type': 'application/json',
+                'Prefer': 'wait',
               },
-              body: JSON.stringify({
-                version: 'db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf', // SDXL img2img
-                input: {
-                  image: imageDataUri,
-                  prompt: enhancedPrompt,
-                  negative_prompt: enhancedNegative,
-                  num_outputs: userNumOutputs,
-                  strength: userIntensity,
-                  guidance_scale: 9.0,
-                  num_inference_steps: 45,
-                  scheduler: 'DPMSolverMultistep',
-                  refine: 'expert_ensemble_refiner',
-                  high_noise_frac: 0.8,
-                },
-              }),
+              body: JSON.stringify({ input: m.input }),
             });
+
+            // If model endpoint doesn't exist, try the legacy /v1/predictions format
+            if (res.status === 404 || res.status === 422) {
+              console.warn(`[design/reimagine] Model endpoint failed for ${m.model}, trying next...`);
+              continue;
+            }
+
+            if (res.ok || res.status === 201) {
+              predictionRes = res;
+              modelUsed = m.model;
+              break;
+            }
+
+            const errText = await res.text();
+            console.warn(`[design/reimagine] ${m.model} failed (${res.status}):`, errText.slice(0, 200));
           }
 
-          if (!predictionRes.ok) {
-            const errBody = await predictionRes.text();
-            console.error('[design/reimagine] Replicate error:', errBody);
-            send('progress', { step: 3, message: 'Image generation unavailable — generating AI description instead...', pct: 30 });
-            // Fall through to Claude fallback below
+          if (!predictionRes) {
+            send('progress', { step: 3, message: 'Image generation unavailable — generating AI description...', pct: 30 });
+            // Fall through to Claude fallback
+          }
+
+          if (!predictionRes) {
+            // All models failed — fall through to Claude
           } else {
             const prediction = await predictionRes.json();
             const predictionId = prediction.id;
+            console.log(`[design/reimagine] Using model: ${modelUsed}, prediction: ${predictionId}`);
 
             send('progress', { step: 4, message: 'AI is rendering your new design...', pct: 35 });
 
