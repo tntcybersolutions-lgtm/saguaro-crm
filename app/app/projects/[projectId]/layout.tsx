@@ -79,6 +79,20 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    label: 'LOW VOLTAGE / IT',
+    items: [
+      { label: 'Network',          href: '/network',            icon: '🌐', badge: null },
+      { label: 'Devices',          href: '/network/devices',    icon: '💻', badge: null },
+      { label: 'VLANs',            href: '/network/vlans',      icon: '🔀', badge: null },
+      { label: 'Cables',           href: '/network/cables',     icon: '🔌', badge: null },
+      { label: 'Firewall',         href: '/network/firewall',   icon: '🛡️',  badge: null },
+      { label: 'WiFi',             href: '/network/wifi',       icon: '📡', badge: null },
+      { label: 'Config Gen',       href: '/network/config',     icon: '⚙️',  badge: null },
+      { label: 'AI Wizard',        href: '/network/wizard',     icon: '🤖', badge: null },
+      { label: 'Reports',          href: '/network/reports',    icon: '📊', badge: null },
+    ],
+  },
+  {
     label: 'AI',
     items: [
       { label: 'Autopilot Alerts', href: '/autopilot',       icon: '🤖', badge: '3'  },
