@@ -97,14 +97,16 @@ export async function POST(req: NextRequest) {
 
     // Update user points in leaderboard
     if (badgeDef.points) {
-      await db.rpc('increment_user_points', {
-        p_tenant_id: user.tenantId,
-        p_user_id: user_id,
-        p_project_id: project_id || null,
-        p_points: badgeDef.points,
-      }).catch(() => {
+      try {
+        await db.rpc('increment_user_points', {
+          p_tenant_id: user.tenantId,
+          p_user_id: user_id,
+          p_project_id: project_id || null,
+          p_points: badgeDef.points,
+        });
+      } catch {
         // points update is best-effort
-      });
+      }
     }
 
     return NextResponse.json({ badge: data }, { status: 201 });

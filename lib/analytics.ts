@@ -8,12 +8,17 @@
  *   POSTHOG_HOST=https://us.i.posthog.com   (or https://eu.i.posthog.com)
  */
 
-import { PostHog } from 'posthog-node';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let PostHogClass: any = null;
+try { PostHogClass = require('posthog-node').PostHog; } catch { /* optional dep */ }
 
-let _client: PostHog | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _client: any = null;
 
-function getClient(): PostHog | null {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getClient(): any {
   if (_client) return _client;
+  if (!PostHogClass) return null;
 
   const apiKey = process.env.POSTHOG_API_KEY;
   const host = process.env.POSTHOG_HOST || 'https://us.i.posthog.com';
@@ -25,7 +30,7 @@ function getClient(): PostHog | null {
     return null;
   }
 
-  _client = new PostHog(apiKey, {
+  _client = new PostHogClass(apiKey, {
     host,
     flushAt: 20,
     flushInterval: 10_000,
