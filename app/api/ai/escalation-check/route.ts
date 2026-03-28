@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const today = new Date().toISOString().split('T')[0];
     const { data: pastDueRfis } = await db
       .from('rfis')
-      .select('id, rfi_number, subject, status, due_date, assigned_to')
+      .select('id, rfi_number, subject, status, due_date, assigned_to, created_at')
       .eq('project_id', project_id)
       .eq('tenant_id', user.tenantId)
       .eq('status', 'open')
