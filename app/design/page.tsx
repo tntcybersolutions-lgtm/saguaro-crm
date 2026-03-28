@@ -65,6 +65,8 @@ export default function DesignStudioPage() {
   const [progressIdx, setProgressIdx] = useState(0);
   const [result, setResult] = useState<any>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [intensity, setIntensity] = useState(0.75);
+  const [numOutputs, setNumOutputs] = useState(2);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback((file: File) => {
@@ -97,6 +99,8 @@ export default function DesignStudioPage() {
       formData.append('style', style);
       formData.append('roomType', room);
       formData.append('instructions', instructions);
+      formData.append('intensity', String(intensity));
+      formData.append('numOutputs', String(numOutputs));
 
       // SSE streaming to /api/design/reimagine
       const res = await fetch('/api/design/reimagine', { method: 'POST', body: formData });
@@ -275,6 +279,42 @@ export default function DesignStudioPage() {
               outline: 'none', fontFamily: 'inherit',
             }}
           />
+        </section>
+
+        {/* ── AI Controls ── */}
+        <section style={{ marginBottom: 48 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {/* Transformation Intensity */}
+            <div style={{ ...glass, padding: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>Transformation Intensity</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>{Math.round(intensity * 100)}%</span>
+              </div>
+              <input type="range" min={30} max={95} value={Math.round(intensity * 100)}
+                onChange={(e) => setIntensity(Number(e.target.value) / 100)}
+                style={{ width: '100%', accentColor: GOLD, cursor: 'pointer' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: DIM, marginTop: 4 }}>
+                <span>Subtle refresh</span>
+                <span>Complete reimagine</span>
+              </div>
+            </div>
+            {/* Number of variations */}
+            <div style={{ ...glass, padding: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Variations</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[1, 2, 3].map(n => (
+                  <button key={n} onClick={() => setNumOutputs(n)} style={{
+                    flex: 1, padding: '10px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                    background: numOutputs === n ? GOLD : `${CARD}`, color: numOutputs === n ? '#000' : DIM,
+                    fontWeight: 700, fontSize: 15, transition: 'all .15s',
+                  }}>{n}</button>
+                ))}
+              </div>
+              <div style={{ fontSize: 11, color: DIM, marginTop: 8, textAlign: 'center' }}>
+                ~${(0.02 * numOutputs).toFixed(2)} per generation
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ── Generate Button ── */}

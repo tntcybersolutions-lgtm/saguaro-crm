@@ -33,6 +33,8 @@ export async function POST(req: NextRequest) {
         const customInstructions = formData.get('instructions') as string || '';
         const sessionId = formData.get('sessionId') as string;
         const customerId = formData.get('customerId') as string;
+        const userIntensity = parseFloat(formData.get('intensity') as string) || 0.75;
+        const userNumOutputs = Math.min(3, Math.max(1, parseInt(formData.get('numOutputs') as string) || 2));
 
         if (!file) { send('error', { message: 'No photo provided' }); return done(); }
 
@@ -81,10 +83,10 @@ export async function POST(req: NextRequest) {
           custom_instructions: customInstructions || null,
           generation_prompt: fullPrompt,
           negative_prompt: negativePrompt,
-          strength,
+          strength: userIntensity,
           control_net_type: 'canny',
-          guidance_scale: 7.5,
-          num_outputs: 2,
+          guidance_scale: 9.0,
+          num_outputs: userNumOutputs,
           generation_provider: 'replicate',
           status: 'processing',
         }).select().single();
@@ -97,27 +99,64 @@ export async function POST(req: NextRequest) {
         if (replicateToken) {
           send('progress', { step: 3, message: 'AI is redesigning your space...', pct: 25 });
 
-          // Start Replicate prediction
-          const predictionRes = await fetch('https://api.replicate.com/v1/predictions', {
+          // Use awerbin/interior-design model — specifically trained for room redesign
+          // Falls back to SDXL img2img if that model is unavailable
+          const imageDataUri = `data:image/${ext === 'png' ? 'png' : 'jpeg'};base64,${base64}`;
+
+          // Enhanced prompt with photorealism keywords
+          const enhancedPrompt = `${fullPrompt}, professional interior photography, shot on Canon EOS R5, natural lighting, ultra detailed, photorealistic, magazine quality, architectural visualization, ray tracing, global illumination`;
+          const enhancedNegative = `${negativePrompt}, cartoon, anime, drawing, painting, sketch, illustration, low resolution, blurry, distorted, deformed, disfigured, watermark, text, logo, bad anatomy, ugly, pixelated, oversaturated, underexposed`;
+
+          // Try the dedicated interior design model first
+          let predictionRes = await fetch('https://api.replicate.com/v1/predictions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${replicateToken}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              version: 'db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf', // SDXL img2img
+              version: 'a07bc28a6a3c8ef61e3aca0faafec2c11ff01a76153bb1880fbe972fce0e1e9e', // jagilley/controlnet-interior (ControlNet + SD 1.5 interior)
               input: {
-                image: `data:image/${ext === 'png' ? 'png' : 'jpeg'};base64,${base64}`,
-                prompt: fullPrompt,
-                negative_prompt: negativePrompt,
-                num_outputs: 2,
-                strength: strength,
-                guidance_scale: 7.5,
-                num_inference_steps: 30,
-                scheduler: 'K_EULER_ANCESTRAL',
+                image: imageDataUri,
+                prompt: enhancedPrompt,
+                negative_prompt: enhancedNegative,
+                num_samples: userNumOutputs,
+                image_resolution: 768,
+                num_inference_steps: 40,
+                guidance_scale: 9.0,
+                strength: userIntensity,
+                a_prompt: 'best quality, extremely detailed, photorealistic, 8k uhd, professional photo',
+                n_prompt: enhancedNegative,
               },
             }),
           });
+
+          // Fallback to SDXL img2img if interior model fails
+          if (!predictionRes.ok) {
+            console.warn('[design/reimagine] Interior model unavailable, falling back to SDXL');
+            predictionRes = await fetch('https://api.replicate.com/v1/predictions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${replicateToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                version: 'db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf', // SDXL img2img
+                input: {
+                  image: imageDataUri,
+                  prompt: enhancedPrompt,
+                  negative_prompt: enhancedNegative,
+                  num_outputs: userNumOutputs,
+                  strength: userIntensity,
+                  guidance_scale: 9.0,
+                  num_inference_steps: 45,
+                  scheduler: 'DPMSolverMultistep',
+                  refine: 'expert_ensemble_refiner',
+                  high_noise_frac: 0.8,
+                },
+              }),
+            });
+          }
 
           if (!predictionRes.ok) {
             const errBody = await predictionRes.text();
