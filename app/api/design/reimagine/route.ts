@@ -105,100 +105,45 @@ export async function POST(req: NextRequest) {
           const enhancedPrompt = `${fullPrompt}, professional interior photography, shot on Canon EOS R5, natural window lighting, ultra detailed, photorealistic, magazine quality, architectural digest, 8k resolution`;
           const enhancedNegative = `${negativePrompt}, cartoon, anime, drawing, painting, sketch, illustration, low resolution, blurry, distorted, deformed, watermark, text, logo, ugly, pixelated, oversaturated`;
 
-          // Model chain — try each until one works:
-          // 1. adirik/interior-design (best for rooms — uses ControlNet + Realistic Vision)
-          // 2. stability-ai/sdxl (high quality general img2img)
-          // 3. stability-ai/stable-diffusion (reliable fallback)
-          const models = [
-            {
-              // adirik/interior-design — purpose-built for room redesign
-              model: 'adirik/interior-design',
+          // adirik/interior-design — 1.95M runs, purpose-built for room redesign
+          // Uses ControlNet + Realistic Vision V3.0 with segmentation + MLSD
+          // Version: 76604baddc85b1b4616e1c6475eca080da339c8875bd4996705440484a6eac38
+          const INTERIOR_VERSION = '76604baddc85b1b4616e1c6475eca080da339c8875bd4996705440484a6eac38';
+
+          send('progress', { step: 3, message: 'Generating photorealistic redesign...', pct: 28 });
+
+          const predictionRes = await fetch('https://api.replicate.com/v1/predictions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${replicateToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              version: INTERIOR_VERSION,
               input: {
                 image: imageDataUri,
                 prompt: enhancedPrompt,
-                negative_prompt: enhancedNegative,
+                negative_prompt: `${enhancedNegative}, lowres, watermark, banner, logo, contactinfo, text, deformed, blurry, blur, out of focus, out of frame, surreal, extra, ugly, upholstered walls, fabric walls, plush walls, mirror, mirrored`,
+                guidance_scale: 15,
+                prompt_strength: userIntensity,
                 num_inference_steps: 50,
-                guidance_scale: 10,
-                prompt_strength: userIntensity,
               },
-            },
-            {
-              // stability-ai/sdxl — high quality general purpose
-              model: 'stability-ai/sdxl',
-              input: {
-                image: imageDataUri,
-                prompt: enhancedPrompt,
-                negative_prompt: enhancedNegative,
-                num_outputs: userNumOutputs,
-                prompt_strength: userIntensity,
-                guidance_scale: 9.0,
-                num_inference_steps: 45,
-                scheduler: 'DPMSolverMultistep',
-                refine: 'expert_ensemble_refiner',
-                high_noise_frac: 0.8,
-                apply_watermark: false,
-              },
-            },
-            {
-              // stable-diffusion img2img — reliable fallback
-              model: 'stability-ai/stable-diffusion',
-              input: {
-                image: imageDataUri,
-                prompt: enhancedPrompt,
-                negative_prompt: enhancedNegative,
-                num_outputs: userNumOutputs,
-                prompt_strength: userIntensity,
-                guidance_scale: 9.0,
-                num_inference_steps: 40,
-                scheduler: 'DPMSolverMultistep',
-              },
-            },
-          ];
+            }),
+          });
 
-          let predictionRes: Response | null = null;
-          let modelUsed = '';
-
-          for (const m of models) {
-            send('progress', { step: 3, message: `Trying ${m.model}...`, pct: 28 });
-            console.log(`[design/reimagine] Trying model: ${m.model}`);
-
-            const res = await fetch('https://api.replicate.com/v1/models/' + m.model + '/predictions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${replicateToken}`,
-                'Content-Type': 'application/json',
-                'Prefer': 'wait',
-              },
-              body: JSON.stringify({ input: m.input }),
-            });
-
-            // If model endpoint doesn't exist, try the legacy /v1/predictions format
-            if (res.status === 404 || res.status === 422) {
-              console.warn(`[design/reimagine] Model endpoint failed for ${m.model}, trying next...`);
-              continue;
-            }
-
-            if (res.ok || res.status === 201) {
-              predictionRes = res;
-              modelUsed = m.model;
-              break;
-            }
-
-            const errText = await res.text();
-            console.warn(`[design/reimagine] ${m.model} failed (${res.status}):`, errText.slice(0, 200));
-          }
-
-          if (!predictionRes) {
+          if (!predictionRes.ok) {
+            const errText = await predictionRes.text();
+            console.error('[design/reimagine] Replicate error:', errText.slice(0, 300));
             send('progress', { step: 3, message: 'Image generation unavailable — generating AI description...', pct: 30 });
             // Fall through to Claude fallback
           }
 
-          if (!predictionRes) {
-            // All models failed — fall through to Claude
+          if (!predictionRes.ok) {
+            // Model failed — fall through to Claude
           } else {
             const prediction = await predictionRes.json();
             const predictionId = prediction.id;
-            console.log(`[design/reimagine] Using model: ${modelUsed}, prediction: ${predictionId}`);
+            console.log(`[design/reimagine] Prediction started: ${predictionId}`);
 
             send('progress', { step: 4, message: 'AI is rendering your new design...', pct: 35 });
 
@@ -215,7 +160,9 @@ export async function POST(req: NextRequest) {
               const status = await statusRes.json();
 
               if (status.status === 'succeeded') {
-                result = status.output; // array of image URLs
+                // adirik model returns single URL string, others return array
+                const output = status.output;
+                result = Array.isArray(output) ? output : (typeof output === 'string' ? [output] : null);
                 break;
               } else if (status.status === 'failed') {
                 console.error('[design/reimagine] Replicate failed:', status.error);
