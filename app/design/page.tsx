@@ -2,10 +2,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
-/* ─── Palette ─── */
-const BG = '#0F1419', CARD = '#1A1F2E', GOLD = '#D4A017', GREEN = '#22C55E';
-const BORDER = '#1E2A3A', TEXT = '#F0F4FF', DIM = '#7B8FA8', DARK = '#0B0F14';
-const BLUE = '#3B82F6', RED = '#EF4444', PURPLE = '#8B5CF6';
+/* ─── Light Theme Palette — Arizona Modern ─── */
+const BG = '#F8F6F3', CARD = '#FFFFFF', GOLD = '#C8960F', GREEN = '#16A34A';
+const BORDER = '#E5E2DC', TEXT = '#1A1A1A', DIM = '#6B7280', DARK = '#F0EDE8';
+const BLUE = '#2563EB', RED = '#DC2626', PURPLE = '#7C3AED';
+const WARM = '#D4A017', SAND = '#E8DFD0', TERRACOTTA = '#C0785A';
 
 /* ─── Room Types ─── */
 const ROOMS = [
@@ -180,13 +181,24 @@ export default function DesignStudioPage() {
   const fmt$ = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, color: TEXT }} data-landing>
+    <div style={{ minHeight: '100vh', background: BG, color: TEXT }}>
+      {/* ── Arizona landscape gradient background ── */}
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, height: '50vh', zIndex: 0,
+        background: 'linear-gradient(180deg, #87CEEB 0%, #B8D4E3 30%, #E8DFD0 60%, #D2B48C 80%, #C0785A 100%)',
+        opacity: 0.3,
+      }} />
+      {/* Mountain silhouette */}
+      <svg style={{ position: 'fixed', bottom: '50vh', left: 0, right: 0, zIndex: 0, opacity: 0.06 }} viewBox="0 0 1440 200" preserveAspectRatio="none">
+        <path d="M0,200 L0,120 L120,60 L200,90 L280,40 L360,80 L440,20 L520,70 L600,30 L680,60 L760,10 L840,50 L920,25 L1000,65 L1080,15 L1160,55 L1240,35 L1320,70 L1440,45 L1440,200 Z" fill="#8B7355"/>
+      </svg>
+
       {/* ── Top Bar ── */}
-      <div style={{ background: DARK, borderBottom: `1px solid ${BORDER}`, padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
+      <div style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: `1px solid ${BORDER}`, padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 100 }}>
         <a href="/" style={{ color: GOLD, fontWeight: 800, fontSize: 16, letterSpacing: 2, textDecoration: 'none' }}>SAGUARO</a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ color: DIM, fontSize: 13 }}>AI Design Studio</span>
-          <span style={{ color: GOLD, fontSize: 11, background: `${GOLD}15`, padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>BETA</span>
+          <span style={{ color: '#fff', fontSize: 11, background: GOLD, padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>BETA</span>
         </div>
         <a href="/login" style={{ color: DIM, fontSize: 13, textDecoration: 'none' }}>Log In</a>
       </div>
@@ -217,7 +229,7 @@ export default function DesignStudioPage() {
         </div>
       )}
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 80px' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 20px 80px', position: 'relative', zIndex: 1 }}>
         {/* ════════════════════════════════════════════ */}
         {/* ── STEP 1: UPLOAD ── */}
         {step === 'upload' && (
@@ -235,8 +247,9 @@ export default function DesignStudioPage() {
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
               style={{
-                background: isDragging ? `${GOLD}08` : `${CARD}AA`,
-                backdropFilter: 'blur(16px)', border: `2px dashed ${isDragging ? GOLD : BORDER}`,
+                background: isDragging ? 'rgba(212,160,23,0.05)' : 'rgba(255,255,255,0.8)',
+                backdropFilter: 'blur(16px)', border: `2px dashed ${isDragging ? GOLD : '#D1CBC0'}`,
+                boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
                 borderRadius: 20, padding: photo ? 0 : '80px 40px', cursor: 'pointer',
                 transition: 'all .2s', overflow: 'hidden', maxWidth: 640, margin: '0 auto',
               }}
@@ -253,7 +266,7 @@ export default function DesignStudioPage() {
                 </div>
               ) : (
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ width: 72, height: 72, borderRadius: 20, background: `${GOLD}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 32 }}>
+                  <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(212,160,23,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 32 }}>
                     📸
                   </div>
                   <p style={{ fontSize: 17, fontWeight: 700, marginBottom: 6 }}>Drop your photo here</p>
@@ -292,7 +305,7 @@ export default function DesignStudioPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, maxWidth: 700, margin: '0 auto' }}>
               {ROOMS.map(r => (
                 <button key={r.id} onClick={() => { setRoom(r.id); setTimeout(goNext, 200); }} style={{
-                  background: room === r.id ? `${GOLD}15` : `${CARD}CC`,
+                  background: room === r.id ? 'rgba(212,160,23,0.1)' : 'rgba(255,255,255,0.8)',
                   backdropFilter: 'blur(12px)', border: `1.5px solid ${room === r.id ? GOLD : BORDER}`,
                   borderRadius: 16, padding: '20px 12px', cursor: 'pointer', transition: 'all .15s',
                   textAlign: 'center', transform: room === r.id ? 'scale(1.03)' : 'scale(1)',
@@ -324,7 +337,7 @@ export default function DesignStudioPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
               {STYLES.map(s => (
                 <button key={s.id} onClick={() => { setStyle(s.id); setTimeout(goNext, 200); }} style={{
-                  background: style === s.id ? `${GOLD}12` : `${CARD}CC`,
+                  background: style === s.id ? 'rgba(212,160,23,0.08)' : 'rgba(255,255,255,0.8)',
                   backdropFilter: 'blur(12px)', border: `1.5px solid ${style === s.id ? GOLD : BORDER}`,
                   borderRadius: 16, padding: '16px', cursor: 'pointer', transition: 'all .15s',
                   textAlign: 'left', transform: style === s.id ? 'scale(1.02)' : 'scale(1)',
@@ -358,7 +371,7 @@ export default function DesignStudioPage() {
             </div>
 
             {/* Preview strip */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center', background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 12 }}>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 24, alignItems: 'center', background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 12 }}>
               {photo && <img src={photo} alt="" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 10 }} />}
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, fontWeight: 700 }}>{ROOMS.find(r => r.id === room)?.label} → {STYLES.find(s => s.id === style)?.label}</div>
@@ -375,7 +388,7 @@ export default function DesignStudioPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
               {/* Intensity */}
-              <div style={{ background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
+              <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                   <span style={{ fontSize: 13, fontWeight: 700 }}>Transformation</span>
                   <span style={{ fontSize: 15, fontWeight: 800, color: GOLD }}>{Math.round(intensity * 100)}%</span>
@@ -390,13 +403,13 @@ export default function DesignStudioPage() {
               </div>
 
               {/* Variations */}
-              <div style={{ background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
+              <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Design Variations</div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {[1, 2, 3].map(n => (
                     <button key={n} onClick={() => setNumOutputs(n)} style={{
                       flex: 1, padding: '12px', borderRadius: 10, border: numOutputs === n ? `2px solid ${GOLD}` : `1px solid ${BORDER}`,
-                      background: numOutputs === n ? `${GOLD}15` : 'transparent', color: numOutputs === n ? GOLD : DIM,
+                      background: numOutputs === n ? 'rgba(212,160,23,0.1)' : 'transparent', color: numOutputs === n ? GOLD : DIM,
                       fontWeight: 800, fontSize: 18, cursor: 'pointer', transition: 'all .15s',
                     }}>{n}</button>
                   ))}
@@ -415,7 +428,7 @@ export default function DesignStudioPage() {
               <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)}
                 placeholder="Add specific details... e.g., 'I want a large island with seating for 4, pendant lights, and a wine fridge'"
                 rows={3} style={{
-                  width: '100%', background: `${CARD}CC`, border: `1px solid ${BORDER}`, borderRadius: 12,
+                  width: '100%', background: 'rgba(255,255,255,0.8)', border: `1px solid ${BORDER}`, borderRadius: 12,
                   padding: 14, color: TEXT, fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit',
                 }} />
             </div>
@@ -445,7 +458,7 @@ export default function DesignStudioPage() {
                 animation: 'spin 3s linear infinite', opacity: 0.7,
               }} />
               <div style={{
-                position: 'absolute', inset: 8, borderRadius: '50%', background: BG,
+                position: 'absolute', inset: 8, borderRadius: '50%', background: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32,
               }}>✨</div>
             </div>
@@ -459,7 +472,7 @@ export default function DesignStudioPage() {
 
             {/* Progress bar */}
             <div style={{ maxWidth: 400, margin: '0 auto' }}>
-              <div style={{ height: 6, background: `${CARD}`, borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ height: 6, background: '#E5E2DC', borderRadius: 4, overflow: 'hidden' }}>
                 <div style={{
                   height: '100%', borderRadius: 4, transition: 'width .5s ease',
                   width: `${progress.pct || 10}%`,
@@ -472,7 +485,7 @@ export default function DesignStudioPage() {
             </div>
 
             {/* Tips while waiting */}
-            <div style={{ marginTop: 48, background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 24px', maxWidth: 500, margin: '48px auto 0', textAlign: 'left' }}>
+            <div style={{ marginTop: 48, background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 24px', maxWidth: 500, margin: '48px auto 0', textAlign: 'left' }}>
               <div style={{ fontSize: 11, color: GOLD, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Did you know?</div>
               <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
                 Saguaro uses ControlNet AI to preserve your room&apos;s structure while completely transforming the style. Walls, windows, and doors stay in place — only the design changes.
@@ -503,14 +516,14 @@ export default function DesignStudioPage() {
 
             {/* Before/After Slider */}
             {result.generatedUrls?.length > 0 && photo && (
-              <div style={{ background: `${CARD}CC`, backdropFilter: 'blur(16px)', border: `1px solid ${BORDER}`, borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}>
+              <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(16px)', border: `1px solid ${BORDER}`, borderRadius: 20, overflow: 'hidden', marginBottom: 20 }}>
                 {/* Variation tabs */}
                 {result.generatedUrls.length > 1 && (
                   <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${BORDER}` }}>
                     {result.generatedUrls.map((_: string, idx: number) => (
                       <button key={idx} onClick={() => setCompareIdx(idx)} style={{
                         flex: 1, padding: '10px', border: 'none', cursor: 'pointer',
-                        background: compareIdx === idx ? `${GOLD}15` : 'transparent',
+                        background: compareIdx === idx ? 'rgba(212,160,23,0.1)' : 'transparent',
                         color: compareIdx === idx ? GOLD : DIM, fontWeight: 700, fontSize: 13,
                         borderBottom: compareIdx === idx ? `2px solid ${GOLD}` : '2px solid transparent',
                         transition: 'all .15s',
@@ -543,7 +556,7 @@ export default function DesignStudioPage() {
 
             {/* Claude fallback notice */}
             {(!result.generatedUrls || result.generatedUrls.length === 0) && result.note && (
-              <div style={{ background: `${GOLD}08`, border: `1px solid ${GOLD}30`, borderRadius: 14, padding: 16, marginBottom: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ background: 'rgba(212,160,23,0.06)', border: `1px solid ${GOLD}30`, borderRadius: 14, padding: 16, marginBottom: 20, display: 'flex', gap: 12, alignItems: 'center' }}>
                 <span style={{ fontSize: 24 }}>💡</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: GOLD, marginBottom: 2 }}>Text-Only Mode</div>
@@ -555,17 +568,17 @@ export default function DesignStudioPage() {
             {/* Cost + Details */}
             {result.costEstimate && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
-                <div style={{ background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px' }}>
                   <div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Estimated Cost</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: GREEN }}>
                     {fmt$(result.costEstimate.cost_low || 0)} – {fmt$(result.costEstimate.cost_high || 0)}
                   </div>
                 </div>
-                <div style={{ background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px' }}>
                   <div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Timeline</div>
                   <div style={{ fontSize: 22, fontWeight: 800 }}>{result.costEstimate.timeline_weeks || '?'} <span style={{ fontSize: 14, fontWeight: 400, color: DIM }}>weeks</span></div>
                 </div>
-                <div style={{ background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px' }}>
+                <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 20px' }}>
                   <div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Difficulty</div>
                   <div style={{ fontSize: 22, fontWeight: 800, color: result.costEstimate.difficulty === 'complex' ? RED : result.costEstimate.difficulty === 'moderate' ? GOLD : GREEN }}>
                     {(result.costEstimate.difficulty || 'moderate').charAt(0).toUpperCase() + (result.costEstimate.difficulty || 'moderate').slice(1)}
@@ -576,7 +589,7 @@ export default function DesignStudioPage() {
 
             {/* Description */}
             {result.costEstimate?.description && (
-              <div style={{ background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
+              <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, marginBottom: 20 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Design Description</div>
                 <p style={{ color: DIM, fontSize: 13, lineHeight: 1.7 }}>{result.costEstimate.description}</p>
                 {result.costEstimate.color_palette && (
@@ -591,7 +604,7 @@ export default function DesignStudioPage() {
 
             {/* Materials */}
             {result.costEstimate?.materials?.length > 0 && (
-              <div style={{ background: `${CARD}CC`, backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, marginBottom: 24 }}>
+              <div style={{ background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 20, marginBottom: 24 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Materials & Cost Breakdown</div>
                 {result.costEstimate.materials.map((m: any, i: number) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: i < result.costEstimate.materials.length - 1 ? `1px solid ${BORDER}` : 'none', fontSize: 13 }}>
