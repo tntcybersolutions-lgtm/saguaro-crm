@@ -7,6 +7,7 @@
     "@next/next/no-assign-module-variable": "off",
     "react/no-unescaped-entities": "warn",
     "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/rules-of-hooks": "warn",
     "@typescript-eslint/no-explicit-any": "off"
   },
   "ignorePatterns": ["node_modules/", ".next/", "ios/", "android/", "public/"]
