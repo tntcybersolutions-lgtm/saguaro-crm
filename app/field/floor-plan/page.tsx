@@ -11,7 +11,7 @@ import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-/* ── Design Tokens ── */
+/* ââ Design Tokens ââ */
 const GOLD = '#D4A017';
 const CARD = '#1A1F2E';
 const BASE = '#0F1419';
@@ -42,7 +42,7 @@ function hr(hex: string): string {
   return `${r},${g},${b}`;
 }
 
-/* ── Pin Types (original + new measurement & issue) ── */
+/* ââ Pin Types (original + new measurement & issue) ââ */
 const PIN_TYPES: Record<string, { color: string; icon: string; label: string }> = {
   location: { color: BLUE, icon: '\u{1F4CD}', label: 'Location' },
   photo:    { color: GREEN, icon: '\u{1F4F7}', label: 'Photo' },
@@ -53,7 +53,7 @@ const PIN_TYPES: Record<string, { color: string; icon: string; label: string }> 
   issue:    { color: '#F97316', icon: '\u{26A0}', label: 'Issue' },
 };
 
-/* ── Heatmap colors ── */
+/* ââ Heatmap colors ââ */
 const HEAT_COLORS: { max: number; color: string; label: string }[] = [
   { max: 25, color: '#EF4444', label: '0-25%' },
   { max: 50, color: '#F97316', label: '26-50%' },
@@ -66,10 +66,10 @@ function heatColor(pct: number): string {
   return GREEN;
 }
 
-/* ── Markup colors ── */
+/* ââ Markup colors ââ */
 const MARKUP_COLORS = [RED, BLUE, GREEN, GOLD, '#FFFFFF'];
 
-/* ── Types ── */
+/* ââ Types ââ */
 interface Drawing {
   id: string; sheet: string; name: string; description: string;
   file_url: string; thumbnail_url?: string;
@@ -95,7 +95,7 @@ interface MarkupAction {
 type View = 'list' | 'viewer';
 type Mode = 'view' | 'pin' | 'room' | 'markup';
 
-/* ── Cluster helper ── */
+/* ââ Cluster helper ââ */
 function clusterPins(pins: FloorPin[], threshold: number): { pins: FloorPin[]; x: number; y: number }[] {
   const used = new Set<string>();
   const clusters: { pins: FloorPin[]; x: number; y: number }[] = [];
@@ -515,7 +515,7 @@ function FloorPlanPage() {
         {view === 'list' ? `${drawings.length} drawing${drawings.length !== 1 ? 's' : ''} available` : selectedDrawing?.name}
       </p>
 
-      {/* ── Drawing List ── */}
+      {/* ââ Drawing List ââ */}
       {view === 'list' && (
         loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -555,7 +555,7 @@ function FloorPlanPage() {
         )
       )}
 
-      {/* ── Drawing Viewer ── */}
+      {/* ââ Drawing Viewer ââ */}
       {view === 'viewer' && selectedDrawing && (
         <div>
           {/* Toolbar Row 1 */}
