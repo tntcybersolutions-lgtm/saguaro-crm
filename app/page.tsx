@@ -181,9 +181,9 @@ export default function LandingPage() {
           portals: {
             label: 'Portals',
             items: [
-              { icon: <User size={22} weight="duotone" color="#D4A017" />, title: 'Owner / Client Portal', desc: 'Live project visibility for owners', href: '/app/client-portal' },
-              { icon: <UsersThree size={22} weight="duotone" color="#D4A017" />, title: 'Subcontractor Portal', desc: 'Self-service docs & pay apps', href: '/app/sub-portal' },
-              { icon: <PenNib size={22} weight="duotone" color="#D4A017" />, title: 'E-Signature Portal', desc: 'Sign documents in-browser', href: '/app/documents' },
+              { icon: <User size={22} weight="duotone" color="#D4A017" />, title: 'Owner / Client Portal', desc: 'Live project visibility for owners', href: '/portals/client' },
+              { icon: <UsersThree size={22} weight="duotone" color="#D4A017" />, title: 'Subcontractor Portal', desc: 'Self-service docs & pay apps', href: '/portals/sub' },
+              { icon: <PenNib size={22} weight="duotone" color="#D4A017" />, title: 'E-Signature Portal', desc: 'Sign documents in-browser', href: '/portals/sign' },
               { icon: <Handshake size={22} weight="duotone" color="#D4A017" />, title: 'Integrations', desc: 'QuickBooks, Sage, Stripe', href: '/app/integrations' },
             ],
           },
