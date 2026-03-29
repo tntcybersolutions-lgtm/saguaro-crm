@@ -5,13 +5,14 @@ import { useDashboardStats, useTodayItems } from '@/lib/hooks/useDashboard';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useRFIs } from '@/lib/hooks/useRFIs';
 import { useRealtimeDashboard } from '@/lib/useRealtime';
+import { CurrencyDollar, ShieldCheck, ClipboardText, CheckCircle } from '@phosphor-icons/react';
 
 const GOLD   = '#D4A017';
-const DARK   = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM    = '#8fa3c0';
-const TEXT   = '#e8edf8';
+const DARK   = '#000000';
+const RAISED = '#0A0A0A';
+const BORDER = 'rgba(255,255,255,0.05)';
+const DIM    = '#86868B';
+const TEXT   = '#F5F5F7';
 const GREEN  = '#1a8a4a';
 const RED    = '#c03030';
 const BLUE   = '#1a5fa8';
@@ -45,7 +46,7 @@ function KPI({
     <div
       onClick={onClick}
       style={{
-        background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10,
+        background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0,
         padding: '18px 20px', cursor: onClick || href ? 'pointer' : 'default',
         transition: 'border-color .15s',
       }}
@@ -53,7 +54,7 @@ function KPI({
       onMouseLeave={e => { if (onClick || href) (e.currentTarget as HTMLDivElement).style.borderColor = BORDER; }}
     >
       <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: DIM, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 800, color: color ?? TEXT, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 26, fontWeight: 700, color: color ?? TEXT, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{sub}</div>}
       {(onClick || href) && (
         <div style={{ fontSize: 10, color: GOLD, marginTop: 6, letterSpacing: .5 }}>DRILL DOWN →</div>
@@ -79,11 +80,11 @@ function SkeletonRow() {
 }
 
 /* ─── Today Action Item Card ─────────────────────────────────────────── */
-const TYPE_META: Record<TodayItem['type'], { icon: string; borderColor: string; label: string }> = {
-  'pay-app':    { icon: '💰', borderColor: GOLD,       label: 'Pay App' },
-  'insurance':  { icon: '🛡️', borderColor: RED,        label: 'Insurance' },
-  'rfi':        { icon: '📋', borderColor: ORANGE,     label: 'RFI' },
-  'compliance': { icon: '✅', borderColor: '#2a6db8',  label: 'Compliance' },
+const TYPE_META: Record<TodayItem['type'], { icon: React.ReactNode; borderColor: string; label: string }> = {
+  'pay-app':    { icon: <CurrencyDollar size={22} weight="duotone" color={GOLD} />, borderColor: GOLD, label: 'Pay App' },
+  'insurance':  { icon: <ShieldCheck size={22} weight="duotone" color={RED} />, borderColor: RED, label: 'Insurance' },
+  'rfi':        { icon: <ClipboardText size={22} weight="duotone" color={ORANGE} />, borderColor: ORANGE, label: 'RFI' },
+  'compliance': { icon: <CheckCircle size={22} weight="duotone" color="#3B82F6" />, borderColor: '#2a6db8', label: 'Compliance' },
 };
 const URGENCY_COLOR: Record<TodayItem['urgency'], string> = { high: RED, medium: ORANGE, low: DIM };
 
@@ -99,7 +100,7 @@ function TodayActionCard({ item }: { item: TodayItem }) {
       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,.025)')}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
     >
-      <span style={{ fontSize: 20, flexShrink: 0 }}>{meta.icon}</span>
+      <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{meta.icon}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</div>
         <div style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.subtitle}</div>
@@ -191,7 +192,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
               {error && <div style={{ color: RED, fontSize: 12, marginBottom: 12 }}>{error}</div>}
               <button
                 type="submit" disabled={loading}
-                style={{ width: '100%', padding: '11px', background: loading ? 'rgba(212,160,23,.4)' : GOLD, border: 'none', borderRadius: 8, color: '#0d1117', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4 }}
+                style={{ width: '100%', padding: '11px', background: loading ? 'rgba(212,160,23,.4)' : GOLD, border: 'none', borderRadius: 8, color: '#000000', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4 }}
               >
                 {loading ? 'Analyzing...' : 'Score This Bid →'}
               </button>
@@ -342,7 +343,7 @@ export default function DashboardPage() {
             <div style={{ fontSize: 14, color: DIM }}>Here's what needs your attention today.</div>
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
-            <Link href="/app/projects/new" style={{ padding: '10px 18px', background: GOLD, color: '#0d1117', borderRadius: 8, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+            <Link href="/app/projects/new" style={{ padding: '10px 18px', background: GOLD, color: '#000000', borderRadius: 8, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
               + New Project
             </Link>
             <button
@@ -398,8 +399,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Today's Priority Actions */}
-        <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, overflow: 'hidden', marginBottom: 24 }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Today's Priority Actions</span>
               <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>Items requiring your attention</div>
@@ -425,8 +426,8 @@ export default function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
 
           {/* Active Projects */}
-          <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, fontSize: 14 }}>Active Projects</span>
               <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>All Projects →</Link>
             </div>
@@ -434,9 +435,9 @@ export default function DashboardPage() {
               {projectsLoading && <><SkeletonRow /><SkeletonRow /></>}
               {!projectsLoading && projects.length === 0 && (
                 <div style={{ padding: '24px 0', textAlign: 'center' }}>
-                  <div style={{ fontSize: 32, marginBottom: 10 }}>📁</div>
+                  <div style={{ fontSize: 32, marginBottom: 10, display: 'flex', justifyContent: 'center' }}><ClipboardText size={32} weight="duotone" color={DIM} /></div>
                   <div style={{ color: DIM, fontSize: 13, marginBottom: 14 }}>No active projects yet.</div>
-                  <Link href="/app/projects/new" style={{ display: 'inline-block', padding: '8px 18px', background: GOLD, color: '#0d1117', borderRadius: 7, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+                  <Link href="/app/projects/new" style={{ display: 'inline-block', padding: '8px 18px', background: GOLD, color: '#000000', borderRadius: 7, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
                     Create your first project
                   </Link>
                 </div>
@@ -467,8 +468,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Open RFIs */}
-          <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, fontSize: 14 }}>Open RFIs</span>
               <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>View Projects →</Link>
             </div>

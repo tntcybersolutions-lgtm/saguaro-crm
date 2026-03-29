@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useToast } from '../../../../../components/Toast';
+import { Blueprint, Table, ArrowRight, DownloadSimple, FileXls, Package, CurrencyDollar, Lightning } from '@phosphor-icons/react';
 
 interface TakeoffItem {
   csiCode: string;
@@ -71,8 +72,8 @@ const CSI_DIVISION_NAMES: Record<string, string> = {
 };
 
 const GOLD = '#D4A017';
-const SURFACE = 'rgba(255,255,255,0.04)';
-const BORDER = 'rgba(255,255,255,0.08)';
+const SURFACE = 'rgba(255,255,255,0.02)';
+const BORDER = 'rgba(255,255,255,0.05)';
 
 export default function TakeoffPage() {
   const { projectId } = useParams() as { projectId: string };
@@ -962,8 +963,8 @@ export default function TakeoffPage() {
           display: 'grid',
           gridTemplateColumns: '100px 1fr 80px 56px 80px 110px 110px',
           padding: '10px 16px',
-          background: 'rgba(255,255,255,0.04)',
-          borderBottom: `1px solid ${BORDER}`,
+          background: '#0A0A0A',
+          borderBottom: '2px solid rgba(212,160,23,0.2)',
           fontSize: 11, fontWeight: 600,
           letterSpacing: '0.08em',
           color: 'rgba(255,255,255,0.4)',
@@ -1126,34 +1127,34 @@ export default function TakeoffPage() {
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={handleGenerateAll} disabled={!!generating}
             style={{ padding: '12px 28px', background: `linear-gradient(135deg, #22C55E, #16A34A)`, border: 'none', borderRadius: 8, color: '#fff', fontWeight: 800, fontSize: 14, cursor: generating ? 'wait' : 'pointer', letterSpacing: '0.03em', opacity: generating ? 0.6 : 1 }}>
-            {generating === 'all' ? 'Building...' : '🚀 Generate All Documents'}
+            {generating === 'all' ? 'Building...' : <><ArrowRight size={16} weight="bold" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Generate All Documents</>}
           </button>
           <button onClick={handleSageAutoDocs} disabled={!!generating}
             style={{ padding: '11px 24px', background: generating === 'sage' ? 'rgba(212,160,23,0.3)' : `linear-gradient(135deg, ${GOLD}, #C8960F)`, border: 'none', borderRadius: 8, color: '#000', fontWeight: 800, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sage') ? 0.5 : 1 }}>
-            {generating === 'sage' ? 'Sage building...' : '⚡ Sage AI Documents'}
+            {generating === 'sage' ? 'Sage building...' : <><Lightning size={16} weight="duotone" color="#000" style={{marginRight:4, verticalAlign:'middle'}} /> Sage AI Documents</>}
           </button>
           <button onClick={exportXLS} disabled={!!generating}
             style={{ padding: '11px 22px', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, color: '#22C55E', fontWeight: 600, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'xls') ? 0.5 : 1 }}>
-            {generating === 'xls' ? 'Generating...' : '📊 Export Excel'}
+            {generating === 'xls' ? 'Generating...' : <><FileXls size={16} weight="duotone" color="#22C55E" style={{marginRight:4, verticalAlign:'middle'}} /> Export Excel</>}
           </button>
         </div>
         {/* Secondary actions */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={handleGenerateBidPackages} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'bid-packages') ? 0.5 : 1 }}>
-            {generating === 'bid-packages' ? 'Creating...' : '📦 Bid Packages'}
+            {generating === 'bid-packages' ? 'Creating...' : <><Package size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Bid Packages</>}
           </button>
           <button onClick={handleGenerateSOV} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sov') ? 0.5 : 1 }}>
-            {generating === 'sov' ? 'Creating...' : '📋 SOV'}
+            {generating === 'sov' ? 'Creating...' : <><Table size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> SOV</>}
           </button>
           <button onClick={handleCreateBudget} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'budget') ? 0.5 : 1 }}>
-            {generating === 'budget' ? 'Creating...' : '💰 Budget'}
+            {generating === 'budget' ? 'Creating...' : <><CurrencyDollar size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Budget</>}
           </button>
           <button onClick={handleGenerateLienWaivers} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'lien-waivers') ? 0.5 : 1 }}>
-            {generating === 'lien-waivers' ? 'Creating...' : '📝 Lien Waivers'}
+            {generating === 'lien-waivers' ? 'Creating...' : <><Blueprint size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Lien Waivers</>}
           </button>
           <button
             onClick={() => {

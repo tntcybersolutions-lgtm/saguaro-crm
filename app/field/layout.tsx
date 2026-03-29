@@ -7,6 +7,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { House, Warning, NotePencil, Camera, SquaresFour, Bell } from '@phosphor-icons/react';
 import { getQueueCount, getDeadLetterCount, replayQueue, purgeExpired } from '@/lib/field-db';
 import {
   isNative,
@@ -25,19 +26,19 @@ import {
 } from '@/lib/native';
 
 const GOLD   = '#D4A017';
-const DARK   = '#07101C';
-const BORDER = '#1E3A5F';
-const TEXT   = '#F0F4FF';
-const DIM    = '#8BAAC8';
+const DARK   = '#000000';
+const BORDER = 'rgba(255,255,255,0.06)';
+const TEXT   = '#F5F5F7';
+const DIM    = '#86868B';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 
 const NAV = [
-  { href: '/field',         label: 'Home',   Icon: HomeIcon },
-  { href: '/field/punch',   label: 'Punch',  Icon: PunchIcon },
-  { href: '/field/log',     label: 'Log',    Icon: LogIcon },
-  { href: '/field/photos',  label: 'Photos', Icon: CameraIcon },
-  { href: '/field/more',    label: 'More',   Icon: GridIcon },
+  { href: '/field',         label: 'Home',   PhIcon: House },
+  { href: '/field/punch',   label: 'Punch',  PhIcon: Warning },
+  { href: '/field/log',     label: 'Log',    PhIcon: NotePencil },
+  { href: '/field/photos',  label: 'Photos', PhIcon: Camera },
+  { href: '/field/more',    label: 'More',   PhIcon: SquaresFour },
 ];
 
 
@@ -230,7 +231,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', background: DARK, color: TEXT, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', maxWidth: 480, margin: '0 auto' }}>
 
       {/* ── Header with project switcher ── */}
-      <div style={{ background: '#060C15', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${BORDER}`, paddingTop: `max(${native && isIOS() ? '44px' : '6px'}, env(safe-area-inset-top))` }}>
+      <div style={{ background: 'rgba(0,0,0,0.95)', position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${BORDER}`, paddingTop: `max(${native && isIOS() ? '44px' : '6px'}, env(safe-area-inset-top))` }}>
         {/* Top row: Logo + Status */}
         <div style={{ padding: '6px 14px 4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -253,7 +254,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
         <div style={{ padding: '0 14px 6px', position: 'relative' }}>
           <button onClick={() => { setShowProjectPicker(!showProjectPicker); hapticLight().catch(() => {}); }}
             style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 8, padding: '5px 10px', display: 'flex', alignItems: 'center', gap: 6, width: '100%', cursor: 'pointer', color: TEXT }}>
-            <span style={{ fontSize: 13 }}>🏗</span>
+            <span style={{ display: 'flex', alignItems: 'center' }}><House size={16} weight="duotone" color={GOLD} /></span>
             <span style={{ flex: 1, textAlign: 'left', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {projectName || 'Select Project'}
             </span>
@@ -261,7 +262,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
           </button>
           {/* Project dropdown */}
           {showProjectPicker && projects.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 14, right: 14, background: '#0F1E30', border: `1px solid ${BORDER}`, borderRadius: 10, zIndex: 100, maxHeight: 240, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,.6)' }}>
+            <div style={{ position: 'absolute', top: '100%', left: 14, right: 14, background: '#0A0A0A', border: `1px solid ${BORDER}`, borderRadius: 10, zIndex: 100, maxHeight: 240, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,.6)' }}>
               {projects.map(p => (
                 <button key={p.id} onClick={() => switchProject(p.id)}
                   style={{ width: '100%', padding: '10px 14px', background: p.id === activeProjectId ? 'rgba(212,160,23,.1)' : 'transparent', border: 'none', borderBottom: `1px solid rgba(255,255,255,.04)`, color: p.id === activeProjectId ? GOLD : TEXT, fontSize: 13, fontWeight: p.id === activeProjectId ? 700 : 400, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -290,7 +291,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
       {/* ── Inline push notification banner (native foreground) ── */}
       {pushMsg && (
         <div style={{ background: 'rgba(212,160,23,.12)', borderBottom: '1px solid rgba(212,160,23,.3)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 18 }}>🔔</span>
+          <span style={{ display: 'flex', alignItems: 'center' }}><Bell size={18} weight="duotone" color={GOLD} /></span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: GOLD }}>{pushMsg.title}</p>
             <p style={{ margin: 0, fontSize: 12, color: DIM }}>{pushMsg.body}</p>
@@ -303,7 +304,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
       {showInstall && !isStandalone && !native && (
         <>
           <div onClick={dismissInstall} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 200 }} />
-          <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#0F1E30', borderRadius: '20px 20px 0 0', border: '1px solid rgba(212,160,23,.22)', borderBottom: 'none', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))', zIndex: 201, boxShadow: '0 -10px 48px rgba(0,0,0,0.7)' }}>
+          <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#0A0A0A', borderRadius: '20px 20px 0 0', border: '1px solid rgba(212,160,23,.22)', borderBottom: 'none', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))', zIndex: 201, boxShadow: '0 -10px 48px rgba(0,0,0,0.7)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
               <div style={{ width: 38, height: 4, borderRadius: 2, background: 'rgba(255,255,255,.14)' }} />
             </div>
@@ -373,8 +374,8 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
       </main>
 
       {/* ── Bottom nav ── */}
-      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#060C15', borderTop: `1px solid ${BORDER}`, display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 50 }}>
-        {NAV.map(({ href, label, Icon }) => {
+      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 50 }}>
+        {NAV.map(({ href, label, PhIcon }) => {
           const active = href === '/field' ? pathname === '/field' : pathname.startsWith(href);
           return (
             <Link
@@ -384,7 +385,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, padding: '10px 4px 8px', color: active ? GOLD : DIM, textDecoration: 'none', position: 'relative', minHeight: 54 }}
             >
               {active && <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 28, height: 2.5, background: GOLD, borderRadius: '0 0 3px 3px' }} />}
-              <Icon active={active} />
+              <PhIcon size={22} weight={active ? 'fill' : 'duotone'} color={active ? GOLD : DIM} />
               <span style={{ fontSize: 11, fontWeight: active ? 800 : 500, letterSpacing: 0.1 }}>{label}</span>
             </Link>
           );
