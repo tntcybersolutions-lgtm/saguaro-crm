@@ -6,9 +6,33 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #D4A017; }
 a { color: #D4A017; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; }
-button:active { transform: scale(0.98); }
-input, textarea, select { font-family: inherit; }
+button { font-family: inherit; cursor: pointer; transition: all 0.2s ease; }
+button:hover { box-shadow: 0 0 20px rgba(212,160,23,0.15), 0 0 4px rgba(212,160,23,0.1); }
+button:active { transform: scale(0.97); }
+input, textarea, select { font-family: inherit; transition: all 0.2s ease; }
+input:focus, textarea:focus { border-color: #D4A017 !important; box-shadow: 0 0 0 3px rgba(212,160,23,0.12), 0 0 20px rgba(212,160,23,0.08) !important; outline: none; }
+
+/* ── Gold hover glow on all clickable cards/links ── */
+a[href]:hover { text-shadow: 0 0 12px rgba(212,160,23,0.3); }
+[role="button"]:hover, [data-clickable]:hover { box-shadow: 0 0 24px rgba(212,160,23,0.12); }
+
+/* ── Gold accent border on active/focused elements ── */
+*:focus-visible { outline: 2px solid rgba(212,160,23,0.4); outline-offset: 2px; border-radius: 4px; }
+
+/* ── Smooth transitions for all interactive elements ── */
+a, button, input, textarea, select, [role="button"] { transition: all 0.2s ease; }
+
+/* ── Premium card hover effect ── */
+.glass-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 20px rgba(212,160,23,0.08); }
+
+/* ── Table row hover gold accent ── */
+tr:hover td, [data-row]:hover { background: rgba(212,160,23,0.03) !important; }
+
+/* ── Nav dropdown animation ── */
+@keyframes navDropFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 /* ── Apple-grade dark select styling ── */
 select {
