@@ -75,7 +75,7 @@ export default function AppTopBar({
         left: sidebarWidth,
         right: 0,
         height: sidebarTokens.headerHeight,
-        background: 'rgba(13,17,23,.97)',
+        background: 'rgba(255,255,255,.97)',
         borderBottom: `1px solid ${colors.border}`,
         backdropFilter: 'blur(12px)',
         display: 'flex',
@@ -128,7 +128,7 @@ export default function AppTopBar({
           alignItems: 'center',
           gap: 8,
           padding: '6px 12px',
-          background: 'rgba(255,255,255,.04)',
+          background: colors.raised,
           border: `1px solid ${colors.border}`,
           borderRadius: radius.md,
           color: colors.textDim,
@@ -189,7 +189,7 @@ export default function AppTopBar({
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.color = colors.text;
-          e.currentTarget.style.background = 'rgba(255,255,255,.04)';
+          e.currentTarget.style.background = colors.raised;
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.color = colors.textMuted;
@@ -232,7 +232,7 @@ export default function AppTopBar({
                 position: 'absolute',
                 top: 42,
                 right: 0,
-                background: colors.raised,
+                background: colors.white,
                 border: `1px solid ${colors.border}`,
                 borderRadius: radius.xl,
                 minWidth: 180,

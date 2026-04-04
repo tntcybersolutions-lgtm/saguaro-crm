@@ -175,7 +175,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: colors.dark, color: colors.text, fontFamily: font.family }}>
+    <div style={{ minHeight: '100vh', background: colors.pageBg, color: colors.text, fontFamily: font.family }}>
 
       {/* ── Responsive + AI panel styles ──────────────────────────────── */}
       <style>{`
@@ -244,8 +244,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             position: 'fixed', bottom: 20, right: 20, zIndex: z.modal,
             width: 'min(540px, calc(100vw - 24px))',
             height: 'min(680px, calc(100vh - 80px))',
-            background: colors.raised, border: `1px solid ${colors.border}`,
-            borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,.7)',
+            background: colors.white, border: `1px solid ${colors.border}`,
+            borderRadius: 14, boxShadow: '0 24px 80px rgba(0,0,0,.15)',
             display: 'flex', flexDirection: 'column', overflow: 'hidden',
           }}
         >

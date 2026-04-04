@@ -1,37 +1,51 @@
 /**
  * Saguaro CRM — Centralized Design Tokens
- * Import these instead of hardcoding colors/spacing in every file.
+ * BRIGHT & CLEAN theme — Procore-grade professional.
+ * Sidebar stays dark (brand), content area is white/light.
  */
 
 /* ── Colors ────────────────────────────────────────────────────────── */
 export const colors = {
-  gold:       '#D4A017',
-  goldLight:  '#F0C040',
-  goldDim:    'rgba(212,160,23,.12)',
-  goldBorder: 'rgba(212,160,23,.25)',
-  goldHover:  'rgba(212,160,23,.18)',
-  goldActive: 'rgba(212,160,23,.25)',
+  /* Brand gold — stays the same */
+  gold:       '#C8960F',
+  goldLight:  '#E5B020',
+  goldDim:    'rgba(200,150,15,.08)',
+  goldBorder: 'rgba(200,150,15,.25)',
+  goldHover:  'rgba(200,150,15,.12)',
+  goldActive: 'rgba(200,150,15,.18)',
 
-  dark:       '#0d1117',
-  darkAlt:    '#0a0e14',
-  raised:     '#161b22',
-  raisedAlt:  '#1c2333',
-  surface:    '#1f2c3e',
+  /* Sidebar (dark) */
+  sidebarBg:     '#1a1f2e',
+  sidebarBorder: '#2a3244',
+  sidebarText:   '#c8cdd8',
+  sidebarDim:    '#6b7a94',
 
-  border:     '#263347',
-  borderDim:  'rgba(38,51,71,.5)',
-
-  text:       '#e8edf8',
-  textMuted:  '#8fa3c0',
-  textDim:    '#546a8a',
-  textFaint:  '#3a4f6a',
-
-  green:      '#22c55e',
-  red:        '#ef4444',
-  orange:     '#f59e0b',
-  blue:       '#3b82f6',
-
+  /* Content area (bright) */
+  pageBg:     '#F8F9FB',
   white:      '#ffffff',
+  surface:    '#ffffff',
+  raised:     '#F3F4F6',
+  raisedAlt:  '#E5E7EB',
+
+  /* Borders (light) */
+  border:     '#E2E5EA',
+  borderDim:  '#EEF0F3',
+
+  /* Text (dark on light) */
+  text:       '#111827',
+  textMuted:  '#6B7280',
+  textDim:    '#9CA3AF',
+  textFaint:  '#D1D5DB',
+
+  /* Status colors */
+  green:      '#16A34A',
+  red:        '#DC2626',
+  orange:     '#EA580C',
+  blue:       '#2563EB',
+
+  /* Legacy compat — map old dark names to new bright equivalents */
+  dark:       '#1a1f2e',
+  darkAlt:    '#1a1f2e',
   black:      '#000000',
 } as const;
 
@@ -50,7 +64,7 @@ export const space = {
 
 /* ── Typography ────────────────────────────────────────────────────── */
 export const font = {
-  family: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  family: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, system-ui, sans-serif',
   mono: '"SF Mono", "Fira Code", "Cascadia Code", monospace',
 
   size: {
@@ -82,13 +96,14 @@ export const radius = {
   full: 9999,
 } as const;
 
-/* ── Shadows ───────────────────────────────────────────────────────── */
+/* ── Shadows (lighter for bright theme) ────────────────────────────── */
 export const shadow = {
-  sm:   '0 1px 2px rgba(0,0,0,.3)',
-  md:   '0 4px 12px rgba(0,0,0,.4)',
-  lg:   '0 8px 32px rgba(0,0,0,.5)',
-  xl:   '0 16px 48px rgba(0,0,0,.6)',
-  glow: `0 0 20px rgba(212,160,23,.15)`,
+  sm:   '0 1px 2px rgba(0,0,0,.06)',
+  md:   '0 4px 12px rgba(0,0,0,.08)',
+  lg:   '0 8px 24px rgba(0,0,0,.1)',
+  xl:   '0 16px 40px rgba(0,0,0,.12)',
+  glow: '0 0 16px rgba(200,150,15,.2)',
+  card: '0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04)',
 } as const;
 
 /* ── Sidebar ───────────────────────────────────────────────────────── */
@@ -96,7 +111,7 @@ export const sidebar = {
   width: 240,
   widthCollapsed: 64,
   headerHeight: 56,
-  itemHeight: 36,
+  itemHeight: 38,
   sectionGap: 24,
 } as const;
 

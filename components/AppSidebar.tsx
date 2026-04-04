@@ -125,8 +125,8 @@ export default function AppSidebar({
         left: 0,
         bottom: 0,
         width,
-        background: colors.darkAlt,
-        borderRight: `1px solid ${colors.border}`,
+        background: colors.sidebarBg,
+        borderRight: `1px solid ${colors.sidebarBorder}`,
         display: 'flex',
         flexDirection: 'column',
         zIndex: z.sidebar,
@@ -142,7 +142,7 @@ export default function AppSidebar({
           alignItems: 'center',
           padding: collapsed ? '0 16px' : '0 16px',
           gap: 10,
-          borderBottom: `1px solid ${colors.border}`,
+          borderBottom: `1px solid ${colors.sidebarBorder}`,
           flexShrink: 0,
         }}
       >
@@ -170,7 +170,7 @@ export default function AppSidebar({
               }}>
                 SAGUARO
               </span>
-              <span style={{ fontSize: font.size.xs, color: colors.textDim, fontWeight: font.weight.semibold, letterSpacing: 0.5 }}>
+              <span style={{ fontSize: font.size.xs, color: colors.sidebarDim, fontWeight: font.weight.semibold, letterSpacing: 0.5 }}>
                 Control Systems
               </span>
             </span>
@@ -189,7 +189,7 @@ export default function AppSidebar({
                   padding: '12px 16px 4px',
                   fontSize: font.size.xs,
                   fontWeight: font.weight.bold,
-                  color: colors.textDim,
+                  color: colors.sidebarDim,
                   textTransform: 'uppercase',
                   letterSpacing: 1.2,
                   userSelect: 'none',
@@ -229,8 +229,8 @@ export default function AppSidebar({
                   }}
                   onMouseEnter={(e) => {
                     if (!active) {
-                      e.currentTarget.style.background = 'rgba(255,255,255,.04)';
-                      e.currentTarget.style.color = colors.text;
+                      e.currentTarget.style.background = 'rgba(255,255,255,.06)';
+                      e.currentTarget.style.color = colors.sidebarText;
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -285,7 +285,7 @@ export default function AppSidebar({
       </nav>
 
       {/* ── Bottom Section (Settings + Collapse) ────────────────────── */}
-      <div style={{ borderTop: `1px solid ${colors.border}`, padding: '8px 0', flexShrink: 0 }}>
+      <div style={{ borderTop: `1px solid ${colors.sidebarBorder}`, padding: '8px 0', flexShrink: 0 }}>
         {BOTTOM_ITEMS.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
@@ -331,14 +331,14 @@ export default function AppSidebar({
             margin: 0,
             background: 'none',
             border: 'none',
-            color: colors.textDim,
+            color: colors.sidebarDim,
             fontSize: font.size.sm,
             fontWeight: font.weight.medium,
             cursor: 'pointer',
             transition: 'color .15s',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.color = colors.text)}
-          onMouseLeave={(e) => (e.currentTarget.style.color = colors.textDim)}
+          onMouseLeave={(e) => (e.currentTarget.style.color = colors.sidebarDim)}
         >
           {collapsed ? <CaretRight size={16} /> : <><CaretLeft size={16} /><span>Collapse</span></>}
         </button>

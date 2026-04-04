@@ -1,442 +1,123 @@
+/* ═══════════════════════════════════════════════════════════════════
+   SAGUARO CRM — Global Styles
+   BRIGHT & CLEAN theme — Procore-grade professional
+   ═══════════════════════════════════════════════════════════════════ */
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-html { font-size: 14px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif; background: #000000; color: #F5F5F7; overflow-x: hidden; font-size: 14px; line-height: 1.5; }
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #0A0A0A; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #D4A017; }
-a { color: #D4A017; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; transition: all 0.2s ease !important; }
-button:hover { box-shadow: 0 0 30px rgba(212,160,23,0.35), 0 0 8px rgba(212,160,23,0.25), inset 0 0 4px rgba(212,160,23,0.1) !important; border-color: rgba(212,160,23,0.4) !important; }
-button:active { transform: scale(0.97) !important; }
-input, textarea, select { font-family: inherit; transition: all 0.2s ease !important; }
-input:hover, textarea:hover, select:hover { border-color: rgba(212,160,23,0.3) !important; box-shadow: 0 0 16px rgba(212,160,23,0.12) !important; }
-input:focus, textarea:focus, select:focus { border-color: #D4A017 !important; box-shadow: 0 0 0 3px rgba(212,160,23,0.15), 0 0 24px rgba(212,160,23,0.15) !important; outline: none !important; }
+html { font-size: 14px; scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif;
+  background: #F8F9FB;
+  color: #111827;
+  overflow-x: hidden;
+  font-size: 14px;
+  line-height: 1.5;
+}
 
-/* ── Gold hover glow on clickable elements (not nav links) ── */
-a:not(nav a):not([style]):hover { text-shadow: 0 0 12px rgba(212,160,23,0.3); }
-div[onClick]:hover, div[onclick]:hover, [role="button"]:hover, [data-clickable]:hover { box-shadow: 0 0 30px rgba(212,160,23,0.2) !important; cursor: pointer; }
+/* ── Scrollbar — subtle and clean ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
 
-/* ── Gold focus ring on all focusable elements ── */
-*:focus-visible { outline: 2px solid rgba(212,160,23,0.5) !important; outline-offset: 2px !important; border-radius: 4px !important; }
+/* ── Links ── */
+a { color: #C8960F; text-decoration: none; }
+a:hover { color: #A67B0B; }
 
-/* ── Smooth transitions on interactive elements only ── */
-a, button, input, textarea, select, [role="button"] { transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease !important; }
+/* ── Interactive elements — smooth transitions ── */
+a, button, input, textarea, select, [role="button"] {
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+button { font-family: inherit; cursor: pointer; }
+button:active { transform: scale(0.98); }
+input, textarea, select { font-family: inherit; }
 
-/* ── Card hover lift + gold glow ── */
-.glass-card:hover { transform: translateY(-3px) !important; box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 24px rgba(212,160,23,0.12) !important; }
+/* ── Focus — gold ring on all focusable ── */
+*:focus-visible {
+  outline: 2px solid rgba(200,150,15,.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
-/* ── Table row hover gold accent ── */
-tr:hover td, [data-row]:hover { background: rgba(212,160,23,0.04) !important; }
-tr:hover { box-shadow: inset 3px 0 0 #D4A017 !important; }
+/* ── Input focus/hover states ── */
+input:focus, textarea:focus, select:focus {
+  border-color: #C8960F !important;
+  box-shadow: 0 0 0 3px rgba(200,150,15,.12) !important;
+  outline: none !important;
+}
+input:hover, textarea:hover, select:hover {
+  border-color: #D1D5DB !important;
+}
 
-/* ── Nav link gold underline on hover ── */
-nav a:hover { color: #D4A017 !important; }
-
-/* ── Animations ── */
-@keyframes navDropFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-@keyframes goldGlow { 0%, 100% { box-shadow: 0 0 20px rgba(212,160,23,0.2); } 50% { box-shadow: 0 0 40px rgba(212,160,23,0.4); } }
-
-/* ── Apple-grade dark select styling ── */
+/* ── Select styling ── */
 select {
   appearance: none;
   -webkit-appearance: none;
-  background-color: rgba(255,255,255,0.06);
-  color: #F5F5F7;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px;
+  background-color: #ffffff;
+  color: #111827;
+  border: 1px solid #E2E5EA;
+  border-radius: 8px;
   padding: 10px 36px 10px 12px;
   font-size: 14px;
-  font-family: inherit;
   cursor: pointer;
   outline: none;
-  transition: all .2s ease;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2386868B' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7280' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
 }
-select:hover { border-color: rgba(255,255,255,0.15); background-color: rgba(255,255,255,0.08); }
-select:focus { border-color: #D4A017; box-shadow: 0 0 0 3px rgba(212,160,23,0.12); color: #F5F5F7; }
-select option { background-color: #1C1C1E; color: #F5F5F7; font-size: 14px; padding: 8px 12px; }
-select option:checked, select option:hover { background-color: #2C2C2E; color: #D4A017; }
+select option { background-color: #ffffff; color: #111827; }
 
-/* ── react-datepicker Apple dark theme ── */
+/* ── Typography — professional, compact ── */
+h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.3; color: #111827; }
+h2 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.3; color: #111827; }
+h3 { font-size: 15px; font-weight: 600; line-height: 1.3; color: #111827; }
+h4, h5, h6 { font-size: 13px; font-weight: 600; line-height: 1.3; color: #374151; }
+
+/* ── Table styling ── */
+table { border-collapse: collapse; width: 100%; }
+tr:hover td { background: rgba(200,150,15,.04); }
+th { text-align: left; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; }
+
+/* ── Card hover effect ── */
+.glass-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+
+/* ── Animations ── */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Date picker — light theme ── */
 .saguaro-calendar {
-  background: rgba(28,28,30,0.95) !important;
-  backdrop-filter: blur(40px) !important;
-  -webkit-backdrop-filter: blur(40px) !important;
-  border: 1px solid rgba(255,255,255,0.08) !important;
-  border-radius: 14px !important;
+  background: #ffffff !important;
+  border: 1px solid #E2E5EA !important;
+  border-radius: 12px !important;
   font-family: inherit !important;
   font-size: 13px !important;
-  color: #F5F5F7 !important;
-  box-shadow: 0 16px 48px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,0.04) !important;
+  color: #111827 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.1) !important;
 }
 .saguaro-calendar .react-datepicker__header {
-  background: rgba(255,255,255,0.04) !important;
-  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
-  border-radius: 14px 14px 0 0 !important;
+  background: #F8F9FB !important;
+  border-bottom: 1px solid #E2E5EA !important;
+  border-radius: 12px 12px 0 0 !important;
 }
 .saguaro-calendar .react-datepicker__current-month,
-.saguaro-calendar .react-datepicker__day-name {
-  color: #F5F5F7 !important;
-  font-weight: 600 !important;
-}
-.saguaro-calendar .react-datepicker__day {
-  color: #F5F5F7 !important;
-  border-radius: 8px !important;
-  transition: all 0.15s ease !important;
-}
-.saguaro-calendar .react-datepicker__day:hover {
-  background: rgba(255,255,255,0.08) !important;
-  color: #D4A017 !important;
-}
+.saguaro-calendar .react-datepicker__day-name { color: #111827 !important; font-weight: 600 !important; }
+.saguaro-calendar .react-datepicker__day { color: #111827 !important; border-radius: 8px !important; }
+.saguaro-calendar .react-datepicker__day:hover { background: #F3F4F6 !important; color: #C8960F !important; }
 .saguaro-calendar .react-datepicker__day--selected,
-.saguaro-calendar .react-datepicker__day--keyboard-selected {
-  background: #D4A017 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-}
-.saguaro-calendar .react-datepicker__day--today {
-  border: 1px solid #D4A017 !important;
-  background: transparent !important;
-  color: #D4A017 !important;
-}
-.saguaro-calendar .react-datepicker__day--outside-month {
-  color: #48484A !important;
-}
-.saguaro-calendar .react-datepicker__navigation-icon::before {
-  border-color: #86868B !important;
-}
-.saguaro-calendar .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
-  border-color: #D4A017 !important;
-}
-.react-datepicker-wrapper {
-  width: 100%;
-  display: block;
-}
-.react-datepicker__input-container {
-  width: 100%;
-  display: block;
-}
-.react-datepicker-popper {
-  z-index: 9999 !important;
-}
+.saguaro-calendar .react-datepicker__day--keyboard-selected { background: #C8960F !important; color: #ffffff !important; font-weight: 700 !important; }
+.saguaro-calendar .react-datepicker__day--today { border: 1px solid #C8960F !important; background: transparent !important; color: #C8960F !important; }
+.saguaro-calendar .react-datepicker__day--outside-month { color: #D1D5DB !important; }
+.saguaro-calendar .react-datepicker__navigation-icon::before { border-color: #6B7280 !important; }
+.saguaro-calendar .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before { border-color: #C8960F !important; }
+.react-datepicker-wrapper { width: 100%; display: block; }
+.react-datepicker__input-container { width: 100%; display: block; }
+.react-datepicker-popper { z-index: 9999 !important; }
 
-/* ── Professional CRM typography — compact, information-dense ── */
-/* Tighten all headings: max 20px, normal weight 600-700 */
-h1 { font-size: 18px !important; font-weight: 700 !important; letter-spacing: -0.01em; line-height: 1.3; }
-h2 { font-size: 15px !important; font-weight: 700 !important; letter-spacing: -0.01em; line-height: 1.3; }
-h3 { font-size: 14px !important; font-weight: 600 !important; line-height: 1.3; }
-h4, h5, h6 { font-size: 13px !important; font-weight: 600 !important; line-height: 1.3; }
-
-/* Body text: 13px base, not 14-16px */
-p, span, div, li, td, th, label, a {
-  font-weight: inherit;
+/* ── Print styles ── */
+@media print {
+  body { background: white; }
+  nav, aside, [data-ai-panel], .mobile-hamburger { display: none !important; }
 }
-
-/* Inputs: compact 13px */
-input, textarea, select {
-  font-size: 13px !important;
-}
-
-/* Buttons: compact, professional */
-button {
-  font-size: 13px;
-  letter-spacing: 0.01em;
-}
-
-/* Tables: tight professional rows */
-table { font-size: 13px; border-collapse: collapse; }
-th { font-size: 11px !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 0.06em; }
-td { font-size: 13px !important; padding: 8px 12px; }
-
-/* Cards: reduce padding bloat */
-[style*="borderRadius"][style*="padding"] {
-  /* Handled by inline — this is a hint for dev */
-}
-
-/* Labels: small caps style */
-label {
-  font-size: 11px !important;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #86868B;
-}
-
-/* Badge/chip styling */
-[style*="borderRadius: 20"] {
-  font-size: 11px !important;
-}
-
-/* Professional font stack — Inter-like system fonts */
-body, button, input, textarea, select {
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, system-ui, sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-/* Reduce visual weight of heavy font-weight: 800-900 */
-[style*="fontWeight: 900"], [style*="fontWeight: 800"] {
-  font-weight: 700 !important;
-}
-
-/* ── Responsive breakpoints ── */
-@media (max-width: 768px) {
-  html { font-size: 13px; }
-
-  /* Hide desktop nav links on mobile — hamburger handles it */
-  [data-nav-links] { display: none !important; }
-  [data-nav-desktop] { display: none !important; }
-
-  /* Mobile-safe modals */
-  [data-modal] { width: calc(100vw - 32px) !important; max-width: 100% !important; }
-
-  /* AI chat panel full-width on mobile */
-  [data-ai-panel] {
-    width: calc(100vw - 24px) !important;
-    right: 12px !important;
-    left: 12px !important;
-    bottom: 12px !important;
-  }
-
-  /* Tables scroll horizontally */
-  [data-table-wrap] { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-}
-
-@media (max-width: 480px) {
-  html { font-size: 12px; }
-}
-
-/* ══════════════════════════════════════════════════════════ */
-/* ── DESIGN SYSTEM v2 — Glassmorphism + Animations ────── */
-/* ══════════════════════════════════════════════════════════ */
-
-/* ── Apple-grade Glassmorphism ── */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-.glass-sm {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-.glass-elevated {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(40px) saturate(200%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-.glass-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.glass-hover:hover {
-  border-color: rgba(212, 160, 23, 0.25);
-  box-shadow: 0 8px 32px rgba(212, 160, 23, 0.08), 0 0 0 1px rgba(212, 160, 23, 0.1);
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.07);
-}
-
-/* Page transition — fade in on mount */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.page-enter {
-  animation: fadeInUp 0.2s ease-out;
-}
-
-/* Slide in from right (for mobile page transitions) */
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-.slide-in {
-  animation: slideInRight 0.2s ease-out;
-}
-
-/* Shimmer loading skeleton */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 8px;
-}
-
-/* Pulse animation (for recording, live indicators) */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.pulse { animation: pulse 2s ease-in-out infinite; }
-
-/* Spin animation */
-@keyframes spin { to { transform: rotate(360deg); } }
-.spin { animation: spin 1s linear infinite; }
-
-/* Bounce animation (for typing indicators) */
-@keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
-}
-
-/* Scale tap feedback */
-.tap-scale:active { transform: scale(0.97); }
-.tap-scale { transition: transform 0.1s ease; }
-
-/* Gold glow on focus */
-input:focus, textarea:focus, select:focus {
-  border-color: #D4A017 !important;
-  box-shadow: 0 0 0 3px rgba(212, 160, 23, 0.12), 0 0 20px rgba(212, 160, 23, 0.06);
-  outline: none;
-}
-/* Apple-grade input styling */
-input, textarea {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 10px;
-  color: #F5F5F7;
-  transition: all 0.2s ease;
-}
-input:hover, textarea:hover {
-  border-color: rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.08);
-}
-input::placeholder, textarea::placeholder {
-  color: #48484A;
-}
-
-/* Status badge colors */
-.badge-green { background: rgba(34, 197, 94, 0.12); color: #22C55E; border: 1px solid rgba(34, 197, 94, 0.25); }
-.badge-gold { background: rgba(212, 160, 23, 0.12); color: #D4A017; border: 1px solid rgba(212, 160, 23, 0.25); }
-.badge-red { background: rgba(239, 68, 68, 0.12); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.25); }
-.badge-blue { background: rgba(59, 130, 246, 0.12); color: #3B82F6; border: 1px solid rgba(59, 130, 246, 0.25); }
-.badge-purple { background: rgba(139, 92, 246, 0.12); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.25); }
-.badge-gray { background: rgba(148, 163, 184, 0.12); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.25); }
-[class^="badge-"] {
-  display: inline-flex; align-items: center; padding: 2px 10px;
-  border-radius: 20px; font-size: 11px; font-weight: 600;
-  letter-spacing: 0.02em; white-space: nowrap;
-}
-
-/* Tooltip */
-.tooltip { position: relative; }
-.tooltip::after {
-  content: attr(data-tip); position: absolute; bottom: 100%; left: 50%;
-  transform: translateX(-50%); background: rgba(28,28,30,0.95); color: #F5F5F7;
-  padding: 6px 12px; border-radius: 8px; font-size: 11px; white-space: nowrap;
-  opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
-  border: 1px solid rgba(255,255,255,0.08); margin-bottom: 6px;
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-}
-.tooltip:hover::after { opacity: 1; }
-
-/* Progress bar */
-.progress-bar {
-  height: 6px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;
-}
-.progress-bar-fill {
-  height: 100%; border-radius: 4px; transition: width 0.5s ease;
-  background: linear-gradient(90deg, #D4A017, #F0C040);
-}
-
-/* Divider */
-.divider {
-  height: 1px; background: rgba(255,255,255,0.06); margin: 16px 0;
-}
-
-/* Scrollbar for dark glass containers */
-.glass::-webkit-scrollbar { width: 4px; }
-.glass::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-
-/* Confetti burst */
-@keyframes confetti-fall {
-  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-}
-
-/* Smooth transitions for all interactive elements */
-a, button, input, select, textarea {
-  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s, color 0.15s, transform 0.1s;
-}
-
-/* Apple-grade table rows */
-tr { transition: background 0.15s ease; }
-tr:hover td { background: rgba(255, 255, 255, 0.03) !important; }
-thead th { background: rgba(255,255,255,0.03) !important; border-bottom: 1px solid rgba(255,255,255,0.06) !important; }
-tbody td { border-bottom: 1px solid rgba(255,255,255,0.03) !important; }
-
-/* Gold accent button utility */
-.btn-gold {
-  background: linear-gradient(135deg, #D4A017 0%, #C8960F 100%);
-  color: #000; font-weight: 700; border: none; border-radius: 10px;
-  padding: 10px 24px; cursor: pointer; transition: all 0.2s ease;
-  box-shadow: 0 2px 12px rgba(212,160,23,0.2);
-}
-.btn-gold:hover {
-  box-shadow: 0 4px 20px rgba(212,160,23,0.35);
-  transform: translateY(-1px);
-}
-.btn-gold:active { transform: scale(0.98) translateY(0); }
-
-/* Ghost button */
-.btn-ghost {
-  background: rgba(255,255,255,0.06); color: #F5F5F7;
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
-  padding: 10px 24px; cursor: pointer; transition: all 0.2s ease;
-}
-.btn-ghost:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.2);
-}
-
-/* Gradient mesh background utility */
-.mesh-bg {
-  position: relative;
-  overflow: hidden;
-}
-.mesh-bg::before {
-  content: '';
-  position: absolute;
-  top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(ellipse at 20% 50%, rgba(212,160,23,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 20%, rgba(59,130,246,0.04) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 80%, rgba(139,92,246,0.03) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Scroll-triggered fade in */
-@keyframes fadeInOnScroll {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.fade-section {
-  animation: fadeInOnScroll 0.6s ease-out both;
-}
-
-/* ── Landing page specific overrides ── */
-[data-landing] h1 { font-size: clamp(24px, 4vw, 38px) !important; }
-[data-landing] h2 { font-size: clamp(18px, 3vw, 28px) !important; }
-[data-landing] h3 { font-size: clamp(15px, 2.5vw, 20px) !important; }
-[data-landing] p { font-size: 14px !important; line-height: 1.6; }
