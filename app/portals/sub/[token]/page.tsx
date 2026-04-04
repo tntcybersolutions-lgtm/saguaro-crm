@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import PortalHeader from '../../../../components/PortalHeader';
+import PortalSageChat from '../../../../components/PortalSageChat';
 import { House, ShieldCheck, CurrencyDollar, ClipboardText, Question, CalendarBlank, Star, ChatCircle, UploadSimple, PaperPlaneTilt, MapPin, Clock, Warning } from '@phosphor-icons/react';
 
 /* ── Design Tokens ── */
@@ -934,6 +935,21 @@ export default function SubPortal(){
         <div style={{fontSize:12,color:DIM}}>Powered by <strong style={{color:GOLD}}>Saguaro CRM</strong> &middot; Construction Management Platform</div>
         <div style={{fontSize:10,color:BORDER,marginTop:4}}>&copy; {new Date().getFullYear()} Saguaro. All rights reserved.</div>
       </footer>
+
+      {/* ── Sage AI Chat ── */}
+      <PortalSageChat
+        token={token||''}
+        portalType="sub"
+        userName={companyName}
+        projectContext={{
+          companyName,
+          trade: sub?.trade,
+          complianceDocsCount: complianceDocs.length,
+          payAppsCount: payApps.length,
+          openRfis: rfis.filter((r:any)=>r.status==='open').length,
+          healthScore,
+        }}
+      />
 
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}*{scrollbar-width:thin;scrollbar-color:${BORDER} ${DARK}}::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:${DARK}}::-webkit-scrollbar-thumb{background:${BORDER};border-radius:3px}select option{background:${DARK};color:${TEXT}}@media(max-width:768px){main{padding:16px 12px!important}}`}</style>
     </div>

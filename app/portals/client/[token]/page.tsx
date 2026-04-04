@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import PortalHeader from '../../../../components/PortalHeader';
+import PortalSageChat from '../../../../components/PortalSageChat';
 import { House, CheckCircle, CurrencyDollar, ChatCircle, FileText, Wrench, Brain, Camera, Warning } from '@phosphor-icons/react';
 
 /* ── Palette (bright theme) ──────────────────────────────────────── */
@@ -2376,6 +2377,23 @@ export default function ClientPortalPage() {
           </div>
         </div>
       </footer>
+
+      {/* ── Sage AI Chat ── */}
+      <PortalSageChat
+        token={token||''}
+        portalType="client"
+        userName={project.client_name}
+        projectContext={{
+          projectName: project.name,
+          clientName: project.client_name,
+          companyName: project.company_name,
+          percentComplete: project.percent_complete,
+          originalContract: project.original_contract,
+          totalBudget: project.total_budget,
+          spentToDate: project.spent_to_date,
+          openItems: project.open_items,
+        }}
+      />
     </div>
   );
 }
