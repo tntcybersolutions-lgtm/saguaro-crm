@@ -31,6 +31,8 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   onExport?: () => void;
   toolbar?: React.ReactNode;
+  /** Render a mobile card for each row (shown below 768px instead of table) */
+  mobileCard?: (row: T) => React.ReactNode;
 }
 
 export default function DataTable<T extends Record<string, any>>({
@@ -45,7 +47,17 @@ export default function DataTable<T extends Record<string, any>>({
   onRowClick,
   onExport,
   toolbar,
+  mobileCard,
 }: DataTableProps<T>) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  React.useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -123,7 +135,43 @@ export default function DataTable<T extends Record<string, any>>({
         </div>
       </div>
 
-      {/* ── Table ────────────────────────────────────────────────────── */}
+      {/* ── Mobile Card View (< 768px) ────────────────────────────── */}
+      {isMobile && mobileCard ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={`mobile-skeleton-${i}`} style={{ padding: 16, background: 'rgba(255,255,255,.02)', border: `1px solid ${colors.border}`, borderRadius: radius.lg }}>
+                <div style={{ height: 14, width: '60%', borderRadius: 4, background: 'rgba(255,255,255,.04)', marginBottom: 10, animation: 'pulse 1.5s ease-in-out infinite' }} />
+                <div style={{ height: 12, width: '80%', borderRadius: 4, background: 'rgba(255,255,255,.04)', marginBottom: 6, animation: 'pulse 1.5s ease-in-out infinite' }} />
+                <div style={{ height: 12, width: '40%', borderRadius: 4, background: 'rgba(255,255,255,.04)', animation: 'pulse 1.5s ease-in-out infinite' }} />
+              </div>
+            ))
+          ) : table.getRowModel().rows.length === 0 ? (
+            <div style={{ padding: '48px 16px', textAlign: 'center', color: colors.textDim, fontSize: font.size.md }}>
+              {emptyMessage}
+            </div>
+          ) : (
+            table.getRowModel().rows.map((row) => (
+              <div
+                key={row.id}
+                onClick={() => onRowClick?.(row.original)}
+                style={{
+                  padding: 16,
+                  background: 'rgba(255,255,255,.02)',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: radius.lg,
+                  cursor: onRowClick ? 'pointer' : 'default',
+                  transition: 'border-color .15s',
+                }}
+              >
+                {mobileCard(row.original)}
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+
+      /* ── Desktop Table (>= 768px) ───────────────────────────────── */
       <div style={{ borderRadius: radius.lg, border: `1px solid ${colors.border}`, overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -224,6 +272,8 @@ export default function DataTable<T extends Record<string, any>>({
           </table>
         </div>
       </div>
+
+      )}
 
       {/* ── Pagination ───────────────────────────────────────────────── */}
       {pageCount > 1 && (
