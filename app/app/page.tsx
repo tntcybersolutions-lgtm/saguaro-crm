@@ -47,29 +47,60 @@ interface TodayItem {
   actionLabel: string;
 }
 
-/* ─── KPI Card ────────────────────────────────────────────────────────── */
+/* ─── KPI Card with trend indicator ──────────────────────────────────── */
 function KPI({
-  label, value, sub, color, onClick, href,
+  label, value, sub, color, onClick, href, trend,
 }: {
   label: string; value: string; sub?: string; color?: string;
   onClick?: () => void; href?: string;
+  trend?: { direction: 'up' | 'down' | 'flat'; pct?: number };
 }) {
+  const trendColor = trend?.direction === 'up' ? GREEN : trend?.direction === 'down' ? RED : DIM;
+  const trendArrow = trend?.direction === 'up' ? '↑' : trend?.direction === 'down' ? '↓' : '→';
+
   const inner = (
     <div
       onClick={onClick}
       style={{
-        background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0,
-        padding: '18px 20px', cursor: onClick || href ? 'pointer' : 'default',
-        transition: 'border-color .15s',
+        background: 'rgba(255,255,255,0.02)',
+        border: '1px solid rgba(255,255,255,0.04)',
+        borderRadius: 10,
+        padding: '18px 20px',
+        cursor: onClick || href ? 'pointer' : 'default',
+        transition: 'border-color .2s, background .2s, box-shadow .2s',
       }}
-      onMouseEnter={e => { if (onClick || href) (e.currentTarget as HTMLDivElement).style.borderColor = GOLD; }}
-      onMouseLeave={e => { if (onClick || href) (e.currentTarget as HTMLDivElement).style.borderColor = BORDER; }}
+      onMouseEnter={e => {
+        if (onClick || href) {
+          e.currentTarget.style.borderColor = 'rgba(212,160,23,.3)';
+          e.currentTarget.style.background = 'rgba(212,160,23,.04)';
+          e.currentTarget.style.boxShadow = '0 0 20px rgba(212,160,23,.08)';
+        }
+      }}
+      onMouseLeave={e => {
+        if (onClick || href) {
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+          e.currentTarget.style.boxShadow = 'none';
+        }
+      }}
     >
-      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: DIM, marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 700, color: color ?? TEXT, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: DIM, marginTop: 4 }}>{sub}</div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: DIM, marginBottom: 6 }}>{label}</div>
+        {trend && (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 2,
+            fontSize: 11, fontWeight: 700, color: trendColor,
+            padding: '2px 6px', borderRadius: 4,
+            background: `${trendColor}15`,
+          }}>
+            {trendArrow} {trend.pct != null ? `${trend.pct}%` : ''}
+          </span>
+        )}
+      </div>
+      <div style={{ fontSize: 28, fontWeight: 800, color: color ?? TEXT, lineHeight: 1, fontVariantNumeric: 'tabular-nums', letterSpacing: -0.5 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12, color: DIM, marginTop: 6 }}>{sub}</div>}
       {(onClick || href) && (
-        <div style={{ fontSize: 10, color: GOLD, marginTop: 6, letterSpacing: .5 }}>DRILL DOWN →</div>
+        <div style={{ fontSize: 10, color: GOLD, marginTop: 8, letterSpacing: .5, fontWeight: 700 }}>VIEW DETAILS →</div>
       )}
     </div>
   );
