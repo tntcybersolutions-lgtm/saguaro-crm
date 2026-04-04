@@ -1,11 +1,23 @@
 'use client';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useDashboardStats, useTodayItems } from '@/lib/hooks/useDashboard';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useRFIs } from '@/lib/hooks/useRFIs';
 import { useRealtimeDashboard } from '@/lib/useRealtime';
-import { CurrencyDollar, ShieldCheck, ClipboardText, CheckCircle } from '@phosphor-icons/react';
+import { CurrencyDollar, ShieldCheck, ClipboardText, CheckCircle, ChartBar, TrendUp } from '@phosphor-icons/react';
+
+// Lazy-load Recharts to avoid SSR issues
+const BarChart = dynamic(() => import('recharts').then(m => m.BarChart), { ssr: false });
+const Bar = dynamic(() => import('recharts').then(m => m.Bar), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then(m => m.XAxis), { ssr: false });
+const YAxis = dynamic(() => import('recharts').then(m => m.YAxis), { ssr: false });
+const Tooltip = dynamic(() => import('recharts').then(m => m.Tooltip), { ssr: false });
+const ResponsiveContainer = dynamic(() => import('recharts').then(m => m.ResponsiveContainer), { ssr: false });
+const PieChart = dynamic(() => import('recharts').then(m => m.PieChart), { ssr: false });
+const Pie = dynamic(() => import('recharts').then(m => m.Pie), { ssr: false });
+const Cell = dynamic(() => import('recharts').then(m => m.Cell), { ssr: false });
 
 const GOLD   = '#D4A017';
 const DARK   = '#000000';
@@ -397,6 +409,94 @@ export default function DashboardPage() {
             </>
           )}
         </div>
+
+        {/* ── Charts Section ─────────────────────────────────────────── */}
+        {!statsLoading && !projectsLoading && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 28 }}>
+
+            {/* Project Budget Chart */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '16px 18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <ChartBar size={18} weight="duotone" color={GOLD} />
+                <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Project Budgets</span>
+              </div>
+              {projects.length > 0 ? (
+                <div style={{ width: '100%', height: 220 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={projects.slice(0, 6).map(p => ({
+                      name: p.name?.length > 12 ? p.name.slice(0, 12) + '…' : p.name || 'Unnamed',
+                      budget: p.budget ?? p.contract_value ?? 0,
+                    }))}>
+                      <XAxis dataKey="name" tick={{ fill: DIM, fontSize: 11 }} axisLine={{ stroke: 'rgba(255,255,255,0.05)' }} tickLine={false} />
+                      <YAxis tick={{ fill: DIM, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                      <Tooltip
+                        contentStyle={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12, color: TEXT }}
+                        labelStyle={{ color: GOLD, fontWeight: 700 }}
+                        formatter={(v: number) => [`$${v.toLocaleString()}`, 'Budget']}
+                      />
+                      <Bar dataKey="budget" fill={GOLD} radius={[4, 4, 0, 0]} maxBarSize={48} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, fontSize: 13 }}>
+                  No project data to display yet
+                </div>
+              )}
+            </div>
+
+            {/* Portfolio Status Donut */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '16px 18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <TrendUp size={18} weight="duotone" color={GOLD} />
+                <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Portfolio Status</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+                <div style={{ width: 160, height: 160 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Active', value: stats?.activeProjects ?? 0 },
+                          { name: 'Open Bids', value: stats?.openBids ?? 0 },
+                          { name: 'Pay Apps', value: stats?.pendingPayApps ?? 0 },
+                          { name: 'RFIs', value: openRFIs?.length ?? 0 },
+                        ].filter(d => d.value > 0)}
+                        cx="50%" cy="50%"
+                        innerRadius={45} outerRadius={70}
+                        paddingAngle={3}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        <Cell fill={GOLD} />
+                        <Cell fill={BLUE} />
+                        <Cell fill={ORANGE} />
+                        <Cell fill={RED} />
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12, color: TEXT }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {[
+                    { label: 'Active Projects', value: stats?.activeProjects ?? 0, color: GOLD },
+                    { label: 'Open Bids', value: stats?.openBids ?? 0, color: BLUE },
+                    { label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: ORANGE },
+                    { label: 'Open RFIs', value: openRFIs?.length ?? 0, color: RED },
+                  ].map(item => (
+                    <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: 2, background: item.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: DIM }}>{item.label}</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginLeft: 'auto' }}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Today's Priority Actions */}
         <div style={{ background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, overflow: 'hidden', marginBottom: 24 }}>
