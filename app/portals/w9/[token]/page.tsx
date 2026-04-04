@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827',GREEN='#1a8a4a',RED='#c03030';
 
 export default function W9Portal() {
   const { token } = useParams<{ token: string }>();
@@ -54,7 +54,7 @@ export default function W9Portal() {
         value={(form as any)[key]}
         onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
         placeholder={placeholder}
-        style={{ width: '100%', background: '#0d1117', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+        style={{ width: '100%', background: '#F8F9FB', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
       />
     </div>
   );
@@ -90,7 +90,7 @@ export default function W9Portal() {
   return (
     <div style={{ minHeight: '100vh', background: DARK, fontFamily: 'system-ui,sans-serif', color: TEXT }}>
       {/* Header */}
-      <div style={{ background: 'rgba(13,17,23,.96)', borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ background: 'rgba(248,249,251,.97)', borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ fontSize: 22 }}>🌵</span>
         <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1 }}>SAGUARO CRM</span>
         <span style={{ fontSize: 11, color: DIM, marginLeft: 8 }}>Secure W-9 Collection Portal</span>
@@ -117,7 +117,7 @@ export default function W9Portal() {
                 <select
                   value={form.taxClassification}
                   onChange={e => setForm(f => ({ ...f, taxClassification: e.target.value }))}
-                  style={{ width: '100%', background: '#0d1117', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none' }}
+                  style={{ width: '100%', background: '#F8F9FB', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none' }}
                 >
                   <option value="individual">Individual / Sole Proprietor</option>
                   <option value="c_corp">C Corporation</option>
@@ -162,7 +162,7 @@ export default function W9Portal() {
                   onChange={e => setForm(f => ({ ...f, tin: e.target.value }))}
                   placeholder={form.tinType === 'ssn' ? '___-__-____' : '__-_______'}
                   maxLength={11}
-                  style={{ width: '100%', background: '#0d1117', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box', letterSpacing: 2 }}
+                  style={{ width: '100%', background: '#F8F9FB', border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box', letterSpacing: 2 }}
                 />
                 <div style={{ fontSize: 11, color: DIM, marginTop: 4 }}>Your TIN is encrypted and stored securely. It will never be shared with unauthorized parties.</div>
               </div>
@@ -190,7 +190,7 @@ export default function W9Portal() {
           <button
             type="submit"
             disabled={saving}
-            style={{ width: '100%', padding: '14px', background: saving ? '#4a5f7a' : `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 9, color: '#0d1117', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
+            style={{ width: '100%', padding: '14px', background: saving ? '#4a5f7a' : `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 9, color: '#ffffff', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
           >
             {saving ? 'Submitting...' : 'Submit W-9 Securely →'}
           </button>

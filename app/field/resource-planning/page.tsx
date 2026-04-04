@@ -10,7 +10,7 @@ import { enqueue } from '@/lib/field-db';
 import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 /* ── colour palette ────────────────────────────────────────────────── */
-const GOLD = '#D4A017', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F';
+const GOLD = '#C8960F', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F';
 const TEXT = '#F0F4FF', DIM = '#8BAAC8', GREEN = '#22C55E', RED = '#EF4444';
 const AMBER = '#F59E0B', BLUE = '#3B82F6', PURPLE = '#8B5CF6';
 
@@ -916,7 +916,7 @@ export default function Page() {
       fallback={
         <div style={{ minHeight: '100dvh', background: '#07101C', color: '#8BAAC8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 32, height: 32, border: '3px solid #1E3A5F', borderTopColor: '#D4A017', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+            <div style={{ width: 32, height: 32, border: '3px solid #1E3A5F', borderTopColor: '#C8960F', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
             <p style={{ fontSize: 14, margin: 0 }}>Loading Resource Planning...</p>
             <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
           </div>

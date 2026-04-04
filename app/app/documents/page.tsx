@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-const GOLD = '#D4A017';
-const DARK = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const GOLD = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 const GREEN = '#3dd68c';
 
 const fmt = (n: number) =>
@@ -109,7 +109,7 @@ export default function DocumentsPage() {
       <div style={{
         display: 'flex', gap: 0,
         borderBottom: `1px solid ${BORDER}`,
-        background: '#0a1117', paddingLeft: 24,
+        background: '#F8F9FB', paddingLeft: 24,
         overflowX: 'auto',
       }}>
         {TABS.map(tab => {
@@ -144,14 +144,14 @@ export default function DocumentsPage() {
               <Link href="/app/projects" style={{
                 padding: '8px 16px',
                 background: `linear-gradient(135deg,${GOLD},#F0C040)`,
-                borderRadius: 7, color: '#0d1117', fontSize: 13, fontWeight: 800,
+                borderRadius: 7, color: '#ffffff', fontSize: 13, fontWeight: 800,
                 textDecoration: 'none',
               }}>+ Generate New</Link>
             </div>
             <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#0a1117' }}>
+                  <tr style={{ background: '#F8F9FB' }}>
                     {['Application #', 'Period', 'Amount Due', 'Status', 'Download'].map(h => (
                       <th key={h} style={{
                         padding: '10px 16px', textAlign: 'left',
@@ -199,14 +199,14 @@ export default function DocumentsPage() {
               <Link href="/app/projects" style={{
                 padding: '8px 16px',
                 background: `linear-gradient(135deg,${GOLD},#F0C040)`,
-                borderRadius: 7, color: '#0d1117', fontSize: 13, fontWeight: 800,
+                borderRadius: 7, color: '#ffffff', fontSize: 13, fontWeight: 800,
                 textDecoration: 'none',
               }}>+ Generate New</Link>
             </div>
             <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#0a1117' }}>
+                  <tr style={{ background: '#F8F9FB' }}>
                     {['Sub Name', 'Type', 'Amount', 'Through Date', 'Status', 'Download'].map(h => (
                       <th key={h} style={{
                         padding: '10px 16px', textAlign: 'left',
@@ -256,7 +256,7 @@ export default function DocumentsPage() {
                 padding: '8px 16px',
                 background: `linear-gradient(135deg,${GOLD},#F0C040)`,
                 border: 'none', borderRadius: 7,
-                color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                color: '#ffffff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
               }}>+ Generate New</button>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -278,7 +278,7 @@ export default function DocumentsPage() {
                     marginTop: 4, padding: '8px 0', width: '100%',
                     background: `linear-gradient(135deg,${GOLD},#F0C040)`,
                     border: 'none', borderRadius: 7,
-                    color: '#0d1117', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                    color: '#ffffff', fontSize: 12, fontWeight: 800, cursor: 'pointer',
                   }}>Generate {card.code}</button>
                 </div>
               ))}
@@ -294,14 +294,14 @@ export default function DocumentsPage() {
               <Link href="/app/projects" style={{
                 padding: '8px 16px',
                 background: `linear-gradient(135deg,${GOLD},#F0C040)`,
-                borderRadius: 7, color: '#0d1117', fontSize: 13, fontWeight: 800,
+                borderRadius: 7, color: '#ffffff', fontSize: 13, fontWeight: 800,
                 textDecoration: 'none',
               }}>+ Generate WH-347</Link>
             </div>
             <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#0a1117' }}>
+                  <tr style={{ background: '#F8F9FB' }}>
                     {['Week Ending', '# Employees', 'Total Gross', 'Status', 'Download'].map(h => (
                       <th key={h} style={{
                         padding: '10px 16px', textAlign: 'left',
@@ -350,7 +350,7 @@ export default function DocumentsPage() {
                 padding: '8px 16px',
                 background: `linear-gradient(135deg,${GOLD},#F0C040)`,
                 border: 'none', borderRadius: 7,
-                color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                color: '#ffffff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
               }}>+ Export Closeout Package</button>
             </div>
 

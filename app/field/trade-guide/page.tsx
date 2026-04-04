@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
-const GOLD = '#D4A017';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const BORDER = '#E5E7EB';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface Article {
   id: string;
@@ -184,7 +184,7 @@ export default function TradeGuidePage() {
               textTransform: 'capitalize',
             }}>{selectedArticle.difficulty}</span>
             {selectedArticle.estimated_time && (
-              <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>
+              <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 8, background: '#EEF0F3', color: DIM }}>
                 {selectedArticle.estimated_time}
               </span>
             )}
@@ -280,7 +280,7 @@ export default function TradeGuidePage() {
                 <div key={i} style={{
                   alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: '85%', padding: '10px 14px', borderRadius: 12,
-                  background: msg.role === 'user' ? `${GOLD}20` : 'rgba(255,255,255,0.05)',
+                  background: msg.role === 'user' ? `${GOLD}20` : '#E2E5EA',
                   color: TEXT, fontSize: 13, lineHeight: 1.5,
                   borderBottomRightRadius: msg.role === 'user' ? 4 : 12,
                   borderBottomLeftRadius: msg.role === 'assistant' ? 4 : 12,
@@ -361,7 +361,7 @@ export default function TradeGuidePage() {
             onClick={() => setActiveCategory(cat)}
             style={{
               padding: '4px 10px', border: 'none',
-              borderRadius: 6, background: activeCategory === cat ? 'rgba(255,255,255,0.1)' : 'transparent',
+              borderRadius: 6, background: activeCategory === cat ? '#E5E7EB' : 'transparent',
               color: activeCategory === cat ? TEXT : DIM,
               fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
             }}
@@ -400,12 +400,12 @@ export default function TradeGuidePage() {
                   textTransform: 'capitalize',
                 }}>{article.difficulty}</span>
                 {article.estimated_time && (
-                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', color: DIM }}>
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: '#E2E5EA', color: DIM }}>
                     {article.estimated_time}
                   </span>
                 )}
                 <span style={{
-                  fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', color: DIM,
+                  fontSize: 10, padding: '2px 8px', borderRadius: 8, background: '#E2E5EA', color: DIM,
                 }}>{article.category}</span>
               </div>
               <div style={{ color: TEXT, fontSize: 15, fontWeight: 700, marginBottom: 4 }}>{article.title}</div>
@@ -456,7 +456,7 @@ export default function TradeGuidePage() {
               <div key={i} style={{
                 alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                 maxWidth: '85%', padding: '10px 14px', borderRadius: 12,
-                background: msg.role === 'user' ? `${GOLD}20` : 'rgba(255,255,255,0.05)',
+                background: msg.role === 'user' ? `${GOLD}20` : '#E2E5EA',
                 color: TEXT, fontSize: 13, lineHeight: 1.5,
                 borderBottomRightRadius: msg.role === 'user' ? 4 : 12,
                 borderBottomLeftRadius: msg.role === 'assistant' ? 4 : 12,

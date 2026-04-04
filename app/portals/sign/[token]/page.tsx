@@ -8,7 +8,7 @@ const BORDER_LT = '#e2e8f0';
 const TEXT_DARK = '#1a202c';
 const TEXT_MED = '#4a5568';
 const TEXT_DIM = '#718096';
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const GREEN = '#16a34a';
 const RED = '#dc2626';
 

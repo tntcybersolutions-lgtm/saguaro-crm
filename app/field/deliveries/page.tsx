@@ -7,9 +7,9 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD = '#D4A017';
-const CARD = '#1A1F2E';
-const BASE = '#0F1419';
+const GOLD = '#C8960F';
+const CARD = '#F8F9FB';
+const BASE = '#F8F9FB';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const GREEN = '#22C55E';
@@ -52,7 +52,7 @@ const glass: React.CSSProperties = {
   background: 'rgba(26,31,46,0.7)',
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255,255,255,0.06)',
+  border: '1px solid #EEF0F3',
   borderRadius: 16,
 };
 
@@ -298,9 +298,9 @@ function DeliveriesPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[1, 2, 3].map(i => (
                 <div key={i} style={{ ...glass, padding: 16, height: 100, animation: 'pulse 1.5s ease-in-out infinite' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, height: 16, width: '60%', marginBottom: 8 }} />
-                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, height: 12, width: '40%', marginBottom: 8 }} />
-                  <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 8, height: 10, width: '30%' }} />
+                  <div style={{ background: '#F3F4F6', borderRadius: 8, height: 16, width: '60%', marginBottom: 8 }} />
+                  <div style={{ background: '#F8F9FB', borderRadius: 8, height: 12, width: '40%', marginBottom: 8 }} />
+                  <div style={{ background: '#FAFBFC', borderRadius: 8, height: 10, width: '30%' }} />
                 </div>
               ))}
             </div>
@@ -324,7 +324,7 @@ function DeliveriesPage() {
                 return (
                   <div key={delivery.id} style={{
                     ...glass, padding: 14,
-                    border: isOverdue ? `1px solid rgba(${hr(RED)},0.3)` : '1px solid rgba(255,255,255,0.06)',
+                    border: isOverdue ? `1px solid rgba(${hr(RED)},0.3)` : '1px solid #EEF0F3',
                   }}>
                     {/* Header */}
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -373,7 +373,7 @@ function DeliveriesPage() {
                         disabled={markingId === delivery.id}
                         style={{
                           width: '100%', marginTop: 10,
-                          background: markingId === delivery.id ? 'rgba(255,255,255,0.04)' : `rgba(${hr(GREEN)},0.1)`,
+                          background: markingId === delivery.id ? '#F3F4F6' : `rgba(${hr(GREEN)},0.1)`,
                           border: `1px solid ${markingId === delivery.id ? BORDER : `rgba(${hr(GREEN)},0.3)`}`,
                           borderRadius: 10, padding: '10px', cursor: markingId === delivery.id ? 'wait' : 'pointer',
                           color: markingId === delivery.id ? DIM : GREEN, fontSize: 13, fontWeight: 700,

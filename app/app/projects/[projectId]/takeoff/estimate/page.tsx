@@ -6,12 +6,12 @@ import { useDragReorder } from '../../../../../../components/DragHandle';
 import BulkActionBar from '../../../../../../components/BulkActionBar';
 import PresenceIndicator from '../../../../../../components/PresenceIndicator';
 
-const GOLD = '#D4A017';
-const DARK = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const GOLD = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface Project {
   id: string;
@@ -802,7 +802,7 @@ function EstimatePage() {
 export default function EstimatePageWrapper() {
   return (
     <Suspense fallback={
-      <div style={{ background: '#0d1117', color: '#8fa3c0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+      <div style={{ background: '#F8F9FB', color: '#6B7280', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
         Loading estimate workspace...
       </div>
     }>

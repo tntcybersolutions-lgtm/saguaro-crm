@@ -5,7 +5,7 @@ const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const RED = '#EF4444';
 
 interface SignaturePadProps {

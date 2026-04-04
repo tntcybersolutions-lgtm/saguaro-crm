@@ -8,7 +8,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SwipeActionItem } from '@/components/field/SwipeAction';
 
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT = '#F0F4FF';

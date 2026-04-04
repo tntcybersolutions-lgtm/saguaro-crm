@@ -7,16 +7,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
 const CARD_GLASS = 'rgba(26,31,46,0.7)';
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
-const BORDER = 'rgba(255,255,255,0.06)';
+const BORDER = '#EEF0F3';
 const RADIUS = 16;
 
 const glass: React.CSSProperties = {
@@ -326,7 +326,7 @@ function LaserPage() {
       <p style={{ margin: '0 0 14px', fontSize: 12, color: DIM }}>BLE laser connection & measurement logging</p>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 3 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#F8F9FB', borderRadius: 12, padding: 3 }}>
         {(['measure', 'history'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             style={{
@@ -355,7 +355,7 @@ function LaserPage() {
               </>
             ) : (
               <>
-                <div style={{ fontSize: 48, fontWeight: 900, color: 'rgba(255,255,255,0.08)', lineHeight: 1 }}>
+                <div style={{ fontSize: 48, fontWeight: 900, color: '#E5E7EB', lineHeight: 1 }}>
                   {'0\' 0"'}
                 </div>
                 <p style={{ margin: '8px 0 0', fontSize: 13, color: DIM, fontWeight: 500 }}>
@@ -366,7 +366,7 @@ function LaserPage() {
           </div>
 
           {/* Unit toggle */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 3 }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#F8F9FB', borderRadius: 10, padding: 3 }}>
             {(['ft/in', 'mm', 'm', 'cm'] as Unit[]).map(u => (
               <button key={u} onClick={() => setUnit(u)}
                 style={{
@@ -439,7 +439,7 @@ function LaserPage() {
                   Set
                 </button>
                 <button onClick={() => setManualEntry(false)}
-                  style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '0 12px', color: DIM, cursor: 'pointer', fontSize: 13 }}>
+                  style={{ background: '#EEF0F3', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '0 12px', color: DIM, cursor: 'pointer', fontSize: 13 }}>
                   Cancel
                 </button>
               </div>
@@ -448,7 +448,7 @@ function LaserPage() {
             <button onClick={() => setManualEntry(true)}
               style={{
                 width: '100%', padding: '12px 16px', marginBottom: 12,
-                background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`,
+                background: '#F8F9FB', border: `1px solid ${BORDER}`,
                 borderRadius: 12, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}>
@@ -480,7 +480,7 @@ function LaserPage() {
               width: '100%', padding: '16px 20px',
               background: currentValueMM > 0
                 ? `linear-gradient(135deg, ${GOLD} 0%, #EF8C1A 100%)`
-                : 'rgba(255,255,255,0.06)',
+                : '#EEF0F3',
               border: 'none', borderRadius: RADIUS,
               color: currentValueMM > 0 ? '#000' : DIM,
               fontSize: 16, fontWeight: 800, cursor: currentValueMM > 0 ? 'pointer' : 'default',
@@ -512,7 +512,7 @@ function LaserPage() {
           )}
 
           {/* Filters */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: 'rgba(255,255,255,0.03)', borderRadius: 10, padding: 3 }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: '#F8F9FB', borderRadius: 10, padding: 3 }}>
             {([
               { key: 'all', label: 'All' },
               { key: 'linked', label: 'Linked' },
@@ -535,8 +535,8 @@ function LaserPage() {
             <div>
               {[1, 2, 3, 4].map(i => (
                 <div key={i} style={{ ...glass, padding: 14, marginBottom: 8 }}>
-                  <div style={{ height: 20, width: '40%', background: 'rgba(255,255,255,0.06)', borderRadius: 8, marginBottom: 8 }} />
-                  <div style={{ height: 12, width: '60%', background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
+                  <div style={{ height: 20, width: '40%', background: '#EEF0F3', borderRadius: 8, marginBottom: 8 }} />
+                  <div style={{ height: 12, width: '60%', background: '#F3F4F6', borderRadius: 6 }} />
                 </div>
               ))}
             </div>
@@ -572,7 +572,7 @@ function LaserPage() {
                   <button onClick={() => handleUpdateLabel(m.id)}
                     style={{ background: GREEN, border: 'none', borderRadius: 8, padding: '0 12px', color: '#000', fontWeight: 700, cursor: 'pointer', fontSize: 12 }}>Save</button>
                   <button onClick={() => setEditingId(null)}
-                    style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '0 10px', color: DIM, cursor: 'pointer', fontSize: 12 }}>Cancel</button>
+                    style={{ background: '#EEF0F3', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '0 10px', color: DIM, cursor: 'pointer', fontSize: 12 }}>Cancel</button>
                 </div>
               ) : (
                 <>
@@ -599,7 +599,7 @@ function LaserPage() {
                     </div>
                     <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                       <button onClick={() => { setEditingId(m.id); setEditLabel(m.label || ''); }}
-                        style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: DIM }}>
+                        style={{ background: '#F3F4F6', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: DIM }}>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
                       <button onClick={() => handleDelete(m.id)}
@@ -621,19 +621,19 @@ function LaserPage() {
 function LoadingSkeleton() {
   return (
     <div style={{ padding: '12px 14px', maxWidth: 480, margin: '0 auto' }}>
-      <div style={{ height: 22, width: '50%', background: 'rgba(255,255,255,0.06)', borderRadius: 8, marginBottom: 16 }} />
+      <div style={{ height: 22, width: '50%', background: '#EEF0F3', borderRadius: 8, marginBottom: 16 }} />
       <div style={{
         background: CARD_GLASS, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         border: `1px solid ${BORDER}`, borderRadius: RADIUS, padding: '32px 20px', textAlign: 'center', marginBottom: 16,
       }}>
-        <div style={{ height: 48, width: '40%', background: 'rgba(255,255,255,0.06)', borderRadius: 10, margin: '0 auto' }} />
+        <div style={{ height: 48, width: '40%', background: '#EEF0F3', borderRadius: 10, margin: '0 auto' }} />
       </div>
       {[1, 2].map(i => (
         <div key={i} style={{
           background: CARD_GLASS, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
           border: `1px solid ${BORDER}`, borderRadius: RADIUS, padding: 14, marginBottom: 8,
         }}>
-          <div style={{ height: 14, width: '60%', background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
+          <div style={{ height: 14, width: '60%', background: '#F3F4F6', borderRadius: 6 }} />
         </div>
       ))}
     </div>

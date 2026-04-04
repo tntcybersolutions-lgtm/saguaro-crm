@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827',GREEN='#1a8a4a',RED='#c03030';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 
 export default function OwnerApprovalPortal() {
@@ -72,7 +72,7 @@ export default function OwnerApprovalPortal() {
 
   return (
     <div style={{ minHeight:'100vh',background:DARK,fontFamily:'system-ui,sans-serif',color:TEXT }}>
-      <div style={{ background:'rgba(13,17,23,.96)',borderBottom:`1px solid ${BORDER}`,padding:'16px 24px',display:'flex',alignItems:'center',gap:12 }}>
+      <div style={{ background:'rgba(248,249,251,.97)',borderBottom:`1px solid ${BORDER}`,padding:'16px 24px',display:'flex',alignItems:'center',gap:12 }}>
         <span style={{ fontSize:22 }}>🌵</span>
         <span style={{ fontWeight:800,fontSize:16,color:GOLD,letterSpacing:1 }}>SAGUARO CRM</span>
         <span style={{ fontSize:11,color:DIM,marginLeft:8 }}>Owner Pay Application Review Portal</span>
@@ -177,7 +177,7 @@ export default function OwnerApprovalPortal() {
             <div style={{ marginBottom:16 }}>
               <label style={{ display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5,textTransform:'uppercase',letterSpacing:.5 }}>Notes / Comments (optional)</label>
               <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="Add any notes, conditions, or comments for the contractor..." rows={3}
-                style={{ width:'100%',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box',resize:'vertical' }} />
+                style={{ width:'100%',background:'#ffffff',border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box',resize:'vertical' }} />
             </div>
             <div style={{ display:'flex',gap:12 }}>
               <button onClick={()=>handleAction('approved')} disabled={saving}

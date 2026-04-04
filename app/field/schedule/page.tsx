@@ -9,7 +9,7 @@ import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT   = '#F0F4FF';
@@ -713,7 +713,7 @@ function GanttChart({
                 </div>
                 {barWidth > 30 && (
                   <div style={{ position: 'absolute', left: startOffset + 4, top: (ROW_HEIGHT - 18) / 2, height: 18, display: 'flex', alignItems: 'center', pointerEvents: 'none', zIndex: 2 }}>
-                    <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.5)' }}>{pct}%</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,.08)' }}>{pct}%</span>
                   </div>
                 )}
               </div>

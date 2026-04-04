@@ -211,7 +211,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="sidebar-mobile-overlay" style={{ display: 'none' }}>
           <div
             onClick={() => setMobileSidebarOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: z.sidebar - 1 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.1)', zIndex: z.sidebar - 1 }}
           />
           <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: z.sidebar }}>
             <AppSidebar
@@ -385,10 +385,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* ── Bid Score Modal ────────────────────────────────────────────── */}
       {showScoreModal && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
           onClick={e => { if (e.target === e.currentTarget) setShowScoreModal(false); }}
         >
-          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px rgba(0,0,0,.6)', overflow: 'hidden' }}>
+          <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px rgba(0,0,0,.1)', overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <div style={{ fontWeight: 800, fontSize: 16, color: colors.text, display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import PhotoEditor from '../../../../../components/PhotoEditor';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827';
 const GREEN='#1a8a4a',RED='#c03030';
 
 const ALBUMS=['General','Progress','Inspections','Closeout','Issues','Other'];
@@ -502,14 +502,14 @@ export default function PhotosPage(){
 function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
   photo:any;selected:boolean;onClick:()=>void;albumColor:string;onEdit?:(id:string,url:string)=>void;
 }){
-  const BORDER_C='#263347';
-  const RAISED_C='#1f2c3e';
+  const BORDER_C='#E2E5EA';
+  const RAISED_C='#ffffff';
   const DIM_C='#8fa3c0';
   const TEXT_C='#e8edf8';
   return(
     <div onClick={onClick}
       style={{background:selected?'rgba(212,160,23,.07)':RAISED_C,
-        border:`1px solid ${selected?'#D4A017':BORDER_C}`,borderRadius:10,
+        border:`1px solid ${selected?'#C8960F':BORDER_C}`,borderRadius:10,
         overflow:'hidden',cursor:'pointer',transition:'border-color .15s'}}
       onMouseEnter={e=>{if(!selected)e.currentTarget.style.borderColor='rgba(212,160,23,.4)';}}
       onMouseLeave={e=>{if(!selected)e.currentTarget.style.borderColor=BORDER_C;}}>
@@ -518,7 +518,7 @@ function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
           style={{width:'100%',height:140,objectFit:'cover',display:'block'}}
           onError={e=>{(e.target as HTMLImageElement).parentElement!.style.background='#0d1117';(e.target as HTMLImageElement).style.display='none';}}/>
       ):(
-        <div style={{width:'100%',height:140,background:'#0d1117',display:'flex',
+        <div style={{width:'100%',height:140,background:'#ffffff',display:'flex',
           alignItems:'center',justifyContent:'center',color:DIM_C,fontSize:12}}>
           No image
         </div>
@@ -546,7 +546,7 @@ function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
         )}
         {photo.url && onEdit && (
           <button onClick={(e)=>{e.stopPropagation();onEdit(photo.id,photo.url);}}
-            style={{marginTop:8,width:'100%',padding:'6px',background:'rgba(212,160,23,.08)',border:`1px solid rgba(212,160,23,.2)`,borderRadius:6,color:'#D4A017',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
+            style={{marginTop:8,width:'100%',padding:'6px',background:'rgba(212,160,23,.08)',border:`1px solid rgba(212,160,23,.2)`,borderRadius:6,color:'#C8960F',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
             ✏️ Edit / Crop / Rotate
           </button>
         )}

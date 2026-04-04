@@ -25,11 +25,11 @@ import {
   registerForPush,
 } from '@/lib/native';
 
-const GOLD   = '#D4A017';
-const DARK   = '#000000';
-const BORDER = 'rgba(255,255,255,0.06)';
-const TEXT   = '#F5F5F7';
-const DIM    = '#86868B';
+const GOLD   = '#C8960F';
+const DARK = '#F8F9FB';
+const BORDER = '#EEF0F3';
+const TEXT = '#111827';
+const DIM = '#6B7280';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 
@@ -262,7 +262,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
           </button>
           {/* Project dropdown */}
           {showProjectPicker && projects.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 14, right: 14, background: '#0A0A0A', border: `1px solid ${BORDER}`, borderRadius: 10, zIndex: 100, maxHeight: 240, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,.6)' }}>
+            <div style={{ position: 'absolute', top: '100%', left: 14, right: 14, background: '#F8F9FB', border: `1px solid ${BORDER}`, borderRadius: 10, zIndex: 100, maxHeight: 240, overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,.1)' }}>
               {projects.map(p => (
                 <button key={p.id} onClick={() => switchProject(p.id)}
                   style={{ width: '100%', padding: '10px 14px', background: p.id === activeProjectId ? 'rgba(212,160,23,.1)' : 'transparent', border: 'none', borderBottom: `1px solid rgba(255,255,255,.04)`, color: p.id === activeProjectId ? GOLD : TEXT, fontSize: 13, fontWeight: p.id === activeProjectId ? 700 : 400, textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -304,7 +304,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
       {showInstall && !isStandalone && !native && (
         <>
           <div onClick={dismissInstall} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 200 }} />
-          <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#0A0A0A', borderRadius: '20px 20px 0 0', border: '1px solid rgba(212,160,23,.22)', borderBottom: 'none', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))', zIndex: 201, boxShadow: '0 -10px 48px rgba(0,0,0,0.7)' }}>
+          <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#F8F9FB', borderRadius: '20px 20px 0 0', border: '1px solid rgba(212,160,23,.22)', borderBottom: 'none', paddingBottom: 'calc(20px + env(safe-area-inset-bottom))', zIndex: 201, boxShadow: '0 -10px 48px rgba(0,0,0,0.7)' }}>
             <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
               <div style={{ width: 38, height: 4, borderRadius: 2, background: 'rgba(255,255,255,.14)' }} />
             </div>
@@ -341,7 +341,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
               </div>
             ) : (
               <div style={{ padding: '20px 24px 0' }}>
-                <button onClick={handleInstall} style={{ width: '100%', background: 'linear-gradient(135deg, #D4A017 0%, #EF8C1A 100%)', border: 'none', borderRadius: 14, padding: '16px', color: '#000', fontSize: 17, fontWeight: 900, cursor: 'pointer', boxShadow: '0 6px 28px rgba(212,160,23,.5)' }}>
+                <button onClick={handleInstall} style={{ width: '100%', background: 'linear-gradient(135deg, #C8960F 0%, #EF8C1A 100%)', border: 'none', borderRadius: 14, padding: '16px', color: '#000', fontSize: 17, fontWeight: 900, cursor: 'pointer', boxShadow: '0 6px 28px rgba(212,160,23,.5)' }}>
                   Install App
                 </button>
                 <p style={{ margin: '9px 0 0', textAlign: 'center', fontSize: 12, color: DIM }}>Takes 2 seconds · Works like a native app</p>
@@ -374,7 +374,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
       </main>
 
       {/* ── Bottom nav ── */}
-      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 50 }}>
+      <nav style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid #EEF0F3', display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 50 }}>
         {NAV.map(({ href, label, PhIcon }) => {
           const active = href === '/field' ? pathname === '/field' : pathname.startsWith(href);
           return (

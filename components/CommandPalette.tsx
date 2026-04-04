@@ -2,11 +2,11 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-const GOLD   = '#D4A017';
-const DARK   = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM    = '#8fa3c0';
+const GOLD   = '#C8960F';
+const DARK   = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM    = '#6B7280';
 const TEXT   = '#e8edf8';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -279,7 +279,7 @@ function ItemRow({
         <kbd style={{
           flexShrink: 0, fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 5,
           background: isFocused ? 'rgba(212,160,23,.2)' : 'rgba(255,255,255,.05)',
-          border: `1px solid ${isFocused ? 'rgba(212,160,23,.4)' : '#263347'}`,
+          border: `1px solid ${isFocused ? 'rgba(212,160,23,.4)' : '#E2E5EA'}`,
           color: isFocused ? GOLD : DIM, letterSpacing: 0.5,
         }}>
           {item.shortcut}

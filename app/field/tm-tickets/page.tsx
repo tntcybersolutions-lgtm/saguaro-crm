@@ -11,7 +11,7 @@ import EmailComposer from '@/components/EmailComposer';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { TRADESPERSON_ROLES as TRADES } from '@/lib/contractor-trades';
 
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT   = '#F0F4FF';
@@ -206,7 +206,7 @@ const exportPDF = (title: string, content: string) => {
       <title>${title}</title>
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; color: #1a1a1a; max-width: 800px; margin: 0 auto; }
-        h1 { font-size: 24px; border-bottom: 2px solid #D4A017; padding-bottom: 8px; }
+        h1 { font-size: 24px; border-bottom: 2px solid #C8960F; padding-bottom: 8px; }
         h2 { font-size: 18px; color: #333; margin-top: 24px; }
         table { width: 100%; border-collapse: collapse; margin: 12px 0; }
         th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; font-size: 13px; }
@@ -814,7 +814,7 @@ function TMTicketsPage() {
           {/* Confirmation Dialog */}
           {confirmDialog && (
             <div style={{
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.7)',
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,.12)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 20,
             }}>
               <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: '100%', maxWidth: 400 }}>

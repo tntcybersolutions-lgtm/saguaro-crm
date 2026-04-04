@@ -21,7 +21,7 @@ export default function HowToGetStartedPage() {
           position: sticky; top: 0; z-index: 100;
           height: 64px; display: flex; align-items: center;
           justify-content: space-between; padding: 0 32px;
-          background: rgba(13,17,23,0.95); backdrop-filter: blur(12px);
+          background: rgba(248,249,251,.97); backdrop-filter: blur(12px);
           border-bottom: 1px solid var(--border);
         }
         .logo { font-weight: 900; font-size: 16px; text-decoration: none;
@@ -77,7 +77,7 @@ export default function HowToGetStartedPage() {
 
         .device-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
         .device-card {
-          padding: 18px; background: rgba(255,255,255,0.02);
+          padding: 18px; background: #FAFBFC;
           border: 1px solid rgba(30,58,95,0.6); border-radius: 12px;
         }
         .device-card .icon { font-size: 28px; margin-bottom: 10px; }

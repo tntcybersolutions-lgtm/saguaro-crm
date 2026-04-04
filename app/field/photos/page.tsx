@@ -11,12 +11,12 @@ import OfflineSyncStatus from '@/components/field/OfflineSyncStatus';
 import VoiceToLog from '@/components/field/VoiceToLog';
 import PhotoEditor from '@/components/field/PhotoEditor';
 
-const GOLD   = '#D4A017';
-const DARK   = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM    = '#8fa3c0';
-const TEXT   = '#e8edf8';
+const GOLD   = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 const GREEN  = '#22c55e';
 const RED    = '#ef4444';
 
@@ -457,7 +457,7 @@ function PhotosInner() {
           {/* Close button */}
           <button onClick={() => setViewingPhoto(null)} style={{
             position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.15)', color: '#fff', border: 'none', fontSize: 18,
+            background: '#D1D5DB', color: '#fff', border: 'none', fontSize: 18,
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
           }}>X</button>
 
@@ -544,7 +544,7 @@ function PhotosInner() {
 /* ─── Page wrapper with Suspense ─── */
 export default function FieldPhotosPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#0d1117', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8fa3c0' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#F8F9FB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>Loading...</div>}>
       <PhotosInner />
     </Suspense>
   );

@@ -7,9 +7,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/components/Toast';
 
-const BASE   = '#0F1419';
-const CARD   = '#1A1F2E';
-const GOLD   = '#D4A017';
+const BASE   = '#F8F9FB';
+const CARD   = '#F8F9FB';
+const GOLD   = '#C8960F';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const BORDER = '#2A3144';
@@ -805,7 +805,7 @@ function inputStyle(): React.CSSProperties {
     padding: '10px 12px',
     borderRadius: 8,
     border: '1px solid #2A3144',
-    background: '#0F1419cc',
+    background: '#F8F9FBcc',
     color: '#F0F4FF',
     fontSize: 14,
     outline: 'none',

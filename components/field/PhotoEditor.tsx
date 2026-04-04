@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
-const GOLD = '#D4A017', DARK = '#07101C', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
+const GOLD = '#C8960F', DARK = '#07101C', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 const RED = '#EF4444', GREEN = '#22C55E';
 
 interface PhotoEditorProps {

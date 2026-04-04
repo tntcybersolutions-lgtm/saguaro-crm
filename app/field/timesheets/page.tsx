@@ -8,7 +8,7 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT   = '#F0F4FF';
@@ -1213,7 +1213,7 @@ export default function TimesheetsPage() {
   return (
     <Suspense fallback={
       <div style={{ background: '#0A1628', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#D4A017', fontWeight: 700, fontSize: 16 }}>Loading Timesheets...</div>
+        <div style={{ color: '#C8960F', fontWeight: 700, fontSize: 16 }}>Loading Timesheets...</div>
       </div>
     }>
       <TimesheetsInner />

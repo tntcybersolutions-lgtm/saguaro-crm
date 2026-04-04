@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#161f2e', RAISED2='#1f2c3e',
-      BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8',
+const GOLD='#C8960F', DARK='#F8F9FB', RAISED='#161f2e', RAISED2='#ffffff',
+      BORDER='#E2E5EA', DIM='#6B7280', TEXT='#111827',
       GREEN='#22c55e', RED='#ef4444', ORANGE='#f97316', BLUE='#60a5fa';
 
 const fmt  = (n:number) => new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n||0);
@@ -263,7 +263,7 @@ export default function PayAppDetailPage() {
     <div style={{ background: DARK, minHeight: '100%' }}>
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 10, background: toast.type === 'success' ? 'rgba(34,197,94,.92)' : 'rgba(239,68,68,.92)', color: '#fff', fontWeight: 700, fontSize: 14, boxShadow: '0 4px 24px rgba(0,0,0,.5)', pointerEvents: 'none' }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 99999, padding: '12px 22px', borderRadius: 10, background: toast.type === 'success' ? 'rgba(34,197,94,.92)' : 'rgba(239,68,68,.92)', color: '#fff', fontWeight: 700, fontSize: 14, boxShadow: '0 4px 24px rgba(0,0,0,.08)', pointerEvents: 'none' }}>
           {toast.type === 'success' ? '✓ ' : '✗ '}{toast.msg}
         </div>
       )}

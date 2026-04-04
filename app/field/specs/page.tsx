@@ -9,7 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 /* ── Theme constants ── */
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT   = '#F0F4FF';
@@ -868,7 +868,7 @@ export default function SpecsPage() {
     <Suspense fallback={
       <div style={{ background: '#0B1623', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 36, height: 36, border: '3px solid #1E3A5F', borderTopColor: '#D4A017', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+          <div style={{ width: 36, height: 36, border: '3px solid #1E3A5F', borderTopColor: '#C8960F', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
           <p style={{ color: '#8BAAC8', fontSize: 14 }}>Loading specifications...</p>
           <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
         </div>

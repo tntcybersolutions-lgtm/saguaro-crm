@@ -2,10 +2,10 @@
 
 import { useState, useCallback, useRef } from 'react';
 
-const GOLD = '#D4A017';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM = '#8fa3c0';
+const GOLD = '#C8960F';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
 
 /* ──────────────────────────────────────────────
    useDragReorder hook

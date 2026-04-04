@@ -2,7 +2,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 
-const GOLD = '#D4A017', DARK = '#0d1117', RAISED = '#1f2c3e', BORDER = '#263347', DIM = '#8fa3c0', TEXT = '#e8edf8';
+const GOLD = '#C8960F', DARK = '#0d1117', RAISED = '#ffffff', BORDER = '#E2E5EA', DIM = '#8fa3c0', TEXT = '#e8edf8';
 const GREEN = '#1a8a4a', RED = '#c03030';
 
 const fmt = (n: number) => '$' + (n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -144,7 +144,7 @@ function CashFlowContent() {
           background: toast.ok ? '#14532d' : '#7f1d1d',
           color: TEXT, padding: '12px 24px', borderRadius: 8,
           border: `1px solid ${toast.ok ? GREEN : RED}`,
-          fontSize: 13, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,.5)',
+          fontSize: 13, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,.08)',
         }}>
           {toast.msg}
         </div>
@@ -350,7 +350,7 @@ function CashFlowContent() {
               {/* Expanded line items */}
               {isExpanded && (
                 <div style={{
-                  background: 'rgba(13,17,23,0.6)', borderBottom: `1px solid rgba(38,51,71,0.4)`,
+                  background: 'rgba(248,249,251,.97)', borderBottom: `1px solid rgba(38,51,71,0.4)`,
                   padding: '12px 20px 12px 40px',
                 }}>
                   {period.line_items.length === 0 ? (

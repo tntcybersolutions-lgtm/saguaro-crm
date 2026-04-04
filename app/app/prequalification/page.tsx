@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
 /* ─── Palette ─── */
-const GOLD = '#D4A017', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F',
+const GOLD = '#C8960F', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F',
   TEXT = '#F0F4FF', DIM = '#8BAAC8', GREEN = '#22C55E', RED = '#EF4444',
   AMBER = '#F59E0B', BLUE = '#3B82F6', PURPLE = '#8B5CF6';
 
@@ -855,7 +855,7 @@ function QuestionEditor({ initial, onSave, onClose }: { initial: Question | null
   };
 
   return (
-    <div style={{ ...modalOverlay, background: 'rgba(0,0,0,.5)' }} onClick={onClose}>
+    <div style={{ ...modalOverlay, background: 'rgba(0,0,0,.08)' }} onClick={onClose}>
       <div style={{ ...modalBox, maxWidth: 500 }} onClick={e => e.stopPropagation()}>
         <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: GOLD }}>{initial ? 'Edit Question' : 'Add Question'}</h3>
         {err && <div style={{ background: RED + '22', color: RED, padding: '6px 12px', borderRadius: 6, fontSize: 12, marginBottom: 10 }}>{err}</div>}

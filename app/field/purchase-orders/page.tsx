@@ -9,7 +9,7 @@ import { useSearchParams } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT   = '#F0F4FF';
@@ -902,7 +902,7 @@ function PurchaseOrdersInner() {
               <div>
                 <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus style={{ width: '100%', padding: '12px', background: RAISED, border: `1px solid ${GOLD}`, borderRadius: 8, color: TEXT, fontSize: 16, textAlign: 'center', outline: 'none', marginBottom: 10, boxSizing: 'border-box' }} />
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => { const v = parseFloat(editVal); if (!isNaN(v) && v >= 0) handleEditPO(v); }} style={{ flex: 1, padding: '12px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 8, color: '#0d1117', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Save</button>
+                  <button onClick={() => { const v = parseFloat(editVal); if (!isNaN(v) && v >= 0) handleEditPO(v); }} style={{ flex: 1, padding: '12px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 8, color: '#ffffff', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Save</button>
                   <button onClick={() => setSheetMode('menu')} style={{ flex: 1, padding: '12px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 8, color: DIM, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
                 </div>
               </div>
@@ -921,7 +921,7 @@ function PurchaseOrdersInner() {
         </BottomSheet>
       )}
       {deleteConfirm && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setDeleteConfirm(null)}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setDeleteConfirm(null)}>
           <div onClick={e => e.stopPropagation()} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 24, maxWidth: 340, width: '100%' }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Void Purchase Order?</div>
             <div style={{ fontSize: 13, color: DIM, marginBottom: 16 }}>This will mark the PO as void. This action cannot be undone.</div>

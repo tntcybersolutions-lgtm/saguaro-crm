@@ -19,12 +19,12 @@ const PieChart = dynamic(() => import('recharts').then(m => m.PieChart), { ssr: 
 const Pie = dynamic(() => import('recharts').then(m => m.Pie), { ssr: false });
 const Cell = dynamic(() => import('recharts').then(m => m.Cell), { ssr: false });
 
-const GOLD   = '#D4A017';
-const DARK   = '#000000';
-const RAISED = '#0A0A0A';
-const BORDER = 'rgba(255,255,255,0.05)';
-const DIM    = '#86868B';
-const TEXT   = '#F5F5F7';
+const GOLD   = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 const GREEN  = '#1a8a4a';
 const RED    = '#c03030';
 const BLUE   = '#1a5fa8';
@@ -62,8 +62,8 @@ function KPI({
     <div
       onClick={onClick}
       style={{
-        background: 'rgba(255,255,255,0.02)',
-        border: '1px solid rgba(255,255,255,0.04)',
+        background: '#FAFBFC',
+        border: '1px solid #F3F4F6',
         borderRadius: 10,
         padding: '18px 20px',
         cursor: onClick || href ? 'pointer' : 'default',
@@ -78,8 +78,8 @@ function KPI({
       }}
       onMouseLeave={e => {
         if (onClick || href) {
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)';
-          e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+          e.currentTarget.style.borderColor = '#F3F4F6';
+          e.currentTarget.style.background = '#FAFBFC';
           e.currentTarget.style.boxShadow = 'none';
         }
       }}
@@ -201,10 +201,10 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px rgba(0,0,0,.6)', overflow: 'hidden' }}>
+      <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, width: '100%', maxWidth: 520, boxShadow: '0 30px 80px rgba(0,0,0,.1)', overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontWeight: 800, fontSize: 16, color: TEXT }}>Score a Bid</div>
@@ -304,7 +304,7 @@ function DrillDownPanel({ type, onClose }: { type: DrillDownType; onClose: () =>
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,.08)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
     >
       <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderTopLeftRadius: 20, borderTopRightRadius: 20, width: '100%', maxWidth: 600, padding: '20px 24px 32px', animation: 'slideUp 0.2s ease' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -446,7 +446,7 @@ export default function DashboardPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 28 }}>
 
             {/* Project Budget Chart */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '16px 18px' }}>
+            <div style={{ background: '#FAFBFC', borderBottom: '1px solid #E2E5EA', padding: '16px 18px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                 <ChartBar size={18} weight="duotone" color={GOLD} />
                 <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Project Budgets</span>
@@ -458,10 +458,10 @@ export default function DashboardPage() {
                       name: p.name?.length > 12 ? p.name.slice(0, 12) + '…' : p.name || 'Unnamed',
                       budget: p.budget ?? p.contract_value ?? 0,
                     }))}>
-                      <XAxis dataKey="name" tick={{ fill: DIM, fontSize: 11 }} axisLine={{ stroke: 'rgba(255,255,255,0.05)' }} tickLine={false} />
+                      <XAxis dataKey="name" tick={{ fill: DIM, fontSize: 11 }} axisLine={{ stroke: '#E2E5EA' }} tickLine={false} />
                       <YAxis tick={{ fill: DIM, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
                       <Tooltip
-                        contentStyle={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12, color: TEXT }}
+                        contentStyle={{ background: '#F8F9FB', border: '1px solid #E5E7EB', borderRadius: 8, fontSize: 12, color: TEXT }}
                         labelStyle={{ color: GOLD, fontWeight: 700 }}
                         formatter={(v: number) => [`$${v.toLocaleString()}`, 'Budget']}
                       />
@@ -477,7 +477,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Portfolio Status Donut */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '16px 18px' }}>
+            <div style={{ background: '#FAFBFC', borderBottom: '1px solid #E2E5EA', padding: '16px 18px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                 <TrendUp size={18} weight="duotone" color={GOLD} />
                 <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Portfolio Status</span>
@@ -505,7 +505,7 @@ export default function DashboardPage() {
                         <Cell fill={RED} />
                       </Pie>
                       <Tooltip
-                        contentStyle={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12, color: TEXT }}
+                        contentStyle={{ background: '#F8F9FB', border: '1px solid #E5E7EB', borderRadius: 8, fontSize: 12, color: TEXT }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -530,8 +530,8 @@ export default function DashboardPage() {
         )}
 
         {/* Today's Priority Actions */}
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, overflow: 'hidden', marginBottom: 24 }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ background: '#FAFBFC', border: 'none', borderBottom: '1px solid #E2E5EA', borderRadius: 0, overflow: 'hidden', marginBottom: 24 }}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E5EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Today's Priority Actions</span>
               <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>Items requiring your attention</div>
@@ -557,8 +557,8 @@ export default function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
 
           {/* Active Projects */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: '#FAFBFC', border: 'none', borderBottom: '1px solid #E2E5EA', borderRadius: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E5EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, fontSize: 14 }}>Active Projects</span>
               <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>All Projects →</Link>
             </div>
@@ -599,8 +599,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Open RFIs */}
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', borderRadius: 0, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ background: '#FAFBFC', border: 'none', borderBottom: '1px solid #E2E5EA', borderRadius: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #E2E5EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 700, fontSize: 14 }}>Open RFIs</span>
               <Link href="/app/projects" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>View Projects →</Link>
             </div>

@@ -71,9 +71,9 @@ const CSI_DIVISION_NAMES: Record<string, string> = {
   '33': 'Utilities',
 };
 
-const GOLD = '#D4A017';
-const SURFACE = 'rgba(255,255,255,0.02)';
-const BORDER = 'rgba(255,255,255,0.05)';
+const GOLD = '#C8960F';
+const SURFACE = '#FAFBFC';
+const BORDER = '#E2E5EA';
 
 export default function TakeoffPage() {
   const { projectId } = useParams() as { projectId: string };
@@ -582,7 +582,7 @@ export default function TakeoffPage() {
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
           style={{
-            border: `2px dashed ${isDragging ? GOLD : selectedFile ? '#22C55E' : 'rgba(255,255,255,0.15)'}`,
+            border: `2px dashed ${isDragging ? GOLD : selectedFile ? '#22C55E' : '#D1D5DB'}`,
             borderRadius: 16,
             padding: '48px 32px',
             textAlign: 'center',
@@ -658,7 +658,7 @@ export default function TakeoffPage() {
           style={{
             width: '100%',
             padding: '14px',
-            background: selectedFile ? `linear-gradient(135deg, ${GOLD}, #C8960F)` : 'rgba(255,255,255,0.1)',
+            background: selectedFile ? `linear-gradient(135deg, ${GOLD}, #C8960F)` : '#E5E7EB',
             border: 'none',
             borderRadius: 10,
             color: selectedFile ? '#000' : 'rgba(255,255,255,0.3)',
@@ -700,7 +700,7 @@ export default function TakeoffPage() {
 
         {/* Progress bar */}
         <div style={{
-          background: 'rgba(255,255,255,0.1)',
+          background: '#E5E7EB',
           borderRadius: 999, height: 8, marginBottom: 8, overflow: 'hidden',
         }}>
           <div style={{
@@ -776,7 +776,7 @@ export default function TakeoffPage() {
             <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confidence</div>
           </div>
           <div style={{
-            background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`,
+            background: '#EEF0F3', border: `1px solid ${BORDER}`,
             borderRadius: 8, padding: '6px 14px', textAlign: 'center',
           }}>
             <div style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>{result?.itemCount ?? 0}</div>
@@ -875,7 +875,7 @@ export default function TakeoffPage() {
               <svg width={bldgW + padX * 2} height={svgH} viewBox={`0 0 ${bldgW + padX * 2} ${svgH}`}>
                 {/* Ground line */}
                 <line x1={padX - 10} y1={padY + bldgH + 2} x2={padX + bldgW + 10} y2={padY + bldgH + 2}
-                  stroke="rgba(255,255,255,0.15)" strokeWidth={2} />
+                  stroke="#D1D5DB" strokeWidth={2} />
                 {/* Building floors */}
                 {Array.from({ length: displayFloors }).map((_, fi) => {
                   const y = padY + fi * floorH;
@@ -938,7 +938,7 @@ export default function TakeoffPage() {
                         <span style={{ color: '#22C55E', marginLeft: 8 }}>{fmt$(sellAmt)}</span>
                       </span>
                     </div>
-                    <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ height: 6, background: '#E5E7EB', borderRadius: 4, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${pct * 100}%`, background: `linear-gradient(90deg, ${GOLD}, #22C55E)`, borderRadius: 4, transition: 'width 0.6s ease' }} />
                     </div>
                   </div>
@@ -963,7 +963,7 @@ export default function TakeoffPage() {
           display: 'grid',
           gridTemplateColumns: '100px 1fr 80px 56px 80px 110px 110px',
           padding: '10px 16px',
-          background: '#0A0A0A',
+          background: '#F8F9FB',
           borderBottom: '2px solid rgba(212,160,23,0.2)',
           fontSize: 11, fontWeight: 600,
           letterSpacing: '0.08em',
@@ -1006,7 +1006,7 @@ export default function TakeoffPage() {
                     display: 'grid',
                     gridTemplateColumns: '100px 1fr 80px 56px 80px 110px 110px',
                     padding: '10px 16px',
-                    borderBottom: `1px solid rgba(255,255,255,0.04)`,
+                    borderBottom: `1px solid #F3F4F6`,
                     fontSize: 13, alignItems: 'center',
                     background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
                   }}>
@@ -1088,7 +1088,7 @@ export default function TakeoffPage() {
             <div style={{ color: GOLD, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
               Sage is building your documents...
             </div>
-            <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ height: 6, background: '#E5E7EB', borderRadius: 4, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${progress.pct}%`, background: `linear-gradient(90deg, ${GOLD}, #F0C040)`, borderRadius: 4, transition: 'width 0.5s ease' }} />
             </div>
             <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 5 }}>
@@ -1112,7 +1112,7 @@ export default function TakeoffPage() {
             <div style={{ color: '#22C55E', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
               Building all project documents...
             </div>
-            <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{ height: 6, background: '#E5E7EB', borderRadius: 4, overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${progress.pct}%`, background: 'linear-gradient(90deg, #22C55E, #34D399)', borderRadius: 4, transition: 'width 0.5s ease' }} />
             </div>
             <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 5 }}>{progress.message}</div>
@@ -1141,19 +1141,19 @@ export default function TakeoffPage() {
         {/* Secondary actions */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={handleGenerateBidPackages} disabled={!!generating}
-            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'bid-packages') ? 0.5 : 1 }}>
+            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid #D1D5DB', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'bid-packages') ? 0.5 : 1 }}>
             {generating === 'bid-packages' ? 'Creating...' : <><Package size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Bid Packages</>}
           </button>
           <button onClick={handleGenerateSOV} disabled={!!generating}
-            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sov') ? 0.5 : 1 }}>
+            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid #D1D5DB', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sov') ? 0.5 : 1 }}>
             {generating === 'sov' ? 'Creating...' : <><Table size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> SOV</>}
           </button>
           <button onClick={handleCreateBudget} disabled={!!generating}
-            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'budget') ? 0.5 : 1 }}>
+            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid #D1D5DB', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'budget') ? 0.5 : 1 }}>
             {generating === 'budget' ? 'Creating...' : <><CurrencyDollar size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Budget</>}
           </button>
           <button onClick={handleGenerateLienWaivers} disabled={!!generating}
-            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'lien-waivers') ? 0.5 : 1 }}>
+            style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid #D1D5DB', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'lien-waivers') ? 0.5 : 1 }}>
             {generating === 'lien-waivers' ? 'Creating...' : <><Blueprint size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Lien Waivers</>}
           </button>
           <button

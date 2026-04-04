@@ -303,7 +303,7 @@ export default function PricingPage() {
       {/* Nav */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
-        height: 64, background: 'rgba(13,17,23,0.9)',
+        height: 64, background: 'rgba(248,249,251,.97)',
         borderBottom: `1px solid ${C.border}`,
         backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         display: 'flex', alignItems: 'center', padding: '0 32px', gap: 0,
@@ -322,7 +322,7 @@ export default function PricingPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <a href="/login" style={{ padding: '8px 18px', background: 'rgba(245,158,11,0.08)', border: `1px solid rgba(245,158,11,0.25)`, borderRadius: 8, color: C.gold, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Log In</a>
-          <a href="/signup" style={{ padding: '8px 18px', background: `linear-gradient(135deg, ${C.gold}, #FCD34D)`, borderRadius: 8, color: '#0d1117', fontSize: 13, fontWeight: 800, textDecoration: 'none', boxShadow: `0 0 20px rgba(245,158,11,0.25)` }}>Free Trial</a>
+          <a href="/signup" style={{ padding: '8px 18px', background: `linear-gradient(135deg, ${C.gold}, #FCD34D)`, borderRadius: 8, color: '#ffffff', fontSize: 13, fontWeight: 800, textDecoration: 'none', boxShadow: `0 0 20px rgba(245,158,11,0.25)` }}>Free Trial</a>
         </div>
       </nav>
 
@@ -420,14 +420,14 @@ export default function PricingPage() {
                 boxShadow: plan.popular ? `0 0 0 1px rgba(245,158,11,0.2), 0 24px 48px rgba(0,0,0,0.5), 0 0 80px rgba(245,158,11,0.06)` : '0 4px 24px rgba(0,0,0,0.3)',
               }}>
                 {plan.popular && (
-                  <div style={{ background: `linear-gradient(90deg, ${C.gold}, #FCD34D)`, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 800, color: '#0d1117', letterSpacing: 2, textTransform: 'uppercase' }}>
+                  <div style={{ background: `linear-gradient(90deg, ${C.gold}, #FCD34D)`, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 800, color: '#ffffff', letterSpacing: 2, textTransform: 'uppercase' }}>
                     Most Popular
                   </div>
                 )}
                 <div style={{ padding: '30px 28px 28px' }}>
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: plan.popular ? C.gold : C.dim, marginBottom: 2 }}>{plan.name}</div>
                   <div style={{ fontSize: 13, color: C.dim, marginBottom: 6 }}>{plan.tagline}</div>
-                  <div style={{ fontSize: 11, color: plan.popular ? C.gold : C.dim, background: plan.popular ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.04)', border: `1px solid ${plan.popular ? 'rgba(245,158,11,0.2)' : C.border}`, borderRadius: 6, padding: '3px 10px', display: 'inline-block', marginBottom: 20, fontWeight: 600 }}>
+                  <div style={{ fontSize: 11, color: plan.popular ? C.gold : C.dim, background: plan.popular ? 'rgba(245,158,11,0.08)' : '#F3F4F6', border: `1px solid ${plan.popular ? 'rgba(245,158,11,0.2)' : C.border}`, borderRadius: 6, padding: '3px 10px', display: 'inline-block', marginBottom: 20, fontWeight: 600 }}>
                     {plan.highlight}
                   </div>
 
@@ -452,7 +452,7 @@ export default function PricingPage() {
 
                   <a href={plan.cta_href} style={{
                     display: 'block', textAlign: 'center', padding: '13px 0',
-                    background: plan.popular ? `linear-gradient(135deg, ${C.gold}, #FCD34D)` : plan.name === 'Enterprise' ? 'transparent' : 'rgba(255,255,255,0.05)',
+                    background: plan.popular ? `linear-gradient(135deg, ${C.gold}, #FCD34D)` : plan.name === 'Enterprise' ? 'transparent' : '#E2E5EA',
                     border: plan.popular ? 'none' : `1.5px solid ${plan.name === 'Enterprise' ? C.gold : C.border}`,
                     borderRadius: 9, color: plan.popular ? '#0d1117' : plan.name === 'Enterprise' ? C.gold : C.text,
                     fontWeight: 800, fontSize: 14, textDecoration: 'none', marginBottom: 28, letterSpacing: 0.3,
@@ -488,7 +488,7 @@ export default function PricingPage() {
 
         {/* Migration Banner */}
         <section style={{ padding: '0 24px 80px', maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(13,17,23,0) 100%)', border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 16, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(248,249,251,.97) 100%)', border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 16, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Free Migration — Every Plan</div>
               <h2 style={{ fontSize: 28, fontWeight: 900, margin: '0 0 12px', lineHeight: 1.2 }}>We move you over in 1 day. Free.</h2>
@@ -536,7 +536,7 @@ export default function PricingPage() {
                     <div style={{ fontSize: 11, color: C.dim }}>/{addon.per}</div>
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: C.dim, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 10px', display: 'inline-block' }}>
+                <div style={{ fontSize: 11, color: C.dim, background: '#F8F9FB', border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 10px', display: 'inline-block' }}>
                   Available for: {addon.available.join(', ')}
                 </div>
               </div>
@@ -706,7 +706,7 @@ export default function PricingPage() {
               <div key={i} style={{ borderBottom: i < FAQS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: '100%', textAlign: 'left', padding: '22px 0', background: 'none', border: 'none', color: C.text, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, lineHeight: 1.4, fontFamily: C.font }}>
                   <span>{faq.q}</span>
-                  <span style={{ flexShrink: 0, width: 28, height: 28, background: openFaq === i ? `rgba(245,158,11,0.15)` : 'rgba(255,255,255,0.05)', border: `1px solid ${openFaq === i ? 'rgba(245,158,11,0.4)' : C.border}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.gold, fontSize: 18, fontWeight: 300 }}>
+                  <span style={{ flexShrink: 0, width: 28, height: 28, background: openFaq === i ? `rgba(245,158,11,0.15)` : '#E2E5EA', border: `1px solid ${openFaq === i ? 'rgba(245,158,11,0.4)' : C.border}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.gold, fontSize: 18, fontWeight: 300 }}>
                     {openFaq === i ? '−' : '+'}
                   </span>
                 </button>
@@ -729,7 +729,7 @@ export default function PricingPage() {
               30-day free trial. Free migration. No credit card required. Your whole team, one flat rate.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <a href="/signup" style={{ display: 'inline-block', padding: '15px 36px', background: `linear-gradient(135deg, ${C.gold}, #FCD34D)`, borderRadius: 10, color: '#0d1117', fontWeight: 800, fontSize: 16, textDecoration: 'none', boxShadow: `0 4px 24px rgba(245,158,11,0.35)` }}>
+              <a href="/signup" style={{ display: 'inline-block', padding: '15px 36px', background: `linear-gradient(135deg, ${C.gold}, #FCD34D)`, borderRadius: 10, color: '#ffffff', fontWeight: 800, fontSize: 16, textDecoration: 'none', boxShadow: `0 4px 24px rgba(245,158,11,0.35)` }}>
                 Start Free Trial — No CC Required
               </a>
               <a href="/switch-from-procore" style={{ display: 'inline-block', padding: '15px 36px', background: 'transparent', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontWeight: 700, fontSize: 16, textDecoration: 'none' }}>

@@ -79,7 +79,7 @@ export function PullToRefresh({ onRefresh, children, threshold = 60 }: PullToRef
               style={{
                 width: 24,
                 height: 24,
-                border: '2px solid #D4A017',
+                border: '2px solid #C8960F',
                 borderTop: '2px solid transparent',
                 borderRadius: '50%',
                 animation: 'spin 0.7s linear infinite',

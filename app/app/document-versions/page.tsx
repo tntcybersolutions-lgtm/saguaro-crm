@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // ─── Color Palette ────────────────────────────────────────────────
 const C = {
-  GOLD: '#D4A017', BG: '#07101C', RAISED: '#0D1D2E', BORDER: '#1E3A5F',
+  GOLD: '#C8960F', BG: '#07101C', RAISED: '#0D1D2E', BORDER: '#1E3A5F',
   TEXT: '#F0F4FF', DIM: '#8BAAC8', GREEN: '#22C55E', RED: '#EF4444',
   AMBER: '#F59E0B', BLUE: '#3B82F6', PURPLE: '#8B5CF6',
 };

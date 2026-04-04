@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 
-const GOLD = '#D4A017', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
+const GOLD = '#C8960F', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 
 interface FilterOption {
   label: string;

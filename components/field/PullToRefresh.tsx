@@ -58,12 +58,12 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
           <div style={{
             width: 24, height: 24, borderRadius: '50%',
             border: refreshing ? '2px solid transparent' : `2px solid rgba(212,160,23,${Math.min(pullDistance / threshold, 1)})`,
-            borderTopColor: '#D4A017',
+            borderTopColor: '#C8960F',
             animation: refreshing ? 'spin 0.8s linear infinite' : 'none',
             transform: !refreshing ? `rotate(${pullDistance * 3}deg)` : 'none',
           }} />
           {!refreshing && pullDistance >= threshold && (
-            <span style={{ marginLeft: 8, fontSize: 11, color: '#D4A017', fontWeight: 600 }}>Release to refresh</span>
+            <span style={{ marginLeft: 8, fontSize: 11, color: '#C8960F', fontWeight: 600 }}>Release to refresh</span>
           )}
         </div>
       )}

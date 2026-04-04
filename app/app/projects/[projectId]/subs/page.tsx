@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
-const GOLD='#D4A017',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const GOLD='#C8960F',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 interface Sub {
@@ -134,7 +134,7 @@ export default function SubsPage() {
                 <div key={f.k}>
                   <label style={{display:'block',fontSize:11,color:DIM,marginBottom:4,fontWeight:600}}>{f.l}{f.req&&<span style={{color:'#EF4444'}}> *</span>}</label>
                   <input required={f.req} type={f.type||'text'} placeholder={f.ph} value={(form as Record<string,string>)[f.k]} onChange={e=>setForm(p=>({...p,[f.k]:e.target.value}))}
-                    style={{width:'100%',padding:'8px 12px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:6,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box'}} />
+                    style={{width:'100%',padding:'8px 12px',background:'#ffffff',border:`1px solid ${BORDER}`,borderRadius:6,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box'}} />
                 </div>
               ))}
             </div>
@@ -163,7 +163,7 @@ export default function SubsPage() {
           <div style={{overflowX:'auto'}}>
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
               <thead>
-                <tr style={{background:'#0d1117'}}>
+                <tr style={{background:'#ffffff'}}>
                   {['Company','Trade','Contact','Phone','License','Contract','Paid','Score','Status',''].map(h=>(
                     <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.5px',color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
                   ))}
@@ -185,7 +185,7 @@ export default function SubsPage() {
                     <td style={{padding:'12px 14px'}}>{scoreBadge(sub.health_score||0)}</td>
                     <td style={{padding:'12px 14px'}}>
                       <select value={sub.status||'active'} onChange={e=>handleUpdateStatus(sub.id,e.target.value)}
-                        style={{background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:5,color:TEXT,fontSize:11,padding:'4px 8px',cursor:'pointer'}}>
+                        style={{background:'#ffffff',border:`1px solid ${BORDER}`,borderRadius:5,color:TEXT,fontSize:11,padding:'4px 8px',cursor:'pointer'}}>
                         {['active','prequalified','invited','suspended','inactive'].map(s=><option key={s} value={s}>{s}</option>)}
                       </select>
                     </td>

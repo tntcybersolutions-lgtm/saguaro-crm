@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-const DARK = '#0d1117';
+const DARK = '#F8F9FB';
 const GOLD = '#F59E0B';
 const TEXT = '#F8FAFC';
 const DIM = '#CBD5E1';
@@ -140,7 +140,7 @@ export default function SwitchFromProcorePage() {
       {/* ─── STICKY NAV ─── */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(13,17,23,0.95)',
+        background: 'rgba(248,249,251,.97)',
         backdropFilter: 'blur(16px)',
         borderBottom: `1px solid ${BORDER}`,
       }}>

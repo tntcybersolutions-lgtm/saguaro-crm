@@ -12,9 +12,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 /* ââ Design Tokens ââ */
-const GOLD = '#D4A017';
-const CARD = '#1A1F2E';
-const BASE = '#0F1419';
+const GOLD = '#C8960F';
+const CARD = '#F8F9FB';
+const BASE = '#F8F9FB';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const GREEN = '#22C55E';
@@ -26,7 +26,7 @@ const glass: React.CSSProperties = {
   background: 'rgba(26,31,46,0.7)',
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255,255,255,0.06)',
+  border: '1px solid #EEF0F3',
   borderRadius: 16,
 };
 const inp: React.CSSProperties = {
@@ -486,7 +486,7 @@ function FloorPlanPage() {
       ...glass, padding: '8px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 700,
       color: active ? BASE : (color || GOLD),
       background: active ? (color || GOLD) : 'rgba(26,31,46,0.7)',
-      border: active ? `1px solid ${color || GOLD}` : '1px solid rgba(255,255,255,0.06)',
+      border: active ? `1px solid ${color || GOLD}` : '1px solid #EEF0F3',
       display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
     }}>
       {children}
@@ -521,8 +521,8 @@ function FloorPlanPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[1, 2, 3].map(i => (
               <div key={i} style={{ ...glass, padding: 16, height: 88, animation: 'pulse 1.5s ease-in-out infinite' }}>
-                <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, height: 16, width: '60%', marginBottom: 8 }} />
-                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, height: 12, width: '40%' }} />
+                <div style={{ background: '#F3F4F6', borderRadius: 8, height: 16, width: '60%', marginBottom: 8 }} />
+                <div style={{ background: '#F8F9FB', borderRadius: 8, height: 12, width: '40%' }} />
               </div>
             ))}
           </div>
@@ -537,7 +537,7 @@ function FloorPlanPage() {
             {drawings.map(d => (
               <button key={d.id} onClick={() => openDrawing(d)} style={{ ...glass, padding: 14, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', width: '100%', textAlign: 'left', color: TEXT }}>
                 {d.thumbnail_url ? (
-                  <img src={d.thumbnail_url} alt={d.name} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: '1px solid rgba(255,255,255,0.06)' }} />
+                  <img src={d.thumbnail_url} alt={d.name} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', border: '1px solid #EEF0F3' }} />
                 ) : (
                   <div style={{ width: 56, height: 56, borderRadius: 10, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>{'\u{1F4D0}'}</div>
                 )}
@@ -645,7 +645,7 @@ function FloorPlanPage() {
             onClick={handleImageTap}
             style={{
               position: 'relative', borderRadius: 12, overflow: 'hidden',
-              border: mode === 'pin' ? `2px solid ${GOLD}` : mode === 'room' ? `2px solid ${BLUE}` : '1px solid rgba(255,255,255,0.06)',
+              border: mode === 'pin' ? `2px solid ${GOLD}` : mode === 'room' ? `2px solid ${BLUE}` : '1px solid #EEF0F3',
               cursor: mode === 'pin' || mode === 'room' ? 'crosshair' : 'default',
               marginBottom: 12,
               transform: `scale(${zoom})`, transformOrigin: 'top left',
@@ -881,7 +881,7 @@ function FloorPlanPage() {
                 {drawingPins.slice(0, 20).map(pin => {
                   const pType = PIN_TYPES[pin.pin_type] || PIN_TYPES.note;
                   return (
-                    <div key={pin.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div key={pin.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid #F3F4F6' }}>
                       {pin.photo_url ? (
                         <img src={pin.photo_url} alt="" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover', border: `1.5px solid ${pType.color}`, flexShrink: 0 }} />
                       ) : (
@@ -912,7 +912,7 @@ function FloorPlanPage() {
                 {drawingRooms.map(room => {
                   const pct = room.percent_complete || 0;
                   return (
-                    <div key={room.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div key={room.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid #F3F4F6' }}>
                       <div style={{ width: 12, height: 12, borderRadius: 3, background: heatColor(pct), flexShrink: 0 }} />
                       <div style={{ flex: 1 }}>
                         <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: TEXT }}>{room.room_name}</p>

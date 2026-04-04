@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 
-const GOLD='#F59E0B',DARK='#0d1117',RAISED='#0F172A',BORDER='#1E3A5F',DIM='#CBD5E1',TEXT='#F8FAFC',RED='#ef4444',GREEN='#22c55e';
+const GOLD='#F59E0B',DARK='#F8F9FB',RAISED='#0F172A',BORDER='#1E3A5F',DIM='#CBD5E1',TEXT='#F8FAFC',RED='#ef4444',GREEN='#22c55e';
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
 
@@ -111,7 +111,7 @@ export default function SignupPage(){
     <div style={{minHeight:'100vh',background:DARK,fontFamily:"system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
 
       {/* Nav */}
-      <nav style={{padding:'0 32px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${BORDER}`,position:'sticky',top:0,background:'rgba(13,17,23,0.95)',backdropFilter:'blur(12px)',zIndex:50}}>
+      <nav style={{padding:'0 32px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${BORDER}`,position:'sticky',top:0,background:'rgba(248,249,251,.97)',backdropFilter:'blur(12px)',zIndex:50}}>
         <a href="/" style={{textDecoration:'none',display:'flex',alignItems:'center',gap:10}}>
           <img src="/logo-full.jpg" alt="Saguaro" style={{height:34,width:'auto',borderRadius:4}}/>
           <span style={{fontWeight:900,fontSize:15,background:`linear-gradient(90deg,${GOLD},#FCD34D)`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAGUARO</span>
@@ -242,7 +242,7 @@ export default function SignupPage(){
             </form>
 
             {/* What happens next */}
-            <div style={{marginTop:20,padding:'14px 18px',background:'rgba(255,255,255,0.02)',border:`1px solid rgba(30,58,95,0.5)`,borderRadius:8}}>
+            <div style={{marginTop:20,padding:'14px 18px',background:'#FAFBFC',border:`1px solid rgba(30,58,95,0.5)`,borderRadius:8}}>
               <div style={{fontSize:11,fontWeight:700,color:DIM,letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>After you sign up:</div>
               {['Confirm your email → you\'re in instantly','Log in at saguarocontrol.net — works in any browser','Optional: install on your phone in 30 seconds'].map((t,i)=>(
                 <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:12,color:DIM,marginBottom:6}}>

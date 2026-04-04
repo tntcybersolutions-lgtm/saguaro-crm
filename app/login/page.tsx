@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#ef4444';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827',RED='#ef4444';
 
 export default function LoginPage(){
   const [form, setForm] = useState({email:'',password:''});
@@ -221,7 +221,7 @@ export default function LoginPage(){
                 {loading && (
                   <span style={{
                     display:'inline-block',width:16,height:16,
-                    border:'2px solid rgba(13,17,23,.3)',borderTopColor:'#0d1117',
+                    border:'2px solid rgba(248,249,251,.97)',borderTopColor:'#0d1117',
                     borderRadius:'50%',animation:'spin .6s linear infinite',
                   }}/>
                 )}

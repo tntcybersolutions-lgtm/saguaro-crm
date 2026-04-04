@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 
-const GOLD = '#D4A017', DIM = '#8BAAC8', TEXT = '#F0F4FF';
+const GOLD = '#C8960F', DIM = '#8BAAC8', TEXT = '#F0F4FF';
 
 interface EmptyStateProps {
   icon?: string;

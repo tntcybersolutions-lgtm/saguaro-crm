@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
 
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const DIM = '#8BAAC8';
 const TEXT = '#F0F4FF';
 const BLUE = '#3B82F6';
@@ -114,7 +114,7 @@ export default function AIBriefing({ projectId, onViewAll, onAskSage }: AIBriefi
     background: 'rgba(26,31,46,0.7)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid #EEF0F3',
     borderRadius: 16,
     overflow: 'hidden',
   };
@@ -162,7 +162,7 @@ export default function AIBriefing({ projectId, onViewAll, onAskSage }: AIBriefi
             onClick={fetchBriefing}
             style={{
               padding: '8px 20px',
-              background: 'rgba(255,255,255,0.06)',
+              background: '#EEF0F3',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 8,
               color: TEXT,
@@ -212,7 +212,7 @@ export default function AIBriefing({ projectId, onViewAll, onAskSage }: AIBriefi
                   gap: 10,
                   padding: '8px 0',
                   borderBottom: idx < data.items.length - 1
-                    ? '1px solid rgba(255,255,255,0.04)'
+                    ? '1px solid #F3F4F6'
                     : 'none',
                 }}
               >
@@ -233,7 +233,7 @@ export default function AIBriefing({ projectId, onViewAll, onAskSage }: AIBriefi
                       display: 'inline-block',
                       marginTop: 4,
                       padding: '2px 8px',
-                      background: 'rgba(255,255,255,0.04)',
+                      background: '#F3F4F6',
                       borderRadius: 4,
                       fontSize: 10,
                       color: DIM,
@@ -261,8 +261,8 @@ export default function AIBriefing({ projectId, onViewAll, onAskSage }: AIBriefi
           style={{
             flex: 1,
             padding: '10px 0',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: '#E2E5EA',
+            border: '1px solid #E5E7EB',
             borderRadius: 10,
             color: TEXT,
             fontSize: 12,

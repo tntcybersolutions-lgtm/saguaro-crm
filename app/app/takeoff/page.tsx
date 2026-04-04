@@ -451,7 +451,7 @@ export default function TakeoffPage() {
                               width: 18, height: 18, borderRadius: '50%', flexShrink: 0,
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               fontSize: 10, fontWeight: 700,
-                              background: done ? T.greenDim : active ? T.blueDim : 'rgba(255,255,255,0.05)',
+                              background: done ? T.greenDim : active ? T.blueDim : '#E2E5EA',
                               color: done ? T.green : active ? T.blue : T.faint,
                               border: `1px solid ${done ? 'rgba(34,197,94,0.3)' : active ? 'rgba(59,130,246,0.3)' : T.border}`,
                             }}>

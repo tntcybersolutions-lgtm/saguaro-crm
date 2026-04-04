@@ -10,12 +10,12 @@ import VoiceToLog from '../../../components/field/VoiceToLog';
 import OfflineSyncStatus from '../../../components/field/OfflineSyncStatus';
 import { queueAction, isOnline } from '../../../lib/offline-sync';
 
-const GOLD   = '#D4A017';
-const DARK   = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM    = '#8fa3c0';
-const TEXT   = '#e8edf8';
+const GOLD   = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 /* ── WMO weather-code map ─────────────────────────────────── */
 const WMO: Record<number, string> = {
@@ -279,7 +279,7 @@ export default function DailyLogPage() {
           position: 'fixed', top: 16, left: '50%', transform: 'translateX(-50%)',
           background: toast.includes('success') ? '#166534' : '#7f1d1d',
           color: '#fff', padding: '10px 20px', borderRadius: 8, zIndex: 9999,
-          fontSize: 14, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,.5)',
+          fontSize: 14, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,.08)',
         }}>{toast}</div>
       )}
 
@@ -596,7 +596,7 @@ export default function DailyLogPage() {
                     onClick={() => removePhoto(i)}
                     style={{
                       position: 'absolute', top: 4, right: 4, width: 22, height: 22,
-                      borderRadius: '50%', background: 'rgba(0,0,0,.7)', border: 'none',
+                      borderRadius: '50%', background: 'rgba(0,0,0,.12)', border: 'none',
                       color: '#ef4444', fontSize: 14, cursor: 'pointer', lineHeight: 1,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}

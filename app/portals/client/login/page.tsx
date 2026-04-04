@@ -1,12 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 
-const GOLD = '#D4A017';
-const DARK = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const GOLD = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 const GREEN = '#22c55e';
 const RED = '#ef4444';
 
@@ -131,7 +131,7 @@ export default function ClientPortalLogin() {
               style={{
                 width: '100%',
                 padding: '12px 14px',
-                background: 'rgba(255,255,255,0.05)',
+                background: '#E2E5EA',
                 border: `1px solid ${error ? RED : BORDER}`,
                 borderRadius: 8,
                 color: TEXT,

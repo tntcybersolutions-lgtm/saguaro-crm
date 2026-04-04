@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-const GOLD = '#D4A017', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
+const GOLD = '#C8960F', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 const GREEN = '#22C55E', BLUE = '#3B82F6';
 
 function hr(hex: string): string {
@@ -271,7 +271,7 @@ function QRPage() {
                     borderRight: h === 'right' ? `3px solid ${GOLD}` : 'none',
                   }} />
                 ))}
-                <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', fontSize: 12, color: 'rgba(255,255,255,.6)', background: 'rgba(0,0,0,.5)', borderRadius: 8, padding: '4px 10px', whiteSpace: 'nowrap' }}>
+                <div style={{ position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)', fontSize: 12, color: 'rgba(255,255,255,.6)', background: 'rgba(0,0,0,.08)', borderRadius: 8, padding: '4px 10px', whiteSpace: 'nowrap' }}>
                   Scanning...
                 </div>
               </>

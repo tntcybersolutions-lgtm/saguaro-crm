@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827';
 
 interface ScoreBreakdown {
   ownerFit: number;
@@ -348,7 +348,7 @@ export default function BidScorePage() {
                     width: '100%', padding: '12px',
                     background: loading || !form.projectName ? 'rgba(212,160,23,.3)' : `linear-gradient(135deg,${GOLD},#F0C040)`,
                     border: 'none', borderRadius: 8,
-                    color: '#0d1117', fontSize: 14, fontWeight: 800,
+                    color: '#ffffff', fontSize: 14, fontWeight: 800,
                     cursor: loading || !form.projectName ? 'not-allowed' : 'pointer',
                   }}
                 >
@@ -406,7 +406,7 @@ export default function BidScorePage() {
                     <button
                       onClick={addToPipeline}
                       disabled={addingToPipeline}
-                      style={{ padding: '11px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 8, color: '#0d1117', fontSize: 13, fontWeight: 800, cursor: addingToPipeline ? 'wait' : 'pointer', opacity: addingToPipeline ? 0.7 : 1 }}
+                      style={{ padding: '11px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 8, color: '#ffffff', fontSize: 13, fontWeight: 800, cursor: addingToPipeline ? 'wait' : 'pointer', opacity: addingToPipeline ? 0.7 : 1 }}
                     >
                       {addingToPipeline ? 'Adding...' : '+ Add to Pipeline'}
                     </button>

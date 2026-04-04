@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
-const GOLD='#D4A017', DARK='#0d1117', RAISED='#1f2c3e', BORDER='#263347', DIM='#8fa3c0', TEXT='#e8edf8', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='#C8960F', DARK='#F8F9FB', RAISED='#ffffff', BORDER='#E2E5EA', DIM='#6B7280', TEXT='#111827', GREEN='#3dd68c', RED='#ef4444';
 
 interface Contract {
   id: string;
@@ -150,7 +150,7 @@ export default function ContractsPage() {
           <>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#0a1117' }}>
+                <tr style={{ background: '#F8F9FB' }}>
                   {['Sub / Vendor','Trade','Contract Amount','Status','Execution Date','Actions'].map(h => (
                     <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}

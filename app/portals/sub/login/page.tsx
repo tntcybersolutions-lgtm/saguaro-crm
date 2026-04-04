@@ -1,12 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 
-const GOLD = '#D4A017';
-const DARK = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const GOLD = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 const GREEN = '#22c55e';
 const RED = '#ef4444';
 const BLUE = '#3B82F6';
@@ -134,7 +134,7 @@ export default function SubPortalLogin() {
               style={{
                 width: '100%',
                 padding: '12px 14px',
-                background: 'rgba(255,255,255,0.05)',
+                background: '#E2E5EA',
                 border: `1px solid ${error ? RED : BORDER}`,
                 borderRadius: 8,
                 color: TEXT,
@@ -175,7 +175,7 @@ export default function SubPortalLogin() {
             </button>
 
             {/* Have a direct link */}
-            <div style={{ marginTop: 16, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${BORDER}`, borderRadius: 8 }}>
+            <div style={{ marginTop: 16, padding: '12px 14px', background: '#F8F9FB', border: `1px solid ${BORDER}`, borderRadius: 8 }}>
               <div style={{ fontSize: 11, color: DIM, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Have a direct portal link?</div>
               <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>
                 If your GC sent you a direct URL, click the link in that email instead of entering your email here.

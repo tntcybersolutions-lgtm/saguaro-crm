@@ -18,7 +18,7 @@ export default function BackToTop() {
       style={{
         position: 'fixed', bottom: '32px', right: '32px',
         width: '48px', height: '48px', borderRadius: '50%',
-        background: 'linear-gradient(135deg, #D4A017, #F0C040)',
+        background: 'linear-gradient(135deg, #C8960F, #F0C040)',
         border: 'none', cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '20px', color: '#0A0E14', fontWeight: '900',

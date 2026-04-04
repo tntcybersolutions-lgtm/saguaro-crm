@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-const GOLD = '#D4A017', DARK = '#0F1419', CARD = '#1A1F2E', BORDER = '#263347';
-const DIM = '#8fa3c0', TEXT = '#e8edf8', GREEN = '#22C55E', RED = '#EF4444', BLUE = '#3B82F6';
+const GOLD = '#C8960F', DARK = '#F8F9FB', CARD = '#F8F9FB', BORDER = '#E2E5EA';
+const DIM = '#6B7280', TEXT = '#e8edf8', GREEN = '#22C55E', RED = '#EF4444', BLUE = '#3B82F6';
 
 type Endpoint = {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -508,7 +508,7 @@ export default function ApiDocsPage() {
                 style={{
                   padding: '10px 28px', borderRadius: 8, cursor: 'pointer',
                   background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none',
-                  color: '#0d1117', fontSize: 13, fontWeight: 700,
+                  color: '#ffffff', fontSize: 13, fontWeight: 700,
                   opacity: tryLoading ? 0.6 : 1,
                 }}
               >

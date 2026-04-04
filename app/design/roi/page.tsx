@@ -2,11 +2,11 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 
 /* ─── Palette — Premium Dark Glassmorphism ─── */
-const GOLD = '#D4A017', GREEN = '#22C55E';
-const TEXT = '#F5F5F7', DIM = '#86868B';
+const GOLD = '#C8960F', GREEN = '#22C55E';
+const TEXT = '#111827', DIM = '#86868B';
 const RED = '#EF4444', BLUE = '#3B82F6';
-const BG = '#000000', CARD_BG = 'rgba(255,255,255,0.04)';
-const CARD_BORDER = 'rgba(255,255,255,0.08)', CARD_SHADOW = '0 8px 32px rgba(0,0,0,0.4)';
+const BG = '#000000', CARD_BG = '#F3F4F6';
+const CARD_BORDER = '#E5E7EB', CARD_SHADOW = '0 8px 32px rgba(0,0,0,0.4)';
 
 /* ─── State Data ─── */
 type StateData = {
@@ -248,7 +248,7 @@ export default function ROICalculatorPage() {
           width: 100%;
           height: 6px;
           border-radius: 3px;
-          background: rgba(255,255,255,0.08);
+          background: #E5E7EB;
           outline: none;
         }
         .roi-slider::-webkit-slider-thumb {
@@ -274,7 +274,7 @@ export default function ROICalculatorPage() {
           padding: 12px 16px;
           cursor: pointer;
           transition: background 0.15s ease;
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          border-bottom: 1px solid #EEF0F3;
         }
         .roi-dropdown-item:hover {
           background: rgba(212,160,23,0.1);
@@ -291,7 +291,7 @@ export default function ROICalculatorPage() {
           position: absolute;
           top: 0; left: -100%;
           width: 100%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+          background: linear-gradient(90deg, transparent, #D1D5DB, transparent);
           transition: left 0.5s ease;
         }
         .roi-cta-btn:hover::before {
@@ -355,10 +355,10 @@ export default function ROICalculatorPage() {
             {/* ─── State Selector ─── */}
             <div ref={dropdownRef} style={{
               position: 'relative',
-              background: 'rgba(255,255,255,0.04)',
+              background: '#F3F4F6',
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid #E5E7EB',
               borderRadius: 16,
               padding: 24,
               marginBottom: 24,
@@ -381,8 +381,8 @@ export default function ROICalculatorPage() {
                 style={{
                   width: '100%',
                   padding: '14px 18px',
-                  background: 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${dropdownOpen ? GOLD : 'rgba(255,255,255,0.1)'}`,
+                  background: '#EEF0F3',
+                  border: `1px solid ${dropdownOpen ? GOLD : '#E5E7EB'}`,
                   borderRadius: 12,
                   color: TEXT,
                   fontSize: 16,
@@ -457,7 +457,7 @@ export default function ROICalculatorPage() {
                         background: code === state ? 'rgba(212,160,23,0.08)' : 'transparent',
                         transition: 'all 0.15s ease',
                       }}
-                      onMouseEnter={(e) => { if (code !== state) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                      onMouseEnter={(e) => { if (code !== state) e.currentTarget.style.background = '#EEF0F3'; }}
                       onMouseLeave={(e) => { if (code !== state) e.currentTarget.style.background = 'transparent'; }}
                     >
                       <span>{s.name}</span>
@@ -493,10 +493,10 @@ export default function ROICalculatorPage() {
 
             {/* ─── Upgrade Cards ─── */}
             <div style={{
-              background: 'rgba(255,255,255,0.04)',
+              background: '#F3F4F6',
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid #E5E7EB',
               borderRadius: 16,
               padding: 24,
             }}>
@@ -528,14 +528,14 @@ export default function ROICalculatorPage() {
                       padding: '14px 16px',
                       borderRadius: 14,
                       background: isOn
-                        ? 'rgba(255,255,255,0.06)'
-                        : 'rgba(255,255,255,0.02)',
+                        ? '#EEF0F3'
+                        : '#FAFBFC',
                       backdropFilter: isOn ? 'blur(40px)' : 'none',
                       WebkitBackdropFilter: isOn ? 'blur(40px)' : 'none',
                       borderLeft: isOn ? `3px solid ${GOLD}` : '3px solid transparent',
                       border: isOn
                         ? `1px solid rgba(212,160,23,0.2)`
-                        : '1px solid rgba(255,255,255,0.05)',
+                        : '1px solid #E2E5EA',
                       borderLeftWidth: 3,
                       borderLeftColor: isOn ? GOLD : 'transparent',
                       transition: 'all 0.3s ease',
@@ -586,7 +586,7 @@ export default function ROICalculatorPage() {
                           style={{
                             background: isOn
                               ? `linear-gradient(135deg, ${GOLD}, #B8860B)`
-                              : 'rgba(255,255,255,0.08)',
+                              : '#E5E7EB',
                           }}
                           aria-label={`Toggle ${u.name}`}
                         />
@@ -629,10 +629,10 @@ export default function ROICalculatorPage() {
             animation: 'fadeInUp 0.8s ease-out 0.2s both',
           }}>
             <div style={{
-              background: 'rgba(255,255,255,0.04)',
+              background: '#F3F4F6',
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid #E5E7EB',
               borderRadius: 20,
               padding: 28,
               marginBottom: 20,
@@ -704,11 +704,11 @@ export default function ROICalculatorPage() {
                   },
                 ].map(card => (
                   <div key={card.label} style={{
-                    background: 'rgba(255,255,255,0.04)',
+                    background: '#F3F4F6',
                     borderRadius: 12,
                     padding: 14,
                     textAlign: 'center',
-                    border: '1px solid rgba(255,255,255,0.05)',
+                    border: '1px solid #E2E5EA',
                   }}>
                     <div style={{ fontSize: 11, color: DIM, marginBottom: 4 }}>{card.label}</div>
                     <div style={{ fontSize: card.size, fontWeight: 800, color: card.color }}>
@@ -757,7 +757,7 @@ export default function ROICalculatorPage() {
                               width: '44%',
                               height: costH,
                               borderRadius: '6px 6px 0 0',
-                              background: 'linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%)',
+                              background: 'linear-gradient(180deg, #D1D5DB 0%, #E2E5EA 100%)',
                               transition: 'height 0.5s ease',
                             }} />
                           </div>
@@ -782,7 +782,7 @@ export default function ROICalculatorPage() {
                         display: 'inline-block',
                         width: 10,
                         height: 10,
-                        background: 'rgba(255,255,255,0.15)',
+                        background: '#D1D5DB',
                         borderRadius: 2,
                       }} />
                       Cost
@@ -817,10 +817,10 @@ export default function ROICalculatorPage() {
         {/* ─── How You Compare Section ─── */}
         <section style={{
           marginTop: 40,
-          background: 'rgba(255,255,255,0.04)',
+          background: '#F3F4F6',
           backdropFilter: 'blur(40px)',
           WebkitBackdropFilter: 'blur(40px)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          border: '1px solid #E5E7EB',
           borderRadius: 20,
           padding: 32,
           animation: 'fadeInUp 0.8s ease-out 0.3s both',
@@ -848,14 +848,14 @@ export default function ROICalculatorPage() {
               width: '100%',
               height: 14,
               borderRadius: 7,
-              background: 'rgba(255,255,255,0.06)',
+              background: '#EEF0F3',
               overflow: 'hidden',
             }}>
               <div style={{
                 width: '100%',
                 height: '100%',
                 borderRadius: 7,
-                background: 'linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.08))',
+                background: 'linear-gradient(90deg, #D1D5DB, #E5E7EB)',
                 transition: 'width 0.5s ease',
               }} />
             </div>
@@ -871,7 +871,7 @@ export default function ROICalculatorPage() {
               width: '100%',
               height: 14,
               borderRadius: 7,
-              background: 'rgba(255,255,255,0.06)',
+              background: '#EEF0F3',
               overflow: 'hidden',
             }}>
               <div style={{
@@ -910,7 +910,7 @@ export default function ROICalculatorPage() {
           padding: '60px 20px',
           background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(212,160,23,0.08) 0%, transparent 70%)',
           borderRadius: 24,
-          border: '1px solid rgba(255,255,255,0.05)',
+          border: '1px solid #E2E5EA',
           animation: 'fadeInUp 0.8s ease-out 0.4s both',
         }}>
           <h2 style={{

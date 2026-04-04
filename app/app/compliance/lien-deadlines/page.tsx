@@ -5,15 +5,15 @@
  */
 import React, { useState, useEffect, useCallback } from 'react';
 
-const BASE = '#0F1419';
+const BASE = '#F8F9FB';
 const CARD = 'rgba(26,31,46,0.7)';
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
-const BORDER = 'rgba(255,255,255,0.06)';
+const BORDER = '#EEF0F3';
 const GRAY = '#6B7280';
 
 const STATES = ['AZ', 'CA', 'TX', 'NV', 'CO', 'FL'];
@@ -319,7 +319,7 @@ export default function LienDeadlinePage() {
         {/* Loading */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: DIM }}>
-            <div style={{ width: 32, height: 32, border: '3px solid rgba(255,255,255,0.1)', borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+            <div style={{ width: 32, height: 32, border: '3px solid #E5E7EB', borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
             Loading deadlines...
           </div>
         ) : sorted.length === 0 ? (

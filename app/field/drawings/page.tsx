@@ -7,11 +7,11 @@ import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD = '#D4A017', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
+const GOLD = '#C8960F', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 const GREEN = '#22C55E', RED = '#EF4444', AMBER = '#F59E0B', BLUE = '#3B82F6';
 
 const PRESET_COLORS = [RED, BLUE, GREEN, AMBER, GOLD, '#8B5CF6', '#EC4899', '#06B6D4'];
-const USER_COLORS = ['#EF4444', '#3B82F6', '#22C55E', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#D4A017'];
+const USER_COLORS = ['#EF4444', '#3B82F6', '#22C55E', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#C8960F'];
 
 function hr(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);
@@ -1092,7 +1092,7 @@ function DrawingsPage() {
                 position: 'absolute', left: `${pin.x_pct * 100}%`, top: `${pin.y_pct * 100}%`,
                 transform: 'translate(-50%, -50%)', width: 22, height: 22, borderRadius: '50%',
                 background: CATEGORY_COLORS[pin.category] || DIM, border: '2px solid #fff',
-                cursor: 'pointer', padding: 0, boxShadow: '0 2px 6px rgba(0,0,0,.5)', zIndex: 10,
+                cursor: 'pointer', padding: 0, boxShadow: '0 2px 6px rgba(0,0,0,.08)', zIndex: 10,
               }}
               title={pin.title}
             />
@@ -1103,7 +1103,7 @@ function DrawingsPage() {
             <div style={{
               position: 'absolute', left: `${pendingPin.x_pct * 100}%`, top: `${pendingPin.y_pct * 100}%`,
               transform: 'translate(-50%, -50%)', width: 22, height: 22, borderRadius: '50%',
-              background: RED, border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,.5)', zIndex: 20,
+              background: RED, border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,.08)', zIndex: 20,
               animation: 'pulse 1s infinite',
             }} />
           )}

@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
-const GOLD = '#D4A017';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const BORDER = '#E5E7EB';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface ConfigTemplate {
   id: string;
@@ -183,7 +183,7 @@ export default function ConfigGeneratorPage() {
                   key={tmpl.id}
                   onClick={() => selectTemplate(tmpl)}
                   style={{
-                    padding: '10px 12px', background: selectedTemplate?.id === tmpl.id ? `${GOLD}10` : 'rgba(255,255,255,0.03)',
+                    padding: '10px 12px', background: selectedTemplate?.id === tmpl.id ? `${GOLD}10` : '#F8F9FB',
                     border: `1px solid ${selectedTemplate?.id === tmpl.id ? `${GOLD}40` : BORDER}`,
                     borderRadius: 8, cursor: 'pointer', textAlign: 'left',
                   }}
@@ -272,14 +272,14 @@ export default function ConfigGeneratorPage() {
                     <div style={{ color: DIM, fontSize: 12, fontWeight: 700, textTransform: 'uppercase' }}>Generated Configuration</div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button onClick={copyToClipboard} style={{
-                        padding: '6px 12px', background: copied ? `${GREEN}15` : 'rgba(255,255,255,0.05)',
+                        padding: '6px 12px', background: copied ? `${GREEN}15` : '#E2E5EA',
                         color: copied ? GREEN : TEXT, border: `1px solid ${copied ? GREEN : BORDER}`,
                         borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
                       }}>
                         {copied ? 'Copied!' : 'Copy'}
                       </button>
                       <button onClick={downloadConfig} style={{
-                        padding: '6px 12px', background: 'rgba(255,255,255,0.05)',
+                        padding: '6px 12px', background: '#E2E5EA',
                         color: TEXT, border: `1px solid ${BORDER}`,
                         borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer',
                       }}>
@@ -288,7 +288,7 @@ export default function ConfigGeneratorPage() {
                     </div>
                   </div>
                   <pre style={{
-                    background: '#0a0e14', border: `1px solid ${BORDER}`, borderRadius: 8,
+                    background: '#F8F9FB', border: `1px solid ${BORDER}`, borderRadius: 8,
                     padding: 16, color: GREEN, fontSize: 12, fontFamily: 'monospace',
                     lineHeight: 1.6, overflow: 'auto', maxHeight: 400,
                     whiteSpace: 'pre-wrap', wordBreak: 'break-all',

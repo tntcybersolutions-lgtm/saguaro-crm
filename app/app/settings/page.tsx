@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 
 const GOLD  = '#F59E0B';
-const DARK  = '#0d1117';
+const DARK = '#F8F9FB';
 const RAISED = '#0F172A';
 const BORDER = '#1E3A5F';
 const DIM   = '#CBD5E1';
@@ -160,7 +160,7 @@ export default function SettingsPage() {
               <img
                 src={branding.logo_url}
                 alt="Company logo"
-                style={{ maxHeight: 56, maxWidth: 180, objectFit: 'contain', borderRadius: 6, border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.04)', padding: 8 }}
+                style={{ maxHeight: 56, maxWidth: 180, objectFit: 'contain', borderRadius: 6, border: `1px solid ${BORDER}`, background: '#F3F4F6', padding: 8 }}
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
               <span style={{ fontSize: 12, color: DIM }}>Logo preview</span>
@@ -175,7 +175,7 @@ export default function SettingsPage() {
                 value={branding.company_name}
                 onChange={e => setBranding(b => ({ ...b, company_name: e.target.value }))}
                 placeholder="e.g. Acme General Contractors"
-                style={{ width: '100%', maxWidth: 420, background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', maxWidth: 420, background: '#E2E5EA', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
             <div>
@@ -185,7 +185,7 @@ export default function SettingsPage() {
                 value={branding.logo_url}
                 onChange={e => setBranding(b => ({ ...b, logo_url: e.target.value }))}
                 placeholder="https://yoursite.com/logo.png or Supabase storage URL"
-                style={{ width: '100%', maxWidth: 520, background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', maxWidth: 520, background: '#E2E5EA', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
               <div style={{ fontSize: 11, color: DIM, marginTop: 5 }}>
                 Accepts PNG or JPG. Upload your logo to Supabase Storage, Imgur, or any public URL.
@@ -225,10 +225,10 @@ export default function SettingsPage() {
                 background: item.highlight ? 'rgba(245,158,11,0.03)' : 'transparent',
                 transition: 'background .15s',
               }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
+                onMouseEnter={e => (e.currentTarget.style.background = '#F8F9FB')}
                 onMouseLeave={e => (e.currentTarget.style.background = item.highlight ? 'rgba(245,158,11,0.03)' : 'transparent')}
               >
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: item.highlight ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${item.highlight ? 'rgba(245,158,11,0.2)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: item.highlight ? 'rgba(245,158,11,0.1)' : '#E2E5EA', border: `1px solid ${item.highlight ? 'rgba(245,158,11,0.2)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
                   {item.icon}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -245,7 +245,7 @@ export default function SettingsPage() {
       ))}
 
       {/* Install App CTA */}
-      <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(13,17,23,0) 100%)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 14, padding: '28px 28px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
+      <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(248,249,251,.97) 100%)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 14, padding: '28px 28px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap', marginBottom: 32 }}>
         <div style={{ fontSize: 40 }}>📱</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Install Saguaro Field on your phone</div>

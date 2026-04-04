@@ -8,7 +8,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SwipeActionItem } from '@/components/field/SwipeAction';
 
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT = '#F0F4FF';
@@ -951,10 +951,10 @@ function MoneyActionSheet({
               value={editVal} onChange={e => setEditVal(e.target.value)}
               type="number" inputMode="decimal" autoFocus
               onKeyDown={e => { if (e.key === 'Enter') onSaveEdit(); }}
-              style={{ width: '100%', padding: '14px 16px', background: '#0A1628', border: '1px solid #D4A017', borderRadius: 10, color: '#F0F4FF', fontSize: 20, fontWeight: 700, outline: 'none', boxSizing: 'border-box', textAlign: 'right' }}
+              style={{ width: '100%', padding: '14px 16px', background: '#0A1628', border: '1px solid #C8960F', borderRadius: 10, color: '#F0F4FF', fontSize: 20, fontWeight: 700, outline: 'none', boxSizing: 'border-box', textAlign: 'right' }}
             />
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button onClick={onSaveEdit} style={{ flex: 1, padding: '14px', background: '#D4A017', color: '#000', fontWeight: 700, border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Save</button>
+              <button onClick={onSaveEdit} style={{ flex: 1, padding: '14px', background: '#C8960F', color: '#000', fontWeight: 700, border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Save</button>
               <button onClick={() => setSheetMode('menu')} style={{ flex: 1, padding: '14px', background: 'transparent', color: '#8BAAC8', fontWeight: 600, border: '1px solid #1E3A5F', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Back</button>
             </div>
           </div>
@@ -983,10 +983,10 @@ function MoneyActionSheet({
             <textarea
               value={noteVal} onChange={e => setNoteVal(e.target.value)}
               rows={3} autoFocus placeholder="e.g. Updated per sub quote 3/25"
-              style={{ width: '100%', padding: '12px 14px', background: '#0A1628', border: '1px solid #D4A017', borderRadius: 10, color: '#F0F4FF', fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '12px 14px', background: '#0A1628', border: '1px solid #C8960F', borderRadius: 10, color: '#F0F4FF', fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
             />
             <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-              <button onClick={onSaveNote} disabled={!noteVal.trim()} style={{ flex: 1, padding: '14px', background: '#D4A017', color: '#000', fontWeight: 700, border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer', opacity: noteVal.trim() ? 1 : 0.5 }}>Save Note</button>
+              <button onClick={onSaveNote} disabled={!noteVal.trim()} style={{ flex: 1, padding: '14px', background: '#C8960F', color: '#000', fontWeight: 700, border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer', opacity: noteVal.trim() ? 1 : 0.5 }}>Save Note</button>
               <button onClick={() => setSheetMode('menu')} style={{ flex: 1, padding: '14px', background: 'transparent', color: '#8BAAC8', fontWeight: 600, border: '1px solid #1E3A5F', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Back</button>
             </div>
           </div>

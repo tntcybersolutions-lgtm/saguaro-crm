@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
-const GOLD = '#D4A017';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const BORDER = '#E5E7EB';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface NetworkProject {
   id: string;
@@ -298,7 +298,7 @@ export default function NetworkDashboard() {
               key={action.label}
               href={action.href.startsWith('#') ? '#' : `/app/projects/${projectId}/network/${action.href}`}
               style={{
-                padding: '8px 16px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`,
+                padding: '8px 16px', background: '#E2E5EA', border: `1px solid ${BORDER}`,
                 borderRadius: 8, color: TEXT, fontSize: 12, fontWeight: 600, textDecoration: 'none',
                 display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s',
               }}
@@ -343,7 +343,7 @@ export default function NetworkDashboard() {
                 <span style={{ fontSize: 18 }}>{DEVICE_TYPE_ICONS[type] || '📦'}</span>
                 <span style={{ color: TEXT, fontSize: 13, fontWeight: 700, textTransform: 'capitalize' }}>{type.replace(/_/g, ' ')}</span>
                 <span style={{
-                  background: 'rgba(255,255,255,0.06)', color: DIM, fontSize: 11, padding: '2px 8px',
+                  background: '#EEF0F3', color: DIM, fontSize: 11, padding: '2px 8px',
                   borderRadius: 10, fontWeight: 600,
                 }}>{devs.length}</span>
               </div>
@@ -354,7 +354,7 @@ export default function NetworkDashboard() {
                     href={`/app/projects/${projectId}/network/devices?selected=${dev.id}`}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                      background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: `1px solid ${BORDER}`,
+                      background: '#F8F9FB', borderRadius: 8, border: `1px solid ${BORDER}`,
                       textDecoration: 'none', transition: 'all .15s',
                     }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = GOLD; }}
@@ -390,7 +390,7 @@ export default function NetworkDashboard() {
           {alerts.filter(a => !a.resolved).map(alert => (
             <div key={alert.id} style={{
               display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
-              background: alert.severity === 'critical' ? `${RED}10` : 'rgba(255,255,255,0.03)',
+              background: alert.severity === 'critical' ? `${RED}10` : '#F8F9FB',
               borderRadius: 8, border: `1px solid ${alert.severity === 'critical' ? `${RED}30` : BORDER}`,
               marginBottom: 6,
             }}>

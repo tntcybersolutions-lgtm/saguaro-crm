@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
-const GOLD = '#D4A017';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const BORDER = '#E5E7EB';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface WizardResult {
   vlans: Array<{ vlan_id: number; name: string; subnet: string; gateway: string; purpose: string }>;
@@ -409,8 +409,8 @@ export default function NetworkWizardPage() {
                     <span style={{ color: TEXT, fontSize: 13, fontWeight: 600 }}>{ssid.ssid}</span>
                     <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
                       <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, background: `${GREEN}15`, color: GREEN }}>{ssid.security}</span>
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: DIM }}>VLAN {ssid.vlan}</span>
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: DIM }}>{ssid.band}</span>
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, background: '#E2E5EA', color: DIM }}>VLAN {ssid.vlan}</span>
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 6, background: '#E2E5EA', color: DIM }}>{ssid.band}</span>
                     </div>
                   </div>
                   <span style={{ color: DIM, fontSize: 12 }}>{ssid.purpose}</span>

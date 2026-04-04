@@ -1,11 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-const GOLD = '#D4A017';
-const DARK = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM = '#8fa3c0';
+const GOLD = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
 const TEXT = '#e8edf8';
 
 const LIGHT_OVERRIDES_CSS = `
@@ -96,7 +96,7 @@ export default function ThemeToggle() {
         borderRadius: 8,
         border: `1px solid ${BORDER}`,
         background: theme === 'dark' ? RAISED : '#ffffff',
-        color: theme === 'dark' ? GOLD : '#D4A017',
+        color: theme === 'dark' ? GOLD : '#C8960F',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

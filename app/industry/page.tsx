@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: 'Purpose-built for every type of contractor: general contractors, residential remodelers, commercial GCs, roofing contractors, specialty subcontractors.',
 };
 
-const DARK = '#0d1117';
+const DARK = '#F8F9FB';
 const GOLD = '#F59E0B';
 const TEXT = '#F8FAFC';
 const DIM = '#CBD5E1';
@@ -21,7 +21,7 @@ export default function IndustryIndexPage() {
       {/* NAV */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        height: 64, background: 'rgba(13,17,23,0.9)',
+        height: 64, background: 'rgba(248,249,251,.97)',
         borderBottom: `1px solid ${BORDER}`,
         backdropFilter: 'blur(16px)',
         display: 'flex', alignItems: 'center',

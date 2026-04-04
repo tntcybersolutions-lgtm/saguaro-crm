@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
 
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const RED = '#EF4444';
 const DIM = '#8BAAC8';
@@ -232,7 +232,7 @@ export default function WeatherWidget() {
     background: 'rgba(26,31,46,0.7)',
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    border: '1px solid rgba(255,255,255,0.06)',
+    border: '1px solid #EEF0F3',
     borderRadius: 16,
     overflow: 'hidden',
   };
@@ -364,8 +364,8 @@ export default function WeatherWidget() {
           gap: 0,
           marginBottom: 16,
           padding: '10px 0',
-          borderTop: '1px solid rgba(255,255,255,0.04)',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          borderTop: '1px solid #F3F4F6',
+          borderBottom: '1px solid #F3F4F6',
         }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: 10, color: DIM, marginBottom: 2 }}>Wind</p>
@@ -373,7 +373,7 @@ export default function WeatherWidget() {
               {weather.windSpeed} <span style={{ fontSize: 10, color: DIM, fontWeight: 500 }}>mph</span>
             </p>
           </div>
-          <div style={{ width: 1, background: 'rgba(255,255,255,0.06)' }} />
+          <div style={{ width: 1, background: '#EEF0F3' }} />
           <div style={{ flex: 1, textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: 10, color: DIM, marginBottom: 2 }}>Humidity</p>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>
@@ -396,7 +396,7 @@ export default function WeatherWidget() {
                     flex: 1,
                     textAlign: 'center',
                     padding: '8px 2px',
-                    background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent',
+                    background: i % 2 === 0 ? '#FAFBFC' : 'transparent',
                     borderRadius: 6,
                   }}
                 >

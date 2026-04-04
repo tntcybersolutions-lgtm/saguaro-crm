@@ -48,7 +48,7 @@ export default function GetTheAppPage() {
           align-items: center;
           padding: 0 32px;
           height: 64px;
-          background: rgba(13,17,23,0.92);
+          background: rgba(248,249,251,.97);
           backdrop-filter: blur(12px);
           border-bottom: 1px solid rgba(30,58,95,0.6);
         }
@@ -225,7 +225,7 @@ export default function GetTheAppPage() {
           width: 168px; height: 360px;
           background: linear-gradient(160deg, #1a2840 0%, #0f1a2e 100%);
           border-radius: 38px;
-          border: 2px solid rgba(255,255,255,0.12);
+          border: 2px solid #D1D5DB;
           box-shadow: 0 32px 72px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07), 0 0 0 1px rgba(0,0,0,0.3);
           overflow: hidden;
           animation: floatPhone 5s ease-in-out infinite;
@@ -272,7 +272,7 @@ export default function GetTheAppPage() {
         .ps-row {
           display:flex;align-items:center;gap:8px;
           padding:6px 8px;border-radius:8px;
-          background:rgba(255,255,255,0.04);
+          background:#F3F4F6;
           margin-bottom:5px;
         }
         .ps-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0; }
@@ -286,7 +286,7 @@ export default function GetTheAppPage() {
           position:absolute;bottom:0;left:0;right:0;
           height:42px;
           background:rgba(8,15,26,0.96);
-          border-top:1px solid rgba(255,255,255,0.06);
+          border-top:1px solid #EEF0F3;
           display:flex;align-items:center;justify-content:space-around;
         }
         .ps-nav-i { width:16px;height:16px;stroke:rgba(255,255,255,0.25);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round; }
@@ -299,7 +299,7 @@ export default function GetTheAppPage() {
           width:268px; height:370px;
           background: linear-gradient(160deg, #1a2840 0%, #0f1a2e 100%);
           border-radius:20px;
-          border:2px solid rgba(255,255,255,0.12);
+          border:2px solid #D1D5DB;
           box-shadow: 0 32px 72px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.07);
           overflow:hidden;
           animation: floatTablet 5.5s ease-in-out infinite 0.4s;
@@ -314,7 +314,7 @@ export default function GetTheAppPage() {
         }
         .ts-header {
           padding:10px 12px 8px;
-          border-bottom:1px solid rgba(255,255,255,0.05);
+          border-bottom:1px solid #E2E5EA;
           display:flex;align-items:center;justify-content:space-between;
         }
         .ts-logo { font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.06em; }
@@ -338,7 +338,7 @@ export default function GetTheAppPage() {
         .ts-bars-label { font-size:7px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px; }
         .ts-bars { display:flex;align-items:flex-end;gap:4px;height:36px; }
         .ts-bar { flex:1;border-radius:3px 3px 0 0; }
-        .ts-row { display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:8px; }
+        .ts-row { display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #F3F4F6;font-size:8px; }
         .ts-row-name { color:rgba(255,255,255,0.6); }
         .ts-bge { padding:2px 6px;border-radius:4px;font-size:7px;font-weight:600; }
         .bg-gn { background:rgba(34,197,94,0.15);color:#22c55e; }
@@ -357,7 +357,7 @@ export default function GetTheAppPage() {
           height:112px;
           background:linear-gradient(160deg,#1a2840,#0f1a2e);
           border-radius:10px 10px 0 0;
-          border:2px solid rgba(255,255,255,0.12);
+          border:2px solid #D1D5DB;
           border-bottom:none;
           padding:7px;
         }
@@ -371,7 +371,7 @@ export default function GetTheAppPage() {
         .ls-sidebar {
           width:30%;
           background:rgba(245,158,11,0.04);
-          border-right:1px solid rgba(255,255,255,0.05);
+          border-right:1px solid #E2E5EA;
           padding:6px 4px;
         }
         .ls-logo { font-size:7px;font-weight:800;color:var(--gold);padding:0 3px;margin-bottom:7px; }
@@ -394,15 +394,15 @@ export default function GetTheAppPage() {
         .lc3 .ls-card-n { color:#60a5fa; }
         .lc4 .ls-card-n { color:#a78bfa; }
         .ls-card-l { font-size:5px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.05em;margin-top:1px; }
-        .ls-row { display:flex;gap:4px;padding:2.5px 0;border-bottom:1px solid rgba(255,255,255,0.04); }
+        .ls-row { display:flex;gap:4px;padding:2.5px 0;border-bottom:1px solid #F3F4F6; }
         .ls-td { font-size:5.5px;color:rgba(255,255,255,0.35);flex:1; }
         .ls-td.bold { color:rgba(255,255,255,0.7); }
         .dev-laptop-hinge {
           height:10px;
           background:linear-gradient(160deg,#1a2840,#0f1a2e);
-          border-left:2px solid rgba(255,255,255,0.1);
-          border-right:2px solid rgba(255,255,255,0.1);
-          border-bottom:2px solid rgba(255,255,255,0.08);
+          border-left:2px solid #E5E7EB;
+          border-right:2px solid #E5E7EB;
+          border-bottom:2px solid #E5E7EB;
           border-radius:0 0 6px 6px;
           width:108%; margin-left:-4%;
         }
@@ -412,7 +412,7 @@ export default function GetTheAppPage() {
           width:52%;
           margin:0 auto;
           border-radius:0 0 6px 6px;
-          border:1px solid rgba(255,255,255,0.06);
+          border:1px solid #EEF0F3;
           border-top:none;
         }
 
@@ -434,7 +434,7 @@ export default function GetTheAppPage() {
           text-align: center;
           padding: 24px 16px;
           border-radius: 12px;
-          background: rgba(255,255,255,0.02);
+          background: #FAFBFC;
           border: 1px solid var(--border);
         }
         .stat-number {

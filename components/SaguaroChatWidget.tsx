@@ -593,8 +593,8 @@ export default function SaguaroChatWidget({
         .sage-scroll::-webkit-scrollbar { width: 4px; }
         .sage-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
         .sage-scroll::-webkit-scrollbar-thumb { background: rgba(212,160,23,0.25); border-radius: 2px; }
-        .sage-msg-bubble strong { color: #D4A017; }
-        .sage-msg-bubble code { background: rgba(212,160,23,0.12); color: #D4A017; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+        .sage-msg-bubble strong { color: #C8960F; }
+        .sage-msg-bubble code { background: rgba(212,160,23,0.12); color: #C8960F; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
         .sage-msg-bubble ul { margin: 4px 0; padding-left: 16px; }
         .sage-msg-bubble li { margin: 2px 0; }
         .sage-msg-bubble p { margin: 0 0 8px; }
@@ -615,7 +615,7 @@ export default function SaguaroChatWidget({
               background: 'rgba(0,0,0,0.88)', color: '#fff', fontSize: 11,
               padding: '7px 14px', borderRadius: 20, whiteSpace: 'nowrap',
               animation: 'tooltipFade 0.2s ease forwards', pointerEvents: 'none',
-              border: '1px solid rgba(255,255,255,0.08)',
+              border: '1px solid #E5E7EB',
             }}>
               Chat with Sage — AI Construction Expert
               <div style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '5px solid rgba(0,0,0,0.88)' }} />
@@ -667,7 +667,7 @@ export default function SaguaroChatWidget({
             border: '1px solid rgba(255,255,255,0.09)',
             borderRadius: 20, overflow: 'hidden',
             display: 'flex', flexDirection: 'column',
-            boxShadow: '0 32px 80px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.04)',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.75), 0 0 0 1px #F3F4F6',
             animation: 'panelIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
             transformOrigin: 'bottom right',
             transition: 'height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -684,7 +684,7 @@ export default function SaguaroChatWidget({
               cursor: isMinimized ? 'pointer' : 'default', flexShrink: 0,
             }}
           >
-            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #D4A017, #8B6210)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 12px rgba(212,160,23,0.35)', flexShrink: 0 }}>🌵</div>
+            <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, #C8960F, #8B6210)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, boxShadow: '0 2px 12px rgba(212,160,23,0.35)', flexShrink: 0 }}>🌵</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-0.2px' }}>
                 Sage
@@ -696,7 +696,7 @@ export default function SaguaroChatWidget({
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', animation: 'onlinePulse 2s ease-in-out infinite', flexShrink: 0 }} />
                 AI Construction Expert · Online
                 {memoryProfile && memoryProfile.engagement.currentStreak > 2 && (
-                  <span style={{ marginLeft: 6, color: '#D4A017', fontSize: 10, animation: 'streakFlicker 3s ease-in-out infinite' }}>
+                  <span style={{ marginLeft: 6, color: '#C8960F', fontSize: 10, animation: 'streakFlicker 3s ease-in-out infinite' }}>
                     🔥 {memoryProfile.engagement.currentStreak}d
                   </span>
                 )}
@@ -753,7 +753,7 @@ export default function SaguaroChatWidget({
                   }}>
                     {msg.role === 'user' ? (
                       <>
-                        <div style={{ maxWidth: '80%', background: 'linear-gradient(135deg, #D4A017 0%, #C8960F 100%)', color: '#000', fontSize: 14, fontWeight: 500, padding: '10px 16px', borderRadius: '18px 18px 4px 18px', boxShadow: '0 2px 12px rgba(212,160,23,0.2)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                        <div style={{ maxWidth: '80%', background: 'linear-gradient(135deg, #C8960F 0%, #C8960F 100%)', color: '#000', fontSize: 14, fontWeight: 500, padding: '10px 16px', borderRadius: '18px 18px 4px 18px', boxShadow: '0 2px 12px rgba(212,160,23,0.2)', lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                           {msg.content}
                         </div>
                         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', paddingRight: 4 }}>
@@ -762,18 +762,18 @@ export default function SaguaroChatWidget({
                       </>
                     ) : (
                       <div style={{ display: 'flex', gap: 10, maxWidth: '88%', alignItems: 'flex-start' }}>
-                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #D4A017, #8B6210)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, marginTop: 2 }}>🌵</div>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #C8960F, #8B6210)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, marginTop: 2 }}>🌵</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           {msg.content === '__TYPING__' ? (
-                            <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', padding: '14px 18px', borderRadius: '4px 18px 18px 18px', display: 'flex', gap: 6, alignItems: 'center' }}>
+                            <div style={{ background: '#EEF0F3', border: '1px solid rgba(255,255,255,0.09)', padding: '14px 18px', borderRadius: '4px 18px 18px 18px', display: 'flex', gap: 6, alignItems: 'center' }}>
                               {[0, 0.2, 0.4].map((delay, i) => (
-                                <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: '#D4A017', animation: 'dotBlink 1.2s ease-in-out infinite', animationDelay: `${delay}s` }} />
+                                <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: '#C8960F', animation: 'dotBlink 1.2s ease-in-out infinite', animationDelay: `${delay}s` }} />
                               ))}
                             </div>
                           ) : (
                             <div
                               className="sage-msg-bubble"
-                              style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(255,255,255,0.88)', fontSize: 14, lineHeight: 1.65, padding: '12px 16px', borderRadius: '4px 18px 18px 18px', wordBreak: 'break-word' }}
+                              style={{ background: '#EEF0F3', border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(255,255,255,0.88)', fontSize: 14, lineHeight: 1.65, padding: '12px 16px', borderRadius: '4px 18px 18px 18px', wordBreak: 'break-word' }}
                               dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }}
                             />
                           )}
@@ -786,10 +786,10 @@ export default function SaguaroChatWidget({
                                 >
                                   <span style={{ fontSize: 18 }}>{action.icon}</span>
                                   <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: 13, fontWeight: 600, color: '#D4A017' }}>{action.label}</div>
+                                    <div style={{ fontSize: 13, fontWeight: 600, color: '#C8960F' }}>{action.label}</div>
                                     <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{action.description}</div>
                                   </div>
-                                  <span style={{ fontSize: 12, color: '#D4A017', opacity: 0.7 }}>→</span>
+                                  <span style={{ fontSize: 12, color: '#C8960F', opacity: 0.7 }}>→</span>
                                 </button>
                               ))}
                             </div>
@@ -812,7 +812,7 @@ export default function SaguaroChatWidget({
                 <div style={{ padding: '0 14px 12px', display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                   {chips.map(chip => (
                     <button key={chip} className="sage-chip" onClick={() => sendMessage(chip)}
-                      style={{ background: 'rgba(212,160,23,0.07)', border: '1px solid rgba(212,160,23,0.22)', borderRadius: 20, padding: '6px 14px', fontSize: 12, color: '#D4A017', cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'inherit' }}
+                      style={{ background: 'rgba(212,160,23,0.07)', border: '1px solid rgba(212,160,23,0.22)', borderRadius: 20, padding: '6px 14px', fontSize: 12, color: '#C8960F', cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'inherit' }}
                     >{chip}</button>
                   ))}
                 </div>
@@ -820,7 +820,7 @@ export default function SaguaroChatWidget({
 
               {/* INPUT */}
               <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '14px', background: 'rgba(0,0,0,0.15)', flexShrink: 0 }}>
-                <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, display: 'flex', alignItems: 'flex-end', padding: '10px 12px', gap: 10, transition: 'border-color 0.2s, box-shadow 0.2s' }}>
+                <div style={{ background: '#EEF0F3', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, display: 'flex', alignItems: 'flex-end', padding: '10px 12px', gap: 10, transition: 'border-color 0.2s, box-shadow 0.2s' }}>
                   <textarea
                     ref={inputRef}
                     value={input}
@@ -847,7 +847,7 @@ export default function SaguaroChatWidget({
                       cursor: isStreaming || input.trim() ? 'pointer' : 'default',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       transition: 'all 0.15s',
-                      background: isStreaming ? 'rgba(239,68,68,0.2)' : input.trim() ? 'linear-gradient(135deg, #D4A017, #C8960F)' : 'rgba(255,255,255,0.05)',
+                      background: isStreaming ? 'rgba(239,68,68,0.2)' : input.trim() ? 'linear-gradient(135deg, #C8960F, #C8960F)' : '#E2E5EA',
                       boxShadow: input.trim() && !isStreaming ? '0 2px 12px rgba(212,160,23,0.3)' : 'none',
                     }}
                   >

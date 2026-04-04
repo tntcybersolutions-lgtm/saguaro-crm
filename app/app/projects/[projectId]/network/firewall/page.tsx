@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
-const GOLD = '#D4A017';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const BORDER = '#E5E7EB';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface FirewallRule {
   id: string;
@@ -267,7 +267,7 @@ export default function FirewallRulesPage() {
                 key={rule.id}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                  background: !rule.enabled ? 'rgba(255,255,255,0.02)' : 'transparent',
+                  background: !rule.enabled ? '#FAFBFC' : 'transparent',
                   opacity: rule.enabled ? 1 : 0.5,
                   borderBottom: idx < filteredRules.length - 1 ? `1px solid ${BORDER}` : 'none',
                 }}
@@ -299,7 +299,7 @@ export default function FirewallRulesPage() {
 
                 {/* Category */}
                 <span style={{
-                  fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.05)',
+                  fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#E2E5EA',
                   color: DIM, textTransform: 'capitalize', fontWeight: 600,
                 }}>{rule.category}</span>
 

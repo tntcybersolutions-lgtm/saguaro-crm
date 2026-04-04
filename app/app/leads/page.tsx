@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 /* ─── Palette ─── */
-const GOLD = '#D4A017', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
+const GOLD = '#C8960F', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
 const GREEN = '#22C55E', RED = '#EF4444', AMBER = '#F59E0B', BLUE = '#3B82F6', PURPLE = '#8B5CF6';
 
 /* ─── Constants ─── */
@@ -57,7 +57,7 @@ const labelS: React.CSSProperties = {
   fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 4, display: 'block',
 };
 const overlayS: React.CSSProperties = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 1000,
+  position: 'fixed', inset: 0, background: 'rgba(0,0,0,.1)', zIndex: 1000,
   display: 'flex', justifyContent: 'center', alignItems: 'flex-start',
   paddingTop: 60, overflowY: 'auto',
 };

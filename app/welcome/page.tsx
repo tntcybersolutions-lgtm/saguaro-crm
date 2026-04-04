@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 
 const GOLD  = '#F59E0B';
-const DARK  = '#0d1117';
+const DARK = '#F8F9FB';
 const RAISED = '#0F172A';
 const BORDER = '#1E3A5F';
 const DIM   = '#CBD5E1';
@@ -41,7 +41,7 @@ export default function WelcomePage() {
         </p>
 
         {/* ACCESS CALLOUT — most important box */}
-        <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(13,17,23,0) 100%)', border: `1.5px solid rgba(245,158,11,0.4)`, borderRadius: 16, padding: '28px 32px', marginBottom: 32 }}>
+        <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(248,249,251,.97) 100%)', border: `1.5px solid rgba(245,158,11,0.4)`, borderRadius: 16, padding: '28px 32px', marginBottom: 32 }}>
           <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>How to access your software</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 8 }}>
             Open any browser and go to{' '}
@@ -54,7 +54,7 @@ export default function WelcomePage() {
             <a href="/app" style={{ padding: '12px 28px', background: `linear-gradient(135deg, ${GOLD}, #D97706)`, borderRadius: 9, color: '#000', fontWeight: 900, fontSize: 14, textDecoration: 'none', boxShadow: `0 4px 20px rgba(245,158,11,0.3)` }}>
               Go to My Dashboard →
             </a>
-            <a href="/get-the-app" style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+            <a href="/get-the-app" style={{ padding: '12px 24px', background: '#F3F4F6', border: `1px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
               Install on Phone
             </a>
           </div>
@@ -127,7 +127,7 @@ export default function WelcomePage() {
               { icon: '🤖', device: 'Android', how: 'Open Chrome → Add to Home Screen' },
               { icon: '🖥️', device: 'Tablet', how: 'Any browser → works full screen' },
             ].map((d, i) => (
-              <div key={i} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: `1px solid rgba(30,58,95,0.5)`, borderRadius: 10 }}>
+              <div key={i} style={{ padding: '14px 16px', background: '#FAFBFC', border: `1px solid rgba(30,58,95,0.5)`, borderRadius: 10 }}>
                 <div style={{ fontSize: 22, marginBottom: 8 }}>{d.icon}</div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{d.device}</div>
                 <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>{d.how}</div>

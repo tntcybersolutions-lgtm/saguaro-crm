@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 /* ── palette ── */
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const BG = '#07101C';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
@@ -603,7 +603,7 @@ export default function ApprovalWorkflowsPage() {
       {toast && (
         <div style={{
           position: 'fixed', top: 20, right: 20, background: GOLD, color: BG, padding: '10px 24px',
-          borderRadius: 8, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: '0 4px 24px rgba(0,0,0,.5)',
+          borderRadius: 8, fontWeight: 700, fontSize: 13, zIndex: 9999, boxShadow: '0 4px 24px rgba(0,0,0,.08)',
         }}>{toast}</div>
       )}
 

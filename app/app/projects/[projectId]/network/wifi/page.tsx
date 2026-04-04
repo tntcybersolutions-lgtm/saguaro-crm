@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
-const GOLD = '#D4A017';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const BORDER = '#E5E7EB';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface WifiNetwork {
   id: string;
@@ -126,7 +126,7 @@ export default function WifiManagerPage() {
     ctx.fillRect(0, 0, w, h);
 
     // Grid lines
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = '#E2E5EA';
     ctx.lineWidth = 1;
     for (let x = 0; x < w; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
     for (let y = 0; y < h; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
@@ -325,7 +325,7 @@ export default function WifiManagerPage() {
               return (
                 <div key={net.id} style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                  background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: `1px solid ${BORDER}`,
+                  background: '#F8F9FB', borderRadius: 8, border: `1px solid ${BORDER}`,
                 }}>
                   <span style={{ fontSize: 22 }}>📡</span>
                   <div style={{ flex: 1 }}>
@@ -338,10 +338,10 @@ export default function WifiManagerPage() {
                         fontSize: 10, padding: '2px 8px', borderRadius: 8, fontWeight: 600,
                         background: sc.bg, color: sc.text,
                       }}>{net.security_type.replace(/_/g, ' ').toUpperCase()}</span>
-                      {net.vlan_name && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>VLAN: {net.vlan_name}</span>}
-                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{net.band.toUpperCase()}</span>
+                      {net.vlan_name && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: '#EEF0F3', color: DIM }}>VLAN: {net.vlan_name}</span>}
+                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: '#EEF0F3', color: DIM }}>{net.band.toUpperCase()}</span>
                       {net.client_isolation && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: `${GOLD}15`, color: GOLD }}>Isolated</span>}
-                      {net.bandwidth_limit_mbps > 0 && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', color: DIM }}>{net.bandwidth_limit_mbps} Mbps</span>}
+                      {net.bandwidth_limit_mbps > 0 && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: '#EEF0F3', color: DIM }}>{net.bandwidth_limit_mbps} Mbps</span>}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -366,7 +366,7 @@ export default function WifiManagerPage() {
             <button
               onClick={() => setPlaceMode(!placeMode)}
               style={{
-                padding: '8px 14px', background: placeMode ? `${GREEN}20` : 'rgba(255,255,255,0.05)',
+                padding: '8px 14px', background: placeMode ? `${GREEN}20` : '#E2E5EA',
                 color: placeMode ? GREEN : TEXT, border: `1px solid ${placeMode ? GREEN : BORDER}`,
                 borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
               }}
@@ -389,7 +389,7 @@ export default function WifiManagerPage() {
 
         {/* Place AP Form */}
         {showApForm && (
-          <div style={{ marginTop: 16, padding: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: `1px solid ${BORDER}` }}>
+          <div style={{ marginTop: 16, padding: 16, background: '#F8F9FB', borderRadius: 8, border: `1px solid ${BORDER}` }}>
             <h4 style={{ color: TEXT, fontSize: 14, fontWeight: 700, margin: '0 0 12px' }}>Configure Access Point</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
               <div>
@@ -441,7 +441,7 @@ export default function WifiManagerPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8 }}>
               {aps.filter(a => a.floor === selectedFloor).map(ap => (
                 <div key={ap.id} style={{
-                  padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: `1px solid ${BORDER}`,
+                  padding: '10px 12px', background: '#F8F9FB', borderRadius: 8, border: `1px solid ${BORDER}`,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: ap.status === 'online' ? GREEN : ap.status === 'offline' ? RED : '#6B7280' }} />

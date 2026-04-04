@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
-const GOLD = '#D4A017';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const BORDER = '#E5E7EB';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface ReportHistory {
   id: string;
@@ -169,7 +169,7 @@ export default function ReportsPage() {
             {FORMAT_OPTIONS.map(f => <option key={f} value={f}>{f.toUpperCase()}</option>)}
           </select>
           <button onClick={() => setShowBranding(!showBranding)} style={{
-            padding: '10px 14px', background: 'rgba(255,255,255,0.05)', color: TEXT,
+            padding: '10px 14px', background: '#E2E5EA', color: TEXT,
             border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
           }}>
             {showBranding ? 'Hide' : 'Branding'}
@@ -232,7 +232,7 @@ export default function ReportsPage() {
                   disabled={generating === report.type}
                   style={{
                     flex: 1, padding: '8px 12px',
-                    background: generating === report.type ? `${report.color}10` : 'rgba(255,255,255,0.05)',
+                    background: generating === report.type ? `${report.color}10` : '#E2E5EA',
                     color: report.color, border: `1px solid ${report.color}30`,
                     borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                     opacity: generating === report.type ? 0.6 : 1, textTransform: 'uppercase',
@@ -258,7 +258,7 @@ export default function ReportsPage() {
             {history.map(report => (
               <div key={report.id} style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
-                background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: `1px solid ${BORDER}`,
+                background: '#F8F9FB', borderRadius: 8, border: `1px solid ${BORDER}`,
               }}>
                 <span style={{ fontSize: 18 }}>
                   {REPORT_TYPES.find(r => r.type === report.report_type)?.icon || '📄'}

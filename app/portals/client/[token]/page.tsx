@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
 /* ── Palette ──────────────────────────────────────────────────────── */
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const BG = '#07101C';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
@@ -1189,7 +1189,7 @@ export default function ClientPortalPage() {
                 />
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0,
-                  background: 'linear-gradient(transparent, rgba(0,0,0,.7))',
+                  background: 'linear-gradient(transparent, rgba(0,0,0,.12))',
                   padding: '16px 8px 8px',
                 }}>
                   <div style={{ fontSize: 10, color: '#fff', fontWeight: 600 }}>{photo.caption}</div>
@@ -2139,7 +2139,7 @@ export default function ClientPortalPage() {
       {showChangeRequest && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,.6)', zIndex: 300,
+          background: 'rgba(0,0,0,.1)', zIndex: 300,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 24,
         }}

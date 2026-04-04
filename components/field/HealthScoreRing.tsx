@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef, useId } from 'react';
 
 const GREEN = '#22C55E';
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const RED = '#EF4444';
 const DIM = '#8BAAC8';
 const TEXT = '#F0F4FF';
@@ -82,7 +82,7 @@ export default function HealthScoreRing({
             cy={center}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="#EEF0F3"
             strokeWidth={sw}
           />
 

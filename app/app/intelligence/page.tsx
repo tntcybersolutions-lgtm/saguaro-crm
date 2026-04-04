@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-const GOLD = '#D4A017', DARK = '#0d1117', RAISED = '#1f2c3e', BORDER = '#263347', DIM = '#8fa3c0', TEXT = '#e8edf8';
+const GOLD = '#C8960F', DARK = '#0d1117', RAISED = '#ffffff', BORDER = '#E2E5EA', DIM = '#8fa3c0', TEXT = '#e8edf8';
 const GREEN = '#1a8a4a', RED = '#c03030', AMBER = '#d49a17';
 
 const fmt = (n: number) => '$' + (n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -185,7 +185,7 @@ export default function IntelligencePage() {
   const maxRfi = Math.max(...selected.map(m => m.openRfis), 1);
   const maxRet = Math.max(...selected.map(m => m.retainageHeld), 1);
 
-  const barColors = ['#D4A017', '#3dd68c', '#5ba3f5', '#e06be0', '#ff7070'];
+  const barColors = ['#C8960F', '#3dd68c', '#5ba3f5', '#e06be0', '#ff7070'];
 
   if (loading) {
     return (
@@ -225,7 +225,7 @@ export default function IntelligencePage() {
               position: 'absolute' as const, top: '100%', right: 0, marginTop: 6,
               background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10,
               padding: 12, minWidth: 320, maxHeight: 400, overflowY: 'auto' as const,
-              zIndex: 100, boxShadow: '0 8px 30px rgba(0,0,0,.5)',
+              zIndex: 100, boxShadow: '0 8px 30px rgba(0,0,0,.08)',
             }}>
               <div style={{ fontSize: 11, color: DIM, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 8 }}>
                 Select up to 5 projects
@@ -238,7 +238,7 @@ export default function IntelligencePage() {
                     borderRadius: 6, cursor: 'pointer',
                     background: selectedIds.has(p.id) ? 'rgba(212,160,23,0.1)' : 'transparent',
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'rgba(212,160,23,0.15)' : 'rgba(255,255,255,0.03)'}
+                  onMouseEnter={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'rgba(212,160,23,0.15)' : '#F8F9FB'}
                   onMouseLeave={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'rgba(212,160,23,0.1)' : 'transparent'}
                 >
                   <input
@@ -332,7 +332,7 @@ export default function IntelligencePage() {
                     <div style={{ fontSize: 18, fontWeight: 800, color: m.burnRate > 90 ? RED : m.burnRate > 70 ? AMBER : TEXT }}>
                       {m.burnRate}%
                     </div>
-                    <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, marginTop: 6 }}>
+                    <div style={{ height: 4, background: '#EEF0F3', borderRadius: 2, marginTop: 6 }}>
                       <div style={{ height: '100%', width: `${Math.min(m.burnRate, 100)}%`, borderRadius: 2, background: m.burnRate > 90 ? RED : m.burnRate > 70 ? AMBER : GREEN }} />
                     </div>
                   </div>
@@ -436,7 +436,7 @@ export default function IntelligencePage() {
                     return (
                       <div key={idx} style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <div style={{ flex: 1, height: 20, background: 'rgba(255,255,255,0.04)', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ flex: 1, height: 20, background: '#F3F4F6', borderRadius: 4, overflow: 'hidden' }}>
                             <div style={{
                               height: '100%', width: `${Math.max(widthPct, 2)}%`,
                               background: barColors[idx % barColors.length],
@@ -492,7 +492,7 @@ export default function IntelligencePage() {
                     </div>
 
                     {/* Risk gauge */}
-                    <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, marginBottom: 10, position: 'relative' as const }}>
+                    <div style={{ height: 6, background: '#EEF0F3', borderRadius: 3, marginBottom: 10, position: 'relative' as const }}>
                       {/* Threshold markers */}
                       <div style={{ position: 'absolute' as const, left: '50%', top: -2, width: 1, height: 10, background: AMBER, opacity: 0.5 }} title="10% threshold" />
                       <div style={{ position: 'absolute' as const, left: '100%', top: -2, width: 1, height: 10, background: RED, opacity: 0.5 }} title="20% threshold" />
@@ -517,7 +517,7 @@ export default function IntelligencePage() {
                         Future CO Approval Likelihood
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3 }}>
+                        <div style={{ flex: 1, height: 6, background: '#EEF0F3', borderRadius: 3 }}>
                           <div style={{
                             height: '100%', width: `${approvalLikelihood}%`,
                             background: approvalLikelihood >= 70 ? GREEN : approvalLikelihood >= 50 ? AMBER : RED,
@@ -551,7 +551,7 @@ export default function IntelligencePage() {
                     {/* Circular gauge */}
                     <div style={{ position: 'relative' as const, width: 80, height: 80, margin: '0 auto 10px' }}>
                       <svg width="80" height="80" viewBox="0 0 80 80">
-                        <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="8" />
+                        <circle cx="40" cy="40" r="34" fill="none" stroke="#EEF0F3" strokeWidth="8" />
                         <circle
                           cx="40" cy="40" r="34" fill="none"
                           stroke={healthColor} strokeWidth="8"

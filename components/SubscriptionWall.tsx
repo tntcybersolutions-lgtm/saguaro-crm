@@ -14,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 const GOLD  = '#F59E0B';
-const DARK  = '#0d1117';
+const DARK  = '#F8F9FB';
 const RAISED = '#0F172A';
 const BORDER = '#1E3A5F';
 const DIM   = '#CBD5E1';
@@ -122,7 +122,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
                 <div style={{ fontSize: 11, color: DIM, marginBottom: 16 }}>{plan.sub}</div>
                 <a href={`/app/billing?plan=${plan.id}`} style={{
                   display: 'block', padding: '10px 0', borderRadius: 7,
-                  background: plan.popular ? `linear-gradient(135deg,${GOLD},#D97706)` : 'rgba(255,255,255,0.06)',
+                  background: plan.popular ? `linear-gradient(135deg,${GOLD},#D97706)` : '#EEF0F3',
                   border: plan.popular ? 'none' : `1px solid ${BORDER}`,
                   color: plan.popular ? '#000' : TEXT, fontWeight: 800, fontSize: 13,
                   textDecoration: 'none',

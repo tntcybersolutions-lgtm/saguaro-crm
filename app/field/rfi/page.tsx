@@ -10,12 +10,12 @@ import { takePhoto, hapticSuccess, hapticLight, hapticError, isNative } from '@/
 import OfflineSyncStatus from '@/components/field/OfflineSyncStatus';
 import VoiceToLog from '@/components/field/VoiceToLog';
 
-const GOLD   = '#D4A017';
-const DARK   = '#0d1117';
-const RAISED = '#1f2c3e';
-const BORDER = '#263347';
-const DIM    = '#8fa3c0';
-const TEXT   = '#e8edf8';
+const GOLD   = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 const GREEN  = '#22c55e';
 const RED    = '#ef4444';
 const AMBER  = '#f59e0b';
@@ -480,7 +480,7 @@ function RFIPageInner() {
 /* ─── Page wrapper with Suspense ─── */
 export default function FieldRFIPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#0d1117', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8fa3c0' }}>Loading...</div>}>
+    <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#F8F9FB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}>Loading...</div>}>
       <RFIPageInner />
     </Suspense>
   );

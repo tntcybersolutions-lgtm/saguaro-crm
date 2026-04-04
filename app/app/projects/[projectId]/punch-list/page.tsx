@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827';
 const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='#3b82f6';
 
 const PRIORITIES=['Critical','High','Medium','Low'];
@@ -16,7 +16,7 @@ const STATUS_LABELS:Record<string,string>={open:'Open',in_progress:'In Progress'
 
 const inp:React.CSSProperties={
   width:'100%',padding:'9px 12px',background:'#151f2e',
-  border:'1px solid #263347',borderRadius:7,color:'#e8edf8',
+  border:'1px solid #E2E5EA',borderRadius:7,color:'#e8edf8',
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
 const EMPTY:Record<string,any>={

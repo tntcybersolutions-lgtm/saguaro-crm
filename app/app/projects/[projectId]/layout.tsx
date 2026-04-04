@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 
-const GOLD = '#D4A017'; const DARK = '#0d1117'; const RAISED = '#1f2c3e';
-const BORDER = '#263347'; const DIM = '#8fa3c0'; const TEXT = '#e8edf8';
+const GOLD = '#C8960F'; const DARK = '#F8F9FB'; const RAISED = '#ffffff';
+const BORDER = '#E2E5EA'; const DIM = '#6B7280'; const TEXT = '#111827';
 
 // ALL sidebar nav items — every module Buildertrend has + more
 const NAV_SECTIONS = [
@@ -147,7 +147,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       <aside className="sidebar-desktop" style={{
         width: collapsed ? 56 : 220,
         flexShrink: 0,
-        background: '#0a1117',
+        background: '#F8F9FB',
         borderRight: `1px solid ${BORDER}`,
         position: 'sticky',
         top: 56,
@@ -209,7 +209,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                   <span style={{ fontSize: 14, flexShrink: 0 }}>{item.icon}</span>
                   {!collapsed && <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
                   {!collapsed && item.badge && (
-                    <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#B85C2A', color: '#0d1117' }}>
+                    <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#B85C2A', color: '#ffffff' }}>
                       {item.badge}
                     </span>
                   )}
@@ -228,7 +228,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       </aside>
 
       {/* ── Page Content ─────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minWidth: 0, background: '#0d1117' }}>
+      <div style={{ flex: 1, minWidth: 0, background: '#F8F9FB' }}>
         {children}
       </div>
     </div>

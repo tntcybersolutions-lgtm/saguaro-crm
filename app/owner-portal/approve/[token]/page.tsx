@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827';
 
 export default function OwnerApprovePage() {
   const params = useParams();
@@ -49,8 +49,8 @@ export default function OwnerApprovePage() {
           <span style={{fontSize:10,background:GOLD,color:'#0d1117',padding:'2px 8px',borderRadius:4,fontWeight:700}}>OWNER PORTAL</span>
         </div>
 
-        <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
-          <div style={{background:'#0a1117',padding:'20px 24px',borderBottom:`1px solid ${BORDER}`}}>
+        <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.08)'}}>
+          <div style={{background:'#F8F9FB',padding:'20px 24px',borderBottom:`1px solid ${BORDER}`}}>
             <div style={{fontSize:11,fontWeight:700,letterSpacing:2,textTransform:'uppercase' as const,color:DIM,marginBottom:6}}>Approval Required</div>
             <h2 style={{fontSize:20,fontWeight:800,color:TEXT,margin:0}}>{title}</h2>
           </div>
@@ -58,7 +58,7 @@ export default function OwnerApprovePage() {
           <div style={{padding:24}}>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
               {[['Project',project],['Contractor','Copper State Developments'],['Period','Feb 1 – Feb 28, 2026'],['Amount Due','$'+amount.toLocaleString()]].map(r=>(
-                <div key={r[0]} style={{background:'#0d1117',borderRadius:8,padding:'12px 16px'}}>
+                <div key={r[0]} style={{background:'#ffffff',borderRadius:8,padding:'12px 16px'}}>
                   <div style={{fontSize:11,color:DIM,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:4}}>{r[0]}</div>
                   <div style={{fontSize:15,fontWeight:700,color:r[0]==='Amount Due'?GOLD:TEXT}}>{r[1]}</div>
                 </div>
@@ -71,7 +71,7 @@ export default function OwnerApprovePage() {
 
             <div style={{marginBottom:24}}>
               <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:8}}>Notes (optional)</label>
-              <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} placeholder="Add any notes about this approval..." style={{width:'100%',padding:'10px 14px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none',resize:'vertical' as const}}/>
+              <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} placeholder="Add any notes about this approval..." style={{width:'100%',padding:'10px 14px',background:'#ffffff',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none',resize:'vertical' as const}}/>
             </div>
 
             <div style={{display:'flex',gap:12}}>

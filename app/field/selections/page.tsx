@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const BG     = '#07101C';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
@@ -852,7 +852,7 @@ export default function Page() {
     <Suspense fallback={
       <div style={{ minHeight: '100vh', background: '#07101C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 36, height: 36, border: '3px solid #1E3A5F', borderTopColor: '#D4A017', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+          <div style={{ width: 36, height: 36, border: '3px solid #1E3A5F', borderTopColor: '#C8960F', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
           <p style={{ color: '#8BAAC8', fontSize: 14 }}>Loading...</p>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>

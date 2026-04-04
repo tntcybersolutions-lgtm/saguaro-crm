@@ -133,7 +133,7 @@ export default function CompareProcorePage() {
       {/* ── NAV ── */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        height: 64, background: 'rgba(13,17,23,0.85)',
+        height: 64, background: 'rgba(248,249,251,.97)',
         borderBottom: `1px solid ${C.border}`,
         backdropFilter: 'blur(16px)',
         display: 'flex', alignItems: 'center',
@@ -177,7 +177,7 @@ export default function CompareProcorePage() {
             padding: '9px 20px',
             background: C.gold,
             borderRadius: 8,
-            color: '#0d1117',
+            color: '#ffffff',
             fontSize: 13,
             fontWeight: 800,
             textDecoration: 'none',
@@ -247,7 +247,7 @@ export default function CompareProcorePage() {
             padding: '14px 36px',
             background: C.gold,
             borderRadius: 10,
-            color: '#0d1117',
+            color: '#ffffff',
             fontWeight: 800,
             fontSize: 16,
             textDecoration: 'none',
@@ -626,7 +626,7 @@ export default function CompareProcorePage() {
               padding: '15px 40px',
               background: `linear-gradient(135deg, ${C.gold}, #D97706)`,
               borderRadius: 10,
-              color: '#0d1117',
+              color: '#ffffff',
               fontWeight: 800,
               fontSize: 16,
               textDecoration: 'none',
@@ -853,7 +853,7 @@ export default function CompareProcorePage() {
             padding: '12px 28px',
             background: C.gold,
             borderRadius: 9,
-            color: '#0d1117',
+            color: '#ffffff',
             fontWeight: 800,
             fontSize: 14,
             textDecoration: 'none',
@@ -930,7 +930,7 @@ export default function CompareProcorePage() {
 
             {/* RIGHT */}
             <div style={{
-              background: 'rgba(13,17,23,0.7)',
+              background: 'rgba(248,249,251,.97)',
               border: `1px solid rgba(245,158,11,0.3)`,
               borderRadius: 14,
               padding: '32px 28px',
@@ -967,7 +967,7 @@ export default function CompareProcorePage() {
                 padding: '14px 24px',
                 background: `linear-gradient(135deg, ${C.gold}, #D97706)`,
                 borderRadius: 9,
-                color: '#0d1117',
+                color: '#ffffff',
                 fontWeight: 800,
                 fontSize: 15,
                 textDecoration: 'none',
@@ -1040,7 +1040,7 @@ export default function CompareProcorePage() {
                     justifyContent: 'center',
                     fontSize: 13,
                     fontWeight: 800,
-                    color: '#0d1117',
+                    color: '#ffffff',
                     flexShrink: 0,
                   }}>
                     {t.initials}
@@ -1100,7 +1100,7 @@ export default function CompareProcorePage() {
             padding: '16px 44px',
             background: C.gold,
             borderRadius: 10,
-            color: '#0d1117',
+            color: '#ffffff',
             fontWeight: 800,
             fontSize: 17,
             textDecoration: 'none',
@@ -1132,12 +1132,12 @@ export default function CompareProcorePage() {
       </div>
 
       {/* ── MOBILE STICKY CTA ── */}
-      <div className="mobile-sticky-cta" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(13,17,23,0.97)', borderTop: '1px solid rgba(245,158,11,0.3)', padding: '12px 16px', backdropFilter: 'blur(12px)' }}>
+      <div className="mobile-sticky-cta" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(248,249,251,.97)', borderTop: '1px solid rgba(245,158,11,0.3)', padding: '12px 16px', backdropFilter: 'blur(12px)' }}>
         <div style={{ display: 'flex', gap: 10 }}>
           <a href="/signup" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, textDecoration: 'none' }}>
             Start Free Trial
           </a>
-          <a href="/switch-from-procore" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, color: '#F59E0B', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+          <a href="/switch-from-procore" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: '#EEF0F3', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, color: '#F59E0B', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
             Free Migration
           </a>
         </div>

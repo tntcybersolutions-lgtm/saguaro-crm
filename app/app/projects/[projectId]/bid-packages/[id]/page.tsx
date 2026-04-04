@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827',GREEN='#1a8a4a',RED='#c03030';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -306,7 +306,7 @@ export default function BidPackageDetailPage() {
             <div style={{ padding: '12px 18px', borderBottom: `1px solid ${BORDER}`, fontWeight: 700, fontSize: 14, color: TEXT }}>Line Items</div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#0a1117' }}>
+                <tr style={{ background: '#F8F9FB' }}>
                   {['Description', 'Qty', 'Unit', 'Unit Cost', 'Total'].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                   ))}
@@ -340,7 +340,7 @@ export default function BidPackageDetailPage() {
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#0a1117' }}>
+                <tr style={{ background: '#F8F9FB' }}>
                   {['Sub Name', 'Email', 'Bid Amount', 'Submitted', 'Action'].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                   ))}
@@ -416,7 +416,7 @@ export default function BidPackageDetailPage() {
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#0a1117' }}>
+                <tr style={{ background: '#F8F9FB' }}>
                   {['Company', 'Contact', 'Email', 'Status', 'Bid Amount', 'Invited', 'Actions'].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                   ))}

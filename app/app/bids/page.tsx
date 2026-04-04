@@ -3,7 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#ef4444',GREEN='#3dd68c';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827',RED='#ef4444',GREEN='#3dd68c';
 
 interface BidRecord {
   id: string;
@@ -233,7 +233,7 @@ function BidsPageInner() {
           </div>
         ) : (
           <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
-            <thead><tr style={{background:'#0a1117'}}>
+            <thead><tr style={{background:'#F8F9FB'}}>
               {['Package Name','Trade','Status','Bid Due','Actions'].map(h=>(
                 <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
               ))}
@@ -294,7 +294,7 @@ function BidsPageInner() {
           <button onClick={()=>fetchHistory()} style={{padding:'8px 18px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:7,color:DIM,fontSize:13,cursor:'pointer'}}>Retry</button>
         </div>}
         {!historyLoading&&historyBids.length>0&&<table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
-          <thead><tr style={{background:'#0a1117'}}>
+          <thead><tr style={{background:'#F8F9FB'}}>
             {['Project','Type','Bid Date','Bid Amount','Margin %','Location','Outcome','Awarded To'].map(h=>(
               <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>
             ))}
@@ -386,8 +386,8 @@ function BidsPageInner() {
       </div>}
 
       {/* ── Score a Bid Modal ─────────────────────────────────────────────────── */}
-      {showScore&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.6)',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
-        <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:28,width:480,maxWidth:'95vw',boxShadow:'0 24px 80px rgba(0,0,0,.6)'}}>
+      {showScore&&<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.1)',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+        <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:28,width:480,maxWidth:'95vw',boxShadow:'0 24px 80px rgba(0,0,0,.1)'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
             <div style={{fontWeight:800,fontSize:17,color:TEXT}}>🤖 Score This Bid</div>
             <button onClick={()=>{setShowScore(false);setScoreResult(null);}} style={{background:'none',border:'none',color:DIM,fontSize:20,cursor:'pointer',lineHeight:1}}>×</button>
@@ -417,13 +417,13 @@ function BidsPageInner() {
                 {([['Project Name','projectName','e.g. Scottsdale Office Buildout'],['Bid Amount ($)','bidAmount','e.g. 2,500,000'],['Target Margin (%)','margin','e.g. 15'],['Trade Type','tradeType','e.g. Commercial']]).map(([lbl,key,ph])=>(
                   <div key={key}>
                     <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>{lbl}</label>
-                    <input value={(scoreForm as any)[key]} onChange={e=>setScoreForm(f=>({...f,[key]:e.target.value}))} placeholder={ph} style={{width:'100%',padding:'8px 12px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box' as const}}/>
+                    <input value={(scoreForm as any)[key]} onChange={e=>setScoreForm(f=>({...f,[key]:e.target.value}))} placeholder={ph} style={{width:'100%',padding:'8px 12px',background:'#ffffff',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box' as const}}/>
                   </div>
                 ))}
               </div>
               <div style={{marginBottom:16}}>
                 <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:5}}>Notes</label>
-                <textarea value={scoreForm.notes} onChange={e=>setScoreForm(f=>({...f,notes:e.target.value}))} rows={3} placeholder="Any context for the AI…" style={{width:'100%',padding:'8px 12px',background:'#0d1117',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',resize:'vertical' as const,boxSizing:'border-box' as const}}/>
+                <textarea value={scoreForm.notes} onChange={e=>setScoreForm(f=>({...f,notes:e.target.value}))} rows={3} placeholder="Any context for the AI…" style={{width:'100%',padding:'8px 12px',background:'#ffffff',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',resize:'vertical' as const,boxSizing:'border-box' as const}}/>
               </div>
               <div style={{display:'flex',gap:10}}>
                 <button onClick={submitScore} disabled={scoring||!scoreForm.projectName||!scoreForm.bidAmount} style={{flex:1,padding:'10px 18px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:7,color:'#0d1117',fontSize:13,fontWeight:800,cursor:'pointer',opacity:scoring||!scoreForm.projectName||!scoreForm.bidAmount?0.6:1}}>
@@ -441,7 +441,7 @@ function BidsPageInner() {
 
 export default function BidsPage() {
   return (
-    <Suspense fallback={<div style={{minHeight:'100vh',background:'#0d1117'}}/>}>
+    <Suspense fallback={<div style={{minHeight:'100vh',background:'#ffffff'}}/>}>
       <BidsPageInner />
     </Suspense>
   );

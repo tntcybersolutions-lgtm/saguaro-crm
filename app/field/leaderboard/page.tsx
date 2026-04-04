@@ -6,9 +6,9 @@
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-const BASE   = '#0F1419';
-const CARD   = '#1A1F2E';
-const GOLD   = '#D4A017';
+const BASE   = '#F8F9FB';
+const CARD   = '#F8F9FB';
+const GOLD   = '#C8960F';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
 const BORDER = '#2A3144';

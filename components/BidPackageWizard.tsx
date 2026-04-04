@@ -1,12 +1,12 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 
-const GOLD = '#D4A017';
-const DARK = '#0d1117';
-const RAISED = '#1f2c3e';
+const GOLD = '#C8960F';
+const DARK = '#F8F9FB';
+const RAISED = '#ffffff';
 const RAISED2 = '#253549';
-const BORDER = '#263347';
-const DIM = '#8fa3c0';
+const BORDER = '#E2E5EA';
+const DIM = '#6B7280';
 const TEXT = '#e8edf8';
 const GREEN = '#3dd68c';
 
@@ -86,7 +86,7 @@ function PrimaryBtn({ onClick, disabled, loading, children }: {
       style={{
         padding: '10px 24px',
         background: disabled || loading ? '#3a4a5a' : `linear-gradient(135deg,${GOLD},#F0C040)`,
-        border: 'none', borderRadius: 7, color: disabled || loading ? DIM : '#0d1117',
+        border: 'none', borderRadius: 7, color: disabled || loading ? DIM : '#F8F9FB',
         fontSize: 13, fontWeight: 800, cursor: disabled || loading ? 'not-allowed' : 'pointer',
         transition: 'opacity 0.15s',
       }}
@@ -592,7 +592,7 @@ function Step4({ trade, scope, lineItems, selectedSubCount, packageName, onPacka
             padding: '12px 32px',
             background: submitting ? '#3a4a5a' : `linear-gradient(135deg,${GOLD},#F0C040)`,
             border: 'none', borderRadius: 8,
-            color: submitting ? DIM : '#0d1117',
+            color: submitting ? DIM : '#F8F9FB',
             fontSize: 15, fontWeight: 800,
             cursor: submitting ? 'not-allowed' : 'pointer',
             boxShadow: submitting ? 'none' : `0 4px 16px rgba(212,160,23,0.3)`,

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 /* ── palette ── */
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const BG     = '#07101C';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';

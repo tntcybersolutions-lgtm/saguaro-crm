@@ -26,7 +26,7 @@ export function Skeleton({ width = '100%', height = 14, borderRadius = 4, style 
           width,
           height,
           borderRadius,
-          background: '#1f2c3e',
+          background: '#ffffff',
           display: 'block',
           ...style,
         }}
@@ -49,11 +49,11 @@ export function SkeletonCard({ height = 80 }: { height?: number }) {
   return (
     <div
       style={{
-        background: '#1f2c3e',
+        background: '#ffffff',
         borderRadius: 10,
         padding: '16px 18px',
         marginBottom: 12,
-        border: '1px solid #263347',
+        border: '1px solid #E2E5EA',
         height,
       }}
     >
@@ -72,8 +72,8 @@ export function SkeletonKPI() {
   return (
     <div
       style={{
-        background: '#1f2c3e',
-        border: '1px solid #263347',
+        background: '#ffffff',
+        border: '1px solid #E2E5EA',
         borderRadius: 10,
         padding: '18px 20px',
       }}
@@ -93,12 +93,12 @@ export function SkeletonRow() {
         alignItems: 'center',
         gap: 14,
         padding: '14px 18px',
-        borderBottom: '1px solid #263347',
+        borderBottom: '1px solid #E2E5EA',
       }}
     >
       <div
         className="skel"
-        style={{ width: 4, height: 48, borderRadius: 2, background: '#263347', flexShrink: 0 }}
+        style={{ width: 4, height: 48, borderRadius: 2, background: '#E2E5EA', flexShrink: 0 }}
       />
       <div style={{ flex: 1 }}>
         <Skeleton width="55%" height={14} style={{ marginBottom: 8 }} />

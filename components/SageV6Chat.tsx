@@ -36,12 +36,12 @@ interface SageV6ChatProps {
 // ─── PALETTE ───────────────────────────────────────────────────────────────────
 
 const C = {
-  DARK:   '#0d1117',
+  DARK:   '#F8F9FB',
   RAISED: '#111827',
-  BORDER: '#1f2c3e',
-  GOLD:   '#D4A017',
+  BORDER: '#ffffff',
+  GOLD:   '#C8960F',
   TEXT:   '#e8edf8',
-  DIM:    '#8fa3c0',
+  DIM:    '#6B7280',
   GREEN:  '#1a8a4a',
   RED:    '#c03030',
   BLUE:   '#1a5fa8',
@@ -357,7 +357,7 @@ export default function SageV6Chat({
         flexDirection: 'column',
         background:  C.RAISED,
         border:      `1px solid ${C.BORDER}`,
-        boxShadow:   '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
+        boxShadow:   '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px #F3F4F6',
         overflow:    'hidden',
         animation:   'slideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards',
         transformOrigin: 'bottom right',
@@ -400,9 +400,9 @@ export default function SageV6Chat({
         .sageV6-scroll::-webkit-scrollbar          { width: 4px; }
         .sageV6-scroll::-webkit-scrollbar-track    { background: transparent; }
         .sageV6-scroll::-webkit-scrollbar-thumb    { background: rgba(212,160,23,0.22); border-radius: 2px; }
-        .sageV6-bubble strong { color: #D4A017; }
+        .sageV6-bubble strong { color: #C8960F; }
         .sageV6-bubble em     { color: #c8d4e8; }
-        .sageV6-bubble code   { background: rgba(212,160,23,0.12); color: #D4A017; padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: monospace; }
+        .sageV6-bubble code   { background: rgba(212,160,23,0.12); color: #C8960F; padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: monospace; }
         .sageV6-bubble ul     { margin: 6px 0; padding-left: 18px; }
         .sageV6-bubble li     { margin: 3px 0; color: #e8edf8; }
         .sageV6-bubble p      { margin: 0 0 8px; }

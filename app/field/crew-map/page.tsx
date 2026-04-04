@@ -7,9 +7,9 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD = '#D4A017';
-const CARD = '#1A1F2E';
-const BASE = '#0F1419';
+const GOLD = '#C8960F';
+const CARD = '#F8F9FB';
+const BASE = '#F8F9FB';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const GREEN = '#22C55E';
@@ -59,7 +59,7 @@ const glass: React.CSSProperties = {
   background: 'rgba(26,31,46,0.7)',
   backdropFilter: 'blur(16px)',
   WebkitBackdropFilter: 'blur(16px)',
-  border: '1px solid rgba(255,255,255,0.06)',
+  border: '1px solid #EEF0F3',
   borderRadius: 16,
 };
 
@@ -245,7 +245,7 @@ function CrewMapPage() {
           onClick={toggleSharing}
           style={{
             width: 52, height: 28, borderRadius: 14, border: 'none', cursor: 'pointer',
-            background: sharing ? GREEN : 'rgba(255,255,255,0.1)',
+            background: sharing ? GREEN : '#E5E7EB',
             position: 'relative', transition: 'background 0.3s',
           }}
         >
@@ -287,10 +287,10 @@ function CrewMapPage() {
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} style={{ ...glass, padding: 16, height: 64, animation: 'pulse 1.5s ease-in-out infinite' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
+                <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#F3F4F6' }} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 6, height: 14, width: '50%', marginBottom: 6 }} />
-                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, height: 10, width: '30%' }} />
+                  <div style={{ background: '#F3F4F6', borderRadius: 6, height: 14, width: '50%', marginBottom: 6 }} />
+                  <div style={{ background: '#F8F9FB', borderRadius: 6, height: 10, width: '30%' }} />
                 </div>
               </div>
             </div>
@@ -369,7 +369,7 @@ function CrewCard({ member, activity, timeAgo }: { member: CrewMember; activity:
       background: 'rgba(26,31,46,0.7)',
       backdropFilter: 'blur(16px)',
       WebkitBackdropFilter: 'blur(16px)',
-      border: '1px solid rgba(255,255,255,0.06)',
+      border: '1px solid #EEF0F3',
       borderRadius: 16,
       padding: '12px 14px',
       display: 'flex', alignItems: 'center', gap: 12,

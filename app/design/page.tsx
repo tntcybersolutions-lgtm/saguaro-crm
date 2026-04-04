@@ -23,23 +23,23 @@ const ROOMS = [
 
 /* ─── Design Styles with color swatches ─── */
 const STYLES = [
-  { id: 'modern', label: 'Modern Minimalist', colors: ['#FAFAF9','#78716C','#292524','#D4A017'], desc: 'Clean lines, neutral tones' },
+  { id: 'modern', label: 'Modern Minimalist', colors: ['#FAFAF9','#78716C','#292524','#C8960F'], desc: 'Clean lines, neutral tones' },
   { id: 'farmhouse', label: 'Modern Farmhouse', colors: ['#FEFCE8','#A16207','#44403C','#D6D3D1'], desc: 'Warm rustic charm' },
   { id: 'mediterranean', label: 'Mediterranean', colors: ['#FEF3C7','#B45309','#7C2D12','#065F46'], desc: 'Earth tones, arched details' },
   { id: 'industrial', label: 'Industrial Loft', colors: ['#78716C','#DC2626','#1C1917','#A8A29E'], desc: 'Exposed brick, raw metal' },
   { id: 'coastal', label: 'Coastal Beach', colors: ['#F0F9FF','#0EA5E9','#BAE6FD','#FDE68A'], desc: 'Light, airy, ocean palette' },
   { id: 'scandinavian', label: 'Scandinavian', colors: ['#FAFAFA','#E7E5E4','#D6D3D1','#A3E635'], desc: 'Hygge warmth, birch wood' },
-  { id: 'art-deco', label: 'Art Deco', colors: ['#1C1917','#D4A017','#7C3AED','#F5F5F4'], desc: 'Glamorous geometric luxury' },
+  { id: 'art-deco', label: 'Art Deco', colors: ['#1C1917','#C8960F','#7C3AED','#F5F5F4'], desc: 'Glamorous geometric luxury' },
   { id: 'japanese', label: 'Japanese Zen', colors: ['#F5F5DC','#8B7355','#2D4A3E','#D4C5A9'], desc: 'Tranquil, natural, wabi-sabi' },
   { id: 'midcentury', label: 'Mid-Century Modern', colors: ['#FDE68A','#EA580C','#065F46','#78716C'], desc: 'Retro 1960s organic curves' },
-  { id: 'luxury', label: 'Luxury Contemporary', colors: ['#1C1917','#D4A017','#F5F5F4','#78716C'], desc: 'High-end sophisticated' },
+  { id: 'luxury', label: 'Luxury Contemporary', colors: ['#1C1917','#C8960F','#F5F5F4','#78716C'], desc: 'High-end sophisticated' },
   { id: 'bohemian', label: 'Bohemian', colors: ['#7C3AED','#DB2777','#F59E0B','#059669'], desc: 'Eclectic, colorful, layered' },
-  { id: 'transitional', label: 'Transitional', colors: ['#F5F5F4','#A8A29E','#57534E','#D4A017'], desc: 'Classic meets contemporary' },
+  { id: 'transitional', label: 'Transitional', colors: ['#F5F5F4','#A8A29E','#57534E','#C8960F'], desc: 'Classic meets contemporary' },
   { id: 'desert-modern', label: 'Desert Modern', colors: ['#D2B48C','#8B4513','#2F4F4F','#DAA520'], desc: 'Southwest contemporary' },
-  { id: 'kitchen', label: "Chef's Kitchen", colors: ['#1E3A5A','#D4A017','#F5F5F4','#44403C'], desc: 'Professional-grade kitchen' },
-  { id: 'bathroom-spa', label: 'Spa Bathroom', colors: ['#F0FDFA','#5EEAD4','#F5F5F4','#D4A017'], desc: 'Hotel-quality spa retreat' },
+  { id: 'kitchen', label: "Chef's Kitchen", colors: ['#1E3A5A','#C8960F','#F5F5F4','#44403C'], desc: 'Professional-grade kitchen' },
+  { id: 'bathroom-spa', label: 'Spa Bathroom', colors: ['#F0FDFA','#5EEAD4','#F5F5F4','#C8960F'], desc: 'Hotel-quality spa retreat' },
   { id: 'resort-backyard', label: 'Resort Backyard', colors: ['#0EA5E9','#22C55E','#FDE68A','#78716C'], desc: 'Luxury pool & outdoor living' },
-  { id: 'home-office', label: 'Executive Office', colors: ['#1C1917','#78716C','#D4A017','#F5F5F4'], desc: 'Productive, stylish workspace' },
+  { id: 'home-office', label: 'Executive Office', colors: ['#1C1917','#78716C','#C8960F','#F5F5F4'], desc: 'Productive, stylish workspace' },
   { id: 'garage-workshop', label: 'Dream Garage', colors: ['#374151','#EF4444','#9CA3AF','#F5F5F4'], desc: 'Organized workshop & storage' },
 ];
 
@@ -495,7 +495,7 @@ export default function DesignStudioPage() {
               <div key={i} style={{ ...card, padding: 0, overflow: 'hidden', position: 'relative' }}>
                 <div style={{ position: 'relative', height: 140, overflow: 'hidden' }}>
                   <img src={f.bgImg} alt={f.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.85) 100%)' }} />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #E5E7EB 0%, rgba(255,255,255,0.85) 100%)' }} />
                   <div style={{ position: 'absolute', bottom: 12, left: 20, width: 52, height: 52, borderRadius: 14, background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
                     {f.icon}
                   </div>
@@ -664,7 +664,7 @@ export default function DesignStudioPage() {
                     <div style={{ position: 'relative' }}>
                       <img src={photo} alt="Your space" style={{ width: '100%', maxHeight: 420, objectFit: 'cover', display: 'block' }} />
                       <button onClick={(e) => { e.stopPropagation(); setPhoto(null); setPhotoFile(null); }}
-                        style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,.7)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                        style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(0,0,0,.12)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                         Change Photo
                       </button>
                     </div>

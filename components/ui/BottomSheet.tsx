@@ -60,10 +60,10 @@ export function BottomSheet({ open, onClose, title, children, height = 'auto' }:
           maxWidth: 600,
           maxHeight: '90vh',
           height,
-          background: '#1f2c3e',
+          background: '#ffffff',
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
-          border: '1px solid #263347',
+          border: '1px solid #E2E5EA',
           borderBottom: 'none',
           display: 'flex',
           flexDirection: 'column',
@@ -91,7 +91,7 @@ export function BottomSheet({ open, onClose, title, children, height = 'auto' }:
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '8px 20px 12px',
-              borderBottom: '1px solid #263347',
+              borderBottom: '1px solid #E2E5EA',
             }}
           >
             <span style={{ fontWeight: 700, fontSize: 16, color: '#e8edf8' }}>{title}</span>
@@ -100,7 +100,7 @@ export function BottomSheet({ open, onClose, title, children, height = 'auto' }:
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#8fa3c0',
+                color: '#6B7280',
                 fontSize: 22,
                 cursor: 'pointer',
                 lineHeight: 1,

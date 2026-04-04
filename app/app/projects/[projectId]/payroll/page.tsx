@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',GREEN='#1a8a4a',RED='#c03030';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827',GREEN='#1a8a4a',RED='#c03030';
 const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const inp: React.CSSProperties = {
@@ -271,7 +271,7 @@ export default function PayrollPage() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
-                  <tr style={{ background: '#0a1117' }}>
+                  <tr style={{ background: '#F8F9FB' }}>
                     {['Employee', 'Class', 'Reg $', 'OT $', ...DAYS, 'Hrs', 'Gross', 'Ded.', 'Net', 'OT', ''].map(h => (
                       <th key={h + Math.random()} style={{ padding: '9px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
@@ -320,7 +320,7 @@ export default function PayrollPage() {
                   })}
                 </tbody>
                 <tfoot>
-                  <tr style={{ background: '#0a1117', borderTop: `2px solid ${BORDER}` }}>
+                  <tr style={{ background: '#F8F9FB', borderTop: `2px solid ${BORDER}` }}>
                     <td colSpan={4} style={{ padding: '10px 8px', fontWeight: 800, fontSize: 12, color: TEXT, textTransform: 'uppercase', letterSpacing: 0.3 }}>TOTALS</td>
                     {DAYS.map(day => (
                       <td key={day} style={{ padding: '10px 4px', fontWeight: 700, color: GOLD, textAlign: 'center', fontSize: 12 }}>
@@ -370,7 +370,7 @@ export default function PayrollPage() {
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr style={{ background: '#0a1117' }}>
+                <tr style={{ background: '#F8F9FB' }}>
                   {['Week Ending', '# Employees', 'Total Gross', 'Status', 'Download'].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                   ))}

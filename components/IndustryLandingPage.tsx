@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { Industry } from '@/lib/industries';
 
-const DARK = '#0d1117';
+const DARK = '#F8F9FB';
 const GOLD = '#F59E0B';
-const GOLD_DARK = '#D4A017';
+const GOLD_DARK = '#C8960F';
 const TEXT = '#F8FAFC';
 const DIM = '#CBD5E1';
 const BORDER = '#1E3A5F';
@@ -74,10 +74,10 @@ export default function IndustryLandingPage({ industry }: Props) {
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
               <span style={{
                 fontWeight: 700, fontSize: '14px', letterSpacing: '0.1em',
-                background: 'linear-gradient(90deg,#D4A017,#F0C040)',
+                background: 'linear-gradient(90deg,#C8960F,#F0C040)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               }}>SAGUARO</span>
-              <span style={{ fontSize: '7px', color: '#8fa3c0', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
+              <span style={{ fontSize: '7px', color: '#6B7280', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
             </span>
           </Link>
 

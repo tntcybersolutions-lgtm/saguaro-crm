@@ -6,16 +6,16 @@
  */
 import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
 const CARD_GLASS = 'rgba(26,31,46,0.7)';
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
-const BORDER = 'rgba(255,255,255,0.06)';
+const BORDER = '#EEF0F3';
 const RADIUS = 16;
 
 const glass: React.CSSProperties = {
@@ -156,7 +156,7 @@ function BimViewerPage() {
     ctx.font = '14px -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('3D Viewer — install @react-three/fiber to enable', dw / 2, vanishY - 20);
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillStyle = '#D1D5DB';
     ctx.font = '11px -apple-system, sans-serif';
     ctx.fillText(selectedModel.name, dw / 2, vanishY - 4);
   }, [selectedModel]);
@@ -357,7 +357,7 @@ function BimViewerPage() {
               </div>
               {typeCounts.map(({ type, count }) => (
                 <div key={type} style={{
-                  background: visibleTypes.has(type) ? 'rgba(59,130,246,0.1)' : 'rgba(255,255,255,0.03)',
+                  background: visibleTypes.has(type) ? 'rgba(59,130,246,0.1)' : '#F8F9FB',
                   borderRadius: 10, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4,
                   opacity: visibleTypes.has(type) ? 1 : 0.4,
                 }}>
@@ -375,7 +375,7 @@ function BimViewerPage() {
                 {Object.keys(groupedElements).map(type => (
                   <label key={type} style={{
                     display: 'flex', alignItems: 'center', gap: 6,
-                    background: visibleTypes.has(type) ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.03)',
+                    background: visibleTypes.has(type) ? 'rgba(59,130,246,0.12)' : '#F8F9FB',
                     border: `1px solid ${visibleTypes.has(type) ? 'rgba(59,130,246,0.3)' : BORDER}`,
                     borderRadius: 10, padding: '6px 12px', cursor: 'pointer',
                     fontSize: 12, color: visibleTypes.has(type) ? BLUE : DIM,
@@ -503,7 +503,7 @@ function BimViewerPage() {
             <span style={{ color: TEXT, fontWeight: 600 }}>Uploading model...</span>
             <span style={{ color: GOLD, fontWeight: 700 }}>{uploadProgress}%</span>
           </div>
-          <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: 6, background: '#EEF0F3', borderRadius: 3, overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${uploadProgress}%`, background: `linear-gradient(90deg, ${GOLD}, #EF8C1A)`, borderRadius: 3, transition: 'width 0.3s ease' }} />
           </div>
         </div>
@@ -514,11 +514,11 @@ function BimViewerPage() {
         <div>
           {[1, 2, 3].map(i => (
             <div key={i} style={{ ...glass, padding: 16, marginBottom: 10 }}>
-              <div style={{ height: 16, width: '60%', background: 'rgba(255,255,255,0.06)', borderRadius: 8, marginBottom: 10 }} />
-              <div style={{ height: 12, width: '40%', background: 'rgba(255,255,255,0.04)', borderRadius: 6, marginBottom: 8 }} />
+              <div style={{ height: 16, width: '60%', background: '#EEF0F3', borderRadius: 8, marginBottom: 10 }} />
+              <div style={{ height: 12, width: '40%', background: '#F3F4F6', borderRadius: 6, marginBottom: 8 }} />
               <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ height: 10, width: 50, background: 'rgba(255,255,255,0.04)', borderRadius: 5 }} />
-                <div style={{ height: 10, width: 60, background: 'rgba(255,255,255,0.04)', borderRadius: 5 }} />
+                <div style={{ height: 10, width: 50, background: '#F3F4F6', borderRadius: 5 }} />
+                <div style={{ height: 10, width: 60, background: '#F3F4F6', borderRadius: 5 }} />
               </div>
             </div>
           ))}
@@ -600,8 +600,8 @@ function LoadingSkeleton() {
           background: CARD_GLASS, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
           border: `1px solid ${BORDER}`, borderRadius: RADIUS, padding: 16, marginBottom: 10,
         }}>
-          <div style={{ height: 16, width: '60%', background: 'rgba(255,255,255,0.06)', borderRadius: 8, marginBottom: 10 }} />
-          <div style={{ height: 12, width: '40%', background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
+          <div style={{ height: 16, width: '60%', background: '#EEF0F3', borderRadius: 8, marginBottom: 10 }} />
+          <div style={{ height: 12, width: '40%', background: '#F3F4F6', borderRadius: 6 }} />
         </div>
       ))}
     </div>

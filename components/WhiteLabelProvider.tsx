@@ -1,7 +1,7 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 
 interface WhiteLabelBranding {
   logoUrl: string;

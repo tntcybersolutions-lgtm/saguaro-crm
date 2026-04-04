@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 const GOLD   = '#F59E0B';
-const DARK   = '#0d1117';
+const DARK = '#F8F9FB';
 const RAISED = '#0F172A';
 const BORDER = '#1E3A5F';
 const DIM    = '#CBD5E1';
@@ -177,7 +177,7 @@ export default function BillingPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {sub.status === 'active' && (
-                <button onClick={handlePortal} disabled={portalLoading} style={{ padding: '10px 20px', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                <button onClick={handlePortal} disabled={portalLoading} style={{ padding: '10px 20px', background: '#EEF0F3', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
                   {portalLoading ? 'Loading...' : 'Manage Payment & Invoices'}
                 </button>
               )}
@@ -197,7 +197,7 @@ export default function BillingPage() {
           {/* Trial progress bar */}
           {sub.status === 'trialing' && trialDays !== null && (
             <div style={{ marginTop: 20 }}>
-              <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: 6, background: '#EEF0F3', borderRadius: 3, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, ((30 - trialDays) / 30) * 100))}%`, background: `linear-gradient(90deg, ${GOLD}, #FCD34D)`, borderRadius: 3 }} />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: DIM }}>
@@ -220,7 +220,7 @@ export default function BillingPage() {
           <h2 style={{ fontSize: 20, fontWeight: 800, margin: 0 }}>
             {sub?.status === 'trialing' ? 'Upgrade Your Plan' : 'Change Plan'}
           </h2>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '3px', border: `1px solid ${BORDER}` }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#F3F4F6', borderRadius: 8, padding: '3px', border: `1px solid ${BORDER}` }}>
             <button onClick={() => setAnnual(false)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: !annual ? 'rgba(245,158,11,0.15)' : 'transparent', color: !annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Monthly</button>
             <button onClick={() => setAnnual(true)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: annual ? 'rgba(245,158,11,0.15)' : 'transparent', color: annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
               Annual
@@ -241,7 +241,7 @@ export default function BillingPage() {
                 boxShadow: plan.popular ? `0 0 40px rgba(245,158,11,0.08)` : 'none',
               }}>
                 {plan.popular && !isCurrent && (
-                  <div style={{ background: `linear-gradient(90deg, ${GOLD}, #FCD34D)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: '#0d1117', letterSpacing: 2, textTransform: 'uppercase' }}>Most Popular</div>
+                  <div style={{ background: `linear-gradient(90deg, ${GOLD}, #FCD34D)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: '#ffffff', letterSpacing: 2, textTransform: 'uppercase' }}>Most Popular</div>
                 )}
                 {isCurrent && (
                   <div style={{ background: 'rgba(34,197,94,0.15)', borderBottom: `1px solid rgba(34,197,94,0.25)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: GREEN, letterSpacing: 2, textTransform: 'uppercase' }}>Current Plan</div>
@@ -267,7 +267,7 @@ export default function BillingPage() {
                     disabled={isCurrent || upgrading === plan.id}
                     style={{
                       width: '100%', padding: '11px 0', borderRadius: 8, border: isCurrent ? `1px solid rgba(34,197,94,0.3)` : plan.popular ? 'none' : `1px solid ${BORDER}`,
-                      background: isCurrent ? 'rgba(34,197,94,0.08)' : plan.popular ? `linear-gradient(135deg, ${GOLD}, #D97706)` : 'rgba(255,255,255,0.05)',
+                      background: isCurrent ? 'rgba(34,197,94,0.08)' : plan.popular ? `linear-gradient(135deg, ${GOLD}, #D97706)` : '#E2E5EA',
                       color: isCurrent ? GREEN : plan.popular ? '#000' : TEXT,
                       fontWeight: 800, fontSize: 13, cursor: isCurrent ? 'default' : 'pointer', marginBottom: 20,
                       boxShadow: plan.popular && !isCurrent ? `0 4px 16px rgba(245,158,11,0.3)` : 'none',
@@ -339,7 +339,7 @@ export default function BillingPage() {
               Before you go — email us at <strong>support@saguarocontrol.net</strong> and we'll give you 20% off your next 3 months.
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowCancel(false)} style={{ flex: 1, padding: '12px 0', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Keep My Plan</button>
+              <button onClick={() => setShowCancel(false)} style={{ flex: 1, padding: '12px 0', background: '#EEF0F3', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Keep My Plan</button>
               <button onClick={handleCancel} disabled={canceling} style={{ flex: 1, padding: '12px 0', background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 8, color: RED, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
                 {canceling ? 'Canceling...' : 'Yes, Cancel'}
               </button>

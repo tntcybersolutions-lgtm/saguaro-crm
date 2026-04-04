@@ -122,8 +122,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Saguaro Field" />
         <meta name="application-name" content="Saguaro Field" />
-        <meta name="theme-color" content="#D4A017" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#D4A017" />
+        <meta name="theme-color" content="#C8960F" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#C8960F" />
         {/* Apple touch icons — PNG, multiple sizes for iPhone/iPad/Mac */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
@@ -133,7 +133,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         {/* Microsoft Tiles */}
-        <meta name="msapplication-TileColor" content="#D4A017" />
+        <meta name="msapplication-TileColor" content="#C8960F" />
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
         <meta name="msapplication-config" content="none" />
         {/* Service Worker registration */}
@@ -197,7 +197,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </>
         )}
       </head>
-      <body style={{ margin: 0, padding: 0, background: '#0d1117', color: '#e8edf8' }}>
+      <body style={{ margin: 0, padding: 0, background: '#F8F9FB', color: '#111827' }}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

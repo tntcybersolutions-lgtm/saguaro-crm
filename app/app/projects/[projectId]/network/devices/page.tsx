@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
-const GOLD = '#D4A017';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const BORDER = 'rgba(255,255,255,0.08)';
-const DIM = '#8fa3c0';
-const TEXT = '#e8edf8';
+const BORDER = '#E5E7EB';
+const DIM = '#6B7280';
+const TEXT = '#111827';
 
 interface Device {
   id: string;
@@ -299,7 +299,7 @@ export default function DeviceInventoryPage() {
             ))}
           </div>
           {selectedDevice.notes && (
-            <div style={{ marginTop: 12, padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 8 }}>
+            <div style={{ marginTop: 12, padding: 12, background: '#F8F9FB', borderRadius: 8 }}>
               <div style={{ color: DIM, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>NOTES</div>
               <div style={{ color: TEXT, fontSize: 13 }}>{selectedDevice.notes}</div>
             </div>
@@ -326,7 +326,7 @@ export default function DeviceInventoryPage() {
                   key={dev.id}
                   onClick={() => setSelectedDevice(dev)}
                   style={{ cursor: 'pointer', transition: 'background .15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = '#F8F9FB'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 >
                   <td style={{ padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, fontSize: 18 }}>{TYPE_ICONS[dev.device_type] || '📦'}</td>

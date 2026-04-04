@@ -7,7 +7,7 @@ export const T = {
   surface2: '#152030',
   border: 'rgba(255,255,255,0.07)',
   borderGold: 'rgba(212,160,23,0.3)',
-  gold: '#D4A017',
+  gold: '#C8960F',
   goldDim: 'rgba(212,160,23,0.12)',
   goldMid: 'rgba(212,160,23,0.22)',
   white: '#FFFFFF',
@@ -92,7 +92,7 @@ const badgeStyles: Record<BadgeColor, { bg: string; color: string; border: strin
   red:   { bg: T.redDim,   color: T.red,   border: 'rgba(239,68,68,0.25)' },
   amber: { bg: T.amberDim, color: T.amber, border: 'rgba(245,158,11,0.25)' },
   blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(59,130,246,0.25)' },
-  muted: { bg: 'rgba(255,255,255,0.06)', color: T.muted, border: T.border },
+  muted: { bg: '#EEF0F3', color: T.muted, border: T.border },
 };
 
 export function Badge({ label, color = 'muted' }: { label: string; color?: BadgeColor }) {

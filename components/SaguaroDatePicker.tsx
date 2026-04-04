@@ -2,8 +2,8 @@
 import React from 'react';
 import DatePicker from 'react-datepicker';
 
-const DARK = '#0d1117';
-const BORDER = '#263347';
+const DARK = '#F8F9FB';
+const BORDER = '#E2E5EA';
 const TEXT = '#e8edf8';
 
 const DEFAULT_INPUT_STYLE: React.CSSProperties = {

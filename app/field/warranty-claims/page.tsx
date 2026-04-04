@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const BG     = '#07101C';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
@@ -1156,7 +1156,7 @@ export default function Page() {
           <div style={{ textAlign: 'center' }}>
             <div
               style={{
-                width: 40, height: 40, border: '3px solid #1E3A5F', borderTopColor: '#D4A017',
+                width: 40, height: 40, border: '3px solid #1E3A5F', borderTopColor: '#C8960F',
                 borderRadius: '50%', margin: '0 auto 16px',
                 animation: 'spin 1s linear infinite',
               }}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const DARK = '#0d1117';
+const DARK = '#F8F9FB';
 const GOLD = '#F59E0B';
 const TEXT = '#F8FAFC';
 const DIM = '#CBD5E1';
@@ -307,7 +307,7 @@ export default function ROICalculatorPage() {
           font-weight: 500;
         }
         .comparison-table tr:hover td {
-          background: rgba(255,255,255,0.02);
+          background: #FAFBFC;
         }
         .trust-pill {
           display: inline-flex;
@@ -360,7 +360,7 @@ export default function ROICalculatorPage() {
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          background: 'rgba(13,17,23,0.92)',
+          background: 'rgba(248,249,251,.97)',
           backdropFilter: 'blur(16px)',
           borderBottom: `1px solid ${BORDER}`,
           padding: '0 24px',

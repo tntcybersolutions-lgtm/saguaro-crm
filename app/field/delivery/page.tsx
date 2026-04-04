@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD   = '#D4A017';
+const GOLD   = '#C8960F';
 const RAISED = '#0D1D2E';
 const BORDER = '#1E3A5F';
 const TEXT   = '#F0F4FF';
@@ -267,7 +267,7 @@ function DeliveryPage() {
               <div style={{ position: 'relative' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={photoPreview} alt="Delivery" style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10 }} />
-                <button type="button" onClick={() => { setPhotoPreview(''); setPhotoFile(null); }} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,.7)', border: 'none', borderRadius: 6, padding: '4px 8px', color: '#fff', fontSize: 12, cursor: 'pointer' }}>✕ Remove</button>
+                <button type="button" onClick={() => { setPhotoPreview(''); setPhotoFile(null); }} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,.12)', border: 'none', borderRadius: 6, padding: '4px 8px', color: '#fff', fontSize: 12, cursor: 'pointer' }}>✕ Remove</button>
               </div>
             )}
             <Fld label="Notes">

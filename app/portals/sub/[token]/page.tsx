@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
 /* ── Design Tokens ── */
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827';
 const GREEN='#22c55e',RED='#ef4444',AMBER='#f59e0b',BLUE='#3b82f6',PURPLE='#8b5cf6';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 const fmtDate=(d:string)=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
@@ -867,7 +867,7 @@ export default function SubPortal(){
   /* ================================================================ */
   return(
     <div style={{minHeight:'100vh',background:DARK,fontFamily:'system-ui,-apple-system,sans-serif',color:TEXT}}>
-      {toast&&<div style={{position:'fixed',top:20,right:20,zIndex:9999,background:RAISED,border:`1px solid ${GOLD}`,borderRadius:10,padding:'12px 20px',color:TEXT,fontSize:13,fontWeight:600,boxShadow:'0 8px 32px rgba(0,0,0,.5)',animation:'fadeIn .3s ease'}}>{toast}</div>}
+      {toast&&<div style={{position:'fixed',top:20,right:20,zIndex:9999,background:RAISED,border:`1px solid ${GOLD}`,borderRadius:10,padding:'12px 20px',color:TEXT,fontSize:13,fontWeight:600,boxShadow:'0 8px 32px rgba(0,0,0,.08)',animation:'fadeIn .3s ease'}}>{toast}</div>}
       {!isOnline&&<div style={{background:RED,color:'#fff',textAlign:'center',padding:'6px 16px',fontSize:12,fontWeight:700}}>You are currently offline. Changes will sync when connection is restored.</div>}
 
       {/* Header */}

@@ -6,17 +6,17 @@
  */
 import React, { useState, useEffect, useRef, Suspense, useCallback } from 'react';
 
-const BASE = '#0F1419';
-const CARD = '#1A1F2E';
+const BASE = '#F8F9FB';
+const CARD = '#F8F9FB';
 const CARD_GLASS = 'rgba(26,31,46,0.7)';
-const GOLD = '#D4A017';
+const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
 const AMBER = '#F59E0B';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
-const BORDER = 'rgba(255,255,255,0.06)';
+const BORDER = '#EEF0F3';
 const RADIUS = 16;
 
 const glass: React.CSSProperties = {
@@ -331,7 +331,7 @@ function DronePage() {
                   <span style={{ color: DIM }}>Completion</span>
                   <span style={{ color: TEXT, fontWeight: 700 }}>{area.percent_complete}%</span>
                 </div>
-                <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: '#EEF0F3', borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%',
                     width: `${area.percent_complete}%`,
@@ -432,7 +432,7 @@ function DronePage() {
                 {/* Job 1 */}
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: '0 0 4px', fontSize: 10, color: DIM, fontWeight: 600 }}>{job1.captured_date}</p>
-                  <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: 6, background: '#EEF0F3', borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct1}%`, background: 'rgba(59,130,246,0.5)', borderRadius: 3 }} />
                   </div>
                   <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 700, color: BLUE }}>{pct1}%</p>
@@ -457,7 +457,7 @@ function DronePage() {
                 {/* Job 2 */}
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: '0 0 4px', fontSize: 10, color: DIM, fontWeight: 600 }}>{job2.captured_date}</p>
-                  <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: 6, background: '#EEF0F3', borderRadius: 3, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct2}%`, background: change >= 0 ? GREEN : RED, borderRadius: 3 }} />
                   </div>
                   <p style={{ margin: '2px 0 0', fontSize: 12, fontWeight: 700, color: change >= 0 ? GREEN : RED }}>{pct2}%</p>
@@ -518,7 +518,7 @@ function DronePage() {
       <p style={{ margin: '0 0 14px', fontSize: 12, color: DIM }}>AI-powered site progress & safety detection</p>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'rgba(255,255,255,0.03)', borderRadius: 12, padding: 3 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#F8F9FB', borderRadius: 12, padding: 3 }}>
         {(['upload', 'jobs'] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             style={{
@@ -542,7 +542,7 @@ function DronePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: TEXT }}>Analysis Results</h3>
                 <button onClick={resetUpload}
-                  style={{ background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '6px 14px', color: DIM, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                  style={{ background: '#EEF0F3', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '6px 14px', color: DIM, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
                   New Upload
                 </button>
               </div>
@@ -696,7 +696,7 @@ function DronePage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
               <button onClick={() => { setCompareMode(!compareMode); setCompareSelections([]); }}
                 style={{
-                  background: compareMode ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
+                  background: compareMode ? 'rgba(59,130,246,0.15)' : '#F3F4F6',
                   border: `1px solid ${compareMode ? 'rgba(59,130,246,0.3)' : BORDER}`,
                   borderRadius: 10, padding: '7px 14px', fontSize: 12, fontWeight: 600,
                   color: compareMode ? BLUE : DIM, cursor: 'pointer',
@@ -724,9 +724,9 @@ function DronePage() {
             <div>
               {[1, 2, 3].map(i => (
                 <div key={i} style={{ ...glass, padding: 16, marginBottom: 10 }}>
-                  <div style={{ height: 16, width: '50%', background: 'rgba(255,255,255,0.06)', borderRadius: 8, marginBottom: 10 }} />
-                  <div style={{ height: 12, width: '70%', background: 'rgba(255,255,255,0.04)', borderRadius: 6, marginBottom: 8 }} />
-                  <div style={{ height: 10, width: '40%', background: 'rgba(255,255,255,0.04)', borderRadius: 5 }} />
+                  <div style={{ height: 16, width: '50%', background: '#EEF0F3', borderRadius: 8, marginBottom: 10 }} />
+                  <div style={{ height: 12, width: '70%', background: '#F3F4F6', borderRadius: 6, marginBottom: 8 }} />
+                  <div style={{ height: 10, width: '40%', background: '#F3F4F6', borderRadius: 5 }} />
                 </div>
               ))}
             </div>
@@ -767,7 +767,7 @@ function DronePage() {
                     {compareMode && (
                       <div style={{
                         width: 20, height: 20, borderRadius: 6, flexShrink: 0, marginTop: 1,
-                        border: `2px solid ${isSelected ? BLUE : 'rgba(255,255,255,0.15)'}`,
+                        border: `2px solid ${isSelected ? BLUE : '#D1D5DB'}`,
                         background: isSelected ? BLUE : 'transparent',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
@@ -819,14 +819,14 @@ function DronePage() {
 function LoadingSkeleton() {
   return (
     <div style={{ padding: '12px 14px', maxWidth: 480, margin: '0 auto' }}>
-      <div style={{ height: 22, width: '50%', background: 'rgba(255,255,255,0.06)', borderRadius: 8, marginBottom: 16 }} />
+      <div style={{ height: 22, width: '50%', background: '#EEF0F3', borderRadius: 8, marginBottom: 16 }} />
       {[1, 2, 3].map(i => (
         <div key={i} style={{
           background: CARD_GLASS, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
           border: `1px solid ${BORDER}`, borderRadius: RADIUS, padding: 16, marginBottom: 10,
         }}>
-          <div style={{ height: 16, width: '50%', background: 'rgba(255,255,255,0.06)', borderRadius: 8, marginBottom: 10 }} />
-          <div style={{ height: 12, width: '70%', background: 'rgba(255,255,255,0.04)', borderRadius: 6 }} />
+          <div style={{ height: 16, width: '50%', background: '#EEF0F3', borderRadius: 8, marginBottom: 10 }} />
+          <div style={{ height: 12, width: '70%', background: '#F3F4F6', borderRadius: 6 }} />
         </div>
       ))}
     </div>

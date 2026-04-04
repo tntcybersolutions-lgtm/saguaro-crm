@@ -217,7 +217,7 @@ export default function FieldAppPage() {
         .fa-card:hover { border-color: rgba(245,158,11,.6) !important; background: rgba(245,158,11,0.06) !important; transform: translateY(-3px); transition: all .2s ease; }
         .fa-cta-primary:hover { opacity: 0.9; transform: translateY(-2px); transition: all .15s ease; }
         .fa-nav-link:hover { color: #F59E0B !important; }
-        .fa-back:hover { color: #e8edf8 !important; background: rgba(255,255,255,0.08) !important; }
+        .fa-back:hover { color: #e8edf8 !important; background: #E5E7EB !important; }
         .fa-get-app:hover { opacity: 0.88; transform: translateY(-1px); transition: all .15s ease; }
       `}</style>
 
@@ -225,7 +225,7 @@ export default function FieldAppPage() {
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, height: 58, background: 'rgba(9,17,26,.96)', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', padding: '0 20px', gap: 12, backdropFilter: 'blur(12px)' }}>
 
         {/* Back to Home */}
-        <a href="/" className="fa-back" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: 'rgba(255,255,255,0.04)', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13, textDecoration: 'none', transition: 'all .15s', flexShrink: 0 }}>
+        <a href="/" className="fa-back" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 7, background: '#F3F4F6', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13, textDecoration: 'none', transition: 'all .15s', flexShrink: 0 }}>
           <IconArrowLeft />
           <span>Home</span>
         </a>
@@ -244,7 +244,7 @@ export default function FieldAppPage() {
 
         <div style={{ flex: 1 }} />
 
-        <a href="/field" style={{ padding: '7px 14px', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, borderRadius: 6, color: 'rgba(255,255,255,0.7)', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}>Open Field App</a>
+        <a href="/field" style={{ padding: '7px 14px', background: '#E2E5EA', border: `1px solid ${BORDER}`, borderRadius: 6, color: 'rgba(255,255,255,0.7)', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}>Open Field App</a>
         {/* Get the App button */}
         <a href="/field/install" className="fa-get-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 6, color: '#000', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 12px rgba(245,158,11,0.35)' }}>
           <IconDownload />
@@ -313,8 +313,8 @@ export default function FieldAppPage() {
             {/* Phone mockup */}
             <div style={{ flex: '0 0 280px', maxWidth: 280, position: 'relative' }}>
               <div style={{ position: 'absolute', inset: -24, background: 'radial-gradient(ellipse 80% 60% at 50% 55%, rgba(212,160,23,0.18) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(16px)' }} />
-              <div style={{ position: 'relative', background: 'linear-gradient(160deg, #141e2e 0%, #0d1520 100%)', border: '2px solid rgba(255,255,255,0.13)', borderRadius: 40, padding: '14px 10px', boxShadow: '0 40px 100px rgba(0,0,0,.7)' }}>
-                <div style={{ width: 72, height: 5, background: 'rgba(255,255,255,0.1)', borderRadius: 3, margin: '0 auto 12px' }} />
+              <div style={{ position: 'relative', background: 'linear-gradient(160deg, #141e2e 0%, #0d1520 100%)', border: '2px solid rgba(255,255,255,0.13)', borderRadius: 40, padding: '14px 10px', boxShadow: '0 40px 100px rgba(0,0,0,.12)' }}>
+                <div style={{ width: 72, height: 5, background: '#E5E7EB', borderRadius: 3, margin: '0 auto 12px' }} />
                 <div style={{ background: '#09111A', borderRadius: 28, overflow: 'hidden', padding: '16px 14px' }}>
                   {/* Saguaro Field header */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -354,7 +354,7 @@ export default function FieldAppPage() {
                     <div style={{ fontSize: 8, color: 'rgba(255,255,255,0.65)', lineHeight: 1.5 }}>&ldquo;Pour on Level 2 is scheduled for Thursday at 6 AM. 3 open RFIs due this week.&rdquo;</div>
                   </div>
                 </div>
-                <div style={{ width: 60, height: 4, background: 'rgba(255,255,255,0.12)', borderRadius: 2, margin: '12px auto 0' }} />
+                <div style={{ width: 60, height: 4, background: '#D1D5DB', borderRadius: 2, margin: '12px auto 0' }} />
               </div>
             </div>
           </div>
@@ -418,7 +418,7 @@ export default function FieldAppPage() {
 
           <div className="fa-features" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
             {FEATURES.map(f => (
-              <div key={f.title} className="fa-card" style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid rgba(255,255,255,0.1)`, borderLeft: `3px solid rgba(${hexRgb(f.color)},0.7)`, borderRadius: 12, padding: '22px', transition: 'all .2s' }}>
+              <div key={f.title} className="fa-card" style={{ background: '#E2E5EA', border: `1px solid #E5E7EB`, borderLeft: `3px solid rgba(${hexRgb(f.color)},0.7)`, borderRadius: 12, padding: '22px', transition: 'all .2s' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 14 }}>
                   <div style={{ width: 44, height: 44, borderRadius: 12, background: `rgba(${hexRgb(f.color)},.15)`, border: `1px solid rgba(${hexRgb(f.color)},.4)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: f.color }}>
                     {FEATURE_ICONS[f.title]}
@@ -485,7 +485,7 @@ export default function FieldAppPage() {
               ))}
             </div>
             {COMPARE.map((row, i) => (
-              <div key={row.feature} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent', borderTop: `1px solid ${BORDER}` }}>
+              <div key={row.feature} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', background: i % 2 === 0 ? '#FAFBFC' : 'transparent', borderTop: `1px solid ${BORDER}` }}>
                 <div style={{ padding: '12px 16px', fontSize: 13, color: TEXT, borderRight: `1px solid ${BORDER}` }}>{row.feature}</div>
                 {[row.saguaro, row.procore, row.buildertrend].map((v, j) => (
                   <div key={j} style={{ padding: '12px 16px', textAlign: 'center', borderRight: j < 2 ? `1px solid ${BORDER}` : 'none' }}>
@@ -573,7 +573,7 @@ export default function FieldAppPage() {
             </div>
 
             <div style={{ textAlign: 'center', marginTop: 28 }}>
-              <a href="/field/install" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 24px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.7)', fontSize: 13, textDecoration: 'none' }}>
+              <a href="/field/install" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 24px', background: '#E2E5EA', border: '1px solid #D1D5DB', borderRadius: 8, color: 'rgba(255,255,255,0.7)', fontSize: 13, textDecoration: 'none' }}>
                 Full step-by-step install guide →
               </a>
             </div>
