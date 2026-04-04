@@ -1,19 +1,21 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import PortalHeader from '../../../../components/PortalHeader';
+import { House, CheckCircle, CurrencyDollar, ChatCircle, FileText, Wrench, Brain, Camera, Warning } from '@phosphor-icons/react';
 
-/* ── Palette ──────────────────────────────────────────────────────── */
+/* ── Palette (bright theme) ──────────────────────────────────────── */
 const GOLD = '#C8960F';
 const BG = '#F8F9FB';
 const RAISED = '#ffffff';
-const BORDER = '#1E3A5F';
+const BORDER = '#E2E5EA';
 const TEXT = '#111827';
-const DIM = '#8BAAC8';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
-const AMBER = '#F59E0B';
-const BLUE = '#3B82F6';
-const PURPLE = '#8B5CF6';
+const DIM = '#6B7280';
+const GREEN = '#16A34A';
+const RED = '#DC2626';
+const AMBER = '#EA580C';
+const BLUE = '#2563EB';
+const PURPLE = '#7C3AED';
 
 /* ── Helpers ──────────────────────────────────────────────────────── */
 const fmt = (n: number) =>
@@ -31,7 +33,7 @@ const fmtTime = (d: string | null | undefined) => {
 const pct = (v: number, t: number) => (t > 0 ? Math.round((v / t) * 100) : 0);
 
 /* ── Inline Types ─────────────────────────────────────────────────── */
-type TabId = 'dashboard' | 'approvals' | 'financials' | 'messages' | 'documents' | 'warranty' | 'ai';
+type TabId = 'dashboard' | 'approvals' | 'financials' | 'messages' | 'documents' | 'photos' | 'warranty' | 'ai';
 
 type ProjectInfo = {
   id: string;
@@ -171,14 +173,15 @@ type DashboardData = {
 };
 
 /* ── Tab Config ───────────────────────────────────────────────────── */
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'approvals', label: 'Approvals', icon: '✅' },
-  { id: 'financials', label: 'Financials', icon: '💰' },
-  { id: 'messages', label: 'Messages', icon: '💬' },
-  { id: 'documents', label: 'Documents', icon: '📁' },
-  { id: 'warranty', label: 'Warranty & Punch', icon: '🔧' },
-  { id: 'ai', label: 'AI Summary', icon: '🤖' },
+const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: <House size={16} weight="duotone"/> },
+  { id: 'approvals', label: 'Approvals', icon: <CheckCircle size={16} weight="duotone"/> },
+  { id: 'financials', label: 'Financials', icon: <CurrencyDollar size={16} weight="duotone"/> },
+  { id: 'photos', label: 'Photos', icon: <Camera size={16} weight="duotone"/> },
+  { id: 'messages', label: 'Messages', icon: <ChatCircle size={16} weight="duotone"/> },
+  { id: 'documents', label: 'Documents', icon: <FileText size={16} weight="duotone"/> },
+  { id: 'warranty', label: 'Warranty & Punch', icon: <Wrench size={16} weight="duotone"/> },
+  { id: 'ai', label: 'AI Summary', icon: <Brain size={16} weight="duotone"/> },
 ];
 
 const DOC_CATEGORIES = ['All', 'Contracts', 'Drawings', 'Specs', 'Submittals', 'Permits', 'Lien Waivers', 'Reports', 'Photos', 'Other'];
@@ -1600,6 +1603,65 @@ export default function ClientPortalPage() {
   };
 
   /* ══════════════════════════════════════════════════════════════════
+     TAB: PHOTOS
+     ══════════════════════════════════════════════════════════════════ */
+  const renderPhotos = () => {
+    // Filter documents for photo types
+    const photos = documents.filter((d: any) =>
+      d.category === 'Photos' || d.category === 'photos' ||
+      d.file_name?.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
+      d.mime_type?.startsWith('image/')
+    );
+
+    return (
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: TEXT }}>Project Photos</h2>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: DIM }}>Progress photos from your project. {photos.length} photo{photos.length !== 1 ? 's' : ''} available.</p>
+          </div>
+        </div>
+
+        {photos.length === 0 ? (
+          <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 48, textAlign: 'center' }}>
+            <Camera size={48} weight="duotone" color={DIM} />
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: TEXT, margin: '16px 0 8px' }}>No Photos Yet</h3>
+            <p style={{ fontSize: 13, color: DIM, maxWidth: 360, margin: '0 auto' }}>Your contractor will share project progress photos here as the project progresses.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+            {photos.map((photo: any) => (
+              <a
+                key={photo.id}
+                href={photo.file_url || photo.url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'block', textDecoration: 'none', background: RAISED, border: `1px solid ${BORDER}`,
+                  borderRadius: 10, overflow: 'hidden', transition: 'box-shadow .15s, transform .15s',
+                }}
+              >
+                <div style={{
+                  width: '100%', height: 180, background: `${BG}`,
+                  backgroundImage: `url(${photo.file_url || photo.url || ''})`,
+                  backgroundSize: 'cover', backgroundPosition: 'center',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {!photo.file_url && !photo.url && <Camera size={32} color={DIM} />}
+                </div>
+                <div style={{ padding: '10px 14px' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{photo.name || photo.file_name || 'Photo'}</div>
+                  <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{fmtDate(photo.created_at || photo.uploaded_at)}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /* ══════════════════════════════════════════════════════════════════
      TAB: DOCUMENTS
      ══════════════════════════════════════════════════════════════════ */
   const renderDocuments = () => {
@@ -1965,6 +2027,7 @@ export default function ClientPortalPage() {
       case 'dashboard': return renderDashboard();
       case 'approvals': return renderApprovals();
       case 'financials': return renderFinancials();
+      case 'photos': return renderPhotos();
       case 'messages': return renderMessages();
       case 'documents': return renderDocuments();
       case 'warranty': return renderWarranty();
@@ -1992,50 +2055,9 @@ export default function ClientPortalPage() {
       `}</style>
 
       {/* ── Header ──────────────────────────────────────────────── */}
-      <header style={{
-        background: `linear-gradient(180deg, ${RAISED} 0%, ${BG} 100%)`,
-        borderBottom: `1px solid ${BORDER}`,
-        padding: '0 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-          {/* Logo area */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 28 }}>🌵</span>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1.5, lineHeight: 1 }}>SAGUARO</div>
-              <div style={{ fontSize: 9, color: DIM, letterSpacing: 2, textTransform: 'uppercase' }}>Client Portal</div>
-            </div>
-          </div>
+      <PortalHeader portalName="Client Portal" subtitle={project.name} showBackToPortals={false} />
 
-          {/* Project & client info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{project.name}</div>
-              <div style={{ fontSize: 11, color: DIM }}>{project.client_name}{project.company_name ? ` · ${project.company_name}` : ''}</div>
-            </div>
-            <div style={{
-              width: 38, height: 38, borderRadius: '50%', background: `${GOLD}20`, border: `2px solid ${GOLD}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: GOLD,
-            }}>
-              {(project.client_name || 'C').charAt(0)}
-            </div>
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            style={{
-              display: 'none',
-              background: 'transparent', border: 'none', color: TEXT, fontSize: 24, cursor: 'pointer', padding: 4,
-            }}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? '✕' : '☰'}
-          </button>
-        </div>
-      </header>
+      {/* header replaced by PortalHeader above */}
 
       {/* ── Tab Navigation ──────────────────────────────────────── */}
       <nav style={{

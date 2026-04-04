@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import PortalHeader from '../../../../components/PortalHeader';
+import { House, ShieldCheck, CurrencyDollar, ClipboardText, Question, CalendarBlank, Star, ChatCircle, UploadSimple, PaperPlaneTilt, MapPin, Clock, Warning } from '@phosphor-icons/react';
 
 /* ── Design Tokens ── */
 const GOLD='#C8960F',DARK='#F8F9FB',RAISED='#ffffff',BORDER='#E2E5EA',DIM='#6B7280',TEXT='#111827';
@@ -77,11 +79,13 @@ export default function SubPortal(){
   const [rfiSaving,setRfiSaving]=useState(false);
   const [docUploadType,setDocUploadType]=useState('');
   const [docFileName,setDocFileName]=useState('');
+  const [docFile,setDocFile]=useState<File|null>(null);
   const [docExpiry,setDocExpiry]=useState('');
   const [docCarrier,setDocCarrier]=useState('');
   const [docPolicyNum,setDocPolicyNum]=useState('');
   const [docCoverage,setDocCoverage]=useState('');
   const [docUploading,setDocUploading]=useState(false);
+  const fileInputRef=useRef<HTMLInputElement>(null);
   const [msgContent,setMsgContent]=useState('');
   const [msgSending,setMsgSending]=useState(false);
   const [lienSig,setLienSig]=useState<string|null>(null);
@@ -209,23 +213,49 @@ export default function SubPortal(){
   };
 
   const uploadComplianceDoc=async()=>{
-    if(!docUploadType||!docFileName){showToast('Document type and file name are required');return;}
+    if(!docUploadType){showToast('Please select a document type');return;}
+    if(!docFile&&!docFileName){showToast('Please select a file to upload');return;}
     setDocUploading(true);
     try{
-      const result=await apiPost('compliance',{
-        doc_type:docUploadType,
-        file_name:docFileName,
-        expires_at:docExpiry||null,
-        carrier:docCarrier||null,
-        policy_number:docPolicyNum||null,
-        coverage_amount:docCoverage?parseFloat(docCoverage):null,
-      });
-      if(result.compliance_doc){
-        showToast('Document uploaded');
-        setComplianceDocs(prev=>[{...result.compliance_doc,expiration_status:'valid',days_until_expiry:null},...prev]);
-        setDocUploadType('');setDocFileName('');setDocExpiry('');setDocCarrier('');setDocPolicyNum('');setDocCoverage('');
-      } else showToast(result.error||'Upload failed');
-    }catch{showToast('Network error');}
+      // If real file selected, upload via FormData
+      if(docFile){
+        const formData=new FormData();
+        formData.append('file',docFile);
+        formData.append('doc_type',docUploadType);
+        formData.append('expires_at',docExpiry||'');
+        formData.append('carrier',docCarrier||'');
+        formData.append('policy_number',docPolicyNum||'');
+        formData.append('coverage_amount',docCoverage||'');
+        const res=await fetch(`/api/portal/sub/compliance/upload?token=${token}`,{
+          method:'POST',
+          headers:{'x-portal-token':token||''},
+          body:formData,
+        });
+        const result=await res.json();
+        if(result.compliance_doc||result.success){
+          showToast('Document uploaded successfully');
+          const newDoc=result.compliance_doc||{doc_type:docUploadType,file_name:docFile.name,status:'pending_review',expiration_status:'valid'};
+          setComplianceDocs(prev=>[{...newDoc,days_until_expiry:null},...prev]);
+          setDocUploadType('');setDocFileName('');setDocFile(null);setDocExpiry('');setDocCarrier('');setDocPolicyNum('');setDocCoverage('');
+          if(fileInputRef.current)fileInputRef.current.value='';
+        } else showToast(result.error||'Upload failed');
+      } else {
+        // Fallback: text-only submission (no file)
+        const result=await apiPost('compliance',{
+          doc_type:docUploadType,
+          file_name:docFileName,
+          expires_at:docExpiry||null,
+          carrier:docCarrier||null,
+          policy_number:docPolicyNum||null,
+          coverage_amount:docCoverage?parseFloat(docCoverage):null,
+        });
+        if(result.compliance_doc){
+          showToast('Document record created');
+          setComplianceDocs(prev=>[{...result.compliance_doc,expiration_status:'valid',days_until_expiry:null},...prev]);
+          setDocUploadType('');setDocFileName('');setDocExpiry('');setDocCarrier('');setDocPolicyNum('');setDocCoverage('');
+        } else showToast(result.error||'Upload failed');
+      }
+    }catch{showToast('Network error — please try again');}
     setDocUploading(false);
   };
 
@@ -301,22 +331,22 @@ export default function SubPortal(){
   if(error||!session)return(
     <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif'}}>
       <div style={{textAlign:'center',color:RED}}>
-        <div style={{fontSize:52,marginBottom:16}}>{'\u26A0'}</div>
+        <div style={{fontSize:52,marginBottom:16}}><Warning size={16} weight="bold"/></div>
         <div style={{fontSize:22,fontWeight:800,color:TEXT}}>Portal Access Denied</div>
         <div style={{fontSize:14,color:DIM,marginTop:10,maxWidth:420,lineHeight:1.6}}>{error||'This portal link is invalid or has expired. Please contact your general contractor for a new link.'}</div>
       </div>
     </div>
   );
 
-  const TABS:{key:Tab;label:string;icon:string}[]=[
-    {key:'dashboard',label:'Dashboard',icon:'\u2302'},
-    {key:'compliance',label:'Compliance',icon:'\u2714'},
-    {key:'payapps',label:'Pay Apps',icon:'\u2709'},
-    {key:'daily',label:'Daily Logs',icon:'\u270D'},
-    {key:'rfis',label:'RFIs',icon:'\u2753'},
-    {key:'schedule',label:'Schedule',icon:'\u2630'},
-    {key:'scorecard',label:'Scorecard',icon:'\u2605'},
-    {key:'messages',label:'Messages',icon:'\u2709'},
+  const TABS:{key:Tab;label:string;icon:React.ReactNode}[]=[
+    {key:'dashboard',label:'Dashboard',icon:<House size={16} weight="duotone"/>},
+    {key:'compliance',label:'Compliance',icon:<ShieldCheck size={16} weight="duotone"/>},
+    {key:'payapps',label:'Pay Apps',icon:<CurrencyDollar size={16} weight="duotone"/>},
+    {key:'daily',label:'Daily Logs',icon:<ClipboardText size={16} weight="duotone"/>},
+    {key:'rfis',label:'RFIs',icon:<Question size={16} weight="duotone"/>},
+    {key:'schedule',label:'Schedule',icon:<CalendarBlank size={16} weight="duotone"/>},
+    {key:'scorecard',label:'Scorecard',icon:<Star size={16} weight="duotone"/>},
+    {key:'messages',label:'Messages',icon:<ChatCircle size={16} weight="duotone"/>},
   ];
 
   /* ================================================================ */
@@ -347,7 +377,7 @@ export default function SubPortal(){
             </div>
             {isPreferred&&(
               <div style={{background:GOLD+'22',border:`1px solid ${GOLD}`,borderRadius:8,padding:'8px 16px',display:'flex',alignItems:'center',gap:8}}>
-                <span style={{fontSize:20}}>{'\u2B50'}</span>
+                <span style={{fontSize:20}}><Star size={18} weight="fill" color={GOLD}/></span>
                 <div><div style={{fontSize:13,fontWeight:800,color:GOLD}}>Preferred Sub</div><div style={{fontSize:10,color:DIM}}>Top-rated</div></div>
               </div>
             )}
@@ -357,7 +387,7 @@ export default function SubPortal(){
         {/* Insurance Expiration Alerts (30/60/90 day) */}
         {alerts.length>0&&(
           <div style={{...card(),borderColor:alerts[0].level==='critical'?RED+'55':AMBER+'55',background:alerts[0].level==='critical'?RED+'08':AMBER+'08'}}>
-            <div style={{fontSize:15,fontWeight:700,color:alerts[0].level==='critical'?RED:AMBER,marginBottom:10}}>{'\u26A0'} Insurance / Compliance Expiration Alerts</div>
+            <div style={{fontSize:15,fontWeight:700,color:alerts[0].level==='critical'?RED:AMBER,marginBottom:10}}><Warning size={16} weight="bold"/> Insurance / Compliance Expiration Alerts</div>
             {alerts.map((a,i)=>{
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
@@ -441,7 +471,18 @@ export default function SubPortal(){
           <div style={{fontSize:17,fontWeight:700,color:TEXT,marginBottom:16}}>Upload Compliance Document</div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16,marginBottom:16}}>
             <div><div style={labelS}>Document Type *</div><select value={docUploadType} onChange={e=>setDocUploadType(e.target.value)} style={{...inputS,cursor:'pointer'}}><option value="">Select type...</option>{docTypes.map(t=><option key={t} value={t}>{docLabels[t]||t}</option>)}</select></div>
-            <div><div style={labelS}>File Name *</div><input value={docFileName} onChange={e=>setDocFileName(e.target.value)} placeholder="insurance_cert_2026.pdf" style={inputS}/></div>
+            <div>
+              <div style={labelS}>Upload File *</div>
+              <div
+                onClick={()=>fileInputRef.current?.click()}
+                style={{...inputS,cursor:'pointer',display:'flex',alignItems:'center',gap:8,color:docFile?TEXT:DIM,background:docFile?`${GREEN}08`:DARK,borderColor:docFile?`${GREEN}44`:BORDER,borderStyle:docFile?'solid':'dashed'}}
+              >
+                <UploadSimple size={16} color={docFile?GREEN:DIM}/>
+                {docFile?docFile.name:'Click to select file (PDF, JPG, PNG)'}
+              </div>
+              <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e=>{const f=e.target.files?.[0];if(f){setDocFile(f);setDocFileName(f.name);}}} style={{display:'none'}}/>
+              {docFile&&<div style={{fontSize:11,color:DIM,marginTop:4}}>{(docFile.size/1024).toFixed(0)} KB &middot; {docFile.type||'Unknown type'}</div>}
+            </div>
             <div><div style={labelS}>Expiration Date</div><input type="date" value={docExpiry} onChange={e=>setDocExpiry(e.target.value)} style={inputS}/></div>
           </div>
           {docUploadType==='insurance'&&(
@@ -457,7 +498,7 @@ export default function SubPortal(){
         {/* 30/60/90 Day Expiration Alerts */}
         {alerts.length>0&&(
           <div style={{...card(),borderColor:AMBER+'55',background:AMBER+'08'}}>
-            <div style={{fontSize:15,fontWeight:700,color:AMBER,marginBottom:10}}>{'\u26A0'} Expiration Alerts (30/60/90 Days)</div>
+            <div style={{fontSize:15,fontWeight:700,color:AMBER,marginBottom:10}}><Warning size={16} weight="bold"/> Expiration Alerts (30/60/90 Days)</div>
             {alerts.map((a,i)=>{
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
@@ -743,7 +784,7 @@ export default function SubPortal(){
       <div style={{display:'grid',gap:20}}>
         {/* Overall */}
         <div style={{...card(),background:`linear-gradient(135deg,${RAISED},${DARK})`,textAlign:'center'}}>
-          {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:GOLD+'22',border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}>{'\u2B50'}</span><span style={{fontSize:15,fontWeight:800,color:GOLD}}>Preferred Subcontractor</span></div>}
+          {isPreferred&&<div style={{marginBottom:16,display:'inline-flex',alignItems:'center',gap:10,background:GOLD+'22',border:`1px solid ${GOLD}`,borderRadius:30,padding:'8px 20px'}}><span style={{fontSize:22}}><Star size={18} weight="fill" color={GOLD}/></span><span style={{fontSize:15,fontWeight:800,color:GOLD}}>Preferred Subcontractor</span></div>}
           <div style={{fontSize:56,fontWeight:800,color:GOLD}}>{overallScore>0?overallScore.toFixed(1):'--'}</div>
           <Stars rating={overallScore} size={28}/>
           <div style={{fontSize:14,color:DIM,marginTop:8}}>Overall Performance Rating ({scorecard?.total_reviews||0} reviews)</div>
@@ -871,21 +912,7 @@ export default function SubPortal(){
       {!isOnline&&<div style={{background:RED,color:'#fff',textAlign:'center',padding:'6px 16px',fontSize:12,fontWeight:700}}>You are currently offline. Changes will sync when connection is restored.</div>}
 
       {/* Header */}
-      <header style={{background:RAISED,borderBottom:`1px solid ${BORDER}`,padding:'12px 24px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
-        <div style={{display:'flex',alignItems:'center',gap:12}}>
-          <span style={{fontSize:26}}>{'\u{1F335}'}</span>
-          <div><span style={{fontWeight:800,fontSize:16,color:GOLD,letterSpacing:1}}>SAGUARO</span><span style={{fontSize:12,color:DIM,marginLeft:8}}>Subcontractor Portal</span></div>
-        </div>
-        <div style={{display:'flex',alignItems:'center',gap:12}}>
-          <div style={{textAlign:'right'}}>
-            <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{companyName}</div>
-            <div style={{fontSize:11,color:DIM}}>{sub?.trade||''}</div>
-          </div>
-          {/* Health Badge mini */}
-          <div style={{width:36,height:36,borderRadius:'50%',border:`2px solid ${healthColor}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:healthColor}} title={`Health Score: ${healthScore.toFixed(1)}`}>{healthScore>0?healthScore.toFixed(1):'--'}</div>
-          {isPreferred&&<span style={{fontSize:18,color:GOLD}} title="Preferred Subcontractor">{'\u2B50'}</span>}
-        </div>
-      </header>
+      <PortalHeader portalName="Subcontractor Portal" subtitle={companyName} showBackToPortals={false} />
 
       {/* Tabs - scrollable on mobile */}
       <nav style={{background:RAISED,borderBottom:`1px solid ${BORDER}`,overflowX:'auto',display:'flex',WebkitOverflowScrolling:'touch'}}>
