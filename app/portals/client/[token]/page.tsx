@@ -4,10 +4,10 @@ import { useParams } from 'next/navigation';
 
 /* ── Palette ──────────────────────────────────────────────────────── */
 const GOLD = '#C8960F';
-const BG = '#07101C';
-const RAISED = '#0D1D2E';
+const BG = '#F8F9FB';
+const RAISED = '#ffffff';
 const BORDER = '#1E3A5F';
-const TEXT = '#F0F4FF';
+const TEXT = '#111827';
 const DIM = '#8BAAC8';
 const GREEN = '#22C55E';
 const RED = '#EF4444';

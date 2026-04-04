@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PortalHeader from '../../../components/PortalHeader';
 
 export default function SubPortalLanding() {
   const router = useRouter();
@@ -38,10 +39,11 @@ export default function SubPortalLanding() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <>
+    <PortalHeader portalName="Subcontractor Portal" />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', minHeight: 'calc(100vh - 64px)' }}>
       <div style={{ maxWidth: 440, width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ color: '#C8960F', fontWeight: 800, fontSize: 24, letterSpacing: '0.12em', marginBottom: 8 }}>SAGUARO</div>
           <h1 style={{ color: '#111827', fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>Subcontractor Portal</h1>
           <p style={{ color: '#6B7280', fontSize: 14, margin: 0 }}>Upload documents, track pay apps, view compliance status.</p>
         </div>
@@ -71,5 +73,6 @@ export default function SubPortalLanding() {
         <div style={{ textAlign: 'center', marginTop: 24 }}><a href="/" style={{ color: '#6B7280', fontSize: 13, textDecoration: 'none' }}>Back to Saguaro</a></div>
       </div>
     </div>
+    </>
   );
 }

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 
-const GOLD='#C8960F',BG='#07101C',RAISED='#0D1D2E',BORDER='#1E3A5F',TEXT='#F0F4FF',DIM='#8BAAC8',GREEN='#22C55E',RED='#EF4444',AMBER='#F59E0B',BLUE='#3B82F6',PURPLE='#8B5CF6';
+const GOLD='#C8960F',BG='#F8F9FB',RAISED='#ffffff',BORDER='#1E3A5F',TEXT='#111827',DIM='#8BAAC8',GREEN='#22C55E',RED='#EF4444',AMBER='#F59E0B',BLUE='#3B82F6',PURPLE='#8B5CF6';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 const fmtDate=(d:string)=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'--';
 
