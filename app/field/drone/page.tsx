@@ -13,7 +13,7 @@ const GOLD = '#C8960F';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const AMBER = '#F59E0B';
+const AMBER = '#C8960F';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#EEF0F3';
@@ -318,7 +318,7 @@ function DronePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>{area.name}</h4>
                 <span style={{
-                  background: area.percent_complete >= 80 ? 'rgba(34,197,94,0.15)' : area.percent_complete >= 40 ? 'rgba(245,158,11,0.15)' : 'rgba(239,68,68,0.15)',
+                  background: area.percent_complete >= 80 ? 'rgba(34,197,94,0.15)' : area.percent_complete >= 40 ? 'rgba(200,150,15,0.15)' : 'rgba(239,68,68,0.15)',
                   color: area.percent_complete >= 80 ? GREEN : area.percent_complete >= 40 ? AMBER : RED,
                   fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 20,
                 }}>
