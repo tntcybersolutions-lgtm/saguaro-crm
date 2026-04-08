@@ -8,10 +8,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD = '#C8960F', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
-const GREEN = '#22C55E', RED = '#EF4444', AMBER = '#F59E0B', BLUE = '#3B82F6';
+const GREEN = '#22C55E', RED = '#EF4444', AMBER = '#C8960F', BLUE = '#3B82F6';
 
 const PRESET_COLORS = [RED, BLUE, GREEN, AMBER, GOLD, '#8B5CF6', '#EC4899', '#06B6D4'];
-const USER_COLORS = ['#EF4444', '#3B82F6', '#22C55E', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#C8960F'];
+const USER_COLORS = ['#EF4444', '#3B82F6', '#22C55E', '#C8960F', '#8B5CF6', '#EC4899', '#06B6D4', '#C8960F'];
 
 function hr(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);
