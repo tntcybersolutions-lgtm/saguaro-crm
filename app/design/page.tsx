@@ -13,7 +13,7 @@ const ROOMS = [
   { id: 'bathroom', label: 'Bathroom', icon: 'bath', gradient: 'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)' },
   { id: 'living_room', label: 'Living Room', icon: 'sofa', gradient: 'linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%)' },
   { id: 'bedroom', label: 'Bedroom', icon: 'bed', gradient: 'linear-gradient(135deg, #EC4899 0%, #DB2777 100%)' },
-  { id: 'dining_room', label: 'Dining Room', icon: 'dining', gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' },
+  { id: 'dining_room', label: 'Dining Room', icon: 'dining', gradient: 'linear-gradient(135deg, #C8960F 0%, #D97706 100%)' },
   { id: 'home_office', label: 'Home Office', icon: 'office', gradient: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)' },
   { id: 'exterior', label: 'Exterior', icon: 'house', gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)' },
   { id: 'backyard', label: 'Backyard', icon: 'yard', gradient: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)' },
@@ -33,7 +33,7 @@ const STYLES = [
   { id: 'japanese', label: 'Japanese Zen', colors: ['#F5F5DC','#8B7355','#2D4A3E','#D4C5A9'], desc: 'Tranquil, natural, wabi-sabi' },
   { id: 'midcentury', label: 'Mid-Century Modern', colors: ['#FDE68A','#EA580C','#065F46','#78716C'], desc: 'Retro 1960s organic curves' },
   { id: 'luxury', label: 'Luxury Contemporary', colors: ['#1C1917','#C8960F','#F5F5F4','#78716C'], desc: 'High-end sophisticated' },
-  { id: 'bohemian', label: 'Bohemian', colors: ['#7C3AED','#DB2777','#F59E0B','#059669'], desc: 'Eclectic, colorful, layered' },
+  { id: 'bohemian', label: 'Bohemian', colors: ['#7C3AED','#DB2777','#C8960F','#059669'], desc: 'Eclectic, colorful, layered' },
   { id: 'transitional', label: 'Transitional', colors: ['#F5F5F4','#A8A29E','#57534E','#C8960F'], desc: 'Classic meets contemporary' },
   { id: 'desert-modern', label: 'Desert Modern', colors: ['#D2B48C','#8B4513','#2F4F4F','#DAA520'], desc: 'Southwest contemporary' },
   { id: 'kitchen', label: "Chef's Kitchen", colors: ['#1E3A5A','#C8960F','#F5F5F4','#44403C'], desc: 'Professional-grade kitchen' },
@@ -109,7 +109,7 @@ const ArrowRight = () => (
   </svg>
 );
 const StarIcon = ({ filled = true }: { filled?: boolean }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? '#F59E0B' : 'none'} stroke="#F59E0B" strokeWidth="2">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? '#C8960F' : 'none'} stroke="#C8960F" strokeWidth="2">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 );
@@ -386,7 +386,7 @@ export default function DesignStudioPage() {
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: 24, fontWeight: 800, color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                     {item.num}
-                    {item.star && <svg width="20" height="20" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
+                    {item.star && <svg width="20" height="20" viewBox="0 0 24 24" fill="#C8960F" stroke="#C8960F" strokeWidth="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
                   </div>
                   <div style={{ fontSize: 13, color: DIM, marginTop: 2 }}>{item.label}</div>
                 </div>
