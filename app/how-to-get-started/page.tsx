@@ -11,7 +11,7 @@ export default function HowToGetStartedPage() {
       <style>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-          --dark: #0d1117; --gold: #F59E0B; --text: #F8FAFC;
+          --dark: #0d1117; --gold: #C8960F; --text: #F8FAFC;
           --dim: #CBD5E1; --border: #1E3A5F; --raised: #0F172A;
           --green: #22c55e; --font: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
         }
@@ -21,7 +21,7 @@ export default function HowToGetStartedPage() {
           position: sticky; top: 0; z-index: 100;
           height: 64px; display: flex; align-items: center;
           justify-content: space-between; padding: 0 32px;
-          background: rgba(248,249,251,.97); backdrop-filter: blur(12px);
+          background: rgba(13,17,23,0.95); backdrop-filter: blur(12px);
           border-bottom: 1px solid var(--border);
         }
         .logo { font-weight: 900; font-size: 16px; text-decoration: none;
@@ -36,8 +36,8 @@ export default function HowToGetStartedPage() {
         .hero { text-align: center; margin-bottom: 64px; }
         .badge {
           display: inline-flex; align-items: center; gap: 8px;
-          padding: 6px 16px; background: rgba(245,158,11,0.08);
-          border: 1px solid rgba(245,158,11,0.25); border-radius: 20px;
+          padding: 6px 16px; background: rgba(200,150,15,0.08);
+          border: 1px solid rgba(200,150,15,0.25); border-radius: 20px;
           font-size: 12px; font-weight: 700; color: var(--gold);
           letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 24px;
         }
@@ -56,13 +56,13 @@ export default function HowToGetStartedPage() {
           background: var(--raised); border: 1px solid var(--border);
           border-radius: 14px; padding: 24px 28px; margin-bottom: 16px;
         }
-        .card-gold { border-color: rgba(245,158,11,0.35); background: linear-gradient(135deg, rgba(245,158,11,0.05), var(--raised)); }
+        .card-gold { border-color: rgba(200,150,15,0.35); background: linear-gradient(135deg, rgba(200,150,15,0.05), var(--raised)); }
 
         .step-row { display: flex; gap: 20px; align-items: flex-start; }
         .step-num {
           width: 40px; height: 40px; flex-shrink: 0;
-          border-radius: 50%; background: rgba(245,158,11,0.1);
-          border: 1px solid rgba(245,158,11,0.25);
+          border-radius: 50%; background: rgba(200,150,15,0.1);
+          border: 1px solid rgba(200,150,15,0.25);
           display: flex; align-items: center; justify-content: center;
           font-size: 15px; font-weight: 900; color: var(--gold);
         }
@@ -70,7 +70,7 @@ export default function HowToGetStartedPage() {
         .step-body p { font-size: 14px; color: var(--dim); line-height: 1.65; }
         .step-body .note {
           margin-top: 12px; padding: 10px 14px;
-          background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.15);
+          background: rgba(200,150,15,0.05); border: 1px solid rgba(200,150,15,0.15);
           border-radius: 8px; font-size: 13px; color: var(--dim);
         }
         .step-body .note strong { color: var(--text); }
@@ -87,8 +87,8 @@ export default function HowToGetStartedPage() {
 
         .cta-box {
           text-align: center; padding: 48px 32px;
-          background: linear-gradient(135deg, rgba(245,158,11,0.06), transparent);
-          border: 1px solid rgba(245,158,11,0.2); border-radius: 16px;
+          background: linear-gradient(135deg, rgba(200,150,15,0.06), transparent);
+          border: 1px solid rgba(200,150,15,0.2); border-radius: 16px;
           margin-bottom: 48px;
         }
         .cta-box h2 { font-size: 28px; font-weight: 900; margin-bottom: 12px; }
@@ -97,7 +97,7 @@ export default function HowToGetStartedPage() {
           display: inline-block; padding: 14px 40px;
           background: linear-gradient(135deg, var(--gold), #D97706);
           border-radius: 10px; color: #000; font-weight: 900; font-size: 16px;
-          text-decoration: none; box-shadow: 0 4px 24px rgba(245,158,11,0.3);
+          text-decoration: none; box-shadow: 0 4px 24px rgba(200,150,15,0.3);
           margin-bottom: 12px;
         }
         .trust-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
@@ -279,12 +279,12 @@ export default function HowToGetStartedPage() {
               { name: 'Starter', price: '$299/mo', desc: 'Up to 10 projects, 100 AI pages/mo, pay apps, lien waivers, mobile app. Best for small GCs.', href: '/signup' },
               { name: 'Professional', price: '$599/mo', desc: 'Unlimited projects, unlimited AI, certified payroll, bid intelligence, owner portals, all documents.', href: '/signup', popular: true },
             ].map(p => (
-              <div key={p.name} className="card" style={{ borderColor: p.popular ? 'rgba(245,158,11,0.4)' : 'var(--border)' }}>
+              <div key={p.name} className="card" style={{ borderColor: p.popular ? 'rgba(200,150,15,0.4)' : 'var(--border)' }}>
                 {p.popular && <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--gold)', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Most Popular</div>}
                 <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', marginBottom: 4 }}>{p.name}</div>
                 <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--gold)', marginBottom: 8 }}>{p.price}</div>
                 <p style={{ fontSize: 13, color: 'var(--dim)', lineHeight: 1.6, marginBottom: 16 }}>{p.desc}</p>
-                <a href={p.href} style={{ display: 'block', padding: '10px', textAlign: 'center', background: p.popular ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'rgba(245,158,11,0.08)', border: p.popular ? 'none' : '1px solid rgba(245,158,11,0.2)', borderRadius: 8, color: p.popular ? '#000' : 'var(--gold)', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
+                <a href={p.href} style={{ display: 'block', padding: '10px', textAlign: 'center', background: p.popular ? 'linear-gradient(135deg, #C8960F, #D97706)' : 'rgba(200,150,15,0.08)', border: p.popular ? 'none' : '1px solid rgba(200,150,15,0.2)', borderRadius: 8, color: p.popular ? '#000' : 'var(--gold)', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
                   Start Free Trial →
                 </a>
               </div>
