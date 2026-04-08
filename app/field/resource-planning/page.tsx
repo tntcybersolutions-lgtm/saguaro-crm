@@ -12,7 +12,7 @@ import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 /* ── colour palette ────────────────────────────────────────────────── */
 const GOLD = '#C8960F', BG = '#07101C', RAISED = '#0D1D2E', BORDER = '#1E3A5F';
 const TEXT = '#F0F4FF', DIM = '#8BAAC8', GREEN = '#22C55E', RED = '#EF4444';
-const AMBER = '#F59E0B', BLUE = '#3B82F6', PURPLE = '#8B5CF6';
+const AMBER = '#C8960F', BLUE = '#3B82F6', PURPLE = '#8B5CF6';
 
 function hr(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);
