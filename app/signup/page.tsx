@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 
-const GOLD='#F59E0B',DARK='#h0a0f1a',RAISED='#0F172A',BORDER='#1E3A5F',DIM='#CBD5E1',TEXT='#F8FAFC',RED='#ef4444',GREEN='#22c55e';
+const GOLD='#C8960F',DARK='#h0a0f1a',RAISED='#0F172A',BORDER='#1E3A5F',DIM='#CBD5E1',TEXT='#F8FAFC',RED='#ef4444',GREEN='#22c55e';
 
 const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
 
