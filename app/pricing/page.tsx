@@ -30,13 +30,13 @@ const PLANS = [
     popular: false,
     cta: 'Start Free Trial',
     cta_href: '/signup',
-    highlight: 'Best for 1–5 person teams',
+    highlight: 'Best for 1â5 person teams',
     features: [
       'Up to 10 active projects',
       'Unlimited users',
-      'AI Takeoff — 100 pages/mo',
+      'AI Takeoff â 100 pages/mo',
       'Pay Applications G702/G703',
-      'Lien Waivers — all 50 states',
+      'Lien Waivers â all 50 states',
       'Basic RFI & Change Orders',
       'Mobile Field App (Saguaro Field)',
       'Free migration from any platform',
@@ -59,13 +59,13 @@ const PLANS = [
     popular: true,
     cta: 'Start Free Trial',
     cta_href: '/signup',
-    highlight: 'Best for 5–50 person teams',
+    highlight: 'Best for 5â50 person teams',
     features: [
       'Unlimited active projects',
       'Unlimited users',
       'Unlimited AI Takeoff pages',
-      'All AIA Documents (G702–G706, A310, A312)',
-      'All 4 Lien Waiver types — all 50 states',
+      'All AIA Documents (G702âG706, A310, A312)',
+      'All 4 Lien Waiver types â all 50 states',
       'Certified Payroll WH-347 + DOL wage lookup',
       'ACORD 25 Insurance Tracker + COI Parser',
       'OSHA 300 Log',
@@ -99,11 +99,11 @@ const PLANS = [
       'Custom API integrations',
       'QuickBooks sync',
       'Dedicated account manager',
-      'SLA — 99.9% uptime guarantee',
+      'SLA â 99.9% uptime guarantee',
       'Custom contract & invoicing',
       'SAML SSO',
       'Custom onboarding + training',
-      'Free migration — we handle everything',
+      'Free migration â we handle everything',
       'Phone support + 1hr response SLA',
     ],
     not_included: [],
@@ -116,7 +116,7 @@ const ADDONS = [
     price: 300,
     per: 'mo',
     description: 'Live chat + email with 4hr response. Dedicated support agent for your account.',
-    icon: '💬',
+    icon: 'ð¬',
     available: ['Starter'],
   },
   {
@@ -124,7 +124,7 @@ const ADDONS = [
     price: 299,
     per: 'mo',
     description: 'Named Customer Success Manager. Phone support, weekly check-ins, 1hr SLA.',
-    icon: '🎯',
+    icon: 'ð¯',
     available: ['Starter', 'Professional'],
   },
   {
@@ -132,7 +132,7 @@ const ADDONS = [
     price: 79,
     per: 'mo',
     description: '500 additional blueprint pages per month. Rolls over unused pages.',
-    icon: '📐',
+    icon: 'ð',
     available: ['Starter'],
   },
   {
@@ -140,7 +140,7 @@ const ADDONS = [
     price: 299,
     per: 'mo',
     description: 'Your own brand, logo, and custom domain. Resell to your clients.',
-    icon: '🏷️',
+    icon: 'ð·ï¸',
     available: ['Starter', 'Professional'],
   },
   {
@@ -148,7 +148,7 @@ const ADDONS = [
     price: 99,
     per: 'mo',
     description: 'Bidirectional sync of budgets, pay apps, and change orders with QuickBooks.',
-    icon: '🔄',
+    icon: 'ð',
     available: ['Starter', 'Professional'],
   },
   {
@@ -156,7 +156,7 @@ const ADDONS = [
     price: 149,
     per: 'mo',
     description: 'Full REST API + webhooks. Build custom integrations with your tech stack.',
-    icon: '⚡',
+    icon: 'â¡',
     available: ['Starter', 'Professional'],
   },
 ];
@@ -168,7 +168,7 @@ const SERVICES = [
     label: 'FREE',
     description: 'We migrate all your projects, contacts, documents, and history from Procore, Buildertrend, or any platform. Done in 1 business day.',
     highlight: true,
-    icon: '🚀',
+    icon: 'ð',
   },
   {
     name: 'Guided Onboarding',
@@ -176,7 +176,7 @@ const SERVICES = [
     label: '$1,200',
     description: 'Hands-on 3-hour setup session with a Saguaro specialist. Configure your company, import your templates, and train your team.',
     highlight: false,
-    icon: '🎓',
+    icon: 'ð',
   },
   {
     name: 'Custom Training',
@@ -184,15 +184,15 @@ const SERVICES = [
     label: '$299/session',
     description: '2-hour live training session for your team. Field app, takeoff, pay apps, or any workflow. Remote or on-site (travel extra).',
     highlight: false,
-    icon: '📚',
+    icon: 'ð',
   },
   {
     name: 'Template Build-Out',
     price: 399,
     label: '$399',
-    description: 'We build your custom bid templates, pay app headers, lien waiver forms, and company documents — ready on day one.',
+    description: 'We build your custom bid templates, pay app headers, lien waiver forms, and company documents â ready on day one.',
     highlight: false,
-    icon: '📋',
+    icon: 'ð',
   },
 ];
 
@@ -233,7 +233,7 @@ const COMPARISON_FEATURES = [
   { label: 'AI Takeoff', starter: '100 pages/mo', pro: 'Unlimited', ent: 'Unlimited' },
   { label: 'Pay Apps G702/G703', starter: true, pro: true, ent: true },
   { label: 'All AIA Documents', starter: false, pro: true, ent: true },
-  { label: 'Lien Waivers — all 50 states', starter: true, pro: true, ent: true },
+  { label: 'Lien Waivers â all 50 states', starter: true, pro: true, ent: true },
   { label: 'All 4 Lien Waiver types', starter: false, pro: true, ent: true },
   { label: 'Certified Payroll WH-347', starter: false, pro: true, ent: true },
   { label: 'ACORD 25 / COI Parser', starter: false, pro: true, ent: true },
@@ -248,18 +248,18 @@ const COMPARISON_FEATURES = [
 ];
 
 const COMPETITOR_COMPARISON = [
-  { name: 'Procore', price: '$3,750–$12,000+/mo', model: 'Per user + modules', migration: false, flatPrice: false },
-  { name: 'Autodesk Build', price: '$2,500–$8,000+/mo', model: 'Per user + modules', migration: false, flatPrice: false },
-  { name: 'Buildertrend', price: '$499–$1,099/mo', model: 'Flat (limited features)', migration: false, flatPrice: true },
-  { name: 'CoConstruct', price: '$499–$1,099/mo', model: 'Flat (limited features)', migration: false, flatPrice: true },
-  { name: 'Fieldwire', price: '$54–$104/user/mo', model: 'Per user', migration: false, flatPrice: false },
-  { name: 'Contractor Foreman', price: '$49–$299/mo', model: 'Flat (basic features)', migration: false, flatPrice: true },
-  { name: 'Saguaro CRM', price: '$299–$599/mo', model: 'Flat, unlimited users', migration: true, flatPrice: true, isSaguaro: true },
+  { name: 'Procore', price: '$3,750â$12,000+/mo', model: 'Per user + modules', migration: false, flatPrice: false },
+  { name: 'Autodesk Build', price: '$2,500â$8,000+/mo', model: 'Per user + modules', migration: false, flatPrice: false },
+  { name: 'Buildertrend', price: '$499â$1,099/mo', model: 'Flat (limited features)', migration: false, flatPrice: true },
+  { name: 'CoConstruct', price: '$499â$1,099/mo', model: 'Flat (limited features)', migration: false, flatPrice: true },
+  { name: 'Fieldwire', price: '$54â$104/user/mo', model: 'Per user', migration: false, flatPrice: false },
+  { name: 'Contractor Foreman', price: '$49â$299/mo', model: 'Flat (basic features)', migration: false, flatPrice: true },
+  { name: 'Saguaro CRM', price: '$299â$599/mo', model: 'Flat, unlimited users', migration: true, flatPrice: true, isSaguaro: true },
 ];
 
 const FAQS = [
-  { q: 'Is the migration really free?', a: 'Yes, completely free. We migrate your projects, contacts, documents, and history from Procore, Buildertrend, CoConstruct, or any spreadsheet-based system. Our team handles everything — you\'ll be live in 1 business day.' },
-  { q: 'Is it really unlimited users?', a: 'Yes. One flat license covers every person on your team — PMs, field supers, estimators, accounting, owners — all included at no extra cost. We will never charge you per seat.' },
+  { q: 'Is the migration really free?', a: 'Yes, completely free. We migrate your projects, contacts, documents, and history from Procore, Buildertrend, CoConstruct, or any spreadsheet-based system. Our team handles everything â you\'ll be live in 1 business day.' },
+  { q: 'Is it really unlimited users?', a: 'Yes. One flat license covers every person on your team â PMs, field supers, estimators, accounting, owners â all included at no extra cost. We will never charge you per seat.' },
   { q: 'What happens after the 30-day free trial?', a: "You'll be prompted to enter payment info. If you choose not to, your account pauses with data preserved for 30 days before deletion. There are no surprise charges." },
   { q: 'Can I upgrade or downgrade my plan anytime?', a: 'Yes. Upgrade immediately and get prorated credit. Downgrade at the end of your billing cycle. No penalties, no fees.' },
   { q: 'Do you support prevailing wage projects?', a: 'Yes. The WH-347 Certified Payroll generator connects to the DOL Davis-Bacon wage API and validates every worker\'s hourly rate against current prevailing wages for their trade and county.' },
@@ -321,15 +321,15 @@ export default function PricingPage() {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <a href="/login" style={{ padding: '8px 18px', background: 'rgba(245,158,11,0.08)', border: `1px solid rgba(245,158,11,0.25)`, borderRadius: 8, color: C.gold, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Log In</a>
-          <a href="/signup" style={{ padding: '8px 18px', background: `linear-gradient(135deg, ${C.gold}, #FCD34D)`, borderRadius: 8, color: '#ffffff', fontSize: 13, fontWeight: 800, textDecoration: 'none', boxShadow: `0 0 20px rgba(245,158,11,0.25)` }}>Free Trial</a>
+          <a href="/login" style={{ padding: '8px 18px', background: 'rgba(200,150,15,0.08)', border: `1px solid rgba(200,150,15,0.25)`, borderRadius: 8, color: C.gold, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Log In</a>
+          <a href="/signup" style={{ padding: '8px 18px', background: `linear-gradient(135deg, ${C.gold}, #FCD34D)`, borderRadius: 8, color: '#ffffff', fontSize: 13, fontWeight: 800, textDecoration: 'none', boxShadow: `0 0 20px rgba(200,150,15,0.25)` }}>Free Trial</a>
         </div>
       </nav>
 
       <div style={{ paddingTop: 64 }}>
 
         {/* Hero */}
-        <section style={{ textAlign: 'center', padding: '88px 24px 64px', background: `radial-gradient(ellipse 900px 500px at 50% 0%, rgba(245,158,11,0.07) 0%, transparent 70%)` }}>
+        <section style={{ textAlign: 'center', padding: '88px 24px 64px', background: `radial-gradient(ellipse 900px 500px at 50% 0%, rgba(200,150,15,0.07) 0%, transparent 70%)` }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', background: 'rgba(34,197,94,0.1)', border: `1px solid rgba(34,197,94,0.3)`, borderRadius: 20, fontSize: 12, fontWeight: 700, color: C.green, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 24 }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.green, display: 'inline-block' }} />
             Free Migration Included on All Plans
@@ -342,34 +342,34 @@ export default function PricingPage() {
             </span>
           </h1>
           <p style={{ fontSize: 'clamp(16px, 2vw, 20px)', color: C.dim, maxWidth: 600, margin: '0 auto 16px', lineHeight: 1.65 }}>
-            Flat pricing. No per-seat fees. No module upgrades. Free migration from Procore, Buildertrend, or any platform — done in 1 day.
+            Flat pricing. No per-seat fees. No module upgrades. Free migration from Procore, Buildertrend, or any platform â done in 1 day.
           </p>
 
           {/* Competitor savings callout */}
           <div style={{ display: 'inline-flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 36 }}>
             {[
               { from: 'Procore', save: 'Save $3,150+/mo' },
-              { from: 'Buildertrend', save: 'Save $200–$500/mo' },
+              { from: 'Buildertrend', save: 'Save $200â$500/mo' },
               { from: 'Autodesk', save: 'Save $1,900+/mo' },
             ].map(item => (
-              <div key={item.from} style={{ padding: '6px 14px', background: 'rgba(245,158,11,0.07)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 20, fontSize: 12, color: C.gold, fontWeight: 600 }}>
-                vs {item.from} — {item.save}
+              <div key={item.from} style={{ padding: '6px 14px', background: 'rgba(200,150,15,0.07)', border: `1px solid rgba(200,150,15,0.2)`, borderRadius: 20, fontSize: 12, color: C.gold, fontWeight: 600 }}>
+                vs {item.from} â {item.save}
               </div>
             ))}
           </div>
 
           {/* Toggle */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: C.raised, borderRadius: 10, padding: '4px', border: `1px solid ${C.border}`, marginBottom: 16 }}>
-            <button onClick={() => setAnnual(false)} style={{ padding: '8px 22px', borderRadius: 7, border: 'none', background: !annual ? 'rgba(245,158,11,0.15)' : 'transparent', color: !annual ? C.gold : C.dim, fontWeight: 700, fontSize: 14, cursor: 'pointer', outline: !annual ? `1px solid rgba(245,158,11,0.3)` : 'none' }}>
+            <button onClick={() => setAnnual(false)} style={{ padding: '8px 22px', borderRadius: 7, border: 'none', background: !annual ? 'rgba(200,150,15,0.15)' : 'transparent', color: !annual ? C.gold : C.dim, fontWeight: 700, fontSize: 14, cursor: 'pointer', outline: !annual ? `1px solid rgba(200,150,15,0.3)` : 'none' }}>
               Monthly
             </button>
-            <button onClick={() => setAnnual(true)} style={{ padding: '8px 22px', borderRadius: 7, border: 'none', background: annual ? 'rgba(245,158,11,0.15)' : 'transparent', color: annual ? C.gold : C.dim, fontWeight: 700, fontSize: 14, cursor: 'pointer', outline: annual ? `1px solid rgba(245,158,11,0.3)` : 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => setAnnual(true)} style={{ padding: '8px 22px', borderRadius: 7, border: 'none', background: annual ? 'rgba(200,150,15,0.15)' : 'transparent', color: annual ? C.gold : C.dim, fontWeight: 700, fontSize: 14, cursor: 'pointer', outline: annual ? `1px solid rgba(200,150,15,0.3)` : 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
               Annual
               <span style={{ fontSize: 11, fontWeight: 800, color: C.green, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', padding: '1px 7px', borderRadius: 10 }}>SAVE 17%</span>
             </button>
           </div>
           <div style={{ fontSize: 13, color: C.dim }}>
-            {annual ? 'Billed annually — cancel anytime' : 'Switch to annual and save up to $1,200/yr'}
+            {annual ? 'Billed annually â cancel anytime' : 'Switch to annual and save up to $1,200/yr'}
           </div>
         </section>
 
@@ -379,17 +379,17 @@ export default function PricingPage() {
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>How it works</div>
               <h2 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0 }}>Start using Saguaro in under 5 minutes</h2>
-              <p style={{ fontSize: 14, color: C.dim, margin: '8px 0 0' }}>Saguaro is a web platform — nothing to download on your computer. Sign up, log in, and your whole team is live.</p>
+              <p style={{ fontSize: 14, color: C.dim, margin: '8px 0 0' }}>Saguaro is a web platform â nothing to download on your computer. Sign up, log in, and your whole team is live.</p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 0, position: 'relative' }}>
               {[
-                { step: '1', icon: '📝', title: 'Sign Up Free', desc: 'Create your account in 30 seconds. No credit card required. 30-day free trial starts immediately.' },
-                { step: '2', icon: '🌐', title: 'Log In — It\'s Instant', desc: 'Open any browser and go to saguarocontrol.net. Your full platform is live — no download, no install.' },
-                { step: '3', icon: '⚙️', title: '5-Min Company Setup', desc: 'Enter your company name, logo, and team roles. Our onboarding wizard walks you through every step.' },
-                { step: '4', icon: '📱', title: 'Install on Your Phone', desc: 'Visit the site on your iPhone or Android and tap "Add to Home Screen." Works offline. No App Store.' },
+                { step: '1', icon: 'ð', title: 'Sign Up Free', desc: 'Create your account in 30 seconds. No credit card required. 30-day free trial starts immediately.' },
+                { step: '2', icon: 'ð', title: 'Log In â It\'s Instant', desc: 'Open any browser and go to saguarocontrol.net. Your full platform is live â no download, no install.' },
+                { step: '3', icon: 'âï¸', title: '5-Min Company Setup', desc: 'Enter your company name, logo, and team roles. Our onboarding wizard walks you through every step.' },
+                { step: '4', icon: 'ð±', title: 'Install on Your Phone', desc: 'Visit the site on your iPhone or Android and tap "Add to Home Screen." Works offline. No App Store.' },
               ].map((s, i, arr) => (
                 <div key={i} style={{ padding: '0 28px', borderRight: i < arr.length - 1 ? `1px solid ${C.border}` : 'none', position: 'relative' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(200,150,15,0.08)', border: '1px solid rgba(200,150,15,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 14 }}>
                     {s.icon}
                   </div>
                   <div style={{ fontSize: 10, fontWeight: 800, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>Step {s.step}</div>
@@ -399,11 +399,11 @@ export default function PricingPage() {
               ))}
             </div>
             <div style={{ textAlign: 'center', marginTop: 32, paddingTop: 28, borderTop: `1px solid ${C.border}` }}>
-              <a href="/signup" style={{ display: 'inline-block', padding: '14px 40px', background: `linear-gradient(135deg, ${C.gold}, #D97706)`, borderRadius: 10, color: '#000', fontWeight: 900, fontSize: 15, textDecoration: 'none', boxShadow: '0 4px 20px rgba(245,158,11,0.3)' }}>
-                Start Free Trial — No Credit Card →
+              <a href="/signup" style={{ display: 'inline-block', padding: '14px 40px', background: `linear-gradient(135deg, ${C.gold}, #D97706)`, borderRadius: 10, color: '#000', fontWeight: 900, fontSize: 15, textDecoration: 'none', boxShadow: '0 4px 20px rgba(200,150,15,0.3)' }}>
+                Start Free Trial â No Credit Card â
               </a>
               <div style={{ marginTop: 12, fontSize: 13, color: C.dim }}>
-                30 days free · Unlimited users · Cancel anytime · <a href="/how-to-get-started" style={{ color: C.gold, textDecoration: 'none', fontWeight: 600 }}>See full walkthrough →</a>
+                30 days free Â· Unlimited users Â· Cancel anytime Â· <a href="/how-to-get-started" style={{ color: C.gold, textDecoration: 'none', fontWeight: 600 }}>See full walkthrough â</a>
               </div>
             </div>
           </div>
@@ -417,7 +417,7 @@ export default function PricingPage() {
                 background: plan.popular ? 'linear-gradient(180deg, #111827 0%, #0F172A 100%)' : C.raised,
                 border: `1.5px solid ${plan.popular ? C.gold : C.border}`,
                 borderRadius: 16, overflow: 'hidden', position: 'relative',
-                boxShadow: plan.popular ? `0 0 0 1px rgba(245,158,11,0.2), 0 24px 48px rgba(0,0,0,0.5), 0 0 80px rgba(245,158,11,0.06)` : '0 4px 24px rgba(0,0,0,0.3)',
+                boxShadow: plan.popular ? `0 0 0 1px rgba(200,150,15,0.2), 0 24px 48px rgba(0,0,0,0.5), 0 0 80px rgba(200,150,15,0.06)` : '0 4px 24px rgba(0,0,0,0.3)',
               }}>
                 {plan.popular && (
                   <div style={{ background: `linear-gradient(90deg, ${C.gold}, #FCD34D)`, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 800, color: '#ffffff', letterSpacing: 2, textTransform: 'uppercase' }}>
@@ -427,7 +427,7 @@ export default function PricingPage() {
                 <div style={{ padding: '30px 28px 28px' }}>
                   <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', color: plan.popular ? C.gold : C.dim, marginBottom: 2 }}>{plan.name}</div>
                   <div style={{ fontSize: 13, color: C.dim, marginBottom: 6 }}>{plan.tagline}</div>
-                  <div style={{ fontSize: 11, color: plan.popular ? C.gold : C.dim, background: plan.popular ? 'rgba(245,158,11,0.08)' : '#F3F4F6', border: `1px solid ${plan.popular ? 'rgba(245,158,11,0.2)' : C.border}`, borderRadius: 6, padding: '3px 10px', display: 'inline-block', marginBottom: 20, fontWeight: 600 }}>
+                  <div style={{ fontSize: 11, color: plan.popular ? C.gold : C.dim, background: plan.popular ? 'rgba(200,150,15,0.08)' : '#F3F4F6', border: `1px solid ${plan.popular ? 'rgba(200,150,15,0.2)' : C.border}`, borderRadius: 6, padding: '3px 10px', display: 'inline-block', marginBottom: 20, fontWeight: 600 }}>
                     {plan.highlight}
                   </div>
 
@@ -438,7 +438,7 @@ export default function PricingPage() {
                         <span style={{ fontSize: 15, color: C.dim, paddingBottom: 8 }}>/mo</span>
                       </div>
                       {annual ? (
-                        <div style={{ fontSize: 12, color: C.dim }}>Billed annually — <span style={{ color: C.green, fontWeight: 600 }}>save ${(plan.price_mo - plan.price_yr) * 12}/yr</span></div>
+                        <div style={{ fontSize: 12, color: C.dim }}>Billed annually â <span style={{ color: C.green, fontWeight: 600 }}>save ${(plan.price_mo - plan.price_yr) * 12}/yr</span></div>
                       ) : (
                         <div style={{ fontSize: 12, color: C.dim }}>Or <span style={{ color: C.green, fontWeight: 600 }}>${plan.price_yr}/mo</span> billed annually</div>
                       )}
@@ -456,7 +456,7 @@ export default function PricingPage() {
                     border: plan.popular ? 'none' : `1.5px solid ${plan.name === 'Enterprise' ? C.gold : C.border}`,
                     borderRadius: 9, color: plan.popular ? '#0d1117' : plan.name === 'Enterprise' ? C.gold : C.text,
                     fontWeight: 800, fontSize: 14, textDecoration: 'none', marginBottom: 28, letterSpacing: 0.3,
-                    boxShadow: plan.popular ? `0 4px 16px rgba(245,158,11,0.3)` : 'none',
+                    boxShadow: plan.popular ? `0 4px 16px rgba(200,150,15,0.3)` : 'none',
                   }}>
                     {plan.cta}
                   </a>
@@ -488,9 +488,9 @@ export default function PricingPage() {
 
         {/* Migration Banner */}
         <section style={{ padding: '0 24px 80px', maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(248,249,251,.97) 100%)', border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 16, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(200,150,15,0.08) 0%, rgba(248,249,251,.97) 100%)', border: `1px solid rgba(200,150,15,0.3)`, borderRadius: 16, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Free Migration — Every Plan</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Free Migration â Every Plan</div>
               <h2 style={{ fontSize: 28, fontWeight: 900, margin: '0 0 12px', lineHeight: 1.2 }}>We move you over in 1 day. Free.</h2>
               <p style={{ fontSize: 15, color: C.dim, margin: '0 0 24px', lineHeight: 1.65 }}>
                 Coming from Procore, Buildertrend, CoConstruct, or a spreadsheet? Our team migrates all your projects, contacts, documents, and history. You do nothing. We handle everything.
@@ -507,7 +507,7 @@ export default function PricingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
               <div style={{ fontSize: 64, fontWeight: 900, color: C.gold, lineHeight: 1 }}>$0</div>
               <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>Migration fee<br />(always free)</div>
-              <a href="/signup" style={{ padding: '14px 28px', background: `linear-gradient(135deg, ${C.gold}, #D97706)`, borderRadius: 9, color: '#000', fontWeight: 800, fontSize: 14, textDecoration: 'none', boxShadow: `0 4px 24px rgba(245,158,11,0.35)`, textAlign: 'center' }}>
+              <a href="/signup" style={{ padding: '14px 28px', background: `linear-gradient(135deg, ${C.gold}, #D97706)`, borderRadius: 9, color: '#000', fontWeight: 800, fontSize: 14, textDecoration: 'none', boxShadow: `0 4px 24px rgba(200,150,15,0.35)`, textAlign: 'center' }}>
                 Start Free Migration
               </a>
             </div>
@@ -517,7 +517,7 @@ export default function PricingPage() {
         {/* Add-ons */}
         <section style={{ padding: '0 24px 96px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'rgba(245,158,11,0.08)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'rgba(200,150,15,0.08)', border: `1px solid rgba(200,150,15,0.2)`, borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               Add-Ons & Upgrades
             </div>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, margin: '0 0 12px', letterSpacing: -0.5 }}>Power up your plan</h2>
@@ -584,8 +584,8 @@ export default function PricingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
             {SERVICES.map(service => (
               <div key={service.name} style={{
-                background: service.highlight ? 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(15,23,42,0) 100%)' : C.raised,
-                border: `1.5px solid ${service.highlight ? 'rgba(245,158,11,0.4)' : C.border}`,
+                background: service.highlight ? 'linear-gradient(135deg, rgba(200,150,15,0.08) 0%, rgba(15,23,42,0) 100%)' : C.raised,
+                border: `1.5px solid ${service.highlight ? 'rgba(200,150,15,0.4)' : C.border}`,
                 borderRadius: 14, padding: '28px 24px', position: 'relative',
               }}>
                 {service.highlight && (
@@ -612,10 +612,10 @@ export default function PricingPage() {
         {/* Competitor Price Comparison */}
         <section style={{ padding: '0 24px 96px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'rgba(245,158,11,0.08)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'rgba(200,150,15,0.08)', border: `1px solid rgba(200,150,15,0.2)`, borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               How We Stack Up
             </div>
-            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>The construction software market — honestly</h2>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>The construction software market â honestly</h2>
           </div>
           <div style={{ background: C.raised, border: `1px solid ${C.border}`, borderRadius: 16, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -630,12 +630,12 @@ export default function PricingPage() {
                 {COMPETITOR_COMPARISON.map((row, i) => (
                   <tr key={row.name} style={{
                     borderBottom: i < COMPETITOR_COMPARISON.length - 1 ? `1px solid rgba(30,58,95,0.5)` : 'none',
-                    background: row.isSaguaro ? 'rgba(245,158,11,0.04)' : 'transparent',
+                    background: row.isSaguaro ? 'rgba(200,150,15,0.04)' : 'transparent',
                   }}>
                     <td style={{ padding: '14px 20px' }}>
                       <span style={{ fontSize: 14, fontWeight: row.isSaguaro ? 800 : 600, color: row.isSaguaro ? C.gold : C.text }}>
                         {row.name}
-                        {row.isSaguaro && <span style={{ fontSize: 10, background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 4, padding: '2px 6px', marginLeft: 8, color: C.gold, fontWeight: 700 }}>YOU</span>}
+                        {row.isSaguaro && <span style={{ fontSize: 10, background: 'rgba(200,150,15,0.15)', border: '1px solid rgba(200,150,15,0.3)', borderRadius: 4, padding: '2px 6px', marginLeft: 8, color: C.gold, fontWeight: 700 }}>YOU</span>}
                       </span>
                     </td>
                     <td style={{ padding: '14px 20px', textAlign: 'center', fontSize: 13, color: row.isSaguaro ? C.gold : C.text, fontWeight: row.isSaguaro ? 700 : 400 }}>{row.price}</td>
@@ -660,7 +660,7 @@ export default function PricingPage() {
         {/* Feature Comparison Table */}
         <section style={{ padding: '0 24px 96px', maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'rgba(245,158,11,0.08)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'rgba(200,150,15,0.08)', border: `1px solid rgba(200,150,15,0.2)`, borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               Full Comparison
             </div>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>Everything, side by side</h2>
@@ -671,7 +671,7 @@ export default function PricingPage() {
                 <tr style={{ borderBottom: `1px solid ${C.border}` }}>
                   <th style={{ padding: '20px 24px', textAlign: 'left', fontWeight: 600, fontSize: 13, color: C.dim, width: '40%' }}>Feature</th>
                   {['Starter', 'Professional', 'Enterprise'].map((col) => (
-                    <th key={col} style={{ padding: '20px 16px', textAlign: 'center', fontWeight: 800, fontSize: 13, color: col === 'Professional' ? C.gold : C.text, background: col === 'Professional' ? 'rgba(245,158,11,0.05)' : 'transparent', borderLeft: col === 'Professional' ? `1px solid rgba(245,158,11,0.15)` : `1px solid ${C.border}`, borderRight: col === 'Professional' ? `1px solid rgba(245,158,11,0.15)` : undefined }}>
+                    <th key={col} style={{ padding: '20px 16px', textAlign: 'center', fontWeight: 800, fontSize: 13, color: col === 'Professional' ? C.gold : C.text, background: col === 'Professional' ? 'rgba(200,150,15,0.05)' : 'transparent', borderLeft: col === 'Professional' ? `1px solid rgba(200,150,15,0.15)` : `1px solid ${C.border}`, borderRight: col === 'Professional' ? `1px solid rgba(200,150,15,0.15)` : undefined }}>
                       {col}
                     </th>
                   ))}
@@ -682,7 +682,7 @@ export default function PricingPage() {
                   <tr key={row.label} style={{ borderBottom: i < COMPARISON_FEATURES.length - 1 ? `1px solid rgba(30,58,95,0.5)` : 'none' }}>
                     <td style={{ padding: '14px 24px', fontSize: 13, color: C.dim, fontWeight: 500 }}>{row.label}</td>
                     {(['starter', 'pro', 'ent'] as const).map((key) => (
-                      <td key={key} style={{ padding: '14px 16px', textAlign: 'center', verticalAlign: 'middle', background: key === 'pro' ? 'rgba(245,158,11,0.03)' : 'transparent', borderLeft: key === 'pro' ? `1px solid rgba(245,158,11,0.12)` : `1px solid rgba(30,58,95,0.4)`, borderRight: key === 'pro' ? `1px solid rgba(245,158,11,0.12)` : undefined }}>
+                      <td key={key} style={{ padding: '14px 16px', textAlign: 'center', verticalAlign: 'middle', background: key === 'pro' ? 'rgba(200,150,15,0.03)' : 'transparent', borderLeft: key === 'pro' ? `1px solid rgba(200,150,15,0.12)` : `1px solid rgba(30,58,95,0.4)`, borderRight: key === 'pro' ? `1px solid rgba(200,150,15,0.12)` : undefined }}>
                         <div style={{ display: 'flex', justifyContent: 'center' }}>
                           <ComparisonCell value={row[key]} />
                         </div>
@@ -698,7 +698,7 @@ export default function PricingPage() {
         {/* FAQ */}
         <section style={{ padding: '0 24px 96px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'rgba(245,158,11,0.08)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>FAQ</div>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'rgba(200,150,15,0.08)', border: `1px solid rgba(200,150,15,0.2)`, borderRadius: 20, fontSize: 11, fontWeight: 700, color: C.gold, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>FAQ</div>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>Frequently asked questions</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -706,8 +706,8 @@ export default function PricingPage() {
               <div key={i} style={{ borderBottom: i < FAQS.length - 1 ? `1px solid ${C.border}` : 'none' }}>
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)} style={{ width: '100%', textAlign: 'left', padding: '22px 0', background: 'none', border: 'none', color: C.text, fontSize: 16, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, lineHeight: 1.4, fontFamily: C.font }}>
                   <span>{faq.q}</span>
-                  <span style={{ flexShrink: 0, width: 28, height: 28, background: openFaq === i ? `rgba(245,158,11,0.15)` : '#E2E5EA', border: `1px solid ${openFaq === i ? 'rgba(245,158,11,0.4)' : C.border}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.gold, fontSize: 18, fontWeight: 300 }}>
-                    {openFaq === i ? '−' : '+'}
+                  <span style={{ flexShrink: 0, width: 28, height: 28, background: openFaq === i ? `rgba(200,150,15,0.15)` : '#E2E5EA', border: `1px solid ${openFaq === i ? 'rgba(200,150,15,0.4)' : C.border}`, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.gold, fontSize: 18, fontWeight: 300 }}>
+                    {openFaq === i ? 'â' : '+'}
                   </span>
                 </button>
                 {openFaq === i && (
@@ -719,7 +719,7 @@ export default function PricingPage() {
         </section>
 
         {/* Final CTA */}
-        <section style={{ padding: '96px 24px', background: `linear-gradient(180deg, transparent 0%, rgba(245,158,11,0.04) 50%, transparent 100%)`, borderTop: `1px solid ${C.border}`, textAlign: 'center' }}>
+        <section style={{ padding: '96px 24px', background: `linear-gradient(180deg, transparent 0%, rgba(200,150,15,0.04) 50%, transparent 100%)`, borderTop: `1px solid ${C.border}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: -0.8 }}>
               Ready to stop paying{' '}
@@ -729,8 +729,8 @@ export default function PricingPage() {
               30-day free trial. Free migration. No credit card required. Your whole team, one flat rate.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <a href="/signup" style={{ display: 'inline-block', padding: '15px 36px', background: `linear-gradient(135deg, ${C.gold}, #FCD34D)`, borderRadius: 10, color: '#ffffff', fontWeight: 800, fontSize: 16, textDecoration: 'none', boxShadow: `0 4px 24px rgba(245,158,11,0.35)` }}>
-                Start Free Trial — No CC Required
+              <a href="/signup" style={{ display: 'inline-block', padding: '15px 36px', background: `linear-gradient(135deg, ${C.gold}, #FCD34D)`, borderRadius: 10, color: '#ffffff', fontWeight: 800, fontSize: 16, textDecoration: 'none', boxShadow: `0 4px 24px rgba(200,150,15,0.35)` }}>
+                Start Free Trial â No CC Required
               </a>
               <a href="/switch-from-procore" style={{ display: 'inline-block', padding: '15px 36px', background: 'transparent', border: `1.5px solid ${C.border}`, borderRadius: 10, color: C.text, fontWeight: 700, fontSize: 16, textDecoration: 'none' }}>
                 Free Migration Guide
