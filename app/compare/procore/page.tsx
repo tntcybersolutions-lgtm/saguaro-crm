@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 const C = {
   dark: '#0d1117',
-  gold: '#F59E0B',
+  gold: '#C8960F',
   text: '#F8FAFC',
   dim: '#CBD5E1',
   border: '#1E3A5F',
@@ -133,7 +133,7 @@ export default function CompareProcorePage() {
       {/* ── NAV ── */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        height: 64, background: 'rgba(248,249,251,.97)',
+        height: 64, background: 'rgba(13,17,23,0.95)',
         borderBottom: `1px solid ${C.border}`,
         backdropFilter: 'blur(16px)',
         display: 'flex', alignItems: 'center',
@@ -201,8 +201,8 @@ export default function CompareProcorePage() {
         <div style={{
           display: 'inline-block',
           padding: '6px 18px',
-          background: 'rgba(245,158,11,0.1)',
-          border: `1px solid rgba(245,158,11,0.35)`,
+          background: 'rgba(200,150,15,0.1)',
+          border: `1px solid rgba(200,150,15,0.35)`,
           borderRadius: 100,
           fontSize: 12,
           fontWeight: 700,
@@ -252,7 +252,7 @@ export default function CompareProcorePage() {
             fontSize: 16,
             textDecoration: 'none',
             letterSpacing: 0.2,
-            boxShadow: `0 0 32px rgba(245,158,11,0.25)`,
+            boxShadow: `0 0 32px rgba(200,150,15,0.25)`,
           }}>
             Try Saguaro Free →
           </a>
@@ -307,9 +307,9 @@ export default function CompareProcorePage() {
 
       {/* ── QUICK WINS BAR ── */}
       <div style={{
-        background: 'rgba(245,158,11,0.06)',
-        borderTop: `1px solid rgba(245,158,11,0.15)`,
-        borderBottom: `1px solid rgba(245,158,11,0.15)`,
+        background: 'rgba(200,150,15,0.06)',
+        borderTop: `1px solid rgba(200,150,15,0.15)`,
+        borderBottom: `1px solid rgba(200,150,15,0.15)`,
         padding: '18px 24px',
         overflowX: 'auto',
       }}>
@@ -333,8 +333,8 @@ export default function CompareProcorePage() {
               alignItems: 'center',
               gap: 8,
               padding: '8px 18px',
-              background: 'rgba(245,158,11,0.08)',
-              border: `1px solid rgba(245,158,11,0.2)`,
+              background: 'rgba(200,150,15,0.08)',
+              border: `1px solid rgba(200,150,15,0.2)`,
               borderRadius: 100,
               fontSize: 13,
               fontWeight: 600,
@@ -378,7 +378,7 @@ export default function CompareProcorePage() {
               padding: '18px 24px',
               textAlign: 'center',
               borderLeft: `1px solid ${C.border}`,
-              background: 'rgba(245,158,11,0.05)',
+              background: 'rgba(200,150,15,0.05)',
             }}>
               <div style={{ fontWeight: 800, fontSize: 16, color: C.gold }}>Saguaro</div>
               <div style={{ fontSize: 11, color: C.gold, opacity: 0.7, marginTop: 2 }}>Recommended</div>
@@ -507,7 +507,7 @@ export default function CompareProcorePage() {
                     width: '100%',
                     padding: '14px 16px 14px 30px',
                     background: 'rgba(15,23,42,0.8)',
-                    border: `1px solid rgba(245,158,11,0.3)`,
+                    border: `1px solid rgba(200,150,15,0.3)`,
                     borderRadius: 10,
                     color: C.text,
                     fontSize: 18,
@@ -515,8 +515,8 @@ export default function CompareProcorePage() {
                     outline: 'none',
                     boxSizing: 'border-box',
                   }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.boxShadow = `0 0 0 2px rgba(245,158,11,0.15)`; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.3)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.boxShadow = `0 0 0 2px rgba(200,150,15,0.15)`; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(200,150,15,0.3)'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
               <button
@@ -524,8 +524,8 @@ export default function CompareProcorePage() {
                 style={{
                   marginTop: 8,
                   padding: '5px 14px',
-                  background: 'rgba(245,158,11,0.1)',
-                  border: `1px solid rgba(245,158,11,0.25)`,
+                  background: 'rgba(200,150,15,0.1)',
+                  border: `1px solid rgba(200,150,15,0.25)`,
                   borderRadius: 100,
                   fontSize: 12,
                   fontWeight: 600,
@@ -549,7 +549,7 @@ export default function CompareProcorePage() {
                   width: '100%',
                   padding: '14px 16px',
                   background: 'rgba(15,23,42,0.8)',
-                  border: `1px solid rgba(245,158,11,0.3)`,
+                  border: `1px solid rgba(200,150,15,0.3)`,
                   borderRadius: 10,
                   color: C.text,
                   fontSize: 18,
@@ -557,8 +557,8 @@ export default function CompareProcorePage() {
                   outline: 'none',
                   boxSizing: 'border-box',
                 }}
-                onFocus={(e) => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.boxShadow = `0 0 0 2px rgba(245,158,11,0.15)`; }}
-                onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.3)'; e.currentTarget.style.boxShadow = 'none'; }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.boxShadow = `0 0 0 2px rgba(200,150,15,0.15)`; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(200,150,15,0.3)'; e.currentTarget.style.boxShadow = 'none'; }}
               />
               <div style={{ marginTop: 8, fontSize: 12, color: C.dim }}>
                 Saguaro is flat-rate — {teamSizeCalc} users, same price
@@ -630,7 +630,7 @@ export default function CompareProcorePage() {
               fontWeight: 800,
               fontSize: 16,
               textDecoration: 'none',
-              boxShadow: `0 0 32px rgba(245,158,11,0.25)`,
+              boxShadow: `0 0 32px rgba(200,150,15,0.25)`,
               marginBottom: 16,
             }}>
               Claim This Savings — Start Free →
@@ -668,19 +668,19 @@ export default function CompareProcorePage() {
                 onClick={() => setActiveDeep(activeDeep === idx ? null : idx)}
                 style={{
                   background: C.dark,
-                  border: `1px solid ${activeDeep === idx ? 'rgba(245,158,11,0.5)' : C.border}`,
+                  border: `1px solid ${activeDeep === idx ? 'rgba(200,150,15,0.5)' : C.border}`,
                   borderRadius: 14,
                   padding: '28px 26px',
                   cursor: 'pointer',
                   transition: 'border-color 0.2s, box-shadow 0.2s',
-                  boxShadow: activeDeep === idx ? `0 0 24px rgba(245,158,11,0.1)` : 'none',
+                  boxShadow: activeDeep === idx ? `0 0 24px rgba(200,150,15,0.1)` : 'none',
                 }}
               >
                 <div style={{
                   display: 'inline-flex',
                   padding: '6px 12px',
-                  background: 'rgba(245,158,11,0.1)',
-                  border: `1px solid rgba(245,158,11,0.2)`,
+                  background: 'rgba(200,150,15,0.1)',
+                  border: `1px solid rgba(200,150,15,0.2)`,
                   borderRadius: 6,
                   fontSize: 11,
                   fontWeight: 700,
@@ -798,11 +798,11 @@ export default function CompareProcorePage() {
 
           {/* Saguaro card */}
           <div style={{
-            background: 'rgba(245,158,11,0.05)',
-            border: `2px solid rgba(245,158,11,0.4)`,
+            background: 'rgba(200,150,15,0.05)',
+            border: `2px solid rgba(200,150,15,0.4)`,
             borderRadius: 16,
             padding: '32px 28px',
-            boxShadow: `0 0 40px rgba(245,158,11,0.08)`,
+            boxShadow: `0 0 40px rgba(200,150,15,0.08)`,
           }}>
             <div style={{ fontWeight: 700, fontSize: 13, color: C.gold, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20 }}>
               Saguaro Professional
@@ -886,8 +886,8 @@ export default function CompareProcorePage() {
               <div style={{
                 display: 'inline-block',
                 padding: '5px 14px',
-                background: 'rgba(245,158,11,0.12)',
-                border: `1px solid rgba(245,158,11,0.3)`,
+                background: 'rgba(200,150,15,0.12)',
+                border: `1px solid rgba(200,150,15,0.3)`,
                 borderRadius: 100,
                 fontSize: 11,
                 fontWeight: 700,
@@ -930,11 +930,11 @@ export default function CompareProcorePage() {
 
             {/* RIGHT */}
             <div style={{
-              background: 'rgba(248,249,251,.97)',
-              border: `1px solid rgba(245,158,11,0.3)`,
+              background: 'rgba(13,17,23,0.95)',
+              border: `1px solid rgba(200,150,15,0.3)`,
               borderRadius: 14,
               padding: '32px 28px',
-              boxShadow: `0 0 40px rgba(245,158,11,0.06)`,
+              boxShadow: `0 0 40px rgba(200,150,15,0.06)`,
             }}>
               <div style={{
                 fontSize: 13,
@@ -972,7 +972,7 @@ export default function CompareProcorePage() {
                 fontSize: 15,
                 textDecoration: 'none',
                 marginBottom: 12,
-                boxShadow: `0 0 24px rgba(245,158,11,0.2)`,
+                boxShadow: `0 0 24px rgba(200,150,15,0.2)`,
               }}>
                 Start My Free Migration →
               </a>
@@ -982,7 +982,7 @@ export default function CompareProcorePage() {
                 justifyContent: 'center',
                 padding: '13px 24px',
                 background: 'transparent',
-                border: `1px solid rgba(245,158,11,0.3)`,
+                border: `1px solid rgba(200,150,15,0.3)`,
                 borderRadius: 9,
                 color: C.gold,
                 fontWeight: 700,
@@ -1060,13 +1060,13 @@ export default function CompareProcorePage() {
       <div style={{
         padding: '96px 24px',
         textAlign: 'center',
-        background: `radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.06) 0%, transparent 70%), ${C.dark}`,
+        background: `radial-gradient(ellipse at 50% 0%, rgba(200,150,15,0.06) 0%, transparent 70%), ${C.dark}`,
       }}>
         <div style={{
           display: 'inline-block',
           padding: '6px 18px',
-          background: 'rgba(245,158,11,0.1)',
-          border: `1px solid rgba(245,158,11,0.3)`,
+          background: 'rgba(200,150,15,0.1)',
+          border: `1px solid rgba(200,150,15,0.3)`,
           borderRadius: 100,
           fontSize: 11,
           fontWeight: 700,
@@ -1104,7 +1104,7 @@ export default function CompareProcorePage() {
             fontWeight: 800,
             fontSize: 17,
             textDecoration: 'none',
-            boxShadow: `0 0 48px rgba(245,158,11,0.3)`,
+            boxShadow: `0 0 48px rgba(200,150,15,0.3)`,
             letterSpacing: 0.2,
           }}>
             Start Free Trial →
@@ -1132,12 +1132,12 @@ export default function CompareProcorePage() {
       </div>
 
       {/* ── MOBILE STICKY CTA ── */}
-      <div className="mobile-sticky-cta" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(248,249,251,.97)', borderTop: '1px solid rgba(245,158,11,0.3)', padding: '12px 16px', backdropFilter: 'blur(12px)' }}>
+      <div className="mobile-sticky-cta" style={{ display: 'none', position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200, background: 'rgba(13,17,23,0.95)', borderTop: '1px solid rgba(200,150,15,0.3)', padding: '12px 16px', backdropFilter: 'blur(12px)' }}>
         <div style={{ display: 'flex', gap: 10 }}>
-          <a href="/signup" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, textDecoration: 'none' }}>
+          <a href="/signup" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: 'linear-gradient(135deg,#C8960F,#D97706)', borderRadius: 8, color: '#000', fontSize: 14, fontWeight: 800, textDecoration: 'none' }}>
             Start Free Trial
           </a>
-          <a href="/switch-from-procore" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: '#EEF0F3', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, color: '#F59E0B', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+          <a href="/switch-from-procore" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '13px', background: '#EEF0F3', border: '1px solid rgba(200,150,15,0.35)', borderRadius: 8, color: '#C8960F', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
             Free Migration
           </a>
         </div>
