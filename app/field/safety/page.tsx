@@ -15,7 +15,7 @@ const TEXT   = '#F0F4FF';
 const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
-const AMBER  = '#F59E0B';
+const AMBER  = '#C8960F';
 const BLUE   = '#3B82F6';
 
 const INCIDENT_TYPES = ['near_miss', 'first_aid', 'recordable', 'lost_time'];
@@ -26,7 +26,7 @@ const CA_STATUSES = ['open', 'in_progress', 'verified', 'closed'];
 const CA_STATUS_LABELS: Record<string, string> = { open: 'Open', in_progress: 'In Progress', verified: 'Verified', closed: 'Closed' };
 const CA_STATUS_COLORS: Record<string, string> = { open: RED, in_progress: AMBER, verified: BLUE, closed: GREEN };
 
-const SEVERITY_COLORS = ['#3B82F6', '#22C55E', '#F59E0B', '#EF4444', '#DC2626'];
+const SEVERITY_COLORS = ['#3B82F6', '#22C55E', '#C8960F', '#EF4444', '#DC2626'];
 
 interface CorrectiveAction {
   id: string;
