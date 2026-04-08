@@ -21,7 +21,7 @@ const RED    = '#EF4444';
 
 const WEATHER_OPTS = ['Sunny', 'Partly Cloudy', 'Overcast', 'Windy', 'Light Rain', 'Heavy Rain', 'Storm', 'Snow', 'Fog', 'Extreme Heat'];
 const PURPLE = '#8B5CF6';
-const ORANGE = '#F59E0B';
+const ORANGE = '#C8960F';
 const CYAN   = '#06B6D4';
 
 /* ── Type definitions for sub-logs ─────────────────────────── */
@@ -1082,7 +1082,7 @@ function DailyLogForm() {
               <div>
                 {/* Summary */}
                 {equipmentEntries.length > 0 && (
-                  <div style={{ background: 'rgba(245,158,11,.06)', border: `1px solid rgba(245,158,11,.15)`, borderRadius: 10, padding: 12, marginBottom: 14 }}>
+                  <div style={{ background: 'rgba(200,150,15,.06)', border: `1px solid rgba(200,150,15,.15)`, borderRadius: 10, padding: 12, marginBottom: 14 }}>
                     <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: ORANGE, textTransform: 'uppercase', letterSpacing: 0.6 }}>Equipment Summary</p>
                     <div style={{ display: 'flex', gap: 20, marginBottom: 10 }}>
                       <div>
