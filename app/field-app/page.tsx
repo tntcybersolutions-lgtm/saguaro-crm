@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 
-const GOLD   = '#F59E0B';
+const GOLD   = '#C8960F';
 const DARK   = '#09111A';
 const RAISED = '#0F172A';
 const BORDER = '#1E3A5F';
@@ -214,9 +214,9 @@ export default function FieldAppPage() {
           .fa-testimonials { grid-template-columns: 1fr !important; }
           .fa-stats-bar { flex-direction: column !important; gap: 24px !important; }
         }
-        .fa-card:hover { border-color: rgba(245,158,11,.6) !important; background: rgba(245,158,11,0.06) !important; transform: translateY(-3px); transition: all .2s ease; }
+        .fa-card:hover { border-color: rgba(200,150,15,.6) !important; background: rgba(200,150,15,0.06) !important; transform: translateY(-3px); transition: all .2s ease; }
         .fa-cta-primary:hover { opacity: 0.9; transform: translateY(-2px); transition: all .15s ease; }
-        .fa-nav-link:hover { color: #F59E0B !important; }
+        .fa-nav-link:hover { color: #C8960F !important; }
         .fa-back:hover { color: #e8edf8 !important; background: #E5E7EB !important; }
         .fa-get-app:hover { opacity: 0.88; transform: translateY(-1px); transition: all .15s ease; }
       `}</style>
@@ -246,7 +246,7 @@ export default function FieldAppPage() {
 
         <a href="/field" style={{ padding: '7px 14px', background: '#E2E5EA', border: `1px solid ${BORDER}`, borderRadius: 6, color: 'rgba(255,255,255,0.7)', fontSize: 13, textDecoration: 'none', whiteSpace: 'nowrap' }}>Open Field App</a>
         {/* Get the App button */}
-        <a href="/field/install" className="fa-get-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 6, color: '#000', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 12px rgba(245,158,11,0.35)' }}>
+        <a href="/field/install" className="fa-get-app" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'linear-gradient(135deg,#C8960F,#D97706)', borderRadius: 6, color: '#000', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 12px rgba(200,150,15,0.35)' }}>
           <IconDownload />
           Get the App
         </a>
@@ -257,7 +257,7 @@ export default function FieldAppPage() {
 
         {/* ── Hero ────────────────────────────────────────────────────── */}
         <section style={{ position: 'relative', overflow: 'hidden', padding: '72px 32px 64px', maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 60% at 15% 50%, rgba(245,158,11,0.16) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 85% 25%, rgba(34,197,94,0.1) 0%, transparent 55%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 60% at 15% 50%, rgba(200,150,15,0.16) 0%, transparent 60%), radial-gradient(ellipse 50% 50% at 85% 25%, rgba(34,197,94,0.1) 0%, transparent 55%)', pointerEvents: 'none' }} />
 
           <div className="fa-hero" style={{ display: 'flex', alignItems: 'center', gap: 56, position: 'relative' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
@@ -278,7 +278,7 @@ export default function FieldAppPage() {
               </p>
 
               <div className="fa-cta-row" style={{ display: 'flex', gap: 12, justifyContent: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
-                <a href="/signup" className="fa-cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', background: `linear-gradient(135deg,#F59E0B,#EF4444)`, borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 900, textDecoration: 'none', boxShadow: `0 8px 36px rgba(245,158,11,0.5)` }}>
+                <a href="/signup" className="fa-cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 32px', background: `linear-gradient(135deg,#C8960F,#EF4444)`, borderRadius: 8, color: '#fff', fontSize: 14, fontWeight: 900, textDecoration: 'none', boxShadow: `0 8px 36px rgba(200,150,15,0.5)` }}>
                   Start Free Trial — includes Field App
                 </a>
                 <a href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 22px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.28)', borderRadius: 8, color: 'rgba(255,255,255,0.92)', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
@@ -287,14 +287,14 @@ export default function FieldAppPage() {
               </div>
 
               {/* Social proof stat bar */}
-              <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap', background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '10px 16px', marginBottom: 20 }}>
+              <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap', background: 'rgba(200,150,15,0.07)', border: '1px solid rgba(200,150,15,0.2)', borderRadius: 10, padding: '10px 16px', marginBottom: 20 }}>
                 {[
                   { stat: '500+', label: 'GC teams' },
                   { stat: '5+', label: 'Device types' },
                   { stat: '4.9★', label: 'Rated' },
                 ].map((item, i) => (
                   <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                    {i > 0 && <span style={{ color: 'rgba(245,158,11,0.3)', margin: '0 14px', fontSize: 18, fontWeight: 300 }}>|</span>}
+                    {i > 0 && <span style={{ color: 'rgba(200,150,15,0.3)', margin: '0 14px', fontSize: 18, fontWeight: 300 }}>|</span>}
                     <span style={{ fontSize: 13, color: GOLD, fontWeight: 900 }}>{item.stat}</span>
                     <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginLeft: 5 }}>{item.label}</span>
                   </div>
@@ -361,19 +361,19 @@ export default function FieldAppPage() {
         </section>
 
         {/* ── Devices supported ───────────────────────────────────────── */}
-        <div style={{ borderTop: '1px solid rgba(245,158,11,0.2)', background: 'rgba(245,158,11,0.04)' }}>
+        <div style={{ borderTop: '1px solid rgba(200,150,15,0.2)', background: 'rgba(200,150,15,0.04)' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', padding: '18px 32px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>Works on every device</span>
               <div className="fa-devices" style={{ display: 'flex', gap: 8 }}>
                 {DEVICES.map(d => (
-                  <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 8, padding: '6px 14px', transition: 'all .15s' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.15)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.5)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(245,158,11,0.08)'; e.currentTarget.style.borderColor = 'rgba(245,158,11,0.25)'; }}>
+                  <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(200,150,15,0.08)', border: '1px solid rgba(200,150,15,0.25)', borderRadius: 8, padding: '6px 14px', transition: 'all .15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(200,150,15,0.15)'; e.currentTarget.style.borderColor = 'rgba(200,150,15,0.5)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(200,150,15,0.08)'; e.currentTarget.style.borderColor = 'rgba(200,150,15,0.25)'; }}>
                     <span style={{ color: GOLD }}><d.Icon /></span>
                     <div>
                       <div style={{ fontSize: 11, fontWeight: 800, color: TEXT }}>{d.label}</div>
-                      <div style={{ fontSize: 9, color: '#F59E0B', opacity: 0.75 }}>{d.sub}</div>
+                      <div style={{ fontSize: 9, color: '#C8960F', opacity: 0.75 }}>{d.sub}</div>
                     </div>
                   </div>
                 ))}
@@ -383,7 +383,7 @@ export default function FieldAppPage() {
         </div>
 
         {/* ── "Why field crews love it" stats bar ─────────────────────── */}
-        <div style={{ background: 'linear-gradient(135deg, #1a0f00 0%, #1f1100 50%, #1a0f00 100%)', borderTop: '1px solid rgba(245,158,11,0.3)', borderBottom: '1px solid rgba(245,158,11,0.3)' }}>
+        <div style={{ background: 'linear-gradient(135deg, #1a0f00 0%, #1f1100 50%, #1a0f00 100%)', borderTop: '1px solid rgba(200,150,15,0.3)', borderBottom: '1px solid rgba(200,150,15,0.3)' }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', padding: '36px 32px' }}>
             <div style={{ textAlign: 'center', marginBottom: 28 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Why field crews love it</div>
@@ -396,7 +396,7 @@ export default function FieldAppPage() {
                 { value: 'Free',    label: 'Included with every plan' },
               ].map((s, i) => (
                 <div key={s.value} style={{ display: 'flex', alignItems: 'center' }}>
-                  {i > 0 && <div style={{ width: 1, height: 48, background: 'rgba(245,158,11,0.25)', margin: '0 32px' }} />}
+                  {i > 0 && <div style={{ width: 1, height: 48, background: 'rgba(200,150,15,0.25)', margin: '0 32px' }} />}
                   <div style={{ textAlign: 'center', minWidth: 130 }}>
                     <div style={{ fontSize: 'clamp(26px, 3vw, 36px)', fontWeight: 900, color: GOLD, letterSpacing: '-0.02em', lineHeight: 1.1 }}>{s.value}</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4, fontWeight: 500 }}>{s.label}</div>
@@ -619,7 +619,7 @@ export default function FieldAppPage() {
               { Icon: IconMonitor, label: 'Desktop' },
             ].map(d => (
               <div key={d.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(200,150,15,0.1)', border: '1px solid rgba(200,150,15,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: GOLD }}>
                   <d.Icon />
                 </div>
                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{d.label}</span>
@@ -634,7 +634,7 @@ export default function FieldAppPage() {
             Start your 30-day free trial. Saguaro Field is included. Your crew can install it on any device in 30 seconds.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 }}>
-            <a href="/field/install" className="fa-cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '15px 36px', background: 'linear-gradient(135deg,#F59E0B,#D97706)', borderRadius: 9, color: '#000', fontSize: 15, fontWeight: 900, textDecoration: 'none', boxShadow: '0 8px 40px rgba(245,158,11,0.55)' }}>
+            <a href="/field/install" className="fa-cta-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '15px 36px', background: 'linear-gradient(135deg,#C8960F,#D97706)', borderRadius: 9, color: '#000', fontSize: 15, fontWeight: 900, textDecoration: 'none', boxShadow: '0 8px 40px rgba(200,150,15,0.55)' }}>
               <IconDownload />
               Get the App — Free
             </a>
