@@ -2,23 +2,23 @@
 import React, { useState } from 'react';
 
 const C = {
-  dark: '#0d1117',
-  gold: '#F59E0B',
-  text: '#F8FAFC',
-  dim: '#CBD5E1',
-  border: '#1E3A5F',
+  dark: '#0D1117',
+  gold: '#C8960F',
+  text: '#F0F4FF',
+  dim: '#8B9DB8',
+  border: 'rgba(212,160,23,0.18)',
   raised: '#0F172A',
   green: '#22c55e',
   blue: '#3B82F6',
-  font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+  font: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
 };
 
 const NAV_LINKS = [
-  { label: 'Home', href: '/' },
-  { label: 'Features', href: '/features' },
-  { label: 'Field App', href: '/get-the-app' },
-  { label: 'Compare', href: '/compare' },
-  { label: 'Switch from Procore', href: '/switch-from-procore' },
+  { label: 'Products', href: '/#features' },
+  { label: 'Solutions', href: '/field-app' },
+  { label: 'Portals', href: '/#portals' },
+  { label: 'Resources', href: '/how-to-get-started' },
+  { label: 'Pricing', href: '/pricing' },
 ];
 
 const PLANS = [
@@ -303,7 +303,7 @@ export default function PricingPage() {
       {/* Nav */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200,
-        height: 64, background: 'rgba(248,249,251,.97)',
+        height: 64, background: 'rgba(13,17,23,0.95)',
         borderBottom: `1px solid ${C.border}`,
         backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         display: 'flex', alignItems: 'center', padding: '0 32px', gap: 0,
