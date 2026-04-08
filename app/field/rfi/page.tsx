@@ -11,14 +11,14 @@ import OfflineSyncStatus from '@/components/field/OfflineSyncStatus';
 import VoiceToLog from '@/components/field/VoiceToLog';
 
 const GOLD   = '#C8960F';
-const DARK = '#F8F9FB';
+const DARK = '#0D1117';
 const RAISED = '#ffffff';
 const BORDER = '#E2E5EA';
 const DIM = '#6B7280';
 const TEXT = '#111827';
 const GREEN  = '#22c55e';
 const RED    = '#ef4444';
-const AMBER  = '#f59e0b';
+const AMBER  = '#C8960F';
 const BLUE   = '#3b82f6';
 
 /* ─── Interfaces ─── */
