@@ -8,7 +8,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD = '#C8960F', RAISED = '#0D1D2E', BORDER = '#1E3A5F', TEXT = '#F0F4FF', DIM = '#8BAAC8';
-const GREEN = '#22C55E', RED = '#EF4444', AMBER = '#F59E0B', BLUE = '#3B82F6';
+const GREEN = '#22C55E', RED = '#EF4444', AMBER = '#C8960F', BLUE = '#3B82F6';
 
 function hr(hex: string): string {
   const r = parseInt((hex || '#888').slice(1, 3), 16);
@@ -34,7 +34,7 @@ type Condition = typeof CONDITIONS[number];
 const CONDITION_COLORS: Record<Condition, string> = {
   Good: GREEN,
   Fair: AMBER,
-  'Needs Service': '#F59E0B',
+  'Needs Service': '#C8960F',
   Down: RED,
 };
 
