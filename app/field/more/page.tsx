@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
 
 const GOLD='#C8960F',RAISED='#0D1D2E',BORDER='#1E3A5F',TEXT='#F0F4FF',DIM='#8BAAC8';
-const GREEN='#22C55E',RED='#EF4444',AMBER='#F59E0B',PURPLE='#8B5CF6',BLUE='#3B82F6',TEAL='#06B6D4';
+const GREEN='#22C55E',RED='#EF4444',AMBER='#C8960F',PURPLE='#8B5CF6',BLUE='#3B82F6',TEAL='#06B6D4';
 type Panel=null|'timesheet'|'rfi'|'safety';
 const COST_CODES=['General Conditions','Concrete','Masonry','Metals / Structural','Carpentry','Thermal & Moisture','Openings','Finishes','Electrical','Plumbing','HVAC / Mechanical','Earthwork / Site','Other'];
 const SEVERITY=['Minor','Moderate','Serious','Critical'];
@@ -90,18 +90,18 @@ function MorePage(){
     {href:`/field/clock${projectId?`?projectId=${projectId}`:''}`,icon:'clock',label:'Clock In / Out',desc:'GPS-stamped time tracking',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
     {href:`/field/punch${projectId?`?projectId=${projectId}`:''}`,icon:'pin',label:'Punch List',desc:'Log defects and assign to trades',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
     {href:`/field/schedule${projectId?`?projectId=${projectId}`:''}`,icon:'calendar',label:'Schedule',desc:"Today's activities and deadlines",color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
-    {href:`/field/delivery${projectId?`?projectId=${projectId}`:''}`,icon:'box',label:'Deliveries',desc:'Confirm deliveries, flag damage',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/delivery${projectId?`?projectId=${projectId}`:''}`,icon:'box',label:'Deliveries',desc:'Confirm deliveries, flag damage',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {href:`/field/contacts${projectId?`?projectId=${projectId}`:''}`,icon:'users',label:'Team Contacts',desc:'Quick-dial PM, subs, owner',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
     {href:`/field/inspect${projectId?`?projectId=${projectId}`:''}`,icon:'check',label:'Inspections',desc:'19 checklist types with deficiency tracking',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
     {href:`/field/drawings${projectId?`?projectId=${projectId}`:''}`,icon:'plan',label:'Drawings',desc:'View plans, drop pins on issues',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
-    {href:`/field/equipment${projectId?`?projectId=${projectId}`:''}`,icon:'truck',label:'Equipment Log',desc:'Track equipment hours and condition',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/equipment${projectId?`?projectId=${projectId}`:''}`,icon:'truck',label:'Equipment Log',desc:'Track equipment hours and condition',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {href:`/field/chat${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Job Board',desc:'Crew messages and announcements',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
     {href:`/field/sage${projectId?`?projectId=${projectId}`:''}`,icon:'sparkle',label:'Sage AI',desc:'Ask anything about your project',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
     {href:`/field/qr${projectId?`?projectId=${projectId}`:''}`,icon:'qr',label:'QR Scanner',desc:'Scan or generate QR codes',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
     {href:`/field/rfis${projectId?`?projectId=${projectId}`:''}`,icon:'question',label:'RFIs',desc:'View, respond, and create RFIs',color:'#F97316',bg:'rgba(249,115,22,.1)',border:'rgba(249,115,22,.25)'},
     {href:`/field/submittals${projectId?`?projectId=${projectId}`:''}`,icon:'document',label:'Submittals',desc:'Review and approve submittals',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
     {href:`/field/docs${projectId?`?projectId=${projectId}`:''}`,icon:'folder',label:'Documents',desc:'View and markup project documents',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
-    {href:`/field/change-orders${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Change Orders',desc:'View, approve, and create COs from field',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/change-orders${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Change Orders',desc:'View, approve, and create COs from field',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {href:`/field/safety${projectId?`?projectId=${projectId}`:''}`,icon:'shield',label:'Safety',desc:'Incident reports and corrective actions',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
     {href:`/field/more/notifications${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Notifications',desc:'Push notification settings',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
     {href:`/field/tm-tickets${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'T&M Tickets',desc:'Time & material tickets with signatures',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
@@ -109,11 +109,11 @@ function MorePage(){
     {href:`/field/meetings${projectId?`?projectId=${projectId}`:''}`,icon:'users',label:'Meetings',desc:'Minutes, attendees, action items',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
     {href:`/field/correspondence${projectId?`?projectId=${projectId}`:''}`,icon:'document',label:'Correspondence',desc:'Letters, transmittals, notices',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
     {href:`/field/forms${projectId?`?projectId=${projectId}`:''}`,icon:'check',label:'Custom Forms',desc:'Form builder & fillable templates',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
-    {href:`/field/directory${projectId?`?projectId=${projectId}`:''}`,icon:'users',label:'Directory',desc:'Company & project contacts',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/directory${projectId?`?projectId=${projectId}`:''}`,icon:'users',label:'Directory',desc:'Company & project contacts',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {href:`/field/budget${projectId?`?projectId=${projectId}`:''}`,icon:'chart',label:'Budget',desc:'Cost tracking, forecast, variance',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
     {href:`/field/bids${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Bid Management',desc:'Bid packages & comparison',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
     {href:`/field/search${projectId?`?projectId=${projectId}`:''}`,icon:'qr',label:'Global Search',desc:'Search across all modules',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
-    {href:`/field/notifications${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Notification Center',desc:'Activity feed & alerts',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/notifications${projectId?`?projectId=${projectId}`:''}`,icon:'message',label:'Notification Center',desc:'Activity feed & alerts',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {href:`/field/favorites${projectId?`?projectId=${projectId}`:''}`,icon:'sparkle',label:'Favorites & Recents',desc:'Pinned items & recent activity',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
     {href:`/field/activity${projectId?`?projectId=${projectId}`:''}`,icon:'calendar',label:'Activity Log',desc:'Audit trail — who changed what',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
     {href:`/field/bim-viewer${projectId?`?projectId=${projectId}`:''}`,icon:'box',label:'BIM 3D Viewer',desc:'Upload IFC models, tap elements for specs',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
@@ -123,16 +123,16 @@ function MorePage(){
     {href:`/field/floor-plan${projectId?`?projectId=${projectId}`:''}`,icon:'plan',label:'Floor Plan Pins',desc:'Tap drawings to pin locations, rooms & heatmap',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
     {href:`/field/room-progress${projectId?`?projectId=${projectId}`:''}`,icon:'chart',label:'Room Progress',desc:'Track completion by room & trade',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
     {href:`/field/crew-map${projectId?`?projectId=${projectId}`:''}`,icon:'pin',label:'Crew Map',desc:'Live GPS locations of all crew',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
-    {href:`/field/deliveries${projectId?`?projectId=${projectId}`:''}`,icon:'truck',label:'Delivery Tracking',desc:'Track deliveries with ETA & arrival',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/deliveries${projectId?`?projectId=${projectId}`:''}`,icon:'truck',label:'Delivery Tracking',desc:'Track deliveries with ETA & arrival',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {href:`/field/safety-talks${projectId?`?projectId=${projectId}`:''}`,icon:'shield',label:'Toolbox Talks',desc:'AI-generated OSHA safety topics',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
     {href:`/field/leaderboard${projectId?`?projectId=${projectId}`:''}`,icon:'sparkle',label:'Leaderboard',desc:'Safety streaks, punch closure, badges',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
     {href:`/field/escalations${projectId?`?projectId=${projectId}`:''}`,icon:'shield',label:'Escalations',desc:'Overdue items auto-escalated',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
     {href:`/field/saved-views${projectId?`?projectId=${projectId}`:''}`,icon:'folder',label:'Saved Views',desc:'Custom filters & saved searches',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
-    {href:`/field/timesheets${projectId?`?projectId=${projectId}`:''}`,icon:'clock',label:'Timesheets',desc:'Weekly timesheet entry & approval',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/timesheets${projectId?`?projectId=${projectId}`:''}`,icon:'clock',label:'Timesheets',desc:'Weekly timesheet entry & approval',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {href:`/field/permits${projectId?`?projectId=${projectId}`:''}`,icon:'document',label:'Permits',desc:'Permit tracking & expiration alerts',color:GREEN,bg:'rgba(34,197,94,.1)',border:'rgba(34,197,94,.25)'},
     {href:`/field/purchase-orders${projectId?`?projectId=${projectId}`:''}`,icon:'box',label:'Purchase Orders',desc:'PO creation, line items & receiving',color:BLUE,bg:'rgba(59,130,246,.1)',border:'rgba(59,130,246,.25)'},
     {href:`/field/contracts${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Contracts',desc:'Prime & sub contracts, compliance',color:GOLD,bg:'rgba(212,160,23,.08)',border:'rgba(212,160,23,.2)'},
-    {href:`/field/invoices${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Invoices',desc:'Invoice approval, aging & payment',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {href:`/field/invoices${projectId?`?projectId=${projectId}`:''}`,icon:'dollar',label:'Invoices',desc:'Invoice approval, aging & payment',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {href:`/field/specs${projectId?`?projectId=${projectId}`:''}`,icon:'folder',label:'Specifications',desc:'CSI MasterFormat spec sections',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
     {href:`/field/todos${projectId?`?projectId=${projectId}`:''}`,icon:'check',label:'Action Items',desc:'Tasks, assignments & due dates',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
     {href:`/field/incidents${projectId?`?projectId=${projectId}`:''}`,icon:'shield',label:'Incidents',desc:'OSHA tracking, investigation & corrective actions',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
@@ -142,7 +142,7 @@ function MorePage(){
     {href:`/field/waste${projectId?`?projectId=${projectId}`:''}`,icon:'truck',label:'Waste & Recycling',desc:'Diversion tracking, LEED compliance',color:TEAL,bg:'rgba(6,182,212,.1)',border:'rgba(6,182,212,.25)'},
   ];
   const QUICK=[
-    {id:'timesheet',icon:'clock',label:'Quick Timesheet',desc:'Log hours in 10 seconds',color:AMBER,bg:'rgba(245,158,11,.1)',border:'rgba(245,158,11,.25)'},
+    {id:'timesheet',icon:'clock',label:'Quick Timesheet',desc:'Log hours in 10 seconds',color:AMBER,bg:'rgba(200,150,15,.1)',border:'rgba(200,150,15,.25)'},
     {id:'rfi',icon:'question',label:'File RFI',desc:'Request from office',color:PURPLE,bg:'rgba(139,92,246,.1)',border:'rgba(139,92,246,.25)'},
     {id:'safety',icon:'shield',label:'Safety Incident',desc:'Log near miss or injury',color:RED,bg:'rgba(239,68,68,.1)',border:'rgba(239,68,68,.25)'},
   ];
