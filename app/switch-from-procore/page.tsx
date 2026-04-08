@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-const DARK = '#F8F9FB';
-const GOLD = '#F59E0B';
+const DARK = '#0D1117';
+const GOLD = '#C8960F';
 const TEXT = '#F8FAFC';
 const DIM = '#CBD5E1';
 const BORDER = '#1E3A5F';
@@ -13,7 +13,7 @@ const GREEN = '#22c55e';
 const RED = '#ef4444';
 
 const goldGradientText = {
-  background: 'linear-gradient(135deg, #F59E0B 0%, #F5D060 50%, #C8960F 100%)',
+  background: 'linear-gradient(135deg, #C8960F 0%, #F5D060 50%, #C8960F 100%)',
   WebkitBackgroundClip: 'text' as const,
   WebkitTextFillColor: 'transparent' as const,
   backgroundClip: 'text' as const,
@@ -68,7 +68,7 @@ export default function SwitchFromProcorePage() {
           .hero-ctas { flex-direction: column !important; align-items: center !important; }
         }
         .btn-amber {
-          background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+          background: linear-gradient(135deg, #C8960F 0%, #D97706 100%);
           color: #0d1117;
           font-weight: 700;
           border: none;
@@ -78,7 +78,7 @@ export default function SwitchFromProcorePage() {
           display: inline-block;
           transition: transform 0.15s, box-shadow 0.15s;
         }
-        .btn-amber:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(245,158,11,0.4); }
+        .btn-amber:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(200,150,15,0.4); }
         .btn-outline {
           background: transparent;
           color: ${TEXT};
@@ -90,7 +90,7 @@ export default function SwitchFromProcorePage() {
           display: inline-block;
           transition: border-color 0.15s, background 0.15s;
         }
-        .btn-outline:hover { border-color: ${GOLD}; background: rgba(245,158,11,0.07); }
+        .btn-outline:hover { border-color: ${GOLD}; background: rgba(200,150,15,0.07); }
         .pain-card {
           background: ${RAISED};
           border: 1px solid ${BORDER};
@@ -108,7 +108,7 @@ export default function SwitchFromProcorePage() {
           position: relative;
           transition: transform 0.15s, border-color 0.15s;
         }
-        .step-card:hover { transform: translateY(-3px); border-color: rgba(245,158,11,0.4); }
+        .step-card:hover { transform: translateY(-3px); border-color: rgba(200,150,15,0.4); }
         .testimonial-card {
           background: ${RAISED};
           border: 1px solid ${BORDER};
@@ -134,13 +134,13 @@ export default function SwitchFromProcorePage() {
         }
         .calc-input-field:focus { border-color: ${GOLD}; }
         .comparison-table tr:nth-child(even) td { background: rgba(30,58,95,0.1); }
-        .comparison-table tr:hover td { background: rgba(245,158,11,0.04); }
+        .comparison-table tr:hover td { background: rgba(200,150,15,0.04); }
       `}</style>
 
-      {/* ─── STICKY NAV ─── */}
+      {/* âââ STICKY NAV âââ */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(248,249,251,.97)',
+        background: 'rgba(13,17,23,0.95)',
         backdropFilter: 'blur(16px)',
         borderBottom: `1px solid ${BORDER}`,
       }}>
@@ -159,7 +159,7 @@ export default function SwitchFromProcorePage() {
         </div>
       </nav>
 
-      {/* ─── HERO ─── */}
+      {/* âââ HERO âââ */}
       <section style={{
         position: 'relative',
         background: DARK,
@@ -172,14 +172,14 @@ export default function SwitchFromProcorePage() {
           position: 'absolute', top: '10%', left: '50%',
           transform: 'translateX(-50%)',
           width: 700, height: 400,
-          background: 'radial-gradient(ellipse, rgba(245,158,11,0.12) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(200,150,15,0.12) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
         <div style={{
           position: 'absolute', bottom: 0, left: '50%',
           transform: 'translateX(-50%)',
           width: 900, height: 200,
-          background: 'radial-gradient(ellipse, rgba(245,158,11,0.06) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse, rgba(200,150,15,0.06) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
 
@@ -187,13 +187,13 @@ export default function SwitchFromProcorePage() {
           {/* Badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
-            background: 'rgba(245,158,11,0.1)',
-            border: `1px solid rgba(245,158,11,0.3)`,
+            background: 'rgba(200,150,15,0.1)',
+            border: `1px solid rgba(200,150,15,0.3)`,
             borderRadius: 999, padding: '8px 20px',
             fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.08em',
             color: GOLD, marginBottom: 32,
           }}>
-            🔄 PROCORE MIGRATION — WE&apos;LL HANDLE EVERYTHING
+            ð PROCORE MIGRATION â WE&apos;LL HANDLE EVERYTHING
           </div>
 
           {/* Headline */}
@@ -202,7 +202,7 @@ export default function SwitchFromProcorePage() {
             letterSpacing: '-0.02em', marginBottom: 24,
             ...goldGradientText,
           }}>
-            Tired of Procore&apos;s Price Tag?<br />We&apos;ll Move You Over — Free.
+            Tired of Procore&apos;s Price Tag?<br />We&apos;ll Move You Over â Free.
           </h1>
 
           {/* Subheadline */}
@@ -216,16 +216,16 @@ export default function SwitchFromProcorePage() {
           {/* CTAs */}
           <div className="hero-ctas" style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/signup" className="btn-amber" style={{ padding: '16px 36px', fontSize: '1.1rem', borderRadius: 12 }}>
-              Start Free Trial — No CC Required
+              Start Free Trial â No CC Required
             </Link>
             <a href="#comparison" className="btn-outline" style={{ padding: '16px 28px', fontSize: '1rem', borderRadius: 12 }}>
-              See What We Offer ↓
+              See What We Offer â
             </a>
           </div>
 
           {/* Trust pills */}
           <div className="trust-pills">
-            {['✓ 1-Day Migration', '✓ Free Data Import', '✓ Month-to-Month', '✓ No Contracts'].map((pill) => (
+            {['â 1-Day Migration', 'â Free Data Import', 'â Month-to-Month', 'â No Contracts'].map((pill) => (
               <span key={pill} style={{
                 background: 'rgba(34,197,94,0.1)',
                 border: `1px solid rgba(34,197,94,0.25)`,
@@ -239,7 +239,7 @@ export default function SwitchFromProcorePage() {
         </div>
       </section>
 
-      {/* ─── PAIN POINTS ─── */}
+      {/* âââ PAIN POINTS âââ */}
       <section className="section-pad" style={{ padding: '80px 40px', background: RAISED }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -255,32 +255,32 @@ export default function SwitchFromProcorePage() {
           <div className="pain-grid">
             {[
               {
-                icon: '💸',
+                icon: 'ð¸',
                 title: 'Per-Seat Pricing That Never Stops',
-                body: 'Procore charges per user. Add 5 people to a project? That\'s $500+/mo more. We charge one flat rate for your whole company — forever.',
+                body: 'Procore charges per user. Add 5 people to a project? That\'s $500+/mo more. We charge one flat rate for your whole company â forever.',
               },
               {
-                icon: '📅',
+                icon: 'ð',
                 title: '6-Month Implementation Hell',
-                body: 'Procore\'s average implementation takes 4–6 months and requires a dedicated admin. We go live in 1 day. No consultants. No training contracts.',
+                body: 'Procore\'s average implementation takes 4â6 months and requires a dedicated admin. We go live in 1 day. No consultants. No training contracts.',
               },
               {
-                icon: '🤖',
+                icon: 'ð¤',
                 title: 'No Real AI Features',
-                body: 'Procore added AI branding but has no blueprint takeoff, no bid intelligence, no automated workflows. We built AI from day one — it\'s in every module.',
+                body: 'Procore added AI branding but has no blueprint takeoff, no bid intelligence, no automated workflows. We built AI from day one â it\'s in every module.',
               },
               {
-                icon: '📱',
+                icon: 'ð±',
                 title: 'App Store Required for Field Crews',
-                body: 'Procore requires App Store installation, IT approval, and device management. Our field app installs in 30 seconds — no App Store, no IT ticket.',
+                body: 'Procore requires App Store installation, IT approval, and device management. Our field app installs in 30 seconds â no App Store, no IT ticket.',
               },
               {
-                icon: '📄',
+                icon: 'ð',
                 title: 'PDF Lien Waivers Still',
-                body: 'Procore still uses PDF lien waivers with manual tracking. We send, sign, and track lien waivers digitally in all 50 states — with auto-reminders.',
+                body: 'Procore still uses PDF lien waivers with manual tracking. We send, sign, and track lien waivers digitally in all 50 states â with auto-reminders.',
               },
               {
-                icon: '🏗️',
+                icon: 'ðï¸',
                 title: 'No Certified Payroll',
                 body: 'Procore doesn\'t generate WH-347 certified payroll. We generate DOL-compliant reports automatically with live Davis-Bacon wage rates built in.',
               },
@@ -309,7 +309,7 @@ export default function SwitchFromProcorePage() {
         </div>
       </section>
 
-      {/* ─── COMPARISON TABLE ─── */}
+      {/* âââ COMPARISON TABLE âââ */}
       <section id="comparison" className="section-pad" style={{ padding: '80px 40px', background: DARK }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
@@ -335,10 +335,10 @@ export default function SwitchFromProcorePage() {
                     Feature
                   </th>
                   <th style={{
-                    background: 'linear-gradient(135deg, rgba(245,158,11,0.18) 0%, rgba(245,158,11,0.08) 100%)',
+                    background: 'linear-gradient(135deg, rgba(200,150,15,0.18) 0%, rgba(200,150,15,0.08) 100%)',
                     padding: '16px 24px', textAlign: 'center',
                     borderBottom: `2px solid ${GOLD}`,
-                    borderLeft: `1px solid rgba(245,158,11,0.3)`,
+                    borderLeft: `1px solid rgba(200,150,15,0.3)`,
                   }}>
                     <span style={{ ...goldGradientText, fontWeight: 800, fontSize: '1.05rem' }}>Saguaro</span>
                     <div style={{ fontSize: '0.75rem', color: DIM, fontWeight: 500, marginTop: 2 }}>$299/mo flat</div>
@@ -357,7 +357,7 @@ export default function SwitchFromProcorePage() {
               <tbody>
                 {[
                   ['Monthly Cost', '$299 flat (whole team)', '$1,850+ per seat', true, false],
-                  ['Setup Time', '1 business day', '4–6 months', true, false],
+                  ['Setup Time', '1 business day', '4â6 months', true, false],
                   ['AI Blueprint Takeoff', 'Included', 'Not available', true, false],
                   ['Field App', 'Free, no App Store', 'Requires App Store + IT', true, false],
                   ['Lien Waivers (50 states)', 'Digital, included', 'PDF manual only', true, false],
@@ -378,13 +378,13 @@ export default function SwitchFromProcorePage() {
                     </td>
                     <td style={{
                       padding: '15px 24px', textAlign: 'center',
-                      borderBottom: `1px solid rgba(245,158,11,0.15)`,
-                      borderLeft: `1px solid rgba(245,158,11,0.2)`,
-                      background: 'rgba(245,158,11,0.04)',
+                      borderBottom: `1px solid rgba(200,150,15,0.15)`,
+                      borderLeft: `1px solid rgba(200,150,15,0.2)`,
+                      background: 'rgba(200,150,15,0.04)',
                       fontSize: '0.9rem',
                     }}>
                       <span style={{ color: GREEN, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: '1rem' }}>✓</span> {saguaro as string}
+                        <span style={{ fontSize: '1rem' }}>â</span> {saguaro as string}
                       </span>
                     </td>
                     <td style={{
@@ -394,7 +394,7 @@ export default function SwitchFromProcorePage() {
                       fontSize: '0.9rem',
                     }}>
                       <span style={{ color: RED, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: '1rem' }}>✗</span> {procore as string}
+                        <span style={{ fontSize: '1rem' }}>â</span> {procore as string}
                       </span>
                     </td>
                   </tr>
@@ -405,7 +405,7 @@ export default function SwitchFromProcorePage() {
         </div>
       </section>
 
-      {/* ─── MIGRATION STEPS ─── */}
+      {/* âââ MIGRATION STEPS âââ */}
       <section className="section-pad" style={{ padding: '80px 40px', background: RAISED }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -457,7 +457,7 @@ export default function SwitchFromProcorePage() {
                     margin: '0 auto 20px',
                     fontWeight: 800, fontSize: '1.3rem', color: DARK,
                     position: 'relative', zIndex: 1,
-                    boxShadow: `0 0 20px rgba(245,158,11,0.35)`,
+                    boxShadow: `0 0 20px rgba(200,150,15,0.35)`,
                   }}>
                     {step.n}
                   </div>
@@ -478,7 +478,7 @@ export default function SwitchFromProcorePage() {
         </div>
       </section>
 
-      {/* ─── COST CALCULATOR ─── */}
+      {/* âââ COST CALCULATOR âââ */}
       <section className="section-pad" style={{ padding: '80px 40px', background: DARK }}>
         <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: 48 }}>
@@ -494,7 +494,7 @@ export default function SwitchFromProcorePage() {
           <div style={{
             background: RAISED, border: `1px solid ${BORDER}`,
             borderRadius: 20, padding: '48px 40px',
-            boxShadow: '0 0 60px rgba(245,158,11,0.06)',
+            boxShadow: '0 0 60px rgba(200,150,15,0.06)',
           }}>
             <div className="calc-inputs">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start' }}>
@@ -527,7 +527,7 @@ export default function SwitchFromProcorePage() {
             </div>
 
             {/* Savings display */}
-            <div style={{ margin: '40px 0 32px', padding: '28px', background: 'rgba(245,158,11,0.07)', borderRadius: 14, border: `1px solid rgba(245,158,11,0.2)` }}>
+            <div style={{ margin: '40px 0 32px', padding: '28px', background: 'rgba(200,150,15,0.07)', borderRadius: 14, border: `1px solid rgba(200,150,15,0.2)` }}>
               <div style={{ fontSize: '0.85rem', color: DIM, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 12 }}>
                 You save
               </div>
@@ -571,8 +571,8 @@ export default function SwitchFromProcorePage() {
                 </div>
                 <div style={{
                   flex: 1, minWidth: 140,
-                  background: 'rgba(245,158,11,0.06)',
-                  border: `1px solid rgba(245,158,11,0.2)`,
+                  background: 'rgba(200,150,15,0.06)',
+                  border: `1px solid rgba(200,150,15,0.2)`,
                   borderRadius: 12, padding: '20px 16px', textAlign: 'center',
                 }}>
                   <div style={{ ...goldGradientText, fontSize: '1.8rem', fontWeight: 800 }}>
@@ -585,7 +585,7 @@ export default function SwitchFromProcorePage() {
 
             <div style={{ marginTop: 36 }}>
               <Link href="/signup" className="btn-amber" style={{ padding: '16px 40px', fontSize: '1.05rem', borderRadius: 12, width: '100%', textAlign: 'center' }}>
-                Claim Your Savings — Start Free
+                Claim Your Savings â Start Free
               </Link>
               <p style={{ color: DIM, fontSize: '0.78rem', marginTop: 12 }}>
                 No credit card. No contracts. Free 30-day trial.
@@ -595,7 +595,7 @@ export default function SwitchFromProcorePage() {
         </div>
       </section>
 
-      {/* ─── TESTIMONIALS ─── */}
+      {/* âââ TESTIMONIALS âââ */}
       <section className="section-pad" style={{ padding: '80px 40px', background: RAISED }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
@@ -619,7 +619,7 @@ export default function SwitchFromProcorePage() {
                 initials: 'DK',
               },
               {
-                quote: 'The certified payroll feature sold me. Procore doesn\'t even offer it. We do 8–10 prevailing wage jobs a year — this saves us $3,000 in admin time every single month.',
+                quote: 'The certified payroll feature sold me. Procore doesn\'t even offer it. We do 8â10 prevailing wage jobs a year â this saves us $3,000 in admin time every single month.',
                 name: 'Marcus T.',
                 title: 'Project Manager',
                 location: 'Phoenix, AZ',
@@ -656,12 +656,12 @@ export default function SwitchFromProcorePage() {
                   </div>
                   <div>
                     <div style={{ fontWeight: 700, color: TEXT, fontSize: '0.95rem' }}>{t.name}</div>
-                    <div style={{ color: DIM, fontSize: '0.82rem' }}>{t.title} · {t.location}</div>
+                    <div style={{ color: DIM, fontSize: '0.82rem' }}>{t.title} Â· {t.location}</div>
                   </div>
                   <div style={{ marginLeft: 'auto' }}>
                     <span style={{
-                      background: 'rgba(245,158,11,0.1)',
-                      border: `1px solid rgba(245,158,11,0.25)`,
+                      background: 'rgba(200,150,15,0.1)',
+                      border: `1px solid rgba(200,150,15,0.25)`,
                       borderRadius: 999, padding: '4px 10px',
                       fontSize: '0.72rem', fontWeight: 600, color: GOLD,
                     }}>
@@ -675,11 +675,11 @@ export default function SwitchFromProcorePage() {
         </div>
       </section>
 
-      {/* ─── FINAL CTA ─── */}
+      {/* âââ FINAL CTA âââ */}
       <section style={{
         background: `linear-gradient(135deg, #1a0f00 0%, #0d1117 40%, #0d1117 60%, #1a0f00 100%)`,
-        borderTop: `1px solid rgba(245,158,11,0.2)`,
-        borderBottom: `1px solid rgba(245,158,11,0.2)`,
+        borderTop: `1px solid rgba(200,150,15,0.2)`,
+        borderBottom: `1px solid rgba(200,150,15,0.2)`,
         padding: '90px 40px',
         position: 'relative', overflow: 'hidden',
         textAlign: 'center',
@@ -688,7 +688,7 @@ export default function SwitchFromProcorePage() {
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
           width: 800, height: 400,
-          background: 'radial-gradient(ellipse, rgba(245,158,11,0.1) 0%, transparent 65%)',
+          background: 'radial-gradient(ellipse, rgba(200,150,15,0.1) 0%, transparent 65%)',
           pointerEvents: 'none',
         }} />
         <div style={{ position: 'relative', maxWidth: 640, margin: '0 auto' }}>
@@ -710,7 +710,7 @@ export default function SwitchFromProcorePage() {
             textDecoration: 'none',
             border: `2px solid ${GOLD}`,
             transition: 'all 0.15s',
-            boxShadow: `0 0 40px rgba(245,158,11,0.2)`,
+            boxShadow: `0 0 40px rgba(200,150,15,0.2)`,
           }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLAnchorElement).style.background = GOLD;
@@ -726,11 +726,11 @@ export default function SwitchFromProcorePage() {
 
           <div className="trust-pills" style={{ marginTop: 36 }}>
             {[
-              '✓ Free data migration',
-              '✓ 30-day trial',
-              '✓ No credit card',
-              '✓ Cancel anytime',
-              '✓ Live onboarding call',
+              'â Free data migration',
+              'â 30-day trial',
+              'â No credit card',
+              'â Cancel anytime',
+              'â Live onboarding call',
             ].map((pill) => (
               <span key={pill} style={{
                 background: 'rgba(34,197,94,0.08)',
@@ -745,7 +745,7 @@ export default function SwitchFromProcorePage() {
         </div>
       </section>
 
-      {/* ─── FOOTER ─── */}
+      {/* âââ FOOTER âââ */}
       <footer style={{
         background: RAISED, borderTop: `1px solid ${BORDER}`,
         padding: '40px 40px', textAlign: 'center',
