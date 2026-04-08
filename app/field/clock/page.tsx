@@ -22,7 +22,7 @@ const TEXT   = '#F0F4FF';
 const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
-const AMBER  = '#F59E0B';
+const AMBER  = '#C8960F';
 
 const COST_CODES = ['General Conditions', 'Concrete', 'Masonry', 'Metals / Structural', 'Carpentry', 'Thermal & Moisture', 'Openings', 'Finishes', 'Electrical', 'Plumbing', 'HVAC / Mechanical', 'Earthwork / Site', 'Other'];
 
@@ -440,8 +440,8 @@ function ClockPage() {
         <>
           {crewMsg && (
             <div style={{
-              background: crewMsg.includes('queued') ? 'rgba(245,158,11,.1)' : 'rgba(34,197,94,.1)',
-              border: `1px solid ${crewMsg.includes('queued') ? 'rgba(245,158,11,.3)' : 'rgba(34,197,94,.3)'}`,
+              background: crewMsg.includes('queued') ? 'rgba(200,150,15,.1)' : 'rgba(34,197,94,.1)',
+              border: `1px solid ${crewMsg.includes('queued') ? 'rgba(200,150,15,.3)' : 'rgba(34,197,94,.3)'}`,
               borderRadius: 10, padding: '12px 14px', marginBottom: 14,
               color: crewMsg.includes('queued') ? AMBER : GREEN, fontSize: 14, fontWeight: 600,
               display: 'flex', alignItems: 'center', gap: 8,
@@ -460,7 +460,7 @@ function ClockPage() {
               {totalCrewHours.toFixed(1)}h Total
             </div>
             {onBreakCount > 0 && (
-              <div style={{ background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.25)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: AMBER, fontWeight: 700 }}>
+              <div style={{ background: 'rgba(200,150,15,.1)', border: '1px solid rgba(200,150,15,.25)', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: AMBER, fontWeight: 700 }}>
                 {onBreakCount} On Break
               </div>
             )}
