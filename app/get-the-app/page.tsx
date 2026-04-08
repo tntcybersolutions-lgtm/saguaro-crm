@@ -27,14 +27,14 @@ export default function GetTheAppPage() {
 
         :root {
           --dark:   #0d1117;
-          --gold:   #F59E0B;
+          --gold:   #C8960F;
           --text:   #F8FAFC;
           --dim:    #CBD5E1;
           --border: #1E3A5F;
           --raised: #0F172A;
           --green:  #22c55e;
-          --gold-dim: rgba(245,158,11,0.12);
-          --gold-glow: rgba(245,158,11,0.25);
+          --gold-dim: rgba(200,150,15,0.12);
+          --gold-glow: rgba(200,150,15,0.25);
         }
 
         body { background: var(--dark); }
@@ -48,7 +48,7 @@ export default function GetTheAppPage() {
           align-items: center;
           padding: 0 32px;
           height: 64px;
-          background: rgba(248,249,251,.97);
+          background: rgba(13,17,23,0.95);
           backdrop-filter: blur(12px);
           border-bottom: 1px solid rgba(30,58,95,0.6);
         }
@@ -98,7 +98,7 @@ export default function GetTheAppPage() {
           position: absolute;
           bottom: -100px; left: -150px;
           width: 700px; height: 700px;
-          background: radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 65%);
+          background: radial-gradient(circle, rgba(200,150,15,0.18) 0%, transparent 65%);
           pointer-events: none;
         }
         .hero-bg-blue {
@@ -150,7 +150,7 @@ export default function GetTheAppPage() {
           color: var(--text);
         }
         .hero-h1 .gold-gradient {
-          background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 50%, #F59E0B 100%);
+          background: linear-gradient(135deg, #C8960F 0%, #FCD34D 50%, #C8960F 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -179,9 +179,9 @@ export default function GetTheAppPage() {
           border-radius: 10px;
           letter-spacing: .01em;
           transition: opacity .2s, transform .15s, box-shadow .2s;
-          box-shadow: 0 4px 20px rgba(245,158,11,0.35);
+          box-shadow: 0 4px 20px rgba(200,150,15,0.35);
         }
-        .btn-primary:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(245,158,11,0.45); }
+        .btn-primary:hover { opacity: .92; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(200,150,15,0.45); }
         .btn-ghost {
           background: transparent;
           color: var(--text);
@@ -193,7 +193,7 @@ export default function GetTheAppPage() {
           border: 1px solid var(--border);
           transition: border-color .2s, background .2s;
         }
-        .btn-ghost:hover { border-color: var(--gold); background: rgba(245,158,11,0.06); }
+        .btn-ghost:hover { border-color: var(--gold); background: rgba(200,150,15,0.06); }
         .trust-pills {
           display: flex;
           flex-wrap: wrap;
@@ -259,12 +259,12 @@ export default function GetTheAppPage() {
         }
         .ps-time { font-size:9px;font-weight:700;color:rgba(248,250,252,0.9); }
         .ps-header {
-          background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.08));
-          border-bottom: 1px solid rgba(245,158,11,0.2);
+          background: linear-gradient(135deg, rgba(200,150,15,0.2), rgba(200,150,15,0.08));
+          border-bottom: 1px solid rgba(200,150,15,0.2);
           padding: 10px 12px;
           flex-shrink:0;
         }
-        .ps-label { font-size:8px;color:rgba(245,158,11,0.7);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px; }
+        .ps-label { font-size:8px;color:rgba(200,150,15,0.7);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px; }
         .ps-big { font-size:20px;font-weight:800;color:#FCD34D;line-height:1; }
         .ps-small { font-size:7.5px;color:rgba(248,250,252,0.4);margin-top:2px; }
         .ps-body { padding:10px 12px;flex:1;overflow:hidden; }
@@ -281,7 +281,7 @@ export default function GetTheAppPage() {
         .ps-row-sub { font-size:6.5px;color:rgba(248,250,252,0.3);margin-top:1px; }
         .ps-badge { padding:2px 6px;border-radius:4px;font-size:6.5px;font-weight:600; }
         .ps-badge-green { background:rgba(34,197,94,0.15);color:#22c55e; }
-        .ps-badge-amber { background:rgba(245,158,11,0.15);color:#F59E0B; }
+        .ps-badge-amber { background:rgba(200,150,15,0.15);color:#C8960F; }
         .ps-nav {
           position:absolute;bottom:0;left:0;right:0;
           height:42px;
@@ -325,7 +325,7 @@ export default function GetTheAppPage() {
         .ts-title { font-size:11px;font-weight:700;color:var(--text);margin-bottom:10px; }
         .ts-grid { display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:9px; }
         .ts-card { border-radius:8px;padding:8px 9px; }
-        .ts-card.c-gold { background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.25); }
+        .ts-card.c-gold { background:rgba(200,150,15,0.15);border:1px solid rgba(200,150,15,0.25); }
         .ts-card.c-green { background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.2); }
         .ts-card.c-blue { background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2); }
         .ts-card.c-purple { background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2); }
@@ -342,7 +342,7 @@ export default function GetTheAppPage() {
         .ts-row-name { color:rgba(255,255,255,0.6); }
         .ts-bge { padding:2px 6px;border-radius:4px;font-size:7px;font-weight:600; }
         .bg-gn { background:rgba(34,197,94,0.15);color:#22c55e; }
-        .bg-am { background:rgba(245,158,11,0.15);color:#F59E0B; }
+        .bg-am { background:rgba(200,150,15,0.15);color:#C8960F; }
         .bg-bl { background:rgba(59,130,246,0.15);color:#60a5fa; }
 
         /* Laptop */
@@ -370,13 +370,13 @@ export default function GetTheAppPage() {
         }
         .ls-sidebar {
           width:30%;
-          background:rgba(245,158,11,0.04);
+          background:rgba(200,150,15,0.04);
           border-right:1px solid #E2E5EA;
           padding:6px 4px;
         }
         .ls-logo { font-size:7px;font-weight:800;color:var(--gold);padding:0 3px;margin-bottom:7px; }
         .ls-item { padding:3px 5px;border-radius:4px;font-size:6px;color:rgba(255,255,255,0.3);margin-bottom:1px;display:flex;align-items:center;gap:3px; }
-        .ls-item.act { background:rgba(245,158,11,0.15);color:var(--gold); }
+        .ls-item.act { background:rgba(200,150,15,0.15);color:var(--gold); }
         .ls-dot { width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.5; }
         .ls-main { flex:1;padding:7px 8px; }
         .ls-top { display:flex;justify-content:space-between;align-items:center;margin-bottom:5px; }
@@ -384,7 +384,7 @@ export default function GetTheAppPage() {
         .ls-badge { padding:2px 5px;border-radius:4px;font-size:5.5px;background:rgba(34,197,94,0.15);color:#22c55e; }
         .ls-cards { display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:4px; }
         .ls-card { border-radius:4px;padding:5px 6px; }
-        .ls-card.lc1 { background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.2); }
+        .ls-card.lc1 { background:rgba(200,150,15,0.15);border:1px solid rgba(200,150,15,0.2); }
         .ls-card.lc2 { background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.18); }
         .ls-card.lc3 { background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.18); }
         .ls-card.lc4 { background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.18); }
@@ -497,7 +497,7 @@ export default function GetTheAppPage() {
           width: 44px; height: 44px;
           border-radius: 11px;
           background: var(--gold-dim);
-          border: 1px solid rgba(245,158,11,0.25);
+          border: 1px solid rgba(200,150,15,0.25);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -543,7 +543,7 @@ export default function GetTheAppPage() {
           transition: border-color .2s, box-shadow .2s;
         }
         .platform-card:hover {
-          border-color: rgba(245,158,11,0.4);
+          border-color: rgba(200,150,15,0.4);
           box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
         .platform-header {
@@ -556,7 +556,7 @@ export default function GetTheAppPage() {
           width: 48px; height: 48px;
           border-radius: 12px;
           background: var(--gold-dim);
-          border: 1px solid rgba(245,158,11,0.2);
+          border: 1px solid rgba(200,150,15,0.2);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -589,7 +589,7 @@ export default function GetTheAppPage() {
           width: 26px; height: 26px;
           border-radius: 50%;
           background: var(--gold-dim);
-          border: 1px solid rgba(245,158,11,0.3);
+          border: 1px solid rgba(200,150,15,0.3);
           color: var(--gold);
           font-size: 12px;
           font-weight: 700;
@@ -644,7 +644,7 @@ export default function GetTheAppPage() {
           text-transform: uppercase;
         }
         .compare-table th.saguaro-col {
-          background: rgba(245,158,11,0.08);
+          background: rgba(200,150,15,0.08);
           color: var(--gold);
           border-left: 2px solid var(--gold);
         }
@@ -662,12 +662,12 @@ export default function GetTheAppPage() {
         }
         .compare-table td.app-store-col { color: #94a3b8; }
         .compare-table td.saguaro-col {
-          background: rgba(245,158,11,0.05);
+          background: rgba(200,150,15,0.05);
           color: var(--text);
           font-weight: 600;
-          border-left: 2px solid rgba(245,158,11,0.3);
+          border-left: 2px solid rgba(200,150,15,0.3);
         }
-        .compare-table tr:hover td.saguaro-col { background: rgba(245,158,11,0.09); }
+        .compare-table tr:hover td.saguaro-col { background: rgba(200,150,15,0.09); }
         .compare-table td.bad { color: #f87171; }
         .compare-table td.good { color: var(--green); }
 
@@ -866,9 +866,9 @@ export default function GetTheAppPage() {
                     </div>
                     <div className="ts-bars-label">Daily Logs — This Week</div>
                     <div className="ts-bars" style={{ marginBottom: '8px' }}>
-                      <div className="ts-bar" style={{ height:'60%', background:'rgba(245,158,11,0.6)', borderRadius:'3px 3px 0 0' }} />
-                      <div className="ts-bar" style={{ height:'90%', background:'rgba(245,158,11,0.7)', borderRadius:'3px 3px 0 0' }} />
-                      <div className="ts-bar" style={{ height:'75%', background:'rgba(245,158,11,0.6)', borderRadius:'3px 3px 0 0' }} />
+                      <div className="ts-bar" style={{ height:'60%', background:'rgba(200,150,15,0.6)', borderRadius:'3px 3px 0 0' }} />
+                      <div className="ts-bar" style={{ height:'90%', background:'rgba(200,150,15,0.7)', borderRadius:'3px 3px 0 0' }} />
+                      <div className="ts-bar" style={{ height:'75%', background:'rgba(200,150,15,0.6)', borderRadius:'3px 3px 0 0' }} />
                       <div className="ts-bar" style={{ height:'100%', background:'rgba(34,197,94,0.7)', borderRadius:'3px 3px 0 0' }} />
                       <div className="ts-bar" style={{ height:'85%', background:'rgba(34,197,94,0.6)', borderRadius:'3px 3px 0 0' }} />
                     </div>
@@ -910,7 +910,7 @@ export default function GetTheAppPage() {
                       <span className="ps-badge ps-badge-green">GPS ✓</span>
                     </div>
                     <div className="ps-row">
-                      <div className="ps-dot" style={{ background: '#F59E0B' }} />
+                      <div className="ps-dot" style={{ background: '#C8960F' }} />
                       <div className="ps-row-text">
                         <div className="ps-row-name">Daily Log</div>
                         <div className="ps-row-sub">3 photos · submitted</div>
@@ -948,7 +948,7 @@ export default function GetTheAppPage() {
                         <div className="ls-card lc4"><div className="ls-card-n">7</div><div className="ls-card-l">Punch</div></div>
                       </div>
                       <div className="ls-row"><div className="ls-td bold">Mesa Commerce</div><div className="ls-td" style={{ color:'#22c55e' }}>On Track</div></div>
-                      <div className="ls-row"><div className="ls-td bold">Chandler Ind.</div><div className="ls-td" style={{ color:'#F59E0B' }}>Log Due</div></div>
+                      <div className="ls-row"><div className="ls-td bold">Chandler Ind.</div><div className="ls-td" style={{ color:'#C8960F' }}>Log Due</div></div>
                     </div>
                   </div>
                 </div>
@@ -1051,7 +1051,7 @@ export default function GetTheAppPage() {
                   <div className="platform-icon">
                     <svg viewBox="0 0 24 24">
                       <rect x="5" y="1" width="14" height="22" rx="3" />
-                      <circle cx="12" cy="19.5" r="1" fill="currentColor" stroke="none" style={{ fill: '#F59E0B' }} />
+                      <circle cx="12" cy="19.5" r="1" fill="currentColor" stroke="none" style={{ fill: '#C8960F' }} />
                       <path d="M9 4h6" />
                     </svg>
                   </div>
@@ -1077,8 +1077,8 @@ export default function GetTheAppPage() {
                       <line x1="20" y1="13" x2="22" y2="13" />
                       <line x1="8" y1="21" x2="8" y2="23" />
                       <line x1="16" y1="21" x2="16" y2="23" />
-                      <circle cx="9" cy="13" r="1" fill="#F59E0B" stroke="none" />
-                      <circle cx="15" cy="13" r="1" fill="#F59E0B" stroke="none" />
+                      <circle cx="9" cy="13" r="1" fill="#C8960F" stroke="none" />
+                      <circle cx="15" cy="13" r="1" fill="#C8960F" stroke="none" />
                     </svg>
                   </div>
                   <div className="platform-name">Android</div>
@@ -1098,7 +1098,7 @@ export default function GetTheAppPage() {
                   <div className="platform-icon">
                     <svg viewBox="0 0 24 24">
                       <rect x="3" y="2" width="18" height="20" rx="2" />
-                      <circle cx="12" cy="19" r="1" fill="#F59E0B" stroke="none" />
+                      <circle cx="12" cy="19" r="1" fill="#C8960F" stroke="none" />
                       <line x1="8" y1="5" x2="16" y2="5" />
                     </svg>
                   </div>
@@ -1121,8 +1121,8 @@ export default function GetTheAppPage() {
                       <rect x="2" y="3" width="20" height="14" rx="2" />
                       <line x1="8" y1="21" x2="16" y2="21" />
                       <line x1="12" y1="17" x2="12" y2="21" />
-                      <circle cx="5" cy="6" r=".8" fill="#F59E0B" stroke="none" />
-                      <circle cx="8" cy="6" r=".8" fill="#F59E0B" stroke="none" />
+                      <circle cx="5" cy="6" r=".8" fill="#C8960F" stroke="none" />
+                      <circle cx="8" cy="6" r=".8" fill="#C8960F" stroke="none" />
                     </svg>
                   </div>
                   <div className="platform-name">Desktop / Laptop</div>
