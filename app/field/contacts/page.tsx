@@ -21,7 +21,7 @@ const ROLE_COLORS: Record<string, string> = {
   'Owner': BLUE,
   'Architect': '#8B5CF6',
   'Engineer': '#06B6D4',
-  'Inspector': '#F59E0B',
+  'Inspector': '#C8960F',
   'Subcontractor': DIM,
   'default': DIM,
 };
