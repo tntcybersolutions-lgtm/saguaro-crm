@@ -12,8 +12,8 @@ export const metadata: Metadata = {
   alternates: { canonical: 'https://saguarocontrol.net/compare' },
 };
 
-const DARK = '#F8F9FB';
-const GOLD = '#F59E0B';
+const DARK = '#0D1117';
+const GOLD = '#C8960F';
 const TEXT = '#F8FAFC';
 const DIM = '#CBD5E1';
 const BORDER = '#1E3A5F';
@@ -29,7 +29,7 @@ export default function ComparePage() {
       {/* NAV */}
       <nav style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-        height: 64, background: 'rgba(248,249,251,.97)',
+        height: 64, background: 'rgba(13,17,23,0.95)',
         borderBottom: `1px solid ${BORDER}`,
         backdropFilter: 'blur(16px)',
         display: 'flex', alignItems: 'center',
@@ -77,8 +77,8 @@ export default function ComparePage() {
       <div style={{ paddingTop: 64 }}>
         <section style={{ maxWidth: 900, margin: '0 auto', padding: '80px 32px 56px', textAlign: 'center' }}>
           <div style={{
-            display: 'inline-block', background: 'rgba(245,158,11,0.12)',
-            border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 20,
+            display: 'inline-block', background: 'rgba(200,150,15,0.12)',
+            border: `1px solid rgba(200,150,15,0.3)`, borderRadius: 20,
             padding: '5px 16px', fontSize: 12, fontWeight: 700,
             color: GOLD, letterSpacing: '0.08em', textTransform: 'uppercase',
             marginBottom: 24,
@@ -107,7 +107,7 @@ export default function ComparePage() {
               border: `2px solid ${GOLD}`,
               borderRadius: 16,
               padding: '36px 40px',
-              boxShadow: `0 0 48px rgba(245,158,11,0.18)`,
+              boxShadow: `0 0 48px rgba(200,150,15,0.18)`,
               transition: 'transform 0.15s ease, box-shadow 0.15s ease',
             }}
           >
@@ -115,7 +115,7 @@ export default function ComparePage() {
               <div style={{ flex: 1, minWidth: 280 }}>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
-                  background: 'rgba(245,158,11,0.15)', border: `1px solid rgba(245,158,11,0.4)`,
+                  background: 'rgba(200,150,15,0.15)', border: `1px solid rgba(200,150,15,0.4)`,
                   borderRadius: 12, padding: '3px 12px', fontSize: 11, fontWeight: 700,
                   color: GOLD, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16,
                 }}>
