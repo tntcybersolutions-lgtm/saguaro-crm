@@ -12,7 +12,7 @@ import VoiceToLog from '@/components/field/VoiceToLog';
 import PhotoEditor from '@/components/field/PhotoEditor';
 
 const GOLD   = '#C8960F';
-const DARK = '#F8F9FB';
+const DARK = '#0D1117';
 const RAISED = '#ffffff';
 const BORDER = '#E2E5EA';
 const DIM = '#6B7280';
