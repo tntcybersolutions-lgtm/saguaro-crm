@@ -19,7 +19,7 @@ const TEXT   = '#F0F4FF';
 const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
-const AMBER  = '#F59E0B';
+const AMBER  = '#C8960F';
 const BLUE   = '#3B82F6';
 
 const INSPECTION_TYPES = [
@@ -31,7 +31,7 @@ const INSPECTION_TYPES = [
 
 const RESULTS = [
   { value: 'passed',           label: 'Passed',           color: GREEN,  bg: 'rgba(34,197,94,.15)',  emoji: '✅' },
-  { value: 'conditional_pass', label: 'Conditional',      color: AMBER,  bg: 'rgba(245,158,11,.15)', emoji: '⚠️' },
+  { value: 'conditional_pass', label: 'Conditional',      color: AMBER,  bg: 'rgba(200,150,15,.15)', emoji: '⚠️' },
   { value: 'failed',           label: 'Failed',           color: RED,    bg: 'rgba(239,68,68,.15)',  emoji: '❌' },
   { value: 'pending',          label: 'Pending',          color: DIM,    bg: 'rgba(143,163,192,.1)', emoji: '🕐' },
 ];
