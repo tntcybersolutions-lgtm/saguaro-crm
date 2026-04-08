@@ -15,7 +15,7 @@ const DIM = '#8BAAC8';
 const GREEN = '#22C55E';
 const BLUE = '#3B82F6';
 const RED = '#EF4444';
-const AMBER = '#F59E0B';
+const AMBER = '#C8960F';
 const BORDER = '#1E3A5F';
 
 function hr(hex: string): string {
