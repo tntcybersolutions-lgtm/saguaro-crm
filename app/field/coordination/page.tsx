@@ -15,7 +15,7 @@ const TEXT   = '#F0F4FF';
 const DIM    = '#8BAAC8';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
-const AMBER  = '#F59E0B';
+const AMBER  = '#C8960F';
 const BLUE   = '#3B82F6';
 
 /* ─── Types ─── */
