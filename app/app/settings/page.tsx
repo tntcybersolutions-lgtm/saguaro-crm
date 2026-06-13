@@ -258,7 +258,16 @@ export default function SettingsPage() {
 
       {/* Logout */}
       <div style={{ textAlign: 'center', paddingBottom: 32 }}>
-        <button onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); window.location.href = '/login'; }}
+        <button onClick={async () => {
+            await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+            try {
+              for (const k of Object.keys(localStorage)) {
+                if (k.startsWith('sb-') || k.toLowerCase().includes('supabase')) localStorage.removeItem(k);
+              }
+              sessionStorage.clear();
+            } catch { /* storage unavailable — ignore */ }
+            window.location.replace('/login');
+          }}
           style={{ padding: '10px 28px', background: 'transparent', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 8, color: RED, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
           Sign Out
         </button>

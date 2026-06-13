@@ -103,8 +103,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [aiOpen]);
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
+    // 1. Clear the server-side httpOnly session cookies.
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+    // 2. CRITICAL: also destroy the browser Supabase session in localStorage.
+    //    Without this, the persisted session silently logs you — or the next
+    //    person on a shared device — right back into the app.
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (k.startsWith('sb-') || k.toLowerCase().includes('supabase')) {
+          localStorage.removeItem(k);
+        }
+      }
+      sessionStorage.clear();
+    } catch { /* storage unavailable — ignore */ }
+    // 3. Hard replace so no in-memory client state survives the redirect.
+    window.location.replace('/login');
   }
 
   async function sendAI(overrideMsg?: string) {
