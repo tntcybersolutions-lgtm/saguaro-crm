@@ -34,6 +34,7 @@
         "lib/*"
       ],
       "@/hooks/*": [
+        "hooks/*",
         "src/hooks/*"
       ],
       "@/components/*": [
@@ -41,6 +42,7 @@
         "components/*"
       ],
       "@/app/*": [
+        "app/*",
         "src/app/*"
       ]
     },
@@ -70,6 +72,8 @@
     "node_modules",
     ".next",
     "dist",
-    "build"
+    "build",
+    "**/*-LT-DeRocher2024.ts",
+    "**/*-LT-DeRocher2024.tsx"
   ]
 }

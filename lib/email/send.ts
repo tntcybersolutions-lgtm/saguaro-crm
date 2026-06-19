@@ -391,3 +391,101 @@ export function welcomeEmail(data: {
     ${btn('Go to Your Dashboard &rarr;', data.loginUrl)}
   `);
 }
+
+// ─── bidInviteHtml ─────────────────────────────────────────────────────────────
+// Invitation to bid sent to a subcontractor for a specific bid package.
+// Used by app/api/bid-packages/[id]/invite/route.ts
+
+export function bidInviteHtml(data: {
+  projectName: string;
+  packageName: string;
+  bidDueDate: string;
+  portalUrl: string;
+  scopeNarrative: string;
+  gcCompanyName: string;
+  gcContactName: string;
+  gcContactEmail: string;
+  gcContactPhone: string;
+}): string {
+  const contactLines: string[] = [];
+  if (data.gcContactName) contactLines.push(data.gcContactName);
+  if (data.gcContactEmail)
+    contactLines.push(
+      `<a href="mailto:${data.gcContactEmail}" style="color:#D5A017;text-decoration:none;">${data.gcContactEmail}</a>`,
+    );
+  if (data.gcContactPhone) contactLines.push(data.gcContactPhone);
+
+  return baseLayout(`
+    ${heading('You&rsquo;re Invited to Bid')}
+    ${para(`<strong>${data.gcCompanyName}</strong> invites your company to submit a bid for the following scope of work on <strong>${data.projectName}</strong>.`)}
+    ${detailTable(`
+      ${detail('Project', data.projectName)}
+      ${detail('Bid Package', data.packageName)}
+      ${detail('Bid Due', data.bidDueDate)}
+      ${detail('General Contractor', data.gcCompanyName)}
+    `)}
+    <h3 style="margin:24px 0 8px;color:#0D1116;font-size:16px;">Scope of Work</h3>
+    <p style="margin:0 0 12px;padding:12px 16px;background:#f9fafb;border-left:4px solid #D5A017;border-radius:4px;font-size:14px;color:#374151;line-height:1.6;white-space:pre-line;">${data.scopeNarrative}</p>
+    ${para('Review the full package, download drawings and specifications, and submit your proposal securely through the bid portal below.')}
+    ${btn('View Package &amp; Submit Bid', data.portalUrl)}
+    ${
+      contactLines.length
+        ? para(
+            `<small style="color:#9ca3af;">Questions about this package? Contact ${contactLines.join(' &middot; ')}.</small>`,
+          )
+        : ''
+    }
+    ${para('<small style="color:#9ca3af;">This invitation link is unique to this bid package. Please do not forward it.</small>')}
+  `);
+}
+
+// ─── insuranceReminderHtml ─────────────────────────────────────────────────────
+// COI / insurance expiration reminder sent to a subcontractor.
+// Used by app/api/cron/insurance-reminders/route.ts
+
+export function insuranceReminderHtml(data: {
+  subCompanyName: string;
+  subContactName: string;
+  projectName: string;
+  insuranceType: string;
+  expirationDate: string;
+  daysUntilExpiry: number;
+  gcCompanyName: string;
+  gcContactName: string;
+  gcEmail: string;
+}): string {
+  const expired = data.daysUntilExpiry <= 0;
+  const urgent = data.daysUntilExpiry <= 7;
+  const urgencyColor = urgent ? '#dc2626' : '#D5A017';
+  const urgencyLabel = expired ? 'EXPIRED: ' : urgent ? 'URGENT: ' : '';
+
+  const status = expired
+    ? `has <strong>expired</strong>`
+    : `expires in <strong>${data.daysUntilExpiry} day${data.daysUntilExpiry !== 1 ? 's' : ''}</strong>`;
+
+  const uploadUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/app/insurance`;
+
+  return baseLayout(`
+    ${heading(`${urgencyLabel}Certificate of Insurance ${expired ? 'Expired' : 'Expiring'}`)}
+    ${para(`Dear ${data.subContactName},`)}
+    <p style="margin:0 0 16px;padding:12px 16px;background:${urgencyColor}18;border-left:4px solid ${urgencyColor};border-radius:4px;font-size:14px;color:#374151;line-height:1.6;">
+      <strong>${data.subCompanyName}</strong>'s <strong>${data.insuranceType}</strong> certificate of insurance ${status} on <strong>${data.expirationDate}</strong>.
+    </p>
+    ${detailTable(`
+      ${detail('Subcontractor', data.subCompanyName)}
+      ${detail('Coverage', data.insuranceType)}
+      ${detail('Project', data.projectName)}
+      ${detail('Expiration Date', data.expirationDate)}
+      ${detail(expired ? 'Status' : 'Days Remaining', expired ? 'Expired' : String(data.daysUntilExpiry))}
+    `)}
+    ${para(`A current certificate of insurance is required to remain in good standing with <strong>${data.gcCompanyName}</strong>. Please upload an updated COI as soon as possible to avoid any interruption to your work or payments.`)}
+    ${btn('Upload Updated COI', uploadUrl)}
+    ${
+      data.gcEmail
+        ? para(
+            `<small style="color:#9ca3af;">Questions? Contact ${data.gcContactName} at <a href="mailto:${data.gcEmail}" style="color:#D5A017;text-decoration:none;">${data.gcEmail}</a>.</small>`,
+          )
+        : para(`<small style="color:#9ca3af;">Questions? Contact ${data.gcContactName} at ${data.gcCompanyName}.</small>`)
+    }
+  `);
+}

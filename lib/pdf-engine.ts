@@ -958,6 +958,615 @@ export async function generateCloseoutPackage(input: {
   return await doc.save();
 }
 
+// ─── Helper: wrapped paragraph text ──────────────────────────────────────────
+function drawParagraph(
+  page: any, text: string, x: number, y: number, maxChars: number,
+  size: number, font: any, color = DARK, lineGap = 4
+): number {
+  const words = String(text || '').split(/\s+/);
+  let line = '';
+  for (const word of words) {
+    if ((line + word).length > maxChars) {
+      drawText(page, line.trimEnd(), x, y, size, font, color);
+      y -= size + lineGap;
+      line = word + ' ';
+    } else {
+      line += word + ' ';
+    }
+  }
+  if (line.trim()) { drawText(page, line.trimEnd(), x, y, size, font, color); y -= size + lineGap; }
+  return y;
+}
+
+// ─── RFI — Request for Information ────────────────────────────────────────────
+export async function generateRFI(input: {
+  rfiNumber: string; subject: string; question: string;
+  answer?: string; specSection?: string; drawingReference?: string;
+  dueDate?: string; submittedBy?: string; submittedAt?: string;
+  answeredBy?: string; answeredAt?: string;
+  status: string; isUrgent: boolean; notes?: string;
+  projectName: string; projectNumber: string;
+  ownerName: string; architectName: string; gcName: string;
+}): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage(PageSizes.Letter);
+  const { width, height } = page.getSize();
+  const { reg, bold } = await baseFonts(doc);
+
+  headerBar(page, 'REQUEST FOR INFORMATION', `${input.projectName}${input.projectNumber ? ` (#${input.projectNumber})` : ''}`, bold, reg);
+
+  // RFI number + status banner
+  let y = height - 70;
+  page.drawRectangle({ x: 36, y: y - 24, width: width - 72, height: 24, color: DARK });
+  drawText(page, `RFI ${input.rfiNumber}`, 42, y - 16, 12, bold, GOLD);
+  const statusLabel = input.status.replace(/_/g, ' ').toUpperCase();
+  drawText(page, statusLabel, width - 200, y - 16, 10, bold, WHITE);
+  if (input.isUrgent) {
+    page.drawRectangle({ x: width - 110, y: y - 20, width: 70, height: 16, color: rgb(0.85, 0.15, 0.1) });
+    drawText(page, 'URGENT', width - 100, y - 16, 9, bold, WHITE);
+  }
+  y -= 38;
+
+  // Parties + meta
+  fieldBox(page, 'PROJECT:', input.projectName, 36, y, 250, reg, bold);
+  fieldBox(page, 'GENERAL CONTRACTOR:', input.gcName, 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'OWNER:', input.ownerName, 36, y, 250, reg, bold);
+  fieldBox(page, 'ARCHITECT/ENGINEER:', input.architectName, 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'SPEC SECTION:', input.specSection || '—', 36, y, 160, reg, bold);
+  fieldBox(page, 'DRAWING REF:', input.drawingReference || '—', 200, y, 160, reg, bold);
+  fieldBox(page, 'DUE DATE:', input.dueDate ? fmtDate(input.dueDate) : '—', 364, y, 192, reg, bold);
+  y -= 30;
+  fieldBox(page, 'SUBMITTED BY:', input.submittedBy || '—', 36, y, 250, reg, bold);
+  fieldBox(page, 'SUBMITTED:', input.submittedAt ? fmtDate(input.submittedAt) : '—', 300, y, 256, reg, bold);
+  y -= 44;
+
+  // Subject
+  drawText(page, 'SUBJECT', 36, y, 10, bold, DARK);
+  y -= 16;
+  y = drawParagraph(page, input.subject, 36, y, 95, 10, reg, DARK);
+  y -= 16;
+
+  // Question
+  drawText(page, 'QUESTION', 36, y, 10, bold, DARK);
+  y -= 6;
+  page.drawRectangle({ x: 36, y: y - 4, width: width - 72, height: 0.5, color: GOLD });
+  y -= 14;
+  y = drawParagraph(page, input.question, 36, y, 95, 9, reg, DARK);
+  y -= 20;
+
+  // Answer
+  drawText(page, 'RESPONSE', 36, y, 10, bold, DARK);
+  y -= 6;
+  page.drawRectangle({ x: 36, y: y - 4, width: width - 72, height: 0.5, color: GOLD });
+  y -= 14;
+  if (input.answer) {
+    y = drawParagraph(page, input.answer, 36, y, 95, 9, reg, DARK);
+    y -= 8;
+    if (input.answeredBy || input.answeredAt) {
+      drawText(page, `Answered by ${input.answeredBy || '—'} on ${input.answeredAt ? fmtDate(input.answeredAt) : '—'}`, 36, y, 8, reg, GRAY);
+      y -= 16;
+    }
+  } else {
+    drawText(page, 'Awaiting response.', 36, y, 9, reg, GRAY);
+    y -= 16;
+  }
+
+  if (input.notes) {
+    y -= 10;
+    drawText(page, 'NOTES', 36, y, 10, bold, DARK);
+    y -= 16;
+    y = drawParagraph(page, input.notes, 36, y, 95, 8, reg, GRAY);
+  }
+
+  footerText(page, reg);
+  return await doc.save();
+}
+
+// ─── Submittal — Shop Drawing / Product Data Transmittal ─────────────────────
+export async function generateSubmittal(input: {
+  submittalNumber: string; title: string; submittalType: string;
+  specSection?: string; drawingReference?: string; status: string;
+  revisionNumber: number; submittedBy?: string; submittedAt?: string;
+  reviewedBy?: string; reviewedAt?: string; reviewAction?: string;
+  reviewComments?: string; dueDate?: string; daysToReview: number;
+  notes?: string; trade?: string; description?: string; fileName?: string;
+  projectName: string; projectNumber: string;
+  ownerName: string; architectName: string; gcName: string;
+}): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage(PageSizes.Letter);
+  const { width, height } = page.getSize();
+  const { reg, bold } = await baseFonts(doc);
+
+  headerBar(page, 'SUBMITTAL TRANSMITTAL', `${input.projectName}${input.projectNumber ? ` (#${input.projectNumber})` : ''}`, bold, reg);
+
+  let y = height - 70;
+  page.drawRectangle({ x: 36, y: y - 24, width: width - 72, height: 24, color: DARK });
+  const typeLabel = input.submittalType.replace(/_/g, ' ').toUpperCase();
+  drawText(page, `SUBMITTAL ${input.submittalNumber}`, 42, y - 16, 12, bold, GOLD);
+  drawText(page, `REV ${input.revisionNumber}`, 230, y - 16, 9, bold, WHITE);
+  drawText(page, input.status.replace(/_/g, ' ').toUpperCase(), width - 200, y - 16, 10, bold, WHITE);
+  y -= 38;
+
+  // Parties + meta
+  fieldBox(page, 'PROJECT:', input.projectName, 36, y, 250, reg, bold);
+  fieldBox(page, 'GENERAL CONTRACTOR:', input.gcName, 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'OWNER:', input.ownerName, 36, y, 250, reg, bold);
+  fieldBox(page, 'ARCHITECT/ENGINEER:', input.architectName, 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'TYPE:', typeLabel, 36, y, 160, reg, bold);
+  fieldBox(page, 'TRADE:', input.trade || '—', 200, y, 160, reg, bold);
+  fieldBox(page, 'SPEC SECTION:', input.specSection || '—', 364, y, 192, reg, bold);
+  y -= 30;
+  fieldBox(page, 'DRAWING REF:', input.drawingReference || '—', 36, y, 160, reg, bold);
+  fieldBox(page, 'SUBMITTED BY:', input.submittedBy || '—', 200, y, 160, reg, bold);
+  fieldBox(page, 'SUBMITTED:', input.submittedAt ? fmtDate(input.submittedAt) : '—', 364, y, 192, reg, bold);
+  y -= 30;
+  fieldBox(page, 'DUE DATE:', input.dueDate ? fmtDate(input.dueDate) : '—', 36, y, 160, reg, bold);
+  fieldBox(page, 'REVIEW WINDOW:', `${input.daysToReview} days`, 200, y, 160, reg, bold);
+  fieldBox(page, 'ATTACHMENT:', input.fileName || '—', 364, y, 192, reg, bold);
+  y -= 44;
+
+  // Title + description
+  drawText(page, 'TITLE', 36, y, 10, bold, DARK);
+  y -= 16;
+  y = drawParagraph(page, input.title, 36, y, 95, 10, reg, DARK);
+  if (input.description) {
+    y -= 10;
+    drawText(page, 'DESCRIPTION', 36, y, 10, bold, DARK);
+    y -= 16;
+    y = drawParagraph(page, input.description, 36, y, 95, 9, reg, DARK);
+  }
+  y -= 20;
+
+  // Review action box
+  drawText(page, 'ARCHITECT / ENGINEER REVIEW', 36, y, 10, bold, DARK);
+  y -= 6;
+  page.drawRectangle({ x: 36, y: y - 4, width: width - 72, height: 0.5, color: GOLD });
+  y -= 18;
+  const actions = ['no_exceptions', 'make_corrections', 'revise_resubmit', 'rejected'];
+  const actionLabels: Record<string, string> = {
+    no_exceptions: 'No Exceptions Taken',
+    make_corrections: 'Make Corrections Noted',
+    revise_resubmit: 'Revise and Resubmit',
+    rejected: 'Rejected',
+  };
+  actions.forEach((a, i) => {
+    const bx = 40 + i * 130;
+    const checked = input.reviewAction === a;
+    page.drawRectangle({ x: bx, y: y - 12, width: 10, height: 10, color: checked ? GOLD : WHITE, borderColor: GRAY, borderWidth: 0.5 });
+    if (checked) drawText(page, 'X', bx + 1.5, y - 11, 9, bold, DARK);
+    drawText(page, actionLabels[a], bx + 14, y - 11, 7, reg, DARK);
+  });
+  y -= 28;
+  fieldBox(page, 'REVIEWED BY:', input.reviewedBy || '—', 36, y, 250, reg, bold);
+  fieldBox(page, 'REVIEWED:', input.reviewedAt ? fmtDate(input.reviewedAt) : '—', 300, y, 256, reg, bold);
+  y -= 30;
+  if (input.reviewComments) {
+    drawText(page, 'REVIEW COMMENTS', 36, y, 9, bold, DARK);
+    y -= 14;
+    y = drawParagraph(page, input.reviewComments, 36, y, 100, 9, reg, DARK);
+  }
+
+  if (input.notes) {
+    y -= 10;
+    drawText(page, 'NOTES', 36, y, 9, bold, DARK);
+    y -= 14;
+    y = drawParagraph(page, input.notes, 36, y, 100, 8, reg, GRAY);
+  }
+
+  footerText(page, reg);
+  return await doc.save();
+}
+
+// ─── Punch List Report ────────────────────────────────────────────────────────
+export async function generatePunchList(input: {
+  projectName: string; projectNumber: string; projectAddress: string;
+  items: Array<Record<string, any>>;
+  generatedBy?: string;
+}): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const { reg, bold } = await baseFonts(doc);
+
+  let page = doc.addPage([792, 612]); // Landscape Letter
+  let { width, height } = page.getSize();
+
+  const newPage = () => {
+    page = doc.addPage([792, 612]);
+    ({ width, height } = page.getSize());
+    page.drawRectangle({ x: 0, y: height - 40, width, height: 40, color: DARK });
+    drawText(page, 'PUNCH LIST', 36, height - 22, 12, bold, GOLD);
+    drawText(page, `${input.projectName}${input.projectNumber ? ` (#${input.projectNumber})` : ''} — ${input.projectAddress}`, 36, height - 36, 8, reg, WHITE);
+    return height - 55;
+  };
+
+  const cols = [
+    { h: '#', x: 36, w: 32 },
+    { h: 'Location', x: 68, w: 110 },
+    { h: 'Description', x: 178, w: 250 },
+    { h: 'Trade', x: 428, w: 90 },
+    { h: 'Assigned To', x: 518, w: 110 },
+    { h: 'Priority', x: 628, w: 55 },
+    { h: 'Status', x: 683, w: 73 },
+  ];
+
+  const drawHeaderRow = (yPos: number) => {
+    page.drawRectangle({ x: 36, y: yPos - 16, width: width - 72, height: 16, color: DARK });
+    cols.forEach(c => drawText(page, c.h, c.x + 2, yPos - 12, 7, bold, WHITE));
+    return yPos - 16;
+  };
+
+  let y = newPage();
+
+  // Summary banner
+  const total = input.items.length;
+  const openCount = input.items.filter(i => String(i.status || '').toLowerCase() !== 'complete' && String(i.status || '').toLowerCase() !== 'closed' && String(i.status || '').toLowerCase() !== 'verified').length;
+  page.drawRectangle({ x: 36, y: y - 20, width: width - 72, height: 20, color: LGRAY, borderColor: GOLD, borderWidth: 0.5 });
+  drawText(page, `Total Items: ${total}    Open: ${openCount}    Closed: ${total - openCount}`, 42, y - 14, 9, bold, DARK);
+  if (input.generatedBy) drawText(page, `Generated by ${input.generatedBy}`, width - 250, y - 14, 8, reg, GRAY);
+  y -= 30;
+
+  y = drawHeaderRow(y);
+
+  input.items.forEach((item, i) => {
+    if (y < 50) { y = newPage(); y = drawHeaderRow(y); }
+    const bg = i % 2 === 0 ? WHITE : LGRAY;
+    page.drawRectangle({ x: 36, y: y - 16, width: width - 72, height: 16, color: bg });
+    const status = String(item.status || 'open').replace(/_/g, ' ');
+    drawText(page, String(item.item_number ?? i + 1), 38, y - 12, 7, reg, DARK);
+    drawText(page, String(item.location || '—'), 70, y - 12, 7, reg, DARK);
+    drawText(page, String(item.description || item.title || '—'), 180, y - 12, 7, reg, DARK);
+    drawText(page, String(item.trade || '—'), 430, y - 12, 7, reg, DARK);
+    drawText(page, String(item.assigned_to || item.assignee || '—'), 520, y - 12, 7, reg, DARK);
+    drawText(page, String(item.priority || '—'), 630, y - 12, 7, reg, DARK);
+    const done = ['complete', 'closed', 'verified'].includes(status.toLowerCase());
+    drawText(page, status, 685, y - 12, 7, bold, done ? rgb(0.1, 0.5, 0.1) : rgb(0.7, 0.3, 0.1));
+    y -= 16;
+  });
+
+  if (total === 0) {
+    drawText(page, 'No punch list items recorded for this project.', 42, y - 14, 9, reg, GRAY);
+  }
+
+  footerText(page, reg);
+  return await doc.save();
+}
+
+// ─── Daily Log / Daily Report ─────────────────────────────────────────────────
+export async function generateDailyLog(input: {
+  logDate: string; status: string;
+  weather?: string; highTemp?: string; lowTemp?: string;
+  precipitation?: string; windConditions?: string;
+  workPerformed?: string; workStopped: boolean; workStoppedReason?: string;
+  delays?: string; delayType?: string; delayHours?: number;
+  crewCount?: number; manpowerCount?: number;
+  manpowerDetail?: Array<Record<string, any>>;
+  equipmentOnSite?: Array<Record<string, any>>;
+  visitorsDetail?: Array<Record<string, any>>;
+  incidentsDetail?: Array<Record<string, any>>;
+  safetyNotes?: string; materialsDelivered?: string; notes?: string;
+  superintendent?: string;
+  projectName: string; projectNumber: string;
+}): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage(PageSizes.Letter);
+  const { width, height } = page.getSize();
+  const { reg, bold } = await baseFonts(doc);
+
+  headerBar(page, 'DAILY CONSTRUCTION LOG', `${input.projectName}${input.projectNumber ? ` (#${input.projectNumber})` : ''}`, bold, reg);
+
+  let y = height - 70;
+  page.drawRectangle({ x: 36, y: y - 24, width: width - 72, height: 24, color: DARK });
+  drawText(page, fmtDate(input.logDate), 42, y - 16, 12, bold, GOLD);
+  drawText(page, input.status.replace(/_/g, ' ').toUpperCase(), width - 160, y - 16, 10, bold, WHITE);
+  y -= 38;
+
+  // Weather strip
+  fieldBox(page, 'WEATHER:', input.weather || '—', 36, y, 150, reg, bold);
+  fieldBox(page, 'HIGH / LOW:', `${input.highTemp || '—'} / ${input.lowTemp || '—'}`, 190, y, 130, reg, bold);
+  fieldBox(page, 'PRECIPITATION:', input.precipitation || '—', 324, y, 110, reg, bold);
+  fieldBox(page, 'WIND:', input.windConditions || '—', 438, y, 118, reg, bold);
+  y -= 30;
+  fieldBox(page, 'SUPERINTENDENT:', input.superintendent || '—', 36, y, 250, reg, bold);
+  fieldBox(page, 'CREW COUNT:', input.crewCount != null ? String(input.crewCount) : '—', 300, y, 120, reg, bold);
+  fieldBox(page, 'TOTAL MANPOWER:', input.manpowerCount != null ? String(input.manpowerCount) : '—', 424, y, 132, reg, bold);
+  y -= 38;
+
+  // Work stoppage / delays banner
+  if (input.workStopped || input.delays) {
+    page.drawRectangle({ x: 36, y: y - 30, width: width - 72, height: 30, color: rgb(1, 0.95, 0.9), borderColor: rgb(0.8, 0.3, 0.1), borderWidth: 1 });
+    let msg = '';
+    if (input.workStopped) msg += `WORK STOPPED: ${input.workStoppedReason || 'See notes'}.  `;
+    if (input.delays) msg += `DELAY (${input.delayType || 'general'}${input.delayHours ? `, ${input.delayHours}h` : ''}): ${input.delays}`;
+    drawParagraph(page, msg, 46, y - 12, 95, 8, bold, rgb(0.7, 0.2, 0.05));
+    y -= 40;
+  }
+
+  // Work performed
+  drawText(page, 'WORK PERFORMED', 36, y, 10, bold, DARK);
+  y -= 16;
+  y = drawParagraph(page, input.workPerformed || 'No work recorded.', 36, y, 100, 9, reg, input.workPerformed ? DARK : GRAY);
+  y -= 12;
+
+  // Manpower detail table
+  const mp = input.manpowerDetail || [];
+  if (mp.length > 0) {
+    drawText(page, 'MANPOWER ON SITE', 36, y, 10, bold, DARK);
+    y -= 16;
+    page.drawRectangle({ x: 36, y: y - 14, width: width - 72, height: 14, color: DARK });
+    drawText(page, 'Trade / Company', 40, y - 10, 7, bold, WHITE);
+    drawText(page, 'Workers', 320, y - 10, 7, bold, WHITE);
+    drawText(page, 'Hours', 420, y - 10, 7, bold, WHITE);
+    y -= 14;
+    mp.slice(0, 12).forEach((m, i) => {
+      const bg = i % 2 === 0 ? WHITE : LGRAY;
+      page.drawRectangle({ x: 36, y: y - 13, width: width - 72, height: 13, color: bg });
+      drawText(page, String(m.trade || m.company || m.name || '—'), 40, y - 10, 7, reg, DARK);
+      drawText(page, String(m.workers ?? m.count ?? m.headcount ?? '—'), 320, y - 10, 7, reg, DARK);
+      drawText(page, String(m.hours ?? '—'), 420, y - 10, 7, reg, DARK);
+      y -= 13;
+    });
+    y -= 12;
+  }
+
+  // Equipment on site
+  const eq = input.equipmentOnSite || [];
+  if (eq.length > 0) {
+    drawText(page, 'EQUIPMENT ON SITE', 36, y, 10, bold, DARK);
+    y -= 14;
+    eq.slice(0, 8).forEach(e => {
+      const label = typeof e === 'string' ? e : String(e.name || e.equipment || e.description || '—');
+      const hrs = typeof e === 'object' && e.hours != null ? ` — ${e.hours}h` : '';
+      drawText(page, `• ${label}${hrs}`, 46, y, 8, reg, DARK);
+      y -= 12;
+    });
+    y -= 8;
+  }
+
+  // Visitors
+  const vis = input.visitorsDetail || [];
+  if (vis.length > 0) {
+    drawText(page, 'VISITORS', 36, y, 10, bold, DARK);
+    y -= 14;
+    vis.slice(0, 6).forEach(v => {
+      const label = typeof v === 'string' ? v : `${v.name || '—'}${v.company ? ` (${v.company})` : ''}${v.purpose ? ` — ${v.purpose}` : ''}`;
+      drawText(page, `• ${label}`, 46, y, 8, reg, DARK);
+      y -= 12;
+    });
+    y -= 8;
+  }
+
+  // Incidents
+  const inc = input.incidentsDetail || [];
+  if (inc.length > 0) {
+    page.drawRectangle({ x: 36, y: y - 14, width: width - 72, height: 14, color: rgb(0.85, 0.15, 0.1) });
+    drawText(page, 'SAFETY INCIDENTS', 40, y - 10, 9, bold, WHITE);
+    y -= 18;
+    inc.slice(0, 6).forEach(item => {
+      const label = typeof item === 'string' ? item : String(item.description || item.type || item.notes || '—');
+      drawText(page, `• ${label}`, 46, y, 8, reg, rgb(0.7, 0.1, 0.05));
+      y -= 12;
+    });
+    y -= 8;
+  }
+
+  if (input.safetyNotes) {
+    drawText(page, 'SAFETY NOTES', 36, y, 9, bold, DARK);
+    y -= 14;
+    y = drawParagraph(page, input.safetyNotes, 36, y, 105, 8, reg, GRAY);
+    y -= 6;
+  }
+  if (input.materialsDelivered) {
+    drawText(page, 'MATERIALS DELIVERED', 36, y, 9, bold, DARK);
+    y -= 14;
+    y = drawParagraph(page, input.materialsDelivered, 36, y, 105, 8, reg, GRAY);
+    y -= 6;
+  }
+  if (input.notes) {
+    drawText(page, 'NOTES', 36, y, 9, bold, DARK);
+    y -= 14;
+    y = drawParagraph(page, input.notes, 36, y, 105, 8, reg, GRAY);
+  }
+
+  footerText(page, reg);
+  return await doc.save();
+}
+
+// ─── Change Order ─────────────────────────────────────────────────────────────
+export async function generateChangeOrder(input: {
+  coNumber: number; title: string;
+  description?: string | null; reason?: string | null;
+  status: string; createdAt: string; amount: number;
+  lineItems: Array<{ description: string; qty: number; unit: string; unit_cost: number; total: number }>;
+  scheduleImpactDays: number;
+  projectName: string; projectNumber?: string | null; projectAddress?: string | null;
+  ownerName?: string | null; architectName?: string | null;
+  gcCompany: string; gcAddress?: string | null;
+  pmName: string; pmTitle?: string | null; pmEmail?: string | null; pmPhone?: string | null;
+  scopeOfChange?: string | null;
+  workIncluded: string[]; workExcluded: string[];
+}): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage(PageSizes.Letter);
+  const { width, height } = page.getSize();
+  const { reg, bold } = await baseFonts(doc);
+
+  headerBar(page, 'CHANGE ORDER', `${input.projectName}${input.projectNumber ? ` (#${input.projectNumber})` : ''}`, bold, reg);
+
+  let y = height - 70;
+  page.drawRectangle({ x: 36, y: y - 24, width: width - 72, height: 24, color: DARK });
+  drawText(page, `CHANGE ORDER #${input.coNumber}`, 42, y - 16, 12, bold, GOLD);
+  drawText(page, input.status.replace(/_/g, ' ').toUpperCase(), width - 180, y - 16, 10, bold, WHITE);
+  y -= 38;
+
+  // Parties
+  fieldBox(page, 'PROJECT:', input.projectName, 36, y, 250, reg, bold);
+  fieldBox(page, 'CONTRACTOR:', input.gcCompany, 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'OWNER:', input.ownerName || '—', 36, y, 250, reg, bold);
+  fieldBox(page, 'ARCHITECT:', input.architectName || '—', 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'DATE:', fmtDate(input.createdAt), 36, y, 160, reg, bold);
+  fieldBox(page, 'SCHEDULE IMPACT:', `${input.scheduleImpactDays} day(s)`, 200, y, 160, reg, bold);
+  fieldBox(page, 'PROJECT ADDRESS:', input.projectAddress || '—', 364, y, 192, reg, bold);
+  y -= 44;
+
+  // Title + reason + description
+  drawText(page, 'TITLE', 36, y, 10, bold, DARK);
+  y -= 16;
+  y = drawParagraph(page, input.title, 36, y, 95, 10, reg, DARK);
+  if (input.reason) {
+    y -= 8;
+    drawText(page, 'REASON FOR CHANGE', 36, y, 10, bold, DARK);
+    y -= 16;
+    y = drawParagraph(page, input.reason, 36, y, 95, 9, reg, DARK);
+  }
+  if (input.scopeOfChange || input.description) {
+    y -= 8;
+    drawText(page, 'SCOPE OF CHANGE', 36, y, 10, bold, DARK);
+    y -= 16;
+    y = drawParagraph(page, input.scopeOfChange || input.description || '', 36, y, 95, 9, reg, DARK);
+  }
+  y -= 16;
+
+  // Line items table
+  if (input.lineItems.length > 0) {
+    drawText(page, 'COST BREAKDOWN', 36, y, 10, bold, DARK);
+    y -= 16;
+    page.drawRectangle({ x: 36, y: y - 16, width: width - 72, height: 16, color: DARK });
+    drawText(page, 'Description', 40, y - 12, 8, bold, WHITE);
+    drawText(page, 'Qty', 330, y - 12, 8, bold, WHITE);
+    drawText(page, 'Unit', 375, y - 12, 8, bold, WHITE);
+    drawText(page, 'Unit Cost', 420, y - 12, 8, bold, WHITE);
+    drawText(page, 'Total', 500, y - 12, 8, bold, WHITE);
+    y -= 16;
+    input.lineItems.slice(0, 18).forEach((li, i) => {
+      const bg = i % 2 === 0 ? WHITE : LGRAY;
+      page.drawRectangle({ x: 36, y: y - 14, width: width - 72, height: 14, color: bg });
+      drawText(page, li.description, 40, y - 10, 8, reg, DARK);
+      drawText(page, String(li.qty), 330, y - 10, 8, reg, DARK);
+      drawText(page, li.unit, 375, y - 10, 8, reg, DARK);
+      drawText(page, fmtCurrency(li.unit_cost), 420, y - 10, 8, reg, DARK);
+      drawText(page, fmtCurrency(li.total), 500, y - 10, 8, reg, DARK);
+      y -= 14;
+    });
+  }
+
+  // Total
+  y -= 6;
+  page.drawRectangle({ x: 36, y: y - 22, width: width - 72, height: 22, color: LGRAY, borderColor: GOLD, borderWidth: 1 });
+  drawText(page, 'NET CHANGE TO CONTRACT SUM:', 42, y - 15, 11, bold, DARK);
+  drawText(page, fmtCurrency(input.amount), width - 160, y - 15, 12, bold, input.amount >= 0 ? rgb(0.1, 0.5, 0.1) : rgb(0.7, 0.2, 0.05));
+  y -= 36;
+
+  // Work included / excluded
+  if (input.workIncluded.length > 0 || input.workExcluded.length > 0) {
+    const colW = (width - 84) / 2;
+    if (input.workIncluded.length > 0) {
+      drawText(page, 'WORK INCLUDED', 36, y, 9, bold, DARK);
+    }
+    if (input.workExcluded.length > 0) {
+      drawText(page, 'WORK EXCLUDED', 42 + colW, y, 9, bold, DARK);
+    }
+    let yL = y - 14;
+    input.workIncluded.slice(0, 8).forEach(w => { drawText(page, `• ${w}`, 40, yL, 8, reg, DARK); yL -= 12; });
+    let yR = y - 14;
+    input.workExcluded.slice(0, 8).forEach(w => { drawText(page, `• ${w}`, 46 + colW, yR, 8, reg, GRAY); yR -= 12; });
+    y = Math.min(yL, yR) - 12;
+  }
+
+  // Signature blocks
+  drawText(page, 'APPROVALS', 36, y, 9, bold, DARK);
+  y -= 24;
+  [['OWNER', input.ownerName || ''], ['CONTRACTOR', `${input.gcCompany}`], ['PROJECT MANAGER', input.pmName]].forEach(([role, name], i) => {
+    const bx = 36 + i * 180;
+    page.drawLine({ start: { x: bx, y }, end: { x: bx + 160, y }, color: DARK, thickness: 0.5 });
+    drawText(page, name, bx, y - 12, 8, bold, DARK);
+    drawText(page, role, bx, y - 22, 7, reg, GRAY);
+    drawText(page, 'Date: _______________', bx, y - 34, 7, reg, GRAY);
+  });
+
+  footerText(page, reg);
+  return await doc.save();
+}
+
+// ─── Contract Summary ─────────────────────────────────────────────────────────
+export async function generateContractSummary(input: {
+  contract: Record<string, any>;
+  projectName: string; projectNumber: string; companyName: string;
+}): Promise<Uint8Array> {
+  const doc = await PDFDocument.create();
+  const page = doc.addPage(PageSizes.Letter);
+  const { width, height } = page.getSize();
+  const { reg, bold } = await baseFonts(doc);
+
+  const c = input.contract || {};
+  const amount = Number(c.amount ?? c.contract_amount ?? 0);
+
+  headerBar(page, 'CONTRACT SUMMARY', `${input.projectName}${input.projectNumber ? ` (#${input.projectNumber})` : ''}`, bold, reg);
+
+  let y = height - 70;
+  page.drawRectangle({ x: 36, y: y - 24, width: width - 72, height: 24, color: DARK });
+  drawText(page, `CONTRACT ${c.contract_number || c.id || ''}`, 42, y - 16, 12, bold, GOLD);
+  drawText(page, String(c.status || 'draft').replace(/_/g, ' ').toUpperCase(), width - 180, y - 16, 10, bold, WHITE);
+  y -= 38;
+
+  fieldBox(page, 'TITLE:', String(c.title || '—'), 36, y, 350, reg, bold);
+  fieldBox(page, 'TYPE:', String(c.contract_type || '—').replace(/_/g, ' '), 400, y, 156, reg, bold);
+  y -= 30;
+  fieldBox(page, 'COMPANY:', input.companyName || '—', 36, y, 250, reg, bold);
+  fieldBox(page, 'PROJECT:', input.projectName || '—', 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'PARTY / SUBCONTRACTOR:', String(c.party_name || c.party_company || '—'), 36, y, 250, reg, bold);
+  fieldBox(page, 'TRADE:', String(c.trade || '—'), 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'PARTY EMAIL:', String(c.party_email || '—'), 36, y, 250, reg, bold);
+  fieldBox(page, 'PARTY PHONE:', String(c.party_phone || '—'), 300, y, 256, reg, bold);
+  y -= 30;
+  fieldBox(page, 'CONTRACT AMOUNT:', fmtCurrency(amount), 36, y, 180, reg, bold);
+  fieldBox(page, 'RETAINAGE:', `${c.retainage_pct ?? 10}%`, 220, y, 120, reg, bold);
+  fieldBox(page, 'INSURANCE REQ:', c.insurance_required ? 'Yes' : 'No', 344, y, 120, reg, bold);
+  y -= 30;
+  fieldBox(page, 'START DATE:', c.start_date ? fmtDate(c.start_date) : '—', 36, y, 180, reg, bold);
+  fieldBox(page, 'END DATE:', c.end_date ? fmtDate(c.end_date) : '—', 220, y, 180, reg, bold);
+  y -= 30;
+  if (c.executed_at) {
+    fieldBox(page, 'EXECUTED:', fmtDate(c.executed_at), 36, y, 250, reg, bold);
+    y -= 30;
+  }
+  y -= 14;
+
+  // Scope of work
+  drawText(page, 'SCOPE OF WORK', 36, y, 10, bold, DARK);
+  y -= 6;
+  page.drawRectangle({ x: 36, y: y - 4, width: width - 72, height: 0.5, color: GOLD });
+  y -= 14;
+  y = drawParagraph(page, String(c.scope_of_work || 'No scope of work recorded.'), 36, y, 95, 9, reg, c.scope_of_work ? DARK : GRAY);
+
+  if (c.notes) {
+    y -= 14;
+    drawText(page, 'NOTES', 36, y, 10, bold, DARK);
+    y -= 16;
+    y = drawParagraph(page, String(c.notes), 36, y, 95, 8, reg, GRAY);
+  }
+
+  // Financial summary box
+  y -= 20;
+  const retPct = Number(c.retainage_pct ?? 10);
+  const retAmount = amount * retPct / 100;
+  page.drawRectangle({ x: 36, y: y - 70, width: width - 72, height: 70, color: LGRAY, borderColor: GOLD, borderWidth: 1 });
+  drawText(page, 'FINANCIAL SUMMARY', 46, y - 14, 9, bold, DARK);
+  drawText(page, `Contract Amount: ${fmtCurrency(amount)}`, 46, y - 30, 9, reg, DARK);
+  drawText(page, `Retainage (${retPct}%): ${fmtCurrency(retAmount)}`, 46, y - 44, 9, reg, DARK);
+  drawText(page, `Net Payable Less Retainage: ${fmtCurrency(amount - retAmount)}`, 46, y - 58, 9, bold, DARK);
+
+  footerText(page, reg);
+  return await doc.save();
+}
+
 // ─── Save Document to Storage + DB ───────────────────────────────────────────
 export async function saveDocument(
   projectId: string,

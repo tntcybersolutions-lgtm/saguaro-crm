@@ -37,6 +37,12 @@ export default function InvoicesPage() {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editVal, setEditVal] = useState('');
+  const [adjustId, setAdjustId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
@@ -82,6 +88,39 @@ export default function InvoicesPage() {
     setInvoices(prev => prev.map(i => i.id === id ? { ...i, status: 'Sent' } : i));
     setSuccessMsg('Invoice sent to owner.');
     setTimeout(() => setSuccessMsg(''), 4000);
+  }
+
+  const fmt = (n: number) => '$' + ((n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+
+  function openInvMenu(id: string) { setMenuId(id); setEditId(null); setAdjustId(null); setDeleteId(null); }
+
+  async function handleEditInv(id: string) {
+    const amount = parseFloat(editVal);
+    if (isNaN(amount) || amount < 0) return;
+    setInvoices(prev => prev.map(i => i.id === id ? { ...i, amount } : i));
+    setEditId(null);
+    try { await fetch(`/api/invoices/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount }) }); setSuccessMsg('Amount updated.'); setTimeout(() => setSuccessMsg(''), 3000); } catch { setSuccessMsg('Updated locally.'); setTimeout(() => setSuccessMsg(''), 3000); }
+  }
+
+  async function handleAdjustInv(id: string, pct: number) {
+    const inv = invoices.find(i => i.id === id);
+    if (!inv) return;
+    const newAmt = Math.round(inv.amount * (1 + pct / 100));
+    setInvoices(prev => prev.map(i => i.id === id ? { ...i, amount: newAmt } : i));
+    setAdjustId(null);
+    try { await fetch(`/api/invoices/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: newAmt }) }); setSuccessMsg(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`); setTimeout(() => setSuccessMsg(''), 3000); } catch { setSuccessMsg('Adjusted locally.'); setTimeout(() => setSuccessMsg(''), 3000); }
+  }
+
+  function handleCopyInv(id: string, amount: number) {
+    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
+    setCopiedId(id); setTimeout(() => setCopiedId(null), 2000);
+    setMenuId(null);
+  }
+
+  async function handleDeleteInv(id: string) {
+    setInvoices(prev => prev.filter(i => i.id !== id));
+    setDeleteId(null);
+    try { await fetch(`/api/invoices/${id}/delete`, { method: 'DELETE' }); setSuccessMsg('Invoice deleted.'); setTimeout(() => setSuccessMsg(''), 3000); } catch { setSuccessMsg('Deleted locally.'); setTimeout(() => setSuccessMsg(''), 3000); }
   }
 
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
@@ -155,7 +194,51 @@ export default function InvoicesPage() {
                   <tr key={inv.id} style={{ borderBottom: '1px solid rgba(38,51,71,.4)', background: overdue ? 'rgba(239,68,68,.04)' : 'transparent' }}>
                     <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 700 }}>{inv.invoice_num}</td>
                     <td style={{ padding: '10px 14px', color: DIM }}>{inv.period}</td>
-                    <td style={{ padding: '10px 14px', color: TEXT, fontWeight: 700 }}>${inv.amount?.toLocaleString()}</td>
+                    <td style={{ padding: '10px 14px', position: 'relative' as const }}>
+                      {deleteId === inv.id ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 11, color: RED, fontWeight: 600 }}>Delete?</span>
+                          <button onClick={() => handleDeleteInv(inv.id)} style={{ padding: '3px 8px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 5, color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                          <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                        </div>
+                      ) : editId === inv.id ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditInv(inv.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
+                          <button onClick={() => handleEditInv(inv.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 5, color: '#0d1117', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                          <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                        </div>
+                      ) : adjustId === inv.id ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                          {[-10, -5, 5, 10].map(p => (
+                            <button key={p} onClick={() => handleAdjustInv(inv.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(61,214,140,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${p > 0 ? 'rgba(61,214,140,.25)' : 'rgba(239,68,68,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                          ))}
+                          <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ color: TEXT, fontWeight: 700 }}>{fmt(inv.amount)}</span>
+                          {copiedId === inv.id && <span style={{ fontSize: 10, color: GREEN, fontWeight: 600 }}>Copied!</span>}
+                          <button onClick={() => openInvMenu(inv.id)} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 10, padding: '2px 4px', lineHeight: 1, opacity: 0.6 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}>&#9662;</button>
+                          {menuId === inv.id && (
+                            <div style={{ position: 'absolute', top: 36, right: 14, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 8px 24px rgba(0,0,0,.4)' }}>
+                              {[
+                                { label: 'Edit Amount', icon: '\u270F\uFE0F', action: () => { setMenuId(null); setEditId(inv.id); setEditVal(String(inv.amount)); } },
+                                { label: 'Adjust %', icon: '\uD83D\uDCCA', action: () => { setMenuId(null); setAdjustId(inv.id); } },
+                                { label: 'Copy Amount', icon: '\uD83D\uDCCB', action: () => handleCopyInv(inv.id, inv.amount) },
+                              ].map(item => (
+                                <div key={item.label} onClick={item.action} style={{ padding: '7px 12px', fontSize: 12, color: TEXT, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = DARK)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                  <span style={{ fontSize: 14 }}>{item.icon}</span>{item.label}
+                                </div>
+                              ))}
+                              <div style={{ height: 1, background: BORDER, margin: '4px 0' }} />
+                              <div onClick={() => { setMenuId(null); setDeleteId(inv.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                <span style={{ fontSize: 14 }}>{'\uD83D\uDDD1\uFE0F'}</span>Delete Invoice
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{inv.issued_date || '—'}</td>
                     <td style={{ padding: '10px 14px', color: overdue ? RED : DIM, whiteSpace: 'nowrap' }}>{inv.due_date || '—'}</td>
                     <td style={{ padding: '10px 14px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{effectiveStatus}</span></td>
@@ -172,6 +255,7 @@ export default function InvoicesPage() {
             </tbody>
           </table>
         )}
+        {menuId && <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuId(null)} />}
       </div>
     </div>
   );
