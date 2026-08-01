@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { getPdfPageCount, generateThumbnail } from '@/lib/blueprint-processor';
+import { detectImageType } from '@/lib/image-detect';
 
 export const runtime = 'nodejs';
 
@@ -29,16 +30,51 @@ export async function POST(
     const supabase = createServerClient();
     const { id: takeoffId } = await params;
 
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
+    // Accept either multipart/form-data (browser / WebView) or JSON base64
+    // (native clients). Calling req.formData() blind throws a TypeError when the
+    // body isn't form-encoded — the confirmed prod error.
+    const ct = req.headers.get('content-type') ?? '';
+    let fileName: string;
+    let clientType: string;
+    let buffer: Buffer;
 
-    if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    if (ct.includes('multipart/form-data')) {
+      const formData = await req.formData();
+      const file = formData.get('file') as File | null;
+      if (!file) {
+        return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      }
+      fileName = file.name;
+      clientType = file.type;
+      buffer = Buffer.from(await file.arrayBuffer());
+    } else if (ct.includes('application/json')) {
+      const body = (await req.json().catch(() => null)) as
+        | { fileBase64?: string; fileName?: string; fileType?: string }
+        | null;
+      if (!body?.fileBase64) {
+        return NextResponse.json({ error: 'Missing fileBase64 in JSON body.' }, { status: 400 });
+      }
+      const raw = body.fileBase64;
+      const b64 = raw.includes(',') ? raw.slice(raw.indexOf(',') + 1) : raw; // strip data: URI prefix
+      buffer = Buffer.from(b64, 'base64');
+      fileName = body.fileName || 'blueprint';
+      clientType = body.fileType || '';
+    } else {
+      return NextResponse.json(
+        { error: 'Upload as multipart/form-data or JSON base64.' },
+        { status: 415 }
+      );
     }
 
+    // Determine the true type from the bytes; fall back to the client label.
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
+    const sniffed = detectImageType(buffer);
+    const fileType =
+      sniffed !== 'unknown' ? sniffed : (clientType || (ext === 'pdf' ? 'application/pdf' : ''));
+    const fileSize = buffer.byteLength;
+
     // Friendly file type validation
-    if (!VALID_TYPES.includes(file.type)) {
-      const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!VALID_TYPES.includes(fileType)) {
       if (ext === 'dwg' || ext === 'dxf') {
         return NextResponse.json(
           { error: `${ext.toUpperCase()} files are not yet supported. Please export as PDF from AutoCAD and upload that instead.` },
@@ -46,14 +82,14 @@ export async function POST(
         );
       }
       return NextResponse.json(
-        { error: `Unsupported file type "${file.type || ext}". Accepted formats: ${FRIENDLY_ACCEPT}.` },
+        { error: `Unsupported file type "${fileType || clientType || ext}". Accepted formats: ${FRIENDLY_ACCEPT}.` },
         { status: 400 }
       );
     }
 
-    if (file.size > MAX_SIZE) {
+    if (fileSize > MAX_SIZE) {
       return NextResponse.json(
-        { error: `File is too large (${formatSize(file.size)}). Maximum size is ${formatSize(MAX_SIZE)}.` },
+        { error: `File is too large (${formatSize(fileSize)}). Maximum size is ${formatSize(MAX_SIZE)}.` },
         { status: 400 }
       );
     }
@@ -69,23 +105,19 @@ export async function POST(
       return NextResponse.json({ error: 'Takeoff not found' }, { status: 404 });
     }
 
-    // Read file into buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
     // Detect PDF page count (non-blocking — kicked off but not awaited yet)
-    const pageCountPromise = file.type === 'application/pdf'
+    const pageCountPromise = fileType === 'application/pdf'
       ? getPdfPageCount(buffer)
       : Promise.resolve(0);
 
     // Upload blueprint to Supabase Storage
-    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf';
+    const fileExt = ext || (fileType === 'application/pdf' ? 'pdf' : 'bin');
     const storagePath = `${takeoff.project_id}/blueprints/${takeoffId}/blueprint.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('blueprints')
       .upload(storagePath, buffer, {
-        contentType: file.type,
+        contentType: fileType,
         upsert: true,
       });
 
@@ -100,7 +132,7 @@ export async function POST(
       .getPublicUrl(storagePath);
 
     // Thumbnail — truly fire-and-forget, never blocks the upload response
-    generateThumbnail(buffer, file.type).then(async (thumb) => {
+    generateThumbnail(buffer, fileType).then(async (thumb) => {
       if (!thumb) return;
       const thumbPath = `${takeoff.project_id}/blueprints/${takeoffId}/thumbnail.jpg`;
       const { error: thumbErr } = await supabase.storage
@@ -120,10 +152,10 @@ export async function POST(
     // Update takeoff record
     const updatePayload: Record<string, unknown> = {
       file_url: publicUrl,
-      file_name: file.name,
+      file_name: fileName,
       storage_path: storagePath,
-      file_type: file.type,
-      file_size: file.size,
+      file_type: fileType,
+      file_size: fileSize,
       status: 'uploaded',
     };
 
@@ -144,8 +176,8 @@ export async function POST(
       success: true,
       takeoff: updated,
       fileUrl: publicUrl,
-      fileSize: file.size,
-      fileSizeFormatted: formatSize(file.size),
+      fileSize: fileSize,
+      fileSizeFormatted: formatSize(fileSize),
       pageCount: pageCount || undefined,
     });
 

@@ -20,6 +20,8 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { detectImageType, isHeic } from './image-detect';
+
 const MB = 1024 * 1024;
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/tiff'];
 
@@ -92,7 +94,8 @@ async function resizeImage(buffer: Buffer): Promise<{ buffer: Buffer; mimeType: 
   if (!sharp) return null;
 
   try {
-    const resized = await sharp(buffer)
+    const resized = await sharp(buffer, { failOn: 'none' })
+      .rotate() // respect EXIF orientation (iPhone photos arrive sideways)
       .resize(2000, 2000, { fit: 'inside', withoutEnlargement: true })
       .jpeg({ quality: 85 })
       .toBuffer();
@@ -173,22 +176,30 @@ export async function processBlueprint(
       };
     }
 
-    const isPdf = mimeType === 'application/pdf';
-    const isImage = IMAGE_TYPES.includes(mimeType);
-
-    // ── Unknown type → attempt as PDF with warning (rule 8) ────────────────
-    if (!isPdf && !isImage) {
-      console.warn(`[blueprint-processor] Unknown MIME "${mimeType}" — attempting as PDF`);
-      return processPdf(buffer);
-    }
+    // Trust the actual bytes over the declared mimeType — a file uploaded as
+    // "image/jpeg" that is really a PNG (or an octet-stream that is really a
+    // PDF) otherwise gets sent to Claude with the wrong media_type and rejected.
+    const detected = detectImageType(buffer);
+    const heic = detected === 'unknown' && isHeic(buffer);
 
     // ── PDF path (rules 1-3) ───────────────────────────────────────────────
-    if (isPdf) {
+    if (detected === 'application/pdf' || (detected === 'unknown' && !heic && mimeType === 'application/pdf')) {
       return processPdf(buffer);
     }
 
-    // ── Image path (rules 4-6) ─────────────────────────────────────────────
-    return processImage(buffer, mimeType);
+    // ── Image path (rules 4-6) — incl. HEIC/HEIF from iPhone cameras ────────
+    const isImage =
+      detected === 'image/png' || detected === 'image/jpeg' ||
+      detected === 'image/gif' || detected === 'image/webp' ||
+      heic || IMAGE_TYPES.includes(mimeType);
+    if (isImage) {
+      const effectiveMime = detected !== 'unknown' ? detected : mimeType;
+      return processImage(buffer, effectiveMime);
+    }
+
+    // ── Truly unknown type → attempt as PDF with warning (rule 8) ──────────
+    console.warn(`[blueprint-processor] Unknown MIME "${mimeType}" / unrecognized bytes — attempting as PDF`);
+    return processPdf(buffer);
 
   } catch (err) {
     // RULE 9: ANY error → catch, log, use original buffer, never crash
@@ -269,13 +280,26 @@ async function processImage(buffer: Buffer, mimeType: string): Promise<Processed
     };
   }
 
-  // Rule 5: no sharp → send original if under 5MB
+  // Rule 5: no sharp → send original if under 5MB, labeled by its REAL bytes
   if (size <= 5 * MB) {
-    const safeMime = IMAGE_TYPES.includes(mimeType) ? mimeType : 'image/jpeg';
+    const detected = detectImageType(buffer);
+    const claudeImage =
+      detected === 'image/png' || detected === 'image/jpeg' ||
+      detected === 'image/gif' || detected === 'image/webp';
+    // Only pass through when we can name the type Claude will actually accept.
+    // (TIFF/HEIC need sharp to convert; without it, error rather than mislabel.)
+    if (claudeImage) {
+      return { base64: buffer.toString('base64'), mimeType: detected, reduced: false };
+    }
+    const claudeSafeLabel = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(mimeType);
+    if (claudeSafeLabel) {
+      return { base64: buffer.toString('base64'), mimeType, reduced: false };
+    }
     return {
-      base64: buffer.toString('base64'),
-      mimeType: safeMime,
+      base64: '',
+      mimeType,
       reduced: false,
+      error: 'This image format needs server-side conversion that is currently unavailable. Please upload a JPG or PNG, or export the plan as PDF.',
     };
   }
 

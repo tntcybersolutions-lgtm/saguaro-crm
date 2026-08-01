@@ -5,6 +5,7 @@
  */
 import { PDFDocument, rgb, StandardFonts, PageSizes } from 'pdf-lib';
 import { createServerClient } from './supabase-server';
+import { toWinAnsi } from './winansi';
 
 export { PageSizes, StandardFonts, rgb, PDFDocument };
 
@@ -44,7 +45,9 @@ function drawBox(page: any, x: number, y: number, w: number, h: number, fill = L
 }
 
 function drawText(page: any, text: string, x: number, y: number, size: number, font: any, color = BLACK) {
-  page.drawText(String(text ?? '').slice(0, 120), { x, y, size, font, color });
+  // toWinAnsi() strips glyphs the StandardFonts can't encode (☐ ✓ ⚠ → …),
+  // which otherwise throw and abort the whole PDF (killed 17 bid jackets).
+  page.drawText(toWinAnsi(text).slice(0, 120), { x, y, size, font, color });
 }
 
 function fieldBox(page: any, label: string, value: string, x: number, y: number, w: number, reg: any, bold: any) {
