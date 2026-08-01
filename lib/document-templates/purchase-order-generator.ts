@@ -5,6 +5,7 @@ import {
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
+import { toWinAnsi } from '../winansi';
 
 export interface POLineItem {
   itemNumber: number;
@@ -92,14 +93,14 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     height: 40,
     color: rgb(0.831, 0.627, 0.09),
   });
-  page.drawText('PURCHASE ORDER', {
+  page.drawText(toWinAnsi('PURCHASE ORDER'), {
     x: 10,
     y: height - 26,
     size: 14,
     font: bold,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page.drawText('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM', {
+  page.drawText(toWinAnsi('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM'), {
     x: 10,
     y: height - 36,
     size: 7,
@@ -108,7 +109,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
   });
 
   // PO number in top right
-  page.drawText(`PO #: ${poNumber}`, {
+  page.drawText(toWinAnsi(`PO #: ${poNumber}`), {
     x: width - 180,
     y: height - 55,
     size: 10,
@@ -148,12 +149,12 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     height: 16,
     color: rgb(0.15, 0.2, 0.25),
   });
-  page.drawText('ITEM', { x: 15, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('DESCRIPTION', { x: 50, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('QTY', { x: 310, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('UNIT', { x: 360, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('UNIT PRICE', { x: 410, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
-  page.drawText('TOTAL', { x: 500, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
+  page.drawText(toWinAnsi('ITEM'), { x: 15, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
+  page.drawText(toWinAnsi('DESCRIPTION'), { x: 50, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
+  page.drawText(toWinAnsi('QTY'), { x: 310, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
+  page.drawText(toWinAnsi('UNIT'), { x: 360, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
+  page.drawText(toWinAnsi('UNIT PRICE'), { x: 410, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
+  page.drawText(toWinAnsi('TOTAL'), { x: 500, y: y + 1, size: 7.5, font: bold, color: rgb(1, 1, 1) });
 
   // Line item rows
   const maxItems = Math.min(items.length, 18);
@@ -167,22 +168,22 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
       height: 14,
       color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
     });
-    page.drawText(item.itemNumber.toString(), {
+    page.drawText(toWinAnsi(item.itemNumber.toString()), {
       x: 15, y: y + 1, size: 8, font, color: rgb(0.1, 0.1, 0.1),
     });
-    page.drawText(item.description.slice(0, 38), {
+    page.drawText(toWinAnsi(item.description.slice(0, 38)), {
       x: 50, y: y + 1, size: 8, font, color: rgb(0.1, 0.1, 0.1),
     });
-    page.drawText(item.qty.toString(), {
+    page.drawText(toWinAnsi(item.qty.toString()), {
       x: 310, y: y + 1, size: 8, font, color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(item.unit, {
+    page.drawText(toWinAnsi(item.unit), {
       x: 360, y: y + 1, size: 8, font, color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(fmtCurrency(item.unitPrice), {
+    page.drawText(toWinAnsi(fmtCurrency(item.unitPrice)), {
       x: 410, y: y + 1, size: 8, font, color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(fmtCurrency(item.total), {
+    page.drawText(toWinAnsi(fmtCurrency(item.total)), {
       x: 500, y: y + 1, size: 8, font, color: rgb(0.1, 0.1, 0.1),
     });
   }
@@ -190,7 +191,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
   if (items.length > 18) {
     y -= 14;
     page.drawText(
-      `... and ${items.length - 18} more line items. See attached schedule.`,
+      toWinAnsi(`... and ${items.length - 18} more line items. See attached schedule.`),
       { x: 15, y, size: 8, font, color: rgb(0.5, 0.5, 0.5) }
     );
   }
@@ -212,8 +213,8 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
 
   totalRows.forEach(([label, value]) => {
     y -= 16;
-    page.drawText(label, { x: 400, y, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
-    page.drawText(value, { x: 500, y, size: 9, font, color: rgb(0, 0, 0) });
+    page.drawText(toWinAnsi(label), { x: 400, y, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
+    page.drawText(toWinAnsi(value), { x: 500, y, size: 9, font, color: rgb(0, 0, 0) });
   });
 
   // Grand total highlight
@@ -225,14 +226,14 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     height: 22,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page.drawText('TOTAL:', {
+  page.drawText(toWinAnsi('TOTAL:'), {
     x: 400,
     y: y + 3,
     size: 10,
     font: bold,
     color: rgb(0.83, 0.63, 0.09),
   });
-  page.drawText(fmtCurrency(total), {
+  page.drawText(toWinAnsi(fmtCurrency(total)), {
     x: 490,
     y: y + 3,
     size: 11,
@@ -243,7 +244,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
   // Delivery instructions
   if (deliveryInstructions) {
     y -= 30;
-    page.drawText('DELIVERY INSTRUCTIONS:', {
+    page.drawText(toWinAnsi('DELIVERY INSTRUCTIONS:'), {
       x: 10,
       y,
       size: 9,
@@ -251,7 +252,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
       color: rgb(0, 0, 0),
     });
     y -= 12;
-    page.drawText(deliveryInstructions.slice(0, 120), {
+    page.drawText(toWinAnsi(deliveryInstructions.slice(0, 120)), {
       x: 15,
       y,
       size: 8.5,
@@ -270,8 +271,8 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
   });
   y -= 15;
 
-  page.drawText('AUTHORIZED BY:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
-  page.drawText(`Date: ${new Date().toLocaleDateString()}`, {
+  page.drawText(toWinAnsi('AUTHORIZED BY:'), { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page.drawText(toWinAnsi(`Date: ${new Date().toLocaleDateString()}`), {
     x: 310,
     y,
     size: 9,
@@ -285,7 +286,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     thickness: 0.5,
     color: rgb(0, 0, 0),
   });
-  page.drawText('Signature / Title', {
+  page.drawText(toWinAnsi('Signature / Title'), {
     x: 10,
     y: y - 30,
     size: 7,
@@ -295,7 +296,7 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
 
   // Footer
   page.drawText(
-    `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Purchase Order`,
+    toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Purchase Order`),
     { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
   );
 

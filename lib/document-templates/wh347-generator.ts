@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
 import { saveDocument, fmtCurrency } from '../pdf-engine';
+import { toWinAnsi } from '../winansi';
 
 export interface WH347Worker {
   name: string;
@@ -56,7 +57,7 @@ export async function generateWH347(input: WH347Input): Promise<{
       height: 40,
       color: rgb(0.831, 0.627, 0.09),
     });
-    page.drawText('U.S. DEPT. OF LABOR \u2014 WH-347 CERTIFIED PAYROLL REPORT', {
+    page.drawText(toWinAnsi('U.S. DEPT. OF LABOR \u2014 WH-347 CERTIFIED PAYROLL REPORT'), {
       x: 10,
       y: height - 26,
       size: 11,
@@ -64,35 +65,35 @@ export async function generateWH347(input: WH347Input): Promise<{
       color: rgb(0.05, 0.07, 0.09),
     });
     page.drawText(
-      `Page ${pageNum}  \u2022  SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM`,
+      toWinAnsi(`Page ${pageNum}  \u2022  SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM`),
       { x: 10, y: height - 36, size: 7, font, color: rgb(0.2, 0.1, 0) }
     );
 
     let y = height - 60;
 
     // Header info
-    page.drawText(`CONTRACTOR: ${input.contractorName}`, {
+    page.drawText(toWinAnsi(`CONTRACTOR: ${input.contractorName}`), {
       x: 10,
       y,
       size: 9,
       font: bold,
       color: rgb(0, 0, 0),
     });
-    page.drawText(`ADDRESS: ${input.contractorAddress}`, {
+    page.drawText(toWinAnsi(`ADDRESS: ${input.contractorAddress}`), {
       x: 10,
       y: y - 12,
       size: 8,
       font,
       color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(`PAYROLL NO: ${input.payrollNumber}`, {
+    page.drawText(toWinAnsi(`PAYROLL NO: ${input.payrollNumber}`), {
       x: 360,
       y,
       size: 9,
       font: bold,
       color: rgb(0, 0, 0),
     });
-    page.drawText(`WEEK ENDING: ${input.weekEnding}`, {
+    page.drawText(toWinAnsi(`WEEK ENDING: ${input.weekEnding}`), {
       x: 360,
       y: y - 12,
       size: 9,
@@ -101,14 +102,14 @@ export async function generateWH347(input: WH347Input): Promise<{
     });
 
     y -= 30;
-    page.drawText(`PROJECT NAME: ${input.projectName}`, {
+    page.drawText(toWinAnsi(`PROJECT NAME: ${input.projectName}`), {
       x: 10,
       y,
       size: 9,
       font: bold,
       color: rgb(0, 0, 0),
     });
-    page.drawText(`PROJECT NO: ${input.projectNumber}`, {
+    page.drawText(toWinAnsi(`PROJECT NO: ${input.projectNumber}`), {
       x: 360,
       y,
       size: 9,
@@ -119,7 +120,7 @@ export async function generateWH347(input: WH347Input): Promise<{
     if (input.federalProjectNumber || input.contractingAgency) {
       y -= 12;
       if (input.federalProjectNumber) {
-        page.drawText(`FEDERAL PROJECT NO: ${input.federalProjectNumber}`, {
+        page.drawText(toWinAnsi(`FEDERAL PROJECT NO: ${input.federalProjectNumber}`), {
           x: 10,
           y,
           size: 8,
@@ -128,7 +129,7 @@ export async function generateWH347(input: WH347Input): Promise<{
         });
       }
       if (input.contractingAgency) {
-        page.drawText(`CONTRACTING AGENCY: ${input.contractingAgency}`, {
+        page.drawText(toWinAnsi(`CONTRACTING AGENCY: ${input.contractingAgency}`), {
           x: 290,
           y,
           size: 8,
@@ -171,7 +172,7 @@ export async function generateWH347(input: WH347Input): Promise<{
     colHeaders.forEach((col) => {
       const lines = col.label.split('\n');
       lines.forEach((line, li) => {
-        page.drawText(line, {
+        page.drawText(toWinAnsi(line), {
           x: col.x + 2,
           y: y - 2 - li * 8,
           size: 6,
@@ -208,21 +209,21 @@ export async function generateWH347(input: WH347Input): Promise<{
       });
 
       // Name, address, classification
-      page.drawText(worker.name.slice(0, 22), {
+      page.drawText(toWinAnsi(worker.name.slice(0, 22)), {
         x: 12,
         y: rowY - 5,
         size: 7.5,
         font: bold,
         color: belowPrevailing ? rgb(0.7, 0.3, 0.05) : rgb(0.05, 0.05, 0.05),
       });
-      page.drawText(worker.address.slice(0, 24), {
+      page.drawText(toWinAnsi(worker.address.slice(0, 24)), {
         x: 12,
         y: rowY - 14,
         size: 6.5,
         font,
         color: rgb(0.4, 0.4, 0.4),
       });
-      page.drawText(worker.workClassification.slice(0, 22), {
+      page.drawText(toWinAnsi(worker.workClassification.slice(0, 22)), {
         x: 12,
         y: rowY - 23,
         size: 6.5,
@@ -232,7 +233,7 @@ export async function generateWH347(input: WH347Input): Promise<{
 
       if (belowPrevailing) {
         page.drawText(
-          `BELOW PREVAILING (${fmtCurrency(worker.prevailingWageRate!)}/hr)`,
+          toWinAnsi(`BELOW PREVAILING (${fmtCurrency(worker.prevailingWageRate!)}/hr)`),
           { x: 12, y: rowY - 33, size: 6, font: bold, color: rgb(0.8, 0.2, 0) }
         );
       }
@@ -242,7 +243,7 @@ export async function generateWH347(input: WH347Input): Promise<{
       const dayLabels = ['M', 'T', 'W', 'Th', 'F', 'Sa', 'Su'];
       days.forEach((day, di) => {
         const hrs = worker.daysWorked[day] || 0;
-        page.drawText(`${dayLabels[di]}:${hrs}`, {
+        page.drawText(toWinAnsi(`${dayLabels[di]}:${hrs}`), {
           x: 143 + di * 11,
           y: rowY - 8,
           size: 6,
@@ -271,7 +272,7 @@ export async function generateWH347(input: WH347Input): Promise<{
       ];
 
       numCols.forEach(([x, val]) => {
-        page.drawText(val, {
+        page.drawText(toWinAnsi(val), {
           x,
           y: rowY - 8,
           size: 7,
@@ -305,42 +306,42 @@ export async function generateWH347(input: WH347Input): Promise<{
       const totNet = batch.reduce((s, w) => s + w.netWages, 0);
       const totRegHrs = batch.reduce((s, w) => s + w.regularHours, 0);
       const totOtHrs = batch.reduce((s, w) => s + w.overtimeHours, 0);
-      page.drawText('PAGE TOTALS', {
+      page.drawText(toWinAnsi('PAGE TOTALS'), {
         x: 15,
         y: y - 10,
         size: 7.5,
         font: bold,
         color: rgb(0.83, 0.63, 0.09),
       });
-      page.drawText(totRegHrs.toString(), {
+      page.drawText(toWinAnsi(totRegHrs.toString()), {
         x: 226,
         y: y - 10,
         size: 7.5,
         font: bold,
         color: rgb(0.83, 0.63, 0.09),
       });
-      page.drawText(totOtHrs.toString(), {
+      page.drawText(toWinAnsi(totOtHrs.toString()), {
         x: 264,
         y: y - 10,
         size: 7.5,
         font: bold,
         color: rgb(0.83, 0.63, 0.09),
       });
-      page.drawText(fmtCurrency(totGross), {
+      page.drawText(toWinAnsi(fmtCurrency(totGross)), {
         x: 398,
         y: y - 10,
         size: 7.5,
         font: bold,
         color: rgb(0.83, 0.63, 0.09),
       });
-      page.drawText(fmtCurrency(totDeductions), {
+      page.drawText(toWinAnsi(fmtCurrency(totDeductions)), {
         x: 461,
         y: y - 10,
         size: 7.5,
         font: bold,
         color: rgb(0.83, 0.63, 0.09),
       });
-      page.drawText(fmtCurrency(totNet), {
+      page.drawText(toWinAnsi(fmtCurrency(totNet)), {
         x: 514,
         y: y - 10,
         size: 7.5,
@@ -359,7 +360,7 @@ export async function generateWH347(input: WH347Input): Promise<{
         color: rgb(0.75, 0.75, 0.75),
       });
       y -= 14;
-      page.drawText('STATEMENT OF COMPLIANCE (CERTIFICATION)', {
+      page.drawText(toWinAnsi('STATEMENT OF COMPLIANCE (CERTIFICATION)'), {
         x: 10,
         y,
         size: 9,
@@ -379,7 +380,7 @@ export async function generateWH347(input: WH347Input): Promise<{
       let certLine = '';
       for (const word of certWords) {
         if ((certLine + ' ' + word).length > 95) {
-          page.drawText(certLine.trim(), {
+          page.drawText(toWinAnsi(certLine.trim()), {
             x: 10,
             y,
             size: 7.5,
@@ -393,7 +394,7 @@ export async function generateWH347(input: WH347Input): Promise<{
         }
       }
       if (certLine.trim()) {
-        page.drawText(certLine.trim(), {
+        page.drawText(toWinAnsi(certLine.trim()), {
           x: 10,
           y,
           size: 7.5,
@@ -417,14 +418,14 @@ export async function generateWH347(input: WH347Input): Promise<{
         color: rgb(0, 0, 0),
       });
       y -= 10;
-      page.drawText('Signature / Title', {
+      page.drawText(toWinAnsi('Signature / Title'), {
         x: 10,
         y,
         size: 8,
         font,
         color: rgb(0.5, 0.5, 0.5),
       });
-      page.drawText('Date', {
+      page.drawText(toWinAnsi('Date'), {
         x: 320,
         y,
         size: 8,
@@ -434,7 +435,7 @@ export async function generateWH347(input: WH347Input): Promise<{
     }
 
     page.drawText(
-      `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  WH-347 Certified Payroll`,
+      toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  WH-347 Certified Payroll`),
       { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
     );
 

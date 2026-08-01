@@ -5,6 +5,7 @@ import {
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
+import { toWinAnsi } from '../winansi';
 
 export interface PunchListItem {
   id: string;
@@ -46,7 +47,7 @@ export async function generateG704(input: G704Input): Promise<{
     color: rgb(0.831, 0.627, 0.09),
   });
   page.drawText(
-    'AIA DOCUMENT G704 \u2014 CERTIFICATE OF SUBSTANTIAL COMPLETION',
+    toWinAnsi('AIA DOCUMENT G704 \u2014 CERTIFICATE OF SUBSTANTIAL COMPLETION'),
     {
       x: 10,
       y: height - 26,
@@ -55,7 +56,7 @@ export async function generateG704(input: G704Input): Promise<{
       color: rgb(0.05, 0.07, 0.09),
     }
   );
-  page.drawText('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM', {
+  page.drawText(toWinAnsi('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM'), {
     x: 10,
     y: height - 36,
     size: 7,
@@ -161,7 +162,7 @@ export async function generateG704(input: G704Input): Promise<{
 
   // Certificate body
   y -= 18;
-  page.drawText('CERTIFICATE OF SUBSTANTIAL COMPLETION', {
+  page.drawText(toWinAnsi('CERTIFICATE OF SUBSTANTIAL COMPLETION'), {
     x: 10,
     y,
     size: 11,
@@ -180,7 +181,7 @@ export async function generateG704(input: G704Input): Promise<{
   let certLine = '';
   for (const word of certWords) {
     if ((certLine + ' ' + word).length > 95) {
-      page.drawText(certLine.trim(), {
+      page.drawText(toWinAnsi(certLine.trim()), {
         x: 10,
         y,
         size: 8.5,
@@ -194,7 +195,7 @@ export async function generateG704(input: G704Input): Promise<{
     }
   }
   if (certLine.trim()) {
-    page.drawText(certLine.trim(), {
+    page.drawText(toWinAnsi(certLine.trim()), {
       x: 10,
       y,
       size: 8.5,
@@ -206,7 +207,7 @@ export async function generateG704(input: G704Input): Promise<{
 
   // Date table
   y -= 15;
-  page.drawText('COMPLETION DATES', {
+  page.drawText(toWinAnsi('COMPLETION DATES'), {
     x: 10,
     y,
     size: 10,
@@ -238,14 +239,14 @@ export async function generateG704(input: G704Input): Promise<{
       height: 18,
       color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
     });
-    page.drawText(label, {
+    page.drawText(toWinAnsi(label), {
       x: 15,
       y: y + 2,
       size: 9,
       font: bold,
       color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(value, {
+    page.drawText(toWinAnsi(value), {
       x: 280,
       y: y + 2,
       size: 9,
@@ -263,7 +264,7 @@ export async function generateG704(input: G704Input): Promise<{
     color: rgb(0.83, 0.63, 0.09),
   });
   y -= 15;
-  page.drawText('WORK TO COMPLETE OR CORRECT (PUNCH LIST)', {
+  page.drawText(toWinAnsi('WORK TO COMPLETE OR CORRECT (PUNCH LIST)'), {
     x: 10,
     y,
     size: 10,
@@ -273,7 +274,7 @@ export async function generateG704(input: G704Input): Promise<{
 
   if (input.punchListCost) {
     page.drawText(
-      `Estimated Cost to Complete Punch List: ${fmtCurrency(input.punchListCost)}`,
+      toWinAnsi(`Estimated Cost to Complete Punch List: ${fmtCurrency(input.punchListCost)}`),
       { x: 10, y: y - 14, size: 9, font, color: rgb(0.3, 0.3, 0.3) }
     );
     y -= 14;
@@ -282,7 +283,7 @@ export async function generateG704(input: G704Input): Promise<{
   const punchItems = input.punchListItems || [];
   if (punchItems.length === 0) {
     y -= 14;
-    page.drawText('See attached punch list.', {
+    page.drawText(toWinAnsi('See attached punch list.'), {
       x: 15,
       y,
       size: 9,
@@ -300,28 +301,28 @@ export async function generateG704(input: G704Input): Promise<{
       height: 16,
       color: rgb(0.15, 0.2, 0.25),
     });
-    page.drawText('DESCRIPTION', {
+    page.drawText(toWinAnsi('DESCRIPTION'), {
       x: 15,
       y: y + 1,
       size: 7.5,
       font: bold,
       color: rgb(1, 1, 1),
     });
-    page.drawText('ASSIGNED TO', {
+    page.drawText(toWinAnsi('ASSIGNED TO'), {
       x: 310,
       y: y + 1,
       size: 7.5,
       font: bold,
       color: rgb(1, 1, 1),
     });
-    page.drawText('DUE DATE', {
+    page.drawText(toWinAnsi('DUE DATE'), {
       x: 440,
       y: y + 1,
       size: 7.5,
       font: bold,
       color: rgb(1, 1, 1),
     });
-    page.drawText('STATUS', {
+    page.drawText(toWinAnsi('STATUS'), {
       x: 520,
       y: y + 1,
       size: 7.5,
@@ -340,28 +341,28 @@ export async function generateG704(input: G704Input): Promise<{
         height: 14,
         color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
       });
-      page.drawText(item.description.slice(0, 42), {
+      page.drawText(toWinAnsi(item.description.slice(0, 42)), {
         x: 15,
         y: y + 1,
         size: 8,
         font,
         color: rgb(0.1, 0.1, 0.1),
       });
-      page.drawText(item.assignedTo.slice(0, 18), {
+      page.drawText(toWinAnsi(item.assignedTo.slice(0, 18)), {
         x: 310,
         y: y + 1,
         size: 8,
         font,
         color: rgb(0.2, 0.2, 0.2),
       });
-      page.drawText(item.dueDate, {
+      page.drawText(toWinAnsi(item.dueDate), {
         x: 440,
         y: y + 1,
         size: 8,
         font,
         color: rgb(0.2, 0.2, 0.2),
       });
-      page.drawText(item.completed ? 'COMPLETE' : 'OPEN', {
+      page.drawText(toWinAnsi(item.completed ? 'COMPLETE' : 'OPEN'), {
         x: 520,
         y: y + 1,
         size: 8,
@@ -373,7 +374,7 @@ export async function generateG704(input: G704Input): Promise<{
     if (punchItems.length > 12) {
       y -= 14;
       page.drawText(
-        `... and ${punchItems.length - 12} more items. See attached full punch list.`,
+        toWinAnsi(`... and ${punchItems.length - 12} more items. See attached full punch list.`),
         { x: 15, y, size: 8, font, color: rgb(0.5, 0.5, 0.5) }
       );
     }
@@ -396,7 +397,7 @@ export async function generateG704(input: G704Input): Promise<{
   ];
 
   sigCols.forEach((col) => {
-    page.drawText(col.label, {
+    page.drawText(toWinAnsi(col.label), {
       x: col.x,
       y,
       size: 8,
@@ -409,7 +410,7 @@ export async function generateG704(input: G704Input): Promise<{
       thickness: 0.5,
       color: rgb(0, 0, 0),
     });
-    page.drawText('Signature / Date', {
+    page.drawText(toWinAnsi('Signature / Date'), {
       x: col.x,
       y: y - 30,
       size: 7,
@@ -422,7 +423,7 @@ export async function generateG704(input: G704Input): Promise<{
       thickness: 0.5,
       color: rgb(0, 0, 0),
     });
-    page.drawText('Printed Name / Title', {
+    page.drawText(toWinAnsi('Printed Name / Title'), {
       x: col.x,
       y: y - 55,
       size: 7,
@@ -433,7 +434,7 @@ export async function generateG704(input: G704Input): Promise<{
 
   // Footer
   page.drawText(
-    `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  AIA G704`,
+    toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  AIA G704`),
     { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
   );
 

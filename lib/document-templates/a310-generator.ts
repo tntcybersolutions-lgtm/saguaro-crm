@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
 import { drawField, fmtCurrency, saveDocument } from '../pdf-engine';
+import { toWinAnsi } from '../winansi';
 
 export interface A310Input {
   projectId: string;
@@ -38,14 +39,14 @@ export async function generateA310(input: A310Input): Promise<{
     height: 40,
     color: rgb(0.831, 0.627, 0.09),
   });
-  page.drawText('AIA DOCUMENT A310 \u2014 BID BOND', {
+  page.drawText(toWinAnsi('AIA DOCUMENT A310 \u2014 BID BOND'), {
     x: 10,
     y: height - 26,
     size: 13,
     font: bold,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page.drawText('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM', {
+  page.drawText(toWinAnsi('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM'), {
     x: 10,
     y: height - 36,
     size: 7,
@@ -57,7 +58,7 @@ export async function generateA310(input: A310Input): Promise<{
 
   // Bond number and date
   if (input.bondNumber) {
-    page.drawText(`Bond No: ${input.bondNumber}`, {
+    page.drawText(toWinAnsi(`Bond No: ${input.bondNumber}`), {
       x: width - 180,
       y,
       size: 9,
@@ -65,7 +66,7 @@ export async function generateA310(input: A310Input): Promise<{
       color: rgb(0, 0, 0),
     });
   }
-  page.drawText(`Date: ${input.bondDate || new Date().toLocaleDateString()}`, {
+  page.drawText(toWinAnsi(`Date: ${input.bondDate || new Date().toLocaleDateString()}`), {
     x: width - 180,
     y: y - 12,
     size: 9,
@@ -116,21 +117,21 @@ export async function generateA310(input: A310Input): Promise<{
     height: 28,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page.drawText('PENAL SUM OF THIS BOND:', {
+  page.drawText(toWinAnsi('PENAL SUM OF THIS BOND:'), {
     x: 20,
     y: y + 7,
     size: 11,
     font: bold,
     color: rgb(0.83, 0.63, 0.09),
   });
-  page.drawText(fmtCurrency(penalSum), {
+  page.drawText(toWinAnsi(fmtCurrency(penalSum)), {
     x: 380,
     y: y + 7,
     size: 13,
     font: bold,
     color: rgb(0.83, 0.63, 0.09),
   });
-  page.drawText('(10% of Bid Amount)', {
+  page.drawText(toWinAnsi('(10% of Bid Amount)'), {
     x: 380,
     y: y - 2,
     size: 7,
@@ -140,7 +141,7 @@ export async function generateA310(input: A310Input): Promise<{
 
   // Bond body text
   y -= 35;
-  page.drawText('KNOW ALL MEN BY THESE PRESENTS', {
+  page.drawText(toWinAnsi('KNOW ALL MEN BY THESE PRESENTS'), {
     x: 10,
     y,
     size: 10,
@@ -163,7 +164,7 @@ export async function generateA310(input: A310Input): Promise<{
   let bondLine = '';
   for (const word of bondWords) {
     if ((bondLine + ' ' + word).length > 95) {
-      page.drawText(bondLine.trim(), {
+      page.drawText(toWinAnsi(bondLine.trim()), {
         x: 10,
         y,
         size: 8.5,
@@ -177,7 +178,7 @@ export async function generateA310(input: A310Input): Promise<{
     }
   }
   if (bondLine.trim()) {
-    page.drawText(bondLine.trim(), {
+    page.drawText(toWinAnsi(bondLine.trim()), {
       x: 10,
       y,
       size: 8.5,
@@ -196,7 +197,7 @@ export async function generateA310(input: A310Input): Promise<{
     color: rgb(0.75, 0.75, 0.75),
   });
   y -= 15;
-  page.drawText('IN WITNESS WHEREOF, the parties have executed this instrument.', {
+  page.drawText(toWinAnsi('IN WITNESS WHEREOF, the parties have executed this instrument.'), {
     x: 10,
     y,
     size: 9,
@@ -206,21 +207,21 @@ export async function generateA310(input: A310Input): Promise<{
 
   y -= 25;
   // Principal signature
-  page.drawText('PRINCIPAL:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page.drawText(toWinAnsi('PRINCIPAL:'), { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
   page.drawLine({
     start: { x: 10, y: y - 18 },
     end: { x: 260, y: y - 18 },
     thickness: 0.5,
     color: rgb(0, 0, 0),
   });
-  page.drawText(input.principalName, {
+  page.drawText(toWinAnsi(input.principalName), {
     x: 10,
     y: y - 28,
     size: 8,
     font,
     color: rgb(0.3, 0.3, 0.3),
   });
-  page.drawText('Signature / Title / Date', {
+  page.drawText(toWinAnsi('Signature / Title / Date'), {
     x: 10,
     y: y - 38,
     size: 7,
@@ -229,7 +230,7 @@ export async function generateA310(input: A310Input): Promise<{
   });
 
   // Surety signature
-  page.drawText('SURETY:', {
+  page.drawText(toWinAnsi('SURETY:'), {
     x: 310,
     y,
     size: 9,
@@ -242,14 +243,14 @@ export async function generateA310(input: A310Input): Promise<{
     thickness: 0.5,
     color: rgb(0, 0, 0),
   });
-  page.drawText(input.suretyName, {
+  page.drawText(toWinAnsi(input.suretyName), {
     x: 310,
     y: y - 28,
     size: 8,
     font,
     color: rgb(0.3, 0.3, 0.3),
   });
-  page.drawText('Attorney-in-Fact Signature / Date', {
+  page.drawText(toWinAnsi('Attorney-in-Fact Signature / Date'), {
     x: 310,
     y: y - 38,
     size: 7,
@@ -266,7 +267,7 @@ export async function generateA310(input: A310Input): Promise<{
     color: rgb(0.75, 0.75, 0.75),
   });
   y -= 14;
-  page.drawText('NOTARY ACKNOWLEDGMENT', {
+  page.drawText(toWinAnsi('NOTARY ACKNOWLEDGMENT'), {
     x: 10,
     y,
     size: 9,
@@ -275,12 +276,12 @@ export async function generateA310(input: A310Input): Promise<{
   });
   y -= 12;
   page.drawText(
-    'State of _____________  County of _____________  On this _____ day of ________________, 20___, before me personally appeared',
+    toWinAnsi('State of _____________  County of _____________  On this _____ day of ________________, 20___, before me personally appeared'),
     { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
   );
   y -= 12;
   page.drawText(
-    '___________________________, known to me to be the person(s) whose name(s) is/are subscribed to the within instrument.',
+    toWinAnsi('___________________________, known to me to be the person(s) whose name(s) is/are subscribed to the within instrument.'),
     { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
   );
   y -= 18;
@@ -290,7 +291,7 @@ export async function generateA310(input: A310Input): Promise<{
     thickness: 0.5,
     color: rgb(0, 0, 0),
   });
-  page.drawText('Notary Public / Commission Expiration', {
+  page.drawText(toWinAnsi('Notary Public / Commission Expiration'), {
     x: 10,
     y: y - 10,
     size: 7,
@@ -300,7 +301,7 @@ export async function generateA310(input: A310Input): Promise<{
 
   // Footer
   page.drawText(
-    `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  AIA A310 Bid Bond`,
+    toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  AIA A310 Bid Bond`),
     { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
   );
 

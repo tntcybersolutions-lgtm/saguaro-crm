@@ -5,6 +5,7 @@ import {
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
+import { toWinAnsi } from '../winansi';
 
 export interface NTPInput {
   projectId: string;
@@ -48,14 +49,14 @@ export async function generateNTP(input: NTPInput): Promise<{
     height: 40,
     color: rgb(0.831, 0.627, 0.09),
   });
-  page.drawText('NOTICE TO PROCEED', {
+  page.drawText(toWinAnsi('NOTICE TO PROCEED'), {
     x: 10,
     y: height - 26,
     size: 14,
     font: bold,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page.drawText('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM', {
+  page.drawText(toWinAnsi('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM'), {
     x: 10,
     y: height - 36,
     size: 7,
@@ -84,19 +85,19 @@ export async function generateNTP(input: NTPInput): Promise<{
 
   // Date
   y -= 18;
-  page.drawText(`Date: ${new Date(ntpDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`, {
+  page.drawText(toWinAnsi(`Date: ${new Date(ntpDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`), {
     x: 10, y, size: 9, font, color: rgb(0.2, 0.2, 0.2),
   });
 
   // Letter format
   y -= 25;
   const contractorName = p?.gc_entity?.name || 'Contractor';
-  page.drawText(`To: ${contractorName}`, {
+  page.drawText(toWinAnsi(`To: ${contractorName}`), {
     x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0),
   });
 
   y -= 25;
-  page.drawText(`Dear ${contractorName},`, {
+  page.drawText(toWinAnsi(`Dear ${contractorName},`), {
     x: 10, y, size: 9, font, color: rgb(0.1, 0.1, 0.1),
   });
 
@@ -119,7 +120,7 @@ export async function generateNTP(input: NTPInput): Promise<{
     let line = '';
     for (const word of words) {
       if ((line + ' ' + word).length > 95) {
-        page.drawText(line.trim(), {
+        page.drawText(toWinAnsi(line.trim()), {
           x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
         });
         y -= 12;
@@ -129,7 +130,7 @@ export async function generateNTP(input: NTPInput): Promise<{
       }
     }
     if (line.trim()) {
-      page.drawText(line.trim(), {
+      page.drawText(toWinAnsi(line.trim()), {
         x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
       });
       y -= 12;
@@ -155,10 +156,10 @@ export async function generateNTP(input: NTPInput): Promise<{
       height: 18,
       color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
     });
-    page.drawText(label, {
+    page.drawText(toWinAnsi(label), {
       x: 15, y: y + 2, size: 9, font: bold, color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(value, {
+    page.drawText(toWinAnsi(value), {
       x: 280, y: y + 2, size: 9, font, color: rgb(0, 0, 0),
     });
   });
@@ -173,7 +174,7 @@ export async function generateNTP(input: NTPInput): Promise<{
   let closingLine = '';
   for (const word of closingWords) {
     if ((closingLine + ' ' + word).length > 95) {
-      page.drawText(closingLine.trim(), {
+      page.drawText(toWinAnsi(closingLine.trim()), {
         x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
       });
       y -= 12;
@@ -183,7 +184,7 @@ export async function generateNTP(input: NTPInput): Promise<{
     }
   }
   if (closingLine.trim()) {
-    page.drawText(closingLine.trim(), {
+    page.drawText(toWinAnsi(closingLine.trim()), {
       x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
     });
     y -= 12;
@@ -198,11 +199,11 @@ export async function generateNTP(input: NTPInput): Promise<{
     color: rgb(0.75, 0.75, 0.75),
   });
   y -= 15;
-  page.drawText('OWNER:', {
+  page.drawText(toWinAnsi('OWNER:'), {
     x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0),
   });
   y -= 5;
-  page.drawText((ctx.owner as any)?.name || '', {
+  page.drawText(toWinAnsi((ctx.owner as any)?.name || ''), {
     x: 10, y: y - 10, size: 9, font, color: rgb(0.1, 0.1, 0.1),
   });
   y -= 25;
@@ -213,7 +214,7 @@ export async function generateNTP(input: NTPInput): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 10;
-  page.drawText('Signature / Date', {
+  page.drawText(toWinAnsi('Signature / Date'), {
     x: 10, y, size: 8, font, color: rgb(0.5, 0.5, 0.5),
   });
   y -= 15;
@@ -224,21 +225,21 @@ export async function generateNTP(input: NTPInput): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 10;
-  page.drawText('Printed Name / Title', {
+  page.drawText(toWinAnsi('Printed Name / Title'), {
     x: 10, y, size: 8, font, color: rgb(0.5, 0.5, 0.5),
   });
 
   // Contractor acknowledgment
   y -= 25;
-  page.drawText('CONTRACTOR ACKNOWLEDGMENT:', {
+  page.drawText(toWinAnsi('CONTRACTOR ACKNOWLEDGMENT:'), {
     x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0),
   });
   y -= 18;
-  page.drawText('Receipt of the above Notice to Proceed is hereby acknowledged.', {
+  page.drawText(toWinAnsi('Receipt of the above Notice to Proceed is hereby acknowledged.'), {
     x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
   });
   y -= 20;
-  page.drawText(contractorName, {
+  page.drawText(toWinAnsi(contractorName), {
     x: 10, y, size: 9, font, color: rgb(0.1, 0.1, 0.1),
   });
   y -= 20;
@@ -249,13 +250,13 @@ export async function generateNTP(input: NTPInput): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 10;
-  page.drawText('Contractor Signature / Date', {
+  page.drawText(toWinAnsi('Contractor Signature / Date'), {
     x: 10, y, size: 8, font, color: rgb(0.5, 0.5, 0.5),
   });
 
   // Footer
   page.drawText(
-    `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Notice to Proceed`,
+    toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Notice to Proceed`),
     { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
   );
 

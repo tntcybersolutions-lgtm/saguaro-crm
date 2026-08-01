@@ -6,6 +6,7 @@ import {
   saveDocument,
 } from '../pdf-engine';
 import { supabaseAdmin } from '../../supabase/admin';
+import { toWinAnsi } from '../winansi';
 
 export interface G706Input {
   projectId: string;
@@ -59,7 +60,7 @@ export async function generateG706(input: G706Input): Promise<{
     color: rgb(0.831, 0.627, 0.09),
   });
   page.drawText(
-    "AIA DOCUMENT G706 \u2014 CONTRACTOR'S AFFIDAVIT OF PAYMENT OF DEBTS AND CLAIMS",
+    toWinAnsi("AIA DOCUMENT G706 \u2014 CONTRACTOR'S AFFIDAVIT OF PAYMENT OF DEBTS AND CLAIMS"),
     {
       x: 10,
       y: height - 26,
@@ -68,7 +69,7 @@ export async function generateG706(input: G706Input): Promise<{
       color: rgb(0.05, 0.07, 0.09),
     }
   );
-  page.drawText('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM', {
+  page.drawText(toWinAnsi('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM'), {
     x: 10,
     y: height - 36,
     size: 7,
@@ -174,7 +175,7 @@ export async function generateG706(input: G706Input): Promise<{
 
   // Affidavit text
   y -= 18;
-  page.drawText("CONTRACTOR'S AFFIDAVIT", {
+  page.drawText(toWinAnsi("CONTRACTOR'S AFFIDAVIT"), {
     x: 10,
     y,
     size: 11,
@@ -197,7 +198,7 @@ export async function generateG706(input: G706Input): Promise<{
   for (const word of affWords) {
     if (word === '\n\n') {
       if (affLine.trim()) {
-        page.drawText(affLine.trim(), {
+        page.drawText(toWinAnsi(affLine.trim()), {
           x: 10,
           y,
           size: 8.5,
@@ -211,7 +212,7 @@ export async function generateG706(input: G706Input): Promise<{
       continue;
     }
     if ((affLine + ' ' + word).length > 95) {
-      page.drawText(affLine.trim(), {
+      page.drawText(toWinAnsi(affLine.trim()), {
         x: 10,
         y,
         size: 8.5,
@@ -225,7 +226,7 @@ export async function generateG706(input: G706Input): Promise<{
     }
   }
   if (affLine.trim()) {
-    page.drawText(affLine.trim(), {
+    page.drawText(toWinAnsi(affLine.trim()), {
       x: 10,
       y,
       size: 8.5,
@@ -237,7 +238,7 @@ export async function generateG706(input: G706Input): Promise<{
 
   // Exceptions box
   y -= 15;
-  page.drawText('EXCEPTIONS (attach supporting documentation if needed):', {
+  page.drawText(toWinAnsi('EXCEPTIONS (attach supporting documentation if needed):'), {
     x: 10,
     y,
     size: 9,
@@ -258,7 +259,7 @@ export async function generateG706(input: G706Input): Promise<{
 
   // Sub listing with waiver status
   y -= 10;
-  page.drawText('SUBCONTRACTORS / SUPPLIERS — LIEN WAIVER STATUS:', {
+  page.drawText(toWinAnsi('SUBCONTRACTORS / SUPPLIERS — LIEN WAIVER STATUS:'), {
     x: 10,
     y,
     size: 9,
@@ -273,28 +274,28 @@ export async function generateG706(input: G706Input): Promise<{
     height: 14,
     color: rgb(0.15, 0.2, 0.25),
   });
-  page.drawText('SUBCONTRACTOR / SUPPLIER NAME', {
+  page.drawText(toWinAnsi('SUBCONTRACTOR / SUPPLIER NAME'), {
     x: 15,
     y: y - 10,
     size: 7.5,
     font: bold,
     color: rgb(1, 1, 1),
   });
-  page.drawText('TRADE', {
+  page.drawText(toWinAnsi('TRADE'), {
     x: 270,
     y: y - 10,
     size: 7.5,
     font: bold,
     color: rgb(1, 1, 1),
   });
-  page.drawText('CONTRACT AMOUNT', {
+  page.drawText(toWinAnsi('CONTRACT AMOUNT'), {
     x: 360,
     y: y - 10,
     size: 7.5,
     font: bold,
     color: rgb(1, 1, 1),
   });
-  page.drawText('FINAL WAIVER', {
+  page.drawText(toWinAnsi('FINAL WAIVER'), {
     x: 480,
     y: y - 10,
     size: 7.5,
@@ -317,28 +318,28 @@ export async function generateG706(input: G706Input): Promise<{
       (w: any) =>
         w.claimant === sub.name && w.waiver_type === 'unconditional_final'
     );
-    page.drawText(sub.name.slice(0, 36), {
+    page.drawText(toWinAnsi(sub.name.slice(0, 36)), {
       x: 15,
       y: y + 1,
       size: 8,
       font,
       color: rgb(0.1, 0.1, 0.1),
     });
-    page.drawText(sub.trade || '', {
+    page.drawText(toWinAnsi(sub.trade || ''), {
       x: 270,
       y: y + 1,
       size: 8,
       font,
       color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(fmtCurrency(sub.contract_amount || 0), {
+    page.drawText(toWinAnsi(fmtCurrency(sub.contract_amount || 0)), {
       x: 360,
       y: y + 1,
       size: 8,
       font,
       color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(hasWaiver ? 'RECEIVED' : 'PENDING', {
+    page.drawText(toWinAnsi(hasWaiver ? 'RECEIVED' : 'PENDING'), {
       x: 480,
       y: y + 1,
       size: 8,
@@ -349,7 +350,7 @@ export async function generateG706(input: G706Input): Promise<{
 
   if (subs.length > 10) {
     y -= 14;
-    page.drawText(`... and ${subs.length - 10} more. See attached schedule.`, {
+    page.drawText(toWinAnsi(`... and ${subs.length - 10} more. See attached schedule.`), {
       x: 15,
       y,
       size: 8,
@@ -367,7 +368,7 @@ export async function generateG706(input: G706Input): Promise<{
     color: rgb(0.75, 0.75, 0.75),
   });
   y -= 15;
-  page.drawText('CONTRACTOR CERTIFICATION AND NOTARY ACKNOWLEDGMENT', {
+  page.drawText(toWinAnsi('CONTRACTOR CERTIFICATION AND NOTARY ACKNOWLEDGMENT'), {
     x: 10,
     y,
     size: 9,
@@ -376,7 +377,7 @@ export async function generateG706(input: G706Input): Promise<{
   });
 
   y -= 18;
-  page.drawText('Subscribed and sworn to before me this _____ day of ________________, 20___.', {
+  page.drawText(toWinAnsi('Subscribed and sworn to before me this _____ day of ________________, 20___.'), {
     x: 10,
     y,
     size: 8.5,
@@ -398,14 +399,14 @@ export async function generateG706(input: G706Input): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 10;
-  page.drawText('Contractor Signature / Date', {
+  page.drawText(toWinAnsi('Contractor Signature / Date'), {
     x: 10,
     y,
     size: 8,
     font,
     color: rgb(0.5, 0.5, 0.5),
   });
-  page.drawText('Notary Public / Commission Expiration', {
+  page.drawText(toWinAnsi('Notary Public / Commission Expiration'), {
     x: 310,
     y,
     size: 8,
@@ -415,7 +416,7 @@ export async function generateG706(input: G706Input): Promise<{
 
   // Footer
   page.drawText(
-    `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  AIA G706`,
+    toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  AIA G706`),
     { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
   );
 

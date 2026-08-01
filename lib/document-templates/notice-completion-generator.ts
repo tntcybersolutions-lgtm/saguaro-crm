@@ -4,6 +4,7 @@ import {
   drawField,
   saveDocument,
 } from '../pdf-engine';
+import { toWinAnsi } from '../winansi';
 
 export interface NoticeCompletionInput {
   projectId: string;
@@ -32,14 +33,14 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     height: 40,
     color: rgb(0.831, 0.627, 0.09),
   });
-  page.drawText('NOTICE OF COMPLETION', {
+  page.drawText(toWinAnsi('NOTICE OF COMPLETION'), {
     x: 10,
     y: height - 26,
     size: 14,
     font: bold,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page.drawText('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM', {
+  page.drawText(toWinAnsi('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM'), {
     x: 10,
     y: height - 36,
     size: 7,
@@ -49,7 +50,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
 
   // Legal citation
   let y = height - 60;
-  page.drawText('Pursuant to Arizona Revised Statutes \u00A733-993', {
+  page.drawText(toWinAnsi('Pursuant to Arizona Revised Statutes \u00A733-993'), {
     x: 10,
     y,
     size: 9,
@@ -86,7 +87,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
 
   // Body text
   y -= 18;
-  page.drawText('NOTICE', {
+  page.drawText(toWinAnsi('NOTICE'), {
     x: 10,
     y,
     size: 11,
@@ -110,7 +111,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
   let bodyLine = '';
   for (const word of bodyWords) {
     if ((bodyLine + ' ' + word).length > 95) {
-      page.drawText(bodyLine.trim(), {
+      page.drawText(toWinAnsi(bodyLine.trim()), {
         x: 10,
         y,
         size: 8.5,
@@ -124,7 +125,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     }
   }
   if (bodyLine.trim()) {
-    page.drawText(bodyLine.trim(), {
+    page.drawText(toWinAnsi(bodyLine.trim()), {
       x: 10,
       y,
       size: 8.5,
@@ -144,7 +145,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     color: rgb(0.96, 0.97, 0.98),
   });
   y -= 5;
-  page.drawText('RECORDING INSTRUCTIONS', {
+  page.drawText(toWinAnsi('RECORDING INSTRUCTIONS'), {
     x: 15,
     y,
     size: 9,
@@ -153,12 +154,12 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
   });
   y -= 12;
   page.drawText(
-    'TO BE RECORDED in the office of the County Recorder of the county in which the property is located.',
+    toWinAnsi('TO BE RECORDED in the office of the County Recorder of the county in which the property is located.'),
     { x: 15, y, size: 8.5, font, color: rgb(0.3, 0.3, 0.3) }
   );
   y -= 12;
   page.drawText(
-    'This notice must be recorded within ten (10) days of completion of the work of improvement.',
+    toWinAnsi('This notice must be recorded within ten (10) days of completion of the work of improvement.'),
     { x: 15, y, size: 8.5, font, color: rgb(0.3, 0.3, 0.3) }
   );
 
@@ -172,8 +173,8 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
   });
   y -= 15;
 
-  page.drawText('OWNER:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
-  page.drawText(`Date: ${new Date().toLocaleDateString()}`, {
+  page.drawText(toWinAnsi('OWNER:'), { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
+  page.drawText(toWinAnsi(`Date: ${new Date().toLocaleDateString()}`), {
     x: 310,
     y,
     size: 9,
@@ -186,14 +187,14 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     thickness: 0.5,
     color: rgb(0, 0, 0),
   });
-  page.drawText(ownerName, {
+  page.drawText(toWinAnsi(ownerName), {
     x: 10,
     y: y - 30,
     size: 8,
     font,
     color: rgb(0.3, 0.3, 0.3),
   });
-  page.drawText('Signature / Title', {
+  page.drawText(toWinAnsi('Signature / Title'), {
     x: 10,
     y: y - 40,
     size: 7,
@@ -210,7 +211,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     color: rgb(0.75, 0.75, 0.75),
   });
   y -= 14;
-  page.drawText('NOTARY ACKNOWLEDGMENT', {
+  page.drawText(toWinAnsi('NOTARY ACKNOWLEDGMENT'), {
     x: 10,
     y,
     size: 9,
@@ -219,17 +220,17 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
   });
   y -= 12;
   page.drawText(
-    'State of Arizona    County of _____________    On this _____ day of ________________, 20___, before me personally appeared',
+    toWinAnsi('State of Arizona    County of _____________    On this _____ day of ________________, 20___, before me personally appeared'),
     { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
   );
   y -= 12;
   page.drawText(
-    '___________________________, known to me to be the person(s) whose name(s) is/are subscribed to the within instrument,',
+    toWinAnsi('___________________________, known to me to be the person(s) whose name(s) is/are subscribed to the within instrument,'),
     { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
   );
   y -= 12;
   page.drawText(
-    'and acknowledged to me that he/she/they executed the same in his/her/their authorized capacity(ies).',
+    toWinAnsi('and acknowledged to me that he/she/they executed the same in his/her/their authorized capacity(ies).'),
     { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
   );
   y -= 18;
@@ -239,7 +240,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
     thickness: 0.5,
     color: rgb(0, 0, 0),
   });
-  page.drawText('Notary Public / Commission Expiration', {
+  page.drawText(toWinAnsi('Notary Public / Commission Expiration'), {
     x: 10,
     y: y - 10,
     size: 7,
@@ -249,7 +250,7 @@ export async function generateNoticeCompletion(input: NoticeCompletionInput): Pr
 
   // Footer
   page.drawText(
-    `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Notice of Completion`,
+    toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Notice of Completion`),
     { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
   );
 

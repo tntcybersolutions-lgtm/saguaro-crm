@@ -5,6 +5,7 @@ import {
   fmtCurrency,
   saveDocument,
 } from '../pdf-engine';
+import { toWinAnsi } from '../winansi';
 
 export interface SubstantialCompletionInput {
   projectId: string;
@@ -33,14 +34,14 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     height: 40,
     color: rgb(0.831, 0.627, 0.09),
   });
-  page.drawText('CERTIFICATE OF SUBSTANTIAL COMPLETION', {
+  page.drawText(toWinAnsi('CERTIFICATE OF SUBSTANTIAL COMPLETION'), {
     x: 10,
     y: height - 26,
     size: 12,
     font: bold,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page.drawText('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM', {
+  page.drawText(toWinAnsi('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM'), {
     x: 10,
     y: height - 36,
     size: 7,
@@ -74,7 +75,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
 
   // Certificate body
   y -= 18;
-  page.drawText('CERTIFICATE OF SUBSTANTIAL COMPLETION', {
+  page.drawText(toWinAnsi('CERTIFICATE OF SUBSTANTIAL COMPLETION'), {
     x: 10, y, size: 11, font: bold, color: rgb(0, 0, 0),
   });
 
@@ -89,7 +90,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
   let certLine = '';
   for (const word of certWords) {
     if ((certLine + ' ' + word).length > 95) {
-      page.drawText(certLine.trim(), {
+      page.drawText(toWinAnsi(certLine.trim()), {
         x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
       });
       y -= 12;
@@ -99,7 +100,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     }
   }
   if (certLine.trim()) {
-    page.drawText(certLine.trim(), {
+    page.drawText(toWinAnsi(certLine.trim()), {
       x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
     });
     y -= 12;
@@ -107,7 +108,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
 
   // Key dates
   y -= 15;
-  page.drawText('COMPLETION DATES', {
+  page.drawText(toWinAnsi('COMPLETION DATES'), {
     x: 10, y, size: 10, font: bold, color: rgb(0, 0, 0),
   });
   y -= 5;
@@ -129,10 +130,10 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
       height: 18,
       color: i % 2 === 0 ? rgb(0.96, 0.97, 0.98) : rgb(1, 1, 1),
     });
-    page.drawText(label, {
+    page.drawText(toWinAnsi(label), {
       x: 15, y: y + 2, size: 9, font: bold, color: rgb(0.2, 0.2, 0.2),
     });
-    page.drawText(value, {
+    page.drawText(toWinAnsi(value), {
       x: 280, y: y + 2, size: 9, font, color: rgb(0, 0, 0),
     });
   });
@@ -146,12 +147,12 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     color: rgb(0.83, 0.63, 0.09),
   });
   y -= 15;
-  page.drawText('ITEMS TO COMPLETE OR CORRECT (PUNCH LIST)', {
+  page.drawText(toWinAnsi('ITEMS TO COMPLETE OR CORRECT (PUNCH LIST)'), {
     x: 10, y, size: 10, font: bold, color: rgb(0, 0, 0),
   });
 
   y -= 14;
-  page.drawText('See attached punch list for items remaining to be completed or corrected.', {
+  page.drawText(toWinAnsi('See attached punch list for items remaining to be completed or corrected.'), {
     x: 15, y, size: 9, font, color: rgb(0.4, 0.4, 0.4),
   });
 
@@ -164,7 +165,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     color: rgb(0.83, 0.63, 0.09),
   });
   y -= 15;
-  page.drawText('DIVISION OF RESPONSIBILITIES', {
+  page.drawText(toWinAnsi('DIVISION OF RESPONSIBILITIES'), {
     x: 10, y, size: 10, font: bold, color: rgb(0, 0, 0),
   });
 
@@ -179,7 +180,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
   let respLine = '';
   for (const word of respWords) {
     if ((respLine + ' ' + word).length > 95) {
-      page.drawText(respLine.trim(), {
+      page.drawText(toWinAnsi(respLine.trim()), {
         x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
       });
       y -= 12;
@@ -189,7 +190,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
     }
   }
   if (respLine.trim()) {
-    page.drawText(respLine.trim(), {
+    page.drawText(toWinAnsi(respLine.trim()), {
       x: 10, y, size: 8.5, font, color: rgb(0.2, 0.2, 0.2),
     });
     y -= 12;
@@ -212,7 +213,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
   ];
 
   sigCols.forEach((col) => {
-    page.drawText(col.label, {
+    page.drawText(toWinAnsi(col.label), {
       x: col.x, y, size: 8, font: bold, color: rgb(0, 0, 0),
     });
     page.drawLine({
@@ -221,7 +222,7 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
       thickness: 0.5,
       color: rgb(0, 0, 0),
     });
-    page.drawText('Signature / Date', {
+    page.drawText(toWinAnsi('Signature / Date'), {
       x: col.x, y: y - 30, size: 7, font, color: rgb(0.5, 0.5, 0.5),
     });
     page.drawLine({
@@ -230,14 +231,14 @@ export async function generateSubstantialCompletionCert(input: SubstantialComple
       thickness: 0.5,
       color: rgb(0, 0, 0),
     });
-    page.drawText('Printed Name / Title', {
+    page.drawText(toWinAnsi('Printed Name / Title'), {
       x: col.x, y: y - 55, size: 7, font, color: rgb(0.5, 0.5, 0.5),
     });
   });
 
   // Footer
   page.drawText(
-    `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Substantial Completion`,
+    toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Substantial Completion`),
     { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
   );
 

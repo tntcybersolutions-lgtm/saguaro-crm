@@ -6,6 +6,7 @@ import {
   saveDocument,
 } from '../pdf-engine';
 import { supabaseAdmin } from '../../supabase/admin';
+import { toWinAnsi } from '../winansi';
 
 export interface G702Input {
   projectId: string;
@@ -58,7 +59,7 @@ export async function generateG702(input: G702Input): Promise<{
     color: rgb(0.831, 0.627, 0.09),
   });
   page.drawText(
-    'AIA DOCUMENT G702 \u2014 APPLICATION AND CERTIFICATE FOR PAYMENT',
+    toWinAnsi('AIA DOCUMENT G702 \u2014 APPLICATION AND CERTIFICATE FOR PAYMENT'),
     {
       x: 10,
       y: height - 26,
@@ -67,7 +68,7 @@ export async function generateG702(input: G702Input): Promise<{
       color: rgb(0.05, 0.07, 0.09),
     }
   );
-  page.drawText('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM', {
+  page.drawText(toWinAnsi('SAGUARO CONSTRUCTION INTELLIGENCE PLATFORM'), {
     x: 10,
     y: height - 36,
     size: 7,
@@ -77,21 +78,21 @@ export async function generateG702(input: G702Input): Promise<{
 
   // Application info header row
   let y = height - 60;
-  page.drawText(`Application No: ${appNumber}`, {
+  page.drawText(toWinAnsi(`Application No: ${appNumber}`), {
     x: 10,
     y,
     size: 10,
     font: bold,
     color: rgb(0, 0, 0),
   });
-  page.drawText(`Period From: ${input.periodFrom}`, {
+  page.drawText(toWinAnsi(`Period From: ${input.periodFrom}`), {
     x: 200,
     y,
     size: 10,
     font,
     color: rgb(0, 0, 0),
   });
-  page.drawText(`Period To: ${input.periodTo}`, {
+  page.drawText(toWinAnsi(`Period To: ${input.periodTo}`), {
     x: 380,
     y,
     size: 10,
@@ -174,7 +175,7 @@ export async function generateG702(input: G702Input): Promise<{
 
   // Financial summary section
   y -= 20;
-  page.drawText("CONTRACTOR'S APPLICATION FOR PAYMENT", {
+  page.drawText(toWinAnsi("CONTRACTOR'S APPLICATION FOR PAYMENT"), {
     x: 10,
     y,
     size: 10,
@@ -207,7 +208,7 @@ export async function generateG702(input: G702Input): Promise<{
 
   rows.forEach(([label, val], i) => {
     y -= 18;
-    page.drawText(label, {
+    page.drawText(toWinAnsi(label), {
       x: 20,
       y,
       size: 9,
@@ -216,7 +217,7 @@ export async function generateG702(input: G702Input): Promise<{
       color: rgb(0.1, 0.1, 0.1),
     });
     if (val) {
-      page.drawText(val, {
+      page.drawText(toWinAnsi(val), {
         x: 430,
         y,
         size: 9,
@@ -235,14 +236,14 @@ export async function generateG702(input: G702Input): Promise<{
     height: 28,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page.drawText('8. CURRENT PAYMENT DUE', {
+  page.drawText(toWinAnsi('8. CURRENT PAYMENT DUE'), {
     x: 20,
     y: y + 7,
     size: 12,
     font: bold,
     color: rgb(0.83, 0.63, 0.09),
   });
-  page.drawText(fmtCurrency(currentPaymentDue), {
+  page.drawText(toWinAnsi(fmtCurrency(currentPaymentDue)), {
     x: 400,
     y: y + 7,
     size: 14,
@@ -251,14 +252,14 @@ export async function generateG702(input: G702Input): Promise<{
   });
 
   y -= 20;
-  page.drawText('9. BALANCE TO FINISH (Line 3-Line 6)', {
+  page.drawText(toWinAnsi('9. BALANCE TO FINISH (Line 3-Line 6)'), {
     x: 20,
     y,
     size: 9,
     font,
     color: rgb(0.1, 0.1, 0.1),
   });
-  page.drawText(fmtCurrency(contractSumToDate - totalEarnedLessRetainage), {
+  page.drawText(toWinAnsi(fmtCurrency(contractSumToDate - totalEarnedLessRetainage)), {
     x: 430,
     y,
     size: 9,
@@ -275,7 +276,7 @@ export async function generateG702(input: G702Input): Promise<{
     color: rgb(0.75, 0.75, 0.75),
   });
   y -= 15;
-  page.drawText("CONTRACTOR'S CERTIFICATION:", {
+  page.drawText(toWinAnsi("CONTRACTOR'S CERTIFICATION:"), {
     x: 10,
     y,
     size: 9,
@@ -284,12 +285,12 @@ export async function generateG702(input: G702Input): Promise<{
   });
   y -= 12;
   page.drawText(
-    "The undersigned Contractor certifies that to the best of the Contractor's knowledge, information and belief the Work covered",
+    toWinAnsi("The undersigned Contractor certifies that to the best of the Contractor's knowledge, information and belief the Work covered"),
     { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
   );
   y -= 10;
   page.drawText(
-    'by this Application for Payment has been completed in accordance with the Contract Documents.',
+    toWinAnsi('by this Application for Payment has been completed in accordance with the Contract Documents.'),
     { x: 10, y, size: 8, font, color: rgb(0.3, 0.3, 0.3) }
   );
 
@@ -307,14 +308,14 @@ export async function generateG702(input: G702Input): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 10;
-  page.drawText('Contractor Signature / Date', {
+  page.drawText(toWinAnsi('Contractor Signature / Date'), {
     x: 10,
     y,
     size: 8,
     font,
     color: rgb(0.5, 0.5, 0.5),
   });
-  page.drawText("Architect's Certificate for Payment", {
+  page.drawText(toWinAnsi("Architect's Certificate for Payment"), {
     x: 310,
     y,
     size: 8,
@@ -324,7 +325,7 @@ export async function generateG702(input: G702Input): Promise<{
 
   // Page number and timestamp footer
   page.drawText(
-    `Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Application #${appNumber}`,
+    toWinAnsi(`Generated by Saguaro CRM  \u2022  ${new Date().toLocaleDateString()}  \u2022  Application #${appNumber}`),
     { x: 10, y: 15, size: 7, font, color: rgb(0.6, 0.6, 0.6) }
   );
 
