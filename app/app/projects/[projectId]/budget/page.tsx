@@ -37,6 +37,12 @@ export default function BudgetPage() {
   const [editAmount, setEditAmount] = useState('');
   const [exporting, setExporting] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const [adjustId, setAdjustId] = useState<string | null>(null);
+  const [noteId, setNoteId] = useState<string | null>(null);
+  const [noteVal, setNoteVal] = useState('');
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   function showToast(msg: string, ok = true) {
     setToast({ msg, ok });
@@ -112,6 +118,35 @@ export default function BudgetPage() {
     } catch {
       showToast('Saved locally (offline mode).', true);
     }
+  }
+
+  function openMenu(id: string) { setMenuId(id); setEditingId(null); setAdjustId(null); setNoteId(null); setDeleteId(null); }
+
+  async function handleAdjust(id: string, pct: number) {
+    const line = lines.find(l => l.id === id);
+    if (!line) return;
+    const newAmt = Math.round(line.original_budget * (1 + pct / 100));
+    setLines(prev => prev.map(l => l.id === id ? { ...l, original_budget: newAmt, revised_budget: newAmt + l.approved_cos, forecast_cost: Math.max(l.actual_cost, newAmt) } : l));
+    setAdjustId(null);
+    try {
+      await fetch(`/api/projects/${projectId}/budget`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, original_budget: newAmt }) });
+      showToast(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
+    } catch { showToast('Saved locally.'); }
+  }
+
+  function handleCopy(id: string, amount: number) {
+    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
+    setCopiedId(id); setTimeout(() => setCopiedId(null), 2000);
+    setMenuId(null);
+  }
+
+  async function handleDeleteLine(id: string) {
+    setLines(prev => prev.filter(l => l.id !== id));
+    setDeleteId(null);
+    try {
+      await fetch(`/api/projects/${projectId}/budget`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, _delete: true }) });
+      showToast('Budget line deleted.');
+    } catch { showToast('Deleted locally.'); }
   }
 
   async function exportReport() {
@@ -281,14 +316,47 @@ export default function BudgetPage() {
                         </div>
                       </td>
                       <td style={{ padding: '11px 14px', textAlign: 'right', color: remaining >= 0 ? '#3dd68c' : '#ff7070', fontWeight: 600 }}>{fmt(remaining)}</td>
-                      <td style={{ padding: '11px 14px', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '11px 14px', whiteSpace: 'nowrap', position: 'relative' as const }}>
                         {isEditing ? (
                           <div style={{ display: 'flex', gap: 5 }}>
                             <button onClick={() => saveEdit(l.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 4, color: '#0d1117', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                             <button onClick={() => setEditingId(null)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 4, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                           </div>
+                        ) : adjustId === l.id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            {[-10, -5, 5, 10].map(p => (
+                              <button key={p} onClick={() => handleAdjust(l.id, p)} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(61,214,140,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${p > 0 ? 'rgba(61,214,140,.25)' : 'rgba(239,68,68,.25)'}`, borderRadius: 4, color: p > 0 ? '#3dd68c' : '#ff7070', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                            ))}
+                            <button onClick={() => setAdjustId(null)} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          </div>
+                        ) : deleteId === l.id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 11, color: '#ff7070', fontWeight: 600 }}>Delete?</span>
+                            <button onClick={() => handleDeleteLine(l.id)} style={{ padding: '3px 8px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 4, color: '#ff7070', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                            <button onClick={() => setDeleteId(null)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 4, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          </div>
                         ) : (
-                          <button onClick={() => { setEditingId(l.id); setEditAmount(String(l.original_budget)); }} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 4, color: DIM, fontSize: 11, cursor: 'pointer' }}>Edit</button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            {copiedId === l.id && <span style={{ fontSize: 10, color: '#3dd68c', fontWeight: 600 }}>Copied!</span>}
+                            <button onClick={() => openMenu(l.id)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 4, color: DIM, fontSize: 11, cursor: 'pointer' }}>Actions &#9662;</button>
+                            {menuId === l.id && (
+                              <div style={{ position: 'absolute', top: 36, right: 14, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 8px 24px rgba(0,0,0,.4)' }}>
+                                {[
+                                  { label: 'Edit Amount', icon: '\u270F\uFE0F', action: () => { setMenuId(null); setEditingId(l.id); setEditAmount(String(l.original_budget)); } },
+                                  { label: 'Adjust %', icon: '\uD83D\uDCCA', action: () => { setMenuId(null); setAdjustId(l.id); } },
+                                  { label: 'Copy Amount', icon: '\uD83D\uDCCB', action: () => handleCopy(l.id, l.original_budget) },
+                                ].map(item => (
+                                  <div key={item.label} onClick={item.action} style={{ padding: '7px 12px', fontSize: 12, color: TEXT, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = DARK)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                    <span style={{ fontSize: 14 }}>{item.icon}</span>{item.label}
+                                  </div>
+                                ))}
+                                <div style={{ height: 1, background: BORDER, margin: '4px 0' }} />
+                                <div onClick={() => { setMenuId(null); setDeleteId(l.id); }} style={{ padding: '7px 12px', fontSize: 12, color: '#ff7070', cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                  <span style={{ fontSize: 14 }}>{'\uD83D\uDDD1\uFE0F'}</span>Delete Line
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -312,6 +380,7 @@ export default function BudgetPage() {
           </div>
         </div>
       </div>
+      {menuId && <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuId(null)} />}
     </div>
   );
 }

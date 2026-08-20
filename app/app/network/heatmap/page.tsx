@@ -152,12 +152,13 @@ function renderHeatmap(
       if (bestRSSI >= threshold) covered++
 
       let color: string
-      if (bestRSSI >= -50) color = 'rgba(0,200,80,0.75)'
-      else if (bestRSSI >= -60) color = 'rgba(80,200,0,0.70)'
-      else if (bestRSSI >= -67) color = 'rgba(200,200,0,0.65)'
-      else if (bestRSSI >= -75) color = 'rgba(255,140,0,0.65)'
-      else if (bestRSSI >= -82) color = 'rgba(220,60,0,0.70)'
-      else color = 'rgba(120,0,0,0.80)'
+      // Ekahau/UniFi convention: strong = hot red at the AP → amber → green → weak blue.
+      if (bestRSSI >= -50) color = 'rgba(199,38,41,0.78)'
+      else if (bestRSSI >= -60) color = 'rgba(242,112,42,0.72)'
+      else if (bestRSSI >= -67) color = 'rgba(244,199,40,0.68)'
+      else if (bestRSSI >= -75) color = 'rgba(120,191,74,0.66)'
+      else if (bestRSSI >= -82) color = 'rgba(56,150,170,0.66)'
+      else color = 'rgba(30,64,110,0.72)'
 
       ctx.fillStyle = color
       ctx.fillRect(px - 1, py - 1, step + 2, step + 2)
@@ -299,12 +300,12 @@ function drawLegend(ctx: CanvasRenderingContext2D, W: number, H: number) {
   ctx.textAlign = 'left'
   ctx.fillText('Signal Strength', lx + 8, ly + 18)
   const items = [
-    { color: '#00c850', label: 'Excellent  \u2265 \u221250 dBm' },
-    { color: '#50c800', label: 'Very Good  \u2265 \u221260 dBm' },
-    { color: '#c8c800', label: 'Good        \u2265 \u221267 dBm' },
-    { color: '#ff8c00', label: 'Fair          \u2265 \u221275 dBm' },
-    { color: '#dc3c00', label: 'Poor         \u2265 \u221282 dBm' },
-    { color: '#780000', label: 'Dead Zone' },
+    { color: '#C72629', label: 'Excellent  \u2265 \u221250 dBm' },
+    { color: '#F2702A', label: 'Very Good  \u2265 \u221260 dBm' },
+    { color: '#F4C728', label: 'Good        \u2265 \u221267 dBm' },
+    { color: '#78BF4A', label: 'Fair          \u2265 \u221275 dBm' },
+    { color: '#3896AA', label: 'Poor         \u2265 \u221282 dBm' },
+    { color: '#1E406E', label: 'Dead Zone' },
   ]
   items.forEach((item, i) => {
     ctx.fillStyle = item.color

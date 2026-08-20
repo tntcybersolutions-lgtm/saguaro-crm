@@ -7,6 +7,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { enqueue } from '@/lib/field-db';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 
 const GOLD   = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -130,6 +131,88 @@ function ChangeOrdersPage() {
   // PDF export
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
+
+  // Money action BottomSheet state
+  const [actionSheet, setActionSheet] = useState<{ coId: string; label: string; amount: number } | null>(null);
+  const [sheetMode, setSheetMode] = useState<'menu' | 'edit' | 'adjust'>('menu');
+  const [editVal, setEditVal] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [fieldToast, setFieldToast] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function showFieldToast(msg: string) { setFieldToast(msg); setTimeout(() => setFieldToast(null), 2500); }
+
+  function openMoneySheet(coId: string, label: string, amount: number) {
+    setActionSheet({ coId, label, amount });
+    setSheetMode('menu');
+    setEditVal(String(amount));
+  }
+
+  function closeMoneySheet() { setActionSheet(null); setSheetMode('menu'); }
+
+  async function handleCOSaveEdit() {
+    if (!actionSheet) return;
+    const amount = parseFloat(editVal);
+    if (isNaN(amount)) return;
+    const co = cos.find(c => c.id === actionSheet.coId);
+    if (!co) return;
+    const url = `/api/change-orders/${actionSheet.coId}/approve`;
+    const body = JSON.stringify({ ...co, amount });
+    try {
+      const r = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body });
+      if (!r.ok) throw new Error();
+    } catch {
+      if (typeof window !== 'undefined') {
+        try { await enqueue({ url, method: 'PUT', body, contentType: 'application/json', isFormData: false }); } catch { /* */ }
+      }
+    }
+    setCos(prev => prev.map(c => c.id === actionSheet.coId ? { ...c, amount } : c));
+    showFieldToast('Amount updated');
+    closeMoneySheet();
+  }
+
+  async function handleCOAdjust(pct: number) {
+    if (!actionSheet) return;
+    const newAmt = Math.round(actionSheet.amount * (1 + pct / 100) * 100) / 100;
+    const co = cos.find(c => c.id === actionSheet.coId);
+    if (!co) return;
+    const url = `/api/change-orders/${actionSheet.coId}/approve`;
+    const body = JSON.stringify({ ...co, amount: newAmt });
+    try {
+      const r = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body });
+      if (!r.ok) throw new Error();
+    } catch {
+      if (typeof window !== 'undefined') {
+        try { await enqueue({ url, method: 'PUT', body, contentType: 'application/json', isFormData: false }); } catch { /* */ }
+      }
+    }
+    setCos(prev => prev.map(c => c.id === actionSheet.coId ? { ...c, amount: newAmt } : c));
+    showFieldToast(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
+    closeMoneySheet();
+  }
+
+  function handleCOCopy(amount: number, coId: string) {
+    navigator.clipboard.writeText(formatUSD(amount)).catch(() => {});
+    setCopiedId(coId);
+    setTimeout(() => setCopiedId(null), 2000);
+    closeMoneySheet();
+  }
+
+  async function handleCODelete(coId: string) {
+    const url = `/api/change-orders/${coId}/reject`;
+    const body = JSON.stringify({ reason: 'Voided from field' });
+    try {
+      const r = await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body });
+      if (!r.ok) throw new Error();
+    } catch {
+      if (typeof window !== 'undefined') {
+        try { await enqueue({ url, method: 'PUT', body, contentType: 'application/json', isFormData: false }); } catch { /* */ }
+      }
+    }
+    setCos(prev => prev.map(c => c.id === coId ? { ...c, status: 'rejected' } : c));
+    setDeleteConfirm(null);
+    showFieldToast('Change order rejected');
+  }
 
   // ─── Advanced Filters & Sorting ─────────────────────────────
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
@@ -1094,7 +1177,13 @@ function ChangeOrdersPage() {
                           </div>
                           <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: TEXT, lineHeight: 1.3 }}>{co.title}</p>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span style={{ fontSize: 16, fontWeight: 800, color: co.amount >= 0 ? GREEN : RED }}>{formatUSD(co.amount)}</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <span style={{ fontSize: 16, fontWeight: 800, color: copiedId === co.id ? GOLD : (co.amount >= 0 ? GREEN : RED) }}>{formatUSD(co.amount)}</span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openMoneySheet(co.id, `CO #${co.co_number ?? '—'} — ${co.title}`, co.amount); }}
+                                style={{ background: 'none', border: 'none', color: DIM, fontSize: 18, cursor: 'pointer', padding: '0 2px', lineHeight: 1 }}
+                              >&#x22EF;</button>
+                            </span>
                             {co.reason && <span style={{ fontSize: 11, color: DIM }}>{co.reason}</span>}
                           </div>
                         </div>
@@ -1228,6 +1317,91 @@ function ChangeOrdersPage() {
               </div>
             )}
           </>
+        )}
+
+        {/* ── Money Action BottomSheet ─────────────────────── */}
+        {actionSheet && (
+          <BottomSheet open={!!actionSheet} onClose={closeMoneySheet} title={actionSheet.label}>
+            <div style={{ padding: '8px 20px 24px' }}>
+              {/* Current amount display */}
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                <div style={{ fontSize: 11, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Current Amount</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>
+                  {formatUSD(actionSheet.amount)}
+                </div>
+              </div>
+
+              {sheetMode === 'menu' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {[
+                    { label: 'Edit Amount', icon: '\u270F\uFE0F', action: () => { setSheetMode('edit'); setEditVal(String(actionSheet.amount)); } },
+                    { label: 'Adjust %', icon: '\uD83D\uDCCA', action: () => setSheetMode('adjust') },
+                    { label: 'Copy Amount', icon: '\uD83D\uDCCB', action: () => { handleCOCopy(actionSheet.amount, actionSheet.coId); } },
+                    { label: 'Reject CO', icon: '\uD83D\uDDD1\uFE0F', action: () => { closeMoneySheet(); setDeleteConfirm(actionSheet.coId); } },
+                  ].map(item => (
+                    <button key={item.label} onClick={item.action} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: item.label === 'Reject CO' ? RED : TEXT, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+                      <span style={{ fontSize: 20 }}>{item.icon}</span>{item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {sheetMode === 'edit' && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 6 }}>New Amount ($)</label>
+                  <input
+                    value={editVal} onChange={e => setEditVal(e.target.value)}
+                    type="number" inputMode="decimal" autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') handleCOSaveEdit(); }}
+                    style={{ width: '100%', padding: '14px 16px', background: '#0A1628', border: `1px solid ${GOLD}`, borderRadius: 10, color: TEXT, fontSize: 20, fontWeight: 700, outline: 'none', boxSizing: 'border-box', textAlign: 'right' }}
+                  />
+                  <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+                    <button onClick={handleCOSaveEdit} style={{ flex: 1, padding: '14px', background: GOLD, color: '#000', fontWeight: 700, border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Save</button>
+                    <button onClick={() => setSheetMode('menu')} style={{ flex: 1, padding: '14px', background: 'transparent', color: DIM, fontWeight: 600, border: `1px solid ${BORDER}`, borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Back</button>
+                  </div>
+                </div>
+              )}
+
+              {sheetMode === 'adjust' && (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                    {[-10, -5, 5, 10].map(pct => (
+                      <button key={pct} onClick={() => handleCOAdjust(pct)} style={{
+                        padding: '16px', borderRadius: 10, fontSize: 18, fontWeight: 800, cursor: 'pointer', border: 'none',
+                        background: pct > 0 ? 'rgba(34,197,94,.12)' : 'rgba(239,68,68,.12)',
+                        color: pct > 0 ? GREEN : RED,
+                      }}>
+                        {pct > 0 ? '+' : ''}{pct}%
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => setSheetMode('menu')} style={{ width: '100%', padding: '12px', background: 'transparent', color: DIM, fontWeight: 600, border: `1px solid ${BORDER}`, borderRadius: 10, fontSize: 14, cursor: 'pointer' }}>Back</button>
+                </div>
+              )}
+            </div>
+          </BottomSheet>
+        )}
+
+        {/* ── Delete (Reject) Confirmation Overlay ────────────── */}
+        {deleteConfirm && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 700, padding: 24 }}>
+            <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: '100%', maxWidth: 340, textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>{'\uD83D\uDDD1\uFE0F'}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Reject this change order?</div>
+              <div style={{ fontSize: 13, color: DIM, marginBottom: 20 }}>This action will mark the CO as rejected.</div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => handleCODelete(deleteConfirm)} style={{ flex: 1, padding: '12px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 10, color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Yes, Reject</button>
+                <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Toast ──────────────────────────────────────── */}
+        {fieldToast && (
+          <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 20px', color: GREEN, fontSize: 13, fontWeight: 600, zIndex: 800, boxShadow: '0 8px 24px rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>{'\u2713'}</span>{fieldToast}
+          </div>
         )}
       </div>
     );

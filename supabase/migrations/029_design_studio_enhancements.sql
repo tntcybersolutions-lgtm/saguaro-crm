@@ -1,0 +1,7 @@
+-- Applied via Supabase MCP tool on 2026-04-05
+-- See migration 029_design_studio_enhancements applied to project jddfvugsaosvgllbkzch
+-- 9 tables: design_email_drips, design_shares, design_room_packages,
+-- design_room_package_items, design_presentations, design_appointments,
+-- design_quiz_results, design_comparisons, design_comparison_variants
+-- + RLS, indexes, RPC (schedule_design_drip), view (design_appointment_stats)
+-- Full SQL was applied directly to Supabase — this file is for git tracking.

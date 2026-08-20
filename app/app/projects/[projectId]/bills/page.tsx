@@ -47,6 +47,12 @@ export default function BillsPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editVal, setEditVal] = useState('');
+  const [adjustId, setAdjustId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const fetchBills = useCallback(async () => {
     setLoading(true);
@@ -117,6 +123,39 @@ export default function BillsPage() {
     setTimeout(() => setSuccessMsg(''), 3000);
   }
 
+  const fmt = (n: number) => '$' + ((n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+
+  function openBillMenu(id: string) { setMenuId(id); setEditId(null); setAdjustId(null); setDeleteId(null); }
+
+  async function handleEditBill(id: string) {
+    const amount = parseFloat(editVal);
+    if (isNaN(amount) || amount < 0) return;
+    setBills(prev => prev.map(b => b.id === id ? { ...b, amount } : b));
+    setEditId(null);
+    try { await fetch(`/api/bills/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount }) }); setSuccessMsg('Amount updated.'); setTimeout(() => setSuccessMsg(''), 3000); } catch { setSuccessMsg('Updated locally.'); setTimeout(() => setSuccessMsg(''), 3000); }
+  }
+
+  async function handleAdjustBill(id: string, pct: number) {
+    const bill = bills.find(b => b.id === id);
+    if (!bill) return;
+    const newAmt = Math.round(bill.amount * (1 + pct / 100));
+    setBills(prev => prev.map(b => b.id === id ? { ...b, amount: newAmt } : b));
+    setAdjustId(null);
+    try { await fetch(`/api/bills/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: newAmt }) }); setSuccessMsg(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`); setTimeout(() => setSuccessMsg(''), 3000); } catch { setSuccessMsg('Adjusted locally.'); setTimeout(() => setSuccessMsg(''), 3000); }
+  }
+
+  function handleCopyBill(id: string, amount: number) {
+    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
+    setCopiedId(id); setTimeout(() => setCopiedId(null), 2000);
+    setMenuId(null);
+  }
+
+  async function handleDeleteBill(id: string) {
+    setBills(prev => prev.filter(b => b.id !== id));
+    setDeleteId(null);
+    try { await fetch(`/api/bills/${id}/delete`, { method: 'DELETE' }); setSuccessMsg('Bill deleted.'); setTimeout(() => setSuccessMsg(''), 3000); } catch { setSuccessMsg('Deleted locally.'); setTimeout(() => setSuccessMsg(''), 3000); }
+  }
+
   const pendingTotal = bills.filter(b => b.status === 'Pending' || b.status === 'Approved').reduce((s, b) => s + (b.amount || 0), 0);
   const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#151f2e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
@@ -181,7 +220,51 @@ export default function BillsPage() {
                       <td style={{ padding: '10px 14px', color: GOLD, fontWeight: 600 }}>{b.invoice_num}</td>
                       <td style={{ padding: '10px 14px', color: TEXT }}>{b.vendor}</td>
                       <td style={{ padding: '10px 14px', color: DIM, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.description}</td>
-                      <td style={{ padding: '10px 14px', color: TEXT, fontWeight: 700 }}>${b.amount?.toLocaleString()}</td>
+                      <td style={{ padding: '10px 14px', position: 'relative' as const }}>
+                        {deleteId === b.id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 11, color: RED, fontWeight: 600 }}>Delete bill?</span>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteBill(b.id); }} style={{ padding: '3px 8px', background: 'rgba(239,68,68,.15)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: 5, color: RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Yes</button>
+                            <button onClick={(e) => { e.stopPropagation(); setDeleteId(null); }} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          </div>
+                        ) : editId === b.id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditBill(b.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
+                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},#F0C040)`, border: 'none', borderRadius: 5, color: '#0d1117', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          </div>
+                        ) : adjustId === b.id ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            {[-10, -5, 5, 10].map(p => (
+                              <button key={p} onClick={(e) => { e.stopPropagation(); handleAdjustBill(b.id, p); }} style={{ padding: '3px 7px', background: p > 0 ? 'rgba(61,214,140,.1)' : 'rgba(239,68,68,.1)', border: `1px solid ${p > 0 ? 'rgba(61,214,140,.25)' : 'rgba(239,68,68,.25)'}`, borderRadius: 5, color: p > 0 ? GREEN : RED, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{p > 0 ? '+' : ''}{p}%</button>
+                            ))}
+                            <button onClick={(e) => { e.stopPropagation(); setAdjustId(null); }} style={{ padding: '3px 6px', background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ color: TEXT, fontWeight: 700 }}>{fmt(b.amount)}</span>
+                            {copiedId === b.id && <span style={{ fontSize: 10, color: GREEN, fontWeight: 600 }}>Copied!</span>}
+                            <button onClick={(e) => { e.stopPropagation(); openBillMenu(b.id); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 10, padding: '2px 4px', lineHeight: 1, opacity: 0.6 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}>&#9662;</button>
+                            {menuId === b.id && (
+                              <div style={{ position: 'absolute', top: 36, right: 14, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 8, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 8px 24px rgba(0,0,0,.4)' }}>
+                                {[
+                                  { label: 'Edit Amount', icon: '\u270F\uFE0F', action: () => { setMenuId(null); setEditId(b.id); setEditVal(String(b.amount)); } },
+                                  { label: 'Adjust %', icon: '\uD83D\uDCCA', action: () => { setMenuId(null); setAdjustId(b.id); } },
+                                  { label: 'Copy Amount', icon: '\uD83D\uDCCB', action: () => handleCopyBill(b.id, b.amount) },
+                                ].map(item => (
+                                  <div key={item.label} onClick={(e) => { e.stopPropagation(); item.action(); }} style={{ padding: '7px 12px', fontSize: 12, color: TEXT, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = DARK)} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                    <span style={{ fontSize: 14 }}>{item.icon}</span>{item.label}
+                                  </div>
+                                ))}
+                                <div style={{ height: 1, background: BORDER, margin: '4px 0' }} />
+                                <div onClick={(e) => { e.stopPropagation(); setMenuId(null); setDeleteId(b.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                                  <span style={{ fontSize: 14 }}>{'\uD83D\uDDD1\uFE0F'}</span>Delete Bill
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
                       <td style={{ padding: '10px 14px', color: overdue ? RED : DIM, whiteSpace: 'nowrap' }}>{b.due_date || '—'}</td>
                       <td style={{ padding: '10px 14px' }}>{statusBadge(overdue && b.status !== 'Paid' ? 'Overdue' : b.status)}</td>
                       <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
@@ -202,6 +285,7 @@ export default function BillsPage() {
                 })}
               </tbody>
             </table>
+            {menuId && <div style={{ position: 'fixed', inset: 0, zIndex: 50 }} onClick={() => setMenuId(null)} />}
             <div style={{ marginTop: 20, padding: '14px 20px', background: RAISED, borderRadius: 8, display: 'flex', justifyContent: 'flex-end', gap: 40 }}>
               <div style={{ fontSize: 13, color: DIM }}>Bills: <span style={{ color: TEXT, fontWeight: 700 }}>{bills.length}</span></div>
               <div style={{ fontSize: 13, color: DIM }}>Pending + Approved: <span style={{ color: GOLD, fontWeight: 800, fontSize: 15 }}>${pendingTotal.toLocaleString()}</span></div>

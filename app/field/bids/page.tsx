@@ -5,6 +5,8 @@
  */
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { SwipeActionItem } from '@/components/field/SwipeAction';
 
 const GOLD = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -139,6 +141,130 @@ function BidsPage() {
   const [selectedInvitees, setSelectedInvitees] = useState<string[]>([]);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteSearch, setInviteSearch] = useState('');
+
+  // Money action BottomSheet state
+  const [actionSheet, setActionSheet] = useState<{ bidderId: string; companyName: string; amount: number } | null>(null);
+  const [sheetMode, setSheetMode] = useState<'menu' | 'edit' | 'adjust' | 'note'>('menu');
+  const [editVal, setEditVal] = useState('');
+  const [noteVal, setNoteVal] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [fieldToast, setFieldToast] = useState<string | null>(null);
+  const [copiedBidder, setCopiedBidder] = useState<string | null>(null);
+
+  function showFieldToast(msg: string) { setFieldToast(msg); setTimeout(() => setFieldToast(null), 2500); }
+
+  function openActionSheet(bidderId: string, companyName: string, amount: number) {
+    setActionSheet({ bidderId, companyName, amount });
+    setSheetMode('menu');
+    setEditVal(String(amount));
+    setNoteVal('');
+  }
+
+  function closeActionSheet() { setActionSheet(null); setSheetMode('menu'); }
+
+  async function handleFieldSaveEdit() {
+    if (!actionSheet) return;
+    const amount = parseFloat(editVal);
+    if (isNaN(amount) || amount < 0) return;
+    const url = `/api/bids/${actionSheet.bidderId}`;
+    const body = JSON.stringify({ bid_amount: amount });
+    try {
+      const r = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+      if (!r.ok) throw new Error();
+    } catch {
+      // Offline — queue for later sync
+      if (typeof window !== 'undefined') {
+        try {
+          const { enqueue } = await import('@/lib/field-db');
+          await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false });
+        } catch { /* field-db may not be available */ }
+      }
+    }
+    // Optimistic update
+    if (comparison) {
+      setComparison({
+        ...comparison,
+        bidders: comparison.bidders.map(b => b.bidder_id === actionSheet.bidderId ? { ...b, total: amount } : b),
+      });
+    }
+    showFieldToast('Amount updated');
+    closeActionSheet();
+  }
+
+  async function handleFieldAdjust(pct: number) {
+    if (!actionSheet) return;
+    const newAmt = Math.round(actionSheet.amount * (1 + pct / 100));
+    const url = `/api/bids/${actionSheet.bidderId}`;
+    const body = JSON.stringify({ bid_amount: newAmt });
+    try {
+      const r = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+      if (!r.ok) throw new Error();
+    } catch {
+      if (typeof window !== 'undefined') {
+        try {
+          const { enqueue } = await import('@/lib/field-db');
+          await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false });
+        } catch { /* */ }
+      }
+    }
+    if (comparison) {
+      setComparison({
+        ...comparison,
+        bidders: comparison.bidders.map(b => b.bidder_id === actionSheet.bidderId ? { ...b, total: newAmt } : b),
+      });
+    }
+    showFieldToast(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
+    closeActionSheet();
+  }
+
+  function handleFieldCopy(amount: number, bidderId: string) {
+    navigator.clipboard.writeText(formatUSD(amount)).catch(() => {});
+    setCopiedBidder(bidderId);
+    setTimeout(() => setCopiedBidder(null), 2000);
+    closeActionSheet();
+  }
+
+  async function handleFieldSaveNote() {
+    if (!actionSheet || !noteVal.trim()) return;
+    const url = `/api/bids/${actionSheet.bidderId}`;
+    const body = JSON.stringify({ notes: noteVal.trim() });
+    try {
+      const r = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+      if (!r.ok) throw new Error();
+    } catch {
+      if (typeof window !== 'undefined') {
+        try {
+          const { enqueue } = await import('@/lib/field-db');
+          await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false });
+        } catch { /* */ }
+      }
+    }
+    showFieldToast('Note saved');
+    closeActionSheet();
+  }
+
+  async function handleFieldDelete(bidderId: string) {
+    const url = `/api/bids/${bidderId}`;
+    try {
+      const r = await fetch(url, { method: 'DELETE' });
+      if (!r.ok) throw new Error();
+    } catch {
+      if (typeof window !== 'undefined') {
+        try {
+          const { enqueue } = await import('@/lib/field-db');
+          await enqueue({ url, method: 'DELETE', body: '', contentType: 'application/json', isFormData: false });
+        } catch { /* */ }
+      }
+    }
+    if (comparison) {
+      setComparison({
+        ...comparison,
+        bidders: comparison.bidders.filter(b => b.bidder_id !== bidderId),
+      });
+    }
+    showFieldToast('Bid deleted');
+    setDeleteConfirm(null);
+  }
 
   const fetchPackages = useCallback(async () => {
     if (!projectId) { setLoading(false); return; }
@@ -624,16 +750,26 @@ function BidsPage() {
               {[...comparison.bidders].sort((a, b) => a.total - b.total).map((b, i) => {
                 const isRec = b.bidder_id === comparison.recommended_bidder_id;
                 return (
-                  <div key={b.bidder_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < comparison.bidders.length - 1 ? `1px solid ${BORDER}08` : 'none' }}>
-                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: i === 0 ? `${GREEN}22` : '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', color: i === 0 ? GREEN : DIM, fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
-                      #{i + 1}
+                  <SwipeActionItem
+                    key={b.bidder_id}
+                    leftAction={{ label: 'Edit', color: GOLD, icon: '✏️', onAction: () => openActionSheet(b.bidder_id, b.company_name, b.total) }}
+                    rightAction={{ label: 'Delete', color: RED, icon: '🗑️', onAction: () => setDeleteConfirm(b.bidder_id) }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: i < comparison.bidders.length - 1 ? `1px solid ${BORDER}08` : 'none', background: RAISED }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: i === 0 ? `${GREEN}22` : '#0A1628', display: 'flex', alignItems: 'center', justifyContent: 'center', color: i === 0 ? GREEN : DIM, fontWeight: 800, fontSize: 12, flexShrink: 0 }}>
+                        #{i + 1}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ color: TEXT, fontWeight: 600, fontSize: 14 }}>{b.company_name}</span>
+                        {isRec && <span style={{ ...badge(GREEN), marginLeft: 8 }}>Recommended</span>}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ color: i === 0 ? GREEN : TEXT, fontWeight: 700, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{formatUSD(b.total)}</span>
+                        {copiedBidder === b.bidder_id && <span style={{ fontSize: 10, color: GREEN, fontWeight: 600 }}>Copied!</span>}
+                        <button onClick={(e) => { e.stopPropagation(); openActionSheet(b.bidder_id, b.company_name, b.total); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: '4px 6px', fontSize: 16, lineHeight: 1 }}>⋯</button>
+                      </div>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ color: TEXT, fontWeight: 600, fontSize: 14 }}>{b.company_name}</span>
-                      {isRec && <span style={{ ...badge(GREEN), marginLeft: 8 }}>Recommended</span>}
-                    </div>
-                    <span style={{ color: i === 0 ? GREEN : TEXT, fontWeight: 700, fontSize: 15, fontVariantNumeric: 'tabular-nums' }}>{formatUSD(b.total)}</span>
-                  </div>
+                  </SwipeActionItem>
                 );
               })}
             </div>
@@ -687,6 +823,38 @@ function BidsPage() {
         <div style={{ ...card, textAlign: 'center', color: DIM }}>No bid packages found</div>
       )}
 
+      {/* ── Money Action BottomSheet ─────────────────────── */}
+      <MoneyActionSheet
+        actionSheet={actionSheet} sheetMode={sheetMode} setSheetMode={setSheetMode}
+        editVal={editVal} setEditVal={setEditVal} noteVal={noteVal} setNoteVal={setNoteVal}
+        onClose={closeActionSheet} onSaveEdit={handleFieldSaveEdit}
+        onAdjust={(pct) => handleFieldAdjust(pct)}
+        onCopy={() => actionSheet && handleFieldCopy(actionSheet.amount, actionSheet.bidderId)}
+        onSaveNote={handleFieldSaveNote}
+      />
+
+      {/* ── Delete Confirmation Overlay ────────────────── */}
+      {deleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 700, padding: 24 }}>
+          <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: '100%', maxWidth: 340, textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🗑️</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Delete this bid?</div>
+            <div style={{ fontSize: 13, color: DIM, marginBottom: 20 }}>This action cannot be undone.</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => handleFieldDelete(deleteConfirm)} style={{ flex: 1, padding: '12px', background: 'rgba(239,68,68,.15)', border: `1px solid rgba(239,68,68,.3)`, borderRadius: 10, color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Yes, Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Toast ──────────────────────────────────────── */}
+      {fieldToast && (
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 20px', color: GREEN, fontSize: 13, fontWeight: 600, zIndex: 800, boxShadow: '0 8px 24px rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16 }}>✓</span>{fieldToast}
+        </div>
+      )}
+
       {!loading && filteredPackages.map((pkg) => {
         const days = daysUntil(pkg.due_date);
         const invCount = pkg.invited_bidders?.length || 0;
@@ -730,6 +898,101 @@ function BidsPage() {
         );
       })}
     </div>
+  );
+}
+
+/* ── Money Action BottomSheet ────────────────────────── */
+
+function MoneyActionSheet({
+  actionSheet, sheetMode, setSheetMode, editVal, setEditVal, noteVal, setNoteVal,
+  onClose, onSaveEdit, onAdjust, onCopy, onSaveNote,
+}: {
+  actionSheet: { bidderId: string; companyName: string; amount: number } | null;
+  sheetMode: 'menu' | 'edit' | 'adjust' | 'note';
+  setSheetMode: (m: 'menu' | 'edit' | 'adjust' | 'note') => void;
+  editVal: string; setEditVal: (v: string) => void;
+  noteVal: string; setNoteVal: (v: string) => void;
+  onClose: () => void; onSaveEdit: () => void;
+  onAdjust: (pct: number) => void; onCopy: () => void; onSaveNote: () => void;
+}) {
+  if (!actionSheet) return null;
+  const menuItems = [
+    { label: 'Edit Amount', icon: '✏️', action: () => { setSheetMode('edit'); setEditVal(String(actionSheet.amount)); } },
+    { label: 'Adjust %', icon: '📊', action: () => setSheetMode('adjust') },
+    { label: 'Copy Amount', icon: '📋', action: () => onCopy() },
+    { label: 'Add Note', icon: '💬', action: () => setSheetMode('note') },
+  ];
+
+  return (
+    <BottomSheet open={!!actionSheet} onClose={onClose} title={actionSheet.companyName}>
+      <div style={{ padding: '8px 20px 24px' }}>
+        {/* Current amount display */}
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: '#8BAAC8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Current Amount</div>
+          <div style={{ fontSize: 28, fontWeight: 800, color: '#F0F4FF', fontVariantNumeric: 'tabular-nums' }}>
+            {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(actionSheet.amount)}
+          </div>
+        </div>
+
+        {sheetMode === 'menu' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {menuItems.map(item => (
+              <button key={item.label} onClick={item.action} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: `1px solid #1E3A5F`, borderRadius: 10, color: '#F0F4FF', fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+                <span style={{ fontSize: 20 }}>{item.icon}</span>{item.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {sheetMode === 'edit' && (
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#8BAAC8', fontWeight: 700, marginBottom: 6 }}>New Amount ($)</label>
+            <input
+              value={editVal} onChange={e => setEditVal(e.target.value)}
+              type="number" inputMode="decimal" autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') onSaveEdit(); }}
+              style={{ width: '100%', padding: '14px 16px', background: '#0A1628', border: '1px solid #D4A017', borderRadius: 10, color: '#F0F4FF', fontSize: 20, fontWeight: 700, outline: 'none', boxSizing: 'border-box', textAlign: 'right' }}
+            />
+            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+              <button onClick={onSaveEdit} style={{ flex: 1, padding: '14px', background: '#D4A017', color: '#000', fontWeight: 700, border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Save</button>
+              <button onClick={() => setSheetMode('menu')} style={{ flex: 1, padding: '14px', background: 'transparent', color: '#8BAAC8', fontWeight: 600, border: '1px solid #1E3A5F', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Back</button>
+            </div>
+          </div>
+        )}
+
+        {sheetMode === 'adjust' && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+              {[-10, -5, 5, 10].map(pct => (
+                <button key={pct} onClick={() => onAdjust(pct)} style={{
+                  padding: '16px', borderRadius: 10, fontSize: 18, fontWeight: 800, cursor: 'pointer', border: 'none',
+                  background: pct > 0 ? 'rgba(34,197,94,.12)' : 'rgba(239,68,68,.12)',
+                  color: pct > 0 ? '#22C55E' : '#EF4444',
+                }}>
+                  {pct > 0 ? '+' : ''}{pct}%
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setSheetMode('menu')} style={{ width: '100%', padding: '12px', background: 'transparent', color: '#8BAAC8', fontWeight: 600, border: '1px solid #1E3A5F', borderRadius: 10, fontSize: 14, cursor: 'pointer' }}>Back</button>
+          </div>
+        )}
+
+        {sheetMode === 'note' && (
+          <div>
+            <label style={{ display: 'block', fontSize: 12, color: '#8BAAC8', fontWeight: 700, marginBottom: 6 }}>Note</label>
+            <textarea
+              value={noteVal} onChange={e => setNoteVal(e.target.value)}
+              rows={3} autoFocus placeholder="e.g. Updated per sub quote 3/25"
+              style={{ width: '100%', padding: '12px 14px', background: '#0A1628', border: '1px solid #D4A017', borderRadius: 10, color: '#F0F4FF', fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
+            />
+            <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+              <button onClick={onSaveNote} disabled={!noteVal.trim()} style={{ flex: 1, padding: '14px', background: '#D4A017', color: '#000', fontWeight: 700, border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer', opacity: noteVal.trim() ? 1 : 0.5 }}>Save Note</button>
+              <button onClick={() => setSheetMode('menu')} style={{ flex: 1, padding: '14px', background: 'transparent', color: '#8BAAC8', fontWeight: 600, border: '1px solid #1E3A5F', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Back</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </BottomSheet>
   );
 }
 

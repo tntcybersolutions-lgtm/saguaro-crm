@@ -32,6 +32,11 @@ export default function PayAppsPage() {
   const [error,setError]       = useState('');
   const [downloading,setDownloading] = useState<string|null>(null);
   const [toast,setToast] = useState<{msg:string;type:'success'|'error'}|null>(null);
+  const [menuId, setMenuId] = useState<string|null>(null);
+  const [editId, setEditId] = useState<string|null>(null);
+  const [editVal, setEditVal] = useState('');
+  const [copiedId, setCopiedId] = useState<string|null>(null);
+  const [deleteId, setDeleteId] = useState<string|null>(null);
 
   useEffect(()=>{ const t=toast?setTimeout(()=>setToast(null),4000):null; return ()=>{ if(t) clearTimeout(t); }; },[toast]);
 
@@ -71,6 +76,28 @@ export default function PayAppsPage() {
     }finally{
       setDownloading(null);
     }
+  }
+
+  function openPayMenu(id: string) { setMenuId(id); setEditId(null); setDeleteId(null); }
+
+  async function handleEditPayAmt(id: string) {
+    const amount = parseFloat(editVal);
+    if (isNaN(amount) || amount < 0) return;
+    setPayApps(prev => prev.map(p => p.id === id ? { ...p, current_payment_due: amount } : p));
+    setEditId(null);
+    try { await fetch(`/api/pay-apps/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ current_payment_due: amount }) }); setToast({ msg: 'Amount updated', type: 'success' }); } catch { setToast({ msg: 'Updated locally', type: 'success' }); }
+  }
+
+  function handleCopyPay(id: string, amount: number) {
+    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
+    setCopiedId(id); setTimeout(() => setCopiedId(null), 2000);
+    setMenuId(null);
+  }
+
+  async function handleDeletePayApp(id: string) {
+    setPayApps(prev => prev.filter(p => p.id !== id));
+    setDeleteId(null);
+    try { await fetch(`/api/pay-apps/${id}`, { method: 'DELETE' }); setToast({ msg: 'Pay app deleted', type: 'success' }); } catch { setToast({ msg: 'Deleted locally', type: 'success' }); }
   }
 
   const totalCertified = payApps.filter(p=>p.status==='approved'||p.status==='certified'||p.status==='paid').reduce((s:number,p:any)=>s+(p.current_payment_due||0),0);
@@ -173,7 +200,43 @@ export default function PayAppsPage() {
                     <td style={{padding:'12px 14px',color:TEXT}}>{fmt(pa.contract_sum||0)}</td>
                     <td style={{padding:'12px 14px',color:TEXT}}>{fmt(pa.this_period||0)}</td>
                     <td style={{padding:'12px 14px',color:ORANGE}}>{fmt(pa.retainage_amount||0)}</td>
-                    <td style={{padding:'12px 14px',color:TEXT,fontWeight:700}}>{fmt(pa.current_payment_due||0)}</td>
+                    <td style={{padding:'12px 14px',position:'relative' as const}} onClick={e=>e.stopPropagation()}>
+                      {deleteId===pa.id ? (
+                        <div style={{display:'flex',alignItems:'center',gap:6}}>
+                          <span style={{fontSize:11,color:RED,fontWeight:600}}>Delete?</span>
+                          <button onClick={()=>handleDeletePayApp(pa.id)} style={{padding:'3px 8px',background:'rgba(192,48,48,.15)',border:'1px solid rgba(192,48,48,.3)',borderRadius:5,color:RED,fontSize:11,fontWeight:700,cursor:'pointer'}}>Yes</button>
+                          <button onClick={()=>setDeleteId(null)} style={{padding:'3px 8px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>Cancel</button>
+                        </div>
+                      ) : editId===pa.id ? (
+                        <div style={{display:'flex',alignItems:'center',gap:4}}>
+                          <input value={editVal} onChange={e=>setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e=>{if(e.key==='Enter')handleEditPayAmt(pa.id);if(e.key==='Escape')setEditId(null);}} style={{width:100,padding:'4px 8px',background:DARK,border:`1px solid ${GOLD}`,borderRadius:5,color:TEXT,fontSize:12,outline:'none',textAlign:'right' as const}}/>
+                          <button onClick={()=>handleEditPayAmt(pa.id)} style={{padding:'3px 8px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:'#0d1117',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
+                          <button onClick={()=>setEditId(null)} style={{padding:'3px 8px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>Cancel</button>
+                        </div>
+                      ) : (
+                        <div style={{display:'flex',alignItems:'center',gap:4}}>
+                          <span style={{color:TEXT,fontWeight:700}}>{fmt(pa.current_payment_due||0)}</span>
+                          {copiedId===pa.id&&<span style={{fontSize:10,color:'#3dd68c',fontWeight:600}}>Copied!</span>}
+                          <button onClick={()=>openPayMenu(pa.id)} style={{background:'none',border:'none',color:DIM,cursor:'pointer',fontSize:10,padding:'2px 4px',lineHeight:1,opacity:0.6}} onMouseEnter={e=>(e.currentTarget.style.opacity='1')} onMouseLeave={e=>(e.currentTarget.style.opacity='0.6')}>&#9662;</button>
+                          {menuId===pa.id&&(
+                            <div style={{position:'absolute',top:36,right:14,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,padding:4,zIndex:100,minWidth:150,boxShadow:'0 8px 24px rgba(0,0,0,.4)'}}>
+                              {[
+                                {label:'Edit Amount',icon:'\u270F\uFE0F',action:()=>{setMenuId(null);setEditId(pa.id);setEditVal(String(pa.current_payment_due||0));}},
+                                {label:'Copy Amount',icon:'\uD83D\uDCCB',action:()=>handleCopyPay(pa.id,pa.current_payment_due||0)},
+                              ].map(item=>(
+                                <div key={item.label} onClick={item.action} style={{padding:'7px 12px',fontSize:12,color:TEXT,cursor:'pointer',borderRadius:6,display:'flex',alignItems:'center',gap:8}} onMouseEnter={e=>(e.currentTarget.style.background=DARK)} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                                  <span style={{fontSize:14}}>{item.icon}</span>{item.label}
+                                </div>
+                              ))}
+                              <div style={{height:1,background:BORDER,margin:'4px 0'}}/>
+                              <div onClick={()=>{setMenuId(null);setDeleteId(pa.id);}} style={{padding:'7px 12px',fontSize:12,color:RED,cursor:'pointer',borderRadius:6,display:'flex',alignItems:'center',gap:8}} onMouseEnter={e=>(e.currentTarget.style.background='rgba(192,48,48,.08)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                                <span style={{fontSize:14}}>{'\uD83D\uDDD1\uFE0F'}</span>Delete Pay App
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td style={{padding:'12px 14px'}}>
                       <button
                         onClick={()=>downloadG702(pa)}
@@ -186,6 +249,7 @@ export default function PayAppsPage() {
                   </tr>
                 ))}
               </tbody>
+              {menuId&&<div style={{position:'fixed',inset:0,zIndex:50}} onClick={()=>setMenuId(null)}/>}
             </table>
           </div>
         )}

@@ -5,6 +5,10 @@
  */
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { SwipeActionItem } from '@/components/field/SwipeAction';
+import FieldPageHeader from '../FieldPageHeader';
+import { scopedFieldIcon } from '../field-icons';
 
 const GOLD = '#D4A017';
 const RAISED = '#0D1D2E';
@@ -120,6 +124,71 @@ function BudgetPage() {
   const [filterCode, setFilterCode] = useState('');
   const [selectedCostCode, setSelectedCostCode] = useState<CostCode | null>(null);
   const [showChart, setShowChart] = useState(true);
+
+  // Money action BottomSheet state
+  const [actionSheet, setActionSheet] = useState<{ id: string; description: string; amount: number } | null>(null);
+  const [sheetMode, setSheetMode] = useState<'menu' | 'edit' | 'adjust'>('menu');
+  const [editVal, setEditVal] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [fieldToast, setFieldToast] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function showFieldToast(msg: string) { setFieldToast(msg); setTimeout(() => setFieldToast(null), 2500); }
+
+  function openActionSheet(id: string, description: string, amount: number) {
+    setActionSheet({ id, description, amount });
+    setSheetMode('menu');
+    setEditVal(String(amount));
+  }
+
+  function closeActionSheet() { setActionSheet(null); setSheetMode('menu'); }
+
+  async function handleFieldBudgetEdit() {
+    if (!actionSheet) return;
+    const amount = parseFloat(editVal);
+    if (isNaN(amount) || amount < 0) return;
+    const url = `/api/projects/${projectId}/budget`;
+    const body = JSON.stringify({ id: actionSheet.id, original_budget: amount });
+    try {
+      await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+    } catch {
+      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); } catch {}
+    }
+    showFieldToast('Amount updated');
+    closeActionSheet();
+  }
+
+  async function handleFieldBudgetAdjust(pct: number) {
+    if (!actionSheet) return;
+    const newAmt = Math.round(actionSheet.amount * (1 + pct / 100));
+    const url = `/api/projects/${projectId}/budget`;
+    const body = JSON.stringify({ id: actionSheet.id, original_budget: newAmt });
+    try {
+      await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+    } catch {
+      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); } catch {}
+    }
+    showFieldToast(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
+    closeActionSheet();
+  }
+
+  function handleFieldBudgetCopy(amount: number) {
+    navigator.clipboard.writeText(formatUSD(amount)).catch(() => {});
+    closeActionSheet();
+    showFieldToast('Copied!');
+  }
+
+  async function handleFieldBudgetDelete(id: string) {
+    const url = `/api/projects/${projectId}/budget`;
+    const body = JSON.stringify({ id, _delete: true });
+    try {
+      await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+    } catch {
+      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); } catch {}
+    }
+    showFieldToast('Budget line deleted');
+    setDeleteConfirm(null);
+  }
 
   const fetchBudget = useCallback(async () => {
     if (!projectId) { setLoading(false); return; }
@@ -261,12 +330,10 @@ function BudgetPage() {
 
   return (
     <div style={{ padding: '18px 16px', maxWidth: 900, margin: '0 auto' }}>
-      <button onClick={() => router.back()} style={backBtn}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" width={20} height={20}><line x1={19} y1={12} x2={5} y2={12}/><polyline points="12 19 5 12 12 5"/></svg>
-        Back
-      </button>
-
-      <h1 style={{ margin: '0 0 16px', fontSize: 22, fontWeight: 800, color: TEXT }}>Project Budget</h1>
+      <FieldPageHeader
+        title="Project Budget"
+        icon={scopedFieldIcon('dashboard', 'ph')}
+      />
 
       {loading && <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading budget...</div>}
       {error && <div style={{ ...card, borderColor: RED, color: RED, padding: 12 }}>{error}</div>}
@@ -412,7 +479,12 @@ function BudgetPage() {
                       <tr key={cc.id} style={{ cursor: 'pointer' }} onClick={() => { setSelectedCostCode(cc); setView('drilldown'); }}>
                         <td style={{ ...tdStyle, fontWeight: 700, color: GOLD, whiteSpace: 'nowrap' }}>{cc.code}</td>
                         <td style={tdStyle}>{cc.description}</td>
-                        <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatUSD(cc.budget)}</td>
+                        <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            {formatUSD(cc.budget)}
+                            <button onClick={(e) => { e.stopPropagation(); openActionSheet(cc.id, `${cc.code} — ${cc.description}`, cc.budget); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', padding: '2px 4px', fontSize: 18, lineHeight: 1, borderRadius: 6 }} title="Actions">⋯</button>
+                          </span>
+                        </td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatUSD(cc.committed)}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatUSD(cc.actual)}</td>
                         <td style={{ ...tdStyle, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatUSD(cc.forecast)}</td>
@@ -454,6 +526,75 @@ function BudgetPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Money Action BottomSheet */}
+      <BottomSheet open={!!actionSheet} onClose={closeActionSheet} title={actionSheet?.description || ''}>
+        <div style={{ padding: '8px 20px 24px' }}>
+          {actionSheet && (
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Current Budget</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{formatUSD(actionSheet.amount)}</div>
+            </div>
+          )}
+          {sheetMode === 'menu' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[
+                { label: 'Edit Amount', icon: '✏️', action: () => setSheetMode('edit') },
+                { label: 'Adjust %', icon: '📊', action: () => setSheetMode('adjust') },
+                { label: 'Copy Amount', icon: '📋', action: () => actionSheet && handleFieldBudgetCopy(actionSheet.amount) },
+              ].map(item => (
+                <button key={item.label} onClick={item.action} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: TEXT, fontSize: 15, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+                  <span style={{ fontSize: 20 }}>{item.icon}</span>{item.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {sheetMode === 'edit' && (
+            <div>
+              <label style={{ display: 'block', fontSize: 12, color: DIM, fontWeight: 700, marginBottom: 6 }}>New Amount ($)</label>
+              <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" inputMode="decimal" autoFocus style={{ width: '100%', padding: '14px 16px', background: '#0A1628', border: `1px solid ${GOLD}`, borderRadius: 10, color: TEXT, fontSize: 20, fontWeight: 700, outline: 'none', boxSizing: 'border-box', textAlign: 'right' }} />
+              <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+                <button onClick={handleFieldBudgetEdit} style={{ flex: 1, padding: '14px', background: GOLD, color: '#000', fontWeight: 700, border: 'none', borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Save</button>
+                <button onClick={() => setSheetMode('menu')} style={{ flex: 1, padding: '14px', background: 'transparent', color: DIM, fontWeight: 600, border: `1px solid ${BORDER}`, borderRadius: 10, fontSize: 15, cursor: 'pointer' }}>Back</button>
+              </div>
+            </div>
+          )}
+          {sheetMode === 'adjust' && (
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                {[-10, -5, 5, 10].map(pct => (
+                  <button key={pct} onClick={() => handleFieldBudgetAdjust(pct)} style={{ padding: '16px', borderRadius: 10, fontSize: 18, fontWeight: 800, cursor: 'pointer', border: 'none', background: pct > 0 ? 'rgba(34,197,94,.12)' : 'rgba(239,68,68,.12)', color: pct > 0 ? GREEN : RED }}>
+                    {pct > 0 ? '+' : ''}{pct}%
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => setSheetMode('menu')} style={{ width: '100%', padding: '12px', background: 'transparent', color: DIM, fontWeight: 600, border: `1px solid ${BORDER}`, borderRadius: 10, fontSize: 14, cursor: 'pointer' }}>Back</button>
+            </div>
+          )}
+        </div>
+      </BottomSheet>
+
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 700, padding: 24 }}>
+          <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 24, width: '100%', maxWidth: 340, textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🗑️</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 8 }}>Delete this budget line?</div>
+            <div style={{ fontSize: 13, color: DIM, marginBottom: 20 }}>This action cannot be undone.</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => handleFieldBudgetDelete(deleteConfirm)} style={{ flex: 1, padding: '12px', background: 'rgba(239,68,68,.15)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 10, color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Yes, Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} style={{ flex: 1, padding: '12px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: DIM, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {fieldToast && (
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 20px', color: GREEN, fontSize: 13, fontWeight: 600, zIndex: 800, boxShadow: '0 8px 24px rgba(0,0,0,.4)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16 }}>✓</span>{fieldToast}
+        </div>
       )}
     </div>
   );

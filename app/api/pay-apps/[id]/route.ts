@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await getUser(req);
@@ -73,6 +75,64 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       }
     }
 
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const body = await req.json();
+    const db = createServerClient();
+
+    // Whitelist to real pay_applications columns the pay-apps list page may patch.
+    const allowed = [
+      'current_payment_due', 'status', 'app_number', 'period_from', 'period_to',
+      'scheduled_value', 'this_period', 'percent_complete', 'net_payment_due',
+      'contract_sum', 'notes', 'internal_notes',
+    ];
+    const updates: Record<string, unknown> = {};
+    for (const k of allowed) {
+      if (body[k] !== undefined) updates[k] = body[k];
+    }
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ success: true });
+    }
+    updates.updated_at = new Date().toISOString();
+
+    const { data, error } = await db
+      .from('pay_applications')
+      .update(updates)
+      .eq('id', id)
+      .eq('tenant_id', user.tenantId)
+      .select()
+      .single();
+    if (error) throw error;
+    if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ payApp: data });
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const db = createServerClient();
+    // Remove SOV child rows first, then the pay app (tenant-scoped).
+    await db.from('schedule_of_values').delete().eq('pay_app_id', id);
+    const { error } = await db
+      .from('pay_applications')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', user.tenantId);
+    if (error) throw error;
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -3,7 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8';
+const GOLD='#D4A017',DARK='#0d1117',RAISED='#1f2c3e',BORDER='#263347',DIM='#8fa3c0',TEXT='#e8edf8',RED='#ef4444',GREEN='#3dd68c';
 
 interface BidRecord {
   id: string;
@@ -38,6 +38,76 @@ function BidsPageInner() {
   const [historyStats, setHistoryStats] = useState<BidStats|null>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<'all'|'won'|'lost'|'pending'>('all');
+
+  // Money action menu state
+  const [menuId, setMenuId] = useState<string|null>(null);
+  const [editId, setEditId] = useState<string|null>(null);
+  const [editVal, setEditVal] = useState('');
+  const [adjustId, setAdjustId] = useState<string|null>(null);
+  const [noteId, setNoteId] = useState<string|null>(null);
+  const [noteVal, setNoteVal] = useState('');
+  const [deleteId, setDeleteId] = useState<string|null>(null);
+  const [copiedId, setCopiedId] = useState<string|null>(null);
+  const [toast, setToast] = useState<string|null>(null);
+
+  function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(null), 2500); }
+  const fmt = (n: number) => '$' + ((n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }));
+
+  function openMenu(id: string) { setMenuId(id); setEditId(null); setAdjustId(null); setNoteId(null); setDeleteId(null); }
+  function closeAll() { setMenuId(null); setEditId(null); setAdjustId(null); setNoteId(null); setDeleteId(null); }
+
+  async function handleSaveEdit(id: string) {
+    const amount = parseFloat(editVal);
+    if (isNaN(amount) || amount < 0) return;
+    try {
+      const r = await fetch(`/api/bids/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bid_amount: amount }) });
+      if (!r.ok) throw new Error();
+      setHistoryBids(prev => prev.map(b => b.id === id ? { ...b, bid_amount: amount } : b));
+      showToast('Amount updated');
+    } catch { showToast('Failed to update'); }
+    setEditId(null);
+  }
+
+  async function handleAdjust(id: string, pct: number) {
+    const bid = historyBids.find(b => b.id === id);
+    if (!bid) return;
+    const newAmt = Math.round(bid.bid_amount * (1 + pct / 100));
+    try {
+      const r = await fetch(`/api/bids/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ bid_amount: newAmt }) });
+      if (!r.ok) throw new Error();
+      setHistoryBids(prev => prev.map(b => b.id === id ? { ...b, bid_amount: newAmt } : b));
+      showToast(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
+    } catch { showToast('Failed to adjust'); }
+    setAdjustId(null);
+  }
+
+  function handleCopy(id: string, amount: number) {
+    navigator.clipboard.writeText(fmt(amount)).catch(() => {});
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+    setMenuId(null);
+  }
+
+  async function handleSaveNote(id: string) {
+    if (!noteVal.trim()) return;
+    try {
+      const r = await fetch(`/api/bids/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: noteVal.trim() }) });
+      if (!r.ok) throw new Error();
+      setHistoryBids(prev => prev.map(b => b.id === id ? { ...b, notes: noteVal.trim() } : b));
+      showToast('Note saved');
+    } catch { showToast('Failed to save note'); }
+    setNoteId(null); setNoteVal('');
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      const r = await fetch(`/api/bids/${id}`, { method: 'DELETE' });
+      if (!r.ok) throw new Error();
+      setHistoryBids(prev => prev.filter(b => b.id !== id));
+      showToast('Bid deleted');
+    } catch { showToast('Failed to delete'); }
+    setDeleteId(null);
+  }
 
   // Score modal state
   const [showScore, setShowScore] = useState(tabParam === 'score');
@@ -241,7 +311,59 @@ function BidsPageInner() {
               <td style={{padding:'12px 14px',color:TEXT,fontWeight:600,maxWidth:220,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const}}>{b.project_name}</td>
               <td style={{padding:'12px 14px',color:DIM}}>{b.project_type}</td>
               <td style={{padding:'12px 14px',color:DIM}}>{b.bid_date}</td>
-              <td style={{padding:'12px 14px',color:TEXT}}>${b.bid_amount.toLocaleString()}</td>
+              {/* ── Money cell with action menu ── */}
+              <td style={{padding:'12px 14px',position:'relative' as const}}>
+                {deleteId===b.id ? (
+                  <div style={{display:'flex',alignItems:'center',gap:6}}>
+                    <span style={{fontSize:12,color:RED,fontWeight:600}}>Delete this bid?</span>
+                    <button onClick={()=>handleDelete(b.id)} style={{padding:'3px 10px',background:'rgba(239,68,68,.15)',border:`1px solid rgba(239,68,68,.3)`,borderRadius:5,color:RED,fontSize:11,fontWeight:700,cursor:'pointer'}}>Yes</button>
+                    <button onClick={()=>setDeleteId(null)} style={{padding:'3px 10px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>Cancel</button>
+                  </div>
+                ) : editId===b.id ? (
+                  <div style={{display:'flex',alignItems:'center',gap:4}}>
+                    <input value={editVal} onChange={e=>setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e=>{if(e.key==='Enter')handleSaveEdit(b.id);if(e.key==='Escape')setEditId(null);}} style={{width:110,padding:'4px 8px',background:DARK,border:`1px solid ${GOLD}`,borderRadius:5,color:TEXT,fontSize:12,outline:'none',textAlign:'right' as const}}/>
+                    <button onClick={()=>handleSaveEdit(b.id)} style={{padding:'3px 8px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:'#0d1117',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
+                    <button onClick={()=>setEditId(null)} style={{padding:'3px 8px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>Cancel</button>
+                  </div>
+                ) : adjustId===b.id ? (
+                  <div style={{display:'flex',alignItems:'center',gap:3,flexWrap:'wrap' as const}}>
+                    {[-10,-5,5,10].map(p=>(
+                      <button key={p} onClick={()=>handleAdjust(b.id,p)} style={{padding:'3px 8px',background:p>0?'rgba(61,214,140,.1)':'rgba(239,68,68,.1)',border:`1px solid ${p>0?'rgba(61,214,140,.25)':'rgba(239,68,68,.25)'}`,borderRadius:5,color:p>0?GREEN:RED,fontSize:11,fontWeight:700,cursor:'pointer'}}>{p>0?'+':''}{p}%</button>
+                    ))}
+                    <button onClick={()=>setAdjustId(null)} style={{padding:'3px 6px',background:'none',border:'none',color:DIM,fontSize:11,cursor:'pointer'}}>Cancel</button>
+                  </div>
+                ) : noteId===b.id ? (
+                  <div style={{display:'flex',alignItems:'center',gap:4}}>
+                    <input value={noteVal} onChange={e=>setNoteVal(e.target.value)} placeholder="Add a note…" autoFocus onKeyDown={e=>{if(e.key==='Enter')handleSaveNote(b.id);if(e.key==='Escape'){setNoteId(null);setNoteVal('');}}} style={{width:160,padding:'4px 8px',background:DARK,border:`1px solid ${GOLD}`,borderRadius:5,color:TEXT,fontSize:12,outline:'none'}}/>
+                    <button onClick={()=>handleSaveNote(b.id)} style={{padding:'3px 8px',background:`linear-gradient(135deg,${GOLD},#F0C040)`,border:'none',borderRadius:5,color:'#0d1117',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
+                    <button onClick={()=>{setNoteId(null);setNoteVal('');}} style={{padding:'3px 8px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>Cancel</button>
+                  </div>
+                ) : (
+                  <div style={{display:'flex',alignItems:'center',gap:4}}>
+                    <span style={{color:TEXT,fontVariantNumeric:'tabular-nums'}}>{fmt(b.bid_amount)}</span>
+                    {copiedId===b.id && <span style={{fontSize:10,color:GREEN,fontWeight:600}}>Copied!</span>}
+                    <button onClick={(e)=>{e.stopPropagation();openMenu(b.id);}} style={{background:'none',border:'none',color:DIM,cursor:'pointer',fontSize:10,padding:'2px 4px',lineHeight:1,opacity:0.6}} onMouseEnter={e=>(e.currentTarget.style.opacity='1')} onMouseLeave={e=>(e.currentTarget.style.opacity='0.6')}>▾</button>
+                    {menuId===b.id&&(
+                      <div style={{position:'absolute',top:36,right:14,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,padding:4,zIndex:100,minWidth:160,boxShadow:'0 8px 24px rgba(0,0,0,.4)'}}>
+                        {[
+                          {label:'Edit Amount',icon:'✏️',action:()=>{setMenuId(null);setEditId(b.id);setEditVal(String(b.bid_amount));}},
+                          {label:'Adjust %',icon:'📊',action:()=>{setMenuId(null);setAdjustId(b.id);}},
+                          {label:'Copy Amount',icon:'📋',action:()=>handleCopy(b.id,b.bid_amount)},
+                          {label:'Add Note',icon:'💬',action:()=>{setMenuId(null);setNoteId(b.id);setNoteVal(b.notes||'');}},
+                        ].map(item=>(
+                          <div key={item.label} onClick={item.action} style={{padding:'7px 12px',fontSize:12,color:TEXT,cursor:'pointer',borderRadius:6,display:'flex',alignItems:'center',gap:8}} onMouseEnter={e=>(e.currentTarget.style.background=DARK)} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                            <span style={{fontSize:14}}>{item.icon}</span>{item.label}
+                          </div>
+                        ))}
+                        <div style={{height:1,background:BORDER,margin:'4px 0'}}/>
+                        <div onClick={()=>{setMenuId(null);setDeleteId(b.id);}} style={{padding:'7px 12px',fontSize:12,color:RED,cursor:'pointer',borderRadius:6,display:'flex',alignItems:'center',gap:8}} onMouseEnter={e=>(e.currentTarget.style.background='rgba(239,68,68,.08)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                          <span style={{fontSize:14}}>🗑️</span>Delete Bid
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </td>
               <td style={{padding:'12px 14px',color:b.margin_pct>=15?'#3dd68c':b.margin_pct>=10?GOLD:'#ff7070',fontWeight:700}}>{b.margin_pct}%</td>
               <td style={{padding:'12px 14px',color:DIM}}>{b.location}</td>
               <td style={{padding:'12px 14px'}}>
@@ -253,6 +375,14 @@ function BidsPageInner() {
             </tr>;
           })}</tbody>
         </table>}
+      </div>}
+
+      {/* ── Click-away overlay for money menu ──────────────────────────────── */}
+      {menuId&&<div style={{position:'fixed',inset:0,zIndex:50}} onClick={()=>setMenuId(null)}/>}
+
+      {/* ── Toast notification ─────────────────────────────────────────────── */}
+      {toast&&<div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'10px 20px',color:GREEN,fontSize:13,fontWeight:600,zIndex:1100,boxShadow:'0 8px 24px rgba(0,0,0,.4)',display:'flex',alignItems:'center',gap:8}}>
+        <span style={{fontSize:16}}>✓</span>{toast}
       </div>}
 
       {/* ── Score a Bid Modal ─────────────────────────────────────────────────── */}

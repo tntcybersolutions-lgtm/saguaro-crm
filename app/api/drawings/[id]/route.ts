@@ -7,10 +7,27 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const body = await req.json();
     const db = createServerClient();
-    const allowed = ['drawing_number','title','discipline','revision','revision_date','status','url','notes'];
+    // The real `drawings` table (same one upload/list use) has columns:
+    // name, url, sheet_number, discipline, version, revision_date, status, notes.
+    // Map the client's aliases (mobile sends title/sheet_number/discipline) to
+    // the real columns; accept camelCase too.
+    const pick = (...keys: string[]) => {
+      for (const k of keys) { if (body[k] !== undefined) return body[k]; }
+      return undefined;
+    };
+    const candidates: Record<string, any> = {
+      name:         pick('name', 'title'),
+      url:          pick('url', 'file_url', 'fileUrl'),
+      sheet_number: pick('sheet_number', 'sheetNumber', 'sheet_no', 'drawing_number', 'drawingNumber'),
+      discipline:   pick('discipline'),
+      version:      pick('version', 'revision'),
+      revision_date: pick('revision_date', 'revisionDate'),
+      status:       pick('status'),
+      notes:        pick('notes'),
+    };
     const fields: Record<string, any> = {};
-    for (const k of allowed) { if (body[k] !== undefined) fields[k] = body[k]; }
-    const { error } = await db.from('project_drawings').update(fields).eq('id', id).eq('tenant_id', user.tenantId);
+    for (const [col, val] of Object.entries(candidates)) { if (val !== undefined) fields[col] = val; }
+    const { error } = await db.from('drawings').update(fields).eq('id', id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch {
@@ -23,7 +40,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const db = createServerClient();
-    const { error } = await db.from('project_drawings').delete().eq('id', id).eq('tenant_id', user.tenantId);
+    const { error } = await db.from('drawings').delete().eq('id', id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch {

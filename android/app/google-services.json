@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "147115905517",
+    "project_id": "saguaro-field-app",
+    "storage_bucket": "saguaro-field-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:147115905517:android:6cdb4459b5f0a0d9de57e4",
+        "android_client_info": {
+          "package_name": "com.saguaro.field"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFBjYlPVUzP0BeWpv8wlu4URjVDD82Lug"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

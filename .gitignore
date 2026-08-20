@@ -144,3 +144,7 @@ bundle-report.html
 .Rproj.user
 .Rhistory
 .claude/settings.local.json
+
+# NEVER commit signing material or env — added during WIP preservation 2026-08-20
+android/*.keystore
+*.tgz
