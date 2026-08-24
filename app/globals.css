@@ -1,4 +1,11 @@
 :root {
+  /* Tell the browser this page is already dark. Without this the UA assumes
+     LIGHT and draws its own chrome to match: select drop-down popups, date
+     pickers, scrollbars and the autofill background all render light, so our
+     white text lands on a white box. It also opts the site out of Chrome's
+     Auto Dark Mode, which otherwise force-inverts pages that never declared a
+     scheme — on an already-dark site that turns the inputs pale. */
+  color-scheme: dark;
   /* Surfaces — Sonoran DARK (Rob's direction 2026-07-22): navy page + slate cards */
   --bg-base: #0a0a0a;
   --bg-surface: #141416;
@@ -517,6 +524,69 @@ select:-webkit-autofill {
   transition: background-color 600000s 0s, color 600000s 0s;
 }
 input:-webkit-autofill::first-line { color: #FFFFFF !important; font-size: 15px; }
+
+/* Firefox implements NONE of the -webkit- rules above, so an autofilled field
+   there still paints Firefox's own light background under our white text —
+   exactly the white-on-white the block above fixes for Chrome and Safari.
+   `:autofill` is the unprefixed standard (Firefox 86+, Chrome 94+).
+
+   This MUST stay a separate rule. One unknown pseudo-class invalidates the
+   whole selector list it sits in, so folding `:autofill` into the -webkit-
+   list above would make older browsers drop the Chrome/Safari fix with it.
+   Split, each browser keeps whichever rule it understands.
+
+   Firefox paints its highlight as a background-image and honours the author's
+   background-color, so it needs the real properties, not just the inset
+   shadow trick Chrome requires. */
+input:autofill,
+input:autofill:hover,
+input:autofill:focus,
+input:autofill:active,
+textarea:autofill,
+select:autofill {
+  background-color: #141416 !important;
+  background-image: none !important;
+  box-shadow: 0 0 0 1000px #141416 inset !important;
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  caret-color: #FFFFFF !important;
+  filter: none !important;
+}
+
+/* iOS SAFARI (confirmed from a device screenshot, 24 Aug 2026, saguarocontrol.net
+   signup opened from a Messages link):
+
+   On iOS, Safari paints its OWN pale autofill background and the inset
+   box-shadow above does NOT cover it — the trick that works in desktop Chrome
+   and macOS Safari silently fails there. The -webkit-text-fill-color above then
+   puts WHITE text on that pale box, so every field Safari filled from the
+   contact card (name, email, company, phone, state) was unreadable while the
+   one field it did not fill, password, looked fine.
+
+   We cannot force that background dark on iOS, so we go the other way and make
+   the text dark instead. The value stays readable; an autofilled field just
+   reads as a light "filled" chip until the user edits it.
+
+   @supports (-webkit-touch-callout: none) is the standard iOS-only gate — it
+   does not match macOS Safari, Chrome, or Firefox, so the white-on-dark rules
+   above keep their behaviour everywhere else.
+
+   If a future iOS ever honours the inset shadow, this flips to dark-on-dark and
+   should be removed. Re-test on a real iPhone before changing it: autofill
+   cannot be triggered in headless automation, so this is device-verified only. */
+@supports (-webkit-touch-callout: none) {
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: #0A0A0A !important;
+    color: #0A0A0A !important;
+    caret-color: #0A0A0A !important;
+  }
+  input:-webkit-autofill::first-line { color: #0A0A0A !important; }
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    MATERIAL LAYER (2026-08-21) — the Signal Studio designer finish, promoted to
