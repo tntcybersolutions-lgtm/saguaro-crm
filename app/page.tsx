@@ -220,29 +220,35 @@ export default function LandingPage() {
 
       {/* Integration logos — real vendor marks (react-icons), only for shipped integrations */}
       {/* ══════════ 2. SONORAN — the origin story, front and center ══════════ */}
-      <section style={{ position: 'relative', overflow: 'hidden', padding: 'clamp(56px, 8vh, 72px) 24px clamp(52px, 8vh, 68px)', textAlign: 'center' as const, borderTop: '1px solid rgba(245,158,11,0.14)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Scaled up 24 Aug 2026 on the owner's call: this is the origin story and
+          it was reading as a footnote between two louder sections. It now holds
+          a screen on its own — hero-scale headline, deeper vertical padding, a
+          wider measure and a stronger horizon glow. Every size is a clamp, so
+          the phone floor barely moves while the desktop ceiling roughly
+          doubles: the headline goes 44px -> 82px only where there is room. */}
+      <section style={{ position: 'relative', overflow: 'hidden', padding: 'clamp(72px, 13vh, 136px) 24px clamp(64px, 11vh, 120px)', textAlign: 'center' as const, borderTop: '1px solid rgba(245,158,11,0.20)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         {/* desert-heat backdrop: horizon glow, no images */}
-        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(90% 70% at 50% 115%, rgba(224,100,78,0.16) 0%, rgba(245,158,11,0.09) 38%, rgba(0,0,0,0) 72%)' }} />
-        <div style={{ position: 'relative', maxWidth: 980, margin: '0 auto' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.08)', color: '#F5B84D', fontSize: 11.5, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' as const, marginBottom: 22 }}>
-            <Thermometer size={13} weight="fill" /> Field-proven at 115°
+        <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(92% 78% at 50% 118%, rgba(224,100,78,0.22) 0%, rgba(245,158,11,0.13) 38%, rgba(0,0,0,0) 74%)' }} />
+        <div style={{ position: 'relative', maxWidth: 1240, margin: '0 auto' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 20px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.42)', background: 'rgba(245,158,11,0.10)', color: '#F5B84D', fontSize: 13, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' as const, marginBottom: 28 }}>
+            <Thermometer size={15} weight="fill" /> Field-proven at 115°
           </span>
-          <h2 style={{ fontSize: 'clamp(30px, 4.2vw, 44px)', fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.08, margin: '0 0 16px' }}>
+          <h2 style={{ fontSize: 'clamp(34px, 6.2vw, 82px)', fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.02, margin: '0 0 20px', textWrap: 'balance' as const }}>
             Born on <span style={{ background: 'linear-gradient(100deg, #E0644E 4%, #F59E0B 42%, #FDE68A 60%, #E0644E 96%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>Sonoran</span> jobsites.
           </h2>
-          <p style={{ color: '#E4E4E7', fontSize: 'clamp(15px, 1.8vw, 18px)', lineHeight: 1.65, maxWidth: 660, margin: '0 auto 30px' }}>
+          <p style={{ color: '#E4E4E7', fontSize: 'clamp(16px, 2.1vw, 23px)', lineHeight: 1.6, maxWidth: 820, margin: '0 auto 38px' }}>
             Built where summers hit <strong style={{ color: '#F5B84D' }}>115 degrees</strong> and the far corner of the site has no bars.
             The field app assumes gloves, glare, and no signal — because that is where it was raised.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' as const, gap: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' as const, gap: 14 }}>
             {[
               { Ic: Hand, label: 'Glove mode' },
               { Ic: WifiSlash, label: 'Offline-first' },
               { Ic: MapPin, label: 'GPS clock-in' },
               { Ic: CloudSun, label: 'Auto weather on logs' },
             ].map(b => (
-              <span key={b.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 9, border: '1px solid rgba(245,158,11,0.30)', background: 'linear-gradient(180deg, rgba(245,158,11,0.10), rgba(245,158,11,0.04))', color: '#F4F4F5', fontSize: 14, fontWeight: 700, padding: '11px 18px', borderRadius: 999, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
-                <b.Ic size={17} weight="duotone" color="#F59E0B" />{b.label}
+              <span key={b.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px solid rgba(245,158,11,0.34)', background: 'linear-gradient(180deg, rgba(245,158,11,0.12), rgba(245,158,11,0.05))', color: '#F4F4F5', fontSize: 16, fontWeight: 700, padding: '13px 22px', borderRadius: 999, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.09)' }}>
+                <b.Ic size={19} weight="duotone" color="#F59E0B" />{b.label}
               </span>
             ))}
           </div>
