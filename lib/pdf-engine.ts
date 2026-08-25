@@ -309,9 +309,14 @@ export async function generateG703(input: {
   branding?: DocBranding;
 }): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  const page = doc.addPage([792, 612]); // Landscape Letter
+  /* `let`: the continuation sheet PAGINATES. It used to stop dead at
+   * `if (y < 60) return;` — a schedule of values longer than one page simply
+   * lost its remaining lines, silently, on the document that backs a pay
+   * application. */
+  let page = doc.addPage([792, 612]); // Landscape Letter
   const { width, height } = page.getSize();
   const { reg, bold } = await baseFonts(doc);
+  const g703Pages: any[] = [page];
   const branding = input.branding ?? SAGUARO_BRANDING;
   const accent = branding.accent;
   const logo = await embedLogo(doc, branding);
@@ -340,16 +345,35 @@ export async function generateG703(input: {
   ];
 
   let y = height - 55;
-  cols.forEach(col => {
-    drawBox(page, col.x, y - 24, col.w, 24, LGRAY);
-    const lines = col.label.split('\n');
-    drawText(page, lines[0], col.x + 2, y - 10, 7, bold, DARK);
-    drawText(page, lines[1], col.x + 2, y - 20, 6, reg,  GRAY);
-  });
+  /** Column header strip — repeated on every continuation sheet. */
+  const drawG703Heads = () => {
+    cols.forEach(col => {
+      drawBox(page, col.x, y - 24, col.w, 24, LGRAY);
+      const lines = col.label.split('\n');
+      drawText(page, lines[0], col.x + 2, y - 10, 7, bold, DARK);
+      drawText(page, lines[1], col.x + 2, y - 20, 6, reg,  GRAY);
+    });
+    y -= 30;
+  };
+  drawG703Heads();
 
-  y -= 30;
+  /* Break BEFORE a row that will not fit, reserving 90pt so the totals row is
+   * never orphaned from the last line item it sums. This replaced
+   * `if (y < 60) return;`, which abandoned every remaining line of the schedule
+   * of values without a word — on the sheet that backs a pay application. */
+  const g703Room = (needed: number) => {
+    if (y - needed >= 90) return;
+    page = doc.addPage([792, 612]);
+    g703Pages.push(page);
+    page.drawRectangle({ x: 0, y: height - 40, width, height: 40, color: DARK });
+    drawText(page, 'AIA G703 — CONTINUATION SHEET (CONTINUED)', 36, height - 22, 12, bold, accent);
+    drawText(page, `${input.projectName} | Application No. ${input.appNumber}`, 36, height - 36, 8, reg, WHITE);
+    y = height - 55;
+    drawG703Heads();
+  };
+
   input.lineItems.forEach((item, i) => {
-    if (y < 60) return;
+    g703Room(14);
     const bg = i % 2 === 0 ? WHITE : LGRAY;
     page.drawRectangle({ x: 36, y: y - 14, width: width - 72, height: 14, color: bg });
     drawText(page, String(item.lineNumber), 38, y - 11, 7, reg, DARK);
@@ -398,7 +422,8 @@ export async function generateG704(input: {
   contractSum: number; punchListItems?: string[];
 }): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  const page = doc.addPage(PageSizes.Letter);
+  let page = doc.addPage(PageSizes.Letter);
+  const g704Pages: any[] = [page]; // every sheet this document grows, for page stamping
   const { width, height } = page.getSize();
   const { reg, bold } = await baseFonts(doc);
 
@@ -440,7 +465,19 @@ export async function generateG704(input: {
   if (input.punchListItems && input.punchListItems.length > 0) {
     drawText(page, 'PUNCH LIST ITEMS TO COMPLETE:', 36, y, 10, bold, DARK);
     y -= 16;
-    input.punchListItems.slice(0, 10).forEach(item => {
+    /* Was `.slice(0, 10)`. A Certificate of Substantial Completion whose punch
+     * list quietly stops at ten items understates what is still owed on the
+     * job. All items are listed; the signature blocks need ~110pt beneath, so
+     * the list continues on a second sheet rather than running under them. */
+    input.punchListItems.forEach(item => {
+      if (y < 150) {
+        page = doc.addPage(PageSizes.Letter);
+        g704Pages.push(page);
+        headerBar(page, 'CERTIFICATE OF SUBSTANTIAL COMPLETION (CONTINUED)', input.projectName, bold, reg);
+        y = height - 90;
+        drawText(page, 'PUNCH LIST ITEMS TO COMPLETE (CONTINUED):', 36, y, 10, bold, DARK);
+        y -= 16;
+      }
       drawText(page, `• ${item}`, 46, y, 9, reg, DARK);
       y -= 14;
     });
@@ -814,7 +851,8 @@ export async function generateBidJacket(input: {
 
   // PAGE 4 — Bid Form / Schedule of Values
   {
-    const page = doc.addPage(PageSizes.Letter);
+    let page = doc.addPage(PageSizes.Letter);
+    const bidPages: any[] = [page]; // sheets this section grows
     const { width, height } = page.getSize();
     headerBar(page, 'BID FORM — SCHEDULE OF VALUES', `Submit by: ${fmtDate(input.dueDate)}`, bold, reg);
     let y = height - 70;
@@ -831,7 +869,15 @@ export async function generateBidJacket(input: {
     drawText(page, 'Total', 490, y - 12, 8, bold, WHITE);
     y -= 16;
 
-    input.lineItems.slice(0, 20).forEach((item, i) => {
+    /* Was `.slice(0, 20)`. A bid jacket that drops line item 21 understates
+     * the bid. Rows now break to a new sheet instead of vanishing. */
+    input.lineItems.forEach((item, i) => {
+      if (y < 90) {
+        page = doc.addPage(PageSizes.Letter);
+        bidPages.push(page);
+        headerBar(page, 'BID JACKET (CONTINUED)', input.projectName, bold, reg);
+        y = height - 90;
+      }
       const bg = i % 2 === 0 ? WHITE : LGRAY;
       page.drawRectangle({ x: 36, y: y - 14, width: width - 72, height: 14, color: bg });
       drawText(page, String(i + 1), 38, y - 10, 8, reg, DARK);
@@ -930,14 +976,25 @@ export async function generateWH347(input: {
   }>;
 }): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  const page = doc.addPage([792, 612]); // Landscape
+  /* `let`, not `const`: this form PAGINATES. It previously drew
+   * `input.employees.slice(0, 15)` onto a single page with no continuation and
+   * no notice, so a crew of 40 produced a federal Davis-Bacon filing showing 15
+   * people and nothing on the page said the other 25 existed. Every row is now
+   * drawn, flowing onto as many pages as it takes. */
+  let page = doc.addPage([792, 612]); // Landscape
   const { width, height } = page.getSize();
   const { reg, bold } = await baseFonts(doc);
+  const pages: any[] = [page];
 
-  page.drawRectangle({ x: 0, y: height - 40, width, height: 40, color: DARK });
-  drawText(page, 'U.S. DEPARTMENT OF LABOR — WH-347', 36, height - 18, 11, bold, GOLD);
-  drawText(page, 'CERTIFIED PAYROLL FORM', 36, height - 32, 8, reg, WHITE);
-  drawText(page, `Week Ending: ${fmtDate(input.weekEnding)} | Payroll #${input.payrollNumber}`, 400, height - 22, 9, reg, WHITE);
+  /** The DOL title band — repeated on every page so a loose sheet is identifiable. */
+  const drawBand = (p: any, contPage: number) => {
+    p.drawRectangle({ x: 0, y: height - 40, width, height: 40, color: DARK });
+    drawText(p, 'U.S. DEPARTMENT OF LABOR — WH-347', 36, height - 18, 11, bold, GOLD);
+    drawText(p, contPage > 1 ? `CERTIFIED PAYROLL FORM (CONTINUED)` : 'CERTIFIED PAYROLL FORM', 36, height - 32, 8, reg, WHITE);
+    drawText(p, `Week Ending: ${fmtDate(input.weekEnding)} | Payroll #${input.payrollNumber}`, 400, height - 22, 9, reg, WHITE);
+  };
+
+  drawBand(page, 1);
 
   let y = height - 50;
   fieldBox(page, 'CONTRACTOR:', input.gcName, 36, y, 200, reg, bold);
@@ -956,13 +1013,32 @@ export async function generateWH347(input: {
     { h: 'State WH', x: 606, w: 44 }, { h: 'Other', x: 650, w: 44 }, { h: 'Net Pay', x: 694, w: 62 },
   ];
 
-  page.drawRectangle({ x: 36, y: y - 16, width: width - 72, height: 16, color: DARK });
-  cols.forEach(c => drawText(page, c.h, c.x + 2, y - 12, 6, bold, WHITE));
-  y -= 16;
+  /** Column header strip — repeated at the top of every continuation page, so a
+   *  reader never has to flip back to know which column is Net Pay. */
+  const drawColumnHeads = () => {
+    page.drawRectangle({ x: 36, y: y - 16, width: width - 72, height: 16, color: DARK });
+    cols.forEach(c => drawText(page, c.h, c.x + 2, y - 12, 6, bold, WHITE));
+    y -= 16;
+  };
+  drawColumnHeads();
 
-  input.employees.slice(0, 15).forEach((emp, i) => {
+  /* Break BEFORE a row that would not fit. 150pt of reserve is the totals strip
+   * (30) plus the statement of compliance and signature rule (~110) — the parts
+   * that legally have to sit under the last row rather than orphaned alone. */
+  const ROW_H = 18;
+  const ensureRoom = (needed: number) => {
+    if (y - needed >= 150) return;
+    page = doc.addPage([792, 612]);
+    pages.push(page);
+    drawBand(page, pages.length);
+    y = height - 50;
+    drawColumnHeads();
+  };
+
+  input.employees.forEach((emp, i) => {
+    ensureRoom(ROW_H);
     const bg = i % 2 === 0 ? WHITE : LGRAY;
-    page.drawRectangle({ x: 36, y: y - 18, width: width - 72, height: 18, color: bg });
+    page.drawRectangle({ x: 36, y: y - ROW_H, width: width - 72, height: ROW_H, color: bg });
     drawText(page, emp.name, 38, y - 13, 7, reg, DARK);
     drawText(page, emp.classification, 148, y - 13, 7, reg, DARK);
     [emp.hoursMonday, emp.hoursTuesday, emp.hoursWednesday, emp.hoursThursday, emp.hoursFriday, emp.hoursSaturday, emp.hoursSunday]
@@ -978,6 +1054,9 @@ export async function generateWH347(input: {
     y -= 18;
   });
 
+  /* Totals + compliance block: 30 for the totals strip, 60 for the statement,
+   * 30 for the signature rule. ensureRoom() keeps them together on one page. */
+  ensureRoom(120);
   y -= 16;
   page.drawRectangle({ x: 36, y: y - 20, width: width - 72, height: 20, color: DARK });
   const totGross = input.employees.reduce((s, e) => s + e.grossEarnings, 0);
@@ -1004,6 +1083,15 @@ export async function generateWH347(input: {
   page.drawLine({ start: { x: 36, y }, end: { x: 300, y }, color: DARK, thickness: 0.5 });
   drawText(page, `${input.gcName} — Authorized Representative`, 36, y - 12, 8, reg, GRAY);
   drawText(page, 'Title: _______________  Date: _______________', 320, y - 12, 8, reg, DARK);
+
+  /* "Page 1 of 3" on every sheet, plus the employee count. A certified payroll
+   * gets printed, signed and mailed; without this a reader cannot tell whether
+   * they are holding the whole filing. Stamped at the end because the total is
+   * not known until the last row is drawn. */
+  pages.forEach((p, i) => {
+    drawText(p, `Page ${i + 1} of ${pages.length}`, width - 96, 20, 7, reg, GRAY);
+    drawText(p, `${input.employees.length} employee${input.employees.length === 1 ? '' : 's'} reported`, 36, 20, 7, reg, GRAY);
+  });
 
   return await doc.save();
 }
@@ -1037,7 +1125,8 @@ export async function generateCloseoutPackage(input: {
 
   // Checklist page
   {
-    const page = doc.addPage(PageSizes.Letter);
+    let page = doc.addPage(PageSizes.Letter);
+    const closeoutPages: any[] = [page]; // sheets this section grows
     const { width, height } = page.getSize();
     headerBar(page, 'CLOSEOUT CHECKLIST', input.projectName, bold, reg);
     let y = height - 70;
@@ -1058,7 +1147,13 @@ export async function generateCloseoutPackage(input: {
         item.status === 'complete' ? rgb(0.1, 0.5, 0.1) : item.status === 'na' ? GRAY : rgb(0.7, 0.3, 0.1));
       drawText(page, item.item, 120, y - 12, 9, reg, DARK);
       y -= 20;
-      if (y < 60) return;
+      /* Was a silent `return` that abandoned the rest of the list mid-page. */
+      if (y < 60) {
+        page = doc.addPage(PageSizes.Letter);
+        closeoutPages.push(page);
+        headerBar(page, 'PROJECT CLOSEOUT PACKAGE (CONTINUED)', input.projectName, bold, reg);
+        y = height - 90;
+      }
     });
 
     const complete = input.checklist.filter(i => i.status === 'complete').length;
