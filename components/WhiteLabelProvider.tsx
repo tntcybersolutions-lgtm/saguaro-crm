@@ -5,6 +5,11 @@ const SAGUARO_GOLD = '#F59E0B';
 
 export interface WhiteLabelBranding {
   logoUrl: string;
+  /** Measured at upload time from the logo's visible pixels. 'dark' means the
+   *  artwork is dark and needs a light plate behind it to be readable on the
+   *  app's near-black chrome; 'light' needs none. 'unknown' = not measured
+   *  (SVG, or a logo uploaded before tone detection existed). */
+  logoTone: 'dark' | 'light' | 'unknown';
   primaryColor: string;
   companyName: string;
   whiteLabelEnabled: boolean;
@@ -12,6 +17,7 @@ export interface WhiteLabelBranding {
 
 const defaults: WhiteLabelBranding = {
   logoUrl: '',
+  logoTone: 'unknown',
   primaryColor: SAGUARO_GOLD,
   companyName: '',
   whiteLabelEnabled: false,
@@ -60,6 +66,8 @@ export default function WhiteLabelProvider({ children }: { children: React.React
 
         setBranding({
           logoUrl: typeof data.logo_url === 'string' ? data.logo_url : '',
+          logoTone:
+            data.logo_tone === 'dark' || data.logo_tone === 'light' ? data.logo_tone : 'unknown',
           primaryColor: hex ?? SAGUARO_GOLD,
           companyName: typeof data.name === 'string' ? data.name : '',
           whiteLabelEnabled: enabled,

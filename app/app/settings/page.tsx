@@ -122,6 +122,11 @@ export default function SettingsPage() {
   // ── Branding ───────────────────────────────────────────────────────
   const [branding, setBranding] = useState({ company_name: '', logo_url: '', primary_color: '' });
   const [brandingSaving, setBrandingSaving] = useState(false);
+  /* The logo's real pixel shape, read off the loaded image. The sidebar caps
+   * HEIGHT, so a portrait logo collapses to a sliver however good it looks in
+   * a file browser — a real 600x1301 tenant logo rendered at 22x48. We measure
+   * it and say so, instead of letting the user wonder why it looks broken. */
+  const [logoDims, setLogoDims] = useState<{ w: number; h: number } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -425,6 +430,34 @@ export default function SettingsPage() {
                     style={{ ...inputStyle, fontSize: 12.5, padding: '8px 12px' }}
                   />
                 </div>
+
+                {/* Honest shape feedback. A tall logo is not "wrong", but it WILL
+                    render small in a sidebar that caps height — say so here
+                    rather than letting it look like a bug. */}
+                {logoDims && (() => {
+                  const aspect = logoDims.w / logoDims.h;
+                  const portrait = aspect < 0.8;
+                  const rendered = Math.round(96 * aspect);
+                  return (
+                    <div style={{
+                      marginTop: 10, padding: '10px 12px', borderRadius: 10, fontSize: 12, lineHeight: 1.5,
+                      border: `1px solid ${portrait ? 'rgba(245,158,11,0.35)' : BORDER}`,
+                      background: portrait ? 'rgba(245,158,11,0.07)' : 'rgba(255,255,255,0.02)',
+                      color: portrait ? TEXT : DIM,
+                    }}>
+                      <strong style={{ color: portrait ? GOLD : TEXT }}>
+                        {logoDims.w} x {logoDims.h}px
+                      </strong>
+                      {portrait ? (
+                        <> — this logo is taller than it is wide, so the sidebar renders it about{' '}
+                          <strong>{rendered}px wide</strong>. A horizontal (landscape) version of your
+                          mark will read far better here and on report letterheads.</>
+                      ) : (
+                        <> — good shape for the sidebar and report letterheads.</>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Brand color */}
@@ -480,7 +513,13 @@ export default function SettingsPage() {
                           src={branding.logo_url}
                           alt="Logo preview"
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          style={{ display: 'block', maxWidth: '100%', maxHeight: 48, width: 'auto', height: 'auto', objectFit: 'contain', objectPosition: 'left center', marginBottom: 9 }}
+                          onLoad={e => {
+                            const im = e.target as HTMLImageElement;
+                            if (im.naturalWidth && im.naturalHeight) setLogoDims({ w: im.naturalWidth, h: im.naturalHeight });
+                          }}
+                          /* 96 mirrors AppSidebar exactly — a preview that lies
+                             about the cap is worse than no preview. */
+                          style={{ display: 'block', maxWidth: '100%', maxHeight: 96, width: 'auto', height: 'auto', objectFit: 'contain', objectPosition: 'left center', marginBottom: 9 }}
                         />
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                           {branding.company_name && (

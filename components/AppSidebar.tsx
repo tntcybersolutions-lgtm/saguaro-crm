@@ -105,6 +105,15 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
   }, []);
 
   const hasLogo = !!wl.logoUrl && !imgFailed;
+  /* A dark logo on near-black chrome reads as an empty tile — the owner's
+   * "you can't see it". Tone is measured from the artwork's visible pixels at
+   * upload time (see app/api/branding/logo/route.ts), so dark marks get a light
+   * plate to sit on and white knock-out marks are left alone. 'unknown' (SVG,
+   * or uploaded before tone detection) keeps the old neutral treatment. */
+  const needsPlate = hasLogo && wl.logoTone === 'dark';
+  const platedImg: React.CSSProperties = needsPlate
+    ? { background: '#FFFFFF', padding: 6, borderRadius: 8, boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.06)' }
+    : {};
   const hasTenantBrand = hasLogo || !!wl.companyName;
 
   // Plan pill — honest states only: nothing renders until billing answers.
@@ -173,7 +182,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
           onMouseLeave={() => setHover(false)}
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 44, height: 44, borderRadius: 12, textDecoration: 'none',
+            width: 52, height: 52, borderRadius: 12, textDecoration: 'none',
             background: hover ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
             border: `1px solid ${hover ? 'var(--brand-primary-35)' : colors.borderDim}`,
             transition: 'background .15s ease, border-color .15s ease',
@@ -185,7 +194,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
               src={wl.logoUrl}
               alt={wl.companyName || 'Company logo'}
               onError={() => setImgFailed(true)}
-              style={{ maxWidth: 36, maxHeight: 36, width: 'auto', height: 'auto', objectFit: 'contain', display: 'block' }}
+              style={{ maxWidth: 44, maxHeight: 44, width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', ...platedImg }}
             />
           ) : monogram(36, 14)}
         </Link>
@@ -214,14 +223,20 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
       >
         {hasLogo ? (
           <>
-            {/* Logo at a proper size — contained, aspect preserved, left-anchored */}
+            {/* Logo at a proper size — contained, aspect preserved, left-anchored.
+                maxHeight was 48, which is what made this unreadable: the cap is
+                on HEIGHT with width:auto, so a PORTRAIT logo collapses to a
+                sliver. A real 600x1301 tenant logo rendered at 22x48px. Tall
+                logos now get real height, and wide lockups still stop at 100%
+                width, so both shapes land somewhere sensible. */}
             <img
               src={wl.logoUrl}
               alt={wl.companyName || 'Company logo'}
               onError={() => setImgFailed(true)}
               style={{
-                display: 'block', maxWidth: '100%', maxHeight: 48,
+                display: 'block', maxWidth: '100%', maxHeight: 96,
                 width: 'auto', height: 'auto', objectFit: 'contain', objectPosition: 'left center',
+                ...platedImg,
                 marginBottom: (wl.companyName || planPill) ? 9 : 0,
               }}
             />

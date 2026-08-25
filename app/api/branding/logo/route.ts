@@ -34,14 +34,58 @@ export async function POST(req: NextRequest) {
   const { data: pub } = db.storage.from('branding').getPublicUrl(path);
   const logo_url = pub.publicUrl;
 
+  /* ── WHICH WAY ROUND IS THIS LOGO? ──────────────────────────────────────
+   * The app chrome is near-black. A GC who uploads a dark logo — dark text on
+   * transparent, or a dark badge — gets a tile that looks empty, which is
+   * exactly the "you can't see it" complaint. A GC who uploads a white
+   * knock-out logo needs the opposite. We cannot guess from the filename, so
+   * measure it once, here, and let the sidebar render accordingly.
+   *
+   * Mean luminance is taken over VISIBLE pixels only. Averaging the
+   * transparent ones would drag every transparent PNG toward black and put a
+   * light plate behind logos that never needed one. */
+  let logo_tone: 'dark' | 'light' | 'unknown' = 'unknown';
+  /* Dimensions matter as much as tone. The sidebar constrains a logo by HEIGHT,
+   * so a tall portrait image collapses to a sliver — a real 600x1301 logo in
+   * this tenant rendered at 22x48px, which is the "you can't see it" report.
+   * Storing the shape lets the sidebar size it sensibly AND lets Settings warn
+   * the user at upload instead of silently producing a sliver. */
+  let logo_w: number | null = null;
+  let logo_h: number | null = null;
+  try {
+    const sharp = (await import('sharp')).default;
+    const meta = await sharp(bytes, { failOn: 'none' }).metadata();
+    logo_w = typeof meta.width === 'number' ? meta.width : null;
+    logo_h = typeof meta.height === 'number' ? meta.height : null;
+    const { data, info } = await sharp(bytes, { failOn: 'none' })
+      .resize(64, 64, { fit: 'inside', withoutEnlargement: true })
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    let lum = 0;
+    let seen = 0;
+    for (let i = 0; i < data.length; i += info.channels) {
+      const a = data[i + 3];
+      if (a < 32) continue; // effectively transparent — ignore
+      // Rec. 709 luma, good enough to answer "light or dark?"
+      lum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+      seen++;
+    }
+    if (seen > 0) logo_tone = lum / seen < 110 ? 'dark' : 'light';
+  } catch {
+    // SVGs without a rasteriser, or anything sharp will not open: leave
+    // 'unknown' and the sidebar falls back to its neutral treatment.
+  }
+
   // Merge into tenants.settings so the WhiteLabelProvider + reports pick it up.
   const { data: existing } = await db.from('tenants').select('settings').eq('id', user.tenantId).single();
-  const settings = { ...((existing as any)?.settings ?? {}), logo_url };
+  const settings = { ...((existing as any)?.settings ?? {}), logo_url, logo_tone, logo_w, logo_h };
   const { error: updErr } = await db
     .from('tenants')
     .update({ settings, updated_at: new Date().toISOString() })
     .eq('id', user.tenantId);
   if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true, logo_url });
+  return NextResponse.json({ ok: true, logo_url, logo_tone, logo_w, logo_h });
 }

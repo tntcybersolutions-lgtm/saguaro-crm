@@ -19,6 +19,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     company_name: settings.company_name ?? (data as any)?.name ?? '',
     logo_url: settings.logo_url ?? '',
+    logo_tone: settings.logo_tone ?? 'unknown',
+    logo_w: settings.logo_w ?? null,
+    logo_h: settings.logo_h ?? null,
     primary_color: settings.primary_color ?? '',
   });
 }

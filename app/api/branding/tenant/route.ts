@@ -39,6 +39,11 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     name: settings.company_name ?? tenant?.name ?? '',
     logo_url: settings.logo_url ?? '',
+    // Measured at upload; the sidebar uses it to decide whether a dark logo
+    // needs a light plate to be visible on near-black chrome.
+    logo_tone: settings.logo_tone ?? 'unknown',
+    logo_w: settings.logo_w ?? null,
+    logo_h: settings.logo_h ?? null,
     primary_color: settings.primary_color ?? '',
     white_label_enabled: whiteLabelEnabled,
     settings,
