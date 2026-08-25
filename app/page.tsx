@@ -154,7 +154,7 @@ export default function LandingPage() {
       })()}
 
       {/* ══════════ 3. HERO ══════════ */}
-      <section style={{ maxWidth: 1160, margin: '0 auto', padding: 'clamp(40px, 6vh, 64px) 24px 48px', display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 'clamp(32px, 4vw, 56px)', alignItems: 'center', position: 'relative' as const }} className="hero-grid">
+      <section style={{ maxWidth: 1360, margin: '0 auto', padding: 'clamp(40px, 6vh, 64px) 24px 48px', display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 'clamp(32px, 4vw, 56px)', alignItems: 'center', position: 'relative' as const }} className="hero-grid">
         {/* very subtle ambient warmth — minimal, no stock photo */}
         <div style={{ position: 'absolute' as const, top: -120, right: -40, width: 460, height: 460, background: 'radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 68%)', zIndex: 0, pointerEvents: 'none' as const }} />
         {/* left */}
@@ -234,7 +234,7 @@ export default function LandingPage() {
       <section style={{ position: 'relative', overflow: 'hidden', padding: 'clamp(72px, 13vh, 136px) 24px clamp(64px, 11vh, 120px)', textAlign: 'center' as const, borderTop: '1px solid rgba(245,158,11,0.20)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         {/* desert-heat backdrop: horizon glow, no images */}
         <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'radial-gradient(92% 78% at 50% 118%, rgba(224,100,78,0.22) 0%, rgba(245,158,11,0.13) 38%, rgba(0,0,0,0) 74%)' }} />
-        <div style={{ position: 'relative', maxWidth: 1240, margin: '0 auto' }}>
+        <div style={{ position: 'relative', maxWidth: 1360, margin: '0 auto' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 20px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.42)', background: 'rgba(245,158,11,0.10)', color: '#F5B84D', fontSize: 13, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' as const, marginBottom: 28 }}>
             <Thermometer size={15} weight="fill" /> Field-proven at 115°
           </span>
@@ -267,10 +267,10 @@ export default function LandingPage() {
       <IntegrationStrip />
 
       {/* ══════════ 4. MODULE GRID ══════════ */}
-      <section id="features" style={{ maxWidth: 1200, margin: '0 auto', padding: '64px 24px' }}>
+      <section id="features" style={{ maxWidth: 1360, margin: '0 auto', padding: '64px 24px' }}>
         <h2 style={{ textAlign: 'center' as const, fontSize: 26, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>What&apos;s inside</h2>
         <p style={{ textAlign: 'center' as const, color: DIM, fontSize: 14, marginBottom: 40, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>Real module names, listed because they ship — from the radio to the bid.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '44px 48px', maxWidth: 1000, margin: '0 auto' }} className="feature-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '44px 48px', maxWidth: 1360, margin: '0 auto' }} className="feature-grid">
           {FEATURE_MODULES.map(f => {
             const a = moduleAccent(f.key);
             return (
@@ -288,7 +288,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════ 5. RADIO DEMO ══════════ */}
-      <section id="radio-demo" style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px 64px', scrollMarginTop: 72 }}>
+      <section id="radio-demo" style={{ maxWidth: 1360, margin: '0 auto', padding: '0 24px 64px', scrollMarginTop: 72 }}>
         <div style={{ ...glass, padding: '32px 28px', display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' as const }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(245, 158, 11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Broadcast size={24} weight="duotone" color={GOLD} />
@@ -303,7 +303,7 @@ export default function LandingPage() {
 
 
       {/* ══════════ 6. COMPARISON TABLE ══════════ */}
-      <section id="compare" style={{ maxWidth: 900, margin: '0 auto', padding: '64px 24px', scrollMarginTop: 72 }}>
+      <section id="compare" style={{ maxWidth: 1360, margin: '0 auto', padding: '64px 24px', scrollMarginTop: 72 }}>
         <h2 style={{ textAlign: 'center' as const, fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>How Saguaro compares</h2>
         <p style={{ textAlign: 'center' as const, color: DIM, fontSize: 14, marginBottom: 32 }}>Feature-for-feature — judge for yourself in the free trial.</p>
         <div style={{ ...glass, overflow: 'hidden', boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
@@ -337,7 +337,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════ 6b. RECEIPTS ══════════ */}
-      <section style={{ maxWidth: 900, margin: '0 auto', padding: '64px 24px' }}>
+      <section style={{ maxWidth: 1360, margin: '0 auto', padding: '64px 24px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 24, alignItems: 'start' }} className="receipts-grid">
           <div style={{ width: 52, height: 52, borderRadius: 14, background: 'rgba(245, 158, 11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Receipt size={28} weight="duotone" color={GOLD} />
@@ -351,10 +351,10 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════ 7. PRICING ══════════ */}
-      <section id="pricing" style={{ maxWidth: 1000, margin: '0 auto', padding: '64px 24px' }}>
+      <section id="pricing" style={{ maxWidth: 1360, margin: '0 auto', padding: '64px 24px' }}>
         <h2 style={{ textAlign: 'center' as const, fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>Simple, Transparent Pricing</h2>
         <p style={{ textAlign: 'center' as const, color: DIM, fontSize: 14, marginBottom: 36 }}>No hidden fees. No per-user charges. Cancel anytime.</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, alignItems: 'stretch' }} className="pricing-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, alignItems: 'stretch' }} className="pricing-grid">
           {HOME_PLANS.map(plan => (
             <div key={plan.name} style={{
               background: 'rgba(255,255,255,0.02)',

@@ -4,7 +4,20 @@ import Link from 'next/link';
 
 /*
  * SOCIAL_LINKS — the owner supplies the real handles/URLs here.
- * Keep '#' placeholders until then; do NOT invent handles.
+ * Do NOT invent handles.
+ *
+ * Confirmed with the owner on 24 Aug 2026: Saguaro has no social accounts yet.
+ * Every entry below is still the '#' placeholder, and a '#' icon is worse than
+ * no icon — it looks live, does nothing when clicked, and reads as a dead site.
+ * So SocialRow FILTERS these out and renders nothing at all while they are
+ * unset. Replace a '#' with a real profile URL and that icon appears by itself;
+ * no other change is needed anywhere.
+ *
+ * Worth stating plainly, because it came up: these are ordinary outbound links
+ * to OUR OWN profiles, opened in a new tab with rel="noopener". They never sign
+ * a visitor into anything. Letting a customer connect THEIR social accounts is
+ * a different feature entirely and belongs behind the login, never on a public
+ * marketing page.
  */
 const SOCIAL_LINKS: { name: 'Instagram' | 'Facebook' | 'TikTok' | 'X'; href: string }[] = [
   { name: 'Instagram', href: '#' },
@@ -12,6 +25,9 @@ const SOCIAL_LINKS: { name: 'Instagram' | 'Facebook' | 'TikTok' | 'X'; href: str
   { name: 'TikTok', href: '#' },
   { name: 'X', href: '#' },
 ];
+
+/** A link is real once it is not the placeholder and points somewhere. */
+const isLive = (href: string) => href.trim() !== '' && href.trim() !== '#';
 
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -62,9 +78,12 @@ function SocialGlyph({ name, size }: { name: string; size: number }) {
 
 /* Compact social icon row — footer and header both use this. */
 export function SocialRow({ size = 18, gap = 14 }: { size?: number; gap?: number }) {
+  const live = SOCIAL_LINKS.filter(s => isLive(s.href));
+  // Nothing configured yet — render nothing rather than dead icons.
+  if (live.length === 0) return null;
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap }}>
-      {SOCIAL_LINKS.map(s => (
+      {live.map(s => (
         <a key={s.name} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={`Saguaro on ${s.name}`} style={{ display: 'inline-flex', lineHeight: 0 }}>
           <SocialGlyph name={s.name} size={size} />
         </a>
