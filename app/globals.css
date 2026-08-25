@@ -520,6 +520,24 @@ tbody td { border-bottom: 1px solid rgba(255,255,255,0.12) !important; }
   font-size: clamp(16px, 2.1vw, 23px) !important;
   line-height: 1.6 !important;
 }
+/* The hero headline. Same opt-out as .landing-display, one tier larger and
+   tuned for a two-line sentence rather than a three-word statement. */
+[data-landing] .landing-hero {
+  font-size: clamp(32px, 4.5vw, 62px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.06 !important;
+  text-wrap: balance;
+}
+/* The heat gradient used on "Sonoran", as a class so any headline fragment can
+   carry it. background-clip:text needs a transparent fill to show through. */
+.heat-shine {
+  background: linear-gradient(100deg, #E0644E 4%, #F59E0B 42%, #FDE68A 60%, #E0644E 96%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
 
 /* FIX: light-theme flip left inputs at color:#F5F5F7 (white) on a white field =
    invisible typing in every form. Force dark text on a solid white field. */

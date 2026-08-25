@@ -160,7 +160,12 @@ export default function LandingPage() {
         {/* left */}
         <div style={{ position: 'relative', zIndex: 1, minWidth: 0 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: DIM, fontSize: 10.5, fontWeight: 500, letterSpacing: 0.8, padding: '5px 12px', borderRadius: 999, marginBottom: 24, textTransform: 'uppercase' as const }}><span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD }} />Construction Management Platform</span>
-          <h1 style={{ fontSize: 30, fontWeight: 600, lineHeight: 1.25, letterSpacing: '-0.03em', margin: '0 0 20px', color: TEXT, maxWidth: 460 }}>Run the job. Talk to the crew. Price the work. One platform.</h1>
+          {/* Owner's call: bigger, and the heat gradient across the WHOLE phrase.
+              className is load-bearing — [data-landing] h1 caps every heading at
+              23px with !important, so an inline fontSize alone renders this at
+              body size no matter what number is written here. maxWidth went
+              460 -> 720 because at 62px the old measure broke it into slivers. */}
+          <h1 className="landing-hero heat-shine" style={{ margin: '0 0 20px', maxWidth: 720 }}>Run the job. Talk to the crew. Price the work. One platform.</h1>
           <p style={{ color: DIM, fontSize: 15, fontWeight: 400, lineHeight: 1.7, margin: '0 0 32px', maxWidth: 452 }}>The construction platform with a built-in PTT radio, RF design studio, and blueprint-to-priced-bid takeoff.</p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const, alignItems: 'center' }}>
             <Link href="/signup" className="btn-gold" style={{ textDecoration: 'none', fontSize: 13.5, padding: '10px 22px' }}>Start free trial <span style={{ fontSize: 15 }}>&rarr;</span></Link>
