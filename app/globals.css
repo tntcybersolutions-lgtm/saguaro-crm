@@ -499,6 +499,28 @@ tbody td { border-bottom: 1px solid rgba(255,255,255,0.12) !important; }
 [data-landing] h3 { font-size: clamp(12.5px, 1.3vw, 15px) !important; font-weight: 600 !important; letter-spacing: -0.008em; }
 [data-landing] p { font-size: 13px !important; line-height: 1.65; }
 
+/* ── Opt-out: a heading that is meant to be a STATEMENT ──────────────────
+   The three rules above cap every landing heading with !important — h1 at
+   23px, h2 at 17px, h3 at 15px. That is a dense-app scale, and on the
+   marketing page it crushes section headlines to body size, which is why the
+   page reads small and bland however large a font-size the component asks for.
+
+   React cannot put !important in a style object, so an inline clamp on the
+   element always loses to those rules. This class is the way a section says
+   "I am a headline, not a UI label" and gets its size back. Add it to the
+   handful of headings that carry a section, not to ordinary ones. */
+[data-landing] .landing-display {
+  font-size: clamp(34px, 6.2vw, 82px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  line-height: 1.02 !important;
+  text-wrap: balance;
+}
+[data-landing] .landing-lede {
+  font-size: clamp(16px, 2.1vw, 23px) !important;
+  line-height: 1.6 !important;
+}
+
 /* FIX: light-theme flip left inputs at color:#F5F5F7 (white) on a white field =
    invisible typing in every form. Force dark text on a solid white field. */
 input, textarea, select {

@@ -233,10 +233,14 @@ export default function LandingPage() {
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '8px 20px', borderRadius: 999, border: '1px solid rgba(245,158,11,0.42)', background: 'rgba(245,158,11,0.10)', color: '#F5B84D', fontSize: 13, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' as const, marginBottom: 28 }}>
             <Thermometer size={15} weight="fill" /> Field-proven at 115°
           </span>
-          <h2 style={{ fontSize: 'clamp(34px, 6.2vw, 82px)', fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.02, margin: '0 0 20px', textWrap: 'balance' as const }}>
+          {/* className, not just an inline size: [data-landing] h2 caps every
+              heading at 17px with !important, and React cannot write
+              !important into a style object — so the inline clamp alone was
+              silently losing and this rendered at body size. */}
+          <h2 className="landing-display" style={{ fontSize: 'clamp(34px, 6.2vw, 82px)', fontWeight: 800, letterSpacing: '-0.025em', lineHeight: 1.02, margin: '0 0 20px', textWrap: 'balance' as const }}>
             Born on <span style={{ background: 'linear-gradient(100deg, #E0644E 4%, #F59E0B 42%, #FDE68A 60%, #E0644E 96%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>Sonoran</span> jobsites.
           </h2>
-          <p style={{ color: '#E4E4E7', fontSize: 'clamp(16px, 2.1vw, 23px)', lineHeight: 1.6, maxWidth: 820, margin: '0 auto 38px' }}>
+          <p className="landing-lede" style={{ color: '#E4E4E7', fontSize: 'clamp(16px, 2.1vw, 23px)', lineHeight: 1.6, maxWidth: 820, margin: '0 auto 38px' }}>
             Built where summers hit <strong style={{ color: '#F5B84D' }}>115 degrees</strong> and the far corner of the site has no bars.
             The field app assumes gloves, glare, and no signal — because that is where it was raised.
           </p>
