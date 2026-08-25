@@ -229,16 +229,24 @@ export default function GetTheAppPage() {
            purely by frame WIDTH. Cropping the screenshots would not have helped;
            only bigger frames do. Container grew to match, or the taller phones
            would overflow it. */
+        /* LAYOUT: the laptop sits ABOVE the phones, not behind them.
+           Enlarging the phones (185->233, 210->268) made them cover the laptop
+           almost entirely — its screen is the top of the frame, and the phones
+           were anchored to the top while the laptop was anchored to the bottom,
+           so the two fought for the same band. Now the laptop is top-anchored
+           and centred, the phones are bottom-anchored at the edges, and they
+           overlap only its base. The login form is centred in the laptop screen,
+           which is exactly the part that stays clear. */
         .devices {
           position: relative;
-          height: 650px;
+          height: 760px;
         }
-        .dev-slot-phone-a { position: absolute; right: 12px; top: 0; z-index: 3; animation: floatA 5s ease-in-out infinite; }
-        .dev-slot-phone-b { position: absolute; left: 0; top: 64px; z-index: 2; animation: floatB 5.5s ease-in-out infinite 0.4s; }
-        .dev-slot-laptop  { position: absolute; left: 36px; bottom: 0; z-index: 1; animation: floatC 6s ease-in-out infinite 1s; }
+        .dev-slot-phone-a { position: absolute; right: 0; bottom: 0; z-index: 3; animation: floatA 5s ease-in-out infinite; }
+        .dev-slot-phone-b { position: absolute; left: 0; bottom: 34px; z-index: 2; animation: floatB 5.5s ease-in-out infinite 0.4s; }
+        .dev-slot-laptop  { position: absolute; left: 50%; transform: translateX(-50%); top: 0; z-index: 1; animation: floatC 6s ease-in-out infinite 1s; }
         @keyframes floatA { 0%,100%{transform:translateY(0) rotate(2deg)} 50%{transform:translateY(-12px) rotate(2deg)} }
         @keyframes floatB { 0%,100%{transform:translateY(0) rotate(-2deg)} 50%{transform:translateY(-9px) rotate(-2deg)} }
-        @keyframes floatC { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        @keyframes floatC { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-6px)} }
 
         /* ── NUMBERS BAR ── */
         .numbers-bar {
@@ -587,7 +595,7 @@ export default function GetTheAppPage() {
           .nav { padding: 0 16px; }
           .hero { padding: 80px 16px 60px; }
           .hero-inner { grid-template-columns: 1fr; gap: 48px; }
-          .devices { height: 560px; order: -1; }
+          .devices { height: 640px; order: -1; }
           .dev-slot-phone-b { display: none; }
           .dev-slot-laptop { left: 0; }
           .numbers-bar { padding: 32px 16px; }
