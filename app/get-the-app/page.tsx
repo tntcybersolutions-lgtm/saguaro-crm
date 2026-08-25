@@ -654,22 +654,25 @@ export default function GetTheAppPage() {
               </div>
             </div>
 
-            {/* Devices — REAL dark app screenshots in machined frames.
-                Drop these exact files into /public/marketing/:
-                  phone-radio.png      iPhone — Saguaro Radio (push-to-talk) screen
-                  phone-today.png      iPhone — My Work / today screen
-                  laptop-dispatch.png  Web — dispatch map screen
-                Until they exist, DeviceFrame shows a dark in-frame placeholder —
-                never a mocked-up light-mode UI. */}
+            {/* Devices — REAL screenshots, shipped in /public/marketing/, replacing
+                the placeholders that used to read "Drop phone-today.png here".
+                  phone-takeoff.png  iPhone 1290x2796 — Takeoff Studio
+                  phone-project.png  iPhone 1290x2796 — project overview
+                  web-login.png      the real /login page at 1440x900
+
+                The middle frame is a LAPTOP (430x270, aspect 1.59), so it takes a
+                DESKTOP capture. A portrait phone screenshot dropped in here
+                letterboxes into a sliver with black rails either side — which is
+                why the login shot is the web one, not the iOS one. */}
             <div className="devices">
               <div className="dev-slot-phone-b">
-                <PhoneFrame src="/marketing/phone-today.png" alt="My Work — today's assignments on iPhone" width={185} />
+                <PhoneFrame src="/marketing/phone-takeoff.png" alt="Takeoff Studio on iPhone — turn a blueprint into a priced estimate" width={185} />
               </div>
               <div className="dev-slot-phone-a">
-                <PhoneFrame src="/marketing/phone-radio.png" alt="Saguaro Radio — push-to-talk on iPhone" width={210} />
+                <PhoneFrame src="/marketing/phone-project.png" alt="Project overview on iPhone — contract value, quick add, progress" width={210} />
               </div>
               <div className="dev-slot-laptop">
-                <LaptopFrame src="/marketing/laptop-dispatch.png" alt="Dispatch map in the Saguaro web app" width={430} height={270} />
+                <LaptopFrame src="/marketing/web-login.png" alt="Signing in to Saguaro Control Systems on the web" width={430} height={270} />
               </div>
             </div>
           </div>
