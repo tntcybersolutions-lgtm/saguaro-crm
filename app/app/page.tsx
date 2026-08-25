@@ -344,6 +344,25 @@ export default function DashboardPage() {
     setGreeting(h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
   }, []);
 
+  /* Greet the person by name — "Good evening, Rob".
+   * firstName is null whenever the profile has no real full_name; /api/auth/me
+   * refuses to fall back to the email prefix precisely so this cannot render
+   * "Good evening, tntcybersolutions". No name => the greeting stays as it was. */
+  const [firstName, setFirstName] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch('/api/auth/me')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (alive && d && typeof d.firstName === 'string') setFirstName(d.firstName); })
+      .catch(() => { /* greeting simply stays nameless */ });
+    return () => { alive = false; };
+  }, []);
+
+  // "Good" stays white; "evening, Rob" carries the gold accent.
+  const greetLead = greeting.split(' ')[0];
+  const greetRest = greeting.split(' ').slice(1).join(' ');
+  const greetAccent = firstName ? `${greetRest}, ${firstName}` : greetRest;
+
   // Win/loss learned outcomes — headline win rate + per-trade breakdown
   // (GET /api/bids/win-factors; winRate is a 0..1 fraction over decided bids, or null).
   const [winData, setWinData] = useState<{
@@ -380,8 +399,8 @@ export default function DashboardPage() {
           eyebrow="Portfolio Overview"
           eyebrowIcon={<Sparkle size={13} weight="fill" />}
           aux={<LivePulse />}
-          title={greeting.split(' ')[0]}
-          accent={greeting.split(' ').slice(1).join(' ')}
+          title={greetLead}
+          accent={greetAccent}
           subtitle="Here's what needs your attention today."
           actions={<>
             <Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Project</Link>

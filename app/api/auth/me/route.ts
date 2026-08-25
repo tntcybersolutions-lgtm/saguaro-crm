@@ -17,10 +17,29 @@ export async function GET(req: NextRequest) {
   const p = profile as any;
   const name = p?.full_name || user.email.split('@')[0];
 
+  /* firstName is for greeting a person by name ("Good evening, Rob").
+   * It is deliberately NOT derived from `name` above: that field falls back to
+   * the email prefix, so a login like tntcybersolutions@… would produce
+   * "Good evening, tntcybersolutions", which is worse than no name at all.
+   * Null here means "we do not actually know this person's name" and the
+   * caller should greet them without one. */
+  const rawFullName = typeof p?.full_name === 'string' ? p.full_name.trim() : '';
+  const firstToken = rawFullName.split(/\s+/)[0] ?? '';
+  const firstName =
+    // a real given name: letters (plus - and ') and a sane length
+    /^[\p{L}][\p{L}'-]{0,29}$/u.test(firstToken)
+      ? // Real profiles in this database are stored however the user typed them
+        // — "rob", "avery", "Chad Derocher". Greeting someone "Good evening,
+        // rob" reads as a bug, so capitalise the first letter. The REST of the
+        // token is left untouched so "McKay" and "O'Brien" survive intact.
+        firstToken.charAt(0).toUpperCase() + firstToken.slice(1)
+      : null;
+
   return NextResponse.json({
     id: user.id,
     email: user.email,
     name,
+    firstName,
     tenantId: user.tenantId,
     phone: p?.phone || null,
     role: p?.role || 'member',
