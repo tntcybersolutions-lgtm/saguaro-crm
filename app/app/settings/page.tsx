@@ -76,10 +76,10 @@ const SETTINGS_SECTIONS = [
     title: 'Support & Resources',
     sectionIcon: Lifebuoy,
     items: [
-      { icon: Rocket, label: 'Free Migration', desc: 'Migrate your data from any platform or spreadsheet', href: 'mailto:support@saguarocontrol.net?subject=Migration Request' },
-      { icon: GraduationCap, label: 'Guided Onboarding', desc: 'Book a hands-on setup session with a Saguaro specialist ($1,200)', href: 'mailto:support@saguarocontrol.net?subject=Guided Onboarding' },
-      { icon: Books, label: 'Help Center', desc: 'Tutorials, walkthroughs, and FAQs', href: 'mailto:support@saguarocontrol.net?subject=Help Center' },
-      { icon: ChatCircle, label: 'Contact Support', desc: 'Email support@saguarocontrol.net — we respond within 48hrs', href: 'mailto:support@saguarocontrol.net' },
+      { icon: Rocket, label: 'Free Migration', desc: 'Migrate your data from any platform or spreadsheet', href: '/contact?reason=Migration%20help' },
+      { icon: GraduationCap, label: 'Guided Onboarding', desc: 'Book a hands-on setup session with a Saguaro specialist ($1,200)', href: '/contact?reason=Demo%20request' },
+      { icon: Books, label: 'Help Center', desc: 'Tutorials, walkthroughs, and FAQs', href: '/help-center' },
+      { icon: ChatCircle, label: 'Contact Support', desc: 'Send us a message — we respond within 48hrs', href: '/contact?reason=Support%20request' },
     ],
   },
 ];
@@ -592,8 +592,29 @@ export default function SettingsPage() {
       {SETTINGS_SECTIONS.map(section => (
         <div key={section.title} style={{ marginBottom: 24 }}>
           <SectionCard title={section.title} icon={<section.sectionIcon size={18} weight="duotone" color={GOLD} />} flush>
-            {section.items.map((item, i) => (
-              <a key={item.label} href={item.href} style={{
+            {section.items.map((item, i) => {
+              /* Internal routes MUST go through next/link.
+               *
+               * Every row here was a plain <a href>, which means a full page
+               * reload and NO prefetch — so each click woke a cold serverless
+               * function. Measured on production: /app/notification-settings
+               * took 15,526ms cold and 86-108ms warm. That 15-second first hit
+               * is the reported "not opening / super slow"; the page was fine
+               * once something had warmed it.
+               *
+               * <Link> gives client-side navigation AND prefetches the route
+               * when the row scrolls into view, so the lambda is already warm
+               * by the time anyone clicks.
+               *
+               * mailto: and other non-route hrefs stay plain anchors — Link
+               * would try to route them. */
+              const external = !item.href.startsWith('/');
+              const Row: any = external ? 'a' : Link;
+              const rowProps = external
+                ? { href: item.href }
+                : { href: item.href, prefetch: true };
+              return (
+              <Row key={item.label} {...rowProps} style={{
                 display: 'flex', alignItems: 'center', gap: 16,
                 padding: '18px 24px',
                 borderBottom: i < section.items.length - 1 ? `1px solid rgba(255,255,255,0.06)` : 'none',
@@ -601,8 +622,8 @@ export default function SettingsPage() {
                 background: item.highlight ? 'rgba(245,158,11,0.05)' : 'transparent',
                 transition: 'background .15s',
               }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
-                onMouseLeave={e => (e.currentTarget.style.background = item.highlight ? 'rgba(245,158,11,0.05)' : 'transparent')}
+                onMouseEnter={(e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                onMouseLeave={(e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = item.highlight ? 'rgba(245,158,11,0.05)' : 'transparent')}
               >
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: item.highlight ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${item.highlight ? 'rgba(245,158,11,0.2)' : BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
                   <item.icon size={20} weight="regular" color={item.highlight ? GOLD : TEXT} />
@@ -614,8 +635,9 @@ export default function SettingsPage() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <path d="M9 18l6-6-6-6" />
                 </svg>
-              </a>
-            ))}
+              </Row>
+              );
+            })}
           </SectionCard>
         </div>
       ))}

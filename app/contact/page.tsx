@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 const C = {
@@ -106,6 +106,19 @@ const labelStyle: React.CSSProperties = {
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', company: '', reason: REASONS[0].value, message: '' });
+
+  /* Preselect the enquiry from ?reason=. Settings deep-links here for Free
+   * Migration, Guided Onboarding and Contact Support — without this, three
+   * different rows would all land on the same blank form and the user would
+   * have to restate why they came. Only a value that is actually one of
+   * REASONS is accepted, so the URL cannot inject an arbitrary subject. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const wanted = new URLSearchParams(window.location.search).get('reason');
+    if (!wanted) return;
+    const match = REASONS.find(r => r.value.toLowerCase() === wanted.toLowerCase());
+    if (match) setForm(f => ({ ...f, reason: match.value }));
+  }, []);
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [focused, setFocused] = useState<string | null>(null);
 
