@@ -63,7 +63,10 @@ const ACTIVE_PROJECT_KEY = 'sag_active_project';
 /* ─── Interfaces ─── */
 interface Photo {
   id: string;
+  /** Full-size original: 1-3.6 MB, 12 megapixels. Viewer and editor only. */
   url: string;
+  /** ~400px, 12-24 KB. What the GRID must render — see normalizePhoto. */
+  thumbUrl: string;
   caption: string;
   location: string;
   phase: string;
@@ -110,6 +113,18 @@ function normalizePhoto(raw: unknown): Photo {
   return {
     id: asString(r.id) || String(r.id ?? ''),
     url: asString(r.url) || asString(r.thumbnail_url),
+    /* The grid MUST take the thumbnail first. /api/photos/list states the
+       contract outright: url is a 1-3.6 MB 12-megapixel JPEG, thumbnail_url is
+       ~400px and 12-24 KB, and "a grid MUST render thumbnail_url and fall back
+       to url only when it is [null]". This field had the precedence inverted,
+       so every tile downloaded and decoded a full 12MP original — a dozen
+       photos froze the renderer outright. Reproduced on the live site: the
+       gallery requested .../photos/<ts>-sonoran.png, the original, and the tab
+       stopped responding twice.
+       thumbnail_url is null on rows the backfill could not process (legacy
+       .heic), hence the fallback — null means "no thumbnail exists", not "not
+       signed yet". */
+    thumbUrl: asString(r.thumbnail_url) || asString(r.url),
     caption: asString(r.caption) || asString(r.title) || asString(r.description),
     location: locText,
     phase: asString(r.category) || asString(r.album) || asString(r.phase),
@@ -909,13 +924,17 @@ function PhotosInner() {
                       border: `1px solid ${BORDER}`, aspectRatio: '1', background: RAISED,
                     }}
                   >
-                    {photo.url ? (
+                    {photo.thumbUrl ? (
+                      /* thumbUrl, NOT url — this tile is ~120px on screen and
+                         url is a 12-megapixel original. Full size is loaded
+                         only when the viewer or editor opens. */
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
-                        src={photo.url}
+                        src={photo.thumbUrl}
                         alt={photo.caption || 'Photo'}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div style={{
