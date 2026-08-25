@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Saguaro Control Systems — Construction Intelligence Platform</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,300&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Archivo:wdth,wght@62.5..125,400..900&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;0,900;1,300&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root{
   --void:#0d1117; --ink:#141920; --surface:#1a2332; --raised:#1f2c3e;
@@ -275,6 +275,74 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:48px 20p
 .ty{background:rgba(212,160,23,.15);color:var(--gold2)}
 .tr{background:rgba(192,48,48,.15);color:#ff7070}
 .tb{background:rgba(26,95,168,.15);color:var(--blue3)}
+</style>
+
+<style id="saguaro-refresh">
+/* ═══════════════════════════════════════════════════════════════════════
+   REFRESH — display face, desktop width, nav.        (see patch script)
+   Appended last so it wins on equal specificity.
+
+   EVERYTHING is inside min-width:1024px. The phone rendering is deliberately
+   byte-identical to before: marketing.html already overflows horizontally at
+   390px (scrollWidth 535 on a 390 screen, .nav-links being 497px wide) and a
+   wider display face made that worse. The phone keeps Bebas Neue until that
+   pre-existing header bug is fixed on its own.
+
+   SELECTORS: headings carry classes (.hero-title, .sec-title) that set their
+   size, and a bare "h1" at 0,0,1 loses to a class at 0,1,0 no matter how late
+   it appears — so heading rules are written tag+class to sit at 0,1,1.
+   The nav items are BUTTONS, not anchors, so the handle is ".nl" with no tag.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+
+  /* ── DISPLAY TYPE ────────────────────────────────────────────────────
+     Bebas Neue is caps-only, single-weight, and on half the internet.
+     Archivo is a variable industrial grotesque with a real width axis, so
+     headings can be WIDENED to hold the page instead of stacking narrow
+     down the middle. Uppercase is kept, so only the letterforms change. */
+  :root { --fd: 'Archivo', sans-serif; }
+
+  h1.hero-title, h2.sec-title, h2 {
+    font-family: var(--fd);
+    font-weight: 800;
+    font-variation-settings: 'wdth' 112, 'wght' 800;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+    text-wrap: balance;
+  }
+
+  /* Archivo at wdth 112 sets far wider than condensed Bebas, so the old
+     96px / 52px ceilings would overflow the measure. Smaller numbers here
+     occupy MORE horizontal space, not less. */
+  h1.hero-title { font-size: clamp(40px, 4.2vw, 64px); line-height: 1.02; }
+  h2.sec-title  { font-size: clamp(28px, 2.5vw, 38px); line-height: 1.08; }
+
+  /* ── WIDTH ───────────────────────────────────────────────────────────
+     .container was 1100px, which left 820px of dead rail at 1920. */
+  .container { max-width: min(1500px, 92vw); }
+
+  /* Prose must NOT stretch with it — a 1500px line of body copy is harder
+     to read, not denser. Direct children only; copy inside cards and grids
+     keeps whatever width its own layout gives it. */
+  section > .container > p,
+  section > .container > .sub,
+  section > .container > .lead,
+  section > .container > .section-sub { max-width: 70ch; }
+
+  /* ── NAV ─────────────────────────────────────────────────────────────
+     13px Barlow Condensed in #8fa3c0: small, cramped, and a cold blue-grey
+     fighting the warm gold beside it. Near-white for the links so gold
+     means "act on this" and nothing else. */
+  .nl {
+    font-family: var(--fb);
+    font-size: 15px;
+    font-weight: 600;
+    color: #E6E1D6;
+    letter-spacing: 0.005em;
+  }
+  .nl:hover { color: #F0C040; }
+}
 </style>
 </head>
 <body>
