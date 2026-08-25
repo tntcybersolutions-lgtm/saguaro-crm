@@ -42,6 +42,10 @@
  * bytes should be converted.
  */
 import sharp from 'sharp';
+import {
+  decodeToSharpReadable,
+  UnsupportedImageError as DecodeUnsupportedError,
+} from './image-decode';
 
 /** Long-edge cap for the stored "display original". Still sharp full-screen. */
 export const MAX_DISPLAY_EDGE = 2000;
@@ -179,6 +183,8 @@ export interface ProcessOptions {
   thumbQuality?: number;
   /** Skip the thumbnail render when nothing will store a thumbnail url. */
   wantThumb?: boolean;
+  /** Original filename, used only to make decode errors name the file. */
+  fileName?: string | null;
 }
 
 /**
@@ -205,29 +211,41 @@ export async function processImageUpload(
     throw new Error('The uploaded file was empty — nothing to store.');
   }
 
-  // A HEVC-branded HEIF never reaches sharp: fail early with the actionable
-  // message rather than surfacing a libvips error nobody can act on.
-  const brand = heifBrandOf(input);
-  if (brand) {
-    throw new UnsupportedImageError(
-      `This looks like an iPhone HEIC photo (HEIF brand "${brand}"). The image library on this ` +
-        `server ships an AVIF codec but no HEVC codec, so it cannot be converted here — and no ` +
-        `browser or Android device can display it either. Re-save or export it as JPEG and upload ` +
-        `again, or upload it through the Saguaro app, which converts HEIC on the phone.`,
-    );
+  /* DECODE FIRST, then process.
+   *
+   * This used to refuse a HEVC-branded HEIF outright, because sharp's libvips
+   * ships an AVIF codec but no HEVC one. Honest, but a dead end: it left real
+   * iPhone photos in storage that no browser and no Android device can render,
+   * and every future iPhone upload hit the same wall.
+   *
+   * lib/image-decode.ts now normalises the source first — sharp-native formats
+   * pass straight through untouched, HEIC is transcoded to JPEG via a real
+   * decoder, and anything genuinely unreadable still raises the same typed
+   * UnsupportedImageError. Detection is by magic bytes, so a HEVC file that a
+   * share sheet renamed to .jpg is handled correctly too.
+   *
+   * `decoded.buffer` is what the rest of this function must use. `input` may be
+   * bytes sharp cannot open. */
+  let decoded;
+  try {
+    decoded = await decodeToSharpReadable(input, opts.fileName ?? null);
+  } catch (e: unknown) {
+    if (e instanceof DecodeUnsupportedError) {
+      // Re-raise as this module's own error type so existing callers (the
+      // upload route's 415 branch) keep working unchanged.
+      throw new UnsupportedImageError(e.message);
+    }
+    throw e;
   }
+  const decodedInput = decoded.buffer;
+  const transcodeNote = decoded.note;
 
   // `failOn: 'none'` keeps slightly-truncated phone JPEGs usable instead of
   // rejecting a photo that every viewer opens fine.
   let meta: sharp.Metadata;
   try {
-    meta = await sharp(input, { failOn: 'none' }).metadata();
+    meta = await sharp(decodedInput, { failOn: 'none' }).metadata();
   } catch (e: unknown) {
-    if (isHeicLike(input)) {
-      throw new UnsupportedImageError(
-        'This HEIC/HEIF image cannot be decoded on the server. Export it as JPEG and upload again.',
-      );
-    }
     return { kind: 'passthrough', reason: `not a decodable image (${errText(e)}) — stored as uploaded` };
   }
 
@@ -252,7 +270,7 @@ export async function processImageUpload(
 
   let display: RenderedImage;
   try {
-    display = await render(input, {
+    display = await render(decodedInput, {
       resize: { width: maxEdge, height: maxEdge, fit: 'inside' },
       format: outFormat,
       quality: displayQ,
@@ -307,6 +325,8 @@ async function render(input: Buffer, spec: RenderSpec): Promise<RenderedImage> {
   // it. It MUST run before `.resize()`, otherwise a portrait phone photo is
   // resized against its stored (landscape) dimensions and lands sideways once
   // the orientation tag is stripped by the re-encode.
+  // `input` here is render()'s own parameter — the caller has already passed
+  // DECODED bytes (see processImageUpload), so this is safe for HEIC sources.
   let pipeline = sharp(input, { failOn: 'none' }).rotate();
 
   if (spec.flatten) pipeline = pipeline.flatten({ background: '#ffffff' });

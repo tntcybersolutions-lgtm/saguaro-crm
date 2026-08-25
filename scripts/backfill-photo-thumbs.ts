@@ -30,6 +30,7 @@
  *   npx tsx scripts/backfill-photo-thumbs.ts [--dry-run] [--force] [--limit=N]
  */
 import { createClient } from '@supabase/supabase-js';
+import { decodeToSharpReadable } from '../lib/image-decode';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -175,22 +176,59 @@ async function main() {
     }
     const original = Buffer.from(await dl.data.arrayBuffer());
 
+    /* NORMALISE FIRST. sharp's bundled libvips ships an AVIF decoder but no
+     * HEVC one, so an iPhone .heic cannot go straight into sharp. The shared
+     * decode chain in lib/image-decode.ts transcodes HEIC to JPEG and passes
+     * every sharp-native format through untouched — the SAME module the upload
+     * route uses, so a backfilled row and a fresh upload converge. */
+    let decoded;
+    try {
+      decoded = await decodeToSharpReadable(original, path.posix.basename(objectPath));
+    } catch (e: unknown) {
+      tally.undecodable++;
+      problems.push(`${id}: ${e instanceof Error ? e.message : e}`);
+      continue;
+    }
+    if (decoded.note) console.log(`     ${id}: ${decoded.note}`);
+
     let thumb: Buffer;
     try {
-      thumb = await sharp(original)
+      thumb = await sharp(decoded.buffer)
         .rotate() // honor EXIF orientation before the resize bakes pixels in
         .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
         .jpeg({ quality: THUMB_QUALITY, mozjpeg: true })
         .toBuffer();
     } catch (e: unknown) {
-      // Real case in this data: one .heic object. The prebuilt libvips ships
-      // AVIF but not HEVC/HEIC decoding, so this genuinely cannot be rendered
-      // here — say so instead of writing a thumbnail_url that points at nothing.
       tally.undecodable++;
       problems.push(
         `${id}: sharp could not decode ${path.posix.basename(objectPath)} (${row.mime_type || 'unknown type'}) — ${e instanceof Error ? e.message : e}`,
       );
       continue;
+    }
+
+    /* A THUMBNAIL IS NOT ENOUGH FOR A TRANSCODED SOURCE.
+     * If we had to convert, the stored ORIGINAL is still a .heic that no
+     * browser and no Android device can render — the grid tile would work and
+     * opening the photo would show nothing. So write a JPEG display copy
+     * alongside it and repoint `url`. The .heic object is left in storage
+     * untouched, so this is reversible and loses no data. */
+    let displayJpeg: Buffer | null = null;
+    let displayPath: string | null = null;
+    if (decoded.transcoded) {
+      try {
+        displayJpeg = await sharp(decoded.buffer)
+          .rotate()
+          .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 80, mozjpeg: true })
+          .toBuffer();
+        const dir = path.posix.dirname(objectPath);
+        const stem = path.posix.basename(objectPath).replace(/\.[^.]+$/, '');
+        displayPath = `${dir === '.' ? '' : dir + '/'}${stem}.jpg`;
+      } catch (e: unknown) {
+        problems.push(`${id}: display JPEG render failed — ${e instanceof Error ? e.message : e}`);
+        displayJpeg = null;
+        displayPath = null;
+      }
     }
 
     bytesBefore += original.length;
@@ -199,7 +237,8 @@ async function main() {
     if (DRY_RUN) {
       tally.created++;
       console.log(
-        `     would write ${thumbPathFor(objectPath)} — ${(original.length / 1024 / 1024).toFixed(2)} MB -> ${(thumb.length / 1024).toFixed(0)} KB`,
+        `     would write ${thumbPathFor(objectPath)} — ${(original.length / 1024 / 1024).toFixed(2)} MB -> ${(thumb.length / 1024).toFixed(0)} KB` +
+          (displayPath ? ` + display copy ${displayPath} (${((displayJpeg?.length ?? 0) / 1024 / 1024).toFixed(2)} MB) and repoint url` : ''),
       );
       continue;
     }
@@ -222,9 +261,25 @@ async function main() {
       continue;
     }
 
+    // Upload the display JPEG (transcoded sources only) before the row update,
+    // so `url` is never repointed at an object that does not exist yet.
+    let newUrl: string | null = null;
+    if (displayJpeg && displayPath) {
+      const { error: dispErr } = await db.storage
+        .from(bucket)
+        .upload(displayPath, displayJpeg, { contentType: 'image/jpeg', upsert: true });
+      if (dispErr) {
+        problems.push(`${id}: display JPEG upload failed (${bucket}/${displayPath}) — ${dispErr.message}`);
+      } else {
+        const { data: dpub } = db.storage.from(bucket).getPublicUrl(displayPath);
+        newUrl = dpub?.publicUrl ?? null;
+        if (!newUrl) problems.push(`${id}: could not resolve a public URL for ${bucket}/${displayPath}`);
+      }
+    }
+
     const { error: updErr } = await db
       .from('photos')
-      .update({ thumbnail_url: thumbUrl } as never)
+      .update({ thumbnail_url: thumbUrl, ...(newUrl ? { url: newUrl } : {}) } as never)
       .eq('id', id);
     if (updErr) {
       tally.error++;

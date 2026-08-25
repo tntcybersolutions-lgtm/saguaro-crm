@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     // See lib/image-thumb.ts for why Supabase image transforms are NOT the fix.
     let processed;
     try {
-      processed = await processImageUpload(original);
+      processed = await processImageUpload(original, { fileName: rawFilename });
     } catch (e: unknown) {
       if (e instanceof UnsupportedImageError) {
         // A HEIC we have no codec for. Storing it would put an object in the
