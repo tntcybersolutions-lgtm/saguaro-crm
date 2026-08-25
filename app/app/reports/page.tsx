@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { CurrencyDollar, ChartBar, Clipboard, ArrowsClockwise, Lock, ShieldCheck, CalendarBlank, CheckCircle, HardHat, Warning, Package, Clock, ArrowRight, X } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { PdfIcon, XlsIcon, CsvIcon, FileButton } from '@/components/ui/FileTypeIcon';
+import { PdfIcon, XlsIcon, CsvIcon, DocIcon, FileButton } from '@/components/ui/FileTypeIcon';
 
 // ── Color palette ──────────────────────────────────────────────
 const GOLD   = '#F59E0B';
@@ -369,6 +369,28 @@ export default function ReportsPage() {
       showError('Excel export failed. Try CSV instead.');
     }
   };
+  const exportDOC = async () => {
+    if (!reportResult) return;
+    try {
+      const res = await fetch('/api/reports/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          format: 'docx',
+          title: reportResult.title,
+          columns: reportResult.columns,
+          rows: reportResult.rows,
+          totals: reportResult.totals,
+          companyName: branding.company_name || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      downloadBlob(blob, `${reportResult.title.replace(/\s+/g, '-')}-${today()}.docx`);
+    } catch {
+      showError('Word export failed. Try PDF instead.');
+    }
+  };
 
   const exportPDF = async () => {
     if (!reportResult) return;
@@ -630,6 +652,7 @@ export default function ReportsPage() {
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, flexWrap: 'wrap' }}>
                   <FileButton icon={<PdfIcon size={16} />} label="PDF" onClick={exportPDF} title="Branded corporate PDF — letterhead, KPI band, totals" />
                   <FileButton icon={<XlsIcon size={16} />} label="Excel" onClick={exportXLS} title="Excel workbook (.xlsx) with typed money columns and totals" />
+                  <FileButton icon={<DocIcon size={16} />} label="Word" onClick={exportDOC} title="Word document (.docx) with a real table you can restyle" />
                   <FileButton icon={<CsvIcon size={16} />} label="CSV" onClick={exportCSV} title="Plain CSV (.csv) for any spreadsheet tool" />
                   <button
                     onClick={() => { setPageState('idle'); setReportResult(null); }}

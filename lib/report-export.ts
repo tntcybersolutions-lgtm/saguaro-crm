@@ -5,7 +5,11 @@
  * and ad-hoc exports share one implementation. Pure functions — no auth / I/O
  * except the optional logo fetch inside buildPdf.
  */
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  WidthType, AlignmentType, ShadingType, PageOrientation,
+} from 'docx';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,6 +69,43 @@ function formatCsvValue(value: unknown, type: ColumnType): string {
   }
 }
 
+/**
+ * DISPLAY formatting, for documents a person reads rather than a machine parses.
+ *
+ * Deliberately NOT formatCsvValue: that one emits bare numbers (1234.56, 50) so
+ * a spreadsheet or script can consume them. A Word table wants "$1,234.56" and
+ * "50%" — the .docx carries no number formats of its own, so whatever is written
+ * into the cell is exactly what the reader sees.
+ */
+function formatCellValue(value: unknown, type: ColumnType): string {
+  if (value == null || value === '') return '';
+  switch (type) {
+    case 'currency': {
+      const n = currencyToNumber(value);
+      return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
+    case 'number': {
+      const n = typeof value === 'number' ? value : parseFloat(String(value));
+      return isNaN(n) ? String(value) : n.toLocaleString('en-US');
+    }
+    case 'percent': {
+      const raw = String(value).replace('%', '').trim();
+      const n = parseFloat(raw);
+      if (isNaN(n)) return String(value);
+      // tolerate both 0.5 and 50 meaning "50%"
+      return (n > 1 ? n : n * 100).toFixed(1).replace(/\.0$/, '') + '%';
+    }
+    case 'date': {
+      const d = new Date(String(value));
+      return isNaN(d.getTime())
+        ? String(value)
+        : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    default:
+      return String(value);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // CSV
 // ---------------------------------------------------------------------------
@@ -107,28 +148,61 @@ export function buildCsv(
 // XLSX
 // ---------------------------------------------------------------------------
 
-export function buildXlsx(
+/**
+ * Styled XLSX.
+ *
+ * REPLACED the xlsx@0.18.5 implementation, whose styling never existed. That
+ * build's writer reads only `cell.z` (get_cell_style, xlsx.js:14433) and
+ * ignores `cell.s` entirely, so the bold dark headers and gold totals this
+ * function used to set were silently discarded on every export — and `!freeze`
+ * is not implemented in that build at all. exceljs writes real cell formatting,
+ * so what is described below is what the user actually opens.
+ *
+ * Async because exceljs serialises through a stream. Callers must await.
+ */
+export async function buildXlsx(
   columns: ReportColumn[],
   rows: Record<string, unknown>[],
   title: string,
   totals?: Record<string, number>,
   companyName?: string,
-): Buffer {
-  const wb = XLSX.utils.book_new();
-  const wsData: unknown[][] = [];
+): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = companyName || 'Saguaro Control Systems';
+  wb.created = new Date();
+  const ws = wb.addWorksheet('Report', {
+    views: [{ state: 'frozen', ySplit: 3 }],   // title + spacer + header stay pinned
+    pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
+  });
 
-  // Row 1: title (will be merged)
-  wsData.push([companyName ? `${companyName} — ${title}` : title]);
+  const DARK = 'FF0D1116';
+  const GOLD = 'FFD4A017';
+  const HAIRLINE = 'FFD9DDE3';
+  const isNumeric = (t: ColumnType) => t === 'currency' || t === 'number' || t === 'percent';
 
-  // Row 2: blank
-  wsData.push([]);
+  // Row 1 - title, merged across the table
+  ws.addRow([companyName ? companyName + ' \u2014 ' + title : title]);
+  ws.mergeCells(1, 1, 1, Math.max(1, columns.length));
+  const titleCell = ws.getCell('A1');
+  titleCell.font = { bold: true, size: 14, color: { argb: DARK } };
+  titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+  ws.getRow(1).height = 24;
 
-  // Row 3: column headers
-  wsData.push(columns.map(c => c.label));
+  ws.addRow([]); // Row 2 - breathing room
 
-  // Rows 4+: data
+  // Row 3 - column headers
+  const header = ws.addRow(columns.map(c => c.label));
+  header.eachCell(cell => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: DARK } };
+    cell.alignment = { vertical: 'middle' };
+    cell.border = { bottom: { style: 'thin', color: { argb: DARK } } };
+  });
+  header.height = 20;
+
+  // Rows 4+ - data, typed so Excel can sum, sort and filter it
   for (const row of rows) {
-    const dataRow: unknown[] = columns.map(col => {
+    ws.addRow(columns.map(col => {
       const val = row[col.key];
       switch (col.type) {
         case 'currency':
@@ -138,114 +212,158 @@ export function buildXlsx(
           return isNaN(n) ? (val ?? '') : n;
         }
         case 'percent': {
-          const n = typeof val === 'number' ? val : parseFloat(String(val ?? ''));
-          if (!isNaN(n)) {
-            const raw = String(val ?? '').replace('%', '').trim();
-            const parsed = parseFloat(raw);
-            return isNaN(parsed) ? val : parsed > 1 ? parsed / 100 : parsed;
-          }
-          return val ?? '';
+          const raw = String(val ?? '').replace('%', '').trim();
+          const parsed = parseFloat(raw);
+          // stored as a fraction so Excel's % format renders it correctly
+          return isNaN(parsed) ? (val ?? '') : parsed > 1 ? parsed / 100 : parsed;
         }
         case 'date': {
           if (!val) return '';
           const d = new Date(String(val));
-          if (isNaN(d.getTime())) return String(val);
-          return d;
+          return isNaN(d.getTime()) ? String(val) : d;
         }
         default:
           return val == null ? '' : String(val);
       }
-    });
-    wsData.push(dataRow);
+    }));
   }
 
-  // Totals row (if provided)
-  const hasTotals = totals && Object.keys(totals).length > 0;
+  const hasTotals = !!totals && Object.keys(totals).length > 0;
   if (hasTotals) {
-    const totalsRow: unknown[] = columns.map((col, i) => {
+    const tr = ws.addRow(columns.map((col, i) => {
       if (col.key in totals!) return totals![col.key];
       if (i === 0) return 'TOTALS';
       return '';
+    }));
+    tr.eachCell(cell => {
+      cell.font = { bold: true, color: { argb: GOLD } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: DARK } };
+      cell.border = { top: { style: 'thin', color: { argb: DARK } } };
     });
-    wsData.push(totalsRow);
+    tr.height = 18;
   }
 
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-  const numCols = columns.length;
-  const numDataRows = rows.length;
-  const headerRowIndex = 2; // 0-based, row 3 in spreadsheet
-  const dataStartIndex = 3; // row 4
-  const totalsRowIndex = hasTotals ? dataStartIndex + numDataRows : null;
-
-  // Column widths: auto-fit based on content
-  const colWidths: number[] = columns.map(col => {
+  const firstDataRow = 4;
+  const lastDataRow = firstDataRow + rows.length - 1;
+  columns.forEach((col, i) => {
+    const column = ws.getColumn(i + 1);
     const headerLen = col.label.length;
-    const maxDataLen = rows.reduce((acc, row) => {
-      const v = row[col.key];
+    const widest = rows.reduce((acc, r) => {
+      const v = r[col.key];
       return Math.max(acc, v == null ? 0 : String(v).length);
     }, 0);
-    return Math.min(40, Math.max(10, headerLen, maxDataLen));
-  });
-  ws['!cols'] = colWidths.map(w => ({ wch: w }));
+    column.width = Math.min(40, Math.max(10, headerLen + 2, widest + 2));
 
-  // Merge title across all columns (row 1)
-  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: Math.max(0, numCols - 1) } }];
-
-  // Title cell style
-  const titleCell = ws['A1'];
-  if (titleCell) {
-    titleCell.s = {
-      font: { bold: true, sz: 14 },
-      alignment: { horizontal: 'center' },
-    };
-  }
-
-  const HEADER_STYLE = {
-    font: { bold: true, color: { rgb: 'FFFFFF' } },
-    fill: { fgColor: { rgb: '0D1116' } },
-  };
-  const TOTALS_STYLE = {
-    font: { bold: true, color: { rgb: 'D4A017' } },
-    fill: { fgColor: { rgb: '0D1116' } },
-  };
-
-  for (let c = 0; c < numCols; c++) {
-    const col = columns[c];
-    const cellAddress = XLSX.utils.encode_cell({ r: headerRowIndex, c });
-    if (ws[cellAddress]) {
-      ws[cellAddress].s = HEADER_STYLE;
-    }
-
-    let fmt: string | null = null;
-    if (col.type === 'currency') fmt = '"$"#,##0.00';
-    if (col.type === 'percent') fmt = '0.00%';
-    if (col.type === 'number') fmt = '#,##0';
-    if (col.type === 'date') fmt = 'mmm d, yyyy';
-
+    const fmt =
+      col.type === 'currency' ? '"$"#,##0.00' :
+      col.type === 'percent' ? '0.00%' :
+      col.type === 'number' ? '#,##0' :
+      col.type === 'date' ? 'mmm d, yyyy' : null;
     if (fmt) {
-      for (let r = dataStartIndex; r < dataStartIndex + numDataRows; r++) {
-        const addr = XLSX.utils.encode_cell({ r, c });
-        if (ws[addr]) ws[addr].z = fmt;
-      }
-      if (totalsRowIndex !== null) {
-        const addr = XLSX.utils.encode_cell({ r: totalsRowIndex, c });
-        if (ws[addr]) ws[addr].z = fmt;
-      }
+      const last = hasTotals ? lastDataRow + 1 : lastDataRow;
+      for (let r = firstDataRow; r <= last; r++) ws.getCell(r, i + 1).numFmt = fmt;
     }
+    for (let r = firstDataRow; r <= lastDataRow; r++) {
+      if (isNumeric(col.type)) ws.getCell(r, i + 1).alignment = { horizontal: 'right' };
+      ws.getCell(r, i + 1).border = { bottom: { style: 'hair', color: { argb: HAIRLINE } } };
+    }
+  });
 
-    if (totalsRowIndex !== null) {
-      const addr = XLSX.utils.encode_cell({ r: totalsRowIndex, c });
-      if (ws[addr]) {
-        ws[addr].s = TOTALS_STYLE;
-      }
-    }
+  // Let the reader filter and sort without setting it up first
+  if (rows.length > 0) {
+    ws.autoFilter = { from: { row: 3, column: 1 }, to: { row: lastDataRow, column: columns.length } };
   }
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Report');
+  return Buffer.from(await wb.xlsx.writeBuffer());
+}
 
-  const xlsxBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
-  return xlsxBuffer;
+/**
+ * Word (.docx) export - the third format the owner asked for, and the one that
+ * did not exist anywhere in the app. Built with `docx` rather than an HTML file
+ * renamed to .doc, so Word opens a real document with a real table it can
+ * restyle - not a web page wearing the wrong extension.
+ */
+export async function buildDocx(
+  columns: ReportColumn[],
+  rows: Record<string, unknown>[],
+  title: string,
+  totals?: Record<string, number>,
+  companyName?: string,
+): Promise<Buffer> {
+  const DARK = '0D1116';
+  const GOLD = 'D4A017';
+  const isNumeric = (t: ColumnType) => t === 'currency' || t === 'number' || t === 'percent';
+
+  const cell = (
+    text: string,
+    opts: { bold?: boolean; color?: string; shade?: string; right?: boolean } = {},
+  ) =>
+    new TableCell({
+      shading: opts.shade ? { fill: opts.shade, type: ShadingType.CLEAR, color: 'auto' } : undefined,
+      margins: { top: 60, bottom: 60, left: 90, right: 90 },
+      children: [new Paragraph({
+        alignment: opts.right ? AlignmentType.RIGHT : AlignmentType.LEFT,
+        children: [new TextRun({ text, bold: opts.bold, color: opts.color, size: 18 })],
+      })],
+    });
+
+  const headerRow = new TableRow({
+    // repeats on every page, the same courtesy the paginated PDFs give
+    tableHeader: true,
+    children: columns.map(c =>
+      cell(c.label, { bold: true, color: 'FFFFFF', shade: DARK, right: isNumeric(c.type) })),
+  });
+
+  const bodyRows = rows.map(r => new TableRow({
+    children: columns.map(c =>
+      cell(formatCellValue(r[c.key], c.type), { right: isNumeric(c.type) })),
+  }));
+
+  const hasTotals = !!totals && Object.keys(totals).length > 0;
+  const totalRows = hasTotals ? [new TableRow({
+    children: columns.map((c, i) =>
+      cell(
+        c.key in totals! ? formatCellValue(totals![c.key], c.type) : i === 0 ? 'TOTALS' : '',
+        { bold: true, color: GOLD, shade: DARK, right: isNumeric(c.type) },
+      )),
+  })] : [];
+
+  const generated = new Date().toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+  });
+
+  const doc = new Document({
+    creator: companyName || 'Saguaro Control Systems',
+    title,
+    sections: [{
+      properties: { page: { size: { orientation: PageOrientation.LANDSCAPE } } },
+      children: [
+        new Paragraph({
+          children: [new TextRun({
+            text: companyName || 'Saguaro Control Systems',
+            bold: true, size: 28, color: DARK,
+          })],
+        }),
+        new Paragraph({
+          spacing: { after: 240 },
+          children: [new TextRun({ text: title, size: 22, color: '5B677A' })],
+        }),
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [headerRow, ...bodyRows, ...totalRows],
+        }),
+        new Paragraph({
+          spacing: { before: 240 },
+          children: [new TextRun({
+            text: rows.length + ' row' + (rows.length === 1 ? '' : 's') + ' \u00b7 generated ' + generated,
+            size: 16, color: '8094B0',
+          })],
+        }),
+      ],
+    }],
+  });
+
+  return Buffer.from(await Packer.toBuffer(doc));
 }
 
 // ---------------------------------------------------------------------------
@@ -455,8 +573,9 @@ export function safeFilename(title: string): string {
   return title.replace(/[^a-z0-9_\-\s]/gi, '').trim().replace(/\s+/g, '-') || 'report';
 }
 
-export const EXPORT_CONTENT_TYPE: Record<'csv' | 'xlsx' | 'pdf', string> = {
+export const EXPORT_CONTENT_TYPE: Record<'csv' | 'xlsx' | 'pdf' | 'docx', string> = {
   csv: 'text/csv; charset=utf-8',
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   pdf: 'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 };

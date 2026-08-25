@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import {
   buildCsv,
   buildXlsx,
+  buildDocx,
   safeFilename,
   todayStamp,
   EXPORT_CONTENT_TYPE,
@@ -25,10 +26,10 @@ const COLUMNS: ReportColumn[] = [
   { key: 'status', label: 'Status', type: 'badge' },
 ];
 
-type Fmt = 'csv' | 'xlsx' | 'pdf';
+type Fmt = 'csv' | 'xlsx' | 'pdf' | 'docx';
 function normalizeFormat(v: string | null | undefined): Fmt {
   const f = (v || '').toLowerCase();
-  return f === 'csv' || f === 'xlsx' || f === 'pdf' ? (f as Fmt) : 'pdf';
+  return f === 'csv' || f === 'xlsx' || f === 'pdf' || f === 'docx' ? (f as Fmt) : 'pdf';
 }
 
 async function build(req: NextRequest, projectId: string, ids: string[], format: Fmt) {
@@ -74,11 +75,20 @@ async function build(req: NextRequest, projectId: string, ids: string[], format:
       });
     }
     if (format === 'xlsx') {
-      const xlsx = buildXlsx(COLUMNS, rows, title, undefined, companyName);
+      const xlsx = await buildXlsx(COLUMNS, rows, title, undefined, companyName);
       return new NextResponse(xlsx as unknown as BodyInit, {
         headers: {
           'Content-Type': EXPORT_CONTENT_TYPE.xlsx,
           'Content-Disposition': `attachment; filename="${safeTitle}-${dateStamp}.xlsx"`,
+        },
+      });
+    }
+    if (format === 'docx') {
+      const docx = await buildDocx(COLUMNS, rows, title, undefined, companyName);
+      return new NextResponse(docx as unknown as BodyInit, {
+        headers: {
+          'Content-Type': EXPORT_CONTENT_TYPE.docx,
+          'Content-Disposition': `attachment; filename="${safeTitle}-${dateStamp}.docx"`,
         },
       });
     }

@@ -6,6 +6,7 @@ import { ENTITY_MAP, type ColType } from '@/lib/report-entities';
 import {
   buildCsv,
   buildXlsx,
+  buildDocx,
   safeFilename,
   todayStamp,
   EXPORT_CONTENT_TYPE,
@@ -156,8 +157,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   try {
     const { searchParams } = new URL(req.url);
     const rawFormat = (searchParams.get('format') || 'csv').toLowerCase();
-    const format: 'csv' | 'xlsx' | 'pdf' =
-      rawFormat === 'pdf' || rawFormat === 'xlsx' ? rawFormat : 'csv';
+    const format: 'csv' | 'xlsx' | 'pdf' | 'docx' =
+      rawFormat === 'pdf' || rawFormat === 'xlsx' || rawFormat === 'docx' ? rawFormat : 'csv';
 
     const supabase = createServerClient();
     const { data: row, error } = await supabase
@@ -219,11 +220,20 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 
     if (format === 'xlsx') {
-      const xlsxBuffer = buildXlsx(columns, rows, title, totals, branding.companyName);
+      const xlsxBuffer = await buildXlsx(columns, rows, title, totals, branding.companyName);
       return new NextResponse(xlsxBuffer as unknown as BodyInit, {
         headers: {
           'Content-Type': EXPORT_CONTENT_TYPE.xlsx,
           'Content-Disposition': `attachment; filename="${safeTitle}-${dateStamp}.xlsx"`,
+        },
+      });
+    }
+    if (format === 'docx') {
+      const docxBuffer = await buildDocx(columns, rows, title, totals, branding.companyName);
+      return new NextResponse(docxBuffer as unknown as BodyInit, {
+        headers: {
+          'Content-Type': EXPORT_CONTENT_TYPE.docx,
+          'Content-Disposition': `attachment; filename="${safeTitle}-${dateStamp}.docx"`,
         },
       });
     }

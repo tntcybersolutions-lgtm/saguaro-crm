@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import {
   buildCsv,
   buildXlsx,
+  buildDocx,
   safeFilename,
   todayStamp,
   EXPORT_CONTENT_TYPE,
@@ -18,7 +19,7 @@ import {
 export const runtime = 'nodejs';
 
 interface ExportBody {
-  format: 'csv' | 'xlsx' | 'pdf';
+  format: 'csv' | 'xlsx' | 'pdf' | 'docx';
   title: string;
   columns: ReportColumn[];
   rows: Record<string, unknown>[];
@@ -71,11 +72,20 @@ export async function POST(req: NextRequest) {
     }
 
     if (format === 'xlsx') {
-      const xlsxBuffer = buildXlsx(columns, rows, title, totals, brandName);
+      const xlsxBuffer = await buildXlsx(columns, rows, title, totals, brandName);
       return new NextResponse(xlsxBuffer as unknown as BodyInit, {
         headers: {
           'Content-Type': EXPORT_CONTENT_TYPE.xlsx,
           'Content-Disposition': `attachment; filename="${safeTitle}-${dateStamp}.xlsx"`,
+        },
+      });
+    }
+    if (format === 'docx') {
+      const docxBuffer = await buildDocx(columns, rows, title, totals, brandName);
+      return new NextResponse(docxBuffer as unknown as BodyInit, {
+        headers: {
+          'Content-Type': EXPORT_CONTENT_TYPE.docx,
+          'Content-Disposition': `attachment; filename="${safeTitle}-${dateStamp}.docx"`,
         },
       });
     }

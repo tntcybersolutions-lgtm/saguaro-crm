@@ -18,7 +18,7 @@ import {
   PremiumSurface, ModuleHero, SectionCard, StatStrip, IconChip, Pill,
   goldButtonStyle, ghostButtonStyle,
 } from '@/components/ui/premium';
-import { PdfIcon, XlsIcon, CsvIcon, FileButton } from '@/components/ui/FileTypeIcon';
+import { PdfIcon, XlsIcon, CsvIcon, DocIcon, FileButton } from '@/components/ui/FileTypeIcon';
 import {
   ChartBar, Funnel, Columns, FloppyDisk, Play, Printer, Trash, Plus, Table, Clock,
 } from '@phosphor-icons/react';
@@ -402,8 +402,8 @@ export default function ReportBuilderPage() {
   // ── Downloads: server-built, tenant-branded PDF / Excel / CSV ──
   // All three formats run through /api/reports/export so every file carries the
   // tenant's letterhead (PDF), typed money columns, and a real totals row.
-  const [exporting, setExporting] = useState<'' | 'csv' | 'xlsx' | 'pdf'>('');
-  const exportAs = useCallback(async (format: 'csv' | 'xlsx' | 'pdf') => {
+  const [exporting, setExporting] = useState<'' | 'csv' | 'xlsx' | 'pdf' | 'docx'>('');
+  const exportAs = useCallback(async (format: 'csv' | 'xlsx' | 'pdf' | 'docx') => {
     if (!result || exporting) return;
     setExporting(format);
     setError('');
@@ -724,6 +724,7 @@ export default function ReportBuilderPage() {
               <div className="rb-noprint" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <FileButton icon={<PdfIcon size={16} />} label={exporting === 'pdf' ? 'Building…' : 'PDF'} onClick={() => exportAs('pdf')} disabled={!result || result.rowCount === 0 || !!exporting} title="Branded corporate PDF — letterhead, KPI band, totals" />
                 <FileButton icon={<XlsIcon size={16} />} label={exporting === 'xlsx' ? 'Building…' : 'Excel'} onClick={() => exportAs('xlsx')} disabled={!result || result.rowCount === 0 || !!exporting} title="Excel workbook (.xlsx) with typed money columns and totals" />
+                <FileButton icon={<DocIcon size={16} />} label={exporting === 'docx' ? 'Building…' : 'Word'} onClick={() => exportAs('docx')} disabled={!result || result.rowCount === 0 || !!exporting} title="Word document (.docx) with a real table you can restyle" />
                 <FileButton icon={<CsvIcon size={16} />} label={exporting === 'csv' ? 'Building…' : 'CSV'} onClick={() => exportAs('csv')} disabled={!result || result.rowCount === 0 || !!exporting} title="Plain CSV (.csv) for any spreadsheet tool" />
                 <button onClick={() => window.print()} disabled={!result} className="pmBtn" style={{ ...ghostButtonStyle, padding: '7px 12px', fontSize: 12, opacity: result ? 1 : 0.5, cursor: result ? 'pointer' : 'not-allowed' }}>
                   <Printer size={14} /> Print
