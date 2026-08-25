@@ -224,9 +224,14 @@ export default function GetTheAppPage() {
         }
 
         /* ── DEVICE SHOWCASE — real dark screenshots in machined frames ── */
+        /* Enlarged 24 Aug 2026: at 185/210px wide the app text inside these
+           frames was unreadable — objectFit is 'cover', so glyph size is set
+           purely by frame WIDTH. Cropping the screenshots would not have helped;
+           only bigger frames do. Container grew to match, or the taller phones
+           would overflow it. */
         .devices {
           position: relative;
-          height: 520px;
+          height: 650px;
         }
         .dev-slot-phone-a { position: absolute; right: 12px; top: 0; z-index: 3; animation: floatA 5s ease-in-out infinite; }
         .dev-slot-phone-b { position: absolute; left: 0; top: 64px; z-index: 2; animation: floatB 5.5s ease-in-out infinite 0.4s; }
@@ -582,7 +587,7 @@ export default function GetTheAppPage() {
           .nav { padding: 0 16px; }
           .hero { padding: 80px 16px 60px; }
           .hero-inner { grid-template-columns: 1fr; gap: 48px; }
-          .devices { height: 450px; order: -1; }
+          .devices { height: 560px; order: -1; }
           .dev-slot-phone-b { display: none; }
           .dev-slot-laptop { left: 0; }
           .numbers-bar { padding: 32px 16px; }
@@ -666,13 +671,13 @@ export default function GetTheAppPage() {
                 why the login shot is the web one, not the iOS one. */}
             <div className="devices">
               <div className="dev-slot-phone-b">
-                <PhoneFrame src="/marketing/phone-takeoff.png" alt="Takeoff Studio on iPhone — turn a blueprint into a priced estimate" width={185} />
+                <PhoneFrame src="/marketing/phone-takeoff.webp" alt="Takeoff Studio on iPhone — turn a blueprint into a priced estimate" width={232} />
               </div>
               <div className="dev-slot-phone-a">
-                <PhoneFrame src="/marketing/phone-project.png" alt="Project overview on iPhone — contract value, quick add, progress" width={210} />
+                <PhoneFrame src="/marketing/phone-project.webp" alt="Project overview on iPhone — contract value, quick add, progress" width={268} />
               </div>
               <div className="dev-slot-laptop">
-                <LaptopFrame src="/marketing/web-login.png" alt="Signing in to Saguaro Control Systems on the web" width={430} height={270} />
+                <LaptopFrame src="/marketing/web-login.webp" alt="Signing in to Saguaro Control Systems on the web" width={536} height={336} />
               </div>
             </div>
           </div>
