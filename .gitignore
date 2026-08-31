@@ -12,3 +12,6 @@ node_modules/
 .DS_Store
 *.tgz
 .vercel/
+
+# local build/install scratch
+*.log
