@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { accentForProject } from '@/lib/project-identity';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { moduleAccent } from '@/lib/module-identity';
 import { useProject } from '@/lib/hooks/useProjects';
 import {
@@ -124,6 +126,23 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const base = `/app/projects/${projectId}`;
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  /* Forty-nine modules on every job is why a GC cannot find the three they
+     need. Six core tools always show, anything carrying real work shows
+     itself, and the rest sit behind "All tools". The preference is per
+     browser rather than per project — a GC who wants everything wants it
+     everywhere. */
+  const [showAllTools, setShowAllTools] = useState(false);
+  useEffect(() => {
+    try { setShowAllTools(localStorage.getItem('sag_all_tools') === '1'); } catch { /* private mode */ }
+  }, []);
+  const toggleAllTools = () => {
+    setShowAllTools(v => {
+      const next = !v;
+      try { localStorage.setItem('sag_all_tools', next ? '1' : '0'); } catch { /* private mode */ }
+      return next;
+    });
+  };
   // W-2: the sidebar header reads the same '/api/projects/{id}' SWR cache
   // entry as the overview page — opening a project costs ONE aggregate request.
   const { project } = useProject(projectId || null);
@@ -137,6 +156,18 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  const { ctx } = useProjectContext(projectId || null);
+  const signals = (ctx || null) as ToolSignals | null;
+  /* The href of the page being viewed — passed to isToolVisible so the nav can
+     never hide the row you are standing on, however you got here. */
+  const activeHref = React.useMemo(() => {
+    const all = NAV_SECTIONS.flatMap(sec => sec.items.map(i => i.href));
+    const rel = pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
+    return all.find(h => h !== '' && rel.startsWith(h)) ?? (pathname === base ? '' : '');
+  }, [pathname, base]);
+  const allHrefs = React.useMemo(() => NAV_SECTIONS.flatMap(sec => sec.items.map(i => i.href)), []);
+  const hiddenCount = hiddenToolCount(allHrefs, signals, activeHref);
 
   const isActive = (href: string) => {
     if (href === '') return pathname === base;
@@ -169,14 +200,17 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
       </div>
 
       {/* Nav sections */}
-      {NAV_SECTIONS.map(section => (
+      {NAV_SECTIONS.map(section => {
+        const visible = section.items.filter(i => isToolVisible(i.href, signals, activeHref, showAllTools));
+        if (visible.length === 0) return null;
+        return (
         <div key={section.label} style={{ padding: '8px 0' }}>
           {!isCollapsed && (
             <div style={{ padding: '6px 12px 3px', fontSize: 10, fontWeight: 700, letterSpacing: 1.4, textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
               {section.label}
             </div>
           )}
-          {section.items.map(item => {
+          {visible.map(item => {
             const active = isActive(item.href);
             const Icon = item.icon;
             const acc = (item as { accent?: string }).accent ? moduleAccent((item as { accent?: string }).accent) : null;
@@ -222,7 +256,28 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             );
           })}
         </div>
-      ))}
+        );
+      })}
+
+      {/* Everything not shown above is one click away — nothing was removed. */}
+      {!isCollapsed && hiddenCount > 0 && (
+        <div style={{ padding: '4px 12px 14px' }}>
+          <button
+            onClick={toggleAllTools}
+            style={{
+              width: '100%', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 8, padding: '0 10px', background: 'transparent',
+              border: `1px dashed ${BORDER}`, borderRadius: 8,
+              color: DIM, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.background = 'transparent'; }}
+          >
+            <span>{showAllTools ? 'Show fewer tools' : 'All tools'}</span>
+            {!showAllTools && <span style={{ opacity: 0.7 }}>+{hiddenCount}</span>}
+          </button>
+        </div>
+      )}
 
       {/* Back to projects */}
       <div style={{ padding: '8px 12px', borderTop: `1px solid ${BORDER}`, marginTop: 8 }}>
