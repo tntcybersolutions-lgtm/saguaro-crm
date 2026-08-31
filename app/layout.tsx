@@ -1,7 +1,7 @@
 import React from 'react';
 import Script from 'next/script';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Permanent_Marker } from 'next/font/google';
 import './globals.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ToastProvider } from '../components/Toast';
@@ -12,6 +12,10 @@ import MarketingChatWrapper from '../components/MarketingChatWrapper';
 // stacks (which were overriding it and rendering chunky Segoe UI on Windows).
 // Inter is a variable font — no weight array so the full 100–900 range is available.
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+
+// The annotation face — a super marking up a drawing. Used only by
+// components/Scribble.tsx, which opts out of the global Inter override below.
+const marker = Permanent_Marker({ subsets: ['latin'], weight: '400', variable: '--font-marker', display: 'swap' });
 
 export const viewport = {
   width: 'device-width',
@@ -28,7 +32,7 @@ export const metadata: Metadata = {
     template: '%s | Saguaro Control Systems',
   },
 
-  description: 'The CRM built for General Contractors. AI blueprint takeoff, AIA pay applications, lien waivers, bid intelligence, and certified payroll — all in one platform.',
+  description: 'The construction management platform built for General Contractors. AI blueprint takeoff, AIA pay applications, lien waivers, bid intelligence, and certified payroll — all in one platform.',
 
   keywords: [
     'construction CRM',
@@ -121,7 +125,7 @@ const PH_HOST   = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${marker.variable}`}>
       <head>
         <meta charSet="utf-8" />
         {/* Theme color + status bar tint */}
@@ -206,7 +210,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "url": "https://saguarocontrol.net",
               "logo": "https://saguarocontrol.net/logo-full.jpg",
               "image": "https://saguarocontrol.net/og-image.jpg",
-              "description": "AI-powered construction CRM for general contractors. Blueprint takeoff, pay applications, lien waivers, bid intelligence.",
+              "description": "AI-powered construction management platform for general contractors. Blueprint takeoff, pay applications, lien waivers, bid intelligence.",
               "applicationCategory": "BusinessApplication",
               "operatingSystem": "Web",
               "offers": {
