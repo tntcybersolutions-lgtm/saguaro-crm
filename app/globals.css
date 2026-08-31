@@ -241,11 +241,14 @@ label {
 /* Force REAL Inter on every element with !important — individual pages hardcode their own
    `-apple-system, 'Segoe UI', …` stack inline on their root wrappers, and inline styles are
    only beaten by an !important CSS declaration. `body *` reaches every descendant. */
-body, body *:not(.scribble):not(.scribble *) {
+body, body * {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif !important;
 }
-/* Marker annotations are the one place the UI face must not win. */
-.scribble, .scribble * {
+/* Marker annotations are the one place the UI face must not win. Beaten on
+   specificity rather than by excluding .scribble from the rule above — that
+   rule governs every element on every page and is not worth touching for
+   this. (0,1,1) with !important clears (0,0,1) with !important. */
+body .scribble, body .scribble * {
   font-family: var(--font-marker), 'Permanent Marker', 'Bradley Hand', cursive !important;
 }
 body, button, input, textarea, select {
