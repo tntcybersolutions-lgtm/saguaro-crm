@@ -39,7 +39,7 @@ function Nav() {
           maxWidth: '1200px', margin: '0 auto', padding: '0 32px',
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
             <img
               src="/logo-full.jpg"
               alt="Saguaro Control Systems"
