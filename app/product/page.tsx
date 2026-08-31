@@ -235,7 +235,7 @@ export default function ProductPage() {
           <span style={{ fontSize: 13, color: 'rgba(203,213,225,0.4)' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.</span>
           <div className="prodFootLinks">
             <Link href="/pricing" style={{ fontSize: 13, color: 'rgba(203,213,225,0.5)', textDecoration: 'none' }}>Pricing</Link>
-            <Link href="/get-the-app" style={{ fontSize: 13, color: 'rgba(203,213,225,0.5)', textDecoration: 'none' }}>Field App</Link>
+            <Link href="/get-the-app" style={{ fontSize: 13, color: 'rgba(203,213,225,0.5)', textDecoration: 'none' }}>The App</Link>
             <Link href="/compare/procore" style={{ fontSize: 13, color: 'rgba(203,213,225,0.5)', textDecoration: 'none' }}>vs Procore</Link>
             <Link href="/privacy" style={{ fontSize: 13, color: 'rgba(203,213,225,0.5)', textDecoration: 'none' }}>Privacy</Link>
             <Link href="/terms" style={{ fontSize: 13, color: 'rgba(203,213,225,0.5)', textDecoration: 'none' }}>Terms</Link>

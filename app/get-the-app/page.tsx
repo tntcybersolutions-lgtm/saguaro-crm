@@ -874,7 +874,7 @@ export default function GetTheAppPage() {
             <div className="footer-links">
               <Link href="/product" className="footer-link">Product</Link>
               <Link href="/pricing" className="footer-link">Pricing</Link>
-              <Link href="/get-the-app" className="footer-link">Field App</Link>
+              <Link href="/get-the-app" className="footer-link">The App</Link>
               <Link href="/compare/procore" className="footer-link">vs Procore</Link>
               <Link href="/privacy" className="footer-link">Privacy</Link>
               <Link href="/terms" className="footer-link">Terms</Link>

@@ -15,9 +15,8 @@ export default function MarketingNav() {
   }, []);
 
   const navLinks = [
-    { label: 'Home', href: '/' },
     { label: 'Product', href: '/product' },
-    { label: 'Field App', href: '/get-the-app' },
+    { label: 'The App', href: '/get-the-app' },
     { label: 'Pricing', href: '/pricing' },
     { label: 'Compare', href: '/compare' },
   ];
@@ -43,7 +42,7 @@ export default function MarketingNav() {
           maxWidth: '1200px', margin: '0 auto', padding: '0 48px',
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <Link href="/" aria-label="Saguaro Control Systems — home" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
             <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '36px', width: 'auto', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
               <span style={{ fontWeight: 700, fontSize: '14px', letterSpacing: '0.1em', background: 'linear-gradient(90deg,#F59E0B,#FBBF24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
