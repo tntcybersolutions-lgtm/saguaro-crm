@@ -184,6 +184,17 @@ export default function TakeoffPage() {
   const [phase, setPhase] = useState<UploadPhase>('idle');
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  /* Inline project creation. Dropping a blueprint here used to dead-end at
+     "Create a project first →", which navigated away and took the staged file
+     with it — you came back and started over. A blueprint in hand is the whole
+     reason you are on this screen; it must not be the thing you lose. Only a
+     name is required to create a project, so it is asked for here and the file
+     carries straight through to analysis. */
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createErr, setCreateErr] = useState('');
   const [progress, setProgress] = useState({ pct: 0, message: '', step: 0 });
   const [errorMsg, setErrorMsg] = useState('');
   const [dragOver, setDragOver] = useState(false);
@@ -306,6 +317,33 @@ export default function TakeoffPage() {
   }
 
   // ── Upload + analyze flow ─────────────────────────────────────────────────
+  async function createProjectAndAnalyze() {
+    const name = newProjectName.trim();
+    if (!name || !pendingFile) return;
+    setCreateBusy(true);
+    setCreateErr('');
+    try {
+      const res = await fetch('/api/projects/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not create the project.');
+      const id = data.project?.id || data.projectId || data.id;
+      if (!id) throw new Error('Project was created but returned no id.');
+      setProjects(prev => [{ id, name } as any, ...prev]);
+      setSelectedProjectId(id);
+      setCreatingProject(false);
+      setNewProjectName('');
+      await startUpload(pendingFile, id);
+    } catch (e) {
+      setCreateErr(e instanceof Error ? e.message : 'Could not create the project.');
+    } finally {
+      setCreateBusy(false);
+    }
+  }
+
   async function startUpload(file: File, projectId: string) {
     setPhase('uploading');
     setProgress({ pct: 5, message: 'Creating takeoff record...', step: 1 });
@@ -534,17 +572,43 @@ export default function TakeoffPage() {
                     <div style={{ color: T.muted, fontSize: 12 }}>
                       File: <span style={{ color: T.white, fontWeight: 500 }}>{pendingFile?.name}</span>
                     </div>
-                    {projects.length === 0 ? (
-                      <div style={{ color: T.amber, fontSize: 12, padding: '10px 0' }}>
-                        No projects found.{' '}
-                        <Link href="/app/projects/new" style={{ color: T.amber, fontWeight: 700, textDecoration: 'underline' }}>
-                          Create a project first →
-                        </Link>
+                    {creatingProject || projects.length === 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <label style={{ color: T.muted, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          New project name
+                        </label>
+                        <input
+                          autoFocus
+                          value={newProjectName}
+                          onChange={e => { setNewProjectName(e.target.value); setCreateErr(''); }}
+                          onKeyDown={e => { if (e.key === 'Enter' && newProjectName.trim() && !createBusy) void createProjectAndAnalyze(); }}
+                          placeholder="Mesa Library Expansion"
+                          style={{
+                            width: '100%', padding: '10px 12px', borderRadius: 8,
+                            background: T.surface2, border: `1px solid ${createErr ? '#EF4444' : T.border}`,
+                            color: T.white, fontSize: 16, outline: 'none',
+                          }}
+                        />
+                        {createErr && <div style={{ color: '#EF4444', fontSize: 12 }}>{createErr}</div>}
+                        <div style={{ color: T.muted, fontSize: 11.5 }}>
+                          Address, budget and contract can be filled in later — the blueprint analyses either way.
+                        </div>
+                        {projects.length > 0 && (
+                          <button
+                            onClick={() => { setCreatingProject(false); setCreateErr(''); }}
+                            style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: T.muted, fontSize: 12, textDecoration: 'underline', cursor: 'pointer', padding: 0, minHeight: 44 }}
+                          >
+                            Pick an existing project instead
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <select
                         value={selectedProjectId}
-                        onChange={e => setSelectedProjectId(e.target.value)}
+                        onChange={e => {
+                          if (e.target.value === '__new__') { setCreatingProject(true); setSelectedProjectId(''); return; }
+                          setSelectedProjectId(e.target.value);
+                        }}
                         style={{
                           width: '100%', padding: '9px 12px', borderRadius: 8,
                           background: T.surface2, border: `1px solid ${T.border}`,
@@ -556,18 +620,30 @@ export default function TakeoffPage() {
                         {projects.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
+                        <option value="__new__">+ New project…</option>
                       </select>
                     )}
                     <div style={{ display: 'flex', gap: 8 }}>
                       <Btn variant="ghost" size="sm" onClick={resetUpload}>Cancel</Btn>
-                      <Btn
-                        size="sm"
-                        disabled={!selectedProjectId || !pendingFile}
-                        onClick={() => pendingFile && selectedProjectId && startUpload(pendingFile, selectedProjectId)}
-                        style={{ flex: 1 }}
-                      >
-                        Start Analysis
-                      </Btn>
+                      {creatingProject || projects.length === 0 ? (
+                        <Btn
+                          size="sm"
+                          disabled={!newProjectName.trim() || !pendingFile || createBusy}
+                          onClick={() => void createProjectAndAnalyze()}
+                          style={{ flex: 1 }}
+                        >
+                          {createBusy ? 'Creating…' : 'Create project & analyze'}
+                        </Btn>
+                      ) : (
+                        <Btn
+                          size="sm"
+                          disabled={!selectedProjectId || !pendingFile}
+                          onClick={() => pendingFile && selectedProjectId && startUpload(pendingFile, selectedProjectId)}
+                          style={{ flex: 1 }}
+                        >
+                          Start Analysis
+                        </Btn>
+                      )}
                     </div>
                   </div>
                 )}
