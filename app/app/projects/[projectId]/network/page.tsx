@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug, CellSignalFull, BatteryFull, Package, Robot, Devices, Shuffle, Gear, ChartBar, Plus, MagnifyingGlass, CheckCircle, Warning, Circle, WarningCircle, Info, Lightning, SquaresFour } from '@phosphor-icons/react';
+import { Globe, ArrowsLeftRight, Shield, WifiHigh, Printer, VideoCamera, HardDrives, Laptop, Phone, Plug, CellSignalFull, BatteryFull, Package, Robot, Devices, Shuffle, Gear, ChartBar, Plus, CheckCircle, Warning, Circle, WarningCircle, Info, Lightning, SquaresFour } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconChip, StatStrip, FlowSteps, InsightRow, goldButtonStyle } from '@/components/ui/premium';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
@@ -313,9 +313,12 @@ export default function NetworkDashboard() {
             { label: 'Add Device', href: `devices`, icon: Plus },
             { label: 'Add VLAN', href: `vlans`, icon: Shuffle },
             { label: 'Add Cable Run', href: `cables`, icon: Plug },
-            { label: 'Scan Network', href: `#scan`, icon: MagnifyingGlass },
+            /* "Scan Network" (#scan) and "Ask Sage" (#sage) were removed: both
+               rendered as <Link href="#"> with no target on the page, so they
+               were dead clicks. A button that does nothing costs more trust
+               than the feature would have earned. The AI Network Wizard above
+               is the working path to the same job. */
             { label: 'Generate Report', href: `reports`, icon: ChartBar },
-            { label: 'Ask Sage', href: `#sage`, icon: Robot },
           ].map(action => (
             <Link
               key={action.label}

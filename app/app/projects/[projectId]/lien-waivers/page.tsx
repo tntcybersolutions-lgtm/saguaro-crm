@@ -155,14 +155,28 @@ export default function LienWaiversPage() {
   async function generateAll(){
     setGenAll(true);
     try{
-      // Generate conditional partial for all subs that don't have one for current period
-      const matrix = buildMatrix(waivers);
-      for(const row of matrix){
-        if(!row.waivers['conditional_partial']){
-          await fetch('/api/lien-waivers/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-            projectId,waiverType:'conditional_partial',claimantName:row.subName,throughDate:fThrough,amount:0,subId:row.subId,
-          })});
-        }
+      /* Generate a conditional partial for every sub on the roster that does
+         not already have one. This used to walk buildMatrix(waivers) — rows
+         derived from waivers that already exist — so on a project with none
+         the loop body never ran: the button said "Generating…", finished, and
+         produced nothing, with no error to explain it. The roster is the right
+         source; existing waivers are what we skip against. */
+      const covered = new Set(
+        buildMatrix(waivers)
+          .filter(r => r.waivers['conditional_partial'])
+          .map(r => r.subId)
+      );
+      const targets = subs.filter((sub: any) => !covered.has(sub.id));
+      if(targets.length === 0){
+        setError(subs.length === 0
+          ? 'No subcontractors on this project yet — add subs before generating waivers.'
+          : 'Every sub already has a conditional partial for this period.');
+        return;
+      }
+      for(const sub of targets){
+        await fetch('/api/lien-waivers/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+          projectId,waiverType:'conditional_partial',claimantName:sub.companyName||sub.name||'',throughDate:fThrough,amount:0,subId:sub.id,
+        })});
       }
       await load();
     }catch(e:any){
