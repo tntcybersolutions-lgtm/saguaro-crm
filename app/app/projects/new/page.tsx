@@ -271,7 +271,7 @@ export default function NewProjectPage() {
           body: JSON.stringify({ projectId: d.projectId }),
         }).catch(() => {});
         guard.clearDraft();
-        router.push(`/app/projects/${d.projectId}/overview`);
+        router.push(`/app/projects/${d.projectId}/${nextRef.current === 'takeoff' ? 'takeoff' : 'overview'}`);
         return true;
       } else {
         setError(d.error || 'Failed to create project');
@@ -284,6 +284,15 @@ export default function NewProjectPage() {
       return false;
     }
   }
+
+  /* Name and address are the only required fields — the page has always said
+     so. Everything else is pre-seeded, so it starts collapsed: five cards of
+     inputs when two matter is why this reads as heavy. */
+  const [showDetails, setShowDetails] = useState(false);
+  /* Where the GC lands after Create. "and add drawings" goes straight to
+     takeoff, which is the actual next thing on a real job — the old flow
+     dropped everyone on Overview and left them to find it. */
+  const nextRef = useRef<'overview' | 'takeoff'>('overview');
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
@@ -371,6 +380,7 @@ export default function NewProjectPage() {
                   </FIELD>
                 </SectionCard>
 
+                {showDetails && (
                 <SectionCard title="Compliance" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
                   <FIELD label="Prevailing Wage" hint="Davis-Bacon or state law turns on certified payroll (WH-347) tracking for every sub.">
                     <select value={prevailingWage} onChange={e=>setPrevailingWage(e.target.value)} style={SELECT_STYLE}>
@@ -383,9 +393,11 @@ export default function NewProjectPage() {
                     </select>
                   </FIELD>
                 </SectionCard>
+                )}
               </div>
 
               <div>
+                {showDetails && (<>
                 <SectionCard title="Contract & Money" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
                   <FIELD label="Contract Value" hint={budgetNum>0 ? <>Reads as <b style={{color:TEXT}}>{fmt(budgetNum)}</b> — seeds the budget and prints as G702 line 1.</> : 'Seeds the budget and prints as G702 line 1 — refine after buyout.'}>
                     <input value={budget} onChange={e=>setBudget(e.target.value)} placeholder="$1,250,000" style={INPUT_STYLE}/>
@@ -428,12 +440,32 @@ export default function NewProjectPage() {
                     <input value={archEmail} onChange={e=>{setArchEmail(e.target.value);setAuto(a=>({...a,archEmail:false}));}} placeholder="arch@example.com" style={INPUT_STYLE}/>
                   </FIELD>
                 </SectionCard>
+                </>)}
               </div>
             </div>
 
             <div style={{display:'flex',gap:12,alignItems:'center',marginTop:16,flexWrap:'wrap' as const}}>
-              <button type="submit" disabled={submitDisabled} className="pmBtn" style={{...goldButtonStyle,padding:'13px 32px',fontSize:15,cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
+              <button type="submit" onClick={() => { nextRef.current = 'overview'; }}
+                disabled={submitDisabled} className="pmBtn"
+                style={{...goldButtonStyle,padding:'13px 32px',fontSize:15,cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
                 {saving?'Creating…':'Create Project'}
+              </button>
+
+              {/* The next thing on a real job is the drawings. This lands the GC
+                  on Takeoff instead of Overview, so the blueprint step is part
+                  of starting a job rather than something to go hunting for. */}
+              <button type="submit" onClick={() => { nextRef.current = 'takeoff'; }}
+                disabled={submitDisabled}
+                style={{padding:'13px 26px',background:'rgba(245,158,11,0.10)',border:'1px solid rgba(245,158,11,0.34)',
+                        borderRadius:10,color:'#F59E0B',fontWeight:700,fontSize:14,minHeight:44,
+                        cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
+                {saving?'Creating…':'Create & add drawings →'}
+              </button>
+
+              <button type="button" onClick={() => setShowDetails(v => !v)}
+                style={{padding:'13px 20px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',
+                        borderRadius:10,color:'rgba(255,255,255,0.7)',fontWeight:600,fontSize:13,minHeight:44,cursor:'pointer'}}>
+                {showDetails ? 'Hide contract details' : 'Add contract details'}
               </button>
               <button type="button" onClick={()=>guard.requestClose(()=>router.back())} className="pmBtn" style={{...ghostButtonStyle,padding:'13px 20px'}}>
                 Cancel
