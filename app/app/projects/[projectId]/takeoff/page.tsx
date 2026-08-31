@@ -1038,50 +1038,6 @@ export default function TakeoffPage() {
     }
   };
 
-  const handleSageAutoDocs = async () => {
-    if (!result || !takeoffId) return;
-    setGenerating('sage');
-    setProgress({ step: 1, message: 'Sage is starting...', pct: 5 });
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const es = new EventSource(`/api/takeoff/${takeoffId}/sage-auto-docs`);
-        let resolved = false;
-        es.onmessage = (e) => {
-          try {
-            const evt = JSON.parse(e.data);
-            if (evt.event === 'progress') {
-              setProgress({ step: evt.step ?? 1, message: evt.message ?? 'Working...', pct: evt.pct ?? 50 });
-            }
-            if (evt.event === 'error') { es.close(); reject(new Error(evt.message)); }
-            if (evt.event === 'done') {
-              es.close();
-              resolved = true;
-              setProgress({ step: 0, message: '', pct: 0 });
-              const pkgs = evt.packagesCreated ?? 0;
-              const jkts = evt.jacketsGenerated ?? 0;
-              const sov  = evt.sovCreated ? ' + SOV' : '';
-              showToast(
-                pkgs > 0
-                  ? `Sage built ${pkgs} bid packages, ${jkts} bid jackets${sov}`
-                  : 'Documents generated',
-                'success'
-              );
-              resolve();
-            }
-          } catch { /* ignore malformed chunks */ }
-        };
-        es.onerror = () => {
-          es.close();
-          if (!resolved) reject(new Error('Connection lost. Please try again.'));
-        };
-      });
-    } catch (err: unknown) {
-      console.error(err); showToast(humanError(err, 'Document generation failed. Please try again.'), 'error');
-      setProgress({ step: 0, message: '', pct: 0 });
-    } finally {
-      setGenerating(null);
-    }
-  };
 
   // Generic SSE runner — resolves with the `done` payload, rejects on `error` or a
   // dropped connection. Reused by the autonomous chain so both phases stream progress.
@@ -1113,8 +1069,14 @@ export default function TakeoffPage() {
     setPickMode(false);
     setAutoSummary(null);
     setGenerating('auto');
-    setProgress({ step: 1, message: 'Sage is reading your takeoff…', pct: 3 });
+    setProgress({ step: 1, message: 'Creating project budget…', pct: 2 });
     try {
+      /* The budget was the one thing the old "Generate All Documents" path did
+         that this one did not — the sole reason three buttons existed. Folded
+         in here so there is one action and it is the complete one. */
+      await handleCreateBudget();
+
+      setProgress({ step: 1, message: 'Sage is reading your takeoff…', pct: 5 });
       // Single stream — sage-auto-docs now builds bid packages + jackets + SOV AND
       // files the compliance package (lien waivers + W-9 + COI requests) inline, so
       // one SSE run covers the whole thing (its internal progress already maps 0-100%).
@@ -1251,35 +1213,6 @@ export default function TakeoffPage() {
   };
 
   // ── Generate All Documents (Budget + Bid Packages + SOV + Lien Waivers) ──
-  const handleGenerateAll = async () => {
-    if (!result) return;
-    setGenerating('all');
-    try {
-      // 1. Create budget
-      setProgress({ step: 1, message: 'Creating project budget...', pct: 10 });
-      await handleCreateBudget();
-
-      // 2. Create bid packages
-      setProgress({ step: 2, message: 'Generating bid packages...', pct: 30 });
-      await handleGenerateBidPackages();
-
-      // 3. Create SOV
-      setProgress({ step: 3, message: 'Building schedule of values...', pct: 55 });
-      await handleGenerateSOV();
-
-      // 4. Create lien waiver templates
-      setProgress({ step: 4, message: 'Generating lien waiver templates...', pct: 75 });
-      await handleGenerateLienWaivers();
-
-      setProgress({ step: 5, message: 'Complete!', pct: 100 });
-      showToast('All documents generated — budget, bid packages, SOV, lien waivers', 'success');
-    } catch (err: unknown) {
-      console.error(err); showToast(humanError(err, 'Document generation failed. Please try again.'), 'error');
-    } finally {
-      setGenerating(null);
-      setProgress({ step: 0, message: '', pct: 0 });
-    }
-  };
 
   // Computed cost values with adjustable markups. Memoized so it only recomputes
   // when the takeoff or a markup actually changes (not on every unrelated render).
@@ -2115,63 +2048,18 @@ export default function TakeoffPage() {
             <ArrowRight size={14} weight="bold" color={GOLD_HI} style={{ transform: 'rotate(180deg)' }} /> Back to Sage
           </button>
 
-          {/* Sage progress overlay (shown while building documents) */}
-          {generating === 'sage' && progress.pct > 0 && (
-            <div style={{
-              background: 'rgba(245, 158, 11,0.08)',
-              border: `1px solid rgba(245, 158, 11,0.25)`,
-              borderRadius: 10, padding: '12px 18px',
-              display: 'flex', alignItems: 'center', gap: 14,
-            }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: GOLD, fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
-                  Sage is building your documents...
-                </div>
-                <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${progress.pct}%`, background: `linear-gradient(90deg, ${GOLD}, #FBBF24)`, borderRadius: 4, transition: 'width 0.5s ease' }} />
-                </div>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 5 }}>
-                  {progress.message}
-                </div>
-              </div>
-              <div style={{ color: GOLD, fontWeight: 700, fontSize: 16, minWidth: 40, textAlign: 'right' }}>
-                {progress.pct}%
-              </div>
-            </div>
-          )}
 
-          {/* Generate All progress */}
-          {generating === 'all' && progress.pct > 0 && (
-            <div style={{
-              background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.25)',
-              borderRadius: 10, padding: '12px 18px',
-              display: 'flex', alignItems: 'center', gap: 14,
-            }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: '#22C55E', fontWeight: 600, fontSize: 13, marginBottom: 6 }}>
-                  Building all project documents...
-                </div>
-                <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${progress.pct}%`, background: 'linear-gradient(90deg, #22C55E, #34D399)', borderRadius: 4, transition: 'width 0.5s ease' }} />
-                </div>
-                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 5 }}>{progress.message}</div>
-              </div>
-              <div style={{ color: '#22C55E', fontWeight: 700, fontSize: 16 }}>{progress.pct}%</div>
-            </div>
-          )}
 
           {/* Action buttons — two rows */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Primary actions */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button onClick={handleGenerateAll} disabled={!!generating} className="tkBtn"
-            style={{ padding: '13px 28px', background: `linear-gradient(135deg, #22C55E, #16A34A)`, border: 'none', borderRadius: 10, color: '#fff', fontWeight: 800, fontSize: 14, cursor: generating ? 'wait' : 'pointer', letterSpacing: '0.03em', opacity: generating ? 0.6 : 1, boxShadow: '0 14px 34px -12px rgba(34,197,94,0.7)' }}>
-            {generating === 'all' ? 'Building...' : <><ArrowRight size={16} weight="bold" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Generate All Documents</>}
-          </button>
-          <button onClick={handleSageAutoDocs} disabled={!!generating} className="tkBtn"
-            style={{ padding: '13px 24px', background: generating === 'sage' ? 'rgba(245, 158, 11,0.3)' : `linear-gradient(135deg, ${GOLD}, ${AMBER})`, border: 'none', borderRadius: 10, color: '#1A1206', fontWeight: 800, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sage') ? 0.5 : 1, boxShadow: '0 14px 34px -12px rgba(245,158,11,0.6)' }}>
-            {generating === 'sage' ? 'Sage building...' : <><Lightning size={16} weight="duotone" color="#1A1206" style={{marginRight:4, verticalAlign:'middle'}} /> Sage AI Documents</>}
-          </button>
+          {/* "Generate All Documents" and "Sage AI Documents" lived here. The
+              second called the identical endpoint as "Build it all" with less
+              UI, and the first differed only by creating the budget — which
+              "Build it all" now does too. Three near-identical gold buttons is
+              how a GC ends up guessing. The individual actions below remain for
+              anyone who genuinely wants one piece. */}
           <button onClick={exportXLS} disabled={!!generating}
             style={{ padding: '11px 22px', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, color: '#22C55E', fontWeight: 600, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'xls') ? 0.5 : 1 }}>
             {generating === 'xls' ? 'Generating...' : <><FileXls size={16} weight="duotone" color="#22C55E" style={{marginRight:4, verticalAlign:'middle'}} /> Export Excel</>}
