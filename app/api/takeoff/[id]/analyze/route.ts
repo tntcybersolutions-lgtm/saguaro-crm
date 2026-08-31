@@ -27,9 +27,17 @@ export const maxDuration = 300;
 const MODEL = 'claude-sonnet-4-6';
 const MB = 1024 * 1024;
 const SINGLE_PASS_MAX_PAGES = 5;   // ≤ this → one combined pass (fast path, common case)
-const INDEX_MAX_PAGES       = 24;  // classification pass looks at up to this many pages
-const PER_DISCIPLINE_PAGES  = 6;   // pages fed to a single discipline deep pass
-const MAX_ANALYZE_PAGES     = 24;  // hard ceiling of pages fed to the model across ALL deep passes
+/* A 25-sheet set is an ordinary commercial job, not an edge case, and these
+   ceilings were quietly truncating every one of them: the index pass never saw
+   sheet 25, so those sheets were not even listed, and the deep passes stopped
+   at 24 regardless of how much of the 300s window was left.
+   DEEP_BUDGET_MS below is the real governor — it stops the run on wall-clock
+   and marks the remainder as honestly skipped — so the page counts do not need
+   to double as a time limit. Raised, and env-tunable so a set that needs more
+   can have it without a deploy. */
+const INDEX_MAX_PAGES       = Number(process.env.TAKEOFF_INDEX_MAX_PAGES   || 60);
+const PER_DISCIPLINE_PAGES  = Number(process.env.TAKEOFF_PAGES_PER_PASS    || 8);
+const MAX_ANALYZE_PAGES     = Number(process.env.TAKEOFF_MAX_ANALYZE_PAGES || 40);
 const MAX_DEEP_PASSES       = 6;   // hard ceiling on discipline passes
 const DEEP_BUDGET_MS        = 210_000; // wall-clock budget for deep passes (route maxDuration=300s)
 const DOC_INLINE_MAX        = 28 * MB; // base64 a sub-PDF directly under this; else downshift via processBlueprint

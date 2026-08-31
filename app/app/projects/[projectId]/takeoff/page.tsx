@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
 import { humanError } from '@/lib/errors';
 import { useToast } from '../../../../../components/Toast';
+import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
+import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { Blueprint, Table, ArrowRight, DownloadSimple, FileXls, Package, CurrencyDollar, Lightning, CheckCircle, Ruler, Robot, CircleNotch, Circle, Plus, Sparkle, ShieldCheck, Timer, Buildings, TrendUp, Stack, Target, MagicWand, FileText, Scroll, FolderSimple, SealCheck, Warning, Calculator, NotePencil, Trash, X } from '@phosphor-icons/react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { UiFx } from '@/components/ui/fx';
@@ -499,6 +501,17 @@ export default function TakeoffPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [takeoffId, setTakeoffId] = useState<string | null>(null);
   const [progress, setProgress] = useState<ProgressState>({ step: 0, message: '', pct: 0 });
+
+  /* Unsaved-work protection. The line items save themselves row by row, so the
+     work at risk here is not a form — it is a blueprint that has been picked
+     but not analyzed, and an analysis already running. Leaving mid-run loses
+     the pass and the money it cost, with nothing on screen to say so. No
+     draftKey: a File cannot be serialized into localStorage, so this is the
+     prompt-only layer of the guard. */
+  const analysisInFlight = state === 'analyzing';
+  const guard = useUnsavedGuard({
+    dirty: analysisInFlight || (state === 'upload' && !!selectedFile),
+  });
   const [result, setResult] = useState<TakeoffResult | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
   const [uploadPct, setUploadPct] = useState(0);
@@ -2250,6 +2263,7 @@ export default function TakeoffPage() {
         </div>
       )}
       </div>
+      <UnsavedGuardModal guard={guard} />
     </div>
   );
 }

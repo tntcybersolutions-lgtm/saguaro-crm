@@ -30,7 +30,11 @@ export async function POST(req: NextRequest) {
     // sign the URL for immediate display (project-files bucket is private)
     if (data?.url) (data as any).url = await signUrl((data as any).url);
     return NextResponse.json({ success: true, photo: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    /* This swallowed the reason silently, which is why "photos are not saving"
+       had no server-side trail to follow. The client still gets a generic
+       message; the log gets the truth. */
+    console.error('[photos/create]', e);
+    return NextResponse.json({ error: 'The photo could not be saved. Please try again.' }, { status: 500 });
   }
 }
