@@ -5,6 +5,8 @@ import { Blueprint, WifiHigh, UsersThree, PenNib, List, X, Broadcast, Briefcase,
 import { IntegrationStrip } from '../components/Integrations';
 import PromoTicker from '../components/PromoTicker';
 import MarketingFooter, { SocialRow } from '../components/MarketingFooter';
+import { ScribbleNote, ScribbleArrow } from '../components/Scribble';
+import GetStartedTour from '../components/GetStartedTour';
 import { moduleAccent } from '../lib/module-identity';
 import { PLANS, TRIAL_DAYS, STARTING_PRICE_FLAT } from '../lib/plans';
 
@@ -103,9 +105,8 @@ export default function LandingPage() {
       {(() => {
         const [mobileOpen, setMobileOpen] = useState(false);
         const links = [
-          { label: 'Home', href: '/' },
           { label: 'Product', href: '/product' },
-          { label: 'Field App', href: '/get-the-app' },
+          { label: 'The App', href: '/get-the-app' },
           { label: 'Pricing', href: '/pricing' },
           { label: 'Compare', href: '/#compare' },
         ];
@@ -124,7 +125,14 @@ export default function LandingPage() {
 
             {/* Desktop menu */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="desktop-nav">
-              {links.map(l => (
+              {links.map(l => l.label === 'The App' ? (
+                /* Marked up the way a super marks up a drawing — the arrow points
+                   at it from the left so the annotation fits the 56px nav. */
+                <Link key={l.label} href={l.href} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '8px 10px 8px 6px', textDecoration: 'none' }}>
+                  <ScribbleArrow direction="right" width={30} color="#FBBF24" style={{ transform: 'rotate(6deg)', marginBottom: 2 }} />
+                  <ScribbleNote color="#FBBF24" size={17} rotate={-3}>{l.label}</ScribbleNote>
+                </Link>
+              ) : (
                 <Link key={l.label} href={l.href} style={{ color: '#FFFFFF', fontSize: 13, fontWeight: 500, padding: '8px 14px', textDecoration: 'none' }}>{l.label}</Link>
               ))}
             </div>
@@ -192,7 +200,11 @@ export default function LandingPage() {
             {/* toolbar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <span style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>AI Takeoff Results</span>
-              <span style={{ fontSize: 11, color: GOLD, fontWeight: 600, background: 'rgba(245, 158, 11,0.12)', padding: '3px 10px', borderRadius: 12 }}>38s &bull; 47 items</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <ScribbleNote color="#FBBF24" size={13} rotate={-5} style={{ opacity: .9 }}>read the blueprint</ScribbleNote>
+                <ScribbleArrow direction="right" width={30} color="#FBBF24" style={{ transform: 'rotate(4deg)' }} />
+                <span style={{ fontSize: 11, color: GOLD, fontWeight: 600, background: 'rgba(245, 158, 11,0.12)', padding: '3px 10px', borderRadius: 12 }}>38s &bull; 47 items</span>
+              </span>
             </div>
             {/* table header */}
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 1, marginBottom: 2 }}>
@@ -217,7 +229,10 @@ export default function LandingPage() {
             {/* total bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, padding: '10px 8px', borderTop: `1px solid rgba(245, 158, 11,0.2)` }}>
               <span style={{ fontSize: 12, fontWeight: 700, color: TEXT }}>Total Estimate</span>
-              <span style={{ fontSize: 14, fontWeight: 800, color: GOLD }}>$137,070</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                <ScribbleNote color="#FBBF24" size={13} rotate={-6} style={{ opacity: .9 }}>no spreadsheet</ScribbleNote>
+                <span style={{ fontSize: 14, fontWeight: 800, color: GOLD }}>$137,070</span>
+              </span>
             </div>
           </div>
         </div>
@@ -265,6 +280,9 @@ export default function LandingPage() {
       </section>
 
       <IntegrationStrip />
+
+      {/* ══════════ GETTING STARTED — the real first-run flow ══════════ */}
+      <GetStartedTour />
 
       {/* ══════════ 4. MODULE GRID ══════════ */}
       <section id="features" style={{ maxWidth: 1360, margin: '0 auto', padding: '64px 24px' }}>
