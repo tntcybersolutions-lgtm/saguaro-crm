@@ -244,6 +244,13 @@ label {
 body, body * {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif !important;
 }
+/* Marker annotations are the one place the UI face must not win. Beaten on
+   specificity rather than by excluding .scribble from the rule above — that
+   rule governs every element on every page and is not worth touching for
+   this. (0,1,1) with !important clears (0,0,1) with !important. */
+body .scribble, body .scribble * {
+  font-family: var(--font-marker), 'Permanent Marker', 'Bradley Hand', cursive !important;
+}
 body, button, input, textarea, select {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

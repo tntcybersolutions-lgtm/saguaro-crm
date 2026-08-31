@@ -19,9 +19,8 @@ const C = {
 };
 
 const NAV_LINKS = [
-  { label: 'Home', href: '/' },
   { label: 'Product', href: '/product' },
-  { label: 'Field App', href: '/get-the-app' },
+  { label: 'The App', href: '/get-the-app' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Compare', href: '/compare' },
 ];
@@ -320,14 +319,14 @@ export default function FeaturesPage() {
         {/* Footer */}
         <footer style={{ borderTop: `1px solid ${C.border}`, padding: '48px 32px', background: C.raised }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 32 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
               <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
                 { label: 'Home', href: '/' }, { label: 'Features', href: '/features' },
                 { label: 'Compare', href: '/compare' },
-                { label: 'Field App', href: '/get-the-app' }, { label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' },
+                { label: 'The App', href: '/get-the-app' }, { label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' },
               ].map(link => (
                 <Link key={link.label} href={link.href} style={{ fontSize: 13, color: C.dim, textDecoration: 'none', fontWeight: 500 }}>{link.label}</Link>
               ))}

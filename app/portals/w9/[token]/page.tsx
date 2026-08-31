@@ -92,7 +92,7 @@ export default function W9Portal() {
       {/* Header */}
       <div style={{ background: 'rgba(20,20,22,.96)', borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ fontSize: 22 }}>🌵</span>
-        <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1 }}>SAGUARO CRM</span>
+        <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1 }}>SAGUARO CONTROL SYSTEMS</span>
         <span style={{ fontSize: 11, color: DIM, marginLeft: 8 }}>Secure W-9 Collection Portal</span>
       </div>
 

@@ -98,7 +98,7 @@ export default function LoginPage(){
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
       {/* Top nav */}
       <nav style={{padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${BORDER}`}}>
-        <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}}>
+        <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}} aria-label="Saguaro Control Systems — home">
           <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:36,width:'auto',objectFit:'contain',borderRadius:4}} />
           <span style={{display:'flex',flexDirection:'column',lineHeight:1.15}}>
             <span style={{fontWeight:900,fontSize:14,letterSpacing:1,background:`linear-gradient(90deg,${GOLD},#FBBF24)`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAGUARO</span>

@@ -214,7 +214,7 @@ export default function CityLandingPage({ city }: { city: City }) {
           display: 'flex', alignItems: 'center',
         }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
               <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '34px', width: 'auto', objectFit: 'contain', borderRadius: '4px' }} />
               <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
                 <span style={{ fontWeight: 600, fontSize: '14px', letterSpacing: '0.1em', color: TEXT }}>SAGUARO</span>
@@ -249,7 +249,7 @@ export default function CityLandingPage({ city }: { city: City }) {
 
           {/* Headline */}
           <h1 style={{ textAlign: 'center', fontSize: 'clamp(26px, 4vw, 32px)', fontWeight: 600, lineHeight: 1.15, margin: '0 0 20px', letterSpacing: '-0.02em' }}>
-            The Construction CRM Built for{' '}
+            The Construction Management Platform Built for{' '}
             <br />
             <span style={{ color: TEXT }}>
               {city.name} General Contractors
@@ -461,7 +461,7 @@ export default function CityLandingPage({ city }: { city: City }) {
               {[
                 { label: 'Features', href: '/#features' },
                 { label: 'Pricing', href: '/pricing' },
-                { label: 'Field App', href: '/get-the-app' },
+                { label: 'The App', href: '/get-the-app' },
                 { label: 'Compare Procore', href: '/compare/procore' },
                 { label: 'ROI Calculator', href: '/roi-calculator' },
                 { label: 'Privacy', href: '/privacy' },

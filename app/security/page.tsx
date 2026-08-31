@@ -5,7 +5,7 @@ const GOLD='#F59E0B',DARK='#0a0a0a',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e'
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:64,background:'rgba(13,17,23,0.9)',borderBottom:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',padding:'0 32px',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)'}}>
-    <Link href="/" style={{display:'flex',alignItems:'center',textDecoration:'none',flexShrink:0}}>
+    <Link href="/" style={{display:'flex',alignItems:'center',textDecoration:'none',flexShrink:0}} aria-label="Saguaro Control Systems — home">
       <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:36,width:'auto',mixBlendMode:'screen',objectFit:'contain'}} />
     </Link>
     <div style={{flex:1}}/>

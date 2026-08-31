@@ -18,10 +18,9 @@ const C = {
 };
 
 const NAV_LINKS = [
-  { label: 'Home', href: '/' },
   { label: 'Features', href: '/features' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Field App', href: '/get-the-app' },
+  { label: 'The App', href: '/get-the-app' },
   { label: 'Compare', href: '/compare' },
 ];
 
@@ -104,7 +103,7 @@ export default function BlogPage() {
         display: 'flex', alignItems: 'center', padding: '0 32px', gap: 0,
       }}>
         <style>{`@media (max-width: 768px){ .blog-mnav-links{ display:none !important } }`}</style>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, marginRight: 40 }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, marginRight: 40 }} aria-label="Saguaro Control Systems — home">
           <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
         </Link>
         <div className="blog-mnav-links" style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
@@ -238,14 +237,14 @@ export default function BlogPage() {
         {/* Footer */}
         <footer style={{ borderTop: `1px solid ${C.hairline}`, padding: '48px 32px', background: C.raised }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 32 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
               <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
                 { label: 'Home', href: '/' }, { label: 'Features', href: '/features' },
                 { label: 'Pricing', href: '/pricing' }, { label: 'Blog', href: '/blog' },
-                { label: 'Field App', href: '/get-the-app' }, { label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' },
+                { label: 'The App', href: '/get-the-app' }, { label: 'Privacy', href: '/privacy' }, { label: 'Terms', href: '/terms' },
               ].map(link => (
                 <a key={link.label} href={link.href} style={{ fontSize: 13, color: C.dim, textDecoration: 'none', fontWeight: 500 }}>{link.label}</a>
               ))}
