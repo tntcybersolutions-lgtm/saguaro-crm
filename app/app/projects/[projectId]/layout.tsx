@@ -159,6 +159,36 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 
   const { ctx } = useProjectContext(projectId || null);
   const signals = (ctx || null) as ToolSignals | null;
+
+  /* Every one of the 46 rail items carried `badge: null`, and this component was
+     already loading the project context that holds the counts. So a GC opened a
+     job and saw forty tool names with no idea where any work was — the one thing
+     Procore's sidebar does that made it legible. The numbers were sitting here
+     unused.
+
+     Only counts that mean "there is something here for you" are shown. A zero is
+     not rendered: a badge reading 0 is noise, and its absence already says it. */
+  const c = (ctx as Record<string, any> | null) || null;
+  const n = (v: unknown) => {
+    const x = Number(v) || 0;
+    return x > 0 ? String(x) : null;
+  };
+  const railCounts: Record<string, string | null> = {
+    '/takeoff':          n(c?.takeoff?.count),
+    '/bid-packages':     n(c?.bidPackages?.length),
+    '/budget':           n(c?.budget?.lineCount),
+    '/pay-apps':         n(c?.money?.payAppCount),
+    '/invoices':         n(c?.counts?.invoices),
+    '/bills':            n(c?.counts?.bills),
+    '/purchase-orders':  n(c?.counts?.purchaseOrders),
+    '/rfis':             n(c?.counts?.openRfis),
+    '/submittals':       n(c?.counts?.openSubmittals),
+    '/schedule':         n(c?.counts?.scheduleTasks),
+    '/punch-list':       n(c?.counts?.openPunch),
+    '/subs':             n(c?.subs?.length),
+    '/crews':            n(c?.subs?.length),
+    '/change-orders':    n(c?.money?.pendingCoCount),
+  };
   /* The href of the page being viewed — passed to isToolVisible so the nav can
      never hide the row you are standing on, however you got here. */
   const activeHref = React.useMemo(() => {
@@ -252,9 +282,9 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                   <span style={{ display: 'inline-flex', flexShrink: 0 }}><Icon size={16} weight="regular" color={vivid || undefined} /></span>
                 )}
                 {!isCollapsed && <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
-                {!isCollapsed && (item as { badge?: string }).badge && (
+                {!isCollapsed && ((item as { badge?: string }).badge || railCounts[item.href]) && (
                   <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#B85C2A', color: '#1C1C1E' }}>
-                    {(item as { badge?: string }).badge}
+                    {(item as { badge?: string }).badge || railCounts[item.href]}
                   </span>
                 )}
               </Link>
