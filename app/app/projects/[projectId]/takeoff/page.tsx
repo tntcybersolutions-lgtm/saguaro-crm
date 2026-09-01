@@ -87,7 +87,12 @@ interface AutoBuildSummary {
 
 // Hard cap on synchronously-rendered rows so a huge AI extraction can't freeze the
 // page building thousands of DOM nodes at once. Beyond this, we show a "load more".
-const ROW_RENDER_CAP = 300;
+/* Every row carries four editable cells and four buttons, so the cap is really
+   a cap on ~8x that many interactive nodes. At 300 that is ~2,400 in one
+   synchronous commit, and a 168-row takeoff was already enough to lock the
+   renderer solid — the page stopped answering at all. 60 rows is ~480 nodes,
+   which paints instantly, and "show all" is one click away. */
+const ROW_RENDER_CAP = 60;
 
 const CSI_DIVISION_NAMES: Record<string, string> = {
   '01': 'General Requirements',
@@ -566,7 +571,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
           onClick={() => setShowAll(true)}
           style={{ width: '100%', padding: '12px', background: 'rgba(245, 158, 11,0.08)', border: 'none', borderTop: `1px solid ${BORDER}`, color: GOLD, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
         >
-          Showing first {fmtN(ROW_RENDER_CAP)} of {fmtN(totalRows)} line items — show all
+          Showing the first {fmtN(ROW_RENDER_CAP)} of {fmtN(totalRows)} lines — show all
         </button>
       )}
     </>
