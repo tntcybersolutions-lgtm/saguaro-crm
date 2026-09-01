@@ -1605,7 +1605,7 @@ export default function TakeoffPage() {
                     {['PDF', 'PNG', 'JPG', 'TIFF', 'WEBP'].map((x) => (
                       <span key={x} style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.72)', padding: '4px 11px', borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(245,158,11,0.22)', letterSpacing: '0.04em' }}>{x}</span>
                     ))}
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', padding: '4px 6px' }}>up to 50MB</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', padding: '4px 6px' }}>up to 200MB</span>
                   </div>
                 </div>
               )}
