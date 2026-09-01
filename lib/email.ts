@@ -479,6 +479,29 @@ export async function sendW9Request(to: string, vendorName: string, projectName:
   `));
 }
 
+export async function sendSignatureRequest(opts: {
+  to: string;
+  signerName: string;
+  senderName: string;
+  docTitle: string;
+  projectName: string;
+  signUrl: string;
+  message?: string;
+}) {
+  const note = opts.message
+    ? p(`<em>&ldquo;${opts.message}&rdquo;</em>`)
+    : '';
+  await send(opts.to, `Signature requested: ${opts.docTitle}`, layout(`
+    ${h('A document is waiting for your signature')}
+    ${p(`Hello <strong>${opts.signerName}</strong>, ${opts.senderName} has sent you <strong>${opts.docTitle}</strong> to review and sign.`)}
+    ${table(row('Document', opts.docTitle) + row('Project', opts.projectName) + row('Sent by', opts.senderName))}
+    ${note}
+    ${p('You can read the whole document before signing. Nothing is committed until you sign it.')}
+    ${btn('Review and sign', opts.signUrl)}
+    ${p('<small style="color:#9ca3af;">This link is unique to you and expires in 30 days. If you were not expecting it, you can ignore this message.</small>')}
+  `));
+}
+
 export async function sendTrialExpiring(to: string, userName: string, daysLeft: number, upgradeUrl: string) {
   const urgent = daysLeft <= 3;
   await send(to, `Your Saguaro trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`, layout(`

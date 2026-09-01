@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import crypto from 'crypto';
+import { apiError, apiFail } from '@/lib/api-error';
+import { sendSignatureRequest } from '@/lib/email';
 
 export const runtime = 'nodejs';
 
@@ -41,11 +43,28 @@ export async function POST(req: NextRequest) {
       .eq('id', existing.id)
       .eq('tenant_id', user.tenantId);
 
-    await db
+    const { data: sig } = await db
       .from('document_signatures')
-      .update({ status: 'pending' })
+      .update({ status: 'pending', sent_at: new Date().toISOString() })
       .eq('id', body.resend_signature_id)
-      .eq('tenant_id', user.tenantId);
+      .eq('tenant_id', user.tenantId)
+      .select('project_id, doc_title, signer_name, signer_email')
+      .single();
+
+    if (sig) {
+      const [{ data: proj }, { data: ten }] = await Promise.all([
+        db.from('projects').select('name').eq('id', (sig as any).project_id).eq('tenant_id', user.tenantId).single(),
+        db.from('tenants').select('name').eq('id', user.tenantId).single(),
+      ]);
+      await sendSignatureRequest({
+        to: (sig as any).signer_email,
+        signerName: (sig as any).signer_name,
+        senderName: (ten as any)?.name || 'Your general contractor',
+        docTitle: (sig as any).doc_title,
+        projectName: (proj as any)?.name || 'the project',
+        signUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net'}/portals/sign/${newToken}`,
+      });
+    }
 
     return NextResponse.json({ success: true, resent: true });
   }
@@ -71,6 +90,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
+  /* Names for the email. The signer is a sub or an owner with no login here,
+     so the message has to say who is asking and about what. */
+  const { data: project } = await db
+    .from('projects')
+    .select('name')
+    .eq('id', project_id)
+    .eq('tenant_id', user.tenantId)
+    .single();
+
+  if (!project) return apiFail('Project not found', 404);
+
+  const { data: tenant } = await db
+    .from('tenants')
+    .select('name')
+    .eq('id', user.tenantId)
+    .single();
+
+  const senderName = (tenant as any)?.name || 'Your general contractor';
+  const projectName = (project as any)?.name || 'the project';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
+
   const created: any[] = [];
 
   for (const signer of signers) {
@@ -94,9 +134,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (sigErr) {
-      return NextResponse.json({ error: sigErr.message }, { status: 500 });
-    }
+    if (sigErr) return apiError('documents/sign/send', sigErr, 'Could not create the signature request.');
 
     // 2. Insert document_signature_requests
     const token = crypto.randomUUID();
@@ -113,9 +151,20 @@ export async function POST(req: NextRequest) {
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
       });
 
-    if (reqErr) {
-      return NextResponse.json({ error: reqErr.message }, { status: 500 });
-    }
+    if (reqErr) return apiError('documents/sign/send', reqErr, 'Could not create the signature request.');
+
+    /* Send the link. A failure here is logged inside sendSignatureRequest and
+       does not roll back the request — the row exists, and Resend can be
+       retried from the status list. */
+    await sendSignatureRequest({
+      to: signer.email,
+      signerName: signer.name,
+      senderName,
+      docTitle: doc_title,
+      projectName,
+      signUrl: `${appUrl}/portals/sign/${token}`,
+      message: message || undefined,
+    });
 
     created.push({ ...sig, token });
   }

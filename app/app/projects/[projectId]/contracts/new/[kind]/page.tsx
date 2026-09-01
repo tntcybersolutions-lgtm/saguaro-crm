@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, ArrowLeft, CheckCircle, DownloadSimple } from '@phosphor-icons/react';
 import ContractForm from '@/components/contracts/ContractForm';
+import ESignatureFlow from '@/components/ESignatureFlow';
 import { CONTRACT_FORMS, type ContractKind } from '@/lib/document-templates/contract-fields';
 
 /**
@@ -24,6 +25,14 @@ const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
 const BASE = '#0d1117';
+
+/** What the signature tables call each kind. */
+const SIGN_DOC_TYPE: Record<ContractKind, 'subcontract' | 'change_order' | 'purchase_order' | 'prime_contract'> = {
+  subcontract: 'subcontract',
+  'change-order': 'change_order',
+  'purchase-order': 'purchase_order',
+  'prime-contract': 'prime_contract',
+};
 
 /** Where each contract kind is generated, and how its route wants the values. */
 function buildRequest(
@@ -79,6 +88,7 @@ export default function NewContractFromTemplate() {
 
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
+  const [signing, setSigning] = useState(false);
 
   const base = `/app/projects/${projectId}/contracts`;
   const spec = CONTRACT_FORMS[kind];
@@ -143,6 +153,10 @@ export default function NewContractFromTemplate() {
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 22px', borderRadius: 9, background: GOLD, color: '#241500', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
                 <DownloadSimple size={16} weight="bold" color="#241500" /> Open the PDF
               </a>
+              <button onClick={() => setSigning((v) => !v)}
+                style={{ minHeight: 44, padding: '0 22px', borderRadius: 9, background: 'transparent', border: `1px solid ${GOLD}`, color: GOLD, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
+                {signing ? 'Hide signing' : 'Send for signature'}
+              </button>
               <button onClick={() => setPdfUrl('')}
                 style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
                 Change something and regenerate
@@ -152,6 +166,17 @@ export default function NewContractFromTemplate() {
                 Done
               </button>
             </div>
+
+            {signing && (
+              <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px' }}>
+                <ESignatureFlow
+                  projectId={projectId}
+                  docType={SIGN_DOC_TYPE[kind]}
+                  docTitle={spec.title}
+                  pdfUrl={pdfUrl}
+                />
+              </div>
+            )}
           </div>
         ) : (
           <>

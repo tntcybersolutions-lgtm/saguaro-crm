@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
     .eq('id', request.signature_id);
 
   if (sigErr) {
-    return NextResponse.json({ error: sigErr.message }, { status: 500 });
+    return apiError('documents/sign/complete', sigErr, 'Your signature could not be recorded. Please try the link again.');
   }
 
   // Update document_signature_requests
@@ -73,7 +74,7 @@ export async function POST(req: NextRequest) {
     .eq('id', request.id);
 
   if (updateErr) {
-    return NextResponse.json({ error: updateErr.message }, { status: 500 });
+    return apiError('documents/sign/complete', updateErr, 'Your signature could not be recorded. Please try the link again.');
   }
 
   return NextResponse.json({ success: true });

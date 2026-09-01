@@ -31,7 +31,7 @@ interface SignatureRecord {
 
 interface ESignatureFlowProps {
   projectId: string;
-  docType: 'g702' | 'lien_waiver' | 'subcontract' | 'change_order' | 'ntp';
+  docType: 'g702' | 'lien_waiver' | 'subcontract' | 'change_order' | 'ntp' | 'purchase_order' | 'prime_contract';
   docTitle: string;
   pdfUrl: string;
   onComplete?: () => void;
