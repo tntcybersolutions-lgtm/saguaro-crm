@@ -1923,6 +1923,30 @@ export default function TakeoffPage() {
               )}
             </div>
           )}
+          {/* The next step, at the top where the GC lands. It used to exist only
+              on a card BELOW the whole line-item table — 168 rows down — so
+              "where is Yes, build it all" was a fair question with no good
+              answer. Same handler, just reachable. */}
+          {result && !autoSummary && generating !== 'auto' && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginTop: 16 }}>
+              <button
+                onClick={handleBuildItAll}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44,
+                  padding: '0 22px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                  color: '#1A1206', fontSize: 14, fontWeight: 800,
+                }}
+              >
+                <MagicWand size={16} weight="fill" color="#1A1206" />
+                Build the bid + compliance package
+              </button>
+              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>
+                bid packages, jackets, schedule of values, lien waivers and W-9 requests
+              </span>
+            </div>
+          )}
+
           {result?.truncated && result?.truncationNote && (
             <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', marginTop: 12, maxWidth: 500, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, padding: '10px 12px' }}>
               <Warning size={16} weight="fill" color={GOLD_HI} style={{ flex: '0 0 auto', marginTop: 1 }} />
