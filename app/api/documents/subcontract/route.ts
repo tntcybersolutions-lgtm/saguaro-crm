@@ -34,6 +34,9 @@ export async function POST(req: NextRequest) {
       projectId: body.projectId,
       subId: body.subId,
       bidPackageId: body.bidPackageId,
+      // What the GC edited on the form. Absent, the generator derives
+      // everything itself exactly as it did before.
+      overrides: body.overrides && typeof body.overrides === 'object' ? body.overrides : undefined,
     });
 
     return NextResponse.json({ pdfUrl, success: true });

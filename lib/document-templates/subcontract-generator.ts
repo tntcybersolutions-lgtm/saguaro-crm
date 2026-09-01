@@ -11,6 +11,11 @@ export interface SubcontractInput {
   projectId: string;
   subId: string;
   bidPackageId?: string;
+  /* What the GC actually typed. Every printed value still derives from the
+     database exactly as before; an override simply wins. The form sends only
+     what a person changed, so there is one document and one source of truth
+     rather than a second copy of the contract living in the UI. */
+  overrides?: Record<string, unknown>;
 }
 
 export async function generateSubcontract(input: SubcontractInput): Promise<{
@@ -108,8 +113,13 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 14;
-  const contractorName = p?.gc_entity?.name || 'Contractor';
-  const subName = sub?.company_name || sub?.name || 'Subcontractor';
+  const ov = (input.overrides ?? {}) as Record<string, any>;
+  const pick = (k: string, fallback: any) => {
+    const v = ov[k];
+    return v === undefined || v === null || v === '' ? fallback : v;
+  };
+  const contractorName = pick('contractorName', p?.gc_entity?.name || 'Contractor');
+  const subName = pick('subName', sub?.company_name || sub?.name || 'Subcontractor');
   y = wrapText(
     page1,
     `This Subcontract Agreement is entered into by and between ${contractorName} ("Contractor") and ${subName} ("Subcontractor") for work on the Project identified above. The Contractor and Subcontractor agree as follows.`,
@@ -144,7 +154,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 14;
-  const scope = bidPkg?.scope || sub?.scope || sub?.trade || 'As described in the Contract Documents.';
+  const scope = pick('scope', bidPkg?.scope || sub?.scope || sub?.trade || 'As described in the Contract Documents.');
   y = wrapText(
     page1,
     `The Subcontractor shall perform the following Work in accordance with the Subcontract Documents: ${scope}`,
@@ -163,7 +173,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
   });
   y -= 14;
 
-  const subAmount = sub?.contract_amount || sub?.amount || bidPkg?.awarded_amount || 0;
+  const subAmount = Number(pick('subAmount', sub?.contract_amount || sub?.amount || bidPkg?.awarded_amount || 0)) || 0;
   y = wrapText(
     page1,
     `The Contractor shall pay the Subcontractor in current funds for the performance of the Subcontract Work, subject to additions and deductions as provided in the Subcontract Documents, the Subcontract Sum of:`,
@@ -210,7 +220,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 14;
-  const retainagePct = p?.retainage_pct || p?.retainage_percent || 10;
+  const retainagePct = pick('retainagePct', p?.retainage_pct || p?.retainage_percent || 10);
   y = wrapText(
     page2,
     `Progress Payments shall be made monthly based on the Subcontractor's Application for Payment, less retainage of ${retainagePct}%. Payment shall be made within seven (7) days after the Contractor receives payment from the Owner for the Subcontractor's Work. Retainage shall be released upon Substantial Completion and acceptance of the Subcontractor's Work.`,
