@@ -65,8 +65,10 @@ export async function POST(
     const newStatus = action === 'approved' ? 'certified' : 'draft';
     // Live pay_applications columns: status, approval_notes, approved_at.
     // owner_notes -> approval_notes, owner_approved_at -> approved_at.
-    // NOTE: pay_applications has no owner_approval_token column, so the .eq()
-    // lookup below cannot resolve a row in the live schema — see flagged item.
+    // The token IS the credential here, the same way the signing portal works:
+    // owner_approval_token is unguessable and identifies exactly one pay app,
+    // which is why this route needs no tenant filter. (An older note here said
+    // the column did not exist. It does — verified against the live schema.)
     const { data: updated, error } = await db
       .from('pay_applications')
       .update({
