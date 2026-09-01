@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { signFields } from '@/lib/storage-signing';
 import { ok, serverError, unauthorized } from '@/lib/api-response';
 
 export const dynamic = 'force-dynamic';
@@ -30,8 +31,15 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error;
 
-    // Look up project names separately to avoid FK resolution failures
-    const rows = data || [];
+/* Blueprints are a private bucket. The row still stores the object's public-form
+   URL — signStoredUrl parses the path back out of it — so nothing had to be
+   migrated in the database; the link is minted per request and expires. */
+    const rows = await signFields(
+      (data || []) as Record<string, unknown>[],
+      ['file_url', 'thumbnail_url'],
+      3600,
+      { strict: false },
+    );
     // W-18: ?include=latestDetail rides the newest takeoff's line items along with the
     // list, so the hub paints list + detail from ONE round trip instead of a dependent
     // pair. Kicked off here (.then fires the lazy builder) so it runs concurrently with

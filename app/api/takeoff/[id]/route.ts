@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { signFields } from '@/lib/storage-signing';
 import { ok, notFound, serverError, unauthorized } from '@/lib/api-response';
 
 export async function GET(
@@ -24,6 +25,11 @@ export async function GET(
     if (takeoffErr || !takeoff) {
       return notFound('Takeoff not found');
     }
+
+/* Blueprints are a private bucket. The row still stores the object's public-form
+   URL — signStoredUrl parses the path back out of it — so nothing had to be
+   migrated in the database; the link is minted per request and expires. */
+    const [signedTakeoff] = await signFields([takeoff as Record<string, unknown>], ['file_url', 'thumbnail_url'], 3600, { strict: false });
 
     // Look up project name separately
     let projectName: string | null = null;
@@ -67,7 +73,7 @@ export async function GET(
     }
 
     const result = {
-      ...takeoff,
+      ...signedTakeoff,
       project_name: projectName,
       materials: materialRows,
     };

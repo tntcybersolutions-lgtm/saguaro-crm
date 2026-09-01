@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { signStoredUrl } from '@/lib/storage-signing';
 import {
   processBlueprint,
   getPdfPageCount,
@@ -364,7 +365,12 @@ export async function GET(
           }
           fileBuffer = await blob.arrayBuffer();
         } else if (takeoff.file_url) {
-          const resp = await fetch(takeoff.file_url);
+          /* Legacy rows written before storage_path was recorded. The
+             blueprints bucket is private now, so a bare fetch of the stored
+             public-form URL would 400 — sign it first. signStoredUrl passes
+             through anything it cannot parse, so a foreign URL still works. */
+          const signed = await signStoredUrl('blueprints', takeoff.file_url, 600);
+          const resp = await fetch(signed || takeoff.file_url);
           stopHeartbeat();
           if (!resp.ok) { send('error', { message: 'Could not load blueprint file.' }); return done(); }
           fileBuffer = await resp.arrayBuffer();
