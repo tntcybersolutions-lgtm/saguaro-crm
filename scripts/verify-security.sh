@@ -45,6 +45,24 @@ check "documents bucket (contracts, W-9s, pay apps)" \
 check "project-files bucket" \
   "$BASE/project-files/"
 
+check "takeoffs bucket" \
+  "$BASE/takeoffs/"
+
+check "takeoff image (a real object)" \
+  "$BASE/takeoffs/692d8793-4d9f-4c43-a935-bf56cc637553/4122ac2b-02aa-4520-9c2c-7ce249d5ad79/1785876434283_IMG_3415.png"
+
+check "drawings bucket" \
+  "$BASE/drawings/"
+
+echo ""
+echo "Public on purpose — this one SHOULD answer 200"
+echo "-------------------------------------------------------------------"
+# Tenant logos render in emails, customer portals and PDF letterheads for people
+# who have no login. Public is the right answer here; it is listed so the choice
+# stays deliberate rather than forgotten.
+printf '  note  %-46s HTTP %s\n' "branding (tenant logos)" \
+  "$(curl -s -o /dev/null -w '%{http_code}' "$BASE/branding/")"
+
 echo ""
 echo "-------------------------------------------------------------------"
 printf 'passed %d   failed %d\n' "$pass" "$fail"
