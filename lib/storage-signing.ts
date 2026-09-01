@@ -3,6 +3,35 @@ import { createServerClient } from '@/lib/supabase-server';
 const PUBLIC_MARKER = '/storage/v1/object/public/';
 
 /**
+ * No signing call may hang a request.
+ *
+ * Every read path that signs is on a page's critical load path, and
+ * createSignedUrl is a network call with no timeout of its own. When the
+ * storage API stalled, the route never returned, the browser never finished
+ * loading, and the takeoff screen simply sat there forever — no error, no spinner
+ * that ever resolved, nothing in the logs. An unbounded call on a load path is
+ * the defect; a slow signer must degrade to a broken link, never to a dead page.
+ */
+const SIGN_TIMEOUT_MS = Number(process.env.STORAGE_SIGN_TIMEOUT_MS || 4000);
+
+async function withTimeout<T>(work: Promise<T>, label: string): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      work,
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => {
+          console.error(`[storage-signing] timed out after ${SIGN_TIMEOUT_MS}ms: ${label}`);
+          resolve(null);
+        }, SIGN_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+/**
  * Derive the bucket-relative object path from a stored value. Handles:
  *  - a Supabase PUBLIC url (legacy rows): ".../object/public/<bucket>/<path>"
  *  - a bare path already (forward-compatible)
@@ -56,7 +85,12 @@ export async function signStoredUrl(
   const path = pathFromStored(stored, bucket);
   if (!path) return stored ?? '';
   try {
-    const { data, error } = await createServerClient().storage.from(bucket).createSignedUrl(path, ttlSeconds);
+    const res = await withTimeout(
+      createServerClient().storage.from(bucket).createSignedUrl(path, ttlSeconds),
+      `${bucket}/${path}`,
+    );
+    if (!res) return reportSigningFailure(bucket, path, 'timed out');
+    const { data, error } = res;
     if (error || !data?.signedUrl) return reportSigningFailure(bucket, path, error);
     return data.signedUrl;
   } catch (e: unknown) {
@@ -89,7 +123,12 @@ export async function signUrl(stored: string | null | undefined, ttlSeconds = 36
     /* not valid percent-encoding — sign it as-is */
   }
   try {
-    const { data, error } = await createServerClient().storage.from(bucket).createSignedUrl(path, ttlSeconds);
+    const res = await withTimeout(
+      createServerClient().storage.from(bucket).createSignedUrl(path, ttlSeconds),
+      `${bucket}/${path}`,
+    );
+    if (!res) return reportSigningFailure(bucket, path, 'timed out');
+    const { data, error } = res;
     if (error || !data?.signedUrl) return reportSigningFailure(bucket, path, error);
     return data.signedUrl;
   } catch (e: unknown) {
