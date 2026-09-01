@@ -36,10 +36,15 @@ const SINGLE_PASS_MAX_PAGES = 5;   // ≤ this → one combined pass (fast path,
    and marks the remainder as honestly skipped — so the page counts do not need
    to double as a time limit. Raised, and env-tunable so a set that needs more
    can have it without a deploy. */
-const INDEX_MAX_PAGES       = Number(process.env.TAKEOFF_INDEX_MAX_PAGES   || 60);
-const PER_DISCIPLINE_PAGES  = Number(process.env.TAKEOFF_PAGES_PER_PASS    || 8);
-const MAX_ANALYZE_PAGES     = Number(process.env.TAKEOFF_MAX_ANALYZE_PAGES || 40);
-const MAX_DEEP_PASSES       = 6;   // hard ceiling on discipline passes
+/* These were low because everything competed for one request and one sequential
+   clock. Neither is true now: the index is cut into pieces that each fit, and
+   the discipline passes run at once — a 28-sheet set went from 4.1 minutes to
+   83 seconds when they stopped queueing. So the ceilings move up to where the
+   wall-clock budget actually binds, not where the old request size did. */
+const INDEX_MAX_PAGES       = Number(process.env.TAKEOFF_INDEX_MAX_PAGES   || 250);
+const PER_DISCIPLINE_PAGES  = Number(process.env.TAKEOFF_PAGES_PER_PASS    || 12);
+const MAX_ANALYZE_PAGES     = Number(process.env.TAKEOFF_MAX_ANALYZE_PAGES || 96);
+const MAX_DEEP_PASSES       = Number(process.env.TAKEOFF_MAX_DEEP_PASSES || 8); // discipline passes, now concurrent
 const DEEP_BUDGET_MS        = 210_000; // wall-clock budget for deep passes (route maxDuration=300s)
 /* What Anthropic will accept for one request, and what we allow ourselves.
    This used to be a 28MB ceiling measured on the RAW buffer — but the PDF goes
@@ -235,6 +240,49 @@ function buildContent(base64: string, mimeType: string, prompt: string): Content
 
 function bufToArrayBuffer(buf: Buffer): ArrayBuffer {
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+}
+
+/**
+ * Split a run of pages into groups whose extracted PDF each fit on the wire.
+ *
+ * A drawing set has no fixed bytes-per-sheet — a title sheet is tiny and a
+ * dense mechanical plan is megabytes — so any "N pages per request" guess is
+ * wrong for somebody. This measures instead: extract, check the encoded size,
+ * and if it is over budget cut the range in half and try again. It terminates
+ * at a single page, and a single page that still will not fit is reported
+ * rather than silently dropped.
+ *
+ * This is what lets a 200-sheet set be indexed at all. Before it, the index
+ * pass packed 60 sheets into one request, blew the limit, gave up quietly, and
+ * the run fell back to sending the whole file — which failed too.
+ */
+async function batchPagesToFit(
+  fileBuf: Buffer,
+  pageIdx: number[],
+  budget: number,
+): Promise<{ batches: { pages: number[]; buf: Buffer }[]; oversized: number[] }> {
+  const batches: { pages: number[]; buf: Buffer }[] = [];
+  const oversized: number[] = [];
+
+  const walk = async (pages: number[]): Promise<void> => {
+    if (!pages.length) return;
+    const buf = await extractPdfPages(fileBuf, pages);
+    if (!buf) {
+      if (pages.length === 1) { oversized.push(pages[0]); return; }
+      const mid = Math.ceil(pages.length / 2);
+      await walk(pages.slice(0, mid));
+      await walk(pages.slice(mid));
+      return;
+    }
+    if (encodedSize(buf.byteLength) <= budget) { batches.push({ pages, buf }); return; }
+    if (pages.length === 1) { oversized.push(pages[0]); return; }
+    const mid = Math.ceil(pages.length / 2);
+    await walk(pages.slice(0, mid));
+    await walk(pages.slice(mid));
+  };
+
+  await walk(pageIdx);
+  return { batches, oversized };
 }
 
 /**
@@ -496,16 +544,46 @@ export async function GET(
         let didMultiSheet = false;
         if (isPdfInput && !canSinglePass) {
           const idxCount = Math.min(pageCount, INDEX_MAX_PAGES);
-          const idxBuf = await extractPdfPages(fileBuf, Array.from({ length: idxCount }, (_, i) => i));
-          if (idxBuf) {
-            const idxContent = await pdfContent(idxBuf, INDEX_PROMPT);
-            if (idxContent) {
-              didMultiSheet = true;
-              multiSheet = true;
-              send('progress', { step: 4, message: `Indexing ${idxCount} sheets…`, pct: 22 });
-              const idxRaw = await runPass(idxContent, 2500, 4, 'Reading sheet index', 22, 38);
-              const idx = safeJsonParse<TakeoffResult>(idxRaw, 'index');
-              mergeMeta(idx);
+          /* The index used to be one request holding every sheet, which is fine
+             for 20 title-block pages and impossible for 200 dense ones. It is
+             cut into pieces that each fit, and the pieces are read at once —
+             so the set size stops being a ceiling and becomes a page count. */
+          const { batches: idxBatches, oversized: idxOversized } = await batchPagesToFit(
+            fileBuf,
+            Array.from({ length: idxCount }, (_, i) => i),
+            DOC_ENCODED_MAX,
+          );
+          if (idxOversized.length) {
+            console.warn(`[analyze] ${idxOversized.length} sheet(s) too large to index individually`);
+          }
+          if (idxBatches.length) {
+            didMultiSheet = true;
+            multiSheet = true;
+            send('progress', {
+              step: 4,
+              message: idxBatches.length > 1
+                ? `Indexing ${idxCount} sheets in ${idxBatches.length} parts…`
+                : `Indexing ${idxCount} sheets…`,
+              pct: 22,
+            });
+
+            const idxParts = await Promise.all(idxBatches.map(async (b, i) => {
+              const content = await pdfContent(b.buf, INDEX_PROMPT);
+              if (!content) return null;
+              const raw = await runPass(content, 2500, 4, `Reading sheet index ${i + 1}/${idxBatches.length}`, 22, 38);
+              return safeJsonParse<TakeoffResult>(raw, `index-${i}`);
+            }));
+
+            /* Merge the registers. Each part only saw its own pages, so the
+               sheet rows concatenate; project-level metadata takes the first
+               answer that has one. */
+            const idx: TakeoffResult = { sh: [] };
+            for (const part of idxParts) {
+              if (!part) continue;
+              mergeMeta(part);
+              if (Array.isArray(part.sh)) idx.sh!.push(...part.sh);
+            }
+            {
 
               // Build the sheet register from the index (fallback: one row per page).
               const sheets: SheetInfo[] = Array.isArray(idx?.sh) && idx!.sh!.length
