@@ -28,7 +28,14 @@ const GOLD_HI = '#FBBF24';
 const TEXT = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
-const LS_KEY = 'sag_journey_collapsed';
+/* Versioned on purpose.
+   The collapse preference is remembered forever, and a hard refresh does not
+   clear localStorage — so anybody who had ever expanded this rail kept the old
+   behaviour and never saw the new default. The screen looked identical after a
+   deploy that had definitely shipped, which is indistinguishable from nothing
+   having changed. Bumping the key hands everyone the new default once; their
+   next explicit toggle is remembered from then on. */
+const LS_KEY = 'sag_journey_collapsed_v2';
 const LS_PROJECT_KEY = 'sag_journey_project';
 
 interface JourneyStep { title: string; desc: string; done: boolean; href?: string }
@@ -114,7 +121,11 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
      Three steps done means the project exists, the plans are priced and the
      money is set — past that the overview should be about the project, not a
      checklist. An explicit toggle overrides this for good. */
-  const showCollapsed = autoCollapse ? doneCount >= 3 : collapsed;
+  /* Folded once the job is moving. On the dashboard the bar is lower still —
+     the live signals above it are worth more than a checklist about one
+     project, and a GC with work in flight is not being onboarded any more. */
+  const autoThreshold = projectId ? 3 : 2;
+  const showCollapsed = autoCollapse ? doneCount >= autoThreshold : collapsed;
 
   function toggle() {
     setAutoCollapse(false); // an explicit choice always wins from here on

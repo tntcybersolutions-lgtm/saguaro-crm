@@ -329,8 +329,6 @@ export default function NewProjectPage() {
       {pf && (
         <StatStrip items={[
           {label:'Project Number', value: projectNumber || `${year}-001`, sub: pf.total>0 ? `next in your ${year} sequence` : `first in the ${year} sequence`},
-          {label:'Portfolio', value: `${pf.total} project${pf.total===1?'':'s'}`, sub: `${pf.active} active`},
-          {label:'Under Management', value: fmt(pf.value), sub:'combined contract value'},
           {label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? '#3dd68c' : undefined, sub: contractType},
           {label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf.retMode && auto.ret ? 'your portfolio standard' : 'default — editable'},
           {label:'Jurisdiction', value: stateJurisdiction || '—', sub:'lien waiver + wage rules'},
@@ -345,7 +343,7 @@ export default function NewProjectPage() {
           starting point, not a lock. */}
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>
-          What kind of job is this?
+          Step 1 · What kind of job is this?
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
           {PROJECT_TEMPLATES.map((t) => {
@@ -409,7 +407,7 @@ export default function NewProjectPage() {
           <div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div>
-                <SectionCard title="Identity" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
+                <SectionCard title="Step 2 · Name and location" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
                 {showDetails && (
                   <FIELD label="Sector" hint={sectorDef?.flags ? 'Public-sector work — prevailing wage and public-agency compliance pre-set below.' : 'Filters building types, derives the category, and pre-sets compliance for public work.'}>
                     <div style={{display:'flex',flexWrap:'wrap' as const,gap:5,background:'rgba(255,255,255,0.04)',borderRadius:10,padding:4,border:'1px solid rgba(255,255,255,0.08)'}}>
@@ -523,23 +521,31 @@ export default function NewProjectPage() {
               </div>
             </div>
 
-            <div style={{display:'flex',gap:12,alignItems:'center',marginTop:16,flexWrap:'wrap' as const}}>
-              <button type="submit" onClick={() => { nextRef.current = 'overview'; }}
+            <div style={{marginTop:18,marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:800,letterSpacing:'0.09em',textTransform:'uppercase',color:GOLD,marginBottom:6}}>
+                Step 3 · Add your drawings
+              </div>
+              <div style={{fontSize:12.5,color:'rgba(255,255,255,0.5)',lineHeight:1.5,maxWidth:560}}>
+                Drop the plan set on the next screen and Saguaro measures every trade, prices it, and writes
+                your budget and bid packages from it. You can skip it and add plans later.
+              </div>
+            </div>
+
+            <div style={{display:'flex',gap:12,alignItems:'center',marginTop:6,flexWrap:'wrap' as const}}>
+              <button type="submit" onClick={() => { nextRef.current = 'takeoff'; }}
                 disabled={submitDisabled} className="pmBtn"
                 style={{...goldButtonStyle,padding:'13px 32px',fontSize:15,cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
-                {saving?'Creating…':'Create Project'}
-              </button>
-
-              {/* The next thing on a real job is the drawings. This lands the GC
-                  on Takeoff instead of Overview, so the blueprint step is part
-                  of starting a job rather than something to go hunting for. */}
-              <button type="submit" onClick={() => { nextRef.current = 'takeoff'; }}
-                disabled={submitDisabled}
-                style={{padding:'13px 26px',background:'rgba(245,158,11,0.10)',border:'1px solid rgba(245,158,11,0.34)',
-                        borderRadius:10,color:'#F59E0B',fontWeight:700,fontSize:14,minHeight:44,
-                        cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
                 {saving?'Creating…':'Create & add drawings →'}
               </button>
+
+              <button type="submit" onClick={() => { nextRef.current = 'overview'; }}
+                disabled={submitDisabled}
+                style={{padding:'13px 26px',background:'transparent',border:'1px solid rgba(255,255,255,0.18)',
+                        borderRadius:10,color:'rgba(255,255,255,0.72)',fontWeight:700,fontSize:14,minHeight:44,
+                        cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
+                {saving?'Creating…':'Create without drawings'}
+              </button>
+
 
               <button type="button" onClick={() => setShowDetails(v => !v)}
                 style={{padding:'13px 20px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',
