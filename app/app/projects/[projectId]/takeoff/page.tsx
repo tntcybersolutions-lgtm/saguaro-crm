@@ -1316,7 +1316,7 @@ export default function TakeoffPage() {
       /* The budget was the one thing the old "Generate All Documents" path did
          that this one did not — the sole reason three buttons existed. Folded
          in here so there is one action and it is the complete one. */
-      await handleCreateBudget();
+      const budgetOk = await handleCreateBudget();
 
       setProgress({ step: 1, message: 'Sage is reading your takeoff…', pct: 5 });
       // Single stream — sage-auto-docs now builds bid packages + jackets + SOV AND
@@ -1342,7 +1342,22 @@ export default function TakeoffPage() {
       };
       setProgress({ step: 0, message: '', pct: 100 });
       setAutoSummary(summary);
-      showToast('Sage built your full bid + compliance package', 'success');
+
+      const built: string[] = [];
+      const failed: string[] = [];
+      (budgetOk ? built : failed).push('budget');
+      if (summary.packages) built.push(`${summary.packages} bid packages`); else failed.push('bid packages');
+      if (summary.jackets) built.push(`${summary.jackets} jacket PDFs`); else failed.push('jacket PDFs');
+      if (summary.sov) built.push('schedule of values'); else failed.push('schedule of values');
+      if (summary.lienWaivers) built.push(`${summary.lienWaivers} lien waivers`);
+      if (summary.w9s) built.push(`${summary.w9s} W-9 requests`);
+
+      showToast(
+        failed.length
+          ? `Built ${built.join(', ')}. Did NOT build: ${failed.join(', ')}.`
+          : `Sage built it all — ${built.join(', ')}.`,
+        failed.length ? 'error' : 'success',
+      );
     } catch (err: unknown) {
       console.error(err);
       showToast(humanError(err, 'Build failed. Please try again.'), 'error');
@@ -1372,8 +1387,8 @@ export default function TakeoffPage() {
   };
 
   // ── Generate Budget from Takeoff ──
-  const handleCreateBudget = async () => {
-    if (!result) return;
+  const handleCreateBudget = async (): Promise<boolean> => {
+    if (!result) return false;
     setGenerating('budget');
     try {
       const subtotal = result.totalMaterialCost + result.totalLaborCost;
@@ -1411,8 +1426,10 @@ export default function TakeoffPage() {
         throw new Error((body as { error?: string }).error || 'Failed to create budget');
       }
       showToast(`Budget created — ${result.items.length} line items, total ${fmt$(total)}`, 'success');
+      return true;
     } catch (err: unknown) {
       console.error(err); showToast(humanError(err, 'Failed to create budget. Please try again.'), 'error');
+      return false;
     } finally {
       setGenerating(null);
     }

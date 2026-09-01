@@ -532,14 +532,39 @@ export async function GET(
               let deepPasses = 0;
               const orderedDiscs = DISCIPLINE_PRIORITY.filter((d) => grouped.has(d));
 
+              /* The disciplines used to be read one after another — five
+                 sequential AI passes, which is where the four minutes went.
+                 They do not depend on each other: each reads its own sheets and
+                 contributes its own line items, so they can run at once and the
+                 wall clock becomes the slowest single pass instead of the sum.
+
+                 The budget gates are the reason this needs care. They used to be
+                 evaluated against counters that the loop itself mutated, which
+                 cannot work when passes overlap. So the allowances are worked
+                 out FIRST, in priority order, with no I/O — same gates, same
+                 arithmetic, same honest skip reasons — and only then are the
+                 passes dispatched. Results merge back in priority order, so the
+                 output is identical whichever pass finishes first. */
+              type Plan = {
+                disc: typeof orderedDiscs[number];
+                rows: typeof grouped extends Map<any, infer R> ? R : never;
+                takeRows: any[];
+                skipRows: any[];
+                label: string;
+                skipReason: string | null;
+              };
+
+              const plans: Plan[] = [];
+              let plannedPages = 0;
+              let plannedPasses = 0;
+
               for (const disc of orderedDiscs) {
                 const rows = grouped.get(disc)!;
                 const sheetLabels = rows.map((r) => r.sheetNumber || `p${r.page}`);
 
-                // Budget gates — each produces an HONEST skip reason on the register.
                 let skipReason: string | null = null;
-                if (deepPasses >= MAX_DEEP_PASSES) skipReason = 'discipline-pass limit reached';
-                else if (pagesAnalyzed >= MAX_ANALYZE_PAGES) skipReason = 'page-analysis limit reached';
+                if (plannedPasses >= MAX_DEEP_PASSES) skipReason = 'discipline-pass limit reached';
+                else if (plannedPages >= MAX_ANALYZE_PAGES) skipReason = 'page-analysis limit reached';
                 else if (Date.now() - analyzeStartMs > DEEP_BUDGET_MS) skipReason = 'time budget reached';
 
                 if (skipReason) {
@@ -548,47 +573,20 @@ export async function GET(
                   continue;
                 }
 
-                const allowance = Math.min(PER_DISCIPLINE_PAGES, MAX_ANALYZE_PAGES - pagesAnalyzed);
+                const allowance = Math.min(PER_DISCIPLINE_PAGES, MAX_ANALYZE_PAGES - plannedPages);
                 const takeRows = rows.slice(0, allowance);
                 const skipRows = rows.slice(allowance);
-                const pageIdx = takeRows.map((r) => r.page - 1); // 0-based
 
-                const subBuf = await extractPdfPages(fileBuf, pageIdx);
-                if (!subBuf) {
-                  rows.forEach((r) => { r.skippedReason = 'sheet extraction failed'; });
-                  disciplinesSkipped.push({ discipline: disc, sheets: sheetLabels, reason: 'sheet extraction failed' });
-                  continue;
-                }
-                const label = DISCIPLINE_LABEL[disc];
-                const content = await pdfContent(
-                  subBuf,
-                  deepPrompt(label, DISCIPLINE_SCOPE[disc], takeRows.map((r) => r.sheetNumber).filter(Boolean).join(', ')),
-                );
-                if (!content) {
-                  rows.forEach((r) => { r.skippedReason = 'sheet too large to analyze'; });
-                  disciplinesSkipped.push({ discipline: disc, sheets: sheetLabels, reason: 'sheet too large to analyze' });
-                  continue;
-                }
+                plannedPages += takeRows.length;
+                plannedPasses++;
 
-                deepPasses++;
-                const pctFloor = 40 + Math.floor((deepPasses - 1) / Math.max(1, orderedDiscs.length) * 38);
-                const pctCeil = 40 + Math.floor(deepPasses / Math.max(1, orderedDiscs.length) * 38);
-                send('progress', { step: 4, message: `Analyzing ${label} sheets…`, pct: pctFloor });
-                const raw = await runPass(content, 5000, 4, `Analyzing ${label}`, pctFloor, pctCeil);
-                const parsedDisc = safeJsonParse<TakeoffResult>(raw, `deep-${disc}`);
-                mergeMeta(parsedDisc);
+                plans.push({
+                  disc, rows: rows as any, takeRows, skipRows,
+                  label: DISCIPLINE_LABEL[disc], skipReason: null,
+                });
 
-                const items = Array.isArray(parsedDisc?.i) ? parsedDisc!.i! : [];
-                for (const it of items) { it._src = label; allRawItems.push(it); }
-
-                takeRows.forEach((r) => { r.analyzed = true; r.itemCount = items.length; });
-                pagesAnalyzed += takeRows.length;
-                if (items.length > 0 || takeRows.length > 0) disciplinesAnalyzed.push(disc);
-
-                // Pages of this discipline we couldn't fit → honest skip. Distinguish the
-                // per-discipline cap from the global page ceiling so the note is accurate.
                 if (skipRows.length > 0) {
-                  const reason = allowance >= (MAX_ANALYZE_PAGES - (pagesAnalyzed - takeRows.length))
+                  const reason = allowance >= (MAX_ANALYZE_PAGES - (plannedPages - takeRows.length))
                     ? 'page-analysis limit reached'
                     : 'per-discipline page cap';
                   skipRows.forEach((r) => { r.skippedReason = reason; });
@@ -597,6 +595,71 @@ export async function GET(
                     sheets: skipRows.map((r) => r.sheetNumber || `p${r.page}`),
                     reason,
                   });
+                }
+              }
+
+              if (plans.length) {
+                send('progress', {
+                  step: 4,
+                  message: `Reading ${plans.length} disciplines at once…`,
+                  pct: 40,
+                });
+
+                let finished = 0;
+                const settled = await Promise.all(plans.map(async (plan) => {
+                  try {
+                    const pageIdx = plan.takeRows.map((r: any) => r.page - 1); // 0-based
+                    const subBuf = await extractPdfPages(fileBuf, pageIdx);
+                    if (!subBuf) return { plan, failure: 'sheet extraction failed' as const };
+
+                    const content = await pdfContent(
+                      subBuf,
+                      deepPrompt(
+                        plan.label,
+                        DISCIPLINE_SCOPE[plan.disc],
+                        plan.takeRows.map((r: any) => r.sheetNumber).filter(Boolean).join(', '),
+                      ),
+                    );
+                    if (!content) return { plan, failure: 'sheet too large to analyze' as const };
+
+                    /* Concurrent passes cannot each own a slice of the progress
+                       bar, so it advances as each one lands. */
+                    const raw = await runPass(content, 5000, 4, `Analyzing ${plan.label}`, 40, 78);
+                    finished++;
+                    send('progress', {
+                      step: 4,
+                      message: `${plan.label} done (${finished}/${plans.length})`,
+                      pct: 40 + Math.floor((finished / plans.length) * 38),
+                    });
+                    return { plan, raw, failure: null };
+                  } catch (err) {
+                    console.error(`[analyze] discipline ${plan.disc} failed:`, err);
+                    return { plan, failure: 'discipline pass failed' as const };
+                  }
+                }));
+
+                /* Merge in priority order — Promise.all preserves input order, so
+                   the result is identical no matter which pass returned first. */
+                for (const r of settled) {
+                  const { plan } = r;
+                  const sheetLabels = plan.takeRows.map((x: any) => x.sheetNumber || `p${x.page}`);
+
+                  if (r.failure) {
+                    plan.takeRows.forEach((x: any) => { x.skippedReason = r.failure; });
+                    disciplinesSkipped.push({ discipline: plan.disc, sheets: sheetLabels, reason: r.failure });
+                    continue;
+                  }
+
+                  deepPasses++;
+                  const parsedDisc = safeJsonParse<TakeoffResult>(r.raw!, `deep-${plan.disc}`);
+                  mergeMeta(parsedDisc);
+
+                  const items = Array.isArray(parsedDisc?.i) ? parsedDisc!.i! : [];
+                  for (const it of items) { it._src = plan.label; allRawItems.push(it); }
+
+                  plan.takeRows.forEach((x: any) => { x.analyzed = true; x.itemCount = items.length; });
+                  pagesAnalyzed += plan.takeRows.length;
+                  if (items.length > 0 || plan.takeRows.length > 0) disciplinesAnalyzed.push(plan.disc);
                 }
               }
             }

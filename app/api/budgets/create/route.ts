@@ -65,11 +65,16 @@ export async function POST(req: NextRequest) {
         csi_division: item.csiDivision || '',
         csi_description: item.description || '',
         original_budget: item.originalAmount || 0,
-        current_budget: item.revisedAmount || item.originalAmount || 0,
+        /* current_budget, estimated_final_cost, variance and variance_pct are
+           GENERATED columns — Postgres computes them from original_budget,
+           approved_changes, committed_cost and uncommitted_cost. Sending values
+           for them fails the whole insert with 428C9 ("cannot insert a
+           non-DEFAULT value into column"), which is why every budget created
+           from a takeoff has failed. */
+        approved_changes: 0,
         committed_cost: 0,
+        uncommitted_cost: 0,
         cost_to_date: 0,
-        estimated_final_cost: item.originalAmount || 0,
-        variance: item.originalAmount || 0,
         sort_order: idx + 1,
       }));
 
