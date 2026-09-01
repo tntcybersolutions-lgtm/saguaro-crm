@@ -29,6 +29,15 @@ export interface PurchaseOrderInput {
   shipping?: number;
   terms?: string;
   deliveryInstructions?: string;
+  /* Collected by the contract form. A PO papered from the form describes one
+     delivery with one total rather than a line-item grid, so the description
+     and amount below become that single line. */
+  buyerName?: string;
+  shipTo?: string;
+  freightTerms?: string;
+  taxable?: string;
+  description?: string;
+  poAmount?: number | string;
 }
 
 export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<{
@@ -60,6 +69,10 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
   const deliveryDate = po?.required_delivery_date || po?.delivery_date || input.requiredDeliveryDate || '';
   const terms = po?.terms || input.terms || 'NET 30';
   const deliveryInstructions = po?.delivery_instructions || input.deliveryInstructions || '';
+  const buyerName = po?.buyer_name || input.buyerName || p?.gc_entity?.name || '';
+  const shipTo = po?.ship_to || input.shipTo || p?.address || '';
+  const freightTerms = po?.freight_terms || input.freightTerms || '';
+  const taxStatus = po?.tax_status || input.taxable || '';
 
   // Build line items — money is NUMERIC-as-TEXT: Number() every stored figure.
   let items: POLineItem[] = input.items || [];
@@ -76,6 +89,18 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
         total: num(li.total) || qty * unitPrice,
       };
     });
+  }
+
+  if (!items.length && (input.description || input.poAmount)) {
+    const amount = num(input.poAmount);
+    items = [{
+      itemNumber: 1,
+      description: String(input.description || 'Materials per attached'),
+      qty: 1,
+      unit: 'LS',
+      unitPrice: amount,
+      total: amount,
+    }];
   }
 
   const subtotal = items.reduce((s, li) => s + num(li.total), 0);
@@ -100,12 +125,19 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
 
   y -= 30;
   drawField(page, font, bold, 'VENDOR ADDRESS:', vendorAddress, 10, y, 260);
-  drawField(page, font, bold, 'SHIP TO ADDRESS:', p?.address || '', 275, y, 270);
+  drawField(page, font, bold, 'SHIP TO ADDRESS:', shipTo, 275, y, 270);
 
   y -= 30;
   drawField(page, font, bold, 'PO DATE:', poDate, 10, y, 160);
   drawField(page, font, bold, 'REQUIRED DELIVERY:', deliveryDate || 'TBD', 175, y, 160);
   drawField(page, font, bold, 'TERMS:', terms, 340, y, 130);
+
+  if (buyerName || freightTerms || taxStatus) {
+    y -= 30;
+    drawField(page, font, bold, 'BUYER:', buyerName, 10, y, 160);
+    drawField(page, font, bold, 'FREIGHT:', freightTerms, 175, y, 160);
+    drawField(page, font, bold, 'TAX STATUS:', taxStatus, 340, y, 130);
+  }
 
   // Separator
   y -= 20;

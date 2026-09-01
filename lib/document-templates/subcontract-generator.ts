@@ -73,6 +73,18 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     return y;
   }
 
+  /* Anything the GC typed on the contract form wins over what the database
+     guessed. Blank is not an override — an empty box means "you had it right".
+     Declared before the first drawn field so the header and the body cannot
+     disagree about who the parties are. */
+  const ov = (input.overrides ?? {}) as Record<string, any>;
+  const pick = (k: string, fallback: any) => {
+    const v = ov[k];
+    return v === undefined || v === null || v === '' ? fallback : v;
+  };
+  const contractorName = pick('contractorName', p?.gc_entity?.name || 'Contractor');
+  const subName = pick('subName', sub?.company_name || sub?.name || 'Subcontractor');
+
   // === PAGE 1 ===
   const page1 = pdf.addPage(PageSizes.Letter);
   const { width, height } = page1.getSize();
@@ -87,11 +99,11 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
   drawField(page1, font, bold, 'DATE:', new Date().toLocaleDateString(), 350, y, 130);
 
   y -= 30;
-  drawField(page1, font, bold, 'CONTRACTOR:', p?.gc_entity?.name || '', 10, y, 260);
-  drawField(page1, font, bold, 'SUBCONTRACTOR:', sub?.company_name || sub?.name || '', 275, y, 260);
+  drawField(page1, font, bold, 'CONTRACTOR:', contractorName, 10, y, 260);
+  drawField(page1, font, bold, 'SUBCONTRACTOR:', subName, 275, y, 260);
 
   y -= 30;
-  drawField(page1, font, bold, 'TRADE:', sub?.trade || bidPkg?.trade || '', 10, y, 200);
+  drawField(page1, font, bold, 'TRADE:', pick('subTrade', sub?.trade || bidPkg?.trade || ''), 10, y, 200);
   drawField(page1, font, bold, 'PROJECT ADDRESS:', p?.address || '', 215, y, 330);
 
   // Separator
@@ -113,13 +125,6 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 14;
-  const ov = (input.overrides ?? {}) as Record<string, any>;
-  const pick = (k: string, fallback: any) => {
-    const v = ov[k];
-    return v === undefined || v === null || v === '' ? fallback : v;
-  };
-  const contractorName = pick('contractorName', p?.gc_entity?.name || 'Contractor');
-  const subName = pick('subName', sub?.company_name || sub?.name || 'Subcontractor');
   y = wrapText(
     page1,
     `This Subcontract Agreement is entered into by and between ${contractorName} ("Contractor") and ${subName} ("Subcontractor") for work on the Project identified above. The Contractor and Subcontractor agree as follows.`,
@@ -162,9 +167,47 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     y
   );
 
+  /* From here the scope article can outrun page one, so drawing follows a
+     cursor rather than a fixed page. */
+  let flow = page1;
+  const room = (needed: number) => {
+    if (y - needed < 60) { flow = pdf.addPage(PageSizes.Letter); y = height - 65; }
+  };
+
+  const inclusions = String(pick('inclusions', ''));
+  if (inclusions) {
+    y -= 6;
+    room(30);
+    flow.drawText('Included in this scope:', { x: 10, y, size: 8.5, font: bold, color: rgb(0.2, 0.2, 0.2) });
+    y -= 12;
+    y = wrapText(flow, inclusions, 10, y);
+  }
+
+  /* The exclusions checklist plus anything typed into the free box. Numbered,
+     because a sub who has to argue about item 7 needs to be able to name it. */
+  const picked = Array.isArray(ov.exclusions) ? (ov.exclusions as string[]) : [];
+  const extraExclusions = String(pick('exclusionsOther', ''))
+    .split(String.fromCharCode(10))
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const exclusions = [...picked, ...extraExclusions];
+  if (exclusions.length) {
+    y -= 6;
+    room(30);
+    flow.drawText('Expressly excluded from this scope:', { x: 10, y, size: 8.5, font: bold, color: rgb(0.2, 0.2, 0.2) });
+    y -= 12;
+    exclusions.forEach((item, i) => {
+      room(14);
+      y = wrapText(flow, `${i + 1}. ${item}`, 14, y, 92);
+    });
+  }
+
+  /* Article 3 needs its heading, a paragraph and the sum band together. */
+  room(110);
+
   // Article 3 - Subcontract Sum
   y -= 10;
-  page1.drawText('ARTICLE 3 \u2014 SUBCONTRACT SUM', {
+  flow.drawText('ARTICLE 3 \u2014 SUBCONTRACT SUM', {
     x: 10,
     y,
     size: 10,
@@ -175,7 +218,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
 
   const subAmount = Number(pick('subAmount', sub?.contract_amount || sub?.amount || bidPkg?.awarded_amount || 0)) || 0;
   y = wrapText(
-    page1,
+    flow,
     `The Contractor shall pay the Subcontractor in current funds for the performance of the Subcontract Work, subject to additions and deductions as provided in the Subcontract Documents, the Subcontract Sum of:`,
     10,
     y
@@ -183,21 +226,21 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
 
   // Sum highlight
   y -= 5;
-  page1.drawRectangle({
+  flow.drawRectangle({
     x: 10,
     y: y - 5,
     width: width - 20,
     height: 28,
     color: rgb(0.05, 0.07, 0.09),
   });
-  page1.drawText('SUBCONTRACT SUM:', {
+  flow.drawText('SUBCONTRACT SUM:', {
     x: 20,
     y: y + 7,
     size: 11,
     font: bold,
     color: rgb(0.83, 0.63, 0.09),
   });
-  page1.drawText(fmtCurrency(subAmount), {
+  flow.drawText(fmtCurrency(subAmount), {
     x: 380,
     y: y + 7,
     size: 13,
@@ -223,7 +266,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
   const retainagePct = pick('retainagePct', p?.retainage_pct || p?.retainage_percent || 10);
   y = wrapText(
     page2,
-    `Progress Payments shall be made monthly based on the Subcontractor's Application for Payment, less retainage of ${retainagePct}%. Payment shall be made within seven (7) days after the Contractor receives payment from the Owner for the Subcontractor's Work. Retainage shall be released upon Substantial Completion and acceptance of the Subcontractor's Work.`,
+    `Progress Payments shall be made monthly based on the Subcontractor's Application for Payment, less retainage of ${retainagePct}%, on terms of ${pick('paymentTerms', 'Net 30 after Owner payment')}. Payment shall be made within seven (7) days after the Contractor receives payment from the Owner for the Subcontractor's Work. Retainage shall be released upon Substantial Completion and acceptance of the Subcontractor's Work.`,
     10,
     y
   );
@@ -240,7 +283,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
   y -= 14;
   y = wrapText(
     page2,
-    'The Subcontractor shall maintain the following insurance coverage throughout the duration of the Subcontract Work: (a) Commercial General Liability with minimum limits of $1,000,000 per occurrence and $2,000,000 general aggregate; (b) Workers\u2019 Compensation as required by applicable state law; (c) Automobile Liability with minimum limits of $1,000,000 combined single limit. Certificates of Insurance (COI) naming the Contractor as additional insured shall be provided prior to commencing work.',
+    `The Subcontractor shall maintain the following insurance coverage throughout the duration of the Subcontract Work: (a) Commercial General Liability with minimum limits of ${pick('glLimits', '$1,000,000 per occurrence / $2,000,000 aggregate')}; (b) Workers\u2019 Compensation as required by applicable state law; (c) Automobile Liability with minimum limits of $1,000,000 combined single limit. Certificates of Insurance (COI) naming the Contractor as additional insured shall be provided prior to commencing work.`,
     10,
     y
   );
@@ -285,6 +328,37 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     10,
     y
   );
+
+  /* Article 8 — the terms the GC filled in on the form that the standard
+     A401 body has no printed slot for. Only what was actually supplied is
+     printed, so a subcontract with none of these reads exactly as before. */
+  const supplementary = ([
+    ['Subcontractor address', String(pick('subAddress', ''))],
+    ['Subcontractor licence', String(pick('subLicense', ''))],
+    ['Contract type', String(pick('contractType', ''))],
+    ['Start on site', String(pick('startDate', ''))],
+    ['Completion', String(pick('completionDate', ''))],
+    ['Liquidated damages', String(pick('liquidatedDamages', ''))],
+    ['Payment & performance bond', String(pick('bondRequired', ''))],
+    ['Special conditions', String(pick('specialConditions', ''))],
+  ] as Array<[string, string]>).filter((row) => Boolean(row[1]));
+
+  if (supplementary.length) {
+    y -= 15;
+    page2.drawText('ARTICLE 8 — SUPPLEMENTARY CONDITIONS', {
+      x: 10,
+      y,
+      size: 10,
+      font: bold,
+      color: rgb(0, 0, 0),
+    });
+    y -= 14;
+    for (const [label, value] of supplementary) {
+      page2.drawText(label + ':', { x: 10, y, size: 8.5, font: bold, color: rgb(0.2, 0.2, 0.2) });
+      y = wrapText(page2, value, 150, y, 74);
+      y -= 3;
+    }
+  }
 
   // Signature blocks
   y -= 25;

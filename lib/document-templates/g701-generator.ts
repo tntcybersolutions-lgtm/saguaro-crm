@@ -8,6 +8,9 @@ import {
 import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
 
 export interface G701Input {
+  /* What the GC typed on the contract form. Values still derive from the
+     database as before; an override simply wins. */
+  overrides?: Record<string, unknown>;
   projectId: string;
   changeOrderId: string;
 }
@@ -29,6 +32,18 @@ export async function generateG701(input: G701Input): Promise<{
     .single();
   const co = changeOrder as any;
 
+  /* Anything the GC typed on the contract form wins over the change order
+     record. Blank is not an override. */
+  const ov = (input.overrides ?? {}) as Record<string, any>;
+  const pick = (k: string, fallback: any) => {
+    const v = ov[k];
+    return v === undefined || v === null || v === '' ? fallback : v;
+  };
+  const coNumber = String(pick('coNumber', co?.co_number ?? co?.number ?? ''));
+  /* One figure, printed in two places — the cost-impact line and the
+     financial summary had drifted apart once already. */
+  const costImpact = Number(pick('costImpact', co?.cost_impact || co?.amount || 0)) || 0;
+
   const pdf = await PDFDocument.create();
   const kit = await brandDoc(pdf, { projectId: input.projectId });
   const page = pdf.addPage(PageSizes.Letter);
@@ -39,22 +54,22 @@ export async function generateG701(input: G701Input): Promise<{
   // Corporate letterhead \u2014 tenant logo + accent color (report-theme)
   drawBrandHeader(page, kit, {
     title: 'AIA G701 \u2014 CHANGE ORDER',
-    docTag: co?.co_number || co?.number ? `CO #${co?.co_number ?? co?.number}` : undefined,
+    docTag: coNumber ? `CO #${coNumber}` : undefined,
   });
 
   // Project info fields
   let y = height - 65;
   drawField(page, font, bold, 'PROJECT:', (project as any)?.name || '', 10, y, 200);
   drawField(page, font, bold, 'PROJECT NO:', (project as any)?.project_number || '', 215, y, 130);
-  drawField(page, font, bold, 'CO NUMBER:', co?.co_number?.toString() || co?.number?.toString() || '', 350, y, 130);
+  drawField(page, font, bold, 'CO NUMBER:', coNumber, 350, y, 130);
 
   y -= 30;
   drawField(page, font, bold, 'DATE:', co?.date || new Date().toLocaleDateString(), 10, y, 130);
-  drawField(page, font, bold, 'OWNER:', (ctx.owner as any)?.name || '', 145, y, 165);
+  drawField(page, font, bold, 'OWNER:', pick('counterparty', (ctx.owner as any)?.name || ''), 145, y, 165);
   drawField(page, font, bold, 'ARCHITECT:', (ctx.architect as any)?.name || '', 315, y, 165);
 
   y -= 30;
-  drawField(page, font, bold, 'CONTRACTOR:', (project as any)?.gc_entity?.name || '', 10, y, 200);
+  drawField(page, font, bold, 'CONTRACTOR:', pick('contractorName', (project as any)?.gc_entity?.name || ''), 10, y, 200);
   drawField(page, font, bold, 'CONTRACT DATE:', (project as any)?.start_date || '', 215, y, 130);
   drawField(page, font, bold, 'CONTRACT FOR:', 'General Construction', 350, y, 165);
 
@@ -78,7 +93,21 @@ export async function generateG701(input: G701Input): Promise<{
   });
 
   y -= 14;
-  const description = co?.description || co?.title || 'See attached documentation.';
+  /* Why the change happened, when the GC picked one. It sits above the
+     description because it is the first thing an owner reads when deciding
+     whether the change is theirs to pay for. */
+  const reason = String(pick('reason', ''));
+  if (reason) {
+    page.drawText('Reason: ' + reason, {
+      x: 10,
+      y,
+      size: 8.5,
+      font: bold,
+      color: rgb(0.2, 0.2, 0.2),
+    });
+    y -= 14;
+  }
+  const description = pick('description', co?.description || co?.title || 'See attached documentation.');
   const descWords = description.split(' ');
   let descLine = '';
   for (const word of descWords) {
@@ -117,7 +146,7 @@ export async function generateG701(input: G701Input): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 14;
-  page.drawText(`Amount: ${fmtCurrency(co?.cost_impact || co?.amount || 0)}`, {
+  page.drawText(`Amount: ${fmtCurrency(costImpact)}`, {
     x: 15,
     y,
     size: 9,
@@ -134,7 +163,7 @@ export async function generateG701(input: G701Input): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 14;
-  const scheduleDays = co?.schedule_impact || co?.schedule_days || 0;
+  const scheduleDays = pick('scheduleImpactDays', co?.schedule_impact || co?.schedule_days || 0);
   page.drawText(
     scheduleDays === 0
       ? 'No change to contract time.'
@@ -170,8 +199,10 @@ export async function generateG701(input: G701Input): Promise<{
     .filter((c: any) => c.id !== input.changeOrderId)
     .reduce((s: number, c: any) => s + (c.cost_impact || c.amount || 0), 0);
   const contractPriorToCO = originalContract + netPriorCOs;
-  const thisCOAmount = co?.cost_impact || co?.amount || 0;
-  const newContractSum = contractPriorToCO + thisCOAmount;
+  const thisCOAmount = costImpact;
+  /* The revised sum is computed, but a GC who has reconciled it against their
+     own books can correct it and be believed. */
+  const newContractSum = Number(pick('newContractSum', contractPriorToCO + thisCOAmount)) || 0;
 
   const finRows = [
     ['Original Contract Sum:', fmtCurrency(originalContract)],
@@ -264,7 +295,7 @@ export async function generateG701(input: G701Input): Promise<{
   const pdfBytes = await pdf.save();
   const pdfUrl = await saveDocument(input.projectId, 'g701', pdfBytes, {
     changeOrderId: input.changeOrderId,
-    coNumber: co?.co_number || co?.number || '',
+    coNumber,
     costImpact: thisCOAmount,
     newContractSum,
   });

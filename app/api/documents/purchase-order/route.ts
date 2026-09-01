@@ -43,6 +43,13 @@ export async function POST(req: NextRequest) {
       shipping: body.shipping,
       terms: body.terms,
       deliveryInstructions: body.deliveryInstructions,
+      // Collected by the contract form.
+      buyerName: body.buyerName,
+      shipTo: body.shipTo,
+      freightTerms: body.freightTerms,
+      taxable: body.taxable,
+      description: body.description,
+      poAmount: body.poAmount,
     });
 
     return NextResponse.json({ pdfUrl, success: true });

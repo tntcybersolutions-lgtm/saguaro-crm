@@ -33,6 +33,9 @@ export async function POST(req: NextRequest) {
     const { pdfUrl } = await generateG701({
       projectId: body.projectId,
       changeOrderId: body.changeOrderId,
+      // What the GC edited on the contract form. Absent, the generator
+      // derives everything itself exactly as it did before.
+      overrides: body.overrides && typeof body.overrides === 'object' ? body.overrides : undefined,
     });
 
     return NextResponse.json({ pdfUrl, success: true });

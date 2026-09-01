@@ -8,6 +8,9 @@ import {
 import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
 
 export interface A101Input {
+  /* What the GC typed on the contract form. Values still derive from the
+     database as before; an override simply wins. */
+  overrides?: Record<string, unknown>;
   projectId: string;
 }
 
@@ -18,6 +21,14 @@ export async function generateA101(input: A101Input): Promise<{
   const ctx = await getProjectContext(input.projectId);
   const { project } = ctx;
   const p = project as any;
+
+  /* Anything the GC typed on the contract form wins over what the database
+     guessed. Blank is not an override — an empty box means "you had it right". */
+  const ov = (input.overrides ?? {}) as Record<string, any>;
+  const pick = (k: string, fallback: any) => {
+    const v = ov[k];
+    return v === undefined || v === null || v === '' ? fallback : v;
+  };
 
   const pdf = await PDFDocument.create();
   const kit = await brandDoc(pdf, { projectId: input.projectId });
@@ -59,8 +70,8 @@ export async function generateA101(input: A101Input): Promise<{
   drawField(page1, font, bold, 'DATE:', new Date().toLocaleDateString(), 350, y, 130);
 
   y -= 30;
-  drawField(page1, font, bold, 'OWNER:', (ctx.owner as any)?.name || '', 10, y, 240);
-  drawField(page1, font, bold, 'CONTRACTOR:', p?.gc_entity?.name || '', 265, y, 240);
+  drawField(page1, font, bold, 'OWNER:', pick('ownerName', (ctx.owner as any)?.name || ''), 10, y, 240);
+  drawField(page1, font, bold, 'CONTRACTOR:', pick('contractorName', p?.gc_entity?.name || ''), 265, y, 240);
 
   y -= 30;
   drawField(page1, font, bold, 'PROJECT ADDRESS:', p?.address || '', 10, y, 330);
@@ -119,7 +130,7 @@ export async function generateA101(input: A101Input): Promise<{
     color: rgb(0, 0, 0),
   });
   y -= 14;
-  const projectDesc = p?.description || p?.scope || `General construction for ${p?.name || 'the Project'} located at ${p?.address || 'the project site'}.`;
+  const projectDesc = pick('scope', p?.description || p?.scope || `General construction for ${p?.name || 'the Project'} located at ${p?.address || 'the project site'}.`);
   y = wrapText(
     page1,
     `The Contractor shall fully execute the Work described in the Contract Documents, except as specifically indicated in the Contract Documents to be the responsibility of others. The Work of this Contract comprises: ${projectDesc}`,
@@ -139,8 +150,8 @@ export async function generateA101(input: A101Input): Promise<{
   y -= 14;
 
   const dateRows = [
-    ['Date of Commencement:', p?.start_date || 'To be determined'],
-    ['Date of Substantial Completion:', p?.substantial_date || 'To be determined'],
+    ['Date of Commencement:', pick('ntpDate', p?.start_date || 'To be determined')],
+    ['Date of Substantial Completion:', pick('substantialDate', p?.substantial_date || 'To be determined')],
     ['Date of Final Completion:', p?.final_completion_date || p?.end_date || 'To be determined'],
   ];
 
@@ -202,7 +213,7 @@ export async function generateA101(input: A101Input): Promise<{
     font: bold,
     color: rgb(0.83, 0.63, 0.09),
   });
-  page1.drawText(fmtCurrency(p?.contract_amount || 0), {
+  page1.drawText(fmtCurrency(Number(pick('contractSum', p?.contract_amount || 0)) || 0), {
     x: 380,
     y: y + 7,
     size: 13,
@@ -211,7 +222,7 @@ export async function generateA101(input: A101Input): Promise<{
   });
 
   y -= 35;
-  const retainagePct = p?.retainage_pct || p?.retainage_percent || 10;
+  const retainagePct = pick('retainagePct', p?.retainage_pct || p?.retainage_percent || 10);
   page1.drawText(`Retainage: ${retainagePct}%`, {
     x: 15,
     y,
@@ -221,7 +232,7 @@ export async function generateA101(input: A101Input): Promise<{
   });
 
   // === PAGE 2 ===
-  const page2 = pdf.addPage(PageSizes.Letter);
+  let page2 = pdf.addPage(PageSizes.Letter);
   const { height: h2 } = page2.getSize();
   drawBrandHeader(page2, kit, { title: 'AIA A101 \u2014 OWNER-CONTRACTOR AGREEMENT (CONT.)' });
   y = h2 - 64;
@@ -244,7 +255,7 @@ export async function generateA101(input: A101Input): Promise<{
   y -= 5;
   y = wrapText(
     page2,
-    `Payment terms are Net 30 days from the date of the Application for Payment. Retainage of ${retainagePct}% shall be withheld from each progress payment until Substantial Completion, at which time the retainage shall be reduced as mutually agreed.`,
+    `Payment terms are ${pick('paymentTerms', 'Net 30')} from the date of the Application for Payment. Retainage of ${retainagePct}% shall be withheld from each progress payment until Substantial Completion, at which time the retainage shall be reduced as mutually agreed.`,
     10,
     y
   );
@@ -277,6 +288,40 @@ export async function generateA101(input: A101Input): Promise<{
     );
   }
 
+  /* Article 7 — the terms the GC filled in on the form that the standard
+     A101 body has no printed slot for. Only what was actually supplied gets
+     printed, so a contract with none of these looks exactly as it always did.
+     A fresh page opens first if the remaining room is too tight to hold a
+     heading plus a line of text. */
+  const supplementary: Array<[string, string]> = [
+    ['Architect', [pick('architectName', ''), pick('architectEmail', '')].filter(Boolean).join(' — ')],
+    ['Contract type', pick('contractType', '')],
+    ['Date of award', pick('awardDate', '')],
+    ['Owner address', pick('ownerAddress', '')],
+    ['Liquidated damages', pick('liquidatedDamages', '')],
+    ['General liability limits', pick('glLimits', '')],
+    ['Special conditions', pick('specialConditions', '')],
+  ].filter((row): row is [string, string] => Boolean(row[1]));
+
+  if (supplementary.length) {
+    y -= 15;
+    if (y < 150) { page2 = pdf.addPage(PageSizes.Letter); y = height - 65; }
+    page2.drawText('ARTICLE 7 — SUPPLEMENTARY CONDITIONS', {
+      x: 10,
+      y,
+      size: 10,
+      font: bold,
+      color: rgb(0, 0, 0),
+    });
+    y -= 14;
+    for (const [label, value] of supplementary) {
+      if (y < 70) { page2 = pdf.addPage(PageSizes.Letter); y = height - 65; }
+      page2.drawText(label + ':', { x: 10, y, size: 8.5, font: bold, color: rgb(0.2, 0.2, 0.2) });
+      y = wrapText(page2, String(value), 130, y, 78);
+      y -= 3;
+    }
+  }
+
   // Signature blocks
   y -= 30;
   page2.drawLine({
@@ -297,7 +342,7 @@ export async function generateA101(input: A101Input): Promise<{
   y -= 25;
   // Owner signature
   page2.drawText('OWNER:', { x: 10, y, size: 9, font: bold, color: rgb(0, 0, 0) });
-  page2.drawText((ctx.owner as any)?.name || '', {
+  page2.drawText(pick('ownerName', (ctx.owner as any)?.name || ''), {
     x: 10,
     y: y - 12,
     size: 8,
@@ -326,7 +371,7 @@ export async function generateA101(input: A101Input): Promise<{
     font: bold,
     color: rgb(0, 0, 0),
   });
-  page2.drawText(p?.gc_entity?.name || '', {
+  page2.drawText(pick('contractorName', p?.gc_entity?.name || ''), {
     x: 310,
     y: y - 12,
     size: 8,
@@ -352,10 +397,10 @@ export async function generateA101(input: A101Input): Promise<{
 
   const pdfBytes = await pdf.save();
   const pdfUrl = await saveDocument(input.projectId, 'a101', pdfBytes, {
-    contractAmount: p?.contract_amount || 0,
+    contractAmount: Number(pick('contractSum', p?.contract_amount || 0)) || 0,
     retainagePct,
-    ownerName: (ctx.owner as any)?.name || '',
-    contractorName: p?.gc_entity?.name || '',
+    ownerName: pick('ownerName', (ctx.owner as any)?.name || ''),
+    contractorName: pick('contractorName', p?.gc_entity?.name || ''),
   });
 
   return { pdfBytes, pdfUrl };

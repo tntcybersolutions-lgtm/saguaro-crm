@@ -290,9 +290,34 @@ export default function ContractsPage() {
         accent="Ledger"
         subtitle="Subcontractor and vendor contracts"
         actions={
-          <button onClick={() => { setShowForm(p => !p); setErrorMsg(''); }} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> New Contract
-          </button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Papering from a template is the common job, so it leads. "New
+                Contract" below still records a contract that was papered
+                elsewhere, which is a different thing and stays available. */}
+            {([
+              ['subcontract', 'Subcontract'],
+              ['purchase-order', 'Purchase order'],
+              ['change-order', 'Change order'],
+              ['prime-contract', 'Prime contract'],
+            ] as const).map(([slug, label], i) => (
+              <a
+                key={slug}
+                href={`/app/projects/${projectId}/contracts/new/${slug}`}
+                className="pmBtn"
+                style={i === 0
+                  ? { ...goldButtonStyle, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }
+                  : { minHeight: 44, display: 'inline-flex', alignItems: 'center', padding: '0 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: '#8BAAC8', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}
+              >
+                {i === 0 && <Plus size={15} weight="bold" />} {label}
+              </a>
+            ))}
+            <button
+              onClick={() => { setShowForm(p => !p); setErrorMsg(''); }}
+              style={{ minHeight: 44, padding: '0 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: '#8BAAC8', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            >
+              Record existing
+            </button>
+          </div>
         }
       />
 
