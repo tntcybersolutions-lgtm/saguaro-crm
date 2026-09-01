@@ -16,6 +16,11 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const admin = createServerClient() as any;
     const url = new URL(req.url);
     const includeDeleted = url.searchParams.get('trash') === '1';
+    /* Files can be tagged to a thing rather than a folder — a marked-up copy
+       returned against one contract, a photo against one RFI. Uploading already
+       recorded that; this is how a screen asks for only its own. */
+    const entityType = url.searchParams.get('entityType');
+    const entityId = url.searchParams.get('entityId');
     let q = admin
       .from('project_files')
       .select('*')
@@ -23,6 +28,8 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false });
     q = includeDeleted ? q.not('deleted_at', 'is', null) : q.is('deleted_at', null);
+    if (entityType) q = q.eq('entity_type', entityType);
+    if (entityId) q = q.eq('entity_id', entityId);
     const { data, error } = await q;
     if (error) throw error;
     const files = await signFields((data as any[]) || [], ['file_url', 'poster_url'], 3600);

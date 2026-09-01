@@ -6,6 +6,7 @@ import { FileText, ArrowLeft, CheckCircle, DownloadSimple } from '@phosphor-icon
 import ContractForm from '@/components/contracts/ContractForm';
 import ESignatureFlow from '@/components/ESignatureFlow';
 import ContractVersions from '@/components/contracts/ContractVersions';
+import ContractCompare from '@/components/contracts/ContractCompare';
 import { CONTRACT_FORMS, type ContractKind } from '@/lib/document-templates/contract-fields';
 
 /**
@@ -170,6 +171,16 @@ export default function NewContractFromTemplate() {
                 Done
               </button>
             </div>
+
+            <ContractCompare
+              projectId={projectId}
+              pdfUrl={pdfUrl}
+              title={spec.title}
+              /* Tagged by kind rather than by generation, so every marked-up
+                 copy of this contract on this project stays together across
+                 regenerations. */
+              entityId={`${projectId}:${kind}`}
+            />
 
             <ContractVersions projectId={projectId} kind={kind} refreshKey={generation} />
 
