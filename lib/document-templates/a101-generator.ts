@@ -25,9 +25,15 @@ export async function generateA101(input: A101Input): Promise<{
   /* Anything the GC typed on the contract form wins over what the database
      guessed. Blank is not an override — an empty box means "you had it right". */
   const ov = (input.overrides ?? {}) as Record<string, any>;
+  /* Every value that reaches the paper passes through here, so this is also
+     where the version record is built. Two generations of the same contract
+     can then be compared field by field instead of eyeballing two PDFs. */
+  const resolved: Record<string, unknown> = {};
   const pick = (k: string, fallback: any) => {
     const v = ov[k];
-    return v === undefined || v === null || v === '' ? fallback : v;
+    const out = v === undefined || v === null || v === '' ? fallback : v;
+    resolved[k] = out;
+    return out;
   };
 
   const pdf = await PDFDocument.create();
@@ -401,6 +407,8 @@ export async function generateA101(input: A101Input): Promise<{
     retainagePct,
     ownerName: pick('ownerName', (ctx.owner as any)?.name || ''),
     contractorName: pick('contractorName', p?.gc_entity?.name || ''),
+    // Every field that reached the paper, for the version comparison.
+    fields: resolved,
   });
 
   return { pdfBytes, pdfUrl };

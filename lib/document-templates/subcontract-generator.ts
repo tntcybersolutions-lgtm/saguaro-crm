@@ -78,9 +78,15 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
      Declared before the first drawn field so the header and the body cannot
      disagree about who the parties are. */
   const ov = (input.overrides ?? {}) as Record<string, any>;
+  /* Every value that reaches the paper passes through here, so this is also
+     where the version record is built. Two generations of the same contract
+     can then be compared field by field instead of eyeballing two PDFs. */
+  const resolved: Record<string, unknown> = {};
   const pick = (k: string, fallback: any) => {
     const v = ov[k];
-    return v === undefined || v === null || v === '' ? fallback : v;
+    const out = v === undefined || v === null || v === '' ? fallback : v;
+    resolved[k] = out;
+    return out;
   };
   const contractorName = pick('contractorName', p?.gc_entity?.name || 'Contractor');
   const subName = pick('subName', sub?.company_name || sub?.name || 'Subcontractor');
@@ -440,6 +446,8 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
     trade: sub?.trade || '',
     subcontractSum: subAmount,
     bidPackageId: input.bidPackageId || null,
+    // Every field that reached the paper, for the version comparison.
+    fields: resolved,
   });
 
   return { pdfBytes, pdfUrl };

@@ -35,9 +35,15 @@ export async function generateG701(input: G701Input): Promise<{
   /* Anything the GC typed on the contract form wins over the change order
      record. Blank is not an override. */
   const ov = (input.overrides ?? {}) as Record<string, any>;
+  /* Every value that reaches the paper passes through here, so this is also
+     where the version record is built. Two generations of the same contract
+     can then be compared field by field instead of eyeballing two PDFs. */
+  const resolved: Record<string, unknown> = {};
   const pick = (k: string, fallback: any) => {
     const v = ov[k];
-    return v === undefined || v === null || v === '' ? fallback : v;
+    const out = v === undefined || v === null || v === '' ? fallback : v;
+    resolved[k] = out;
+    return out;
   };
   const coNumber = String(pick('coNumber', co?.co_number ?? co?.number ?? ''));
   /* One figure, printed in two places — the cost-impact line and the
@@ -298,6 +304,8 @@ export async function generateG701(input: G701Input): Promise<{
     coNumber,
     costImpact: thisCOAmount,
     newContractSum,
+    // Every field that reached the paper, for the version comparison.
+    fields: resolved,
   });
 
   return { pdfBytes, pdfUrl };

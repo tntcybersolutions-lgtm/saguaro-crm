@@ -312,6 +312,25 @@ export async function generatePurchaseOrder(input: PurchaseOrderInput): Promise<
     vendorName,
     total,
     itemCount: items.length,
+    /* This generator resolves its values explicitly rather than through a
+       pick() helper, so the version record is assembled by hand. */
+    fields: {
+      buyerName,
+      vendorName,
+      vendorAddress,
+      shipTo,
+      poNumber,
+      poDate,
+      deliveryDate,
+      terms,
+      freightTerms,
+      taxStatus,
+      deliveryInstructions,
+      subtotal,
+      tax,
+      shipping,
+      total,
+    },
   });
 
   return { pdfBytes, pdfUrl };

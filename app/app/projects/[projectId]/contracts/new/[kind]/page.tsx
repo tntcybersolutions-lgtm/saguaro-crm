@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FileText, ArrowLeft, CheckCircle, DownloadSimple } from '@phosphor-icons/react';
 import ContractForm from '@/components/contracts/ContractForm';
 import ESignatureFlow from '@/components/ESignatureFlow';
+import ContractVersions from '@/components/contracts/ContractVersions';
 import { CONTRACT_FORMS, type ContractKind } from '@/lib/document-templates/contract-fields';
 
 /**
@@ -89,6 +90,8 @@ export default function NewContractFromTemplate() {
   const [pdfUrl, setPdfUrl] = useState('');
   const [error, setError] = useState('');
   const [signing, setSigning] = useState(false);
+  /* Bumped after each generate so the history picks up the version just made. */
+  const [generation, setGeneration] = useState(0);
 
   const base = `/app/projects/${projectId}/contracts`;
   const spec = CONTRACT_FORMS[kind];
@@ -117,6 +120,7 @@ export default function NewContractFromTemplate() {
     const link = data.pdfUrl || data.url || '';
     if (!link) throw new Error('The contract was generated but no document came back.');
     setPdfUrl(link);
+    setGeneration((n) => n + 1);
   };
 
   return (
@@ -166,6 +170,8 @@ export default function NewContractFromTemplate() {
                 Done
               </button>
             </div>
+
+            <ContractVersions projectId={projectId} kind={kind} refreshKey={generation} />
 
             {signing && (
               <div style={{ border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px' }}>

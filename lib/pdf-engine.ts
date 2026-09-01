@@ -1310,6 +1310,21 @@ export async function saveDocument(
   tenantId?: string
 ): Promise<string> {
   try {
+    /* Every generated document was being filed under a tenant_id equal to the
+       PROJECT id, because most callers do not pass one and the fallback was
+       `tenantId || projectId`. /api/documents/list filters on tenant_id, so
+       nothing generated this way ever appeared in the Documents list. The
+       project row knows its own tenant; ask it. */
+    let tenant = tenantId;
+    if (!tenant) {
+      const { data: proj } = await getSupabaseAdmin()
+        .from('projects')
+        .select('tenant_id')
+        .eq('id', projectId)
+        .single();
+      tenant = (proj as { tenant_id?: string } | null)?.tenant_id || undefined;
+    }
+
     const fileName = `${projectId}/${docType}-${Date.now()}.pdf`;
     await getSupabaseAdmin().storage
       .from('documents')
@@ -1323,7 +1338,7 @@ export async function saveDocument(
     // 42703'd and no generated doc (W-9, pay-app, lien) ever reached the
     // Documents list. (storage path is derivable from pdf_url when signing.)
     await getSupabaseAdmin().from('generated_documents').insert({
-      tenant_id: tenantId || projectId,
+      tenant_id: tenant || projectId,
       project_id: projectId,
       doc_type: docType,
       pdf_url: pdfUrl,
