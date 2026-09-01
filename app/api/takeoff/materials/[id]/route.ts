@@ -51,6 +51,18 @@ async function getScopedMaterial(supabase: Supa, tenantId: string, materialId: s
 }
 
 /** Recompute + persist the takeoff's totals from its current rows. */
+/** Next sort_order at the end of the sheet. */
+async function appendPosition(supabase: Supa, takeoffId: string): Promise<number> {
+  const { data: last } = await supabase
+    .from('takeoff_materials')
+    .select('sort_order')
+    .eq('takeoff_id', takeoffId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (Number(last?.sort_order) || 0) + 1;
+}
+
 async function recomputeTotals(supabase: Supa, takeoffId: string, contingencyPctRaw: unknown) {
   const { data: rows, error } = await supabase
     .from('takeoff_materials')
@@ -97,15 +109,55 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!Number.isFinite(quantity) || quantity <= 0) return badRequest('Quantity must be a number greater than 0');
     if (!Number.isFinite(unitCost) || unitCost <= 0) return badRequest('Unit cost must be a number greater than 0');
 
-    // sort_order: append after the takeoff's current last row
-    const { data: last } = await supabase
-      .from('takeoff_materials')
-      .select('sort_order')
-      .eq('takeoff_id', takeoffId)
-      .order('sort_order', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const sortOrder = (Number(last?.sort_order) || 0) + 1;
+    /* sort_order — append, unless the caller named a row to land after.
+       An estimator adding a missed line wants it beside its neighbours, not at
+       the bottom of the sheet. sort_order is an integer, so there is no midpoint
+       to slot into: everything at or after the target shifts up by one first.
+       Two statements rather than one, but the alternative is a schema change to
+       numeric on a live table. */
+    const afterId = body.afterId ? String(body.afterId) : '';
+    let sortOrder: number;
+    // The anchor row was deleted between the client reading it and posting.
+    // Appending is the right fallback — losing the line would be worse than
+    // putting it at the bottom — but the client is told so it can say so.
+    let afterMissing = false;
+
+    if (afterId) {
+      const { data: anchor } = await supabase
+        .from('takeoff_materials')
+        .select('sort_order')
+        .eq('id', afterId)
+        .eq('takeoff_id', takeoffId)
+        .eq('tenant_id', user.tenantId)
+        .maybeSingle();
+
+      if (anchor) {
+        const at = Number(anchor.sort_order) || 0;
+        const { data: below } = await supabase
+          .from('takeoff_materials')
+          .select('id, sort_order')
+          .eq('takeoff_id', takeoffId)
+          .eq('tenant_id', user.tenantId)
+          .gt('sort_order', at)
+          .order('sort_order', { ascending: false });
+
+        // Descending, so no two rows ever collide on the unique-ish ordering
+        // while the shift is in flight.
+        for (const r of below ?? []) {
+          await supabase
+            .from('takeoff_materials')
+            .update({ sort_order: (Number(r.sort_order) || 0) + 1 })
+            .eq('id', r.id)
+            .eq('tenant_id', user.tenantId);
+        }
+        sortOrder = at + 1;
+      } else {
+        afterMissing = true;
+        sortOrder = await appendPosition(supabase, takeoffId);
+      }
+    } else {
+      sortOrder = await appendPosition(supabase, takeoffId);
+    }
 
     const row = {
       takeoff_id: takeoffId,
@@ -130,7 +182,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (insErr) throw insErr;
 
     const totals = await recomputeTotals(supabase, takeoffId, takeoff.contingency_pct);
-    return ok({ material: inserted, totals }, 201);
+    return ok({ material: inserted, totals, afterMissing }, 201);
   } catch (err) {
     return serverError(err);
   }

@@ -8,7 +8,7 @@ import { humanError } from '@/lib/errors';
 import { useToast } from '../../../../../components/Toast';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import { Blueprint, Table, ArrowRight, DownloadSimple, FileXls, Package, CurrencyDollar, Lightning, CheckCircle, Ruler, Robot, CircleNotch, Circle, Plus, Sparkle, ShieldCheck, Timer, Buildings, TrendUp, Stack, Target, MagicWand, FileText, Scroll, FolderSimple, SealCheck, Warning, Calculator, NotePencil, Trash, X } from '@phosphor-icons/react';
+import { Blueprint, Copy, Table, ArrowRight, DownloadSimple, FileXls, Package, CurrencyDollar, Lightning, CheckCircle, Ruler, Robot, CircleNotch, Circle, Plus, Sparkle, ShieldCheck, Timer, Buildings, TrendUp, Stack, Target, MagicWand, FileText, Scroll, FolderSimple, SealCheck, Warning, Calculator, NotePencil, Trash, X } from '@phosphor-icons/react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { UiFx } from '@/components/ui/fx';
 
@@ -325,11 +325,13 @@ function EditableCell({ rawValue, display, align, numeric, disabled, cellStyle, 
 
 /** One editable takeoff line: inline edit on description / qty / unit / $/unit,
  *  a note editor (indicator dot when a note exists), and delete-with-undo. */
-const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, onDelete }: {
+const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, onDuplicate, onInsertBelow, onDelete }: {
   item: TakeoffItem;
   idx: number;
   sellMult: number;
   onPatch: (item: TakeoffItem, patch: LinePatch) => void;
+  onDuplicate: (item: TakeoffItem) => void;
+  onInsertBelow: (item: TakeoffItem) => void;
   onDelete: (item: TakeoffItem) => void;
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
@@ -367,6 +369,14 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, on
             onClick={() => { setNoteDraft(item.notes || ''); setNoteOpen((o) => !o); }}>
             <NotePencil size={14} weight="duotone" color={hasNote ? GOLD_HI : 'rgba(255,255,255,0.55)'} />
             {hasNote && <span aria-hidden style={{ position: 'absolute', top: 2, right: 2, width: 6, height: 6, borderRadius: '50%', background: GOLD, boxShadow: '0 0 6px rgba(245,158,11,0.9)' }} />}
+          </button>
+          <button className="tkIconBtn" disabled={!editable} title="Duplicate this line below"
+            onClick={() => onDuplicate(item)}>
+            <Copy size={14} weight="duotone" color="rgba(255,255,255,0.55)" />
+          </button>
+          <button className="tkIconBtn" disabled={!editable} title="Insert an empty line below"
+            onClick={() => onInsertBelow(item)}>
+            <Plus size={14} weight="bold" color="rgba(255,255,255,0.55)" />
           </button>
           <button className="tkIconBtn" disabled={!editable} title="Delete line (6s undo)" onClick={() => onDelete(item)}>
             <Trash size={14} weight="duotone" color="rgba(248,113,113,0.85)" />
@@ -472,12 +482,14 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
  * Every row is inline-editable (qty / unit / $/unit / description / notes / delete),
  * and each division header carries an add-line composer.
  */
-const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPatch, onAdd, onPaste, onDelete }: {
+const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPatch, onAdd, onPaste, onDuplicate, onInsertBelow, onDelete }: {
   groupedItems: Record<string, TakeoffItem[]>;
   sellMult: number;
   onPatch: (item: TakeoffItem, patch: LinePatch) => void;
   onAdd: (div: string, draft: LineDraft) => Promise<boolean>;
   onPaste: (div: string, text: string) => Promise<number>;
+  onDuplicate: (item: TakeoffItem) => void;
+  onInsertBelow: (item: TakeoffItem) => void;
   onDelete: (item: TakeoffItem) => void;
 }) {
   const [showAll, setShowAll] = useState(false);
@@ -544,7 +556,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
               <DivisionComposer div={div} divName={divName} onAdd={onAdd} onClose={() => setComposerDiv(null)} />
             )}
             {shown.map((item, idx) => (
-              <EditableRow key={item.id ?? `${div}-${idx}`} item={item} idx={idx} sellMult={sellMult} onPatch={onPatch} onDelete={onDelete} />
+              <EditableRow key={item.id ?? `${div}-${idx}`} item={item} idx={idx} sellMult={sellMult} onPatch={onPatch} onDuplicate={onDuplicate} onInsertBelow={onInsertBelow} onDelete={onDelete} />
             ))}
           </div>
         );
@@ -759,7 +771,9 @@ export default function TakeoffPage() {
     }
   }, [beginSave, endSave, applyServerTotals, showToast]);
 
-  const addLine = useCallback(async (div: string, draft: LineDraft): Promise<boolean> => {
+  /* afterId places the new row directly beneath an existing one. Omitted, the
+     line appends — which is what Add line and a spreadsheet paste both want. */
+  const addLine = useCallback(async (div: string, draft: LineDraft, afterId?: string): Promise<boolean> => {
     const tid = resultRef.current?.takeoffId || takeoffId;
     if (!tid) { showToast('Takeoff still syncing — try again in a moment.', 'error'); return false; }
     const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -771,13 +785,22 @@ export default function TakeoffPage() {
       unitCost: draft.unitCost, totalCost: draft.quantity * draft.unitCost,
       laborHours: 0, notes: draft.notes,
     };
-    setResult((prev) => prev ? recomputeResult(prev, [...prev.items, optimistic]) : prev);
+    setResult((prev) => {
+      if (!prev) return prev;
+      // Land the optimistic row where the server will put it, so the line does
+      // not appear at the bottom and then jump on the next load.
+      const at = afterId ? prev.items.findIndex((it) => it.id === afterId) : -1;
+      const items = at >= 0
+        ? [...prev.items.slice(0, at + 1), optimistic, ...prev.items.slice(at + 1)]
+        : [...prev.items, optimistic];
+      return recomputeResult(prev, items);
+    });
     beginSave();
     try {
       const res = await fetch(`/api/takeoff/materials/${tid}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ csiCode, csiName, description: draft.description, quantity: draft.quantity, unit: draft.unit, unitCost: draft.unitCost, notes: draft.notes }),
+        body: JSON.stringify({ csiCode, csiName, description: draft.description, quantity: draft.quantity, unit: draft.unit, unitCost: draft.unitCost, notes: draft.notes, afterId }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error((body as { error?: string }).error || 'Failed to add the line');
@@ -808,6 +831,34 @@ export default function TakeoffPage() {
      badge and the server round-trip are identical either way. Sequential on
      purpose — the server assigns ids and recomputes totals per line, and firing
      forty at once races that. */
+  /* Duplicate a line, landing it directly beneath its original.
+     Repetitive scope is most of a takeoff — six door types, four wall
+     assemblies — and retyping the row to change one number is the slowest
+     thing in the sheet. afterId puts it beside its neighbour rather than at
+     the bottom, which is the whole point. */
+  const duplicateLine = useCallback(async (item: TakeoffItem) => {
+    const div = item.csiCode?.slice(0, 2) || 'XX';
+    await addLine(div, {
+      description: item.description,
+      quantity: item.quantity,
+      unit: item.unit,
+      unitCost: item.unitCost,
+      notes: item.notes || '',
+    }, item.id);
+  }, [addLine]);
+
+  /* An empty line directly beneath this one, ready to type into. */
+  const insertLineBelow = useCallback(async (item: TakeoffItem) => {
+    const div = item.csiCode?.slice(0, 2) || 'XX';
+    await addLine(div, {
+      description: 'New line',
+      quantity: 1,
+      unit: item.unit || 'EA',
+      unitCost: 0.01,
+      notes: '',
+    }, item.id);
+  }, [addLine]);
+
   const pasteLines = useCallback(async (div: string, text: string): Promise<number> => {
     const parsed = parsePastedLines(text);
     if (!parsed.length) {
@@ -2002,7 +2053,7 @@ export default function TakeoffPage() {
         </div>
 
         {/* Grouped rows — memoized + row-capped so slider drags and huge extractions don't freeze */}
-        <LineItemTable groupedItems={groupedItems} sellMult={sellMult} onPatch={patchLine} onAdd={addLine} onPaste={pasteLines} onDelete={deleteLine} />
+        <LineItemTable groupedItems={groupedItems} sellMult={sellMult} onPatch={patchLine} onAdd={addLine} onPaste={pasteLines} onDuplicate={duplicateLine} onInsertBelow={insertLineBelow} onDelete={deleteLine} />
 
         {/* Grand total row */}
         <div style={{
