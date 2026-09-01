@@ -603,6 +603,16 @@ export default function TakeoffPage() {
   const [overheadPct, setOverheadPct] = useState(10);
   const [profitPct, setProfitPct] = useState(10);
   const [contingencyPct, setContingencyPct] = useState(10);
+  /* applyMarkupStack has always computed the full AGC stack — tax on material,
+     burden on labor, GC on direct, then OH, contingency, fee and bond. This
+     screen only ever fed it three of the seven, so the other four silently
+     computed as zero and the sell price was low by exactly the amount a real
+     bid carries. They are inputs now. Defaults are the ones the unreachable
+     estimate builder shipped with, which are sane starting points for AZ. */
+  const [salesTaxPct, setSalesTaxPct] = useState(0);
+  const [laborBurdenPct, setLaborBurdenPct] = useState(0);
+  const [generalConditionsPct, setGeneralConditionsPct] = useState(0);
+  const [bondPct, setBondPct] = useState(0);
   // Autonomous "Yes, build it all" flow: summary after the full chain, and the
   // manual-picker toggle ("Let me pick" reveals the individual document actions).
   const [autoSummary, setAutoSummary] = useState<AutoBuildSummary | null>(null);
@@ -1372,9 +1382,9 @@ export default function TakeoffPage() {
   // and Excel export use — replaces the old flat ×1.15 and the additive markup so this page can
   // never show a different sell number than the rest of the app. Depends only on the sliders.
   const sellMult = useMemo(() => {
-    const mk = applyMarkupStack({ materialCents: 1_000_000, laborCents: 0 }, { overheadPct, profitPct, contingencyPct });
+    const mk = applyMarkupStack({ materialCents: 1_000_000, laborCents: 0 }, { overheadPct, profitPct, contingencyPct, salesTaxPct, laborBurdenPct, generalConditionsPct, bondPct });
     return mk.sellCents / mk.directCents;
-  }, [overheadPct, profitPct, contingencyPct]);
+  }, [overheadPct, profitPct, contingencyPct, salesTaxPct, laborBurdenPct, generalConditionsPct, bondPct]);
 
   const computedCosts = useMemo(() => {
     if (!result) return null;
@@ -1382,16 +1392,20 @@ export default function TakeoffPage() {
     const labCost = result.totalLaborCost;
     const mk = applyMarkupStack(
       { materialCents: Math.round(matCost * 100), laborCents: Math.round(labCost * 100) },
-      { overheadPct, profitPct, contingencyPct },
+      { overheadPct, profitPct, contingencyPct, salesTaxPct, laborBurdenPct, generalConditionsPct, bondPct },
     );
     const subtotal = mk.directCents / 100;          // direct cost of work
+    const materialTax = mk.materialTaxCents / 100;
+    const laborBurden = (mk.burdenedLaborCents / 100) - labCost;
+    const generalConditions = mk.generalConditionsCents / 100;
+    const bond = mk.bondCents / 100;
     const overhead = mk.overheadCents / 100;
     const profit = mk.profitCents / 100;
     const contingency = mk.contingencyCents / 100;
     const totalJobCost = mk.sellCents / 100;        // the sell price (engine stack)
     const costPerSF = result.estimatedSF > 0 ? totalJobCost / result.estimatedSF : 0;
-    return { matCost, labCost, subtotal, overhead, profit, contingency, totalJobCost, costPerSF };
-  }, [result, overheadPct, profitPct, contingencyPct]);
+    return { matCost, labCost, subtotal, materialTax, laborBurden, generalConditions, overhead, profit, contingency, bond, totalJobCost, costPerSF };
+  }, [result, ...[overheadPct, profitPct, contingencyPct, salesTaxPct, laborBurdenPct, generalConditionsPct, bondPct]]);
 
   // Group items by CSI division. Memoized on `result` ONLY — moving a markup slider
   // no longer rebuilds this map, so the giant line-item table is never re-derived on drag.
@@ -1858,9 +1872,17 @@ export default function TakeoffPage() {
           {/* Markup sliders */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 }}>
             {[
-              { label: 'Overhead', pct: overheadPct, setPct: setOverheadPct, value: computedCosts.overhead, color: '#F97316' },
-              { label: 'Profit', pct: profitPct, setPct: setProfitPct, value: computedCosts.profit, color: '#22C55E' },
-              { label: 'Contingency', pct: contingencyPct, setPct: setContingencyPct, value: computedCosts.contingency, color: '#A78BFA' },
+              /* Shown in the order the engine applies them, so the sheet reads
+                 the way the arithmetic actually runs: tax rides material,
+                 burden rides labor, GC on direct, OH on cost-of-work,
+                 contingency on that, fee pre-bond, bond on contract value. */
+              { label: 'Sales tax', pct: salesTaxPct, setPct: setSalesTaxPct, value: computedCosts.materialTax, color: '#38BDF8', max: 15 },
+              { label: 'Labor burden', pct: laborBurdenPct, setPct: setLaborBurdenPct, value: computedCosts.laborBurden, color: '#818CF8', max: 60 },
+              { label: 'General conditions', pct: generalConditionsPct, setPct: setGeneralConditionsPct, value: computedCosts.generalConditions, color: '#F472B6', max: 25 },
+              { label: 'Overhead', pct: overheadPct, setPct: setOverheadPct, value: computedCosts.overhead, color: '#F97316', max: 25 },
+              { label: 'Contingency', pct: contingencyPct, setPct: setContingencyPct, value: computedCosts.contingency, color: '#A78BFA', max: 25 },
+              { label: 'Profit', pct: profitPct, setPct: setProfitPct, value: computedCosts.profit, color: '#22C55E', max: 25 },
+              { label: 'Bond', pct: bondPct, setPct: setBondPct, value: computedCosts.bond, color: '#FBBF24', max: 5 },
             ].map((ctrl) => (
               <div key={ctrl.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -1870,11 +1892,11 @@ export default function TakeoffPage() {
                 <input
                   type="range"
                   min={0}
-                  max={25}
+                  max={ctrl.max}
                   value={ctrl.pct}
                   onChange={(e) => ctrl.setPct(Number(e.target.value))}
                   className="tkRange"
-                  style={{ width: '100%', color: ctrl.color, cursor: 'pointer', background: `linear-gradient(90deg, ${ctrl.color} ${(ctrl.pct / 25) * 100}%, rgba(255,255,255,0.12) ${(ctrl.pct / 25) * 100}%)` }}
+                  style={{ width: '100%', color: ctrl.color, cursor: 'pointer', background: `linear-gradient(90deg, ${ctrl.color} ${(ctrl.pct / ctrl.max) * 100}%, rgba(255,255,255,0.12) ${(ctrl.pct / ctrl.max) * 100}%)` }}
                 />
                 <div style={{ color: ctrl.color, fontWeight: 700, fontSize: 14.5, marginTop: 8, textAlign: 'right' }}>{fmt$(ctrl.value)}</div>
               </div>
