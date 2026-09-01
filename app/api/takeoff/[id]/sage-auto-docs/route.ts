@@ -465,6 +465,7 @@ Rules:
 
         // ── 8. Create SOV / Pay Application ─────────────────────────────────
         let sovId: string | null = null;
+        let sovLines = 0;
 
         try {
           const { data: lastApp } = await supabase
@@ -520,21 +521,32 @@ Rules:
                 tenant_id:        tenantId,
                 project_id:       takeoff.project_id,
                 pay_app_id:       sovId,
-                line_number:      lineNum++,
+                line_number:      lineNum,
                 description:      `${div} — ${divName}`,
                 scheduled_value:  divTotal,
-                work_from_prev:   0,
-                work_this_period: 0,
-                materials_stored: 0,
+                prev_completed:   0,
+                this_period:      0,
+                stored_materials: 0,
                 total_completed:  0,
                 percent_complete: 0,
                 balance_to_finish: divTotal,
                 retainage:        0,
-                csi_code:         div,
+                cost_code:        div,
+                sort_order:       lineNum,
+                ai_generated:     true,
               });
+              lineNum++;
             }
 
-            await supabase.from('schedule_of_values').insert(sovRows as Database['public']['Tables']['schedule_of_values']['Insert'][]);
+            const { error: sovInsertErr } = await supabase
+              .from('schedule_of_values')
+              .insert(sovRows as Database['public']['Tables']['schedule_of_values']['Insert'][]);
+            if (sovInsertErr) {
+              console.error('[sage-auto-docs] SOV line insert failed:', sovInsertErr);
+              sovLines = 0;
+            } else {
+              sovLines = sovRows.length;
+            }
           }
         } catch (sovErr) {
           console.error('[sage-auto-docs] SOV error:', sovErr);
@@ -547,7 +559,8 @@ Rules:
         done({
           packagesCreated: createdPackages.length,
           jacketsGenerated,
-          sovCreated:      !!sovId,
+          sovCreated:      !!sovId && sovLines > 0,
+          sovLines,
           sovId,
           projectId:       takeoff.project_id,
           compliance,
