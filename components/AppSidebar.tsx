@@ -67,8 +67,8 @@ interface NavItem {
   icon: React.ElementType;
   badge?: number;
   gate?: string; // gated feature flag; item hidden unless the tenant is entitled
-  /* Shown always. Everything else waits behind "Show everything" — see
-     CORE_COUNT below for why. */
+  /* Shown always. Everything else waits behind "Show everything" — the note
+     above NAV_SECTIONS says why. */
   core?: boolean;
   accentKey?: string; // module-identity key -> tints the inactive icon + count badge
 }
