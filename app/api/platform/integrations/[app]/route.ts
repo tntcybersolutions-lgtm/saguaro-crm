@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { isPlatformAdmin } from '@/lib/platform-admin';
 import { encryptSecret, hasEncryptionKey } from '@/lib/crypto-secrets';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -34,7 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: { app: string 
     if (error) throw error;
     return NextResponse.json({ ok: true, app: params.app });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Save failed' }, { status: 500 });
+    return apiError('platform/integrations/app', e, "Save failed", 500);
   }
 }
 
@@ -43,6 +44,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { app: stri
   if (err) return err;
   const admin = createServerClient() as any;
   const { error } = await admin.from('platform_integrations').delete().eq('app', params.app);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return apiError('platform/integrations/app', error, undefined, 500);
   return NextResponse.json({ removed: true });
 }

@@ -17,6 +17,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 
+import { apiError } from '@/lib/api-error';
 export const dynamic = 'force-dynamic';
 
 const MARKUP_TYPES = new Set([
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     const { data, error } = await q;
     if (error) {
       console.error('[markups GET] query failed:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError('projects/projectId/drawings/markups', error, undefined, 500);
     }
 
     // Comments (live columns: content / author_name) keyed by markup.
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
     if (error) {
       console.error('[markups POST] insert failed:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError('projects/projectId/drawings/markups', error, undefined, 500);
     }
     return NextResponse.json({ markup: { ...data, comments: [] } });
   } catch (e: unknown) {

@@ -49,7 +49,9 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     if (error) throw error;
     return NextResponse.json({ item: data }, { status: 201 });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Failed';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[projects/projectId/commissioning]', e);
+    const msg = "Failed";
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

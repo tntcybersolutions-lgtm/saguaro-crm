@@ -5,6 +5,7 @@ import { makeProvider, loadConnectorCtx } from '@/lib/storage-providers/registry
 import { signStoredUrl } from '@/lib/storage-signing';
 import { classifyKind } from '@/lib/filekind';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -54,6 +55,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const url = await signStoredUrl(BUCKET, key, 3600);
     return NextResponse.json({ file: { ...row, url, file_url: url } });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Import failed' }, { status: 502 });
+    return apiError('storage/connectors/id/import', err, "Import failed", 502);
   }
 }

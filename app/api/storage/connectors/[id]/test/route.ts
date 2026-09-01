@@ -25,6 +25,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ ok: t.ok, account: t.account, error: t.error });
   } catch (err: any) {
     await admin.from('storage_connectors').update({ status: 'error', last_error: err?.message || 'test failed', updated_at: new Date().toISOString() }).eq('id', params.id).eq('tenant_id', user.tenantId);
-    return NextResponse.json({ ok: false, error: err?.message || 'test failed' });
+    /* last_error above keeps the real reason on the connector row, where an
+       admin can read it. The response says only that it failed. */
+    console.error('[storage/connectors/test]', err);
+    return NextResponse.json({ ok: false, error: 'Connection test failed. Check the connector settings.' });
   }
 }

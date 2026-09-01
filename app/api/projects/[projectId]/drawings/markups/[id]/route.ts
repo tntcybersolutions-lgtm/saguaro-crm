@@ -9,6 +9,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission, hasPermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 
+import { apiError } from '@/lib/api-error';
 export const dynamic = 'force-dynamic';
 
 type MarkupUpdate = Database['public']['Tables']['drawing_markups']['Update'];
@@ -100,7 +101,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 
     if (error) {
       console.error('[markups DELETE] delete failed:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError('projects/projectId/drawings/markups/id', error, undefined, 500);
     }
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
@@ -156,7 +157,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
     if (error) {
       console.error('[markup comment POST] insert failed:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError('projects/projectId/drawings/markups/id', error, undefined, 500);
     }
     return NextResponse.json({ comment: data });
   } catch (e: unknown) {

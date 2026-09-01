@@ -394,7 +394,9 @@ Requirements:
         done();
       } catch (err: unknown) {
         stopHeartbeat();
-        const message = err instanceof Error ? err.message : 'Network wizard failed. Please try again.';
+        // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[ai/network-wizard]', err);
+    const message = "Network wizard failed. Please try again.";
         console.error('[network-wizard]', err);
         send('error', { message });
         done();

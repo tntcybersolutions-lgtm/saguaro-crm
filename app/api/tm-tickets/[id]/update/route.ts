@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const user = await getUser(req);
@@ -55,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .single();
     if (error) {
       const status = error.code === 'PGRST116' ? 404 : 500;
-      return NextResponse.json({ error: error.message || 'Failed to update ticket' }, { status });
+      return apiError('tm-tickets/id/update', error, "Failed to update ticket", status);
     }
     return NextResponse.json({ success: true, ticket: data });
   } catch (err) {

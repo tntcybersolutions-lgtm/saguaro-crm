@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 function isConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest) {
     if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already')) {
       return NextResponse.json({ error: 'An account with this email already exists. Please log in instead.' }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return apiError('auth/signup', error, undefined, 400);
   }
 
   // 2 + 3. Provision the tenant (company) and promote the owner profile.

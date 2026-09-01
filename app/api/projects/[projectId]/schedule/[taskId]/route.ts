@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Per-task schedule update.
  *
@@ -61,7 +62,7 @@ export async function PATCH(
       .single();
     if (error) {
       const status = error.code === 'PGRST116' ? 404 : 500;
-      return NextResponse.json({ error: error.message || 'Failed to update task' }, { status });
+      return apiError('projects/projectId/schedule/taskId', error, "Failed to update task", status);
     }
     return NextResponse.json({ task: data });
   } catch (err) {

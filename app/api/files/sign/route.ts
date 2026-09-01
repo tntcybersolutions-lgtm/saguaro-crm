@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -45,6 +46,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ signed: out });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Sign failed' }, { status: 500 });
+    return apiError('files/sign', err, "Sign failed", 500);
   }
 }

@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
+import { apiError } from '@/lib/api-error';
 // CO workflow (full 8-step, per SCS spec): Issue → GC Pricing → PM Review →
 // Architect Review → Owner Approval → Executed → Schedule Updated → Budget Updated.
 export const CO_FLOW = ['draft', 'pricing', 'pm_review', 'architect_review', 'pending_owner', 'approved', 'schedule_updated', 'budget_updated'];
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ changeOrder: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'create failed' }, { status: 500 });
+    return apiError('franchise/change-orders', e, "create failed", 500);
   }
 }
 
@@ -127,6 +128,6 @@ export async function PATCH(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'not found' }, { status: 400 });
     return NextResponse.json({ changeOrder: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'update failed' }, { status: 500 });
+    return apiError('franchise/change-orders', e, "update failed", 500);
   }
 }

@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import crypto from 'crypto';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -85,6 +86,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: 'Unknown channel' }, { status: 400 });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Share failed' }, { status: 500 });
+    return apiError('files/share', err, "Share failed", 500);
   }
 }

@@ -42,7 +42,9 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 
     return NextResponse.json({ actions: data || [] });
   } catch (err: unknown) {
-    const detail = err instanceof Error ? err.message : 'Internal server error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[projects/projectId/safety/corrective-actions]', err);
+    const detail = "Internal server error";
     console.error('[safety/corrective-actions] GET error:', detail);
     // An empty list here reads as "no outstanding corrective actions" — a safety
     // all-clear. A failed read must surface as an error the UI can retry.

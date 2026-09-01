@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { makeProvider, loadConnectorCtx } from '@/lib/storage-providers/registry';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -38,6 +39,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     });
     return NextResponse.json({ ok: true, external_path: res.path });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Export failed' }, { status: 502 });
+    return apiError('storage/connectors/id/export', err, "Export failed", 502);
   }
 }

@@ -49,7 +49,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     return NextResponse.json({ contract: data });
   } catch (e: unknown) {
     console.error('[projects/contracts/PATCH]', e);
-    const msg = e instanceof Error ? e.message : 'Failed to update the contract.';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[projects/projectId/contracts/id]', e);
+    const msg = "Failed to update the contract.";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

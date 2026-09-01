@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signFields } from '@/lib/storage-signing';
 
+import { apiError } from '@/lib/api-error';
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const user = await getUser(req);
@@ -56,6 +57,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
   };
 
   const { data, error } = await db.from('drawings').insert(row).select().single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return apiError('projects/projectId/drawings', error, undefined, 500);
   return NextResponse.json({ drawing: data });
 }

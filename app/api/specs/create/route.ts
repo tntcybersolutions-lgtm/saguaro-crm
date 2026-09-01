@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
     // The web specs page reads `json.spec`; keep `specification` for any other caller.
     return NextResponse.json({ success: true, spec: data, specification: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Internal server error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[specs/create]', err);
+    const msg = "Internal server error";
     console.error('[specs/create] error:', msg);
     return NextResponse.json({ error: `Failed to create spec: ${msg}` }, { status: 500 });
   }

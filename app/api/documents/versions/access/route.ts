@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ grant: { userId: grant.id, name: grant.grantee, role: grant.role } });
   } catch (err: any) {
     console.error('[documents/versions/access POST]', err?.message);
-    return NextResponse.json({ error: err?.message || 'Failed to grant access' }, { status: 500 });
+    return apiError('documents/versions/access', err, "Failed to grant access", 500);
   }
 }
 
@@ -72,6 +73,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (err: any) {
     console.error('[documents/versions/access DELETE]', err?.message);
-    return NextResponse.json({ error: err?.message || 'Failed to revoke access' }, { status: 500 });
+    return apiError('documents/versions/access', err, "Failed to revoke access", 500);
   }
 }

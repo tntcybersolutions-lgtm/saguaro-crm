@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Cross-site risk register for the Franchise Rollout Command Center.
  * FAIL-CLOSED: only tenants entitled to `command_center` get any data (403 otherwise),
@@ -84,6 +85,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ risk: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'insert failed' }, { status: 500 });
+    return apiError('franchise/risks', e, "insert failed", 500);
   }
 }

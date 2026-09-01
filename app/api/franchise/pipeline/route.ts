@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 import { isStage } from '@/lib/franchise-template';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Move a franchise location to a different rollout stage.
  * FAIL-CLOSED: only tenants entitled to `command_center`, and only their own projects.
@@ -33,6 +34,6 @@ export async function PATCH(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'invalid project' }, { status: 400 });
     return NextResponse.json({ project: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'update failed' }, { status: 500 });
+    return apiError('franchise/pipeline', e, "update failed", 500);
   }
 }

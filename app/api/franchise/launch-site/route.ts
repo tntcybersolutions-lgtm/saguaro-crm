@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 import { buildTemplateRows, GOLF_TEMPLATE } from '@/lib/franchise-template';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Launch a new franchise location from the standardized golf playbook.
  * Creates the project, then seeds phases, milestones, long-lead items, and
@@ -65,6 +66,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ project: proj, template: GOLF_TEMPLATE.name, seeded, warnings });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'launch failed' }, { status: 500 });
+    return apiError('franchise/launch-site', e, "launch failed", 500);
   }
 }

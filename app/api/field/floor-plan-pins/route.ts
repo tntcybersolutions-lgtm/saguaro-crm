@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Floor Plan Pins API — fully wired
  * Accepts both camelCase (projectId, x_pct, y_pct) from mobile field app
@@ -28,9 +29,9 @@ export async function GET(req: NextRequest) {
           if (drawingId) query = query.eq('drawing_id', drawingId);
           if (pinType)   query = query.eq('pin_type', pinType);
           const { data, error } = await query;
-          if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+          if (error) return apiError('field/floor-plan-pins', error, undefined, 500);
           return NextResponse.json({ pins: data || [] });
-    } catch (err: any) { return NextResponse.json({ error: err.message }, { status: 500 }); }
+    } catch (err: any) { return apiError('field/floor-plan-pins', err, undefined, 500); }
 }
 
 export async function POST(req: NextRequest) {
@@ -59,9 +60,9 @@ export async function POST(req: NextRequest) {
                       item_id:   body.linked_item_id   || null,
                       created_by: user.id,
               }).select().single();
-              if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+              if (error) return apiError('field/floor-plan-pins', error, undefined, 500);
               return NextResponse.json({ pin: data }, { status: 201 });
-        } catch (err: any) { return NextResponse.json({ error: err.message }, { status: 500 }); }
+        } catch (err: any) { return apiError('field/floor-plan-pins', err, undefined, 500); }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -78,9 +79,9 @@ export async function PATCH(req: NextRequest) {
           const db = createServerClient();
           const { data, error } = await db.from('floor_plan_pins').update(updates)
             .eq('id', id).eq('tenant_id', user.tenantId).select().single();
-          if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+          if (error) return apiError('field/floor-plan-pins', error, undefined, 500);
           return NextResponse.json({ pin: data });
-    } catch (err: any) { return NextResponse.json({ error: err.message }, { status: 500 }); }
+    } catch (err: any) { return apiError('field/floor-plan-pins', err, undefined, 500); }
 }
 
 export async function DELETE(req: NextRequest) {
@@ -94,7 +95,7 @@ export async function DELETE(req: NextRequest) {
           const db = createServerClient();
           const { error } = await db.from('floor_plan_pins').delete()
             .eq('id', id).eq('tenant_id', user.tenantId);
-          if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+          if (error) return apiError('field/floor-plan-pins', error, undefined, 500);
           return NextResponse.json({ success: true });
-    } catch (err: any) { return NextResponse.json({ error: err.message }, { status: 500 }); }
+    } catch (err: any) { return apiError('field/floor-plan-pins', err, undefined, 500); }
 }

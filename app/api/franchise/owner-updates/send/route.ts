@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 import { sendOwnerUpdate } from '@/lib/email/send';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Email a per-site weekly owner update via Resend. FAIL-CLOSED + tenant-scoped.
  * The client composes the update text (the same one shown on the Owner Updates
@@ -34,6 +35,6 @@ export async function POST(req: NextRequest) {
     if (!result.sent) return NextResponse.json({ error: 'Email is not configured (RESEND_API_KEY missing) or the send failed.' }, { status: 502 });
     return NextResponse.json({ sent: true, id: result.id });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'send failed' }, { status: 500 });
+    return apiError('franchise/owner-updates/send', e, "send failed", 500);
   }
 }

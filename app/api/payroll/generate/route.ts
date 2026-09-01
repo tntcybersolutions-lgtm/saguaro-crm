@@ -256,7 +256,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ downloadUrl: pdfUrl, id: certifiedPayrollId });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to generate certified payroll.';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[payroll/generate]', err);
+    const message = "Failed to generate certified payroll.";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -57,7 +57,9 @@ export async function POST(req: NextRequest) {
     const data = (await res.json()) as { text?: string };
     return NextResponse.json({ text: data.text || '' });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Internal server error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[voice/transcribe]', err);
+    const msg = "Internal server error";
     console.error('[voice/transcribe] error:', msg);
     return NextResponse.json({ error: 'Failed to transcribe audio' }, { status: 500 });
   }

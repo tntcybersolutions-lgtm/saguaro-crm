@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const g = await requirePermission(req, 'Projects', 'Edit');
@@ -18,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .update(updates)
       .eq('id', params.id)
       .eq('tenant_id', user.tenantId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return apiError('bids/id', error, undefined, 500);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to update bid' }, { status: 500 });
@@ -36,7 +37,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       .delete()
       .eq('id', params.id)
       .eq('tenant_id', user.tenantId);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return apiError('bids/id', error, undefined, 500);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to delete bid' }, { status: 500 });

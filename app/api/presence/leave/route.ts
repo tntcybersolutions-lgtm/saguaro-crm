@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 export async function DELETE(req: NextRequest) {
   try {
     const user = await getUser(req);
@@ -23,7 +24,7 @@ export async function DELETE(req: NextRequest) {
 
     if (error) {
       console.error('Presence leave error:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError('presence/leave', error, undefined, 500);
     }
 
     return NextResponse.json({ ok: true });

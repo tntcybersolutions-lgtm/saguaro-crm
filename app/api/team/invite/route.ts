@@ -182,7 +182,9 @@ async function createAndSendInvite(
 
     return { ok: true, email, invite, acceptUrl };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Invite failed';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[team/invite]', err);
+    const msg = "Invite failed";
     console.error('[team/invite] invite threw for', email, '-', msg);
     return { ok: false, email, error: msg };
   }

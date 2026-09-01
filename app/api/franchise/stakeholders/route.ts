@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Per-site stakeholder directory (the org structure: Owner, GC, Architect, City,
  * Full-Swing, IT/AV, Signage, …). Reuses project_contacts. FAIL-CLOSED + tenant-scoped.
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ stakeholder: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'insert failed' }, { status: 500 });
+    return apiError('franchise/stakeholders', e, "insert failed", 500);
   }
 }
 
@@ -89,6 +90,6 @@ export async function DELETE(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'not found' }, { status: 400 });
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'delete failed' }, { status: 500 });
+    return apiError('franchise/stakeholders', e, "delete failed", 500);
   }
 }

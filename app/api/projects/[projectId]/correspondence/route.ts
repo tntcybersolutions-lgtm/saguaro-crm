@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { sendCorrespondenceEmail } from '@/lib/email';
 import type { Database } from '@/lib/database.types';
 
+import { apiError } from '@/lib/api-error';
 /** Pull addresses out of the composer's [{ name, email }] recipient rows. */
 function emails(list: unknown): string[] {
   if (!Array.isArray(list)) return [];
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     const { data, error } = await supabase.from('correspondence').insert(record as Database['public']['Tables']['correspondence']['Insert']).select().single();
     // Never fabricate a fake `corr-…` id on failure — that reports a save that
     // never happened. Surface the real DB error instead.
-    if (error) { console.error('[correspondence/POST]', error); return NextResponse.json({ error: error.message || 'Failed to create correspondence' }, { status: 500 }); }
+    if (error) { console.error('[correspondence/POST]', error); return apiError('projects/projectId/correspondence', error, "Failed to create correspondence", 500); }
 
     // ── ACTUALLY SEND IT ──
     // A draft is filed, not transmitted. Anything else is outbound mail, and the

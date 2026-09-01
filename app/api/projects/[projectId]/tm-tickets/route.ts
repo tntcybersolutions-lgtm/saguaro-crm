@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     const { data, error } = await supabase.from('tm_tickets').insert(record as never).select().single();
     if (error) {
       console.error('[tm-tickets/POST]', error);
-      return NextResponse.json({ error: error.message || 'Failed to create T&M ticket' }, { status: 500 });
+      return apiError('projects/projectId/tm-tickets', error, "Failed to create T&M ticket", 500);
     }
     return NextResponse.json({ ticket: data }, { status: 201 });
   } catch (err) {

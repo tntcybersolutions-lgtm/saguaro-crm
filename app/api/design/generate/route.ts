@@ -192,7 +192,9 @@ Return ONLY valid JSON, no markdown wrapping.`;
             processing_time_ms: processingTime,
           });
         } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'AI analysis failed';
+          // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[design/generate]', err);
+    const errorMessage = "AI analysis failed";
           await db.from('design_sessions').update({
             status: 'error',
             error_message: errorMessage,

@@ -70,7 +70,9 @@ export async function POST(req: NextRequest) {
         // loudly instead of reporting a success that isn't one.
         return NextResponse.json({ error: e.message, code: e.code }, { status: 415 });
       }
-      const msg = e instanceof Error ? e.message : 'Could not process this image';
+      // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[photos/upload]', e);
+    const msg = "Could not process this image";
       console.error('[photos/upload] image processing error:', msg);
       return NextResponse.json({ error: msg }, { status: 400 });
     }

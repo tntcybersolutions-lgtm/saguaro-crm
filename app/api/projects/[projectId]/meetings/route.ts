@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 
+import { apiError } from '@/lib/api-error';
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       return NextResponse.json({ error: 'title, type and date are required' }, { status: 400 });
     }
     const { data, error } = await supabase.from('meetings').insert(record as Database['public']['Tables']['meetings']['Insert']).select().single();
-    if (error) { console.error('[meetings/POST]', error); return NextResponse.json({ error: error.message || 'Failed to create meeting' }, { status: 500 }); }
+    if (error) { console.error('[meetings/POST]', error); return apiError('projects/projectId/meetings', error, "Failed to create meeting", 500); }
     return NextResponse.json({ meeting: data });
   } catch {
     return NextResponse.json({ error: 'Failed to create meeting' }, { status: 500 });

@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Toggle an OAC action item complete/open. FAIL-CLOSED + tenant-scoped.
  */
@@ -37,6 +38,6 @@ export async function PATCH(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'invalid item' }, { status: 400 });
     return NextResponse.json({ action: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'update failed' }, { status: 500 });
+    return apiError('franchise/action-items', e, "update failed", 500);
   }
 }

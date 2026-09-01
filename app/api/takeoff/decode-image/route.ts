@@ -39,7 +39,9 @@ export async function POST(req: NextRequest) {
     const meta = await sharp(png).metadata();
     return Response.json({ ok: true, dataUrl: 'data:image/png;base64,' + png.toString('base64'), width: meta.width ?? 0, height: meta.height ?? 0 });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'unknown';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[takeoff/decode-image]', e);
+    const msg = "unknown";
     return Response.json({ ok: false, error: `Could not decode this image (${msg}). HEIC requires a HEIF-enabled build — if it fails, export the plan as PDF/PNG/JPG.` }, { status: 200 });
   }
 }

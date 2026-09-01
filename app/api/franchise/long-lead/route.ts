@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 import { nextLifecycleStatus } from '@/lib/franchise';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Cross-site long-lead procurement for the Franchise Rollout Command Center.
  * FAIL-CLOSED: only tenants entitled to `command_center` get any data (403 otherwise),
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ item: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'insert failed' }, { status: 500 });
+    return apiError('franchise/long-lead', e, "insert failed", 500);
   }
 }
 
@@ -115,6 +116,6 @@ export async function PATCH(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'invalid item' }, { status: 400 });
     return NextResponse.json({ item: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'update failed' }, { status: 500 });
+    return apiError('franchise/long-lead', e, "update failed", 500);
   }
 }

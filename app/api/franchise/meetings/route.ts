@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Cross-site OAC (Owner / Architect / Contractor) meetings + action items.
  * FAIL-CLOSED: only tenants entitled to `command_center`, scoped to their tenant.
@@ -113,6 +114,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ meeting, action_count: actionCount, warnings });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'create failed' }, { status: 500 });
+    return apiError('franchise/meetings', e, "create failed", 500);
   }
 }

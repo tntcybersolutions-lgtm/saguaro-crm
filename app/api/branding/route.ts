@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 
 /** GET /api/branding — returns { company_name, logo_url } for the current tenant */
@@ -64,6 +65,6 @@ export async function PUT(req: NextRequest) {
     .update({ settings: updated, updated_at: new Date().toISOString() })
     .eq('id', user.tenantId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return apiError('branding', error, undefined, 500);
   return NextResponse.json({ ok: true, company_name: updated.company_name, logo_url: updated.logo_url, primary_color: updated.primary_color });
 }

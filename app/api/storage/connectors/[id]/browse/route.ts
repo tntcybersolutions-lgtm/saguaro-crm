@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { makeProvider, loadConnectorCtx } from '@/lib/storage-providers/registry';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -20,6 +21,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     result.items.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'folder' ? -1 : 1));
     return NextResponse.json(result);
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Could not browse this connection' }, { status: 502 });
+    return apiError('storage/connectors/id/browse', err, "Could not browse this connection", 502);
   }
 }

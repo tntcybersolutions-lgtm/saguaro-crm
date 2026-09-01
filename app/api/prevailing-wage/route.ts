@@ -187,7 +187,9 @@ export async function GET(req: NextRequest) {
       disclaimer,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Failed to load prevailing wage data.';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[prevailing-wage]', err);
+    const message = "Failed to load prevailing wage data.";
     return NextResponse.json(
       { states: [], counties: [], determinations: [], rates: [], match: null, error: message, source: 'error' },
       { status: 500 },

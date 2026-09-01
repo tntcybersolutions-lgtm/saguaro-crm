@@ -33,7 +33,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     return NextResponse.json({ timesheet: data });
   } catch (e: unknown) {
     console.error('[timesheets/PATCH]', e);
-    const msg = e instanceof Error ? e.message : 'Failed to update the timesheet entry.';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[projects/projectId/timesheets/id]', e);
+    const msg = "Failed to update the timesheet entry.";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

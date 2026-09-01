@@ -93,7 +93,9 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     throw lastError;
   } catch (e: unknown) {
     console.error('[warranty-claims/POST]', e);
-    const msg = e instanceof Error ? e.message : 'Failed to create the warranty claim.';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[projects/projectId/warranty-claims]', e);
+    const msg = "Failed to create the warranty claim.";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

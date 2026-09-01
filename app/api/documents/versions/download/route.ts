@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -43,6 +44,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: signed.signedUrl, fileName: ver.file_name });
   } catch (err: any) {
     console.error('[documents/versions/download]', err?.message);
-    return NextResponse.json({ error: err?.message || 'Failed to create download URL' }, { status: 500 });
+    return apiError('documents/versions/download', err, "Failed to create download URL", 500);
   }
 }

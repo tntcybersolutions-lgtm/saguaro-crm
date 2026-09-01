@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -66,6 +67,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, checkedOutBy: null });
   } catch (err: any) {
     console.error('[documents/versions/checkout]', err?.message);
-    return NextResponse.json({ error: err?.message || 'Lock update failed' }, { status: 500 });
+    return apiError('documents/versions/checkout', err, "Lock update failed", 500);
   }
 }

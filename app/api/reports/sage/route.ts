@@ -439,7 +439,9 @@ function buildSageStream(q: string, projectId?: string, tenantId?: string): Resp
         done();
 
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Report generation failed. Please try again.';
+        // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[reports/sage]', err);
+    const message = "Report generation failed. Please try again.";
         console.error('[sage]', err);
         send('error', { message });
         done();

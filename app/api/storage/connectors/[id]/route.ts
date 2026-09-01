@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { encryptSecret } from '@/lib/crypto-secrets';
 import { makeProvider, loadConnectorCtx } from '@/lib/storage-providers/registry';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -45,7 +46,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (error) throw error;
     return NextResponse.json({ connector: redact(data) });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Update failed' }, { status: 500 });
+    return apiError('storage/connectors/id', err, "Update failed", 500);
   }
 }
 
@@ -56,6 +57,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const admin = createServerClient() as any;
   const { error } = await admin.from('storage_connectors').delete().eq('id', params.id).eq('tenant_id', user.tenantId);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return apiError('storage/connectors/id', error, undefined, 500);
   return NextResponse.json({ deleted: true });
 }

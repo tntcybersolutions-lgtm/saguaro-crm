@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { buildBidHistoryContext } from '@/lib/construction-intelligence';
 
+import { apiError } from '@/lib/api-error';
 // ─── CORS helpers ─────────────────────────────────────────────────────────────
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://saguarocontrol.net';
@@ -284,7 +285,7 @@ export async function GET(
         if (error.code === '42P01' || error.message?.includes('does not exist') || error.message?.includes('relation')) {
           return NextResponse.json({ error: 'bid_history table not yet created', bids: [], stats: computeBidStats([]) }, { status: 500 });
         }
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return apiError('...path', error, undefined, 500);
       }
       const bids: BidRecord[] = data ?? [];
       return NextResponse.json({ bids, stats: computeBidStats(bids), source: 'live' });
@@ -688,7 +689,7 @@ export async function POST(
     const { data: project, error } = await supabaseAdmin.from('projects').insert({ tenant_id: tenantId, name, address: address || null, project_number: projectNumber, project_type: projectType, contract_amount: contractAmount || null, start_date: startDate, substantial_completion_date: subDate, owner_name: ownerName, owner_email: ownerEmail, architect_name: archName, architect_email: archEmail, description, retainage_percent: retainage, prevailing_wage: prevailingWage, public_project: publicProject, contract_type: contractType, state, status: 'active', created_at: now, updated_at: now }).select('id, project_number, name').single();
     if (error || !project) {
       console.error('[api/catch-all] projects/create error:', error?.message);
-      return NextResponse.json({ error: error?.message || 'Failed to create project' }, { status: 500 });
+      return apiError('...path', error, "Failed to create project", 500);
     }
     return NextResponse.json({ projectId: project.id, projectNumber: project.project_number, name: project.name });
   }

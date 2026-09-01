@@ -563,7 +563,9 @@ Rules:
         });
 
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Auto-document generation failed.';
+        // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[takeoff/id/sage-auto-docs]', err);
+    const message = "Auto-document generation failed.";
         console.error('[sage-auto-docs]', err);
         send('error', { message });
         done();

@@ -87,7 +87,9 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (error) throw error;
     return NextResponse.json({ links: data || [] });
   } catch (err: unknown) {
-    const detail = err instanceof Error ? err.message : 'Internal server error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[projects/projectId/photos/link]', err);
+    const detail = "Internal server error";
     console.error('[photos/link GET]', detail);
     // A failed read must not render as "no linked photos" — surface it so the
     // UI can show an error state with a retry.

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 export async function GET(req: NextRequest) {
   const user = await getUser(req);
   if (!user) {
@@ -74,7 +75,7 @@ export async function PUT(req: NextRequest) {
 
   const db = createServerClient();
   const { error } = await db.from('profiles').update(patch).eq('id', user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return apiError('auth/me', error, undefined, 500);
 
   return NextResponse.json({ ok: true, ...patch });
 }

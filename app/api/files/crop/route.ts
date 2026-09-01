@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { signStoredUrl } from '@/lib/storage-signing';
 import { cropAndRotate, type CropRect } from '@/lib/blueprint-processor';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -53,6 +54,6 @@ export async function POST(req: NextRequest) {
     const url = await signStoredUrl(bucket, newPath, 3600);
     return NextResponse.json({ file: { ...(updated as any), url, file_url: url } });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Crop failed' }, { status: 500 });
+    return apiError('files/crop', err, "Crop failed", 500);
   }
 }

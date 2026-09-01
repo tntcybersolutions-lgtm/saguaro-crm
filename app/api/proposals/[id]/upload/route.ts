@@ -50,7 +50,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({ success: true, url, proposal: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Internal server error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[proposals/id/upload]', err);
+    const msg = "Internal server error";
     console.error('[proposals/[id]/upload] error:', msg);
     return NextResponse.json({ error: `Failed to upload proposal PDF: ${msg}` }, { status: 500 });
   }

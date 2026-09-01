@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -101,7 +102,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ documents });
   } catch (err: any) {
     console.error('[documents/versions GET]', err?.message);
-    return NextResponse.json({ error: err?.message || 'Failed to load documents' }, { status: 500 });
+    return apiError('documents/versions', err, "Failed to load documents", 500);
   }
 }
 
@@ -267,6 +268,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ documentId: doc.id, version: ver });
   } catch (err: any) {
     console.error('[documents/versions POST]', err?.message);
-    return NextResponse.json({ error: err?.message || 'Failed to save version' }, { status: 500 });
+    return apiError('documents/versions', err, "Failed to save version", 500);
   }
 }

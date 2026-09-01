@@ -327,7 +327,9 @@ export async function GET(
         done();
       } catch (err: unknown) {
         stopHeartbeat();
-        const message = err instanceof Error ? err.message : 'Analysis failed.';
+        // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[drone/id/analyze]', err);
+    const message = "Analysis failed.";
         console.error('[drone/analyze]', err);
         send('error', { message });
         try {

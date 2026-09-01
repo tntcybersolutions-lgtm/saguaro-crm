@@ -60,7 +60,9 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ report: flatten(data) }, { status: 201 });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Failed';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[reports]', e);
+    const msg = "Failed";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

@@ -37,7 +37,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         status: 'invited',
       }).select().single();
 
-      if (error) { results.push({ email: sub.email, status: 'error', error: error.message }); continue; }
+      if (error) {
+        // Per-row failure. The GC needs to know WHICH sub failed, not what the
+        // database said about it — that text names tables and constraints.
+        console.error('[bid-packages/invite-subs]', sub.email, error);
+        results.push({ email: sub.email, status: 'error', error: 'Invite could not be sent.' });
+        continue;
+      }
       results.push({ email: sub.email, status: 'invited' });
 
       // Send invite email (non-blocking)

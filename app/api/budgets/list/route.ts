@@ -22,7 +22,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ data: data || [] });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to list budgets';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[budgets/list]', err);
+    const message = "Failed to list budgets";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

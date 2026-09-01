@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signStoredUrl } from '@/lib/storage-signing';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -53,7 +54,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const url = await signStoredUrl(updated.storage_bucket || 'project-files', updated.storage_path || updated.file_url, 3600);
     return NextResponse.json({ file: { ...updated, url, file_url: url } });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Update failed' }, { status: 500 });
+    return apiError('files/id', err, "Update failed", 500);
   }
 }
 
@@ -83,6 +84,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     if (error) throw error;
     return NextResponse.json({ deleted: true, hard: false });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Delete failed' }, { status: 500 });
+    return apiError('files/id', err, "Delete failed", 500);
   }
 }

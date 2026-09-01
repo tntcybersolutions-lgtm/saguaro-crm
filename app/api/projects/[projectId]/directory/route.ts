@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     // Never fabricate a fake `dir-…` id — surface the real DB error instead.
     if (error) {
       console.error('[directory/POST]', error);
-      return NextResponse.json({ error: error.message || 'Failed to create contact' }, { status: 500 });
+      return apiError('projects/projectId/directory', error, "Failed to create contact", 500);
     }
     return NextResponse.json({ contact: data });
   } catch {

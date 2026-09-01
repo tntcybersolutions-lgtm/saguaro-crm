@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
+import { apiError } from '@/lib/api-error';
 // Map a US state (name or 2-letter code) to its primary IANA timezone so the
 // "before 4 PM local" deadline is judged in each site's own time. Falls back to
 // Arizona (Rob's home market) for unknown/blank states.
@@ -120,6 +121,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ log: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'submit failed' }, { status: 500 });
+    return apiError('franchise/daily-logs', e, "submit failed", 500);
   }
 }

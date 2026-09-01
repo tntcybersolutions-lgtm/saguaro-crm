@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Room Progress API — fully wired
  * Supports polygon_points + drawing_id for floor plan integration.
@@ -27,9 +28,9 @@ export async function GET(req: NextRequest) {
           if (floorId)   query = query.eq('floor', floorId);
           if (drawingId) query = query.eq('drawing_id', drawingId);
           const { data, error } = await query;
-          if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+          if (error) return apiError('field/room-progress', error, undefined, 500);
           return NextResponse.json({ rooms: data || [] });
-    } catch (err: any) { return NextResponse.json({ error: err.message }, { status: 500 }); }
+    } catch (err: any) { return apiError('field/room-progress', err, undefined, 500); }
 }
 
 export async function POST(req: NextRequest) {
@@ -57,9 +58,9 @@ export async function POST(req: NextRequest) {
                   notes:           notes           || null,
                   updated_by:      user.id,
           }).select().single();
-          if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+          if (error) return apiError('field/room-progress', error, undefined, 500);
           return NextResponse.json({ room: data }, { status: 201 });
-    } catch (err: any) { return NextResponse.json({ error: err.message }, { status: 500 }); }
+    } catch (err: any) { return apiError('field/room-progress', err, undefined, 500); }
 }
 
 export async function PUT(req: NextRequest) {
@@ -80,9 +81,9 @@ export async function PUT(req: NextRequest) {
           const db = createServerClient();
           const { data, error } = await db.from('room_progress').update(updates)
             .eq('id', id).eq('tenant_id', user.tenantId).select().single();
-          if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+          if (error) return apiError('field/room-progress', error, undefined, 500);
           return NextResponse.json({ room: data });
-    } catch (err: any) { return NextResponse.json({ error: err.message }, { status: 500 }); }
+    } catch (err: any) { return apiError('field/room-progress', err, undefined, 500); }
 }
 
 export async function PATCH(req: NextRequest) {
@@ -101,7 +102,7 @@ export async function DELETE(req: NextRequest) {
           const db = createServerClient();
           const { error } = await db.from('room_progress').delete()
             .eq('id', id).eq('tenant_id', user.tenantId);
-          if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+          if (error) return apiError('field/room-progress', error, undefined, 500);
           return NextResponse.json({ success: true });
-    } catch (err: any) { return NextResponse.json({ error: err.message }, { status: 500 }); }
+    } catch (err: any) { return apiError('field/room-progress', err, undefined, 500); }
 }

@@ -63,7 +63,9 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, incident: data });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Internal server error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[safety/incidents/create]', err);
+    const msg = "Internal server error";
     console.error('[safety/incidents/create] error:', msg);
     return NextResponse.json({ error: `Failed to create safety incident: ${msg}` }, { status: 500 });
   }

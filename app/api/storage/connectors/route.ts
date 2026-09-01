@@ -6,6 +6,7 @@ import { makeProvider, ctxFromParts } from '@/lib/storage-providers/registry';
 import { PROVIDER_META, type ProviderId } from '@/lib/storage-providers/types';
 import { isOAuthProvider } from '@/lib/storage-providers/oauth';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -56,6 +57,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ connector: redact(data), account: t.account });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Failed to create connector' }, { status: 500 });
+    return apiError('storage/connectors', err, "Failed to create connector", 500);
   }
 }

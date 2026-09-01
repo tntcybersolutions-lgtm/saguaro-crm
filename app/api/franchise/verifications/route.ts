@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
+import { apiError } from '@/lib/api-error';
 // franchise_verifications is a franchise-only table (not in generated types) → loose client.
 const TABLE = 'franchise_verifications';
 const DECISIONS = ['pending', 'verified', 'rejected'];
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ verification: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'create failed' }, { status: 500 });
+    return apiError('franchise/verifications', e, "create failed", 500);
   }
 }
 
@@ -107,6 +108,6 @@ export async function PATCH(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'invalid verification' }, { status: 400 });
     return NextResponse.json({ verification: data });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'update failed' }, { status: 500 });
+    return apiError('franchise/verifications', e, "update failed", 500);
   }
 }

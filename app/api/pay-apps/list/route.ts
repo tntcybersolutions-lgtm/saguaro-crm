@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ payApps: data || [], source: 'live' });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Unknown error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[pay-apps/list]', e);
+    const message = "Unknown error";
     return NextResponse.json({ payApps: [], source: 'error', error: message }, { status: 500 });
   }
 }

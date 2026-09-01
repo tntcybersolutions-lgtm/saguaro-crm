@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -39,6 +40,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ bucket: BUCKET, path, token: data.token, signedUrl: data.signedUrl });
   } catch (err: any) {
     console.error('[documents/versions/upload-url]', err?.message);
-    return NextResponse.json({ error: err?.message || 'Failed to create upload URL' }, { status: 500 });
+    return apiError('documents/versions/upload-url', err, "Failed to create upload URL", 500);
   }
 }

@@ -8,6 +8,7 @@ import { NextRequest } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -71,6 +72,6 @@ Dollar amounts → integer cents (e.g. $12,500.00 → 1250000). Return ONLY the 
     }));
     return Response.json({ bidderName: parsed.bidderName || 'Subcontractor', baseBidCents: toCents(parsed.baseBidCents), scope, alternates, clarifications: parsed.clarifications || [] });
   } catch (err: any) {
-    return Response.json({ error: err?.message || 'Extract failed' }, { status: 200 });
+    return apiError('bids/level-extract', err, "Extract failed", 200);
   }
 }

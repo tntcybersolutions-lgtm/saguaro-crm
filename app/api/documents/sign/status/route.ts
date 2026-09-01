@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError('documents/sign/status', error, undefined, 500);
   }
 
   return NextResponse.json({ signatures: data || [] });

@@ -103,7 +103,9 @@ export async function POST(req: NextRequest) {
       lineItemCount: lineItems.length,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to create budget';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[budgets/create]', err);
+    const message = "Failed to create budget";
     console.error('[budgets/create]', err);
     return NextResponse.json({ error: message }, { status: 500 });
   }

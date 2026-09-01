@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
 import { sendLienDeadlineReminder } from '@/lib/email';
 
+import { apiError } from '@/lib/api-error';
 export const dynamic = 'force-dynamic';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
       .lte('due_date', in30Str);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError('cron/lien-reminders', error, undefined, 500);
     }
 
     // Resolve project name + GC contact for every referenced project.

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('Presence heartbeat error:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError('presence/heartbeat', error, undefined, 500);
     }
 
     return NextResponse.json({ ok: true });

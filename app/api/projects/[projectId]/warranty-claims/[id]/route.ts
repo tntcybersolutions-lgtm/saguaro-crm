@@ -38,7 +38,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     return NextResponse.json({ claim: toUi(data as WarrantyRow) });
   } catch (e: unknown) {
     console.error('[warranty-claims/PATCH]', e);
-    const msg = e instanceof Error ? e.message : 'Failed to update the warranty claim.';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[projects/projectId/warranty-claims/id]', e);
+    const msg = "Failed to update the warranty claim.";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

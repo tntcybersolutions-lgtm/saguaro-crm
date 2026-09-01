@@ -88,7 +88,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const signed = await signStoredUrl(BUCKET, publicUrl, 3600);
     return NextResponse.json({ success: true, pdf_url: signed, file_url: signed, url: signed });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'server error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[contracts/id/upload]', err);
+    const msg = "server error";
     console.error('[contracts/upload] error:', msg);
     return NextResponse.json(
       { error: 'Failed to upload the signed contract. Please try again.' },

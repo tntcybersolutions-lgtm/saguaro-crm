@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 
+import { apiError } from '@/lib/api-error';
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       .single();
     if (error) {
       console.error('[favorites/POST]', error);
-      return NextResponse.json({ error: error.message || 'Failed to add favorite' }, { status: 500 });
+      return apiError('projects/projectId/favorites', error, "Failed to add favorite", 500);
     }
     return NextResponse.json({ favorite: data });
   } catch {

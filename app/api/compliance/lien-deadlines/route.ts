@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError('compliance/lien-deadlines', error, undefined, 500);
   }
 
   return NextResponse.json({ deadlines: data || [] });
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError('compliance/lien-deadlines', error, undefined, 500);
   }
 
   return NextResponse.json({ deadline: data }, { status: 201 });

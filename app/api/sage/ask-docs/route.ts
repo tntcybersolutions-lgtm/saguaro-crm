@@ -10,6 +10,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { rankChunks, buildContext, terms, type DocChunk } from '@/lib/rag';
 import { SAGE_CONDUCT_MANDATE } from '@/lib/sage-prompts';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -96,6 +97,6 @@ You are Sage, answering a general contractor's question using ONLY the numbered 
     const answer = (resp.content || []).filter((x: any) => x.type === 'text').map((x: any) => x.text).join('').trim();
     return Response.json({ answer, citations, searched: chunks.length });
   } catch (err: any) {
-    return Response.json({ error: err?.message || 'Ask failed' }, { status: 200 });
+    return apiError('sage/ask-docs', err, "Ask failed", 200);
   }
 }

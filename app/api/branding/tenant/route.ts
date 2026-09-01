@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 
 /** GET /api/branding/tenant — returns full tenant branding including primary_color */
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError('branding/tenant', error, undefined, 500);
   }
 
   const tenant = data as any;

@@ -28,7 +28,9 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const files = await signFields((data as any[]) || [], ['file_url', 'poster_url'], 3600);
     return NextResponse.json({ files });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Internal server error';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[projects/projectId/files]', err);
+    const msg = "Internal server error";
     console.error('[project/files] error:', msg);
     return NextResponse.json({ error: `Failed to fetch project files: ${msg}` }, { status: 500 });
   }

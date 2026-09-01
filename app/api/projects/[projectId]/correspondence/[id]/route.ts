@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export async function PATCH(req: NextRequest, { params }: { params: { projectId: string; id: string } }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
   if (!g.ok) return g.res;
@@ -34,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     // matched (wrong id / project / tenant) -> 404, everything else -> 500.
     if (error) {
       const status = error.code === 'PGRST116' ? 404 : 500;
-      return NextResponse.json({ error: error.message || 'Failed to update' }, { status });
+      return apiError('projects/projectId/correspondence/id', error, "Failed to update", status);
     }
     return NextResponse.json({ item: data });
   } catch {

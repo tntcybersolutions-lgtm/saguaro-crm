@@ -32,7 +32,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await supabase.from('lead_pipeline').update({ updated_at: new Date().toISOString() }).eq('id', params.id).eq('tenant_id', user.tenantId);
     return NextResponse.json({ activity: data }, { status: 201 });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : 'Failed';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[leads/id/activities]', e);
+    const msg = "Failed";
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

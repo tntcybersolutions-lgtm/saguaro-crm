@@ -420,7 +420,9 @@ export async function POST(
         done();
       } catch (err: unknown) {
         stopHeartbeat();
-        const message = err instanceof Error ? err.message : 'Conversion failed.';
+        // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[bim/id/convert]', err);
+    const message = "Conversion failed.";
         console.error('[bim/convert]', err);
         send('error', { message });
         try {

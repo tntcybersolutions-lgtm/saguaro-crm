@@ -4,6 +4,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
+import { apiError } from '@/lib/api-error';
 /**
  * Operator management of franchisee portal links. FAIL-CLOSED + tenant-scoped.
  * The PUBLIC feed lives at /api/franchise/portal/[token]; this only mints/revokes tokens.
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ portal: { ...data, url: `/franchise-portal/${token}` } });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'create failed' }, { status: 500 });
+    return apiError('franchise/portals', e, "create failed", 500);
   }
 }
 
@@ -86,6 +87,6 @@ export async function DELETE(req: NextRequest) {
     if (!data) return NextResponse.json({ error: 'not found' }, { status: 400 });
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'revoke failed' }, { status: 500 });
+    return apiError('franchise/portals', e, "revoke failed", 500);
   }
 }

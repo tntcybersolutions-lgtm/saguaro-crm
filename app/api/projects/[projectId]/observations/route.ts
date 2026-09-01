@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 
+import { apiError } from '@/lib/api-error';
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     if (!record.title) return NextResponse.json({ error: 'title is required' }, { status: 400 });
     const { data, error } = await supabase.from('observations').insert(record as Database['public']['Tables']['observations']['Insert']).select().single();
     // Do not fabricate a fake `obs-…` id on failure — surface the real error.
-    if (error) { console.error('[observations/POST]', error); return NextResponse.json({ error: error.message || 'Failed to create observation' }, { status: 500 }); }
+    if (error) { console.error('[observations/POST]', error); return apiError('projects/projectId/observations', error, "Failed to create observation", 500); }
     return NextResponse.json({ observation: data });
   } catch {
     return NextResponse.json({ error: 'Failed to create observation' }, { status: 500 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
+import { apiError } from '@/lib/api-error';
 export async function PATCH(req: NextRequest, { params }: { params: { projectId: string; id: string } }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
   if (!g.ok) return g.res;
@@ -33,7 +34,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     // Never echo the request body back as a fake success on failure.
     if (error) {
       const status = error.code === 'PGRST116' ? 404 : 500;
-      return NextResponse.json({ error: error.message || 'Failed to update ticket' }, { status });
+      return apiError('projects/projectId/tm-tickets/id', error, "Failed to update ticket", status);
     }
     return NextResponse.json({ ticket: data });
   } catch {

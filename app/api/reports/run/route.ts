@@ -28,7 +28,9 @@ export async function POST(req: NextRequest) {
     if (e instanceof ReportRunError) {
       return NextResponse.json({ error: e.message }, { status: e.status });
     }
-    const msg = e instanceof Error ? e.message : 'Failed to run report';
+    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
+    console.error('[reports/run]', e);
+    const msg = "Failed to run report";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

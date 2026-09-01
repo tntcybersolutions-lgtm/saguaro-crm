@@ -5,6 +5,7 @@
 import { NextRequest } from 'next/server';
 import { getUser } from '@/lib/supabase-server';
 
+import { apiError } from '@/lib/api-error';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -33,6 +34,6 @@ export async function GET(req: NextRequest) {
       errorText: clean(v.ErrorText) && String(v.ErrorText).startsWith('0') ? undefined : clean(v.ErrorText),
     });
   } catch (e: any) {
-    return Response.json({ error: e?.message || 'VIN lookup failed' }, { status: 200 });
+    return apiError('fleet/vin', e, "VIN lookup failed", 200);
   }
 }
