@@ -201,6 +201,10 @@ h2.tkH2{font-size:clamp(22px,3vw,30px)!important;font-weight:800!important;line-
 /* Inline line-item editing */
 .tkEditable{border-radius:6px;padding:2px 6px;margin:-2px -6px;cursor:text;transition:background .15s ease,box-shadow .15s ease}
 .tkEditable:hover{background:rgba(245,158,11,0.10);box-shadow:inset 0 0 0 1px rgba(245,158,11,0.35)}
+/* The selected cell has to be obvious — keyboard navigation is useless if
+   you cannot see where you are. Solid ring, not the hover tint. */
+.tkEditable:focus{outline:none;background:rgba(245,158,11,0.14);box-shadow:inset 0 0 0 2px rgba(245,158,11,0.9)}
+.tkEditable:focus-visible{outline:none;background:rgba(245,158,11,0.14);box-shadow:inset 0 0 0 2px rgba(245,158,11,0.9)}
 .tkCellInput{width:100%;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.5);border-radius:6px;color:#fff;font-size:13px;padding:4px 7px;outline:none;font-family:inherit}
 .tkCellInput:focus{box-shadow:0 0 0 2px rgba(245,158,11,0.25)}
 .tkCellInput::placeholder{color:rgba(255,255,255,0.35)}
@@ -248,6 +252,23 @@ function EditableCell({ rawValue, display, align, numeric, disabled, cellStyle, 
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
+  const box = useRef<HTMLDivElement>(null);
+
+  /* An estimator works this grid the way they work a spreadsheet: tab across,
+     enter to drop a row, type straight over a value. Click-to-edit alone means
+     reaching for the mouse on every cell of a 54-line takeoff.
+     Cells carry tabIndex so Tab and Shift-Tab come free from the browser in DOM
+     order; Enter and the arrows move by whole rows, which needs the column
+     count — four editable columns per line (description, qty, unit, $/unit). */
+  const step = (dir: 'up' | 'down' | 'left' | 'right') => {
+    const cells = Array.from(document.querySelectorAll<HTMLElement>('[data-tkcell]'));
+    const here = box.current ? cells.indexOf(box.current) : -1;
+    if (here < 0) return;
+    const COLS = 4;
+    const delta = dir === 'right' ? 1 : dir === 'left' ? -1 : dir === 'down' ? COLS : -COLS;
+    cells[here + delta]?.focus();
+  };
+
   if (editing) {
     return (
       <input
@@ -260,8 +281,14 @@ function EditableCell({ rawValue, display, align, numeric, disabled, cellStyle, 
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => { setEditing(false); onCommit(draft); }}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') { setEditing(false); onCommit(draft); }
-          if (e.key === 'Escape') setEditing(false);
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            setEditing(false); onCommit(draft);
+            // Excel convention: Enter commits and drops to the row below.
+            requestAnimationFrame(() => step('down'));
+          }
+          if (e.key === 'Escape') { e.preventDefault(); setEditing(false); box.current?.focus(); }
+          if (e.key === 'Tab') { setEditing(false); onCommit(draft); } // browser moves focus
         }}
         style={{ textAlign: align }}
       />
@@ -269,9 +296,25 @@ function EditableCell({ rawValue, display, align, numeric, disabled, cellStyle, 
   }
   return (
     <div
+      ref={box}
+      data-tkcell
+      role="gridcell"
+      tabIndex={disabled ? -1 : 0}
       className={disabled ? undefined : 'tkEditable'}
-      title={disabled ? 'Syncing with server…' : 'Click to edit'}
+      title={disabled ? 'Syncing with server…' : 'Click, or press Enter, to edit'}
       onClick={() => { if (!disabled) { setDraft(rawValue); setEditing(true); } }}
+      onKeyDown={(e) => {
+        if (disabled) return;
+        if (e.key === 'Enter' || e.key === 'F2') { e.preventDefault(); setDraft(rawValue); setEditing(true); return; }
+        if (e.key === 'ArrowDown')  { e.preventDefault(); step('down');  return; }
+        if (e.key === 'ArrowUp')    { e.preventDefault(); step('up');    return; }
+        if (e.key === 'ArrowRight') { e.preventDefault(); step('right'); return; }
+        if (e.key === 'ArrowLeft')  { e.preventDefault(); step('left');  return; }
+        // Typing over a cell replaces it, as it would in a spreadsheet.
+        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault(); setDraft(e.key); setEditing(true);
+        }
+      }}
       style={{ textAlign: align, minWidth: 0, ...cellStyle }}
     >
       {display}

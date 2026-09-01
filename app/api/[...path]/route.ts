@@ -638,11 +638,13 @@ export async function POST(
     }
   }
 
-  // POST /api/internal/autopilot/run is served by the REAL handler at
-  // app/api/internal/autopilot/run/route.ts (a static segment always wins over
-  // this catch-all). The hollow branch that used to live here only SELECTed
-  // project names and then claimed "Autopilot scan complete" without running a
-  // single check — it is deleted so no code path can ever report that again.
+  // /api/internal/autopilot/run is gone. It was a second 159-line copy of the
+  // rule set, called by one page, alongside /api/autopilot/run which delegates
+  // to lib/autopilot/scan — the engine the nightly cron uses. Two rule sets
+  // behind one button is a divergence waiting to happen, so the page now calls
+  // the shared one and this path no longer exists.
+  // (An even earlier hollow branch here SELECTed project names and claimed
+  // "Autopilot scan complete" without running a check. Also gone.)
 
   // POST /api/notices/preliminary
   if (seg0 === 'notices' && seg1 === 'preliminary') return generatePreliminaryNoticeHandler(req);

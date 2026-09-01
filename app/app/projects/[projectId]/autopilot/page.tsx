@@ -32,7 +32,7 @@ const AMBER = '#F0A63C';
 const GREEN = '#45B37D';
 
 // The four deterministic checks the project-scoped engine runs
-// (/api/internal/autopilot/run), in execution order — rendered as the pipeline rail.
+// (lib/autopilot/scan, via /api/autopilot/run), in execution order — rendered as the pipeline rail.
 const SCAN_RULES = [
   { title: 'Overdue RFIs',         desc: 'Open RFIs past their response-due date.',       match: (a: Alert) => /rfi/i.test(a.alert_type) },
   { title: 'Expiring insurance',   desc: 'Active certificates expiring within 30 days.',  match: (a: Alert) => /insurance/i.test(a.alert_type) },
@@ -77,7 +77,11 @@ export default function AutopilotPage() {
     setScanStage(0);
     const ticker = setInterval(() => setScanStage(s => Math.min(s + 1, SCAN_RULES.length - 1)), 550);
     try {
-      const res = await fetch('/api/internal/autopilot/run', {
+      /* Was /api/internal/autopilot/run — a second, 159-line inline copy of the
+         rule set that only this page called. /api/autopilot/run delegates to
+         lib/autopilot/scan, the same engine the nightly cron and the portfolio
+         page use, so one set of rules now decides what an alert is. */
+      const res = await fetch('/api/autopilot/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId }),
