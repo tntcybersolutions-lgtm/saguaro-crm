@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 
 export async function POST(req: NextRequest) {
   // Was fully unauthenticated (tenant derived from project). Now requires Budget/Edit.
@@ -57,14 +58,40 @@ export async function POST(req: NextRequest) {
 
     // Create budget line items
     if (lineItems.length > 0 && budget) {
-      const rows = lineItems.map((item: Record<string, unknown>, idx: number) => ({
+      /* budget_line_items is UNIQUE (project_id, csi_division) — it is a
+         one-row-per-division budget, not a line-item ledger. The route used to
+         push one row per takeoff item, so the second item in any division blew
+         up the whole insert on 23505 and no budget was ever created. A takeoff
+         of 168 lines across 14 divisions is 14 budget rows, which is also what
+         "CSI-coded budget" means to a GC. */
+      const byDivision = new Map<string, { division: string; costCode: string; total: number; names: string[] }>();
+      for (const item of lineItems as Record<string, unknown>[]) {
+        const division = String(item.csiDivision || item.costCode || '').slice(0, 2) || '00';
+        const amount = Number(item.originalAmount) || 0;
+        const existing = byDivision.get(division);
+        if (existing) {
+          existing.total += amount;
+          if (existing.names.length < 6) existing.names.push(String(item.description || ''));
+        } else {
+          byDivision.set(division, {
+            division,
+            costCode: String(item.costCode || division),
+            total: amount,
+            names: [String(item.description || '')],
+          });
+        }
+      }
+
+      const rows = [...byDivision.values()]
+        .sort((a, b) => a.division.localeCompare(b.division))
+        .map((d, idx) => ({
         // budget_line_items links to a budget via project_id (no budget_id column).
         project_id: projectId,
         tenant_id: tenantId,
-        cost_code: item.costCode || `${String(idx + 1).padStart(4, '0')}`,
-        csi_division: item.csiDivision || '',
-        csi_description: item.description || '',
-        original_budget: item.originalAmount || 0,
+        cost_code: d.costCode,
+        csi_division: d.division,
+        csi_description: (CSI_DIVISIONS[d.division]?.name || d.names[0] || `Division ${d.division}`).slice(0, 200),
+        original_budget: d.total,
         /* current_budget, estimated_final_cost, variance and variance_pct are
            GENERATED columns — Postgres computes them from original_budget,
            approved_changes, committed_cost and uncommitted_cost. Sending values
@@ -87,7 +114,7 @@ export async function POST(req: NextRequest) {
         const batch = rows.slice(i, i + 50);
         const { error: itemErr } = await supabase
           .from('budget_line_items')
-          .insert(batch);
+          .upsert(batch, { onConflict: 'project_id,csi_division' });
         if (itemErr) {
           console.error('[budgets/create] line item insert error:', itemErr);
           throw itemErr;
