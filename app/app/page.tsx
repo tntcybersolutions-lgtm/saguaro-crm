@@ -429,7 +429,8 @@ export default function DashboardPage() {
             each deep-linking to the flagged module section (NudgeRing sync). */}
         {!portfolioEmpty && <SuggestionTicker style={{ marginBottom: 24 }} />}
 
-        {/* GC Guided Journey — 8 steps from first project to first payment */}
+        {/* GC Guided Journey — first project to first payment. The step count
+            lives in GettingStartedRail; do not restate it here. */}
         <GettingStartedRail />
 
         {hasCustomLayout && savedLayout ? (

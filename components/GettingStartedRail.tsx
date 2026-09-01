@@ -44,7 +44,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   const activeId = projectId || projects[0]?.id;
   const { ctx, loading: ctxLoading } = useProjectContext(activeId || null);
   // Never flash a wrong journey: wait for the list (and for the snapshot when
-  // a project exists); a degraded list route never shows a false "0/8".
+  // a project exists); a degraded list route never shows a false "0 of N".
   const loaded = !listLoading && !listError && !degraded && (!activeId || !!ctx || !ctxLoading);
 
   // Read the persisted collapse state after mount (SSR-safe).
@@ -60,7 +60,9 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   const steps: JourneyStep[] = [
     { title: 'Create your project', desc: 'Name, address, owner — everything else builds on this.',
       done: projects.length > 0, href: '/app/projects/new' },
-    { title: 'Set contract & budget', desc: 'Enter the contract sum and budget lines — every module reads from them.',
+    { title: 'Price the drawings', desc: 'Drop the plan set. Saguaro measures every trade and prices it — then writes your budget and bid packages from it.',
+      done: Boolean(ctx?.takeoff?.completed), href: pLink('takeoff') },
+    { title: 'Set contract & budget', desc: 'Confirm the contract sum. The budget lines come from the takeoff — every module reads from them.',
       done: (Number(money?.originalContract) || 0) > 0 || (ctx?.budget?.lineCount || 0) > 0, href: pLink('budget') },
     { title: 'Send bid packages', desc: 'Scoped packages go out to your sub network for pricing.',
       done: (ctx?.bidPackages || []).length > 0, href: pLink('bid-packages') },
@@ -104,7 +106,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
               padding: '3px 10px', borderRadius: 999, background: 'rgba(245,158,11,0.14)',
               border: '1px solid rgba(245,158,11,0.4)', color: GOLD_HI,
               fontSize: 11, fontWeight: 800, letterSpacing: '0.05em', whiteSpace: 'nowrap',
-            }}>{doneCount}/8 complete</span>
+            }}>{doneCount}/{steps.length} complete</span>
             <button
               onClick={toggle}
               aria-label={collapsed ? 'Expand getting started' : 'Collapse getting started'}
