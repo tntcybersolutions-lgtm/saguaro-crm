@@ -1307,7 +1307,28 @@ export default function TakeoffPage() {
   // Compliance) in one shot, streaming a single combined progress bar (phase 1 = 0-50%,
   // phase 2 = 50-100%), then surfaces a summary card.
   const handleBuildItAll = async () => {
-    if (!result || !takeoffId) return;
+    if (!result) return;
+
+    /* On a page that was reloaded rather than analysed in this session,
+       takeoffId could be null — and this used to `return` on that, so the
+       button did precisely nothing: no request, no error, no toast. Pressing
+       it looked identical to it being broken, which it was. Resolve the id
+       from the project, and if that genuinely fails, say so. */
+    let buildId = takeoffId;
+    if (!buildId) {
+      try {
+        const res = await fetch(`/api/takeoff?projectId=${projectId}&limit=5`);
+        const body = await res.json().catch(() => ({}));
+        const rows: Array<{ id?: string; status?: string }> = body.data ?? body.takeoffs ?? [];
+        buildId = rows.find((t) => t.status === 'complete')?.id ?? null;
+        if (buildId) setTakeoffId(buildId);
+      } catch { /* handled just below */ }
+    }
+    if (!buildId) {
+      showToast('Could not tell which takeoff to build from. Reload the page and try again.', 'error');
+      return;
+    }
+
     setPickMode(false);
     setAutoSummary(null);
     setGenerating('auto');
@@ -1323,7 +1344,7 @@ export default function TakeoffPage() {
       // files the compliance package (lien waivers + W-9 + COI requests) inline, so
       // one SSE run covers the whole thing (its internal progress already maps 0-100%).
       const docs = await runSSE(
-        `/api/takeoff/${takeoffId}/sage-auto-docs`,
+        `/api/takeoff/${buildId}/sage-auto-docs`,
         (p) => setProgress({
           step: p.step ?? 1,
           message: p.message ?? 'Building bid jackets + compliance…',
@@ -1941,8 +1962,20 @@ export default function TakeoffPage() {
                 <MagicWand size={16} weight="fill" color="#1A1206" />
                 Build the bid + compliance package
               </button>
-              <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>
-                bid packages, jackets, schedule of values, lien waivers and W-9 requests
+              <button
+                onClick={() => { setAutoSummary(null); setPickMode(true); }}
+                style={{
+                  minHeight: 44, padding: '0 18px', borderRadius: 10, cursor: 'pointer',
+                  background: 'transparent', border: '1px solid rgba(255,255,255,0.18)',
+                  color: 'rgba(255,255,255,0.72)', fontSize: 13.5, fontWeight: 700,
+                }}
+              >
+                Let me pick
+              </button>
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, lineHeight: 1.5 }}>
+                {divCount} divisions · {result.itemCount} lines · {fmt$(sellTotal)} sell
+                <br />
+                bid packages, jacket PDFs, schedule of values, lien waivers and W-9 requests
               </span>
             </div>
           )}
@@ -2409,52 +2442,11 @@ export default function TakeoffPage() {
           </div>
         </div>
       ) : (
-        /* ── AUTONOMOUS CTA: Sage's recommendation ── */
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 18, padding: 2, background: 'linear-gradient(135deg, rgba(245,158,11,0.55), rgba(245,158,11,0.12))', animation: 'tkGlow 3.8s ease-in-out infinite' }}>
-          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: '26px 28px', background: 'radial-gradient(120% 130% at 12% -10%, rgba(245,158,11,0.14), rgba(10,13,20,0.96))', display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(245,158,11,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.05) 1px, transparent 1px)', backgroundSize: '26px 26px', maskImage: 'radial-gradient(90% 90% at 20% 0%, #000, transparent 72%)', WebkitMaskImage: 'radial-gradient(90% 90% at 20% 0%, #000, transparent 72%)' }} />
-            <div style={{ position: 'relative', flex: '0 0 auto', width: 70, height: 70, borderRadius: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(245,158,11,0.28), rgba(245,158,11,0.05))', border: '1px solid rgba(245,158,11,0.5)', boxShadow: '0 0 40px -6px rgba(245,158,11,0.6)', animation: 'tkFloat 5s ease-in-out infinite' }}>
-              <div aria-hidden style={{ position: 'absolute', inset: -2, borderRadius: 20, border: `1px solid ${GOLD}`, animation: 'tkRing 3s ease-out infinite' }} />
-              <Robot size={38} weight="duotone" color={GOLD_HI} />
-            </div>
-            <div style={{ position: 'relative', flex: '1 1 320px', minWidth: 280 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: GOLD_HI, fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>
-                <Sparkle size={13} weight="fill" /> Sage · Autonomous
-              </div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: 19, lineHeight: 1.42, letterSpacing: '-0.01em' }}>
-                I read the plan — <span style={{ color: GREEN }}>{fmt$(sellTotal)}</span> sell across {divCount} division{divCount !== 1 ? 's' : ''}, {fmtN(result?.itemCount || 0)} line items.
-              </div>
-              <div style={{ color: 'rgba(255,255,255,0.62)', fontSize: 14, marginTop: 6, lineHeight: 1.5 }}>
-                Want me to build the full bid jacket + compliance package? I&apos;ll write every scope, generate the jacket PDFs and Schedule of Values, then the lien waivers and W-9 requests — filed to Documents / Compliance.
-              </div>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16, alignItems: 'center' }}>
-                <button onClick={handleBuildItAll} disabled={!!generating} className="tkBtn" style={{ position: 'relative', overflow: 'hidden', padding: '14px 26px', border: 'none', borderRadius: 12, background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: '#1A1206', fontWeight: 900, fontSize: 15, cursor: generating ? 'wait' : 'pointer', letterSpacing: '0.02em', boxShadow: '0 16px 40px -12px rgba(245,158,11,0.75)' }}>
-                  <span aria-hidden className="tkShine" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%)' }} />
-                  <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 9 }}>
-                    <MagicWand size={18} weight="fill" color="#1A1206" /> Yes, build it all <ArrowRight size={17} weight="bold" color="#1A1206" />
-                  </span>
-                </button>
-                <button onClick={() => setPickMode(true)} disabled={!!generating} style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 12, color: '#fff', fontWeight: 700, fontSize: 13, cursor: generating ? 'wait' : 'pointer' }}>
-                  Let me pick
-                </button>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
-                {[
-                  { icon: <Package size={13} weight="duotone" color={GOLD_HI} />, t: `${divCount} bid jacket${divCount !== 1 ? 's' : ''}` },
-                  { icon: <Table size={13} weight="duotone" color={GOLD_HI} />, t: 'Schedule of Values' },
-                  { icon: <Scroll size={13} weight="duotone" color={GOLD_HI} />, t: 'Lien waivers' },
-                  { icon: <FileText size={13} weight="duotone" color={GOLD_HI} />, t: 'W-9 requests' },
-                  { icon: <FolderSimple size={13} weight="duotone" color={GOLD_HI} />, t: 'Filed to Compliance' },
-                ].map((chip) => (
-                  <span key={chip.t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', padding: '5px 11px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(245,158,11,0.22)' }}>
-                    {chip.icon}{chip.t}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        /* The autonomous CTA lives in the results header now — 168 rows up,
+           where a GC lands. It used to be repeated down here as well, which
+           read as two different offers for one action. */
+        null
+      ) }
       </div>
       <UnsavedGuardModal guard={guard} />
     </div>
