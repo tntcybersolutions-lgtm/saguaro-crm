@@ -62,7 +62,13 @@ const HAS_WORK: Record<string, (s: ToolSignals) => boolean> = {
   '/punch-list':       s => (s.counts?.openPunch || 0) > 0,
   '/pay-apps':         s => (s.money?.payAppCount || 0) > 0,
   '/crews':            s => (s.subs?.length || 0) > 0,
-  '/contracts':        s => (s.subs?.length || 0) > 0,
+  /* A subcontract needs a sub, but a prime contract needs an owner and a
+     number — so a job with a contract sum has a contract to paper even before
+     the first sub is awarded. Bid packages count too: awarding one is the step
+     that produces a subcontract. */
+  '/contracts':        s => (s.subs?.length || 0) > 0
+                            || (s.bidPackages?.length || 0) > 0
+                            || (s.money?.originalContract || 0) > 0,
 };
 
 /**
