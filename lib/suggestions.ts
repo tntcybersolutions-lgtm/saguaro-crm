@@ -364,7 +364,10 @@ export async function computeSuggestions(db: Db, tenantId: string): Promise<Sugg
           : `${label} has sat unsent for ${plural(age, 'day')}.`,
         why: `Drafted ${String(pr.created_at).slice(0, 10)}, still status "${st || 'draft'}", never sent${pr.client_name ? ` to ${pr.client_name}` : ''}${proj ? ` (project ${proj})` : ''}. Estimates that go out faster win more — this one is aging in drafts.`,
         dollars: value > 0 ? value : null,
-        href: pr.project_id ? `/app/projects/${pr.project_id}/proposal` : '/app/estimate-builder',
+        // The estimate builder was never reachable from navigation and is gone; a
+        // proposal with no project belongs in the projects list, where one can be
+        // attached to it.
+        href: pr.project_id ? `/app/projects/${pr.project_id}/proposal` : '/app/projects',
         anchorId: null,
         projectId: pr.project_id ? String(pr.project_id) : null,
         projectName: proj,
@@ -490,10 +493,14 @@ export async function computeSuggestions(db: Db, tenantId: string): Promise<Sugg
         moduleLabel: 'Takeoff',
         severity: 'amber',
         finding: `Takeoff "${String(t.name ?? 'Untitled')}" priced ${usd(value)} of work ${plural(age, 'day')} ago and never became an estimate.`,
-        why: `Analysis completed ${String(t.created_at).slice(0, 10)} with a priced total of ${usd(value)}, but it was never exported${proj ? ` (project ${proj})` : ''}. Import it into the Estimate Builder to turn the priced quantities into a bid.`,
+        why: `Analysis completed ${String(t.created_at).slice(0, 10)} with a priced total of ${usd(value)}, but it was never exported${proj ? ` (project ${proj})` : ''}. Open the takeoff and press Build it all to turn the priced quantities into bid packages.`,
         dollars: value,
-        href: `/app/estimate-builder#${ANCHOR_TAKEOFF_ESTIMATE}`,
-        anchorId: ANCHOR_TAKEOFF_ESTIMATE,
+        // Straight to the takeoff that stalled — the priced rows are already there,
+        // which is a shorter path than re-importing them somewhere else.
+        href: t.project_id ? `/app/projects/${t.project_id}/takeoff` : '/app/takeoff',
+        // The ring this pointed at lived on the estimate builder, which is gone.
+        // The takeoff page has no equivalent target, so the nudge just links.
+        anchorId: null,
         projectId: t.project_id ? String(t.project_id) : null,
         projectName: proj,
       });
