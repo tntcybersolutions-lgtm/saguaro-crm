@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  CaretUp,
+  DotsThree,
   FolderSimple,
   GridFour,
   Gauge,
@@ -65,6 +67,9 @@ interface NavItem {
   icon: React.ElementType;
   badge?: number;
   gate?: string; // gated feature flag; item hidden unless the tenant is entitled
+  /* Shown always. Everything else waits behind "Show everything" — see
+     CORE_COUNT below for why. */
+  core?: boolean;
   accentKey?: string; // module-identity key -> tints the inactive icon + count badge
 }
 interface NavSection {
@@ -274,14 +279,33 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
   );
 }
 
+/**
+ * Eight destinations are always in the rail. The other thirty-odd wait behind
+ * one toggle.
+ *
+ * The rail listed forty-one items across six sections, and the feedback was the
+ * same every time: too many buttons, no obvious path to just start a job. Every
+ * one of those pages is real and stays reachable — the problem was never that
+ * they exist, it was being asked to choose among forty of them before doing
+ * anything.
+ *
+ * Three rules, the same ones the project tool rail already uses:
+ *   1. Core items are always shown.
+ *   2. The page you are on is always shown, so the rail never hides where you
+ *      are — that is how a nav loses somebody.
+ *   3. "Show everything" reveals the rest and is remembered, so a GC who wants
+ *      the full rail asks once.
+ */
+const SHOW_ALL_KEY = 'saguaro.sidebar.showAll';
+
 /* ── Navigation Config ─────────────────────────────────────────────── */
 const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { label: 'Dashboard',    href: '/app',              icon: GridFour },
-      { label: 'My Work',      href: '/app/my-work',      icon: Briefcase, accentKey: 'work' },
-      { label: 'Projects',     href: '/app/projects',     icon: FolderSimple },
+      { label: 'Dashboard',    href: '/app',              icon: GridFour, core: true },
+      { label: 'My Work',      href: '/app/my-work',      icon: Briefcase, accentKey: 'work', core: true },
+      { label: 'Projects',     href: '/app/projects',     icon: FolderSimple, core: true },
       { label: 'People & Access', href: '/app/people',    icon: Users, accentKey: 'team' },
       { label: 'Time Clock',   href: '/app/time',         icon: Clock, accentKey: 'time' },
       { label: 'Fleet',        href: '/app/fleet',        icon: Truck, gate: 'fleet' },
@@ -315,8 +339,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Pre-Construction',
     items: [
-      { label: 'Bids & Estimates', href: '/app/bids',         icon: CurrencyDollar },
-      { label: 'Takeoff Studio',   href: '/app/takeoff',      icon: Blueprint, accentKey: 'takeoff' },
+      { label: 'Bids & Estimates', href: '/app/bids',         icon: CurrencyDollar, core: true },
+      { label: 'Takeoff Studio',   href: '/app/takeoff',      icon: Blueprint, accentKey: 'takeoff', core: true },
       { label: 'Catalog',          href: '/app/catalog',      icon: Package, accentKey: 'catalog' },
       { label: 'Signal Studio',    href: '/app/signal-studio', icon: WifiHigh, accentKey: 'signal' },
       { label: 'Intelligence',     href: '/app/intelligence', icon: Brain },
@@ -325,9 +349,9 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Execution',
     items: [
-      { label: 'Documents',   href: '/app/documents',  icon: FileText, accentKey: 'documents' },
+      { label: 'Documents',   href: '/app/documents',  icon: FileText, accentKey: 'documents', core: true },
       { label: 'Daily Logs',  href: '/app/daily-logs', icon: ClipboardText, accentKey: 'daily' },
-      { label: 'Schedule',    href: '/app/schedule',   icon: CalendarBlank, accentKey: 'schedule' },
+      { label: 'Schedule',    href: '/app/schedule',   icon: CalendarBlank, accentKey: 'schedule', core: true },
       { label: 'Field App',   href: '/field',          icon: DeviceMobile },
       { label: 'Saguaro Radio', href: '/app/radio',    icon: Broadcast, accentKey: 'radio' },
     ],
@@ -335,7 +359,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Financial',
     items: [
-      { label: 'Invoicing',   href: '/app/invoicing',  icon: CreditCard, accentKey: 'invoices' },
+      { label: 'Invoicing',   href: '/app/invoicing',  icon: CreditCard, accentKey: 'invoices', core: true },
       { label: 'Billing',     href: '/app/billing',    icon: CurrencyDollar },
       { label: 'Reports',     href: '/app/reports',    icon: ChartBar },
     ],
@@ -368,7 +392,35 @@ export default function AppSidebar({
 }) {
   const pathname = usePathname();
   const { features } = useEntitlements(); // fail-closed: gated items hidden until entitled
+  /* Starts short for everybody, including a first load with no stored answer —
+     the short rail is the point, so it must not depend on reading storage. */
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(SHOW_ALL_KEY) === '1') setShowAll(true);
+    } catch { /* private window, blocked storage — the short rail is fine */ }
+  }, []);
+
+  const toggleShowAll = () => {
+    setShowAll((prev) => {
+      const next = !prev;
+      try { localStorage.setItem(SHOW_ALL_KEY, next ? '1' : '0'); } catch { /* not worth failing over */ }
+      return next;
+    });
+  };
   const width = collapsed ? sidebarTokens.widthCollapsed : sidebarTokens.width;
+
+  const hiddenCount = NAV_SECTIONS.reduce(
+    (n, section) =>
+      n + section.items.filter(
+        (item) =>
+          (!item.gate || features[item.gate] === true) &&
+          !item.core &&
+          !isActive(item.href),
+      ).length,
+    0,
+  );
 
   function isActive(href: string) {
     if (href === '/app') return pathname === '/app';
@@ -405,7 +457,10 @@ export default function AppSidebar({
       {/* ── Navigation Sections ─────────────────────────────────────── */}
       <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '10px 0' }}>
         {NAV_SECTIONS.map((section, sIdx) => {
-          const visibleItems = section.items.filter((item) => !item.gate || features[item.gate] === true);
+          const entitled = section.items.filter((item) => !item.gate || features[item.gate] === true);
+          const visibleItems = entitled.filter(
+            (item) => showAll || item.core || isActive(item.href),
+          );
           // Hide an entire section (title + divider) when the tenant sees none of its items.
           if (visibleItems.length === 0) return null;
           return (
@@ -536,6 +591,31 @@ export default function AppSidebar({
           );
         })}
       </nav>
+
+      {/* One control instead of thirty. Sits at the end of the rail, where a
+          GC looks after not finding what they came for. */}
+      {hiddenCount > 0 || showAll ? (
+        <button
+          onClick={toggleShowAll}
+          title={collapsed ? (showAll ? 'Show less' : 'Show everything') : undefined}
+          aria-expanded={showAll}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start',
+            gap: 11, width: 'calc(100% - 16px)', height: sidebarTokens.itemHeight,
+            padding: collapsed ? 0 : '0 12px 0 16px', margin: '2px 8px 8px',
+            borderRadius: radius.lg, background: 'transparent', border: 'none',
+            color: colors.textMuted, fontSize: font.size.md, fontWeight: font.weight.medium,
+            cursor: 'pointer', whiteSpace: 'nowrap', textAlign: 'left',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = colors.text; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = colors.textMuted; }}
+        >
+          {showAll
+            ? <CaretUp size={collapsed ? 20 : 18} weight="bold" style={{ flexShrink: 0, opacity: 0.85 }} />
+            : <DotsThree size={collapsed ? 20 : 18} weight="bold" style={{ flexShrink: 0, opacity: 0.85 }} />}
+          {!collapsed && <span>{showAll ? 'Show less' : `Show everything (${hiddenCount})`}</span>}
+        </button>
+      ) : null}
 
       {/* ── Bottom Section (Settings + Collapse) ────────────────────── */}
       <div style={{ borderTop: `1px solid ${colors.border}`, padding: '8px 0', flexShrink: 0 }}>
