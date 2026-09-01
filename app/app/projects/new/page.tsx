@@ -5,6 +5,7 @@ import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import SaguaroDatePicker from '../../../../components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PROJECT_TEMPLATES, templateByKey } from '@/lib/project-templates';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { SECTORS } from '@/lib/taxonomy';
 import { Plus, Buildings, MapPin, CalendarBlank, UsersThree, Sparkle, CurrencyDollar, ShieldCheck, Stack } from '@phosphor-icons/react';
@@ -63,6 +64,11 @@ const FIELD = ({label,auto,hint,children}:{label:string,auto?:boolean,hint?:Reac
 export default function NewProjectPage() {
   const router = useRouter();
   const year = new Date().getFullYear();
+
+  /* The kind of job. Picking it sets retainage, contract type and the filing
+     structure, so the GC answers once instead of on every field below. */
+  const [templateKey, setTemplateKey] = useState<string>('ground-up');
+  const tpl = templateByKey(templateKey);
 
   // Identity
   const [name, setName] = useState('');
@@ -258,7 +264,7 @@ export default function NewProjectPage() {
           startDate:startDate||null, substantialCompletionDate:subDate||null,
           awardDate:awardDate||null, noticeToProceedDate:ntpDate||null, finalCompletionDate:finalDate||null,
           stateJurisdiction, ownerName:owner, ownerEmail, architectName:arch, architectEmail:archEmail,
-          description, contractType, retainagePct:Number(retainage)||10,
+          description, contractType, retainagePct:Number(retainage)||10, template:templateKey,
           prevailingWage:prevailingWage!=='No', publicProject:!publicProject.includes('Private'),
         })
       });
@@ -332,6 +338,70 @@ export default function NewProjectPage() {
       )}
 
       {error&&<div style={{background:'rgba(192,48,48,.1)',border:'1px solid rgba(192,48,48,.3)',borderRadius:10,padding:'12px 16px',marginBottom:20,fontSize:13,color:'#ff7070'}}>{error}</div>}
+
+      {/* What kind of job. One choice that furnishes the rest — retainage, the
+          contract type, the CSI spread the budget expects, and the folders the
+          documents land in. Every one of them stays editable below; this is a
+          starting point, not a lock. */}
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>
+          What kind of job is this?
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
+          {PROJECT_TEMPLATES.map((t) => {
+            const on = templateKey === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => {
+                  setTemplateKey(t.key);
+                  setRetainage(String(t.retainagePct));
+                  setContractType(t.contractType);
+                }}
+                aria-pressed={on}
+                style={{
+                  textAlign: 'left', cursor: 'pointer', padding: '15px 16px', borderRadius: 14,
+                  background: on ? 'rgba(245,158,11,0.10)' : 'rgba(255,255,255,0.03)',
+                  border: on ? '1px solid rgba(245,158,11,0.65)' : '1px solid rgba(255,255,255,0.10)',
+                  boxShadow: on ? '0 0 0 3px rgba(245,158,11,0.10)' : 'none',
+                  transition: 'background .15s, border-color .15s, box-shadow .15s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <span style={{
+                    width: 15, height: 15, borderRadius: 999, flexShrink: 0,
+                    border: on ? '5px solid #F59E0B' : '1.5px solid rgba(255,255,255,0.30)',
+                    background: on ? '#1A1206' : 'transparent',
+                  }} />
+                  <span style={{ fontSize: 14, fontWeight: 800, color: on ? '#F59E0B' : '#F0F4FF' }}>{t.name}</span>
+                </div>
+                <div style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(255,255,255,0.62)', marginBottom: 8 }}>{t.blurb}</div>
+                <div style={{ fontSize: 11.5, lineHeight: 1.45, color: 'rgba(255,255,255,0.38)', fontStyle: 'italic' }}>{t.example}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+                  {[
+                    `${t.retainagePct}% retainage`,
+                    t.contractType,
+                    `${t.divisions.length} CSI divisions`,
+                    `${t.folders.length} folders`,
+                  ].map((chip) => (
+                    <span key={chip} style={{
+                      fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
+                      background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.55)',
+                    }}>{chip}</span>
+                  ))}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {tpl && (
+          <div style={{ marginTop: 10, fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+            Creates {tpl.folders.length} document folders — {tpl.folders.slice(0, 5).join(', ')}
+            {tpl.folders.length > 5 ? ` and ${tpl.folders.length - 5} more` : ''}. All of it editable afterwards.
+          </div>
+        )}
+      </div>
 
       <form onSubmit={create}>
         <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 340px',gap:16,alignItems:'start'}}>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { onProjectCreated } from '@/lib/triggers';
+import { templateByKey } from '@/lib/project-templates';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,7 +14,12 @@ export async function POST(req: NextRequest) {
 
     // Accept both camelCase (web) and snake_case (mobile) for every field the
     // clients send, and honor the user's choices instead of hard-coding them.
-    const projectType = body.projectType ?? body.project_type ?? 'commercial';
+    /* A template answers the questions a GC would otherwise answer by hand on
+       every job — retainage, contract type, filing structure. Anything the
+       client sent explicitly still wins; the template only fills the blanks. */
+    const template = templateByKey(body.template ?? body.templateKey);
+
+    const projectType = body.projectType ?? body.project_type ?? template?.projectType ?? 'commercial';
     const status = body.status ?? 'active';
     // Numeric contract — the projects LIST/dashboard read `contract_value`, so
     // that column MUST be populated; mirror to the contract_amount/original_*
@@ -50,7 +56,9 @@ export async function POST(req: NextRequest) {
       architect_email: body.architectEmail || '',
       architect_entity: body.architectName ? { name: body.architectName, email: body.architectEmail } : {},
       // Contract settings
-      retainage_pct: body.retainagePct || 10,
+      retainage_pct: body.retainagePct ?? template?.retainagePct ?? 10,
+      contract_type: body.contractType ?? template?.contractType ?? null,
+      template_name: template?.key ?? null,
       is_public_project: body.publicProject || false,
       prevailing_wage: body.prevailingWage || false,
       // Extras stored in metadata
@@ -69,6 +77,27 @@ export async function POST(req: NextRequest) {
     const projectId = (project as any).id;
 
     // Trigger async scaffolding (non-blocking)
+    /* Lay the filing structure down now, empty. A folder with nothing in it is
+       still a map: it tells a GC where drawings, permits and closeout go before
+       they have any. Non-fatal — a project without folders is a project, and
+       failing creation over a filing cabinet would be absurd. */
+    if (template?.folders?.length) {
+      /* project_folders is newer than the checked-in generated types, so this
+         one call is cast rather than regenerating the whole type file. */
+      const { error: folderErr } = await (db as unknown as {
+        from: (t: string) => { insert: (rows: unknown[]) => Promise<{ error: unknown }> };
+      }).from('project_folders').insert(
+        template.folders.map((name, i) => ({
+          tenant_id: user.tenantId,
+          project_id: projectId,
+          name,
+          sort_order: i,
+          seeded_from: template.key,
+        })) as never,
+      );
+      if (folderErr) console.error('[projects/create] folder seed', folderErr);
+    }
+
     onProjectCreated(projectId).catch(console.error);
 
     return NextResponse.json({ projectId, project, success: true });

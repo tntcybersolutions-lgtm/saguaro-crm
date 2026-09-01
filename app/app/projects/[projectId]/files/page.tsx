@@ -58,7 +58,31 @@ export default function FilesPage() {
   const { ctx } = useProjectContext(projectId);
 
   const flash = (m: string) => { setToast(m); setTimeout(() => setToast(''), 3500); };
-  const folders = useMemo(() => Array.from(new Set(files.map((f) => f.folder).filter(Boolean))).sort(), [files]);
+  /* Folders the project was set up with, whether or not anything is filed in
+     them yet. Deriving the list purely from uploaded files meant a brand-new
+     project showed none at all — the GC had nowhere to put a drawing and no
+     hint that anywhere was expected. */
+  const [seededFolders, setSeededFolders] = useState<string[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/projects/${projectId}/folders`);
+        if (!res.ok) return;
+        const body = await res.json();
+        if (!cancelled) setSeededFolders((body.folders ?? []).map((x: { name: string }) => x.name));
+      } catch { /* the file-derived list below still works */ }
+    })();
+    return () => { cancelled = true; };
+  }, [projectId]);
+
+  /* Seeded order first — it is the order the template meant — then anything a
+     file introduced that is not already in it. */
+  const folders = useMemo(() => {
+    const fromFiles = files.map((f) => f.folder).filter(Boolean) as string[];
+    const extra = Array.from(new Set(fromFiles.filter((x) => !seededFolders.includes(x)))).sort();
+    return [...seededFolders, ...extra];
+  }, [files, seededFolders]);
   const filtered = files.filter((f) => {
     if (kindFilter !== 'all' && kindOf(f) !== kindFilter) return false;
     if (folder !== 'all' && (f.folder || '') !== folder) return false;
