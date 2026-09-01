@@ -14,7 +14,10 @@ const VALID_TYPES = [
 ];
 
 const FRIENDLY_ACCEPT = 'PDF, PNG, JPG, TIFF, or WebP';
-const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+/* Matches the blueprints bucket. This route now only serves small files —
+   anything real goes through upload-url + upload-complete, because a
+   serverless body cannot exceed 4.5 MB. */
+const MAX_SIZE = 200 * 1024 * 1024; // 200MB
 
 function formatSize(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;

@@ -293,8 +293,8 @@ export default function TakeoffPage() {
       setPhase('error');
       return;
     }
-    if (file.size > 50 * 1024 * 1024) {
-      setErrorMsg('File too large. Maximum 50MB.');
+    if (file.size > 200 * 1024 * 1024) {
+      setErrorMsg('File too large. Maximum 200MB.');
       setPhase('error');
       return;
     }
@@ -360,16 +360,41 @@ export default function TakeoffPage() {
       if (!createRes.ok) throw new Error(createJson.error || 'Failed to create takeoff');
       const takeoffId: string = createJson.data.id;
 
-      // 2. Upload file
+      /* 2. Upload the bytes straight to storage — a serverless function will
+            not take a body over 4.5 MB, and a real drawing set is far bigger.
+            See /api/takeoff/[id]/upload-url. */
       setProgress({ pct: 20, message: 'Uploading blueprint...', step: 2 });
-      const formData = new FormData();
-      formData.append('file', file);
-      const uploadRes = await fetch(`/api/takeoff/${takeoffId}/upload`, {
+
+      const urlRes = await fetch(`/api/takeoff/${takeoffId}/upload-url`, {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name }),
       });
-      const uploadJson = await uploadRes.json();
-      if (!uploadRes.ok) throw new Error(uploadJson.error || 'Upload failed');
+      const urlJson = await urlRes.json().catch(() => ({}));
+      if (!urlRes.ok) throw new Error(urlJson.error || 'Could not start the upload.');
+
+      const putRes = await fetch(urlJson.signedUrl, {
+        method: 'PUT',
+        headers: {
+          'x-upsert': 'true',
+          ...(file.type ? { 'Content-Type': file.type } : {}),
+        },
+        body: file,
+      });
+      if (!putRes.ok) throw new Error(`Upload failed (${putRes.status}). Please try again.`);
+
+      const doneRes = await fetch(`/api/takeoff/${takeoffId}/upload-complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: urlJson.path,
+          fileName: file.name,
+          fileType: file.type || 'application/pdf',
+          fileSize: file.size,
+        }),
+      });
+      const uploadJson = await doneRes.json().catch(() => ({}));
+      if (!doneRes.ok) throw new Error(uploadJson.error || 'Upload failed');
 
       // 3. Analyze via SSE
       setPhase('analyzing');
@@ -553,7 +578,7 @@ export default function TakeoffPage() {
                         or click to browse files
                       </div>
                       <div style={{ color: T.faint, fontSize: 11 }}>
-                        PDF, PNG, JPG, TIFF, WebP · max 50MB
+                        PDF, PNG, JPG, TIFF, WebP · max 200MB
                       </div>
                     </div>
                     <input

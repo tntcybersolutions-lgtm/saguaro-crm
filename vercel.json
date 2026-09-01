@@ -15,7 +15,8 @@
       "maxDuration": 60
     },
     "app/api/takeoff/[...path]/route.ts": {
-      "maxDuration": 300
+      "maxDuration": 300,
+      "memory": 3009
     },
     "app/api/[...path]/route.ts": {
       "maxDuration": 120

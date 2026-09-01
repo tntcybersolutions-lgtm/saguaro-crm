@@ -984,8 +984,8 @@ export default function TakeoffPage() {
       showToast('Invalid file type. Please use PDF, PNG, JPG, or TIFF.', 'error');
       return;
     }
-    if (file.size > 50 * 1024 * 1024) {
-      showToast('File too large. Maximum 50MB.', 'error');
+    if (file.size > 200 * 1024 * 1024) {
+      showToast('File too large. Maximum 200MB.', 'error');
       return;
     }
     setSelectedFile(file);
@@ -1018,15 +1018,28 @@ export default function TakeoffPage() {
       const { data: newTakeoff } = await createRes.json();
       setTakeoffId(newTakeoff.id);
 
-      // 2. Upload file with XHR progress tracking
+      /* 2. Upload the bytes STRAIGHT TO STORAGE.
+         A serverless function will not take a request body over 4.5 MB, and a
+         real 25-sheet set is 20–100 MB. Posting the file to /upload meant the
+         platform rejected it at the edge with a non-JSON 413, which this code
+         could only report as "Upload failed" — the exact thing the GC hit.
+         A signed URL has no such ceiling, and the PUT still reports progress. */
       setProgress({ step: 2, message: 'Uploading blueprint...', pct: 10 });
       setUploadPct(0);
-      const formData = new FormData();
-      formData.append('file', selectedFile);
 
-      const uploadResult = await new Promise<{ success: boolean; error?: string }>((resolve, reject) => {
+      const urlRes = await fetch(`/api/takeoff/${newTakeoff.id}/upload-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: selectedFile.name }),
+      });
+      const urlData = await urlRes.json().catch(() => ({}));
+      if (!urlRes.ok) throw new Error(urlData.error || 'Could not start the upload.');
+
+      await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', `/api/takeoff/${newTakeoff.id}/upload`);
+        xhr.open('PUT', urlData.signedUrl);
+        xhr.setRequestHeader('x-upsert', 'true');
+        if (selectedFile.type) xhr.setRequestHeader('Content-Type', selectedFile.type);
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
             const pct = Math.round((e.loaded / e.total) * 100);
@@ -1035,18 +1048,26 @@ export default function TakeoffPage() {
           }
         };
         xhr.onload = () => {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            if (xhr.status >= 200 && xhr.status < 300) resolve({ success: true });
-            else resolve({ success: false, error: data.error || 'Upload failed' });
-          } catch { resolve({ success: false, error: 'Upload failed' }); }
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error(`Upload failed (${xhr.status}). Please try again.`));
         };
         xhr.onerror = () => reject(new Error('Network error during upload'));
-        xhr.send(formData);
+        xhr.send(selectedFile);
       });
-      if (!uploadResult.success) {
-        throw new Error(uploadResult.error || 'Upload failed');
-      }
+
+      // Count the sheets, build the thumbnail, mark it ready to analyse.
+      const doneRes = await fetch(`/api/takeoff/${newTakeoff.id}/upload-complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          path: urlData.path,
+          fileName: selectedFile.name,
+          fileType: selectedFile.type || 'application/pdf',
+          fileSize: selectedFile.size,
+        }),
+      });
+      const doneData = await doneRes.json().catch(() => ({}));
+      if (!doneRes.ok) throw new Error(doneData.error || 'Upload failed');
 
       // 3. Connect SSE analysis stream
       setProgress({ step: 3, message: 'Connecting to AI...', pct: 15 });
