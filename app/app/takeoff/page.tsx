@@ -940,6 +940,18 @@ export default function TakeoffPage() {
                           {t.analyzed_at && <span style={{ color: MUTED, fontSize: 12 }}>Analyzed {fmtDate(t.analyzed_at)}</span>}
                         </div>
                         <div style={{ display: 'flex', gap: 8 }}>
+                          {t.status === 'complete' && t.project_id && (
+                            <a
+                              href={`/app/projects/${t.project_id}/takeoff`}
+                              style={{
+                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                padding: '7px 14px', borderRadius: 8, textDecoration: 'none',
+                                background: GOLD, color: '#1A1206', fontSize: 13, fontWeight: 800,
+                              }}
+                            >
+                              Build bid + compliance →
+                            </a>
+                          )}
                           <Btn variant="ghost" size="sm" onClick={() => exportCSV(t)} disabled={!t.materials?.length}>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><DownloadSimple size={14} weight="bold" /> Export CSV</span>
                           </Btn>

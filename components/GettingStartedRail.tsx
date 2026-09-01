@@ -29,6 +29,7 @@ const TEXT = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
 const LS_KEY = 'sag_journey_collapsed';
+const LS_PROJECT_KEY = 'sag_journey_project';
 
 interface JourneyStep { title: string; desc: string; done: boolean; href?: string }
 
@@ -41,7 +42,24 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   const { projects, loading: listLoading, error: listError, degraded } = useProjects();
   // On the dashboard (no projectId prop) the journey tracks the most recent
   // project — the list is already created_at desc.
-  const activeId = projectId || projects[0]?.id;
+  /* On a project page the prop wins. On the dashboard, the last project the GC
+     deliberately picked wins over "whatever is newest", and either way the card
+     names it — a path to first payment is per-job, so an unlabelled one is just
+     a mystery. */
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  useEffect(() => {
+    if (projectId) return;
+    try { setPickedId(localStorage.getItem(LS_PROJECT_KEY)); } catch { /* private mode */ }
+  }, [projectId]);
+
+  const pickedStillExists = pickedId && projects.some((p: { id: string }) => p.id === pickedId);
+  const activeId = projectId || (pickedStillExists ? pickedId : projects[0]?.id);
+  const activeProject = projects.find((p: { id: string }) => p.id === activeId) ?? null;
+
+  const chooseProject = (id: string) => {
+    setPickedId(id);
+    try { localStorage.setItem(LS_PROJECT_KEY, id); } catch { /* private mode */ }
+  };
   const { ctx, loading: ctxLoading } = useProjectContext(activeId || null);
   // Never flash a wrong journey: wait for the list (and for the snapshot when
   // a project exists); a degraded list route never shows a false "0 of N".
@@ -97,11 +115,31 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
     <div style={{ marginBottom: 24 }}>
       <SectionCard
         title="Your path to first payment"
-        subtitle={next ? `Next up: ${next.title}` : undefined}
+        subtitle={
+          activeProject
+            ? `${activeProject.name}${next ? ` · next up: ${next.title}` : ''}`
+            : next ? `Next up: ${next.title}` : undefined
+        }
         icon={<Compass size={17} weight="duotone" color={GOLD} />}
         flush={collapsed}
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {!projectId && projects.length > 1 && (
+              <select
+                value={activeId ?? ''}
+                onChange={(e) => chooseProject(e.target.value)}
+                aria-label="Which project this path is for"
+                style={{
+                  maxWidth: 220, padding: '4px 8px', borderRadius: 8, cursor: 'pointer',
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)',
+                  color: MUTED, fontSize: 12, fontWeight: 600,
+                }}
+              >
+                {projects.map((p: { id: string; name: string }) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            )}
             <span style={{
               padding: '3px 10px', borderRadius: 999, background: 'rgba(245,158,11,0.14)',
               border: '1px solid rgba(245,158,11,0.4)', color: GOLD_HI,

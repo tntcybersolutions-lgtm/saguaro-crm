@@ -18,7 +18,6 @@ import {
   CinematicPage, ModuleHero, HeroButton, StatCard, SectionCard, SectionLink, EmptyStatePremium, CIN,
 } from '@/components/ui/cinematic';
 import GettingStartedRail from '@/components/GettingStartedRail';
-import PreConFlow from '@/components/PreConFlow';
 import { StatStrip } from '@/components/ui/premium';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22C55E',RED='#EF4444';
@@ -215,10 +214,18 @@ export default function OverviewPage(){
         </>}
       />
 
-      {/* Pre-con setup path — modules auto-sharing real data, in order, with one-click handoffs */}
-      <PreConFlow projectId={projectId}/>
+      {/* ONE path, not two.
+          This page used to stack PreConFlow ("PROJECT SETUP 3/6") directly above
+          the journey ("Your path to first payment 4/9"). Two roadmaps, different
+          step counts, different names for the same work — "Measure the plans"
+          against "Price the drawings" — and they disagreed about what to do
+          next: one said Design low voltage, the other said Set contract &
+          budget. A GC reading both cannot tell which is the product's opinion.
 
-      {/* GC Guided Journey — auto-hides once all 8 steps complete */}
+          The journey wins because it is the whole job, project through to
+          payment, and every PreConFlow step except low voltage already appears
+          in it. Low voltage is a Signal Studio feature, not a gate every
+          general contractor has to pass to set a job up. */}
       <GettingStartedRail projectId={projectId}/>
 
       {scanMsg&&<div style={{marginBottom:20,padding:'13px 18px',background: scanMsg.includes('failed') ? 'rgba(239,68,68,.1)' : 'rgba(34,197,94,.1)',border:`1px solid ${scanMsg.includes('failed') ? 'rgba(239,68,68,.35)' : 'rgba(34,197,94,.35)'}`,borderRadius:14,fontSize:13,fontWeight:600,color: scanMsg.includes('failed') ? RED : GREEN,display:'flex',alignItems:'center',gap:8}}>
