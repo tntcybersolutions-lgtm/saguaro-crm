@@ -62,9 +62,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!takeoff) return apiFail('Takeoff not found', 404);
 
     const projectId = (takeoff as { project_id: string }).project_id;
-    const path = `${projectId}/blueprints/${takeoffId}/blueprint.${ext}`;
 
-    /* upsert so re-uploading over a takeoff behaves as it always has. */
+    /* Every uploaded file gets its own object under sources/. The path used to
+       be a fixed blueprint.<ext> with upsert, so a GC uploading Architectural,
+       then Structural, then MEP — which is how a big set actually arrives —
+       silently kept only the last one. upload-complete merges the sources into
+       the canonical blueprint.<ext> that everything else reads. */
+    const stamp = Date.now();
+    const safeName = fileName.replace(/[^\w.() -]+/g, '_').slice(0, 120);
+    const path = `${projectId}/blueprints/${takeoffId}/sources/${stamp}-${safeName}`;
+
     const { data, error } = await (db as any).storage
       .from(BUCKET)
       .createSignedUploadUrl(path, { upsert: true });

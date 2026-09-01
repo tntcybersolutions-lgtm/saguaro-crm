@@ -1069,6 +1069,14 @@ export default function TakeoffPage() {
       const doneData = await doneRes.json().catch(() => ({}));
       if (!doneRes.ok) throw new Error(doneData.error || 'Upload failed');
 
+      /* Say what landed. A set arriving as three discipline PDFs used to keep
+         only the last one, silently — so the count is worth stating out loud. */
+      if (doneData.merged) {
+        showToast(`Added to the set — ${doneData.sourceCount} files, ${doneData.pageCount ?? '?'} sheets.`);
+      } else if (doneData.replacedPrevious) {
+        showToast('Replaced the previous blueprint (images cannot be added to a PDF set).');
+      }
+
       // 3. Connect SSE analysis stream
       setProgress({ step: 3, message: 'Connecting to AI...', pct: 15 });
       const eventSource = new EventSource(`/api/takeoff/${newTakeoff.id}/analyze`);
