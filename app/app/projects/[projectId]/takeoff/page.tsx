@@ -998,13 +998,61 @@ export default function TakeoffPage() {
     if (file) handleFileSelect(file);
   }, [handleFileSelect]);
 
-  const handleAnalyze = async () => {
-    if (!selectedFile) return;
+  /* Add another discipline file to the takeoff that is already open. The
+     server merges it into the same blueprint and re-reads the whole set. */
+  const addSheetsRef = useRef<HTMLInputElement>(null);
+  const addSheets = async (file: File) => {
+    if (!file || !takeoffId) return;
+    if (file.size > 200 * 1024 * 1024) { showToast('File too large. Maximum 200MB.', 'error'); return; }
+    try {
+      showToast(`Adding ${file.name}…`);
+      const urlRes = await fetch(`/api/takeoff/${takeoffId}/upload-url`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name }),
+      });
+      const urlData = await urlRes.json().catch(() => ({}));
+      if (!urlRes.ok) throw new Error(urlData.error || 'Could not start the upload.');
+
+      const put = await fetch(urlData.signedUrl, {
+        method: 'PUT',
+        headers: { 'x-upsert': 'true', ...(file.type ? { 'Content-Type': file.type } : {}) },
+        body: file,
+      });
+      if (!put.ok) throw new Error(`Upload failed (${put.status}).`);
+
+      const doneRes = await fetch(`/api/takeoff/${takeoffId}/upload-complete`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: urlData.path, fileName: file.name, fileType: file.type || 'application/pdf', fileSize: file.size }),
+      });
+      const doneData = await doneRes.json().catch(() => ({}));
+      if (!doneRes.ok) throw new Error(doneData.error || 'Upload failed');
+
+      showToast(
+        doneData.merged
+          ? `Added — ${doneData.sourceCount} files, ${doneData.pageCount ?? '?'} sheets. Re-reading the set…`
+          : 'Replaced the blueprint. Re-reading…',
+      );
+      /* Re-run the read so the new sheets are actually priced. */
+      setAutoSummary(null);
+      setState('analyzing');
+      handleAnalyze(takeoffId);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Could not add the file.', 'error');
+    }
+  };
+
+  const handleAnalyze = async (existingTakeoffId?: string) => {
+    if (!existingTakeoffId && !selectedFile) return;
     setState('analyzing');
     setLane(null);
     setProgress({ step: 1, message: 'Creating takeoff record...', pct: 5 });
 
     try {
+      /* Re-reading a takeoff that already has its sheets skips straight to the
+         stream — there is nothing to create and nothing to upload. */
+      let analysisId = existingTakeoffId ?? '';
+      if (!analysisId) {
+      const file = selectedFile!;
       // 1. Create takeoff record
       const createRes = await fetch('/api/takeoff/create', {
         method: 'POST',
@@ -1016,7 +1064,8 @@ export default function TakeoffPage() {
         throw new Error(e.error || 'Failed to create takeoff');
       }
       const { data: newTakeoff } = await createRes.json();
-      setTakeoffId(newTakeoff.id);
+      analysisId = newTakeoff.id;
+      setTakeoffId(analysisId);
 
       /* 2. Upload the bytes STRAIGHT TO STORAGE.
          A serverless function will not take a request body over 4.5 MB, and a
@@ -1027,10 +1076,10 @@ export default function TakeoffPage() {
       setProgress({ step: 2, message: 'Uploading blueprint...', pct: 10 });
       setUploadPct(0);
 
-      const urlRes = await fetch(`/api/takeoff/${newTakeoff.id}/upload-url`, {
+      const urlRes = await fetch(`/api/takeoff/${analysisId}/upload-url`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: selectedFile.name }),
+        body: JSON.stringify({ fileName: file.name }),
       });
       const urlData = await urlRes.json().catch(() => ({}));
       if (!urlRes.ok) throw new Error(urlData.error || 'Could not start the upload.');
@@ -1039,7 +1088,7 @@ export default function TakeoffPage() {
         const xhr = new XMLHttpRequest();
         xhr.open('PUT', urlData.signedUrl);
         xhr.setRequestHeader('x-upsert', 'true');
-        if (selectedFile.type) xhr.setRequestHeader('Content-Type', selectedFile.type);
+        if (file.type) xhr.setRequestHeader('Content-Type', file.type);
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
             const pct = Math.round((e.loaded / e.total) * 100);
@@ -1052,18 +1101,18 @@ export default function TakeoffPage() {
           else reject(new Error(`Upload failed (${xhr.status}). Please try again.`));
         };
         xhr.onerror = () => reject(new Error('Network error during upload'));
-        xhr.send(selectedFile);
+        xhr.send(file);
       });
 
       // Count the sheets, build the thumbnail, mark it ready to analyse.
-      const doneRes = await fetch(`/api/takeoff/${newTakeoff.id}/upload-complete`, {
+      const doneRes = await fetch(`/api/takeoff/${analysisId}/upload-complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           path: urlData.path,
-          fileName: selectedFile.name,
-          fileType: selectedFile.type || 'application/pdf',
-          fileSize: selectedFile.size,
+          fileName: file.name,
+          fileType: file.type || 'application/pdf',
+          fileSize: file.size,
         }),
       });
       const doneData = await doneRes.json().catch(() => ({}));
@@ -1077,9 +1126,11 @@ export default function TakeoffPage() {
         showToast('Replaced the previous blueprint (images cannot be added to a PDF set).');
       }
 
+      }
+
       // 3. Connect SSE analysis stream
       setProgress({ step: 3, message: 'Connecting to AI...', pct: 15 });
-      const eventSource = new EventSource(`/api/takeoff/${newTakeoff.id}/analyze`);
+      const eventSource = new EventSource(`/api/takeoff/${analysisId}/analyze`);
       let analysisResolved = false;
 
       eventSource.onmessage = (e) => {
@@ -1100,7 +1151,7 @@ export default function TakeoffPage() {
             setResult(data as TakeoffResult);
             setState('results');
             // hydrate DB row ids in the background so every line is editable
-            void hydrateIds(String(newTakeoff.id));
+            void hydrateIds(String(analysisId));
             const sheetsMsg = data.sheetsAnalyzed
               ? ` from ${data.sheetsAnalyzed}${data.sheetsTotal && data.sheetsTotal !== data.sheetsAnalyzed ? ` of ${data.sheetsTotal}` : ''} sheet${data.sheetsAnalyzed === 1 ? '' : 's'}`
               : '';
@@ -1661,7 +1712,7 @@ export default function TakeoffPage() {
 
           {/* Analyze button */}
           <button
-            onClick={handleAnalyze}
+            onClick={() => handleAnalyze()}
             disabled={!selectedFile}
             className={selectedFile ? 'tkBtn' : undefined}
             style={{
@@ -2205,6 +2256,16 @@ export default function TakeoffPage() {
             <button onClick={() => { setAutoSummary(null); setPickMode(true); }} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
               Add more manually
             </button>
+            <button onClick={() => addSheetsRef.current?.click()} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(245,158,11,0.5)', borderRadius: 10, color: '#F59E0B', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              + Add sheets to this set
+            </button>
+            <input
+              ref={addSheetsRef}
+              type="file"
+              accept="application/pdf,image/png,image/jpeg,image/tiff,image/webp"
+              style={{ display: 'none' }}
+              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) addSheets(f); }}
+            />
             <button onClick={() => { if (confirm('Start a new takeoff? Previous results are saved.')) { setAutoSummary(null); setState('upload'); setSelectedFile(null); setResult(null); setTakeoffId(null); } }} style={{ padding: '11px 18px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 13, cursor: 'pointer', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Plus size={13} weight="bold" color="rgba(255,255,255,0.4)" /> New analysis
             </button>
