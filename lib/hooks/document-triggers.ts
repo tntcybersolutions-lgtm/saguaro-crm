@@ -219,12 +219,15 @@ export async function onSubOnboarded(
     // W-9 request if sub payments likely > $600
     if (((sub as any).contract_amount || 0) > 600) {
       const token = crypto.randomUUID();
-      await supabaseAdmin.from('w9_requests').insert({
+      const { error: writeErr } = await supabaseAdmin.from('w9_requests').insert({
         sub_id: subId,
         project_id: projectId,
         token,
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       });
+      // A rejected write used to vanish here — supabase-js returns
+      // { error } rather than throwing, so nothing surfaced.
+      if (writeErr) console.error('[document-triggers/w9-request]', writeErr);
 
       if ((sub as any).primary_email) {
         await sendEmail({

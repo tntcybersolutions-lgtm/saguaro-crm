@@ -77,7 +77,10 @@ export async function POST(
     // rather than stored as data, since there is no jsonb column for it).
     if (portalType === 'sub' && token && subPath === 'lien-waiver') {
       await req.json().catch(() => ({}));
-      await db.from('lien_waivers').update({ status: 'signed', signed_at: new Date().toISOString(), signature_method: 'portal' }).eq('token', token);
+      const { error: writeErr } = await db.from('lien_waivers').update({ status: 'signed', signed_at: new Date().toISOString(), signature_method: 'portal' }).eq('token', token);
+      // This route answers success right after. A rejected write used to
+      // vanish — supabase-js returns { error } rather than throwing.
+      if (writeErr) { console.error('[portals/lien-waiver-sign]', writeErr); throw writeErr; }
       return NextResponse.json({ success: true });
     }
 

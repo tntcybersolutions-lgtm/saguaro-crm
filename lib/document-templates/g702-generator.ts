@@ -319,7 +319,7 @@ export async function generateG702(input: G702Input): Promise<{
 
   // Insert pay_application record
   try {
-    await supabaseAdmin.from('pay_applications').insert({
+    const { error: writeErr } = await supabaseAdmin.from('pay_applications').insert({
       project_id: input.projectId,
       app_number: appNumber,
       period_to: input.periodTo,
@@ -332,6 +332,10 @@ export async function generateG702(input: G702Input): Promise<{
       status: 'draft',
       g702_pdf_url: pdfUrl,
     });
+    if (writeErr) {
+      console.error('[g702/pay-application]', writeErr);
+      throw writeErr;
+    }
   } catch {
     /* DB may not have table yet */
   }

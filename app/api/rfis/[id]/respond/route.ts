@@ -88,7 +88,7 @@ export async function POST(
     if (updateError) throw updateError;
 
     // Record an official response entry
-    await db.from('rfi_responses').insert({
+    const { error: writeErr } = await db.from('rfi_responses').insert({
       tenant_id: user.tenantId,
       rfi_id: id,
       responder_name: user.email || '',
@@ -98,6 +98,10 @@ export async function POST(
       is_official: true,
       responded_at: nowIso,
     });
+    if (writeErr) {
+      console.error('[rfis/respond]', writeErr);
+      throw writeErr;
+    }
 
     onRFIAnswered(id).catch(() => {});
 

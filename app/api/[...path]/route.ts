@@ -511,7 +511,11 @@ export async function POST(
       return NextResponse.json({ error: 'Internal server error' }, { status: 400, headers: corsHeaders() });
     }
     const tenantId = authData.user.id;
-    await supabaseAdmin.from('tenants').insert({ id: tenantId, company_name: company, phone: phone || null, role, state: state || null, company_size: size || null, plan: 'trial', trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), created_at: new Date().toISOString() }).then(() => null);
+    const { error: tenantErr } = await supabaseAdmin.from('tenants').insert({ id: tenantId, company_name: company, phone: phone || null, role, state: state || null, company_size: size || null, plan: 'trial', trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), created_at: new Date().toISOString() });
+    // Signup answers success straight after this. A rejected insert used to
+    // vanish (supabase-js returns { error }), leaving an auth user with no tenant
+    // — an account that exists and can never load a project.
+    if (tenantErr) { console.error('[signup/tenant]', tenantErr); throw tenantErr; }
     const { data: sessionData, error: sessionErr } = await supabaseAdmin.auth.signInWithPassword({ email, password });
     if (sessionErr || !sessionData.session) return NextResponse.json({ success: true, message: 'Account created! Please log in.', redirectUrl: `${APP_URL}/login` }, { headers: corsHeaders() });
     return NextResponse.json({ success: true, message: 'Account created successfully!', accessToken: sessionData.session.access_token, refreshToken: sessionData.session.refresh_token, expiresAt: sessionData.session.expires_at, userId: authData.user.id, redirectUrl: `${APP_URL}/onboarding/step-1` }, { headers: corsHeaders() });

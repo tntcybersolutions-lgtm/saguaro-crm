@@ -68,7 +68,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     // Update sub w9 status. subcontractors has no w9_status column; the live
     // column is the boolean w9_on_file.
     if (r.sub_id) {
-      await db.from('subcontractors').update({ w9_on_file: true }).eq('id', r.sub_id);
+      const { error: writeErr } = await db.from('subcontractors').update({ w9_on_file: true }).eq('id', r.sub_id);
+      // This route answers success right after. A rejected write used to
+      // vanish — supabase-js returns { error } rather than throwing.
+      if (writeErr) { console.error('[portals/w9-on-file]', writeErr); throw writeErr; }
     }
 
     return NextResponse.json({ success: true, pdfUrl });

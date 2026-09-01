@@ -425,7 +425,7 @@ export async function onBidAwarded(bidSubmissionId: string): Promise<void> {
       .eq('tenant_id', project.tenant_id)
       .maybeSingle();
     if (!existingContract) {
-      await db.from('contracts').insert({
+      const { error: writeErr } = await db.from('contracts').insert({
         tenant_id: project.tenant_id,
         project_id: project.id,
         bid_package_id: pkg.id,
@@ -442,6 +442,7 @@ export async function onBidAwarded(bidSubmissionId: string): Promise<void> {
         counterparty_email: winnerEmail,
         notes: `Auto-created on bid award (package: ${pkg.name}).`,
       } as never);
+      if (writeErr) console.error('[triggers/award-subcontract]', writeErr);
     }
     // (b) Budget commitment — same cost-code/division matching the CO cascade uses.
     const csi = (pkg.csi_codes && pkg.csi_codes[0]) || pkg.csi_division || null;

@@ -64,7 +64,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             .limit(1)
             .maybeSingle();
           if (!dup) {
-            await db.from('cost_entries').insert({
+            const { error: writeErr } = await db.from('cost_entries').insert({
               tenant_id: user.tenantId,
               project_id: t.project_id,
               entry_type: 'labor',
@@ -78,6 +78,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               created_by: user.id,
               notes: tag,
             } as never);
+            // This route answers success right after. A rejected write used to
+            // vanish — supabase-js returns { error } rather than throwing.
+            if (writeErr) { console.error('[timesheets/cost-entry]', writeErr); throw writeErr; }
             if (t.csi_division) {
               const { data: bLine } = await db
                 .from('budget_lines')
