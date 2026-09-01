@@ -41,7 +41,18 @@ const PER_DISCIPLINE_PAGES  = Number(process.env.TAKEOFF_PAGES_PER_PASS    || 8)
 const MAX_ANALYZE_PAGES     = Number(process.env.TAKEOFF_MAX_ANALYZE_PAGES || 40);
 const MAX_DEEP_PASSES       = 6;   // hard ceiling on discipline passes
 const DEEP_BUDGET_MS        = 210_000; // wall-clock budget for deep passes (route maxDuration=300s)
-const DOC_INLINE_MAX        = 28 * MB; // base64 a sub-PDF directly under this; else downshift via processBlueprint
+/* What Anthropic will accept for one request, and what we allow ourselves.
+   This used to be a 28MB ceiling measured on the RAW buffer — but the PDF goes
+   up base64-encoded, which is 4 bytes out for every 3 in. A 28MB sub-PDF
+   therefore left here as ~37MB and came back 413 request_too_large, which is
+   exactly what a GC saw uploading a 25-sheet set. The limit has to be measured
+   on what actually crosses the wire. */
+const ANTHROPIC_REQUEST_MAX = 32 * MB;
+const PROMPT_HEADROOM       = 6 * MB;   // system prompt, sheet register, JSON scaffolding
+const DOC_ENCODED_MAX       = ANTHROPIC_REQUEST_MAX - PROMPT_HEADROOM;
+
+/** Exact base64 length for n bytes — 4 characters per 3 bytes, padded. */
+const encodedSize = (bytes: number) => Math.ceil(bytes / 3) * 4;
 
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/tiff'];
 
@@ -232,11 +243,18 @@ function bufToArrayBuffer(buf: Buffer): ArrayBuffer {
  * Returns null if the buffer can't be sent at all.
  */
 async function pdfContent(buf: Buffer, prompt: string): Promise<ContentBlock[] | null> {
-  if (buf.byteLength <= DOC_INLINE_MAX) {
+  if (encodedSize(buf.byteLength) <= DOC_ENCODED_MAX) {
     return buildContent(buf.toString('base64'), 'application/pdf', prompt);
   }
   const p = await processBlueprint(bufToArrayBuffer(buf), 'application/pdf');
   if (p.error || !p.base64) return null;
+  /* processBlueprint downshifts, but nothing guaranteed the result fits either.
+     Refusing here is honest — the caller records the sheet as unread with a
+     reason — and it beats a 413 that kills the whole analysis. */
+  if (p.base64.length > DOC_ENCODED_MAX) {
+    console.warn(`[analyze] downshifted document still too large: ${Math.round(p.base64.length / MB)}MB encoded`);
+    return null;
+  }
   return buildContent(p.base64, p.mimeType, prompt);
 }
 
@@ -671,6 +689,16 @@ export async function GET(
           send('progress', { step: 3, message: 'Preparing blueprint for AI...', pct: 20 });
           startHeartbeat('Preparing blueprint for AI...', 20, 3);
           const processed = await processBlueprint(fileBuffer, rawMime);
+          if (!processed.error && processed.base64 && processed.base64.length > DOC_ENCODED_MAX) {
+            /* Same ceiling as the multi-sheet path. Without this the request
+               leaves oversized and Anthropic answers 413 — which reads to a GC
+               as "the app cannot open my drawings". */
+            send('error', {
+              message: 'This drawing set is too large to read in one pass. Split it by discipline and upload again.',
+            });
+            await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+            return done();
+          }
           stopHeartbeat();
           if (processed.error) {
             send('error', { message: processed.error });
