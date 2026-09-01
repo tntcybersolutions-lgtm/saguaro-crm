@@ -60,6 +60,12 @@ export default function ProjectsPage() {
     return String(a.name||'').localeCompare(String(b.name||''));
   });
 
+  /* Controls appear when there is something to control. Under five projects a
+     GC reads the list; the sort, the search, the status filter and the view
+     toggle are all noise at that size, and at zero they are a wall in front of
+     an empty page. */
+  const needsControls = !loading && projects.length >= 5;
+
   const toggleBtn = (v:'cards'|'table', label:string)=>(
     <button onClick={()=>setViewPersist(v)} style={{padding:'8px 12px',fontSize:12,fontWeight:700,cursor:'pointer',border:'none',background:view===v?'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))':'transparent',color:view===v?colors.dark:DIM,borderRadius:8,boxShadow:view===v?'inset 0 1px 0 rgba(255,255,255,0.3), 0 1px 6px var(--brand-primary-25)':'none'}}>{label}</button>
   );
@@ -74,6 +80,7 @@ export default function ProjectsPage() {
         accent="Projects"
         subtitle={loading ? 'Loading your projects…' : `${filtered.length} project${filtered.length!==1?'s':''} across your portfolio.`}
         actions={<>
+          {needsControls && <>
           <div style={{display:'inline-flex',padding:3,background:'rgba(255,255,255,0.04)',border:`1px solid ${PANEL_BORDER}`,borderRadius:10}}>
             {toggleBtn('cards','Cards')}{toggleBtn('table','Table')}
           </div>
@@ -102,12 +109,13 @@ export default function ProjectsPage() {
             <option value="complete">Complete</option>
             <option value="closed">Closed</option>
           </select>
+          </>}
           <Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold"/> New Project</Link>
         </>}
       />
 
       {/* Portfolio at a glance — counts the page already fetched */}
-      {!loading && !error && projects.length>0 && (()=>{
+      {!error && needsControls && (()=>{
         const active = projects.filter((p:any)=>p.status==='active').length;
         const bidding = projects.filter((p:any)=>p.status==='bidding').length;
         const complete = projects.filter((p:any)=>p.status==='complete'||p.status==='closed').length;

@@ -383,6 +383,18 @@ export default function DashboardPage() {
   const pendingPayApps = stats?.pendingPayApps ?? 0;
   const totalContract  = stats?.totalContractValue ?? 0;
 
+  /* A dashboard for a portfolio that does not exist yet is six zeros, three
+     empty charts and three empty lists — eight sections of nothing, and it is
+     the first thing every new customer sees. Until there is something to
+     report, this page is the getting-started rail and one button.
+     Everything below returns the moment the first project, bid or pay app
+     exists. Errors are not emptiness: a failed fetch still shows its card. */
+  const portfolioEmpty =
+    !statsLoading && !statsError &&
+    !projectsLoading && !projectsError &&
+    projects.length === 0 &&
+    activeProjects === 0 && openBids === 0 && pendingPayApps === 0;
+
   return (
     <>
       <style>{`
@@ -401,24 +413,28 @@ export default function DashboardPage() {
           aux={<LivePulse />}
           title={greetLead}
           accent={greetAccent}
-          subtitle="Here's what needs your attention today."
+          subtitle={portfolioEmpty
+            ? 'Start with a project. Everything else builds on it.'
+            : "Here's what needs your attention today."}
           actions={<>
             <Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Project</Link>
+            {!portfolioEmpty && <>
             <button onClick={() => setShowScoreModal(true)} style={goldOutlineButtonStyle} className="pmBtn"><Sparkle size={15} weight="fill" /> Score a Bid</button>
             <Link href="/app/dashboard-config" title="Customize dashboard" style={ghostButtonStyle} className="pmBtn"><SlidersHorizontal size={15} weight="bold" /> Customize</Link>
+            </>}
           </>}
         />
 
         {/* Live suggestion ticker — real learning moments with honest $ impact,
             each deep-linking to the flagged module section (NudgeRing sync). */}
-        <SuggestionTicker style={{ marginBottom: 24 }} />
+        {!portfolioEmpty && <SuggestionTicker style={{ marginBottom: 24 }} />}
 
         {/* GC Guided Journey — 8 steps from first project to first payment */}
         <GettingStartedRail />
 
         {hasCustomLayout && savedLayout ? (
           <ConfiguredDashboard layout={savedLayout} />
-        ) : (
+        ) : portfolioEmpty ? null : (
         <>
         {/* KPI Row — every metric is drillable */}
         {statsError && !statsLoading ? (
