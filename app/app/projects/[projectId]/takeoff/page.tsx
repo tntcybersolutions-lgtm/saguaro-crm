@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import { useParams } from 'next/navigation';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
+import { parsePastedLines, looksLikeGrid } from '@/lib/estimating/paste';
 import { humanError } from '@/lib/errors';
 import { useToast } from '../../../../../components/Toast';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
@@ -471,11 +472,12 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
  * Every row is inline-editable (qty / unit / $/unit / description / notes / delete),
  * and each division header carries an add-line composer.
  */
-const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPatch, onAdd, onDelete }: {
+const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPatch, onAdd, onPaste, onDelete }: {
   groupedItems: Record<string, TakeoffItem[]>;
   sellMult: number;
   onPatch: (item: TakeoffItem, patch: LinePatch) => void;
   onAdd: (div: string, draft: LineDraft) => Promise<boolean>;
+  onPaste: (div: string, text: string) => Promise<number>;
   onDelete: (item: TakeoffItem) => void;
 }) {
   const [showAll, setShowAll] = useState(false);
@@ -497,7 +499,17 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
         const divTotal = items.reduce((s, i) => s + i.totalCost, 0);
         const divName = CSI_DIVISION_NAMES[div] || `Division ${div}`;
         return (
-          <div key={div}>
+          <div
+            key={div}
+            onPaste={(e) => {
+              const text = e.clipboardData.getData('text/plain');
+              // A single value pasted into a cell being edited must still behave
+              // normally — only claim the event when it is actually a grid.
+              if (!looksLikeGrid(text)) return;
+              e.preventDefault();
+              void onPaste(div, text);
+            }}
+          >
             <div style={{ padding: '8px 16px', background: 'rgba(245, 158, 11,0.06)', borderBottom: `1px solid ${BORDER}`, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
               <span>Division {div} — {divName}</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
@@ -506,6 +518,24 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
                   title={`Add a line to Division ${div}`}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(245,158,11,0.35)', background: composerDiv === div ? 'rgba(245,158,11,0.16)' : 'rgba(245,158,11,0.06)', color: GOLD_HI, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', cursor: 'pointer' }}>
                   <Plus size={11} weight="bold" color={GOLD_HI} /> Add line
+                </button>
+                {/* Estimators arrive with a block of cells already copied. Reading
+                    it here is the difference between this grid being usable and
+                    being retyping work. Ctrl+V anywhere in the division does the
+                    same thing — this button is for anyone who looks for one. */}
+                <button
+                  onClick={async () => {
+                    try {
+                      const text = await navigator.clipboard.readText();
+                      if (text.trim()) await onPaste(div, text);
+                    } catch {
+                      // Clipboard read is permission-gated in some browsers; the
+                      // onPaste handler below still catches a real Ctrl+V.
+                    }
+                  }}
+                  title={`Paste rows from a spreadsheet into Division ${div} — description, quantity, unit, unit cost`}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.62)', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Paste rows
                 </button>
                 <span>{fmt$(divTotal)}</span>
               </span>
@@ -771,6 +801,34 @@ export default function TakeoffPage() {
       return false;
     }
   }, [takeoffId, beginSave, endSave, applyServerTotals, showToast]);
+
+  /* Paste a block of spreadsheet cells into a division.
+     Parsing lives in lib/takeoff/paste.ts; this walks the result through the
+     same addLine path a typed line takes, so the optimistic row, the save
+     badge and the server round-trip are identical either way. Sequential on
+     purpose — the server assigns ids and recomputes totals per line, and firing
+     forty at once races that. */
+  const pasteLines = useCallback(async (div: string, text: string): Promise<number> => {
+    const parsed = parsePastedLines(text);
+    if (!parsed.length) {
+      showToast('Nothing to paste — copy rows from your spreadsheet first.', 'error');
+      return 0;
+    }
+    let added = 0;
+    for (const line of parsed) {
+      const ok = await addLine(div, { ...line, notes: '' });
+      if (ok) added++;
+    }
+    if (added) {
+      showToast(
+        added === parsed.length
+          ? `Added ${added} line${added === 1 ? '' : 's'} to Division ${div}.`
+          : `Added ${added} of ${parsed.length} lines — the rest could not be saved.`,
+        added === parsed.length ? 'success' : 'error',
+      );
+    }
+    return added;
+  }, [addLine, showToast]);
 
   const commitDelete = useCallback(async (item: TakeoffItem, index: number) => {
     beginSave();
@@ -1944,7 +2002,7 @@ export default function TakeoffPage() {
         </div>
 
         {/* Grouped rows — memoized + row-capped so slider drags and huge extractions don't freeze */}
-        <LineItemTable groupedItems={groupedItems} sellMult={sellMult} onPatch={patchLine} onAdd={addLine} onDelete={deleteLine} />
+        <LineItemTable groupedItems={groupedItems} sellMult={sellMult} onPatch={patchLine} onAdd={addLine} onPaste={pasteLines} onDelete={deleteLine} />
 
         {/* Grand total row */}
         <div style={{
