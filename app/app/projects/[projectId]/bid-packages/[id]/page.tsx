@@ -1,6 +1,7 @@
 'use client';
 import { Skeleton, SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
 import { Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText } from '@phosphor-icons/react';
@@ -50,11 +51,15 @@ interface BidPackage {
   code: string;
   name: string;
   trade: string;
-  scope: string;
+  scope_of_work: string | null;
+  scope_narrative: string | null;
+  scope_summary: string | null;
+  description: string | null;
   status: string;
   bid_due_date: string | null;
   project_id: string;
   awarded_to: string | null;
+  awarded_to_id: string | null;
   awarded_amount: number | null;
   jacket_pdf_url: string | null;
   created_at: string;
@@ -291,6 +296,12 @@ export default function BidPackageDetailPage() {
     </PremiumSurface>
   );
 
+  /* Which column the scope landed in depends on how the package was made —
+     the AI builder, the manual form, and the import each pick a different one.
+     Same order the contract prefill uses, so the card and the subcontract agree
+     about what the sub is being asked to do. */
+  const scopeText = pkg.scope_of_work || pkg.scope_narrative || pkg.scope_summary || pkg.description || '';
+
   const totalSov = toDollars(sumCents(pkg.sov_items.map(i => toCents(i.total))));
   const submittedSubs = pkg.invited_subs.filter(s => s.status === 'submitted');
   const submissions = pkg.bid_submissions || [];
@@ -376,14 +387,30 @@ export default function BidPackageDetailPage() {
               <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: '#1db954', marginBottom: 3, letterSpacing: 0.5 }}>Awarded To</div>
               <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{pkg.awarded_to}{pkg.awarded_amount && <span style={{ color: '#1db954', marginLeft: 12 }}>{fmt(pkg.awarded_amount)}</span>}</div>
             </div>
+
+            {/* The award already knows the sub, the scope and the amount, and the
+                contract form takes all three. Awarding used to end at a toast
+                and papering the subcontract was a screen you had to know
+                existed — this is the next step, offered where the award lands. */}
+            <Link
+              href={`/app/projects/${pkg.project_id}/contracts/new/subcontract?bidPackageId=${pkg.id}${pkg.awarded_to_id ? `&subId=${pkg.awarded_to_id}` : ''}`}
+              style={{
+                marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8,
+                minHeight: 44, padding: '0 20px', borderRadius: 9,
+                background: GOLD, color: '#241500', fontSize: 13.5, fontWeight: 800,
+                textDecoration: 'none', whiteSpace: 'nowrap',
+              }}
+            >
+              <FileText size={16} weight="bold" color="#241500" /> Paper the subcontract
+            </Link>
           </div>
         )}
 
         {/* Scope */}
-        {pkg.scope && (
+        {scopeText && (
           <div style={{ marginBottom: 20 }}>
             <SectionCard title="Scope of Work" icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}>
-              <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{pkg.scope}</div>
+              <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{scopeText}</div>
             </SectionCard>
           </div>
         )}
