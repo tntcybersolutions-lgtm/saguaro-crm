@@ -340,6 +340,7 @@ export default function NewProjectPage() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div>
                 <SectionCard title="Identity" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
+                {showDetails && (
                   <FIELD label="Sector" hint={sectorDef?.flags ? 'Public-sector work — prevailing wage and public-agency compliance pre-set below.' : 'Filters building types, derives the category, and pre-sets compliance for public work.'}>
                     <div style={{display:'flex',flexWrap:'wrap' as const,gap:5,background:'rgba(255,255,255,0.04)',borderRadius:10,padding:4,border:'1px solid rgba(255,255,255,0.08)'}}>
                       {SECTORS.map(s=>{
@@ -355,7 +356,11 @@ export default function NewProjectPage() {
                       })}
                     </div>
                   </FIELD>
+                )}
                   <FIELD label="Project Name"><input value={name} onChange={e=>setName(e.target.value)} required placeholder="e.g. Riverdale Medical Pavilion" style={INPUT_STYLE}/></FIELD>
+                {/* Number, building type, category and description are all seeded or
+                    optional. Two fields is the promise; these are here when wanted. */}
+                {showDetails && (<>
                   <FIELD label="Project Number" auto={auto.num} hint={pf?.total>0 ? `Continues your ${year} sequence — prints on G702s, subcontracts and transmittals.` : 'Year-based sequence — prints on G702s, subcontracts and transmittals.'}>
                     <input value={projectNumber} onChange={e=>{setProjectNumber(e.target.value);setAuto(a=>({...a,num:false}));}} placeholder={`${year}-001`} style={INPUT_STYLE}/>
                   </FIELD>
@@ -371,13 +376,17 @@ export default function NewProjectPage() {
                     </select>
                   </FIELD>
                   <FIELD label="Description"><textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} placeholder="Brief project description..." style={{...INPUT_STYLE,resize:'vertical' as const}}/></FIELD>
+                </>)}
                 </SectionCard>
 
                 <SectionCard title="Location" icon={<MapPin size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
                   <FIELD label="Project Address"><input value={address} onChange={e=>setAddress(e.target.value)} required placeholder="123 Main St, Phoenix, AZ 85001" style={INPUT_STYLE}/></FIELD>
+                {/* Defaults to the portfolio standard; only matters if it differs. */}
+                {showDetails && (
                   <FIELD label="State Jurisdiction" auto={auto.state} hint="Sets statutory lien-waiver forms, preliminary notice deadlines and wage rules.">
                     <input value={stateJurisdiction} onChange={e=>{setStateJurisdiction(e.target.value.toUpperCase());setAuto(a=>({...a,state:false}));}} maxLength={2} placeholder="AZ" style={{...INPUT_STYLE,width:90,textTransform:'uppercase' as const}}/>
                   </FIELD>
+                )}
                 </SectionCard>
 
                 {showDetails && (
