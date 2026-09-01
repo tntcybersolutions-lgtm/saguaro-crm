@@ -14,7 +14,7 @@ const PUBLIC_MARKER = '/storage/v1/object/public/';
  */
 const SIGN_TIMEOUT_MS = Number(process.env.STORAGE_SIGN_TIMEOUT_MS || 4000);
 
-async function withTimeout<T>(work: Promise<T>, label: string): Promise<T | null> {
+export async function withTimeout<T>(work: Promise<T>, label: string): Promise<T | null> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([

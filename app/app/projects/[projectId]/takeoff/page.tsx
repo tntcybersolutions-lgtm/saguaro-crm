@@ -1202,7 +1202,9 @@ export default function TakeoffPage() {
   };
 
   const handleGenerateBidPackages = async () => {
-    if (!result) return;
+    /* No analysed takeoff in hand means this button is on screen doing
+       nothing. Say so rather than swallowing the press. */
+    if (!result) { showToast('Run the blueprint analysis first — there is nothing to build bid packages from.', 'error'); return; }
     setGenerating('bid-packages');
     try {
       // Divisions 27 (Communications) + 28 (Electronic Safety) are ONE trade on a
@@ -1250,7 +1252,9 @@ export default function TakeoffPage() {
   };
 
   const handleGenerateSOV = async () => {
-    if (!result) return;
+    /* No analysed takeoff in hand means this button is on screen doing
+       nothing. Say so rather than swallowing the press. */
+    if (!result) { showToast('Run the blueprint analysis first — there is nothing to build a schedule of values from.', 'error'); return; }
     setGenerating('sov');
     try {
       const res = await fetch('/api/pay-apps/create', {
@@ -1463,7 +1467,9 @@ export default function TakeoffPage() {
 
   // ── Generate Lien Waiver Templates ──
   const handleGenerateLienWaivers = async () => {
-    if (!result) return;
+    /* No analysed takeoff in hand means this button is on screen doing
+       nothing. Say so rather than swallowing the press. */
+    if (!result) { showToast('Run the blueprint analysis first — there is nothing to build lien waivers from.', 'error'); return; }
     setGenerating('lien-waivers');
     try {
       const divisions = [...new Set(result.items.map(i => i.csiCode?.slice(0, 2)))].filter(Boolean);

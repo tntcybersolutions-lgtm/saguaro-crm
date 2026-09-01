@@ -191,7 +191,12 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginBottom: 3 }}>
               <div style={{ height: '100%', width: `${pctComplete}%`, background: `linear-gradient(90deg,${GOLD},#FBBF24)`, borderRadius: 2 }} />
             </div>
-            <div style={{ fontSize: 10, color: DIM }}>{pctComplete}% complete</div>
+            {/* "billed", not "complete". This is money invoiced against the
+                contract sum — it says nothing about how much work is done or
+                how far through setup the job is, and calling it "complete"
+                put it in direct contradiction with the journey's step count
+                a few inches to the right. */}
+            <div style={{ fontSize: 10, color: DIM }}>{pctComplete}% billed</div>
           </>
         )}
         <button onClick={() => setCollapsed(!collapsed)} style={{ marginTop: isCollapsed ? 0 : 8, background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 16, padding: 0, display: 'flex' }}>

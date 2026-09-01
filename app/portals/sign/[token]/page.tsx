@@ -165,7 +165,9 @@ export default function PublicSigningPage() {
 
   // ─── Submit signature ──────────────────────────────────────────────
   const handleSign = async () => {
-    if (!agreed) return;
+    /* Pressing Sign without the box ticked used to do nothing at all —
+       no message, no highlight. A signer cannot guess what is wrong. */
+    if (!agreed) { setErrorMsg('Tick the box to confirm you have read the document before signing.'); return; }
     let sigData = '';
 
     if (mode === 'draw') {

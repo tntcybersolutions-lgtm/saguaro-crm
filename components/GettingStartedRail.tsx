@@ -36,6 +36,9 @@ interface JourneyStep { title: string; desc: string; done: boolean; href?: strin
 export default function GettingStartedRail({ projectId }: { projectId?: string }) {
   const [hydrated, setHydrated] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  /* True until the GC toggles it themselves; while true the rail decides for
+     itself whether to be open, based on how far along the job is. */
+  const [autoCollapse, setAutoCollapse] = useState(false);
 
   // Live data from the shared SWR caches (W-2/W-4): the dashboard and the
   // projects page fill the same keys, so the rail costs zero extra requests.
@@ -67,7 +70,11 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
 
   // Read the persisted collapse state after mount (SSR-safe).
   useEffect(() => {
-    try { setCollapsed(localStorage.getItem(LS_KEY) === '1'); } catch { /* private mode */ }
+    try {
+      const stored = localStorage.getItem(LS_KEY);
+      if (stored !== null) setCollapsed(stored === '1');
+      else setAutoCollapse(true); // no explicit choice yet — decide from progress
+    } catch { setAutoCollapse(true); }
     setHydrated(true);
   }, []);
 
@@ -103,7 +110,14 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   if (!loaded || !hydrated) return null; // never flash a wrong journey
   if (doneCount === 8) return null;     // journey complete — get out of the way
 
+  /* Open for a job that still needs the guidance; folded once it is moving.
+     Three steps done means the project exists, the plans are priced and the
+     money is set — past that the overview should be about the project, not a
+     checklist. An explicit toggle overrides this for good. */
+  const showCollapsed = autoCollapse ? doneCount >= 3 : collapsed;
+
   function toggle() {
+    setAutoCollapse(false); // an explicit choice always wins from here on
     setCollapsed(c => {
       const n = !c;
       try { localStorage.setItem(LS_KEY, n ? '1' : '0'); } catch { /* private mode */ }
@@ -121,7 +135,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
             : next ? `Next up: ${next.title}` : undefined
         }
         icon={<Compass size={17} weight="duotone" color={GOLD} />}
-        flush={collapsed}
+        flush={showCollapsed}
         action={
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {!projectId && projects.length > 1 && (
@@ -144,10 +158,10 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
               padding: '3px 10px', borderRadius: 999, background: 'rgba(245,158,11,0.14)',
               border: '1px solid rgba(245,158,11,0.4)', color: GOLD_HI,
               fontSize: 11, fontWeight: 800, letterSpacing: '0.05em', whiteSpace: 'nowrap',
-            }}>{doneCount}/{steps.length} complete</span>
+            }}>{doneCount} of {steps.length} steps</span>
             <button
               onClick={toggle}
-              aria-label={collapsed ? 'Expand getting started' : 'Collapse getting started'}
+              aria-label={showCollapsed ? 'Expand getting started' : 'Collapse getting started'}
               className="pmBtn"
               style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -155,12 +169,12 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
                 background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              {collapsed ? <CaretDown size={13} weight="bold" color={MUTED} /> : <CaretUp size={13} weight="bold" color={MUTED} />}
+              {showCollapsed ? <CaretDown size={13} weight="bold" color={MUTED} /> : <CaretUp size={13} weight="bold" color={MUTED} />}
             </button>
           </div>
         }
       >
-        {collapsed ? null : (
+        {showCollapsed ? null : (
           <>
             {/* Progress */}
             <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: 18 }}>

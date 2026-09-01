@@ -1,4 +1,5 @@
 import { translateRadioMessage } from '@/lib/translate';
+import { withTimeout } from '@/lib/storage-signing';
 
 const BUCKET = 'project-files';
 
@@ -26,11 +27,17 @@ export async function transcribeRadioVoice(db: any, messageId: string, audioPath
     if (!key || !db || !messageId || !audioPath) return; // env-gated: no key, no transcript
 
     // Pull the clip out of the private bucket (bare path, exactly as stored).
-    const { data: blob, error: dlErr } = await db.storage.from(BUCKET).download(audioPath);
-    let audio: Blob | null = !dlErr && blob ? (blob as Blob) : null;
+    /* Bounded, like every other storage read. This runs inside a serverless
+       function; an unbounded download holds the whole invocation until the
+       platform kills it, and the transcript is a nice-to-have. */
+    const dl = (await withTimeout(db.storage.from(BUCKET).download(audioPath), `${BUCKET}/${audioPath}`)) as
+      { data?: unknown; error?: unknown } | null;
+    let audio: Blob | null = dl && !dl.error && dl.data ? (dl.data as Blob) : null;
     if (!audio) {
       // Fallback: signed URL + fetch (covers storage clients without .download).
-      const { data: signed } = await db.storage.from(BUCKET).createSignedUrl(audioPath, 300);
+      const sig = (await withTimeout(db.storage.from(BUCKET).createSignedUrl(audioPath, 300), `${BUCKET}/${audioPath}`)) as
+        { data?: { signedUrl?: string } } | null;
+      const signed = sig?.data;
       if (!signed?.signedUrl) return;
       const r = await fetch(signed.signedUrl);
       if (!r.ok) return;
