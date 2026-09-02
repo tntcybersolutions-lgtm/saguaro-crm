@@ -201,7 +201,6 @@ export default function TakeoffPage() {
   const [activeTab, setActiveTab] = useState<'items' | 'summary' | 'recs'>('items');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const autoSelectedRef = useRef(false);          // guards one-time auto-select
   const evtSourceRef = useRef<EventSource | null>(null); // live SSE, torn down on unmount
   const [showAllRows, setShowAllRows] = useState(false);
 
@@ -262,14 +261,13 @@ export default function TakeoffPage() {
       // Guard the shape: an error envelope ({error}) must never become list state.
       const list: Takeoff[] = Array.isArray(json.data) ? json.data : [];
       setTakeoffs(list);
-      // Auto-select the first takeoff (side-effect kept OUT of the state updater, which
-      // must stay pure — previously loadDetail() ran inside setSelectedTakeoff and
-      // double-fired under StrictMode). Guarded by a ref so it only auto-selects once.
-      if (list.length > 0 && !autoSelectedRef.current) {
-        autoSelectedRef.current = true;
-        if (Array.isArray(list[0].materials)) setSelectedTakeoff(list[0]); // detail rode along — zero extra fetches
-        else loadDetail(list[0].id); // older API shape — fall back to the dependent fetch
-      }
+      // Deliberately NOT auto-selecting the newest takeoff.
+      //
+      // It used to, and clicking "Takeoff Studio" dropped you into whatever
+      // analysis happened to be most recent — someone else's job, a test
+      // upload, a takeoff from three weeks ago — with its dollar figure filling
+      // the screen. You came here to start one. The newest takeoff still rides
+      // along in the payload, so clicking it in Recent Analyses is instant.
     } finally {
       setLoadingList(false);
     }
@@ -551,6 +549,7 @@ export default function TakeoffPage() {
                 {phase === 'idle' && (
                   <>
                     <div
+                      data-tour="takeoff-dropzone"
                       onClick={() => fileInputRef.current?.click()}
                       onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                       onDragLeave={() => setDragOver(false)}
@@ -660,7 +659,7 @@ export default function TakeoffPage() {
                           {createBusy ? 'Creating…' : 'Create project & analyze'}
                         </Btn>
                       ) : (
-                        <Btn
+                        <Btn data-tour="run-takeoff"
                           size="sm"
                           disabled={!selectedProjectId || !pendingFile}
                           onClick={() => pendingFile && selectedProjectId && startUpload(pendingFile, selectedProjectId)}

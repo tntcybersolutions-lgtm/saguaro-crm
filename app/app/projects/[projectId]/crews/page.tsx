@@ -17,6 +17,7 @@ import {
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 // ---------------------------------------------------------------------------
 // Crews — web parity with the mobile Crews screen (Saguaro-Field app/crews.tsx).
@@ -498,13 +499,10 @@ export default function CrewsPage() {
                     style={inp} placeholder="Who runs this crew" />
                 </Field>
                 <Field label="Trade">
-                  <input value={form.trade} list="sgCrewTrades"
+                  <Suggest value={form.trade}
                     onChange={(e) => setForm(f => ({ ...f, trade: e.target.value }))}
-                    style={inp} placeholder="Pick or type a trade" />
-                  <datalist id="sgCrewTrades">
-                    {SUB_TRADES.map((t) => <option key={t} value={t} />)}
-                  </datalist>
-                </Field>
+                    style={inp} placeholder="Pick or type a trade" options={['t']} />
+                  </Field>
                 <Field label="Status">
                   <select value={form.status}
                     onChange={(e) => setForm(f => ({ ...f, status: e.target.value }))}

@@ -108,6 +108,24 @@ const OPEN_A_PROJECT: TourStep = {
   advance: 'click',
 };
 
+/**
+ * A link in the rail down the left of an open project.
+ *
+ * `route: '/app/projects/'` — with the trailing slash — means "inside a
+ * project". /app/projects/<id>/budget starts with it; the bare /app/projects
+ * list does not. That distinction is what lets a step wait politely on the
+ * list page instead of announcing it cannot find a control that is one click
+ * away.
+ */
+const projectNav = (slug: string, label: string, body: string): TourStep => ({
+  title: `Open ${label}`,
+  body,
+  route: '/app/projects/',
+  anchor: [`[data-tour="project-nav-${slug}"]`],
+  anchorText: [label],
+  advance: 'click',
+});
+
 export const TOURS: Tour[] = [
   /* ─── First day ──────────────────────────────────────────────────────── */
   {
@@ -243,6 +261,7 @@ export const TOURS: Tour[] = [
       {
         title: 'Start the analysis',
         body: 'Saguaro reads each discipline in parallel, so a full set comes back in a minute or two rather than an afternoon.',
+        anchor: ['[data-tour="run-takeoff"]'],
         anchorText: ['Start AI Analysis'],
         advance: 'click',
       },
@@ -279,6 +298,7 @@ export const TOURS: Tour[] = [
         title: 'Start it',
         body: 'You will see the eight passes it runs — indexing sheets, reading each discipline, counting and pricing. Watch it or walk away.',
         route: '/app/takeoff',
+        anchor: ['[data-tour="run-takeoff"]'],
         anchorText: ['Start Analysis', 'Create project & analyze'],
         advance: 'click',
       },
@@ -310,6 +330,7 @@ export const TOURS: Tour[] = [
         title: 'Score it before you chase it',
         body: 'Saguaro scores an opportunity against the jobs you have actually won and lost. Chasing work you do not win is the most expensive thing a contractor does.',
         route: '/app/bids',
+        anchor: ['[data-tour="score-bid"]'],
         anchorText: ['Score a Bid'],
         advance: 'click',
       },
@@ -337,12 +358,8 @@ export const TOURS: Tour[] = [
     steps: [
       nav('/app/projects', 'Projects'),
       OPEN_A_PROJECT,
-      {
-        title: 'Open Bid Packages',
-        body: 'A bid package is one trade’s scope pulled out of the takeoff, ready to send to the subs who do that work.',
-        anchorText: ['Bid Packages', 'Bid packages'],
-        advance: 'click',
-      },
+      projectNav('bid-packages', 'Bid Packages',
+        'A bid package is one trade’s scope pulled out of the takeoff, ready to send to the subs who do that work.'),
       {
         title: 'Level the bids you get back',
         body: 'When the numbers come in, Bid Leveling puts them side by side on the same scope so you are comparing like with like — that is where the missing exclusion shows up.',
@@ -410,6 +427,7 @@ export const TOURS: Tour[] = [
         title: 'Start today’s log',
         body: 'Pick the project and Saguaro carries forward the crew count, superintendent and phase from the last one. Only Project and Work Performed are required.',
         route: '/app/daily-logs',
+        anchor: ['[data-tour="new-daily-log"]'],
         anchorText: ['New Log'],
         advance: 'click',
       },
@@ -478,6 +496,7 @@ export const TOURS: Tour[] = [
         title: 'Add the first task',
         body: 'Name, project, start and duration — the end date computes itself. Set a predecessor and the start date follows the task before it.',
         route: '/app/schedule',
+        anchor: ['[data-tour="new-task"]'],
         anchorText: ['New Task'],
         advance: 'click',
       },
@@ -509,6 +528,7 @@ export const TOURS: Tour[] = [
         title: 'Bonds and AIA forms',
         body: 'A310, A312, G704, G706 and G707 generate as real PDFs against a project you pick. Choose the project first or it will tell you to.',
         route: '/app/documents',
+        anchor: ['[data-tour="docs-tab-bonds-forms"]'],
         anchorText: ['Bonds & Forms'],
         advance: 'click',
       },
@@ -529,15 +549,12 @@ export const TOURS: Tour[] = [
     steps: [
       nav('/app/projects', 'Projects'),
       OPEN_A_PROJECT,
-      {
-        title: 'Open RFIs',
-        body: 'A Request for Information is how you get an answer on record instead of in somebody’s inbox.',
-        anchorText: ['RFIs', 'RFI'],
-        advance: 'click',
-      },
+      projectNav('rfis', 'RFIs',
+        'A Request for Information is how you get an answer on record instead of in somebody’s inbox.'),
       {
         title: 'Create it',
         body: 'Subject is the only required field. The number, the seven-day response date and the architect as ball-in-court are all filled in for you.',
+        anchor: ['[data-tour="create-rfi"]'],
         anchorText: ['Create RFI', 'Create First RFI'],
         advance: 'click',
       },
@@ -646,6 +663,7 @@ export const TOURS: Tour[] = [
         title: 'Add an asset',
         body: 'Type the VIN and press Decode — year, make and model fill themselves in from the federal database. Equipment without a VIN takes a serial number instead.',
         route: '/app/fleet',
+        anchor: ['[data-tour="add-asset"]'],
         anchorText: ['Add asset'],
         advance: 'click',
       },
@@ -668,12 +686,8 @@ export const TOURS: Tour[] = [
     steps: [
       nav('/app/projects', 'Projects'),
       OPEN_A_PROJECT,
-      {
-        title: 'Open Budget',
-        body: 'Original, revised, committed, actual and forecast by CSI cost code — this is job costing, and it is what tells you whether you are making money before the job ends.',
-        anchorText: ['Budget'],
-        advance: 'click',
-      },
+      projectNav('budget', 'Budget',
+        'Original, revised, committed, actual and forecast by CSI cost code — this is job costing, and it is what tells you whether you are making money before the job ends.'),
       {
         title: 'Seed it from the estimate',
         body: 'If you have priced bid packages, each one offers a Seed Line button that carries the number straight in. Otherwise the CSI division chips start you a blank line.',
@@ -697,15 +711,12 @@ export const TOURS: Tour[] = [
     steps: [
       nav('/app/projects', 'Projects'),
       OPEN_A_PROJECT,
-      {
-        title: 'Open Pay Apps',
-        body: 'An AIA G702/G703 application bills one period against your schedule of values. Saguaro rolls forward everything billed to date.',
-        anchorText: ['Pay Apps', 'Pay Applications'],
-        advance: 'click',
-      },
+      projectNav('pay-apps', 'Pay Applications',
+        'An AIA G702/G703 application bills one period against your schedule of values. Saguaro rolls forward everything billed to date.'),
       {
         title: 'Start the application',
         body: 'The period dates are suggested from where the last application ended, and the retainage rate carries over.',
+        anchor: ['[data-tour="new-pay-app"]'],
         anchorText: ['New Pay Application', 'Create Application #1'],
         advance: 'click',
       },
@@ -743,12 +754,8 @@ export const TOURS: Tour[] = [
     steps: [
       nav('/app/projects', 'Projects'),
       OPEN_A_PROJECT,
-      {
-        title: 'Open Change Orders',
-        body: 'The CO number is assigned for you. Only the title is required to log one.',
-        anchorText: ['Change Orders', 'Change orders'],
-        advance: 'click',
-      },
+      projectNav('change-orders', 'Change Orders',
+        'The CO number is assigned for you. Only the title is required to log one.'),
       {
         title: 'Price it and see the impact',
         body: 'Cost impact previews the new contract sum as you type; schedule impact previews the new completion date. A negative number is a credit.',
@@ -780,6 +787,7 @@ export const TOURS: Tour[] = [
         title: 'Create an invoice',
         body: 'Pick the project and the vendor and Saguaro suggests the invoice number, today’s issue date and net-30 terms.',
         route: '/app/invoicing',
+        anchor: ['[data-tour="new-invoice"]'],
         anchorText: ['New Invoice'],
         advance: 'click',
       },
@@ -804,6 +812,7 @@ export const TOURS: Tour[] = [
         title: 'Open Lien Waivers',
         body: 'Conditional and unconditional, progress and final — generated against the right state form for the project’s jurisdiction.',
         route: '/app/documents',
+        anchor: ['[data-tour="docs-tab-lien-waivers"]'],
         anchorText: ['Lien Waivers'],
         advance: 'click',
       },
@@ -898,6 +907,7 @@ export const TOURS: Tour[] = [
         title: 'Invite the owner',
         body: 'A client portal is a read-only window onto one job: progress, photos and the documents you choose. They do not get a Saguaro login and cannot see your costs.',
         route: '/app/portals',
+        anchor: ['[data-tour="invite-client"]'],
         anchorText: ['Invite Client', 'Invite First Client'],
         advance: 'click',
       },
@@ -981,6 +991,7 @@ export const TOURS: Tour[] = [
         title: 'Run a scan',
         body: 'It reads every project for overdue RFIs, unpaid invoices, expiring insurance, stale change orders, budget overruns and scope creep — the things that cost money while nobody is looking.',
         route: '/app/autopilot',
+        anchor: ['[data-tour="run-scan"]'],
         anchorText: ['Run Scan Now'],
         advance: 'click',
       },

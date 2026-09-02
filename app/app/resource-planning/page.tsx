@@ -10,6 +10,7 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldBu
 import { UsersThree, ClipboardText, UserGear, Warning, Gauge, Scales, Plus, DownloadSimple, ArrowsClockwise, FunnelSimple, CurrencyDollar, Clock, TrendDown, UserMinus, CalendarBlank, Buildings } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B',BG='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#CBD5E1',GREEN='#22C55E',RED='#EF4444',AMBER='#F59E0B',BLUE='#F59E0B',PURPLE='#8B5CF6';
 
@@ -543,11 +544,8 @@ export default function ResourcePlanningPage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Person Name *</label>
-            <input value={form.person_name || ''} onChange={e => setForm({ ...form, person_name: e.target.value })} placeholder="Full name" style={inp()} list="person-suggestions" />
-            <datalist id="person-suggestions">
-              {allPersonNames.map(n => <option key={n} value={n} />)}
-            </datalist>
-          </div>
+            <Suggest value={form.person_name || ''} onChange={e => setForm({ ...form, person_name: e.target.value })} placeholder="Full name" style={inp()} options={['n']} />
+            </div>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Project *</label>
             <StandardSelect value={form.project_id || ''} onChange={v => setForm({ ...form, project_id: v })} ariaLabel="Project" placeholder="Select project..." width="100%"

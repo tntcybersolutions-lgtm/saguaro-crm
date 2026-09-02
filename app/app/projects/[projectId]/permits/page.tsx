@@ -9,6 +9,7 @@ import { Clipboard, NotePencil, CheckCircle, CurrencyDollar, Plus, X, Warning, C
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 interface Permit {
   id: string;
@@ -300,13 +301,7 @@ export default function PermitsPage() {
               </div>
               <div>
                 <label style={lbl}>Issuing Agency (AHJ) *{autoF.authority && <AutoChip />}</label>
-                <input value={form.authority} onChange={e => { const v = e.target.value; setAutoF(a => ({ ...a, authority: false })); setForm(p => ({ ...p, authority: v })); }} placeholder="e.g. City Building Department" list="sagPermitAhj" style={inp} />
-                <datalist id="sagPermitAhj">
-                  {city && <option value={`City of ${city}`} />}
-                  {city && <option value={`City of ${city} Building Department`} />}
-                  {city && <option value={`${city} County Development Services`} />}
-                  {[...new Set(permits.map(p => p.issuing_authority).filter(Boolean))].map(a => <option key={a} value={a} />)}
-                </datalist>
+                <Suggest value={form.authority} onChange={e => { const v = e.target.value; setAutoF(a => ({ ...a, authority: false })); setForm(p => ({ ...p, authority: v })); }} placeholder="e.g. City Building Department" style={inp} options={['`City of ${city', '`City of ${city', '`${city', 'a']} />
                 <div style={hint}>{autoF.authority ? 'Guessed from the project address — correct it if another agency has jurisdiction.' : city ? `Project sits in ${city} — its building department is the usual AHJ.` : 'The authority having jurisdiction over the site.'}</div>
               </div>
               <div>

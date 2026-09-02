@@ -12,6 +12,7 @@ import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intellige
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='#F59E0B';
@@ -712,14 +713,9 @@ export default function SchedulePage(){
                 </div>
 
                 <Field label="Assigned To">
-                  <input value={form.assigned_to}
+                  <Suggest value={form.assigned_to}
                     onChange={e=>setForm(f=>({...f,assigned_to:e.target.value}))}
-                    style={inp} placeholder="Subcontractor or person" list="schedule-sub-roster"/>
-                  <datalist id="schedule-sub-roster">
-                    {(ctx?.subs||[]).map((s:any)=>(
-                      <option key={s.membershipId||s.id} value={s.companyName}>{s.trade?`${s.companyName} — ${s.trade}`:s.companyName}</option>
-                    ))}
-                  </datalist>
+                    style={inp} placeholder="Subcontractor or person" options={['s.companyName']} />
                   {(ctx?.subs||[]).length>0&&(
                     <div style={HINT}>{ctx.subs.length} sub{ctx.subs.length===1?'':'s'} on the project roster — start typing to pick one.</div>
                   )}

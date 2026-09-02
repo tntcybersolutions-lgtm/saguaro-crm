@@ -164,7 +164,7 @@ export default function FleetPage() {
           actions={<>
             <button onClick={openIntegrate} style={ghostButtonStyle} className="pmBtn"><Broadcast size={15} weight="fill" color={GOLD} />GPS integration</button>
             {assets.length > 0 && <button onClick={exportReport} style={ghostButtonStyle} className="pmBtn"><FilePdf size={15} />Report</button>}
-            <button onClick={() => { setF({ type: 'vehicle' }); setAdding(true); }} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" />Add asset</button>
+            <button data-tour="add-asset" onClick={() => { setF({ type: 'vehicle' }); setAdding(true); }} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" />Add asset</button>
           </>}
         />
 

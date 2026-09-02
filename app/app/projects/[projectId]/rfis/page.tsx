@@ -417,7 +417,7 @@ export default function RFIsPage() {
           showForm ? (
             <button onClick={closeCreate} style={ghostButtonStyle} className="pmBtn">Cancel</button>
           ) : (
-            <button onClick={() => setShowForm(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create RFI</button>
+            <button data-tour="create-rfi" onClick={() => setShowForm(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create RFI</button>
           )
         }
       />

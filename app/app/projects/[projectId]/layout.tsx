@@ -255,6 +255,12 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             return (
               <Link
                 key={item.href}
+                /* Stable handle for Help Mode: "budget", "pay-apps", "rfis" …
+                   Five walkthroughs point at links in this rail, and matching
+                   them by label meant the arrow hunted for the word "Budget"
+                   anywhere on the page. One attribute here anchors all of
+                   them. */
+                data-tour={`project-nav-${item.href.replace(/^.*\//, '') || 'overview'}`}
                 href={item.href.startsWith('/app/') ? `${item.href}?projectId=${projectId}` : base + item.href}
                 title={isCollapsed ? item.label : undefined}
                 style={{

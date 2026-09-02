@@ -17,6 +17,7 @@ import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 // Semantic accents — tuned to match the dashboard's Sonoran palette.
 const GOLD = '#F59E0B';
@@ -667,10 +668,7 @@ export default function SafetyPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
               <div>
                 <label style={lbl}>Topic *</label>
-                <input value={talkForm.topic} onChange={e => setTalkForm(p => ({ ...p, topic: e.target.value }))} style={inp} placeholder="e.g. Fall Protection" list="sagTalkTopics" />
-                <datalist id="sagTalkTopics">
-                  {TALK_TOPICS.map(t => <option key={t} value={t} />)}
-                </datalist>
+                <Suggest value={talkForm.topic} onChange={e => setTalkForm(p => ({ ...p, topic: e.target.value }))} style={inp} placeholder="e.g. Fall Protection" options={['t']} />
                 <div style={hint}>OSHA focus-four topics suggested first.</div>
               </div>
               <div>
@@ -754,10 +752,7 @@ export default function SafetyPage() {
               </div>
               <div>
                 <label style={lbl}>Assigned To</label>
-                <input value={caForm.assigned_to} onChange={e => setCaForm(p => ({ ...p, assigned_to: e.target.value }))} style={inp} placeholder="Name or email" list="sagCaAssignees" />
-                <datalist id="sagCaAssignees">
-                  {(ctx?.subs || []).map((s: any) => <option key={s.membershipId || s.id} value={s.companyName} />)}
-                </datalist>
+                <Suggest value={caForm.assigned_to} onChange={e => setCaForm(p => ({ ...p, assigned_to: e.target.value }))} style={inp} placeholder="Name or email" options={['s.companyName']} />
                 <div style={hint}>{subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'} on the roster to pick from.` : 'Who owns the fix.'}</div>
               </div>
               <div>

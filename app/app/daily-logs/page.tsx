@@ -19,6 +19,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_DAILY_LOG_GAP } from '@/lib/suggestions';
+import Suggest from '@/components/ui/Suggest';
 
 interface DailyLog {
   id: string;
@@ -351,7 +352,7 @@ export default function DailyLogsPage() {
         accent="Logs"
         subtitle="Track daily field activity, weather, crew, and work progress."
         actions={
-          <button onClick={openCreate} className="pmBtn" style={goldButtonStyle}>
+          <button data-tour="new-daily-log" onClick={openCreate} className="pmBtn" style={goldButtonStyle}>
             <Plus size={16} weight="bold" /> New Log
           </button>
         }
@@ -493,11 +494,8 @@ export default function DailyLogsPage() {
                 </div>
                 <div>
                   <label style={labelStyle}>Weather</label>
-                  <input value={form.weather} list="sgWeatherOptsAll" onChange={(e) => setForm({ ...form, weather: e.target.value })} style={inputStyle} placeholder="Clear, 10 mph W, dusty..." />
-                  <datalist id="sgWeatherOptsAll">
-                    {['Clear', 'Partly Cloudy', 'Cloudy', 'Rain', 'Storm', 'Snow', 'Wind'].map(w => <option key={w} value={w} />)}
-                  </datalist>
-                </div>
+                  <Suggest value={form.weather} onChange={(e) => setForm({ ...form, weather: e.target.value })} style={inputStyle} placeholder="Clear, 10 mph W, dusty..." options={['w']} />
+                  </div>
                 <div>
                   <label style={labelStyle}>Crew Count{autoCrew && form.crewCount ? <AutoChip /> : null}</label>
                   <input type="number" value={form.crewCount} onChange={(e) => setForm({ ...form, crewCount: e.target.value })} style={inputStyle} placeholder="0" />

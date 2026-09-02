@@ -8,6 +8,7 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatSt
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
@@ -280,17 +281,11 @@ export default function InspectionsPage() {
                 <div style={hint}>Defaulted to today — most agencies need 24-48h notice.</div>
               </div>
               <div><label style={label}>Inspector *{auto.insp && <AutoChip />}</label>
-                <input type="text" value={form.inspector} onChange={e => setForm(p => ({ ...p, inspector: e.target.value }))} list="sagInspectorList" style={inp} />
-                <datalist id="sagInspectorList">
-                  {[...new Set(inspections.map(i => i.inspector).filter(Boolean))].map(n => <option key={n} value={n} />)}
-                </datalist>
+                <Suggest type="text" value={form.inspector} onChange={e => setForm(p => ({ ...p, inspector: e.target.value }))} style={inp} options={['n']} />
                 <div style={hint}>{auto.insp ? `Carried from the last inspection (${fmtDate(lastRecord?.date)}).` : 'Who performs the inspection.'}</div>
               </div>
               <div><label style={label}>Agency{auto.agency && <AutoChip />}</label>
-                <input type="text" value={form.agency} onChange={e => setForm(p => ({ ...p, agency: e.target.value }))} placeholder="e.g. City of Phoenix" list="sagAgencyList" style={inp} />
-                <datalist id="sagAgencyList">
-                  {[...new Set(inspections.map(i => i.agency).filter(Boolean))].map(n => <option key={n} value={n} />)}
-                </datalist>
+                <Suggest type="text" value={form.agency} onChange={e => setForm(p => ({ ...p, agency: e.target.value }))} placeholder="e.g. City of Phoenix" style={inp} options={['n']} />
                 <div style={hint}>{auto.agency ? 'Same authority as the last inspection.' : 'The authority having jurisdiction.'}</div>
               </div>
               <div style={{ gridColumn: 'span 2' }}><label style={label}>Notes</label>

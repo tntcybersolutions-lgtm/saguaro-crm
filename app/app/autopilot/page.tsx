@@ -162,7 +162,7 @@ export default function AutopilotPage() {
         accent="Dashboard"
         subtitle="Auto-scans every 6 hours (and on demand) — overdue RFIs & invoices, expiring insurance, pending lien waivers, stale change orders, budget overruns & scope-creep velocity."
         actions={
-          <button
+          <button data-tour="run-scan"
             onClick={runScan}
             disabled={scanning}
             className="pmBtn"

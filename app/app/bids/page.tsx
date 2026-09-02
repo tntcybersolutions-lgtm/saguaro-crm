@@ -451,7 +451,7 @@ function BidsPageInner() {
         subtitle="AI-scored opportunities and active bid packages"
         actions={<>
           <Link href="/app/bid-intelligence" style={goldOutlineButtonStyle} className="pmBtn"><Brain size={15} weight="regular" /> Bid Intelligence</Link>
-          <button style={goldButtonStyle} className="pmBtn" onClick={()=>setShowScore(true)}><Plus size={15} weight="bold" /> Score a Bid</button>
+          <button data-tour="score-bid" style={goldButtonStyle} className="pmBtn" onClick={()=>setShowScore(true)}><Plus size={15} weight="bold" /> Score a Bid</button>
         </>}
       />
 

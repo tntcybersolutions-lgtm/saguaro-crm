@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { UsersThree, Plus, EnvelopeSimple, Phone, Buildings } from '@phosphor-icons/react';
+import Suggest from '@/components/ui/Suggest';
 
 /**
  * The project directory — everyone on this job, in one place.
@@ -135,9 +136,8 @@ export default function ProjectDirectory() {
               </label>
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Role</span>
-                <input list="dir-roles" style={input} value={draft.role ?? ''} onChange={(e) => setDraft({ ...draft, role: e.target.value })} />
-                <datalist id="dir-roles">{ROLES.map((r) => <option key={r} value={r} />)}</datalist>
-              </label>
+                <Suggest style={input} value={draft.role ?? ''} onChange={(e) => setDraft({ ...draft, role: e.target.value })} options={['r']} />
+                </label>
               <label style={{ display: 'block' }}>
                 <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Company</span>
                 <input style={input} value={draft.company ?? ''} onChange={(e) => setDraft({ ...draft, company: e.target.value })} />

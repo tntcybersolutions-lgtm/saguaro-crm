@@ -12,6 +12,7 @@ import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { SECTORS } from '@/lib/taxonomy';
 import { Plus, Buildings, MapPin, CalendarBlank, UsersThree, Sparkle, CurrencyDollar, ShieldCheck, Stack } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B',DARK='#1c1c1e',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
@@ -559,13 +560,13 @@ export default function NewProjectPage() {
 
                 <SectionCard title="Team & Contacts" icon={<UsersThree size={17} weight="duotone" color={GOLD} />}>
                   <FIELD label="Owner Name" hint={ownerNames.length>0 ? `${ownerNames.length} owner${ownerNames.length===1?'':'s'} on file — start typing to reuse.` : 'Owner approvals and pay-app routing start here.'}>
-                    <input list="np-owner-book" value={owner} onChange={e=>onOwnerChange(e.target.value)} placeholder="Desert Health Partners LLC" style={INPUT_STYLE}/>
+                    <Suggest value={owner} onChange={e=>onOwnerChange(e.target.value)} placeholder="Desert Health Partners LLC" style={INPUT_STYLE} options={['n']} />
                   </FIELD>
                   <FIELD label="Owner Email" auto={auto.ownerEmail} hint={auto.ownerEmail ? 'Pulled from a prior project with this owner.' : 'G702 packets route here for one-click approval.'}>
                     <input value={ownerEmail} onChange={e=>{setOwnerEmail(e.target.value);setAuto(a=>({...a,ownerEmail:false}));}} placeholder="owner@example.com" style={INPUT_STYLE}/>
                   </FIELD>
                   <FIELD label="Architect / Designer" hint={archNames.length>0 ? `${archNames.length} on file — start typing to reuse.` : undefined}>
-                    <input list="np-arch-book" value={arch} onChange={e=>onArchChange(e.target.value)} placeholder="Sonoran Architecture Group" style={INPUT_STYLE}/>
+                    <Suggest value={arch} onChange={e=>onArchChange(e.target.value)} placeholder="Sonoran Architecture Group" style={INPUT_STYLE} options={['n']} />
                   </FIELD>
                   <FIELD label="Architect Email" auto={auto.archEmail} hint={auto.archEmail ? 'Pulled from a prior project with this architect.' : undefined}>
                     <input value={archEmail} onChange={e=>{setArchEmail(e.target.value);setAuto(a=>({...a,archEmail:false}));}} placeholder="arch@example.com" style={INPUT_STYLE}/>
@@ -657,9 +658,7 @@ export default function NewProjectPage() {
           </div>
         </div>
 
-        <datalist id="np-owner-book">{ownerNames.map(n=><option key={n} value={n}/>)}</datalist>
-        <datalist id="np-arch-book">{archNames.map(n=><option key={n} value={n}/>)}</datalist>
-      </form>
+        </form>
 
       <UnsavedGuardModal guard={guard} />
     </PremiumSurface>

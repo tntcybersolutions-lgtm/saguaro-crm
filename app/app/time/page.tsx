@@ -111,7 +111,15 @@ export default function TimeClockPage() {
     (async () => {
       await ensureBrowserSession(); // the app auths via server cookies — hydrate the browser client or every query below is signed out
       const { data: { user } } = await sb.auth.getUser();
-      sb.from('projects').select('id, name').order('name').then(({ data }) => { setProjects(data ?? []); if (data?.[0]) setProjectId(data[0].id); });
+      /* Default to a job only when there is exactly one it could be.
+         It used to pre-select whichever project sorted first alphabetically,
+         so a GC with several jobs could clock a full shift onto the wrong one
+         without ever touching the picker — and labour cost lands in that job's
+         budget. With more than one job, the choice has to be deliberate. */
+      sb.from('projects').select('id, name').order('name').then(({ data }) => {
+        setProjects(data ?? []);
+        if (data?.length === 1) setProjectId(data[0].id);
+      });
       if (!user?.email) return;
       // Resolve the signed-in user's tenant so every write is tenant-scoped (RLS/NOT NULL) — without
       // this, the employees insert below is silently rejected and the page hangs on "Resolving…".

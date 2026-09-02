@@ -12,6 +12,7 @@ import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 import FieldPageHeader from '../FieldPageHeader';
 import { scopedFieldIcon } from '../field-icons';
 import { CaretRight, Circle, XCircle, X } from '@phosphor-icons/react';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD   = '#F59E0B';
 const RAISED = '#141416';
@@ -1095,11 +1096,8 @@ function PunchListPage() {
               </Fld>
             </div>
             <Fld label="Assignee">
-              <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Name of responsible person" style={inp} list="assignee-list" />
-              <datalist id="assignee-list">
-                {uniqueAssignees.map((a) => <option key={a} value={a} />)}
-              </datalist>
-            </Fld>
+              <Suggest value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Name of responsible person" style={inp} options={['a']} />
+              </Fld>
             <Fld label="Due Date">
               <SaguaroDatePicker value={dueDate} onChange={(v) => setDueDate(v)} style={inp} />
             </Fld>

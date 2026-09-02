@@ -393,7 +393,7 @@ export default function SchedulePage() {
         accent="Schedule"
         subtitle="Manage tasks, track progress, and map dependencies across the build."
         actions={
-          <button onClick={() => setShowCreate(true)} className="pmBtn" style={goldButtonStyle}>
+          <button data-tour="new-task" onClick={() => setShowCreate(true)} className="pmBtn" style={goldButtonStyle}>
             <Plus size={16} weight="bold" /> New Task
           </button>
         }

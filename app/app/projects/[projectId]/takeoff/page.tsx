@@ -11,6 +11,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { Blueprint, Copy, Table, ArrowRight, DownloadSimple, FileXls, Package, CurrencyDollar, Lightning, CheckCircle, Ruler, Robot, CircleNotch, Circle, Plus, Sparkle, ShieldCheck, Timer, Buildings, TrendUp, Stack, Target, MagicWand, FileText, Scroll, FolderSimple, SealCheck, Warning, Calculator, NotePencil, Trash, X } from '@phosphor-icons/react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { UiFx } from '@/components/ui/fx';
+import Suggest from '@/components/ui/Suggest';
 
 interface TakeoffItem {
   /** takeoff_materials.id — present once loaded/hydrated from the DB. Editing requires it. */
@@ -458,7 +459,7 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
             onChange={(e) => setDescription(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} style={{ textAlign: 'left' }} />
           <input className="tkCellInput" placeholder="Qty" type="number" step="any" min={0} value={qty}
             onChange={(e) => setQty(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} style={{ textAlign: 'right' }} />
-          <input className="tkCellInput" placeholder="Unit" list={`tkUnits-${div}`} value={unit}
+          <Suggest className="tkCellInput" placeholder="Unit" options={UNIT_OPTIONS} value={unit}
             onChange={(e) => setUnit(e.target.value)} style={{ textAlign: 'right' }} />
           <input className="tkCellInput" placeholder="$/Unit" type="number" step="any" min={0} value={unitCost}
             onChange={(e) => setUnitCost(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} style={{ textAlign: 'right' }} />
@@ -474,7 +475,6 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
             {valid ? `= ${fmt$(preview)} cost` : 'Description, qty > 0 and $/unit > 0 required'}
           </span>
         </div>
-        <datalist id={`tkUnits-${div}`}>{UNIT_OPTIONS.map((u) => <option key={u} value={u} />)}</datalist>
       </SectionCard>
     </div>
   );
@@ -1764,7 +1764,7 @@ export default function TakeoffPage() {
           </div>
 
           {/* Analyze button */}
-          <button
+          <button data-tour="run-takeoff"
             onClick={() => handleAnalyze()}
             disabled={!selectedFile}
             className={selectedFile ? 'tkBtn' : undefined}

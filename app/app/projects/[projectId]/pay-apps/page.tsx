@@ -278,7 +278,7 @@ export default function PayAppsPage() {
         accent="Applications"
         subtitle="AIA G702/G703 — Application and Certificate for Payment"
         actions={
-          <Link
+          <Link data-tour="new-pay-app"
             href={`/app/projects/${projectId}/pay-apps/new`}
             style={goldButtonStyle}
             className="pmBtn"

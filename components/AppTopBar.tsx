@@ -156,7 +156,14 @@ export default function AppTopBar({
           onMouseEnter={(e) => { e.currentTarget.style.background = '#1c1c1e'; e.currentTarget.style.borderColor = '#F59E0B'; }}
           onMouseLeave={(e) => { e.currentTarget.style.background = '#141416'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
         >
-          <ArrowLeft size={16} weight="bold" /> Back
+          {/* Name the destination. "Back" alone makes you click to find out
+              where you land — and on a project sub-page there are three
+              plausible answers. Procore names it; so do we. Truncated so a
+              long project name cannot push the breadcrumbs off screen. */}
+          <ArrowLeft size={16} weight="bold" />
+          <span style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {crumbs[crumbs.length - 2]?.label || 'Back'}
+          </span>
         </button>
       )}
 

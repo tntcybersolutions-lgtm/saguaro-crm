@@ -21,7 +21,7 @@ const TEXT = '#fff', DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.5)';
 function ProjectPicker({ onPick, onSkip }: { onPick: (id: string) => void; onSkip: () => void }) {
   const { projects, loading, degraded } = useProjects();
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 20px 64px' }}>
+    <div data-tour="heatmap" style={{ maxWidth: 760, margin: '0 auto', padding: '48px 20px 64px' }}>
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, letterSpacing: 1.6, textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>
         <Lightning size={12} weight="fill" color={GOLD} /> Signal Studio
       </div>

@@ -26,6 +26,7 @@
  */
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import { Lifebuoy, X, CaretRight, MagicWand } from '@phosphor-icons/react';
 import { TOURS, CATEGORY_ORDER, tourById, type Tour, type TourStep } from '@/lib/help-tours';
@@ -48,8 +49,18 @@ const SS_ON = 'sag_help_on';
 const LS_AUTOSTART = 'sag_help_autostart_v1';
 
 const CALLOUT_W = 336;
-/* Room between the callout and the target for the arrow to be legible. */
-const ARROW_GAP = 92;
+/**
+ * Room between the callout and the target.
+ *
+ * At 92 the callout landed on top of the project sub-nav and the arrowhead
+ * stopped 22px past the sidebar's right edge — directly on the "Estimate" row.
+ * The ring was correctly around Projects and the arrow still read as pointing
+ * at Estimate, because an arrowhead sitting on a different clickable row is
+ * what the eye follows. Wider gap, and the head now stops against the ring.
+ */
+const ARROW_GAP = 132;
+/** How far past the ring the arrowhead sits. The ring is drawn at rect+8. */
+const HEAD_OFFSET = 15;
 
 type Side = 'right' | 'left' | 'below' | 'above';
 
@@ -82,21 +93,44 @@ function findAnchor(step: TourStep): HTMLElement | null {
     if (found && isVisible(found)) return found as HTMLElement;
   }
   if (step.anchorText?.length) {
-    const scope = step.anchorTag ?? 'button, a, [role="button"], summary';
-    const nodes = Array.from(document.querySelectorAll(scope)).filter(isVisible);
-    for (const want of step.anchorText) {
-      const exact = nodes.find((n) => visibleText(n) === want);
-      if (exact) return exact as HTMLElement;
-    }
-    for (const want of step.anchorText) {
-      const partial = nodes.find((n) => {
-        const t = visibleText(n);
-        return t.length < 80 && t.toLowerCase().includes(want.toLowerCase());
-      });
-      if (partial) return partial as HTMLElement;
+    /* Controls first. Then anything clickable, because plenty of real targets
+       are not buttons: the Takeoff Studio drop zone is a <div> with an onClick,
+       and searching only buttons meant "Drop blueprints here" matched nothing
+       while sitting in plain view on the screen. */
+    const scopes = step.anchorTag
+      ? [step.anchorTag]
+      : ['button, a, [role="button"], summary, label',
+         'div, section, li, td, span, p, h1, h2, h3, h4'];
+
+    for (const scope of scopes) {
+      const nodes = Array.from(document.querySelectorAll(scope)).filter(isVisible);
+      for (const want of step.anchorText) {
+        const exact = nodes.filter((n) => visibleText(n) === want);
+        /* Smallest wins — an exact text match on <body> is not the target. */
+        if (exact.length) return smallest(exact);
+      }
+      for (const want of step.anchorText) {
+        const partial = nodes.filter((n) => {
+          const t = visibleText(n);
+          return t.length < 120 && t.toLowerCase().includes(want.toLowerCase());
+        });
+        if (partial.length) return smallest(partial);
+      }
     }
   }
   return null;
+}
+
+/** The tightest element of a set — the one that actually wraps the label. */
+function smallest(els: Element[]): HTMLElement {
+  let best = els[0];
+  let bestArea = Infinity;
+  for (const el of els) {
+    const r = el.getBoundingClientRect();
+    const area = r.width * r.height;
+    if (area > 0 && area < bestArea) { bestArea = area; best = el; }
+  }
+  return best as HTMLElement;
 }
 
 /** Which side of the target has room for the callout. */
@@ -288,10 +322,17 @@ export default function HelpMode() {
   /* route: they got to the page this step was waiting for */
   const lastPath = useRef(pathname);
   useEffect(() => {
-    if (lastPath.current === pathname) return;
-    lastPath.current = pathname;
     if (!on || !step || step.advance !== 'route' || !step.nextRoute) return;
-    if ((pathname ?? '').startsWith(step.nextRoute)) advance();
+    const p = pathname ?? '';
+    const changed = lastPath.current !== pathname;
+    lastPath.current = pathname;
+    /* Already standing on the destination when the step begins. Nothing will
+       ever change the route, so the step would sit there telling you to click
+       a link to where you are. Exact match only — being inside
+       /app/projects/<id>/overview is NOT being on the project list, and that
+       step really does still need the sidebar click. */
+    if (p === step.nextRoute) { advance(); return; }
+    if (changed && p.startsWith(step.nextRoute)) advance();
   }, [pathname, on, step, advance]);
 
   /* Esc leaves */
@@ -310,10 +351,25 @@ export default function HelpMode() {
   }, [stepIdx, tour?.id, rect, missing, onRoute]);
 
   if (!on) return null;
+  /* Nothing to portal into until the client has mounted. */
+  if (typeof document === 'undefined') return null;
+
+  /**
+   * Everything renders into document.body.
+   *
+   * `position: fixed` is only fixed to the viewport while no ancestor has a
+   * transform, filter, backdrop-filter or perspective — any of those makes it
+   * the containing block instead, and the overlay silently scopes itself to a
+   * sub-rectangle of the page. This shell has an animated PageTransition and a
+   * backdrop-filtered top bar, so the scrim covered the content column while
+   * leaving the header bright and the callout could land outside the visible
+   * area entirely: a page that just goes dark with nothing on it. A portal to
+   * body cannot be captured that way.
+   */
 
   /* ── the menu ───────────────────────────────────────────────────────── */
   if (!tour) {
-    return (
+    return createPortal(
       <div
         style={{
           position: 'fixed', inset: 0, zIndex: Z,
@@ -387,7 +443,8 @@ export default function HelpMode() {
             );
           })}
         </div>
-      </div>
+      </div>,
+      document.body,
     );
   }
 
@@ -411,29 +468,37 @@ export default function HelpMode() {
     else if (side === 'left') { cx = rect.x - ARROW_GAP - CALLOUT_W; cy = rect.y + rect.h / 2 - calloutH / 2; }
     else if (side === 'below') { cx = rect.x + rect.w / 2 - CALLOUT_W / 2; cy = rect.y + rect.h + ARROW_GAP; }
     else { cx = rect.x + rect.w / 2 - CALLOUT_W / 2; cy = rect.y - ARROW_GAP - calloutH; }
-    cx = Math.max(14, Math.min(cx, vw - CALLOUT_W - 14));
-    cy = Math.max(70, Math.min(cy, vh - calloutH - 14));
   }
+
+  /* Clamp on every path, not just the anchored one.
+     The unanchored branch centred the callout using a calloutH that starts at
+     a guess of 150 and is corrected after the first paint — on a short
+     viewport that put its top above the fold, and a NaN anywhere in a rect
+     dropped the whole `left`/`top` declaration, leaving the scrim up with
+     nothing visible on it. Guard the arithmetic, then clamp. */
+  if (!Number.isFinite(cx)) cx = Math.max(14, vw / 2 - CALLOUT_W / 2);
+  if (!Number.isFinite(cy)) cy = Math.max(70, vh / 2 - calloutH / 2);
+  cx = Math.max(14, Math.min(cx, Math.max(14, vw - CALLOUT_W - 14)));
+  cy = Math.max(70, Math.min(cy, Math.max(70, vh - calloutH - 14)));
 
   /* Arrow: from the callout edge to just outside the ring, head at the target. */
   let arrow: { d: string; hx: number; hy: number; rot: number } | null = null;
   if (rect && onRoute) {
     const tcx = rect.x + rect.w / 2;
     const tcy = rect.y + rect.h / 2;
-    const pad = 10;
     let sx: number, sy: number, ex: number, ey: number, rot: number;
     if (side === 'right') {
       sx = cx - 14; sy = cy + calloutH / 2;
-      ex = rect.x + rect.w + pad + 12; ey = tcy; rot = 0;
+      ex = rect.x + rect.w + HEAD_OFFSET; ey = tcy; rot = 0;
     } else if (side === 'left') {
       sx = cx + CALLOUT_W + 14; sy = cy + calloutH / 2;
-      ex = rect.x - pad - 12; ey = tcy; rot = 180;
+      ex = rect.x - HEAD_OFFSET; ey = tcy; rot = 180;
     } else if (side === 'below') {
       sx = tcx; sy = cy - 14;
-      ex = tcx; ey = rect.y + rect.h + pad + 12; rot = 90;
+      ex = tcx; ey = rect.y + rect.h + HEAD_OFFSET; rot = 90;
     } else {
       sx = tcx; sy = cy + calloutH + 14;
-      ex = tcx; ey = rect.y - pad - 12; rot = 270;
+      ex = tcx; ey = rect.y - HEAD_OFFSET; rot = 270;
     }
     /* A gentle curve reads as a pointing gesture; a straight line reads as a
        border. Control point pushed perpendicular to the run. */
@@ -448,7 +513,7 @@ export default function HelpMode() {
 
   const bob = reduced ? 'none' : 'sagHelpBob 1.15s ease-in-out infinite';
 
-  return (
+  return createPortal(
     <>
       <style>{`
         @keyframes sagHelpBob {
@@ -489,10 +554,13 @@ export default function HelpMode() {
             </filter>
           </defs>
 
-          {/* Dim everything except the target. */}
+          {/* Dim everything except the target. Heavier than it looks like it
+              needs to be: the app's own ground is #0d1117, so a light scrim
+              over a dark page is nearly invisible and the spotlight reads as
+              no spotlight at all. */}
           <rect
             x="0" y="0" width="100%" height="100%"
-            fill="rgba(3,6,12,0.62)"
+            fill="rgba(2,4,9,0.82)"
             mask="url(#sagHelpHole)"
           />
 
@@ -525,10 +593,17 @@ export default function HelpMode() {
                 ['--by' as string]: side === 'below' ? '-12px' : side === 'above' ? '12px' : '0px',
               }}
             >
+              {/* Dark casing under the gold, so the arrow reads as one object
+                  floating above the page rather than dissolving into whatever
+                  rows and borders it happens to cross. */}
+              <path d={arrow.d} fill="none" stroke="rgba(2,4,9,0.9)" strokeWidth={11} strokeLinecap="round" />
               <path d={arrow.d} fill="none" stroke="url(#sagHelpArrow)" strokeWidth={6} strokeLinecap="round" />
               <path
                 d="M 0 0 L -26 -14 L -19 0 L -26 14 Z"
                 fill={GOLD_HI}
+                stroke="rgba(2,4,9,0.9)"
+                strokeWidth={2.5}
+                strokeLinejoin="round"
                 transform={`translate(${arrow.hx} ${arrow.hy}) rotate(${arrow.rot})`}
               />
             </g>
@@ -575,13 +650,16 @@ export default function HelpMode() {
           {/* Not on the right page yet. */}
           {!onRoute && step?.route && (
             <button
-              onClick={() => router.push(step.route as string)}
+              /* A route ending in '/' means "inside one of these" — the step
+                 lives at /app/projects/<id>/budget and there is no single URL
+                 to send you to. Drop you at the list so you can pick the job. */
+              onClick={() => router.push((step.route as string).replace(/\/$/, ''))}
               style={{
                 marginTop: 12, minHeight: 38, width: '100%', borderRadius: 9, cursor: 'pointer',
                 background: GOLD, border: 'none', color: '#241500', fontSize: 13, fontWeight: 800,
               }}
             >
-              Take me to that screen
+              {step.route.endsWith('/') ? 'Open a project first' : 'Take me to that screen'}
             </button>
           )}
 
@@ -623,8 +701,27 @@ export default function HelpMode() {
             </button>
           </div>
         </div>
+
+        {/* Always-visible escape.
+            If the callout is ever mispositioned or the anchor cannot be found,
+            this is still on screen — so a walkthrough can never leave you on a
+            dimmed page with no way out but a reload. */}
+        <button
+          onClick={() => { exit(); setOn(false); }}
+          style={{
+            position: 'absolute', right: 16, bottom: 16, pointerEvents: 'auto',
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            minHeight: 36, padding: '0 14px', borderRadius: 999, cursor: 'pointer',
+            background: 'rgba(13,29,46,0.95)', border: `1px solid ${GOLD}`,
+            color: GOLD_HI, fontSize: 12.5, fontWeight: 800,
+            boxShadow: '0 10px 30px -12px rgba(0,0,0,0.9)',
+          }}
+        >
+          <X size={13} weight="bold" /> Turn help off
+        </button>
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
 

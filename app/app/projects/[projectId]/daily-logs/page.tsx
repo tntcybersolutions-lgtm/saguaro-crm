@@ -12,6 +12,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { SUB_TRADES } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030',BLUE='#F59E0B';
@@ -149,12 +150,9 @@ function ManpowerEditor({rows,onChange}:{rows:any[];onChange:(v:any[])=>void}){
         </div>
       )}
       <div style={{display:'flex',gap:8}}>
-        <input value={trade} list="sgManpowerTrades" onChange={e=>setTrade(e.target.value)}
+        <Suggest value={trade} onChange={e=>setTrade(e.target.value)}
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
-          style={{...inp,flex:1}} placeholder="Add a trade…"/>
-        <datalist id="sgManpowerTrades">
-          {SUB_TRADES.map(t=><option key={t} value={t}/>)}
-        </datalist>
+          style={{...inp,flex:1}} placeholder="Add a trade…" options={['t']} />
         <input type="number" value={count} min={0}
           onChange={e=>setCount(e.target.value)}
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
@@ -704,13 +702,10 @@ export default function DailyLogsPage(){
 
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
                   <Field label="Weather">
-                    <input value={form.weather} list="sgWeatherOpts"
+                    <Suggest value={form.weather}
                       onChange={e=>setForm(f=>({...f,weather:e.target.value}))}
-                      style={inp} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty...'}/>
-                    <datalist id="sgWeatherOpts">
-                      {WEATHER_OPTS.map(w=><option key={w} value={w}/>)}
-                    </datalist>
-                  </Field>
+                      style={inp} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty...'} options={['w']} />
+                    </Field>
                   <Field label="High °F">
                     <input type="number" value={form.high_temp}
                       onChange={e=>setForm(f=>({...f,high_temp:e.target.value}))}

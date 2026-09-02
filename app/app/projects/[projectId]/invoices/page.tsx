@@ -11,6 +11,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B', DARK='#0a0a0a', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
@@ -364,11 +365,7 @@ export default function InvoicesPage() {
               </div>
               <div>
                 <label style={label}>Bill To *{auto.billto && <AutoChip />}</label>
-                <input type="text" value={form.vendor_name} onChange={e => setForm(p => ({ ...p, vendor_name: e.target.value }))} placeholder="Client / owner name" list="sagInvBillTo" style={inp} />
-                <datalist id="sagInvBillTo">
-                  {ctx?.defaults?.ownerName && <option value={ctx.defaults.ownerName} />}
-                  {vendorNames.map(v => <option key={v} value={v} />)}
-                </datalist>
+                <Suggest type="text" value={form.vendor_name} onChange={e => setForm(p => ({ ...p, vendor_name: e.target.value }))} placeholder="Client / owner name" style={inp} options={['ctx.defaults.ownerName', 'v']} />
                 <div style={hint}>{auto.billto ? 'Owner of record from project setup.' : 'Who receives this invoice.'}</div>
               </div>
               <div>

@@ -15,6 +15,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 interface LineItem {
   description: string;
@@ -426,7 +427,6 @@ export default function PurchaseOrdersPage() {
       {showForm && (
         <div style={{ marginBottom: 20, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
           <SectionCard title="New Purchase Order" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
-            <datalist id="sg-po-vendors">{vendors.map((v, i) => <option key={v + '-' + i} value={v} />)}</datalist>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div>
                 <label style={lbl}>PO Number{!form.po_num && <AutoChip />}</label>
@@ -435,7 +435,7 @@ export default function PurchaseOrdersPage() {
               </div>
               <div>
                 <label style={lbl}>Vendor *{vendorAuto && <AutoChip />}</label>
-                <input list="sg-po-vendors" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} />
+                <Suggest value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} options={['v']} />
                 <div style={hint}>{vendorAuto ? 'Your last PO here used this vendor — type to change.' : vendors.length > 0 ? `${vendors.length} known vendor${vendors.length === 1 ? '' : 's'} on this project — start typing.` : 'New vendors are remembered for next time.'}</div>
               </div>
               <div>

@@ -81,6 +81,37 @@ const allSource = labelFiles.map((f) => fs.readFileSync(f, 'utf8')).join('\n');
 
 const toursSrc = fs.readFileSync('lib/help-tours.ts', 'utf8');
 
+/**
+ * The `[ … ]` value of `key:` in a step, by balanced scan.
+ *
+ * A regex of `\[([^\]]*)\]` stops at the first `]` — which lands inside the
+ * very first selector, `[data-tour="job-type-ground-up"]`. Every anchor list
+ * was being read truncated to one broken fragment, so the lint validated
+ * almost nothing while reporting a clean run.
+ */
+function arrayAfter(src, key) {
+  const m = src.match(new RegExp(key + ':\\s*\\['));
+  if (!m) return null;
+  let i = m.index + m[0].length;
+  let depth = 1;
+  let quote = null;
+  const start = i;
+  while (i < src.length) {
+    const ch = src[i];
+    if (quote) {
+      if (ch === '\\') { i += 2; continue; }
+      if (ch === quote) quote = null;
+      i++;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === '`') { quote = ch; i++; continue; }
+    if (ch === '[') depth++;
+    else if (ch === ']') { depth--; if (depth === 0) return src.slice(start, i); }
+    i++;
+  }
+  return null;
+}
+
 /* The file is TypeScript, so it is read rather than imported. Each tour is a
    top-level object in the TOURS array; steps are the objects inside it. */
 const findings = [];
@@ -120,9 +151,9 @@ for (const t of tourBlocks) {
     }
 
     /* anchor selectors */
-    const anchorBlock = s.match(/anchor: \[([^\]]*)\]/);
+    const anchorBlock = arrayAfter(s, 'anchor');
     if (anchorBlock) {
-      for (const sm of anchorBlock[1].matchAll(/'([^']+)'/g)) {
+      for (const sm of anchorBlock.matchAll(/'([^']+)'/g)) {
         const sel = sm[1];
         const dt = sel.match(/^\[data-tour(\^?)="([^"]+)"\]$/);
         if (dt) {
@@ -141,9 +172,9 @@ for (const t of tourBlocks) {
     }
 
     /* anchorText */
-    const textBlock = s.match(/anchorText: \[([^\]]*)\]/);
+    const textBlock = arrayAfter(s, 'anchorText');
     if (textBlock) {
-      const wants = [...textBlock[1].matchAll(/'((?:[^'\\]|\\.)*)'/g)].map((m) => m[1].replace(/\\'/g, "'"));
+      const wants = [...textBlock.matchAll(/'((?:[^'\\]|\\.)*)'/g)].map((m) => m[1].replace(/\\'/g, "'"));
       const anyFound = wants.some((w) => {
         if (!w) return true;
         /* Match the words rather than the exact run, so "Create & add drawings →"
@@ -157,11 +188,34 @@ for (const t of tourBlocks) {
       }
     }
 
+    const adv = (s.match(/advance: '([^']+)'/) || [])[1];
+
     /* A step with no way to find anything. */
-    if (!anchorBlock && !textBlock) {
-      const adv = (s.match(/advance: '([^']+)'/) || [])[1];
-      if (adv && adv !== 'read') {
-        add(t.id, title, 'unanchored', `advance:'${adv}' but no anchor and no anchorText`);
+    if (!anchorBlock && !textBlock && adv && adv !== 'read') {
+      add(t.id, title, 'unanchored', `advance:'${adv}' but no anchor and no anchorText`);
+    }
+
+    /**
+     * A step the reader must ACT on, resting on text matching alone.
+     *
+     * "Drop blueprints here" is on the Takeoff Studio screen in plain sight,
+     * and the arrow could not find it: the drop zone is a <div>, the text
+     * search only looked at buttons, and the lint passed because the string
+     * does appear in a .tsx. Text is a fallback. Anything the reader has to
+     * click or type into gets a data-tour so the arrow cannot miss it.
+     */
+    if (adv && adv !== 'read') {
+      const selectors = anchorBlock ? [...anchorBlock.matchAll(/'([^']+)'/g)].map((x) => x[1]) : [];
+      const hasLiveTourAttr = selectors.some((sel) => {
+        const dt = sel.match(/^\[data-tour(\^?)="([^"]+)"\]$/);
+        if (!dt) return false;
+        const val = dt[2];
+        return tourAttrs.has(val) || tourAttrPatterns.some((p) => val.startsWith(p));
+      });
+      const hasHrefAnchor = selectors.some((sel) => /a\[href="/.test(sel));
+      if (!hasLiveTourAttr && !hasHrefAnchor) {
+        add(t.id, title, 'text-only-anchor',
+          `advance:'${adv}' relies on button text alone — add data-tour to the control`);
       }
     }
   }

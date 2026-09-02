@@ -11,6 +11,7 @@ import { Robot, X, Warning, CheckCircle, XCircle, Plus, Clipboard, CaretDown, Pe
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { moduleAccent } from '@/lib/module-identity';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const AMBER='#d97706';
@@ -445,16 +446,8 @@ export default function ChangeOrdersPage() {
                 </div>
                 <div style={{gridColumn:'1/-1'}}>
                   <label style={LBL}>Reason</label>
-                  <input value={fReason} onChange={e=>setFReason(e.target.value)} placeholder="e.g. Owner request, unforeseen conditions" style={INP} list="co-reason-suggestions"/>
-                  <datalist id="co-reason-suggestions">
-                    <option value="Owner request"/>
-                    <option value="Unforeseen conditions"/>
-                    <option value="Design change"/>
-                    <option value="Code compliance"/>
-                    <option value="Material substitution"/>
-                    <option value="Allowance reconciliation"/>
-                  </datalist>
-                </div>
+                  <Suggest value={fReason} onChange={e=>setFReason(e.target.value)} placeholder="e.g. Owner request, unforeseen conditions" style={INP} options={['Owner request', 'Unforeseen conditions', 'Design change', 'Code compliance', 'Material substitution', 'Allowance reconciliation']} />
+                  </div>
                 <div style={{gridColumn:'1/-1'}}>
                   <label style={LBL}>Description</label>
                   <textarea value={fDesc} onChange={e=>setFDesc(e.target.value)} rows={3} placeholder="Describe the change in detail…"

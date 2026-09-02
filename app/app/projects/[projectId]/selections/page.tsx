@@ -11,6 +11,7 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatSt
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='#F59E0B';
@@ -462,11 +463,8 @@ export default function SelectionsPage(){
                 </Field>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
                   <Field label="Manufacturer / Vendor">
-                    <input list="selVendors" value={form.manufacturer} onChange={e=>setForm(f=>({...f,manufacturer:e.target.value}))}
-                      style={inp} placeholder="Kohler, Moen..."/>
-                    <datalist id="selVendors">
-                      {((ctx?.vendors||[]) as string[]).map(v=><option key={v} value={v}/>)}
-                    </datalist>
+                    <Suggest value={form.manufacturer} onChange={e=>setForm(f=>({...f,manufacturer:e.target.value}))}
+                      style={inp} placeholder="Kohler, Moen..." options={['v']} />
                     {(ctx?.vendors||[]).length>0&&<div style={HINT}>{(ctx.vendors||[]).length} known vendors on this project — start typing to match.</div>}
                   </Field>
                   <Field label="Model / SKU">

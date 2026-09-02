@@ -277,7 +277,12 @@ export default function DocumentsPage() {
   const { projects: liveProjects } = useProjects();
   useEffect(() => {
     setProjects(liveProjects as any[]);
-    if (liveProjects.length) setSelectedProject((prev) => prev || liveProjects[0].id);
+    /* Same rule as the time clock: pre-pick a job only when there is one.
+       Everything generated here — bonds, pay applications, lien waivers,
+       certified payroll — is a legal document carrying the project's name and
+       numbers. Defaulting to whichever job loaded first is how the wrong one
+       gets sent. */
+    if (liveProjects.length === 1) setSelectedProject((prev) => prev || liveProjects[0].id);
   }, [liveProjects]);
 
   // Load real closeout items whenever the Closeout tab is active for the selected project.
@@ -428,6 +433,11 @@ export default function DocumentsPage() {
           return (
             <button
               key={tab}
+              /* Handle for Help Mode — "docs-tab-bonds-forms", "docs-tab-lien-waivers".
+                 Two walkthroughs point at these tabs, and matching them by
+                 label meant hunting for the words "Lien Waivers" anywhere on
+                 a page that also lists lien waivers by name. */
+              data-tour={`docs-tab-${tab.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
               onClick={() => setActiveTab(tab)}
               style={{
                 padding: '12px 20px',

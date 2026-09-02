@@ -17,6 +17,7 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightR
 import { moduleAccent } from '@/lib/module-identity';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INVOICES_OVERDUE } from '@/lib/suggestions';
+import Suggest from '@/components/ui/Suggest';
 
 interface Invoice {
   id: string;
@@ -439,7 +440,7 @@ export default function InvoicingPage() {
         title="Invoicing"
         subtitle="Manage invoices, track payments, and send to vendors."
         actions={
-          <button onClick={() => (showCreate ? closeComposer() : setShowCreate(true))} style={goldButtonStyle} className="pmBtn">
+          <button data-tour="new-invoice" onClick={() => (showCreate ? closeComposer() : setShowCreate(true))} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> New Invoice
           </button>
         }
@@ -498,10 +499,7 @@ export default function InvoicingPage() {
                 </div>
                 <div>
                   <label style={labelStyle}>Vendor Name *</label>
-                  <input value={form.vendor_name} onChange={(e) => setForm({ ...form, vendor_name: e.target.value })} required style={inputStyle} placeholder="Vendor name" list="sagGlobalVendors" />
-                  <datalist id="sagGlobalVendors">
-                    {ctxVendors.map(v => <option key={v} value={v} />)}
-                  </datalist>
+                  <Suggest value={form.vendor_name} onChange={(e) => setForm({ ...form, vendor_name: e.target.value })} required style={inputStyle} placeholder="Vendor name" options={['v']} />
                   <div style={hintStyle}>{ctxVendors.length > 0 ? `${ctxVendors.length} known vendor${ctxVendors.length === 1 ? '' : 's'} on this project — start typing.` : 'Vendors suggest once a project is picked.'}</div>
                 </div>
                 <div>

@@ -252,7 +252,7 @@ export default function PortalsPage() {
         accent="Manager"
         subtitle="Grant and manage portal access for clients and subcontractors. Each person gets a unique secure link."
         actions={<>
-          <button onClick={() => openInvite('client')} style={goldButtonStyle} className="pmBtn">
+          <button data-tour="invite-client" onClick={() => openInvite('client')} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> Invite Client
           </button>
           <button onClick={() => openInvite('sub')} style={goldOutlineButtonStyle} className="pmBtn">

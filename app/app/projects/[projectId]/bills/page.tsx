@@ -11,6 +11,7 @@ import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 const GOLD='#F59E0B', DARK='#0a0a0a', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
@@ -356,7 +357,6 @@ export default function BillsPage() {
       {showForm && (
         <div style={{ marginBottom: 24, display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 16, alignItems: 'start' }}>
           <SectionCard title="New Bill" icon={<FilePlus size={17} weight="duotone" color={GOLD} />}>
-            <datalist id="sg-bill-vendors">{vendors.map((v, i) => <option key={v + '-' + i} value={v} />)}</datalist>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
               <div>
                 <label style={label}>Invoice # *</label>
@@ -365,7 +365,7 @@ export default function BillsPage() {
               </div>
               <div>
                 <label style={label}>Vendor *</label>
-                <input type="text" list="sg-bill-vendors" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} />
+                <Suggest type="text" value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inp} options={['v']} />
                 <div style={hint}>{vendors.length > 0 ? `${vendors.length} known vendor${vendors.length === 1 ? '' : 's'} on this project — start typing.` : 'New vendors are remembered for next time.'}</div>
               </div>
               <div>

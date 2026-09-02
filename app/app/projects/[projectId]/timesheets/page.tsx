@@ -23,6 +23,7 @@ import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import Suggest from '@/components/ui/Suggest';
 
 interface TimeEntry {
   id: string;
@@ -258,10 +259,7 @@ export default function TimesheetsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
               <div>
                 <label style={lbl}>Employee *</label>
-                <input type="text" value={form.employee} onChange={e => setForm(p => ({ ...p, employee: e.target.value }))} style={inp} list="sgCrewRoster" placeholder="Crew member name" />
-                <datalist id="sgCrewRoster">
-                  {roster.map(n => <option key={n} value={n} />)}
-                </datalist>
+                <Suggest type="text" value={form.employee} onChange={e => setForm(p => ({ ...p, employee: e.target.value }))} style={inp} placeholder="Crew member name" options={['n']} />
                 {roster.length > 0 && <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 4, lineHeight: 1.45 }}>{roster.length} crew name{roster.length === 1 ? '' : 's'} on file — start typing to pick.</div>}
               </div>
               <div>
