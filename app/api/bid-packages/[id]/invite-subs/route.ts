@@ -119,7 +119,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
        but it must not fail silently either. */
     await tryWrite(
       db.from('bid_packages')
-        .update({ num_invited: count ?? results.filter((r) => r.status === 'invited').length, invite_sent_at: now } as never)
+        .update({
+          num_invited: count ?? results.filter((r) => r.status === 'invited').length,
+          invite_sent_at: now,
+          /* Inviting a subcontractor IS granting them portal access — the two
+             are the same act. sub_portal_enabled defaults to false and nothing
+             had ever set it, so a portal that honoured it would refuse every
+             invite link ever issued. Setting it here makes the flag mean what
+             it says, and leaves it available as a genuine kill switch: a GC
+             who sets it false shuts the whole package's portal off. */
+          sub_portal_enabled: true,
+        } as never)
         .eq('id', id)
         .eq('tenant_id', user.tenantId),
       'bid_packages num_invited',

@@ -47,6 +47,19 @@ export async function GET(
   return NextResponse.json({ error: 'Not found' }, { status: 404 });
 }
 
+/**
+ * POST /api/documents/[...path]
+ *
+ * This handler had no authentication of any kind, and all seven of its branches
+ * — bid-package, closeout, lien-waiver, pay-application, seed-templates,
+ * substantial-completion, w9-request — read `tenantId` straight from the
+ * request body. Anyone on the internet could generate documents against any
+ * tenant by naming its id: bid packages, lien waivers, pay applications,
+ * closeout books, all built from that tenant's live project data.
+ *
+ * The guard is here rather than in each branch so a new branch cannot be added
+ * without it, and `authTenantId` below is the ONLY tenant any branch may use.
+ */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -54,9 +67,20 @@ export async function POST(
   const { path } = await params;
   const [segment] = path;
 
+  /* seed-templates is machine-to-machine and carries its own SAGUARO_API_SECRET
+     bearer check below — it seeds global templates and belongs to no tenant, so
+     requiring a user session here would break it. Every other branch acts on
+     tenant data and needs a real caller. */
+  let authTenantId = '';
+  if (segment !== 'seed-templates') {
+    const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    authTenantId = user.tenantId;
+  }
+
   if (segment === 'bid-package') {
     const body         = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const tenantId     = String(body.tenantId     ?? '');
+    const tenantId     = authTenantId; // never body.tenantId — the caller does not choose the tenant
     const projectId    = String(body.projectId    ?? '');
     const bidPackageId = String(body.bidPackageId ?? '');
     if (!tenantId || !projectId || !bidPackageId)
@@ -67,7 +91,7 @@ export async function POST(
 
   if (segment === 'closeout') {
     const body      = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const tenantId  = String(body.tenantId  ?? '');
+    const tenantId     = authTenantId; // never body.tenantId — the caller does not choose the tenant
     const projectId = String(body.projectId ?? '');
     if (!tenantId || !projectId)
       return NextResponse.json({ error: 'tenantId and projectId required' }, { status: 400 });
@@ -77,7 +101,7 @@ export async function POST(
 
   if (segment === 'lien-waiver') {
     const body         = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const tenantId     = String(body.tenantId     ?? '');
+    const tenantId     = authTenantId; // never body.tenantId — the caller does not choose the tenant
     const projectId    = String(body.projectId    ?? '');
     const waiverType   = String(body.waiverType   ?? '');
     const state        = String(body.state        ?? '');
@@ -99,7 +123,7 @@ export async function POST(
 
   if (segment === 'pay-application') {
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const tenantId   = String(body.tenantId   ?? '');
+    const tenantId     = authTenantId; // never body.tenantId — the caller does not choose the tenant
     const projectId  = String(body.projectId  ?? '');
     const contractId = String(body.contractId ?? '');
     if (!tenantId || !projectId || !contractId)
@@ -122,7 +146,7 @@ export async function POST(
 
   if (segment === 'substantial-completion') {
     const body      = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const tenantId  = String(body.tenantId  ?? '');
+    const tenantId     = authTenantId; // never body.tenantId — the caller does not choose the tenant
     const projectId = String(body.projectId ?? '');
     if (!tenantId || !projectId)
       return NextResponse.json({ error: 'tenantId and projectId required' }, { status: 400 });
@@ -136,7 +160,7 @@ export async function POST(
 
   if (segment === 'w9-request') {
     const body        = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const tenantId    = String(body.tenantId    ?? '');
+    const tenantId     = authTenantId; // never body.tenantId — the caller does not choose the tenant
     const projectId   = String(body.projectId   ?? '');
     const vendorName  = String(body.vendorName  ?? '');
     const vendorEmail = String(body.vendorEmail ?? '');

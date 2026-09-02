@@ -61,16 +61,31 @@ function fmt(n: number) {
 }
 
 // ─── Core send function ───────────────────────────────────────────────────────
-async function send(to: string | string[], subject: string, html: string): Promise<void> {
+export type SendResult = { sent: boolean; error?: string };
+
+/**
+ * Returns whether the mail actually went out.
+ *
+ * This used to return void and swallow both failure modes — no RESEND_API_KEY,
+ * and a rejected send — so a caller could report "invited 12 subcontractors"
+ * when zero emails existed. That is worse than an error: the GC believes the
+ * bids are coming and finds out at the deadline.
+ *
+ * Existing callers that `await send(...)` and ignore the value keep working
+ * unchanged; callers that need to tell the user the truth can now read it.
+ */
+async function send(to: string | string[], subject: string, html: string): Promise<SendResult> {
   const resend = getResend();
   if (!resend) {
     console.log(`[Email SKIPPED — no RESEND_API_KEY] To: ${to} | Subject: ${subject}`);
-    return;
+    return { sent: false, error: 'Email is not configured on this deployment.' };
   }
   try {
     await resend.emails.send({ from: FROM, to: Array.isArray(to) ? to : [to], subject, html });
+    return { sent: true };
   } catch (err) {
     console.error('[Email] Send failed:', err);
+    return { sent: false, error: err instanceof Error ? err.message : 'Send failed.' };
   }
 }
 
@@ -150,8 +165,10 @@ export async function sendBidPackageCreated(to: string, gcName: string, projectN
   `));
 }
 
-export async function sendSubInvitedToBid(to: string, subName: string, projectName: string, tradeName: string, dueDate: string, scopeSummary: string, portalUrl: string) {
-  await send(to, `Bid Invitation — ${tradeName} — ${projectName}`, layout(`
+/** Returns whether the invitation actually reached the sub — the caller reports
+ *  a count to the GC, and that count must not include mail that never sent. */
+export async function sendSubInvitedToBid(to: string, subName: string, projectName: string, tradeName: string, dueDate: string, scopeSummary: string, portalUrl: string): Promise<SendResult> {
+  return send(to, `Bid Invitation — ${tradeName} — ${projectName}`, layout(`
     ${h(`Bid Invitation: ${tradeName}`)}
     ${p(`Hello <strong>${subName}</strong>, you have been invited to bid on a project.`)}
     ${table(row('Project', projectName) + row('Trade', tradeName) + row('Bid Due Date', dueDate))}

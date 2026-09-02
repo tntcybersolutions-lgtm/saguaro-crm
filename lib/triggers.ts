@@ -18,7 +18,10 @@ import {
 } from './email';
 import { must } from '@/lib/db-write';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app';
+/* Fallback is the live domain. It used to be a Vercel preview URL that no
+   longer resolves, so any email sent without NEXT_PUBLIC_APP_URL set carried
+   links into a dead deployment. */
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
 function adminClient() { return createServerClient(); }
 
@@ -307,11 +310,19 @@ export async function onSubInvitedToBid(bidPackageId: string, inviteId: string):
     const project = pkg?.projects;
     if (!project || !inv.sub_email) return;
 
-    await sendSubInvitedToBid(
+    /* /portals/bid/<invite token> — the bidder's own jacket, keyed by the token
+       on THIS invite. It used to point at /portals/sub/<token>, which has no
+       page at all (404) and whose auth route validates portal_sub_sessions.token
+       — a different token type entirely. Every bid invitation ever sent carried
+       a link that could not resolve. */
+    const mail = await sendSubInvitedToBid(
       inv.sub_email, inv.sub_name, project.name, pkg.trade,
-      pkg.due_date || '', pkg.scope_summary || '',
-      `${APP_URL}/portals/sub/${inv.token}`
+      pkg.bid_due_date || pkg.due_date || '', pkg.scope_summary || pkg.scope_narrative || '',
+      `${APP_URL}/portals/bid/${inv.token}`
     );
+    if (!mail.sent) {
+      console.error('[onSubInvitedToBid] invitation not delivered to', inv.sub_email, '-', mail.error);
+    }
 
     await must(db.from('bid_package_invites').update({ invited_at: new Date().toISOString() }).eq('id', inviteId), 'bid_package_invites update');
 
@@ -343,15 +354,22 @@ export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
     const project = pkg?.projects;
     if (!project) return;
 
+    /* bid_submissions has no bid_amount column — it is base_amount / amount /
+       base_bid. Reading a column that does not exist yielded undefined, so the
+       GC's "new bid received" email and in-app alert both reported $0 for every
+       bid that arrived. base_amount leads: amount defaults to 0 rather than
+       null, so it cannot be trusted as the first term of a coalesce. */
+    const bidAmount = Number(s.base_amount ?? s.amount ?? s.base_bid ?? 0) || 0;
+
     const gcEmail = project.gc_email;
     if (gcEmail) {
-      await sendBidSubmitted(gcEmail, project.gc_name || 'GC', s.sub_name, project.name, s.bid_amount || 0);
+      await sendBidSubmitted(gcEmail, project.gc_name || 'GC', s.sub_name, project.name, bidAmount);
     }
 
     await createNotification(
       project.tenant_id, null, 'bid_submitted',
       `New bid received from ${s.sub_name}`,
-      `${s.sub_name} submitted a bid of $${(s.bid_amount || 0).toLocaleString()} for ${pkg.trade} on ${project.name}`,
+      `${s.sub_name} submitted a bid of $${bidAmount.toLocaleString()} for ${pkg.trade} on ${project.name}`,
       `${APP_URL}/app/projects/${project.id}/bid-packages/${pkg.id}`, project.id
     );
     await dispatchWebhookEvent(project.tenant_id, 'bid.submitted', {
@@ -361,7 +379,7 @@ export async function onBidSubmitted(bidSubmissionId: string): Promise<void> {
       project_name: project.name,
       trade: pkg.trade,
       sub_name: s.sub_name,
-      bid_amount: s.bid_amount ?? 0,
+      bid_amount: bidAmount,
     });
   } catch (err) {
     console.error('[onBidSubmitted]', err);

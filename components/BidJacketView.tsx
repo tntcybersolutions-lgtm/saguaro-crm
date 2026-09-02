@@ -95,8 +95,18 @@ const dateStr = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : null;
 
 export default function BidJacketView({
-  jacket, projectId, packageId,
-}: { jacket: Jacket; projectId: string; packageId: string }) {
+  jacket, projectId, packageId, backHref, slot,
+}: {
+  jacket: Jacket;
+  projectId: string;
+  packageId: string;
+  /** Where "back" goes. Pass null for the bidder's portal view — the default
+   *  points at an authed route a logged-out subcontractor cannot open. */
+  backHref?: string | null;
+  /** Rendered under the cover: assembly controls for the GC, the bid form for
+   *  a bidder. Keeps this component presentational for both audiences. */
+  slot?: React.ReactNode;
+}) {
   const firstFilled = jacket.sections.find((s) => s.count > 0)?.key ?? 'invitation';
   const [tab, setTab] = useState(firstFilled);
   const active = useMemo(() => jacket.sections.find((s) => s.key === tab) ?? null, [jacket, tab]);
@@ -109,12 +119,14 @@ export default function BidJacketView({
   return (
     <div style={{ maxWidth: 1240, margin: '0 auto', padding: '0 4px 48px' }}>
 
+        {backHref !== null && (
         <Link
-          href={`/app/projects/${projectId}/bid-packages/${id}`}
+          href={backHref ?? `/app/projects/${projectId}/bid-packages/${id}`}
           style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16, textDecoration: 'none' }}
         >
           <CaretLeft size={14} weight="bold" /> Back to package
         </Link>
+        )}
 
         {/* ── The label ─────────────────────────────────────────────────────
             What is printed on the outside of a physical jacket: which job,
@@ -214,6 +226,10 @@ export default function BidJacketView({
             )}
           </div>
         </div>
+
+        {/* Caller-supplied controls sit directly under the cover, where the
+            actions on a physical jacket live: on the front, not buried inside. */}
+        {slot ? <div style={{ marginBottom: 18 }}>{slot}</div> : null}
 
         {/* ── Dividers + shelf ─────────────────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 240px) minmax(0, 1fr)', gap: 18, alignItems: 'start' }}>

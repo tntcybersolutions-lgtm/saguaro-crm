@@ -3,6 +3,16 @@ import { createServerClient } from '@/lib/supabase-server';
 import { sendSubInvitedToBid } from '@/lib/email';
 
 export async function GET(req: NextRequest) {
+  /* Every other cron route in this directory carries this guard; this one was
+     the exception. Unguarded it is a GET that anyone can call, on the service
+     role key, that sends email to every invited subcontractor across EVERY
+     tenant — a mailing trigger with a public URL. Same shape as
+     cron/autopilot, cron/insurance-check and cron/lien-reminders. */
+  const auth = req.headers.get('authorization');
+  if (auth !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const db = createServerClient();
     const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
@@ -32,8 +42,12 @@ export async function GET(req: NextRequest) {
           invite.sub_email, invite.sub_name,
           pkg.projects?.name || 'Project',
           pkg.trade, pkg.due_date,
-          `REMINDER: Bid due ${pkg.due_date}. ${pkg.scope_summary || ''}`,
-          `${APP_URL}/portals/sub/${invite.token}`
+          `REMINDER: Bid due ${pkg.bid_due_date || pkg.due_date}. ${pkg.scope_summary || ''}`,
+          /* /portals/bid/<invite token> — the bidder's own jacket. This pointed
+             at /portals/sub/<token>, which has no page (404) and whose auth
+             route validates portal_sub_sessions.token, a different token
+             entirely. Every reminder ever sent carried a dead link. */
+          `${APP_URL}/portals/bid/${invite.token}`
         );
         sent++;
       }
