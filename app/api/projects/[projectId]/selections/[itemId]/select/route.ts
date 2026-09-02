@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,7 +69,7 @@ async function choose(req: NextRequest, params: { projectId: string; itemId: str
     // Best-effort normalized pick record (only when given real UUIDs).
     if (UUID_RE.test(optionId) && typeof body.categoryId === 'string' && UUID_RE.test(body.categoryId)) {
       try {
-        await supabase.from('selection_picks').insert({
+        await must(supabase.from('selection_picks').insert({
           category_id: body.categoryId,
           option_id: optionId,
           project_id: params.projectId,
@@ -76,7 +77,7 @@ async function choose(req: NextRequest, params: { projectId: string; itemId: str
           status: 'pending',
           notes: typeof body.notes === 'string' ? body.notes : null,
           picked_at: now,
-        });
+        }), 'selection_picks insert');
       } catch { /* non-fatal */ }
     }
 

@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { hasFeature } from '@/lib/entitlements-server';
 
 import { apiError } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 // CO workflow (full 8-step, per SCS spec): Issue → GC Pricing → PM Review →
 // Architect Review → Owner Approval → Executed → Schedule Updated → Budget Updated.
 export const CO_FLOW = ['draft', 'pricing', 'pm_review', 'architect_review', 'pending_owner', 'approved', 'schedule_updated', 'budget_updated'];
@@ -111,7 +112,7 @@ export async function PATCH(req: NextRequest) {
           const tb = Date.parse(String(base || ''));
           if (!isNaN(tb)) {
             const nd = new Date(tb + impact * 86400000).toISOString().slice(0, 10);
-            await db.from('projects').update({ revised_completion_date: nd }).eq('tenant_id', user.tenantId).eq('id', pid);
+            await must(db.from('projects').update({ revised_completion_date: nd }).eq('tenant_id', user.tenantId).eq('id', pid), 'projects update');
           }
         }
       }

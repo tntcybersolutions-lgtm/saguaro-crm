@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const user = await getUser(req);
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     if (error) throw error;
     // Bump the lead's updated_at to reflect the new activity. (lead_pipeline has
     // no last_contact_date column, so only updated_at is touched.)
-    await supabase.from('lead_pipeline').update({ updated_at: new Date().toISOString() }).eq('id', params.id).eq('tenant_id', user.tenantId);
+    await must(supabase.from('lead_pipeline').update({ updated_at: new Date().toISOString() }).eq('id', params.id).eq('tenant_id', user.tenantId), 'lead_pipeline update');
     return NextResponse.json({ activity: data }, { status: 201 });
   } catch (e: unknown) {
     // A raw Error's text is the database's words, not ours — log it, show the line we wrote.

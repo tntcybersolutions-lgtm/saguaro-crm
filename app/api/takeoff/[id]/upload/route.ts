@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getPdfPageCount, generateThumbnail } from '@/lib/blueprint-processor';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 
@@ -117,10 +118,10 @@ export async function POST(
       if (!thumbErr) {
         const { data: { publicUrl: thumbUrl } } = supabase.storage
           .from('blueprints').getPublicUrl(thumbPath);
-        await supabase.from('takeoffs')
+        await must(supabase.from('takeoffs')
           .update({ thumbnail_url: thumbUrl })
           .eq('id', takeoffId)
-          .eq('tenant_id', user.tenantId);
+          .eq('tenant_id', user.tenantId), 'takeoffs write');
       }
     }).catch((err) => {
       console.warn('[takeoff/upload] thumbnail (non-fatal):', err instanceof Error ? err.message : err);

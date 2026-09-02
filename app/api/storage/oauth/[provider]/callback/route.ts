@@ -4,6 +4,7 @@ import { encryptSecret, decryptSecret } from '@/lib/crypto-secrets';
 import { exchangeCode, isOAuthProvider } from '@/lib/storage-providers/oauth';
 import { makeProvider, ctxFromParts } from '@/lib/storage-providers/registry';
 import { PROVIDER_META, type ProviderId } from '@/lib/storage-providers/types';
+import { tryWrite } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -39,12 +40,12 @@ export async function GET(req: NextRequest, { params }: { params: { provider: st
     try { const p = await makeProvider(ctxFromParts(provider, tenantId, {}, secret)); const t = await p.test(); account = t.account || ''; } catch { /* store anyway; test() route can re-check */ }
 
     const admin = createServerClient() as any;
-    await admin.from('storage_connectors').insert({
+    await tryWrite(admin.from('storage_connectors').insert({
       tenant_id: tenantId, provider, status: 'connected',
       display_name: `${PROVIDER_META[provider].label}${account ? ` — ${account}` : ''}`,
       config: {}, secret_enc: encryptSecret(secret), created_by: state.u,
       last_verified_at: new Date().toISOString(),
-    });
+    }), 'storage_connectors insert');
     return back(`connected=${provider}`);
   } catch (e: any) {
     return back(`error=${encodeURIComponent(e?.message || 'Could not complete sign-in')}`);

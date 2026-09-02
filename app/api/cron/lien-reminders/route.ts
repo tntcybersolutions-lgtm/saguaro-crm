@@ -4,6 +4,7 @@ import { createNotification } from '@/lib/notifications';
 import { sendLienDeadlineReminder } from '@/lib/email';
 
 import { apiError } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 export const dynamic = 'force-dynamic';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
@@ -113,7 +114,7 @@ export async function GET(req: NextRequest) {
       // so the backlog doesn't drip out one email per day on later runs.
       const update: Record<string, boolean> = {};
       for (const t of THRESHOLDS) if (t.days >= stage.days) update[t.col] = true;
-      await db.from('lien_deadlines').update(update).eq('id', dl.id);
+      await must(db.from('lien_deadlines').update(update).eq('id', dl.id), 'lien_deadlines update');
     }
 
     return NextResponse.json({ success: true, scanned: (deadlines || []).length, notified, emailed });

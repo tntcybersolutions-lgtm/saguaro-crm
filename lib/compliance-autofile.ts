@@ -32,6 +32,7 @@
 import { createServerClient } from './supabase-server';
 import { generateCOIRequest, saveDocument, resolveBranding } from './pdf-engine';
 import { onBidPackageCreated } from './triggers';
+import { must } from '@/lib/db-write';
 
 type DbClient = ReturnType<typeof createServerClient>;
 
@@ -138,29 +139,29 @@ export async function buildComplianceForBidPackages(opts: {
   // ── 0. Idempotent cleanup of THIS routine's prior pristine auto-filed rows ──
   //     Guards: our tag/marker + still-pending + no signed/uploaded artifact.
   try {
-    await db.from('lien_waivers').delete()
+    await must(db.from('lien_waivers').delete()
       .eq('tenant_id', tenantId).eq('project_id', projectId)
       .ilike('notes', `%${AUTOFILE_TAG}%`)
       .in('status', ['requested', 'pending'])
-      .is('signed_at', null).is('signed_pdf_url', null).is('pdf_url', null);
+      .is('signed_at', null).is('signed_pdf_url', null).is('pdf_url', null), 'lien_waivers delete');
   } catch (e) { console.error('[compliance-autofile] cleanup lien_waivers:', e); }
   try {
-    await db.from('insurance_certificates').delete()
+    await must(db.from('insurance_certificates').delete()
       .eq('tenant_id', tenantId).eq('project_id', projectId)
       .ilike('notes', `%${AUTOFILE_TAG}%`)
       .in('status', ['requested', 'pending'])
-      .is('pdf_url', null).is('coi_pdf_url', null);
+      .is('pdf_url', null).is('coi_pdf_url', null), 'insurance_certificates delete');
   } catch (e) { console.error('[compliance-autofile] cleanup insurance_certificates:', e); }
   try {
-    await db.from('w9_requests').delete()
+    await must(db.from('w9_requests').delete()
       .eq('tenant_id', tenantId).eq('project_id', projectId)
       .eq('status', 'pending').is('submitted_at', null)
-      .filter('w9_data->>source', 'eq', W9_SOURCE);
+      .filter('w9_data->>source', 'eq', W9_SOURCE), 'w9_requests delete');
   } catch (e) { console.error('[compliance-autofile] cleanup w9_requests:', e); }
   try {
-    await db.from('generated_documents').delete()
+    await must(db.from('generated_documents').delete()
       .eq('tenant_id', tenantId).eq('project_id', projectId)
-      .eq('doc_type', 'coi-request');
+      .eq('doc_type', 'coi-request'), 'generated_documents delete');
   } catch (e) { console.error('[compliance-autofile] cleanup generated_documents:', e); }
 
   // ── 1. Load the project's real subs (tenant scoped, two-step, no FK join) ──

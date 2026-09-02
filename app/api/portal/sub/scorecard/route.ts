@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -193,13 +194,13 @@ export async function POST(req: NextRequest) {
             (allVals.reduce((a: number, b: number) => a + b, 0) / allVals.length) * 10
           ) / 10;
 
-        await db
+        await must(db
           .from('subcontractors')
           .update({
             rating: newOverall,
           })
           .eq('id', session.sub_id!)
-          .eq('tenant_id', session.tenant_id);
+          .eq('tenant_id', session.tenant_id), 'subcontractors write');
       }
     }
 

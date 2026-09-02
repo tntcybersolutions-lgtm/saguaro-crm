@@ -17,6 +17,7 @@ import {
   type RadioMessageRow,
   type RadioProvenance,
 } from '@/lib/radio-promote';
+import { must, tryWrite } from '@/lib/db-write';
 
 /**
  * Saguaro Radio — ONE-TAP PROMOTE.
@@ -110,7 +111,7 @@ async function existingLink(
   if (alive) return { link, error: null };
 
   // The record it pointed at is gone — drop the stale link and let the caller re-create.
-  await db.from('radio_message_records').delete().eq('id', link.id);
+  await must(db.from('radio_message_records').delete().eq('id', link.id), 'radio_message_records delete');
   return { link: null, error: null };
 }
 
@@ -301,12 +302,12 @@ export async function POST(req: NextRequest) {
     .eq('tenant_id', tenantId).eq('message_id', messageId).eq('record_type', recordType)
     .order('created_at', { ascending: true }).limit(1);
   if (raceErr) {
-    if (created) await db.from(TARGETS[recordType].table).delete().eq('id', recordId).eq('tenant_id', tenantId);
+    if (created) await tryWrite(db.from(TARGETS[recordType].table).delete().eq('id', recordId).eq('tenant_id', tenantId), 'row delete');
     return fail(`Could not link the transmission to the record: ${raceErr.message}`, 500);
   }
   const winner = (Array.isArray(racers) ? racers[0] : null) as Record<string, any> | null;
   if (winner) {
-    if (created) await db.from(TARGETS[recordType].table).delete().eq('id', recordId).eq('tenant_id', tenantId);
+    if (created) await tryWrite(db.from(TARGETS[recordType].table).delete().eq('id', recordId).eq('tenant_id', tenantId), 'row delete');
     return NextResponse.json({
       ok: true,
       alreadyPromoted: true,
@@ -336,7 +337,7 @@ export async function POST(req: NextRequest) {
       const { data: theirs } = await db.from('radio_message_records').select('*')
         .eq('tenant_id', tenantId).eq('message_id', messageId).eq('record_type', recordType).limit(1);
       const other = (Array.isArray(theirs) ? theirs[0] : null) as Record<string, any> | null;
-      if (created) await db.from(TARGETS[recordType].table).delete().eq('id', recordId).eq('tenant_id', tenantId);
+      if (created) await must(db.from(TARGETS[recordType].table).delete().eq('id', recordId).eq('tenant_id', tenantId), 'row delete');
       if (other) {
         return NextResponse.json({
           ok: true,
@@ -350,7 +351,7 @@ export async function POST(req: NextRequest) {
       }
     }
     // Never report a half-finished promote as success.
-    if (created) await db.from(TARGETS[recordType].table).delete().eq('id', recordId).eq('tenant_id', tenantId);
+    if (created) await must(db.from(TARGETS[recordType].table).delete().eq('id', recordId).eq('tenant_id', tenantId), 'row delete');
     return fail(`The record could not be linked to the transmission, so it was rolled back: ${linkErr.message}`, 500);
   }
 

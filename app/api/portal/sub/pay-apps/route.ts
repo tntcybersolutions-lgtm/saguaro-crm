@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { computePayApp, toCents, toDollars } from '@/lib/calc';
+import { must } from '@/lib/db-write';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -212,14 +213,14 @@ export async function POST(req: NextRequest) {
     if (lineError) throw lineError;
 
     // History — every submission timestamped for the sub's activity feed.
-    await db.from('portal_activity').insert({
+    await must(db.from('portal_activity').insert({
       tenant_id: session.tenant_id,
       project_id: session.project_id,
       session_id: session.id,
       action: 'invoice_submitted',
       description: `Submitted pay application (${lineItemRows.length} lines)`,
       metadata: { pay_app_id: payApp.id, amount: (payApp as { amount?: number }).amount, period_end, lines: lineItemRows.length, by: session.sub_company },
-    } as never);
+    } as never), 'portal_activity insert');
 
     return NextResponse.json(
       { pay_app: payApp, message: 'Pay application submitted successfully' },

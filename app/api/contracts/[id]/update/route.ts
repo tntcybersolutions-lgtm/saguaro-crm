@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -80,14 +81,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       const patch: Record<string, unknown> = {};
       if (!c.executed_at) patch.executed_at = new Date().toISOString();
       if (Object.keys(patch).length) {
-        await db.from('contracts').update(patch as never).eq('id', id).eq('tenant_id', user.tenantId);
+        await must(db.from('contracts').update(patch as never).eq('id', id).eq('tenant_id', user.tenantId), 'contracts update');
       }
       if (c.bid_package_id) {
-        await db.from('bid_packages')
+        await must(db.from('bid_packages')
           .update({ status: 'contracted' } as never)
           .eq('id', c.bid_package_id)
           .eq('tenant_id', user.tenantId)
-          .eq('status', 'awarded');
+          .eq('status', 'awarded'), 'bid_packages write');
       }
     }
 

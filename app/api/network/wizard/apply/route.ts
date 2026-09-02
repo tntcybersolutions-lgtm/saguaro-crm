@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -190,7 +191,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ---- Persist the full generated design for record-keeping -----------
-    await db
+    await must(db
       .from('network_generated_configs')
       .insert({
         tenant_id: tenantId,
@@ -202,7 +203,7 @@ export async function POST(req: NextRequest) {
         notes: result.summary || 'AI Network Wizard design',
       })
       .select('id')
-      .single();
+      .single(), 'network_generated_configs write');
 
     return NextResponse.json({
       ok: true,

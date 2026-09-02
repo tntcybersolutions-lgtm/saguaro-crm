@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 /**
  * Crew location — ON-SHIFT, DISCLOSED tracking for dispatch + the human heatmap.
@@ -36,8 +37,8 @@ export async function POST(req: NextRequest) {
       battery_level: Number.isFinite(Number(b.battery)) ? Math.round(Number(b.battery)) : null,
       trade: b.trade ?? null, status: 'on_site', updated_at: new Date().toISOString(),
     };
-    if (existing?.length) await db.from('crew_locations').update(row as never).eq('id', existing[0].id);
-    else await db.from('crew_locations').insert(row as never);
+    if (existing?.length) await must(db.from('crew_locations').update(row as never).eq('id', existing[0].id), 'crew_locations update');
+    else await must(db.from('crew_locations').insert(row as never), 'crew_locations insert');
 
     // History ping (heatmap fuel) — thin append.
     db.from('crew_location_pings').insert({

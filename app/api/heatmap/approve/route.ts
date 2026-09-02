@@ -6,6 +6,7 @@ import { summarizeCables } from '@/lib/heatmap/cabling-spec';
 import { DEVICE_REGISTRY } from '@/lib/heatmap/models';
 import type { HeatmapProject, Device } from '@/lib/heatmap/types';
 import type { Pt } from '@/lib/heatmap/geometry';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -95,9 +96,9 @@ export async function POST(req: NextRequest) {
 
   // No linked project → record the approval, but a project-scoped bid can't be created without one.
   if (!row.project_id) {
-    await db.from('heatmap_designs')
+    await must(db.from('heatmap_designs')
       .update({ approved_by: approverName, approved_email: approverEmail, approved_at: new Date().toISOString() })
-      .eq('id', id).eq('tenant_id', row.tenant_id);
+      .eq('id', id).eq('tenant_id', row.tenant_id), 'heatmap_designs write');
     return NextResponse.json({ ok: true, bidPackageId: null, budget: Math.round(budget), note: "Approval recorded — this design isn't linked to a project, so the team will create the bid manually." });
   }
 
@@ -134,15 +135,15 @@ export async function POST(req: NextRequest) {
     );
     if (itemsErr) {
       console.error('[heatmap/approve] line-item insert failed', itemsErr);
-      await db.from('bid_packages').delete().eq('id', pkgId).eq('tenant_id', row.tenant_id);
+      await must(db.from('bid_packages').delete().eq('id', pkgId).eq('tenant_id', row.tenant_id), 'bid_packages delete');
       return NextResponse.json({ error: 'Could not save the bid line items. Please try again.' }, { status: 500 });
     }
   }
 
   // Record the approval (audit trail + idempotency lock).
-  await db.from('heatmap_designs')
+  await must(db.from('heatmap_designs')
     .update({ approved_by: approverName, approved_email: approverEmail, approved_at: new Date().toISOString(), approved_bid_package_id: pkgId })
-    .eq('id', id).eq('tenant_id', row.tenant_id);
+    .eq('id', id).eq('tenant_id', row.tenant_id), 'heatmap_designs write');
 
   return NextResponse.json({ ok: true, bidPackageId: pkgId, budget: Math.round(budget) });
 }

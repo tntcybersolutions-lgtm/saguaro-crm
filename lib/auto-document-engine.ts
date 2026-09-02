@@ -13,6 +13,7 @@
 
 import { createServerClient } from './supabase-server';
 import { createNotification } from './notifications';
+import { must } from '@/lib/db-write';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app';
 
@@ -138,7 +139,7 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
         if (existing) continue; // Idempotent — already created
 
         try {
-          await client.from('lien_waivers').insert({
+          await must(client.from('lien_waivers').insert({
             tenant_id: project.tenant_id,
             project_id: project.id,
             sub_id: sub.id,
@@ -148,7 +149,7 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
             amount: sub.contract_amount || 0,
             through_date: pa.period_to,
             status: 'pending',
-          });
+          }), 'lien_waivers insert');
           waiverCount++;
         } catch { /* individual failure — continue loop */ }
       }
@@ -252,14 +253,14 @@ export async function onSubAdded(subId: string, projectId: string): Promise<void
 
       if (!existing) {
         try {
-          await client.from('w9_requests').insert({
+          await must(client.from('w9_requests').insert({
             tenant_id: p.tenant_id,
             project_id: projectId,
             vendor_name: s.name,
             vendor_email: s.email,
             status: 'pending',
             token: crypto.randomUUID(), // NOT NULL, no DB default — must be set
-          });
+          }), 'w9_requests insert');
 
           await createNotification(
             p.tenant_id,

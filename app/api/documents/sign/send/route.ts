@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import crypto from 'crypto';
 import { apiError, apiFail } from '@/lib/api-error';
 import { sendSignatureRequest } from '@/lib/email';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
     }
 
     const newToken = crypto.randomUUID();
-    await db
+    await must(db
       .from('document_signature_requests')
       .update({
         token: newToken,
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
         sent_at: new Date().toISOString(),
       })
       .eq('id', existing.id)
-      .eq('tenant_id', user.tenantId);
+      .eq('tenant_id', user.tenantId), 'document_signature_requests write');
 
     const { data: sig } = await db
       .from('document_signatures')

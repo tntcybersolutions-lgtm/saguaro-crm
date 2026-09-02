@@ -15,6 +15,7 @@ import {
   workDateFor,
   type ShiftRow,
 } from '@/lib/timeclock/server';
+import { must } from '@/lib/db-write';
 
 /**
  * POST /api/timeclock/in
@@ -100,11 +101,11 @@ export async function POST(req: NextRequest) {
     if (openNow.length > 1) {
       const winner = openNow[0];
       if (winner.id !== shiftRow.id) {
-        await db.from('time_entries').delete().eq('tenant_id', t).eq('id', shiftRow.id).is('clock_out', null);
+        await must(db.from('time_entries').delete().eq('tenant_id', t).eq('id', shiftRow.id).is('clock_out', null), 'time_entries delete');
         return NextResponse.json({ ok: true, shift: toShift(winner), alreadyOpen: true });
       }
       for (const dupe of openNow.slice(1)) {
-        await db.from('time_entries').delete().eq('tenant_id', t).eq('id', dupe.id).is('clock_out', null);
+        await must(db.from('time_entries').delete().eq('tenant_id', t).eq('id', dupe.id).is('clock_out', null), 'time_entries delete');
       }
       shiftRow = winner;
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -42,7 +43,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const user = g.user;
   try {
     const supabase = createServerClient();
-    await supabase.from('lead_activities').delete().eq('lead_id', params.id).eq('tenant_id', user.tenantId);
+    await must(supabase.from('lead_activities').delete().eq('lead_id', params.id).eq('tenant_id', user.tenantId), 'lead_activities delete');
     const { error } = await supabase.from('lead_pipeline').delete().eq('id', params.id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ ok: true });

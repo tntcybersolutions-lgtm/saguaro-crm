@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 export async function GET(
   req: NextRequest,
@@ -66,7 +67,7 @@ export async function POST(
       const body = await req.json();
       const { decision, notes } = body;
       const newStatus = decision === 'approved' ? 'certified' : 'draft';
-      await db.from('pay_applications').update({ status: newStatus, approval_notes: notes }).eq('owner_approval_token', token);
+      await must(db.from('pay_applications').update({ status: newStatus, approval_notes: notes }).eq('owner_approval_token', token), 'pay_applications update');
       return NextResponse.json({ success: true });
     }
 

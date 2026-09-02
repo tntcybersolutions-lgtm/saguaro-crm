@@ -11,6 +11,8 @@
  * Recording is fire-and-forget: it must never slow or fail the work itself.
  */
 
+import { tryWrite } from '@/lib/db-write';
+
 type Db = any;
 
 export type LearningKind =
@@ -58,7 +60,7 @@ export async function recordLearning(
   }
 ): Promise<void> {
   try {
-    await db.from('learning_events').insert({
+    await tryWrite(db.from('learning_events').insert({
       tenant_id: args.tenantId,
       user_id: args.userId ?? null,
       project_id: args.projectId ?? null,
@@ -66,7 +68,7 @@ export async function recordLearning(
       seconds_saved: args.secondsSaved ?? SAVED_SECONDS[args.kind] ?? 0,
       dollars_surfaced: args.dollarsSurfaced ?? 0,
       meta: args.meta ?? {},
-    } as never);
+    } as never), 'learning_events insert');
   } catch {
     // Never let the receipt break the work.
   }

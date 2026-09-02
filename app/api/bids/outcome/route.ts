@@ -19,6 +19,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { learnTenantWinFactors } from '@/lib/bid-learn';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 
@@ -101,8 +102,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 2) Replace this event's per-division lines (idempotent on re-mark).
-    await supabase.from('bid_outcome_lines')
-      .delete().eq('tenant_id', tenantId).eq('bid_history_id', bidHistoryId);
+    await must(supabase.from('bid_outcome_lines')
+      .delete().eq('tenant_id', tenantId).eq('bid_history_id', bidHistoryId), 'bid_outcome_lines write');
 
     const lines = Array.isArray(body.lines) ? body.lines : [];
     const lineRows = lines

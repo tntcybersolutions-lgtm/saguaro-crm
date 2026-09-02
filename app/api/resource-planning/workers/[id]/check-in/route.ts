@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,20 +29,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Audit trail (project_id is NOT NULL on geofence_events — only log when known)
     if (projectId) {
-      await db.from('geofence_events').insert({
+      await must(db.from('geofence_events').insert({
         tenant_id: user.tenantId,
         user_id: workerId,
         project_id: projectId,
         event_type: 'enter',
         auto_clocked: false,
         created_at: timestamp,
-      });
+      }), 'geofence_events insert');
     }
 
     // Current status — replace any existing location row for this worker.
     // latitude/longitude are NOT NULL on crew_locations; default to 0 when unknown.
-    await db.from('crew_locations').delete().eq('tenant_id', user.tenantId).eq('user_id', workerId);
-    await db.from('crew_locations').insert({
+    await must(db.from('crew_locations').delete().eq('tenant_id', user.tenantId).eq('user_id', workerId), 'crew_locations delete');
+    await must(db.from('crew_locations').insert({
       tenant_id: user.tenantId,
       user_id: workerId,
       project_id: projectId,
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       longitude: 0,
       status: 'on-site',
       updated_at: timestamp,
-    });
+    }), 'crew_locations insert');
 
     return NextResponse.json({ success: true, status: 'on-site', checked_in_at: timestamp });
   } catch {

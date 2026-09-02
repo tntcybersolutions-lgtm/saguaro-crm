@@ -15,6 +15,7 @@ import {
 import { costKeyForCsiLine } from '@/lib/takeoff';
 import { learnTenantRates } from '@/lib/takeoff-learn';
 import { hasFeature } from '@/lib/entitlements-server';
+import { must, tryWrite } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -396,7 +397,7 @@ export async function GET(
         }
 
         if (!takeoff.storage_path && !takeoff.file_url) {
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
           send('error', { message: 'No blueprint uploaded. Please upload a file first.' });
           return done();
         }
@@ -408,7 +409,7 @@ export async function GET(
           send('error', { message: 'Analysis already in progress for this takeoff.' });
           return done();
         }
-        await supabase.from('takeoffs').update({ status: 'analyzing' }).eq('id', takeoffId);
+        await must(supabase.from('takeoffs').update({ status: 'analyzing' }).eq('id', takeoffId), 'takeoffs update');
         send('progress', { step: 2, message: 'Connecting to AI...', pct: 10 });
 
         // ── 3. Fetch file from storage (with heartbeat — can take 5-15s) ─
@@ -774,13 +775,13 @@ export async function GET(
             send('error', {
               message: 'This drawing set is too large to read in one pass. Split it by discipline and upload again.',
             });
-            await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
           stopHeartbeat();
           if (processed.error) {
             send('error', { message: processed.error });
-            await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
           send('progress', { step: 4, message: 'AI is reading your blueprint...', pct: 25 });
@@ -792,12 +793,12 @@ export async function GET(
           if (!parsed) {
             console.error('[analyze] No JSON parsed. Raw:', raw.slice(0, 500));
             send('error', { message: 'AI returned an unexpected format. Please try again.' });
-            await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
           if ('error' in parsed && typeof (parsed as any).error === 'string') {
             send('error', { message: (parsed as any).error });
-            await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
           mergeMeta(parsed);
@@ -970,13 +971,13 @@ export async function GET(
             items = salvaged;
           } else {
             send('error', { message: 'AI returned items but could not extract usable data. Try a higher-resolution blueprint or a clearer PDF.' });
-            await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
         }
         if (items.length === 0) {
           send('error', { message: 'No materials extracted from this blueprint. Try a clearer image or a PDF with visible dimensions.' });
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
           return done();
         }
 
@@ -1156,7 +1157,7 @@ export async function GET(
         console.error('[takeoff/analyze]', err);
         send('error', { message });
         try {
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
         } catch { /* non-fatal */ }
         done();
       }

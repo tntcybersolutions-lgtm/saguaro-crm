@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateWH347, saveDocument } from '@/lib/pdf-engine';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 /**
  * POST /api/payroll/generate
@@ -250,7 +251,7 @@ export async function POST(req: NextRequest) {
     const { error: linesErr } = await db.from('certified_payroll_lines').insert(lineRows);
     if (linesErr) {
       // Never leave a filed certified-payroll header without its employee lines.
-      await db.from('certified_payroll').delete().eq('id', certifiedPayrollId);
+      await must(db.from('certified_payroll').delete().eq('id', certifiedPayrollId), 'certified_payroll delete');
       throw linesErr;
     }
 

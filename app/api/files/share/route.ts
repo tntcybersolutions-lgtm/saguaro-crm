@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import crypto from 'crypto';
 
 import { apiError } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -32,10 +33,10 @@ export async function POST(req: NextRequest) {
     // Mint (or reuse) a durable share token for this file.
     const token = 'fs_' + crypto.randomBytes(18).toString('hex');
     const expires = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(); // 30-day link
-    await admin.from('file_shares').insert({
+    await must(admin.from('file_shares').insert({
       tenant_id: user.tenantId, file_id: fileId, token, channel,
       recipient: to || null, expires_at: expires, created_by: user.id,
-    });
+    }), 'file_shares insert');
     const origin = new URL(req.url).origin;
     const shareUrl = `${origin}/api/files/shared/${token}`;
     const name = (f as any).file_name || 'file';

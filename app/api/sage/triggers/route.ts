@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 type TriggerType =
   | 'budget_threshold'
@@ -140,14 +141,14 @@ export async function POST(req: NextRequest) {
 
     // Back-reference the insight on the trigger event. sage_trigger_events has no
     // insight_id column, so fold the linkage into its data jsonb and mark it processed.
-    await supabase
+    await must(supabase
       .from('sage_trigger_events')
       .update({
         processed: true,
         processed_at: new Date().toISOString(),
         data: { ...(body.triggerData ?? {}), user_id: user.id, insight_id: insightRow.id },
       })
-      .eq('id', triggerRow.id);
+      .eq('id', triggerRow.id), 'sage_trigger_events write');
 
     return NextResponse.json({ success: true, insightCreated: true });
   } catch {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     if (body.lineItems && Array.isArray(body.lineItems) && body.lineItems.length > 0) {
-      await db.from('bid_package_items').insert(
+      await must(db.from('bid_package_items').insert(
         body.lineItems.map((item: Record<string, unknown>) => ({
           tenant_id: user.tenantId,
           bid_package_id: (pkg as Record<string, unknown>).id,
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
           csi_code: item.csiCode || item.csi_code,
           notes: item.notes,
         }))
-      );
+      ), 'bid_package_items insert');
     }
 
     // ── BUDGET SEEDING: a package generated from a takeoff carries the trade's
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
           .limit(1)
           .maybeSingle();
         if (!existing) {
-          await db.from('budget_lines').insert({
+          await must(db.from('budget_lines').insert({
             tenant_id: user.tenantId,
             project_id: projectId,
             division: div,
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
             committed: 0,
             actual: 0,
             notes: 'Seeded from bid package (takeoff estimate).',
-          } as never);
+          } as never), 'budget_lines insert');
         }
       }
     } catch (e) { console.error('budget seed skipped:', e); }

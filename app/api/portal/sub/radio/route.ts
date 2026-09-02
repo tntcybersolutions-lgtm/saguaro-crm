@@ -4,6 +4,7 @@ import { signStoredUrl } from '@/lib/storage-signing';
 import { translateRadioMessage } from '@/lib/translate';
 import { transcribeRadioVoice } from '@/lib/transcribe';
 import { stampPresentAtSend, receiptsByMessage } from '@/lib/radio-receipts';
+import { must } from '@/lib/db-write';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -39,10 +40,10 @@ async function subChannel(db: any, session: any) {
 async function ensureMember(db: any, session: any, channelId: string) {
   const { data } = await db.from('radio_members').select('id').eq('channel_id', channelId).eq('portal_sub_id', session.sub_id).limit(1);
   if (!data || !data.length) {
-    await db.from('radio_members').insert({
+    await must(db.from('radio_members').insert({
       channel_id: channelId, tenant_id: session.tenant_id, portal_sub_id: session.sub_id,
       display_name: session.sub_company || 'Subcontractor',
-    } as never);
+    } as never), 'radio_members insert');
   }
 }
 
@@ -57,9 +58,9 @@ export async function GET(req: NextRequest) {
     // Presence: polling the feed is the heartbeat — mark this sub seen/read,
     // then count everyone (crew + subs) seen on the channel in the last 90s.
     const nowIso = new Date().toISOString();
-    await a.db.from('radio_members')
+    await must(a.db.from('radio_members')
       .update({ last_seen_at: nowIso, last_read_at: nowIso } as never)
-      .eq('channel_id', ch.id).eq('portal_sub_id', a.session.sub_id);
+      .eq('channel_id', ch.id).eq('portal_sub_id', a.session.sub_id), 'radio_members write');
     const presenceCutoff = new Date(Date.now() - 90 * 1000).toISOString();
     const { count: onChannel } = await a.db.from('radio_members')
       .select('id', { count: 'exact', head: true })

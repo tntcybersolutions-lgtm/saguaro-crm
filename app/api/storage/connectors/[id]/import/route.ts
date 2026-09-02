@@ -6,6 +6,7 @@ import { signStoredUrl } from '@/lib/storage-signing';
 import { classifyKind } from '@/lib/filekind';
 
 import { apiError } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -47,10 +48,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }).select('*').single();
     if (rowErr) throw new Error(rowErr.message);
 
-    await admin.from('external_file_links').insert({
+    await must(admin.from('external_file_links').insert({
       tenant_id: user.tenantId, connector_id: ctx.id, file_id: row.id,
       external_path: path, direction: 'import', size_bytes: bytes.length,
-    });
+    }), 'external_file_links insert');
 
     const url = await signStoredUrl(BUCKET, key, 3600);
     return NextResponse.json({ file: { ...row, url, file_url: url } });

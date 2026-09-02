@@ -6,6 +6,7 @@ import { summarizeCables } from '@/lib/heatmap/cabling-spec';
 import { DEVICE_REGISTRY } from '@/lib/heatmap/models';
 import type { HeatmapProject, Device } from '@/lib/heatmap/types';
 import type { Pt } from '@/lib/heatmap/geometry';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
       // Don't leave a half-built package (header with no line items). Best-effort
       // rollback of the header, then surface a clean error.
       console.error('[heatmap/to-bid-package] line-item insert failed', itemsErr);
-      await db.from('bid_packages').delete().eq('id', pkgId).eq('tenant_id', user.tenantId);
+      await must(db.from('bid_packages').delete().eq('id', pkgId).eq('tenant_id', user.tenantId), 'bid_packages delete');
       return NextResponse.json({ error: 'Could not save the bid package line items. Please try again.' }, { status: 500 });
     }
   }

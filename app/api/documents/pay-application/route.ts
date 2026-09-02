@@ -11,6 +11,7 @@ import {
   computePayApp,
   type SovLine,
 } from '@/lib/calc';
+import { must } from '@/lib/db-write';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
 
     // Update pay app with PDF URLs and the computed (cross-footed) summary so
     // the stored figures match the issued document. Existing columns only.
-    await db.from('pay_applications').update({
+    await must(db.from('pay_applications').update({
       g702_pdf_url: g702Url,
       g703_pdf_url: g703Url,
       total_completed: toDollars(calc.completedAndStoredTotal),
@@ -137,7 +138,7 @@ export async function POST(req: NextRequest) {
       total_earned_less_retainage: toDollars(calc.totalEarnedLessRetainage),
       current_payment_due: toDollars(calc.currentPaymentDue),
       net_amount_due: toDollars(calc.currentPaymentDue),
-    } as unknown as Database['public']['Tables']['pay_applications']['Update']).eq('id', body.payAppId).eq('tenant_id', user.tenantId);
+    } as unknown as Database['public']['Tables']['pay_applications']['Update']).eq('id', body.payAppId).eq('tenant_id', user.tenantId), 'pay_applications update');
 
     return NextResponse.json({ g702Url, g703Url, success: true });
   } catch {

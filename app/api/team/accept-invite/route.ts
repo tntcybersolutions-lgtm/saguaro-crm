@@ -26,6 +26,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
+import { must } from '@/lib/db-write';
 
 const INVITE_TTL_DAYS = 7;
 
@@ -167,7 +168,7 @@ export async function POST(req: NextRequest) {
     // Expired (either flagged, or past the 7-day window).
     if (invite.status === 'expired' || isExpired(invite.created_at)) {
       if (invite.status !== 'expired') {
-        await db.from('team_invites').update({ status: 'expired' }).eq('id', invite.id);
+        await must(db.from('team_invites').update({ status: 'expired' }).eq('id', invite.id), 'team_invites update');
       }
       return NextResponse.json(
         { error: 'This invitation has expired. Please ask for a new one.', reason: 'expired' },

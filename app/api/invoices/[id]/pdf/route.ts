@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { generateInvoicePdf } from '@/lib/document-templates/invoice-generator';
+import { must } from '@/lib/db-write';
 
 /**
  * POST — generate (or regenerate) the branded invoice PDF via the pdf engine,
@@ -16,9 +17,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { pdfUrl, invoiceNumber } = await generateInvoicePdf({ invoiceId: id, tenantId: g.user.tenantId });
     const db = createServerClient() as any;
-    await db.from('invoices')
+    await must(db.from('invoices')
       .update({ pdf_url: pdfUrl, updated_at: new Date().toISOString() } as never)
-      .eq('id', id).eq('tenant_id', g.user.tenantId);
+      .eq('id', id).eq('tenant_id', g.user.tenantId), 'invoices write');
     return NextResponse.json({ pdfUrl, invoiceNumber });
   } catch (err) {
     console.error('[invoices/pdf]', err);

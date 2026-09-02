@@ -6,6 +6,7 @@
 import { createServerClient } from '@/lib/supabase-server';
 import { encryptSecret, decryptSecret } from '@/lib/crypto-secrets';
 import type { ConnectorCtx, StorageProvider, ProviderId } from './types';
+import { must } from '@/lib/db-write';
 
 export async function makeProvider(ctx: ConnectorCtx): Promise<StorageProvider> {
   switch (ctx.provider) {
@@ -33,7 +34,7 @@ export async function loadConnectorCtx(id: string, tenantId: string): Promise<Co
     secret: decryptSecret<Record<string, any>>(data.secret_enc) || {}, // eslint-disable-line @typescript-eslint/no-explicit-any
     rootPath: data.root_path,
     saveSecret: async (secret) => {
-      await admin.from('storage_connectors').update({ secret_enc: encryptSecret(secret), updated_at: new Date().toISOString() }).eq('id', id).eq('tenant_id', tenantId);
+      await must(admin.from('storage_connectors').update({ secret_enc: encryptSecret(secret), updated_at: new Date().toISOString() }).eq('id', id).eq('tenant_id', tenantId), 'storage_connectors update');
     },
   };
   return ctx;

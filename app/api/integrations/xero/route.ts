@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 const XERO_CLIENT_ID = process.env.XERO_CLIENT_ID || '';
 const XERO_REDIRECT_URI = process.env.XERO_REDIRECT_URI || '';
@@ -25,11 +26,11 @@ export async function POST(req: NextRequest) {
 
     // Handle disconnect
     if (action === 'disconnect') {
-      await db
+      await must(db
         .from('integrations')
         .update({ status: 'disconnected', updated_at: new Date().toISOString() })
         .eq('tenant_id', user.tenantId)
-        .eq('provider', 'xero');
+        .eq('provider', 'xero'), 'integrations write');
       return NextResponse.json({ success: true, message: 'Xero disconnected' });
     }
 
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (existing) {
-        await db
+        await must(db
           .from('integrations')
           .update({
             status: 'pending',
@@ -57,9 +58,9 @@ export async function POST(req: NextRequest) {
             },
             updated_at: new Date().toISOString(),
           })
-          .eq('id', existing.id);
+          .eq('id', existing.id), 'integrations write');
       } else {
-        await db.from('integrations').insert({
+        await must(db.from('integrations').insert({
           tenant_id: user.tenantId,
           provider: 'xero',
           status: 'pending',
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
             sync_direction: body.sync_direction ?? 'bidirectional',
             sync_frequency: body.sync_frequency ?? 'manual',
           },
-        });
+        }), 'integrations insert');
       }
 
       // Build the Xero OAuth2 authorization URL

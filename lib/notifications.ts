@@ -4,6 +4,7 @@
  */
 import { createServerClient } from './supabase-server';
 import { sendPushToTenant, type PushMessage } from './push';
+import { must } from '@/lib/db-write';
 
 const supabase = createServerClient();
 
@@ -58,7 +59,7 @@ export async function createNotification(
   projectId?: string
 ): Promise<void> {
   try {
-    await supabase.from('notifications').insert({
+    await must(supabase.from('notifications').insert({
       tenant_id: tenantId,
       user_id: userId,
       type,
@@ -67,7 +68,7 @@ export async function createNotification(
       link: link || null,
       project_id: projectId || null,
       is_read: false,
-    });
+    }), 'notifications insert');
 
     // Fire a device/web push so the in-app notification also reaches the phone /
     // desktop. Fire-and-forget — never blocks or fails the notification write.
@@ -116,10 +117,10 @@ export async function getNotifications(tenantId: string, userId: string, limit =
 
 export async function markRead(notificationId: string): Promise<void> {
   try {
-    await supabase
+    await must(supabase
       .from('notifications')
       .update({ is_read: true, read_at: new Date().toISOString() })
-      .eq('id', notificationId);
+      .eq('id', notificationId), 'notifications write');
   } catch (err) {
     console.error('[markRead]', err);
   }
@@ -127,12 +128,12 @@ export async function markRead(notificationId: string): Promise<void> {
 
 export async function markAllRead(tenantId: string, userId: string): Promise<void> {
   try {
-    await supabase
+    await must(supabase
       .from('notifications')
       .update({ is_read: true, read_at: new Date().toISOString() })
       .eq('tenant_id', tenantId)
       .or(`user_id.eq.${userId},user_id.is.null`)
-      .eq('is_read', false);
+      .eq('is_read', false), 'notifications write');
   } catch (err) {
     console.error('[markAllRead]', err);
   }

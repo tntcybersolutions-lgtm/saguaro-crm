@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
+import { must } from '@/lib/db-write';
 
 const BUCKET = 'project-files';
 
@@ -89,14 +90,14 @@ export async function POST(req: NextRequest) {
       .eq('tenant_id', session.tenant_id);
     if (updErr) throw updErr;
 
-    await db.from('portal_activity').insert({
+    await must(db.from('portal_activity').insert({
       tenant_id: session.tenant_id,
       project_id: session.project_id,
       session_id: session.id,
       action: 'punch_completed',
       description: `Completed punch item${photoUrl ? ' (with photo)' : ''}`,
       metadata: { item_id: itemId, description: (item as { description?: string }).description, withPhoto: !!photoUrl, by: session.sub_company },
-    } as never);
+    } as never), 'portal_activity insert');
 
     return NextResponse.json({ success: true });
   } catch {

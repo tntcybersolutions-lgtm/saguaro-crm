@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 /**
  * Tenant add-on management.
@@ -45,8 +46,8 @@ export async function POST(req: NextRequest) {
       expires_at, activated_by: g.user.id, activated_at: new Date().toISOString(),
     };
     const { data: existing } = await db.from('tenant_entitlements').select('id').eq('tenant_id', g.user.tenantId).eq('feature_key', featureKey).maybeSingle();
-    if (existing) await db.from('tenant_entitlements').update(row as never).eq('id', (existing as any).id);
-    else await db.from('tenant_entitlements').insert(row as never);
+    if (existing) await must(db.from('tenant_entitlements').update(row as never).eq('id', (existing as any).id), 'tenant_entitlements update');
+    else await must(db.from('tenant_entitlements').insert(row as never), 'tenant_entitlements insert');
     return NextResponse.json({ ok: true, featureKey, status, expires_at });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

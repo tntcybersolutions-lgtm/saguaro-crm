@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { must, tryWrite } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -208,11 +209,11 @@ export async function POST(
         }
 
         // 2. Set status to processing
-        await supabase
+        await must(supabase
           .from('bim_models')
           .update({ status: 'processing' })
           .eq('id', modelId)
-          .eq('tenant_id', user.tenantId);
+          .eq('tenant_id', user.tenantId), 'bim_models write');
 
         send('progress', { step: 2, message: 'Downloading model file...', pct: 10 });
         startHeartbeat('Downloading model file...', 10, 2);
@@ -226,7 +227,7 @@ export async function POST(
 
         if (dlErr || !blob) {
           send('error', { message: 'Could not download model file from storage.' });
-          await supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId);
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
           return done();
         }
 
@@ -246,11 +247,11 @@ export async function POST(
         // Honest preview-only path — no AI call, no fabricated elements.
         const markPreviewOnly = async (message: string) => {
           // Remove any previously-written (possibly fabricated) elements.
-          await supabase
+          await must(supabase
             .from('bim_elements')
             .delete()
             .eq('bim_model_id', modelId)
-            .eq('tenant_id', user.tenantId);
+            .eq('tenant_id', user.tenantId), 'bim_elements write');
 
           const patch = {
             element_count: 0,
@@ -266,11 +267,11 @@ export async function POST(
             .eq('id', modelId)
             .eq('tenant_id', user.tenantId);
           if (e1) {
-            await supabase
+            await must(supabase
               .from('bim_models')
               .update({ ...patch, status: 'complete' })
               .eq('id', modelId)
-              .eq('tenant_id', user.tenantId);
+              .eq('tenant_id', user.tenantId), 'bim_models write');
           }
         };
 
@@ -291,7 +292,7 @@ export async function POST(
         // 4. Setup Anthropic (only needed for real text analysis)
         if (!process.env.ANTHROPIC_API_KEY) {
           send('error', { message: 'AI service not configured. Add ANTHROPIC_API_KEY.' });
-          await supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId);
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
           return done();
         }
 
@@ -299,7 +300,7 @@ export async function POST(
         const { text: modelText, truncated } = buildModelExcerpt(bytes);
         if (!modelText.trim()) {
           send('error', { message: 'Model file appears to be empty or unreadable.' });
-          await supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId);
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
           return done();
         }
 
@@ -356,18 +357,18 @@ export async function POST(
         if (!parsed || !parsed.elements || !Array.isArray(parsed.elements)) {
           console.error('[bim/convert] parse failed, raw:', accumulated.slice(0, 500));
           send('error', { message: 'AI returned unexpected format. Please try again.' });
-          await supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId);
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
           return done();
         }
 
         send('progress', { step: 6, message: 'Saving elements to database...', pct: 85 });
 
         // 7. Delete existing elements and insert new ones
-        await supabase
+        await must(supabase
           .from('bim_elements')
           .delete()
           .eq('bim_model_id', modelId)
-          .eq('tenant_id', user.tenantId);
+          .eq('tenant_id', user.tenantId), 'bim_elements write');
 
         const elements = parsed.elements.map((el: any, idx: number) => ({
           bim_model_id: modelId,
@@ -426,7 +427,7 @@ export async function POST(
         console.error('[bim/convert]', err);
         send('error', { message });
         try {
-          await supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId);
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
         } catch { /* non-fatal */ }
         done();
       }

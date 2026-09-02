@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 // GET - List signature requests for a project
 export async function GET(req: NextRequest) {
@@ -98,7 +99,7 @@ export async function POST(req: NextRequest) {
 
     // Log to audit trail (fire-and-forget)
     try {
-      await supabase.from('activity_log').insert({
+      await must(supabase.from('activity_log').insert({
         tenant_id: user.tenantId,
         user_id: user.id,
         project_id: projectId,
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
         entity_type: 'document_signature_request',
         entity_id: sigReq.id,
         details: { recipientEmail, documentType },
-      });
+      }), 'activity_log insert');
     } catch { /* non-fatal */ }
 
     return NextResponse.json({ success: true, data: sigReq });
@@ -177,10 +178,10 @@ export async function PATCH(req: NextRequest) {
     if (sigErr) throw sigErr;
 
     // Update request status
-    await supabase
+    await must(supabase
       .from('document_signature_requests')
       .update({ status: 'signed', completed_at: new Date().toISOString() })
-      .eq('id', requestId);
+      .eq('id', requestId), 'document_signature_requests write');
 
     return NextResponse.json({ success: true, data: sig });
   } catch (err: unknown) {

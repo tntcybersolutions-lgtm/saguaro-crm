@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { makeProvider, loadConnectorCtx } from '@/lib/storage-providers/registry';
 
 import { apiError } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -33,10 +34,10 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const provider = await makeProvider(ctx);
     const res = await provider.upload(destFolder ?? null, f.file_name || 'file', bytes, f.mime_type || f.file_type || undefined);
 
-    await admin.from('external_file_links').insert({
+    await must(admin.from('external_file_links').insert({
       tenant_id: user.tenantId, connector_id: ctx.id, file_id: f.id,
       external_path: res.path, external_id: res.externalId || null, direction: 'export', size_bytes: bytes.length,
-    });
+    }), 'external_file_links insert');
     return NextResponse.json({ ok: true, external_path: res.path });
   } catch (err: any) {
     return apiError('storage/connectors/id/export', err, "Export failed", 502);

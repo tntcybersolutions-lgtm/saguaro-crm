@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 async function authenticateSubPortal(req: NextRequest) {
   const token =
@@ -143,11 +144,11 @@ export async function POST(req: NextRequest) {
       invitationUpdate.nda_signed_at = new Date().toISOString();
       invitationUpdate.nda_signer_name = nda_signer_name || null;
     }
-    await db
+    await must(db
       .from('portal_sub_bid_invitations')
       .update(invitationUpdate)
       .eq('id', bid_invitation_id)
-      .eq('tenant_id', session.tenant_id);
+      .eq('tenant_id', session.tenant_id), 'portal_sub_bid_invitations write');
 
     return NextResponse.json(
       { bid_response: bidResponse, message: 'Bid submitted successfully' },

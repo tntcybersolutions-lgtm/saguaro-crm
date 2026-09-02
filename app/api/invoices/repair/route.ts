@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 /**
  * One-time (idempotent) invoice normalizer for the caller's tenant:
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
       if (total === 0 && amount > 0) { patch.total = amount + tax; totalsFixed++; }
       if (r.status && r.status !== String(r.status).toLowerCase()) { patch.status = String(r.status).toLowerCase(); statusesFixed++; }
       if (Object.keys(patch).length) {
-        await db.from('invoices').update(patch as never).eq('id', r.id).eq('tenant_id', g.user.tenantId);
+        await must(db.from('invoices').update(patch as never).eq('id', r.id).eq('tenant_id', g.user.tenantId), 'invoices update');
       }
     }
     return NextResponse.json({ ok: true, scanned: (rows || []).length, totalsFixed, statusesFixed });

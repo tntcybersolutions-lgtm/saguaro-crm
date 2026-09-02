@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 /**
  * Timesheet / time-clock status transition.
@@ -91,9 +92,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
                 .limit(1)
                 .maybeSingle();
               if (bLine) {
-                await db.from('budget_lines')
+                await must(db.from('budget_lines')
                   .update({ actual: ((bLine as { actual: number | null }).actual || 0) + laborCost })
-                  .eq('id', (bLine as { id: string }).id);
+                  .eq('id', (bLine as { id: string }).id), 'budget_lines write');
               }
             }
           }

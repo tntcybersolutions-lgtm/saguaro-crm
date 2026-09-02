@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { metaFor, pickAmount, itemLabel, moduleLabel, type EntityMeta } from '@/lib/approvals';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -155,12 +156,12 @@ export async function POST(req: NextRequest) {
         };
         const reqStatus = isFinal ? decision : 'pending';
         if (requestId) {
-          await db.from('approval_requests')
+          await must(db.from('approval_requests')
             .update({ current_step: newStep, status: reqStatus } as never)
             .eq('id', requestId)
-            .eq('tenant_id', user.tenantId);
+            .eq('tenant_id', user.tenantId), 'approval_requests write');
         } else {
-          await db.from('approval_requests').insert({
+          await must(db.from('approval_requests').insert({
             tenant_id: user.tenantId,
             workflow_id: workflowId,
             workflow_name: workflowName,
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest) {
             total_steps: totalSteps,
             status: reqStatus,
             history: [historyEntry],
-          } as never);
+          } as never), 'approval_requests insert');
         }
       } catch { /* progress tracking optional */ }
     }

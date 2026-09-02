@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createNotification } from '@/lib/notifications';
+import { must } from '@/lib/db-write';
 
 /**
  * Saguaro Radio — talkgroups.
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
       // Ensure the project talkgroup exists (idempotent via unique constraint).
       const { data: existing } = await db.from('radio_channels').select('id').eq('tenant_id', t).eq('project_id', projectId).eq('kind', 'project').limit(1);
       if (!existing || existing.length === 0) {
-        await db.from('radio_channels').insert({ tenant_id: t, project_id: projectId, kind: 'project', name: 'All Hands', allow_subs: true, created_by: uid } as never);
+        await must(db.from('radio_channels').insert({ tenant_id: t, project_id: projectId, kind: 'project', name: 'All Hands', allow_subs: true, created_by: uid } as never), 'radio_channels insert');
       }
     }
 
@@ -92,7 +93,7 @@ export async function GET(req: NextRequest) {
       const lockedIds = new Set(list.filter((c: any) => c.locked).map((c: any) => c.id));
       const toJoin = ids.filter((id) => !joined.has(id) && !lockedIds.has(id));
       if (toJoin.length) {
-        await db.from('radio_members').insert(toJoin.map((channel_id) => ({ channel_id, tenant_id: t, user_id: uid, display_name: g.user.email || null })) as never);
+        await must(db.from('radio_members').insert(toJoin.map((channel_id) => ({ channel_id, tenant_id: t, user_id: uid, display_name: g.user.email || null })) as never), 'radio_members insert');
         for (const id of toJoin) allMembers.push({ channel_id: id, user_id: uid, monitoring: true, role: 'member', last_seen_at: null, last_read_at: null });
       }
     }
@@ -149,7 +150,7 @@ export async function POST(req: NextRequest) {
       if (typeof body.profile.callSign === 'string') patch.call_sign = body.profile.callSign.trim().slice(0, 24) || null;
       if (['available', 'busy', 'on_route', 'off'].includes(body.profile.presenceStatus)) patch.presence_status = body.profile.presenceStatus;
       if (Object.keys(patch).length) {
-        await db.from('radio_members').update(patch as never).eq('tenant_id', t).eq('user_id', g.user.id);
+        await must(db.from('radio_members').update(patch as never).eq('tenant_id', t).eq('user_id', g.user.id), 'radio_members update');
       }
       return NextResponse.json({ ok: true });
     }
@@ -165,10 +166,10 @@ export async function POST(req: NextRequest) {
         name: dname, allow_subs: false, direct_key: pair, created_by: g.user.id,
       } as never).select().single();
       if (error) throw error;
-      await db.from('radio_members').insert([
+      await must(db.from('radio_members').insert([
         { channel_id: (ch as any).id, tenant_id: t, user_id: g.user.id, display_name: g.user.email || null },
         { channel_id: (ch as any).id, tenant_id: t, user_id: body.directToUserId, display_name: dname },
-      ] as never);
+      ] as never), 'radio_members insert');
       return NextResponse.json({ channel: ch }, { status: 201 });
     }
 
@@ -178,28 +179,28 @@ export async function POST(req: NextRequest) {
       if (!a || !b || a === b) return NextResponse.json({ error: 'patch needs two distinct channels' }, { status: 400 });
       const [ca, cb] = [a, b].sort();
       if (release) {
-        await db.from('radio_channel_patches').update({ released_at: new Date().toISOString() } as never)
-          .eq('tenant_id', t).eq('channel_a', ca).eq('channel_b', cb).is('released_at', null);
+        await must(db.from('radio_channel_patches').update({ released_at: new Date().toISOString() } as never)
+          .eq('tenant_id', t).eq('channel_a', ca).eq('channel_b', cb).is('released_at', null), 'radio_channel_patches update');
         return NextResponse.json({ ok: true, released: true });
       }
       const { data: ex } = await db.from('radio_channel_patches').select('id, released_at').eq('tenant_id', t).eq('channel_a', ca).eq('channel_b', cb).maybeSingle();
       if (ex && !(ex as any).released_at) return NextResponse.json({ ok: true, already: true });
-      if (ex) await db.from('radio_channel_patches').update({ released_at: null, created_by: g.user.id, created_at: new Date().toISOString() } as never).eq('id', (ex as any).id);
-      else await db.from('radio_channel_patches').insert({ tenant_id: t, channel_a: ca, channel_b: cb, created_by: g.user.id } as never);
+      if (ex) await must(db.from('radio_channel_patches').update({ released_at: null, created_by: g.user.id, created_at: new Date().toISOString() } as never).eq('id', (ex as any).id), 'radio_channel_patches update');
+      else await must(db.from('radio_channel_patches').insert({ tenant_id: t, channel_a: ca, channel_b: cb, created_by: g.user.id } as never), 'radio_channel_patches insert');
       return NextResponse.json({ ok: true, patched: true }, { status: 201 });
     }
 
     // ── Priority channel toggle (interrupts scanning first) ──
     if (body.priorityChannelId != null) {
-      await db.from('radio_channels').update({ priority: body.priority === true } as never)
-        .eq('id', body.priorityChannelId).eq('tenant_id', t);
+      await must(db.from('radio_channels').update({ priority: body.priority === true } as never)
+        .eq('id', body.priorityChannelId).eq('tenant_id', t), 'radio_channels update');
       return NextResponse.json({ ok: true });
     }
 
     // ── Lock/unlock (dispatcher-invite-only groups) ──
     if (body.lockChannelId != null) {
-      await db.from('radio_channels').update({ locked: body.locked === true } as never)
-        .eq('id', body.lockChannelId).eq('tenant_id', t);
+      await must(db.from('radio_channels').update({ locked: body.locked === true } as never)
+        .eq('id', body.lockChannelId).eq('tenant_id', t), 'radio_channels update');
       return NextResponse.json({ ok: true });
     }
 
@@ -218,10 +219,10 @@ export async function POST(req: NextRequest) {
           const { data: prof } = await db.from('profiles').select('full_name, email').eq('id', body.addUserId).maybeSingle();
           displayName = (prof as any)?.full_name || (prof as any)?.email || null;
         }
-        await db.from('radio_members').insert({
+        await must(db.from('radio_members').insert({
           channel_id: body.channelId, tenant_id: t, user_id: body.addUserId,
           display_name: displayName, role: body.memberRole === 'dispatcher' ? 'dispatcher' : 'member',
-        } as never);
+        } as never), 'radio_members insert');
         await createNotification(t, body.addUserId, 'radio_added', `Added to ${(ch as any).name}`,
           `${g.user.email || 'A dispatcher'} added you to the ${(ch as any).name} talkgroup.`,
           `/app/radio?channel=${body.channelId}`);
@@ -229,10 +230,10 @@ export async function POST(req: NextRequest) {
       }
       const { data: exSub } = await db.from('radio_members').select('id').eq('tenant_id', t).eq('channel_id', body.channelId).eq('portal_sub_id', body.addPortalSubId).limit(1);
       if (exSub && exSub.length) return NextResponse.json({ ok: true, already: true });
-      await db.from('radio_members').insert({
+      await must(db.from('radio_members').insert({
         channel_id: body.channelId, tenant_id: t, portal_sub_id: body.addPortalSubId,
         display_name: String(body.displayName || 'Subcontractor').trim().slice(0, 60) || 'Subcontractor',
-      } as never);
+      } as never), 'radio_members insert');
       return NextResponse.json({ ok: true, added: true }, { status: 201 });
     }
 
@@ -241,7 +242,7 @@ export async function POST(req: NextRequest) {
       if (!row) return NextResponse.json({ error: 'Member not found' }, { status: 404 });
       const { count } = await db.from('radio_members').select('id', { count: 'exact', head: true }).eq('tenant_id', t).eq('channel_id', (row as any).channel_id);
       if ((count ?? 0) <= 1) return NextResponse.json({ error: 'A channel needs at least one member' }, { status: 400 });
-      await db.from('radio_members').delete().eq('tenant_id', t).eq('id', body.removeMemberId);
+      await must(db.from('radio_members').delete().eq('tenant_id', t).eq('id', body.removeMemberId), 'radio_members delete');
       return NextResponse.json({ ok: true, removed: true });
     }
 
@@ -252,7 +253,7 @@ export async function POST(req: NextRequest) {
       allow_subs: body.allowSubs === true, created_by: g.user.id,
     } as never).select().single();
     if (error) throw error;
-    await db.from('radio_members').insert({ channel_id: (data as any).id, tenant_id: t, user_id: g.user.id, display_name: g.user.email || null, role: 'dispatcher' } as never);
+    await must(db.from('radio_members').insert({ channel_id: (data as any).id, tenant_id: t, user_id: g.user.id, display_name: g.user.email || null, role: 'dispatcher' } as never), 'radio_members insert');
     return NextResponse.json({ channel: data }, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

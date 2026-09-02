@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,14 +70,14 @@ export async function POST(req: NextRequest) {
     const { data: found } = await existing.limit(1).maybeSingle();
 
     if (found?.id) {
-      await db.from('resource_forecast').update({ notes }).eq('id', found.id);
+      await must(db.from('resource_forecast').update({ notes }).eq('id', found.id), 'resource_forecast update');
     } else {
-      await db.from('resource_forecast').insert({
+      await must(db.from('resource_forecast').insert({
         tenant_id: user.tenantId,
         project_id: projectId,
         week_start: weekStart,
         notes,
-      });
+      }), 'resource_forecast insert');
     }
 
     return NextResponse.json({ success: true, notes });

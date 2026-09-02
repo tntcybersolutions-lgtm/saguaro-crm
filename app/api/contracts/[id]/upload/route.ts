@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signStoredUrl } from '@/lib/storage-signing';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,14 +77,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (updErr) throw updErr;
 
     // Keep a document-history row (best-effort; the contract already has the url).
-    await db.from('contract_documents').insert({
+    await must(db.from('contract_documents').insert({
       tenant_id: user.tenantId,
       contract_id: id,
       title: file.name || safeName,
       file_url: publicUrl,
       doc_type: contentType,
       uploaded_by: user.id,
-    } as never);
+    } as never), 'contract_documents insert');
 
     const signed = await signStoredUrl(BUCKET, publicUrl, 3600);
     return NextResponse.json({ success: true, pdf_url: signed, file_url: signed, url: signed });

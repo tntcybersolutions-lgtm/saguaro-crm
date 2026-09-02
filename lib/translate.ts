@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { tryWrite } from '@/lib/db-write';
 
 /**
  * Saguaro Radio translation brain.
@@ -46,10 +47,10 @@ Respond ONLY with valid JSON in this exact format:
     if (es) translations.es = es;
     if (!detected && !Object.keys(translations).length) return;
 
-    await db.from('radio_messages').update({
+    await tryWrite(db.from('radio_messages').update({
       ...(detected ? { detected_lang: detected } : {}),
       ...(Object.keys(translations).length ? { translations } : {}),
-    } as never).eq('id', messageId);
+    } as never).eq('id', messageId), 'radio_messages update');
   } catch {
     // Best-effort by design: the send path already returned 201, so a
     // translation failure must never surface. The message stays untranslated.

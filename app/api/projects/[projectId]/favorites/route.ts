@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 
 import { apiError } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -69,12 +70,12 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
     const itemId = url.searchParams.get('item_id');
     if (!itemId) return NextResponse.json({ error: 'item_id required' }, { status: 400 });
     const supabase = createServerClient();
-    await supabase
+    await must(supabase
       .from('favorites')
       .delete()
       .eq('project_id', params.projectId)
       .eq('user_id', user.id)
-      .eq('item_id', itemId);
+      .eq('item_id', itemId), 'favorites write');
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Failed to remove favorite' }, { status: 500 });

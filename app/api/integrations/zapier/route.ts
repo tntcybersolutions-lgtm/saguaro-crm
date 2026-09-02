@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { WEBHOOK_EVENT_CATALOG } from '@/lib/webhook-events';
+import { must } from '@/lib/db-write';
 
 /* ------------------------------------------------------------------ */
 /*  Available Zapier triggers and actions for Saguaro                 */
@@ -141,17 +142,17 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (existingInt) {
-      await db
+      await must(db
         .from('integrations')
         .update({ status: 'active', updated_at: new Date().toISOString() })
-        .eq('id', existingInt.id);
+        .eq('id', existingInt.id), 'integrations write');
     } else {
-      await db.from('integrations').insert({
+      await must(db.from('integrations').insert({
         tenant_id: user.tenantId,
         provider: 'zapier',
         status: 'active',
         settings: { webhook_count: 1 },
-      });
+      }), 'integrations insert');
     }
 
     return NextResponse.json({

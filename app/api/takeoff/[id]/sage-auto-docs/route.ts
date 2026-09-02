@@ -16,6 +16,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { buildComplianceForBidPackages } from '@/lib/compliance-autofile';
 import type { Database } from '@/lib/database.types';
+import { must, tryWrite } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -278,8 +279,8 @@ Rules:
         if (existingPkgs && existingPkgs.length > 0) {
           send('progress', { step: 3, pct: 32, message: `Replacing ${existingPkgs.length} existing packages...` });
           const existingIds = existingPkgs.map((p: { id: string }) => p.id);
-          await supabase.from('bid_package_items').delete().eq('tenant_id', tenantId).in('bid_package_id', existingIds);
-          await supabase.from('bid_packages').delete().eq('project_id', takeoff.project_id).eq('tenant_id', tenantId);
+          await tryWrite(supabase.from('bid_package_items').delete().eq('tenant_id', tenantId).in('bid_package_id', existingIds), 'bid_package_items delete');
+          await tryWrite(supabase.from('bid_packages').delete().eq('project_id', takeoff.project_id).eq('tenant_id', tenantId), 'bid_packages delete');
         }
 
         send('progress', { step: 3, pct: 35, message: `Creating ${divisions.length} bid packages in database...` });
@@ -346,7 +347,7 @@ Rules:
 
           // Insert line items
           if (items.length > 0) {
-            await supabase.from('bid_package_items').insert(
+            await must(supabase.from('bid_package_items').insert(
               items.map(item => ({
                 tenant_id:      tenantId,
                 bid_package_id: pkgId,
@@ -358,7 +359,7 @@ Rules:
                 csi_code:       item.csi_code,
                 notes:          '',
               }))
-            );
+            ), 'bid_package_items insert');
           }
 
           createdPackages.push({ id: pkgId, name: packageName, div, total, trade: divName, requiresBond, insGl, insAuto, insWork });
@@ -412,10 +413,10 @@ Rules:
                 tenantId
               );
 
-              await supabase
+              await must(supabase
                 .from('bid_packages')
                 .update({ jacket_pdf_url: pdfUrl })
-                .eq('id', pkg.id);
+                .eq('id', pkg.id), 'bid_packages write');
 
               jacketsGenerated++;
 

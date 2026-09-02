@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { sendPrequalInvite } from '@/lib/email';
 import type { Database } from '@/lib/database.types';
 import crypto from 'crypto';
+import { must } from '@/lib/db-write';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
@@ -102,11 +103,11 @@ export async function POST(req: NextRequest) {
     // If the email did not actually go out, reflect that on the row so the admin
     // list doesn't imply a delivery that never happened.
     if (!emailResult.sent) {
-      await db
+      await must(db
         .from('prequalification_invites')
         .update({ status: 'pending' })
         .eq('id', (invite as { id: string }).id)
-        .eq('tenant_id', user.tenantId);
+        .eq('tenant_id', user.tenantId), 'prequalification_invites write');
       (invite as { status?: string }).status = 'pending';
     }
 

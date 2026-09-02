@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Json } from '@/lib/database.types';
+import { must, tryWrite } from '@/lib/db-write';
 
 /* ------------------------------------------------------------------ */
 /*  Intuit developer credentials (env). Without these QuickBooks is    */
@@ -133,14 +134,14 @@ export async function POST(req: NextRequest) {
     });
     if (syncHistory.length > 50) syncHistory.length = 50;
 
-    await db
+    await tryWrite(db
       .from('integrations')
       .update({
         last_sync_at: new Date().toISOString(),
         settings: { ...existingSettings, sync_history: syncHistory } as unknown as Json,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', integration.id);
+      .eq('id', integration.id), 'integrations write');
 
     // Overall success = at least one entity succeeded and none hard-errored.
     const values = Object.values(syncResults);
@@ -203,7 +204,7 @@ async function ensureAccessToken(
   const refreshToken = tok.refresh_token || integration.refresh_token;
   const tokenExpiresAt = new Date(now + (tok.expires_in || 3600) * 1000).toISOString();
 
-  await db
+  await must(db
     .from('integrations')
     .update({
       access_token: accessToken,
@@ -211,7 +212,7 @@ async function ensureAccessToken(
       token_expires_at: tokenExpiresAt,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', integration.id);
+    .eq('id', integration.id), 'integrations write');
 
   return { accessToken };
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 /**
  * GET /api/discovery/answers?customer_id=xxx
@@ -86,10 +87,10 @@ export async function POST(req: NextRequest) {
 
       if (selectedOption?.upsell_tags && selectedOption.upsell_tags.length > 0) {
         // Mark the answer as upsell-triggered
-        await db
+        await must(db
           .from('discovery_answers')
           .update({ upsell_triggered: true })
-          .eq('id', answer.id);
+          .eq('id', answer.id), 'discovery_answers write');
 
         // For each tag, create a recommendation if one doesn't already exist
         for (const tag of selectedOption.upsell_tags) {
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
             .limit(1);
 
           if (!existing || existing.length === 0) {
-            await db.from('customer_recommendations').insert({
+            await must(db.from('customer_recommendations').insert({
               tenant_id: user.tenantId,
               customer_id,
               recommendation_key: tag,
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
               trigger_question: question_key,
               trigger_answer: answer_value,
               priority: 5,
-            });
+            }), 'customer_recommendations insert');
             upsellCount++;
           }
         }

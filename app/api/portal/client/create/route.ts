@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { sendClientPortalInvite } from '@/lib/email';
 import { randomUUID } from 'crypto';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,12 +42,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Deactivate any existing sessions for this email + project
-    await db
+    await must(db
       .from('portal_client_sessions')
       .update({ status: 'inactive' })
       .eq('client_email', clientEmail.toLowerCase().trim())
       .eq('project_id', projectId)
-      .eq('tenant_id', user.tenantId);
+      .eq('tenant_id', user.tenantId), 'portal_client_sessions write');
 
     // Generate secure token
     const token = randomUUID().replace(/-/g, '') + randomUUID().replace(/-/g, '');

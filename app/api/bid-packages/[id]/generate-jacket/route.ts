@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { generateBidJacket, saveDocument } from '@/lib/pdf-engine';
 import { generateBidJacketContent } from '@/lib/construction-intelligence';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const pdfUrl = await saveDocument(project?.id || id, 'bid-jacket', pdfBytes, { bidPackageId: id }, p.tenant_id);
 
     // Update bid package with jacket URL (tenant-scoped — service-role bypasses RLS)
-    await db.from('bid_packages').update({ jacket_pdf_url: pdfUrl }).eq('id', id).eq('tenant_id', user.tenantId);
+    await must(db.from('bid_packages').update({ jacket_pdf_url: pdfUrl }).eq('id', id).eq('tenant_id', user.tenantId), 'bid_packages update');
 
     return NextResponse.json({ pdfUrl, success: true });
   } catch {

@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
 import { transcribeRadioVoice } from '@/lib/transcribe';
 import { stampPresentAtSend } from '@/lib/radio-receipts';
+import { must } from '@/lib/db-write';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 25 * 1024 * 1024; // 25MB — minutes of audio, not uploads gone wrong
@@ -72,11 +73,11 @@ export async function POST(req: NextRequest) {
         for (const p of (patches || []) as any[]) {
           const other = p.channel_a === channelId ? p.channel_b : p.channel_a;
           const { data: och } = await db.from('radio_channels').select('project_id').eq('id', other).single();
-          await db.from('radio_messages').insert({
+          await must(db.from('radio_messages').insert({
             tenant_id: t, channel_id: other, project_id: (och as any)?.project_id ?? null,
             sender_user_id: g.user.id, sender_name: g.user.email || 'Team member',
             kind: 'voice', audio_path: path, audio_duration_secs: durationSecs, patched_from: channelId,
-          } as never);
+          } as never), 'radio_messages insert');
         }
       } catch { /* mirroring is best-effort */ }
     })();

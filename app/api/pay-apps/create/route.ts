@@ -4,6 +4,7 @@ import type { Database } from '@/lib/database.types';
 import { onPayAppCreated } from '@/lib/triggers';
 import { recordLearning } from '@/lib/learning';
 import { toCents, toDollars, percentOf, subCents, computePayApp } from '@/lib/calc';
+import { must } from '@/lib/db-write';
 
 /** GET ?projectId= — seed data for a NEW pay app: next number, the prior app's
  *  schedule of values (rolled forward), and the approved-CO total. The new-app
@@ -248,9 +249,9 @@ export async function POST(req: NextRequest) {
 
     // Insert SOV line items (computed by the engine when provided)
     if (sovRows.length > 0) {
-      await db.from('schedule_of_values').insert(
+      await must(db.from('schedule_of_values').insert(
         sovRows.map((row) => ({ tenant_id: user.tenantId, project_id: projectId, pay_app_id: (payApp as any).id, ...row }))
-      );
+      ), 'schedule_of_values insert');
     }
 
     // Non-blocking trigger

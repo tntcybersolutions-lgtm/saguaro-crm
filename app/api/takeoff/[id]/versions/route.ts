@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { computeTakeoff, type Condition, type ComputeOpts, type RateOverrides } from '@/lib/takeoff';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 const toDollars = (cents: number) => Math.round(cents) / 100;
@@ -108,9 +109,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }
 
   // mark the source (and root, if this is the first branch) as superseded — the new rev is current
-  await supabase.from('takeoffs').update({ superseded: true }).eq('id', src.id).eq('tenant_id', user.tenantId);
+  await must(supabase.from('takeoffs').update({ superseded: true }).eq('id', src.id).eq('tenant_id', user.tenantId), 'takeoffs update');
   // ensure the root row carries its own root_takeoff_id for chain queries
-  if (!src.root_takeoff_id) await supabase.from('takeoffs').update({ root_takeoff_id: root }).eq('id', src.id).eq('tenant_id', user.tenantId);
+  if (!src.root_takeoff_id) await must(supabase.from('takeoffs').update({ root_takeoff_id: root }).eq('id', src.id).eq('tenant_id', user.tenantId), 'takeoffs update');
 
   return Response.json({ id: rev.id, revLabel, root, sell: toDollars(r.sellCents), lines: r.lines.length });
 }

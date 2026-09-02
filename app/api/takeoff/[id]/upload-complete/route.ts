@@ -4,6 +4,7 @@ import { getPdfPageCount, generateThumbnail } from '@/lib/blueprint-processor';
 import { mergePDFs } from '@/lib/pdf-engine';
 import { requirePermission } from '@/lib/permissions';
 import { apiError, apiFail } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -145,10 +146,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         if (isPdf) {
           pageCount = (await getPdfPageCount(buffer)) || 0;
           if (pageCount > 0) {
-            await db.from('takeoffs')
+            await must(db.from('takeoffs')
               .update({ page_count: pageCount })
               .eq('id', takeoffId)
-              .eq('tenant_id', g.user.tenantId);
+              .eq('tenant_id', g.user.tenantId), 'takeoffs write');
           }
         }
 
@@ -160,10 +161,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
             .upload(thumbPath, thumb, { contentType: 'image/jpeg', upsert: true });
           if (thumbErr) return;
           const { data: { publicUrl: thumbUrl } } = db.storage.from(BUCKET).getPublicUrl(thumbPath);
-          await db.from('takeoffs')
+          await must(db.from('takeoffs')
             .update({ thumbnail_url: thumbUrl })
             .eq('id', takeoffId)
-            .eq('tenant_id', g.user.tenantId);
+            .eq('tenant_id', g.user.tenantId), 'takeoffs write');
         }).catch((err) => {
           console.warn('[takeoff/upload-complete] thumbnail (non-fatal):', err instanceof Error ? err.message : err);
         });

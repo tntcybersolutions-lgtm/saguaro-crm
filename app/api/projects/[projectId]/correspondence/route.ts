@@ -5,6 +5,7 @@ import { sendCorrespondenceEmail } from '@/lib/email';
 import type { Database } from '@/lib/database.types';
 
 import { apiError } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 /** Pull addresses out of the composer's [{ name, email }] recipient rows. */
 function emails(list: unknown): string[] {
   if (!Array.isArray(list)) return [];
@@ -99,11 +100,11 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     if (!result.sent) {
       // Mark the row for what it is — logged, not transmitted — so the register
       // never shows a "Sent" letter that no one received.
-      await supabase
+      await must(supabase
         .from('correspondence')
         .update({ status: 'Logged', sent_at: null } as never)
         .eq('id', (data as { id: string }).id)
-        .eq('tenant_id', user.tenantId);
+        .eq('tenant_id', user.tenantId), 'correspondence write');
       return NextResponse.json({
         item: { ...(data as Record<string, unknown>), status: 'Logged', sent_at: null },
         emailed: false,

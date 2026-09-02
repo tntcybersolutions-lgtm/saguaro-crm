@@ -7,6 +7,7 @@
 import { createServerClient } from '@/lib/supabase-server';
 import type { Database, Json } from '@/lib/database.types';
 import Anthropic from '@anthropic-ai/sdk';
+import { must } from '@/lib/db-write';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EXPORTED TYPES
@@ -802,7 +803,7 @@ export async function detectAndSaveStyle(
         ? 'semi-formal'
         : 'formal';
 
-    await supabase
+    await must(supabase
       .from('sage_user_profiles')
       .update({
         communication_style: `${formalityLabel}, ${analysis.preferred_format}, directness:${analysis.directness_level}/10`,
@@ -816,7 +817,7 @@ export async function detectAndSaveStyle(
             : 'detailed',
         updated_at: new Date().toISOString(),
       })
-      .eq('user_id', userId);
+      .eq('user_id', userId), 'sage_user_profiles write');
   } catch {
     // Non-fatal — return analysis regardless
   }
@@ -1052,13 +1053,13 @@ export async function saveMessageWithIntelligence(
             .select('total_messages_sent')
             .eq('user_id', userId)
             .single();
-          await supabase
+          await must(supabase
             .from('sage_user_profiles')
             .update({
               ...profileUpdates,
               total_messages_sent: ((existing as { total_messages_sent: number } | null)?.total_messages_sent ?? 0) + 1,
             })
-            .eq('user_id', userId);
+            .eq('user_id', userId), 'sage_user_profiles write');
         }
       });
     } else {
@@ -1074,14 +1075,14 @@ export async function saveMessageWithIntelligence(
             .select('total_messages_received')
             .eq('user_id', userId)
             .single();
-          await supabase
+          await must(supabase
             .from('sage_user_profiles')
             .update({
               total_messages_received:
                 ((existing as { total_messages_received: number } | null)?.total_messages_received ?? 0) + 1,
               updated_at: new Date().toISOString(),
             })
-            .eq('user_id', userId);
+            .eq('user_id', userId), 'sage_user_profiles write');
         }
       });
     }
@@ -1196,7 +1197,7 @@ export async function generateSessionSummary(
 
   // Insert into sage_session_summaries
   try {
-    await supabase.from('sage_session_summaries').insert({
+    await must(supabase.from('sage_session_summaries').insert({
       user_id: userId,
       tenant_id: tenantId,
       session_id: sessionId,
@@ -1225,7 +1226,7 @@ export async function generateSessionSummary(
       stress_indicators: summaryResult.stress_indicators,
       message_count: messages.length,
       created_at: new Date().toISOString(),
-    });
+    }), 'sage_session_summaries insert');
   } catch {
     // Non-fatal — still return the summary
   }
@@ -1327,17 +1328,17 @@ export async function updateUserProfile(
 
     // Upsert profile
     if (profile) {
-      await supabase
+      await must(supabase
         .from('sage_user_profiles')
         .update(updates)
-        .eq('user_id', userId);
+        .eq('user_id', userId), 'sage_user_profiles write');
     } else {
-      await supabase.from('sage_user_profiles').insert({
+      await must(supabase.from('sage_user_profiles').insert({
         user_id: userId,
         ...updates,
         first_seen_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
-      });
+      }), 'sage_user_profiles insert');
     }
 
     // Upsert new facts into sage_knowledge_base
@@ -1351,7 +1352,7 @@ export async function updateUserProfile(
           .single();
 
         if (existingFact) {
-          await supabase
+          await must(supabase
             .from('sage_knowledge_base')
             .update({
               value: fact.value,
@@ -1359,9 +1360,9 @@ export async function updateUserProfile(
               times_confirmed: ((existingFact as { times_confirmed: number }).times_confirmed ?? 0) + 1,
               updated_at: new Date().toISOString(),
             })
-            .eq('id', (existingFact as { id: string }).id);
+            .eq('id', (existingFact as { id: string }).id), 'sage_knowledge_base write');
         } else {
-          await supabase.from('sage_knowledge_base').insert({
+          await must(supabase.from('sage_knowledge_base').insert({
             user_id: userId,
             category: fact.category,
             key: fact.key,
@@ -1372,7 +1373,7 @@ export async function updateUserProfile(
             times_confirmed: 1,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          });
+          }), 'sage_knowledge_base insert');
         }
       } catch {
         // Skip individual fact errors
@@ -1520,12 +1521,12 @@ export async function generateProactiveInsights(
   // Batch insert — skip duplicates gracefully
   if (insightsToInsert.length > 0) {
     try {
-      await supabase.from('sage_proactive_insights').insert(insightsToInsert as Database['public']['Tables']['sage_proactive_insights']['Insert'][]);
+      await must(supabase.from('sage_proactive_insights').insert(insightsToInsert as Database['public']['Tables']['sage_proactive_insights']['Insert'][]), 'sage_proactive_insights insert');
     } catch {
       // Try one at a time as fallback
       for (const insight of insightsToInsert) {
         try {
-          await supabase.from('sage_proactive_insights').insert(insight as Database['public']['Tables']['sage_proactive_insights']['Insert']);
+          await must(supabase.from('sage_proactive_insights').insert(insight as Database['public']['Tables']['sage_proactive_insights']['Insert']), 'sage_proactive_insights insert');
         } catch {
           // Skip
         }
@@ -1638,10 +1639,10 @@ Rules:
   // Mark top insight as delivered if we included it
   if (topInsight) {
     try {
-      await supabase
+      await must(supabase
         .from('sage_proactive_insights')
         .update({ status: 'delivered' })
-        .eq('id', topInsight.id);
+        .eq('id', topInsight.id), 'sage_proactive_insights write');
     } catch {
       // Non-fatal
     }
@@ -1889,7 +1890,7 @@ export async function learnFromFeedback(
 
   try {
     // Update the conversation row
-    await supabase
+    await must(supabase
       .from('sage_messages')
       .update({
         thumbs_up: thumbsUp ? true : null,
@@ -1897,17 +1898,17 @@ export async function learnFromFeedback(
         feedback_note: note ?? null,
         was_helpful: thumbsUp,
       })
-      .eq('id', messageId);
+      .eq('id', messageId), 'sage_messages write');
 
     if (thumbsUp) {
       // ── Positive feedback ────────────────────────────────────────────────
-      if (tenantId) await supabase.from('sage_performance_log').insert({
+      if (tenantId) await must(supabase.from('sage_performance_log').insert({
         tenant_id: tenantId,
         user_id: userId,
         action: 'feedback_thumbs_up',
         metadata: { metric_value: 1 },
         created_at: new Date().toISOString(),
-      });
+      }), 'sage_performance_log insert');
 
       // Increment satisfaction (cap at 10)
       const { data: profile } = await supabase
@@ -1920,22 +1921,22 @@ export async function learnFromFeedback(
         (profile as { satisfaction_with_saguaro: number } | null)?.satisfaction_with_saguaro ?? 7;
       const newSatisfaction = Math.min(10, currentSatisfaction + 0.1);
 
-      await supabase
+      await must(supabase
         .from('sage_user_profiles')
         .update({
           satisfaction_with_saguaro: Math.round(newSatisfaction * 10) / 10,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_id', userId);
+        .eq('user_id', userId), 'sage_user_profiles write');
     } else {
       // ── Negative feedback ────────────────────────────────────────────────
-      if (tenantId) await supabase.from('sage_performance_log').insert({
+      if (tenantId) await must(supabase.from('sage_performance_log').insert({
         tenant_id: tenantId,
         user_id: userId,
         action: 'feedback_thumbs_down',
         metadata: { metric_value: 0 },
         created_at: new Date().toISOString(),
-      });
+      }), 'sage_performance_log insert');
 
       // Detect failure type from note
       let failureType: 'too_long' | 'wrong_tone' | 'wrong_info' | 'not_helpful' | null = null;
@@ -2004,10 +2005,10 @@ export async function learnFromFeedback(
         }
       }
 
-      await supabase
+      await must(supabase
         .from('sage_user_profiles')
         .update(profileUpdates)
-        .eq('user_id', userId);
+        .eq('user_id', userId), 'sage_user_profiles write');
     }
   } catch {
     // Non-fatal — swallow errors so feedback never blocks the UI

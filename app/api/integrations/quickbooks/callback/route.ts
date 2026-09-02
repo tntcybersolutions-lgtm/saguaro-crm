@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 const QB_CLIENT_ID = process.env.QUICKBOOKS_CLIENT_ID || '';
 const QB_CLIENT_SECRET = process.env.QUICKBOOKS_CLIENT_SECRET || '';
@@ -85,7 +86,7 @@ export async function GET(req: NextRequest) {
       .maybeSingle();
 
     if (existing) {
-      await db
+      await must(db
         .from('integrations')
         .update({
           access_token: accessToken,
@@ -103,9 +104,9 @@ export async function GET(req: NextRequest) {
           },
           updated_at: new Date().toISOString(),
         })
-        .eq('id', existing.id);
+        .eq('id', existing.id), 'integrations write');
     } else {
-      await db.from('integrations').insert({
+      await must(db.from('integrations').insert({
         tenant_id: tenantId,
         provider: 'quickbooks',
         access_token: accessToken,
@@ -121,7 +122,7 @@ export async function GET(req: NextRequest) {
           sync_direction: 'bidirectional',
           sync_frequency: 'manual',
         },
-      });
+      }), 'integrations insert');
     }
 
     return NextResponse.redirect(

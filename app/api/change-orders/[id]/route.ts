@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 const ALLOWED_CO_COLUMNS = [
   'project_id', 'title', 'description', 'amount', 'status', 'reason', 'submitted_by', 'co_number',
@@ -84,7 +85,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const { data: owned } = await db.from('change_orders').select('id').eq('id', id).eq('tenant_id', g.user.tenantId).single();
     if (!owned) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     // Delete line items first (tenant-scoped)
-    await db.from('change_order_line_items').delete().eq('change_order_id', id).eq('tenant_id', g.user.tenantId);
+    await must(db.from('change_order_line_items').delete().eq('change_order_id', id).eq('tenant_id', g.user.tenantId), 'change_order_line_items delete');
     const { error } = await db.from('change_orders').delete().eq('id', id).eq('tenant_id', g.user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });

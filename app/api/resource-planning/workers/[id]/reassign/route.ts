@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,23 +28,23 @@ async function handle(req: NextRequest, workerId: string) {
     const db = createServerClient();
 
     if (projectId) {
-      await db.from('geofence_events').insert({
+      await must(db.from('geofence_events').insert({
         tenant_id: user.tenantId,
         user_id: workerId,
         project_id: projectId,
         event_type: 'reassign',
         auto_clocked: false,
         created_at: timestamp,
-      });
+      }), 'geofence_events insert');
     }
 
     // Keep current location row pointed at the right project if one exists.
     if (projectId) {
-      await db
+      await must(db
         .from('crew_locations')
         .update({ project_id: projectId, updated_at: timestamp })
         .eq('tenant_id', user.tenantId)
-        .eq('user_id', workerId);
+        .eq('user_id', workerId), 'crew_locations write');
     }
 
     return NextResponse.json({ success: true, area, task, project_id: projectId });

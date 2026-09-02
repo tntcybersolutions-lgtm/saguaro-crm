@@ -8,6 +8,8 @@
  * Receipts are garnish on a transmission — never a failure mode for it.
  */
 
+import { tryWrite } from '@/lib/db-write';
+
 /**
  * Stamp present_at_send on a just-inserted message: who was live on the
  * channel (radio_members.last_seen_at within 90s) when the transmission
@@ -28,7 +30,7 @@ export async function stampPresentAtSend(db: any, tenantId: string, channelId: s
       name: m.call_sign || m.display_name || null,
     }));
     if (present.length) {
-      await db.from('radio_messages').update({ present_at_send: present } as never).eq('id', messageId);
+      await tryWrite(db.from('radio_messages').update({ present_at_send: present } as never).eq('id', messageId), 'radio_messages update');
     }
   } catch { /* pre-063 schema — heard-by UI degrades quietly */ }
 }

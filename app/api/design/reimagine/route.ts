@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { tryWrite } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -245,7 +246,7 @@ export async function POST(req: NextRequest) {
               }
 
               if (designSessionId) {
-                await supabase.from('design_sessions').update(updatePayload).eq('id', designSessionId);
+                await tryWrite(supabase.from('design_sessions').update(updatePayload).eq('id', designSessionId), 'design_sessions update');
               }
 
               send('result', {
@@ -295,7 +296,7 @@ export async function POST(req: NextRequest) {
 
         // Update session
         if (designSessionId) {
-          await supabase.from('design_sessions').update({
+          await tryWrite(supabase.from('design_sessions').update({
             status: 'complete',
             ai_description: parsed.description,
             estimated_cost_low: parsed.cost_low,
@@ -304,7 +305,7 @@ export async function POST(req: NextRequest) {
             features_detected: parsed.features_added || parsed.changes || [],
             generation_provider: 'claude_vision',
             generation_model: 'claude-sonnet-4-6',
-          }).eq('id', designSessionId);
+          }).eq('id', designSessionId), 'design_sessions update');
         }
 
         send('result', {

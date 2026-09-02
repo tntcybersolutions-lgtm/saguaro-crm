@@ -50,7 +50,15 @@ export default function FleetPage() {
   const loadIntegrations = useCallback(async () => { const { data } = await sb.from('fleet_integrations').select('*').order('created_at', { ascending: false }); setIntegrations(data ?? []); }, [sb]);
   const openIntegrate = () => { setShowIntegrate(true); loadIntegrations(); };
   const genToken = async (provider: string) => { setGenBusy(true); try { const { error } = await sb.rpc('fleet_generate_ingest_token', { p_provider: provider }); if (error) throw error; await loadIntegrations(); } catch (e: any) { console.error(e); showToast(humanError(e, 'Could not generate a token. Please try again.'), 'error'); } setGenBusy(false); };
-  const toggleIntegration = async (id: string, active: boolean) => { await sb.from('fleet_integrations').update({ active }).eq('id', id); loadIntegrations(); };
+  /* Every write below reads its { error }. supabase-js resolves rather than
+     throwing, so the try/catch these sat in never fired: the dialog closed,
+     the list reloaded, and the asset, the service record or the document was
+     simply not there. Same failure the payroll screen had. */
+  const toggleIntegration = async (id: string, active: boolean) => {
+    const { error } = await sb.from('fleet_integrations').update({ active }).eq('id', id);
+    if (error) { console.error(error); showToast(humanError(error, 'Could not change that integration.'), 'error'); return; }
+    loadIntegrations();
+  };
   const copyText = async (text: string, key: string) => { try { await navigator.clipboard.writeText(text); setCopied(key); setTimeout(() => setCopied((c) => (c === key ? null : c)), 1600); } catch { /* */ } };
 
   const load = useCallback(async () => {
@@ -81,10 +89,20 @@ export default function FleetPage() {
   const trip = tripStats(pings.map((p) => ({ lat: p.lat, lng: p.lng, speed_mph: p.speed_mph, at: p.at })));
 
   const decodeVin = async () => { if (!f.vin || f.vin.length < 11) return; setVinBusy(true); try { const r = await fetch(`/api/fleet/vin?vin=${encodeURIComponent(f.vin)}`); const d = await r.json(); if (!d.error) setF((s: any) => ({ ...s, year: d.year ?? s.year, make: d.make ?? s.make, model: d.model ?? s.model, category: s.category || d.bodyClass, notes: [s.notes, d.engine ? `Engine: ${d.engine}` : null].filter(Boolean).join(' ') })); } catch { /* */ } setVinBusy(false); };
-  const addAsset = async () => { if (!f.name?.trim() && !(f.make || f.model)) { if (f.make || f.model) f.name = `${f.year ?? ''} ${f.make ?? ''} ${f.model ?? ''}`.trim(); else return; } const { data } = await sb.from('fleet_assets').insert({ type: f.type, name: f.name || `${f.year ?? ''} ${f.make ?? ''} ${f.model ?? ''}`.trim(), category: f.category || null, make: f.make || null, model: f.model || null, year: parseInt(f.year) || null, vin: f.vin || null, serial_number: f.serial_number || null, license_plate: f.license_plate || null, odometer: parseFloat(f.odometer) || null, status: 'active', notes: f.notes || null }).select('id').maybeSingle(); setAdding(false); setF({ type: 'vehicle' }); await load(); if (data?.id) setSelId(data.id); };
-  const patch = async (payload: any) => { if (!selId) return; await sb.from('fleet_assets').update(payload).eq('id', selId); load(); };
+  const addAsset = async () => { if (!f.name?.trim() && !(f.make || f.model)) { if (f.make || f.model) f.name = `${f.year ?? ''} ${f.make ?? ''} ${f.model ?? ''}`.trim(); else return; } const { data, error } = await sb.from('fleet_assets').insert({ type: f.type, name: f.name || `${f.year ?? ''} ${f.make ?? ''} ${f.model ?? ''}`.trim(), category: f.category || null, make: f.make || null, model: f.model || null, year: parseInt(f.year) || null, vin: f.vin || null, serial_number: f.serial_number || null, license_plate: f.license_plate || null, odometer: parseFloat(f.odometer) || null, status: 'active', notes: f.notes || null }).select('id').maybeSingle(); if (error) { console.error(error); showToast(humanError(error, 'Could not add that asset.'), 'error'); return; } setAdding(false); setF({ type: 'vehicle' }); await load(); if (data?.id) setSelId(data.id); };
+  const patch = async (payload: any) => {
+    if (!selId) return;
+    const { error } = await sb.from('fleet_assets').update(payload).eq('id', selId);
+    if (error) { console.error(error); showToast(humanError(error, 'Could not save that change.'), 'error'); return; }
+    load();
+  };
   const saveEdit = async () => { await patch({ name: f.name, make: f.make || null, model: f.model || null, year: parseInt(f.year) || null, license_plate: f.license_plate || null, serial_number: f.serial_number || null, vin: f.vin || null, odometer: parseFloat(f.odometer) || null, status: f.status, category: f.category || null, warranty_expires: f.warranty_expires || null, registration_expires: f.registration_expires || null, insurance_expires: f.insurance_expires || null, contract_expires: f.contract_expires || null, notes: f.notes || null }); setEditing(false); };
-  const addMaint = async () => { if (!selId) return; await sb.from('fleet_maintenance').insert({ asset_id: selId, kind: m.kind, description: m.description || null, vendor: m.vendor || null, performed_at: m.performed_at ? new Date(m.performed_at).toISOString() : null, odometer_at: parseFloat(m.odometer_at) || null, cost_cents: Math.round((parseFloat(m.cost) || 0) * 100), next_due_odometer: parseFloat(m.next_due_odometer) || null, next_due_date: m.next_due_date || null }); setAddingMaint(false); setM({ kind: 'service', performed_at: new Date().toISOString().slice(0, 10) }); load(); };
+  const addMaint = async () => {
+    if (!selId) return;
+    const { error } = await sb.from('fleet_maintenance').insert({ asset_id: selId, kind: m.kind, description: m.description || null, vendor: m.vendor || null, performed_at: m.performed_at ? new Date(m.performed_at).toISOString() : null, odometer_at: parseFloat(m.odometer_at) || null, cost_cents: Math.round((parseFloat(m.cost) || 0) * 100), next_due_odometer: parseFloat(m.next_due_odometer) || null, next_due_date: m.next_due_date || null });
+    if (error) { console.error(error); showToast(humanError(error, 'Could not log that service record.'), 'error'); return; }
+    setAddingMaint(false); setM({ kind: 'service', performed_at: new Date().toISOString().slice(0, 10) }); load();
+  };
   const [docUploading, setDocUploading] = useState(false);
   const uploadDocFile = async (file: File) => {
     if (!selId || !file) return;
@@ -98,8 +116,17 @@ export default function FleetPage() {
     } catch (e: any) { console.error(e); showToast(humanError(e, 'Upload failed. Please try again.'), 'error'); }
     setDocUploading(false);
   };
-  const addDocument = async () => { if (!selId) return; await sb.from('fleet_documents').insert({ asset_id: selId, category: doc.category, label: doc.label || null, file_url: doc.file_url || null, file_name: doc.file_name || null, expires_at: doc.expires_at || null }); setAddingDoc(false); setDoc({ category: 'warranty' }); load(); };
-  const delAsset = async (id: string) => { await sb.from('fleet_assets').delete().eq('id', id); if (selId === id) setSelId(null); load(); };
+  const addDocument = async () => {
+    if (!selId) return;
+    const { error } = await sb.from('fleet_documents').insert({ asset_id: selId, category: doc.category, label: doc.label || null, file_url: doc.file_url || null, file_name: doc.file_name || null, expires_at: doc.expires_at || null });
+    if (error) { console.error(error); showToast(humanError(error, 'Could not attach that document.'), 'error'); return; }
+    setAddingDoc(false); setDoc({ category: 'warranty' }); load();
+  };
+  const delAsset = async (id: string) => {
+    const { error } = await sb.from('fleet_assets').delete().eq('id', id);
+    if (error) { console.error(error); showToast(humanError(error, 'Could not delete that asset.'), 'error'); return; }
+    if (selId === id) setSelId(null); load();
+  };
 
   const exportReport = () => {
     const w = window.open('', '_blank'); if (!w) return;

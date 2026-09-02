@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 /**
  * Saguaro Radio — field client telemetry.
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
       `[radio-client] ${row.stage} ${row.platform}/${row.os_version} rt=${row.runtime} upd=${row.update_id.slice(0, 8)} emb=${row.embedded} :: ${row.message}`,
     );
     const db = createServerClient() as any;
-    await db.from('radio_client_logs').insert(row as never);
+    await must(db.from('radio_client_logs').insert(row as never), 'radio_client_logs insert');
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch {
     return NextResponse.json({ ok: true }, { status: 200 });

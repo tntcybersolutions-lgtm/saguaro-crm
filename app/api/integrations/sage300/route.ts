@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { encryptSecret, hasEncryptionKey } from '@/lib/crypto-secrets';
+import { must } from '@/lib/db-write';
 
 /* ------------------------------------------------------------------ */
 /*  POST  /api/integrations/sage300                                   */
@@ -20,11 +21,11 @@ export async function POST(req: NextRequest) {
     // Handle disconnect action
     if (action === 'disconnect') {
       const db = createServerClient();
-      await db
+      await must(db
         .from('integrations')
         .update({ status: 'disconnected', updated_at: new Date().toISOString() })
         .eq('tenant_id', user.tenantId)
-        .eq('provider', 'sage300');
+        .eq('provider', 'sage300'), 'integrations write');
       return NextResponse.json({ success: true, message: 'Sage 300 disconnected' });
     }
 

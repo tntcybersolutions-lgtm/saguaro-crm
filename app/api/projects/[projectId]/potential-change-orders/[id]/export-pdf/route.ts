@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -225,12 +226,12 @@ async function handle(req: NextRequest, projectId: string, id: string, wantsFile
     const url = signedUrl || dataUrl;
 
     try {
-      await createServerClient()
+      await must(createServerClient()
         .from('change_orders')
         .update({ pdf_url: signedUrl || null, pdf_generated_at: new Date().toISOString() })
         .eq('id', id)
         .eq('tenant_id', user.tenantId)
-        .eq('project_id', projectId);
+        .eq('project_id', projectId), 'change_orders write');
     } catch { /* non-fatal */ }
 
     return NextResponse.json({ success: true, url, download_url: url, data_url: dataUrl });

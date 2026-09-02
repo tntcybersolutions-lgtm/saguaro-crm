@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 function getSupabase() {
   return createClient(
@@ -134,8 +135,8 @@ export async function POST(req: NextRequest) {
       realm_id: realmId,
       status: 'active',
     };
-    if (existing) await db.from('integrations').update(row).eq('id', existing.id);
-    else await db.from('integrations').insert(row);
+    if (existing) await must(db.from('integrations').update(row).eq('id', existing.id), 'integrations update');
+    else await must(db.from('integrations').insert(row), 'integrations insert');
 
     return NextResponse.json({ ok: true, expiresAt });
   }
@@ -191,11 +192,11 @@ export async function POST(req: NextRequest) {
 
       if (res.ok) {
         const qbData = await res.json() as { Invoice?: { Id: string } };
-        await getSupabase()
+        await must(getSupabase()
           .from('pay_applications')
           .update({ qbo_invoice_id: qbData.Invoice?.Id })
           .eq('id', pa.id)
-          .eq('tenant_id', user.tenantId);
+          .eq('tenant_id', user.tenantId), 'pay_applications write');
         synced++;
       } else {
         const errText = await res.text();
@@ -207,8 +208,8 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === 'disconnect') {
-    await getSupabase().from('integrations').delete()
-      .eq('provider', 'quickbooks').eq('tenant_id', user.tenantId);
+    await must(getSupabase().from('integrations').delete()
+      .eq('provider', 'quickbooks').eq('tenant_id', user.tenantId), 'integrations delete');
     return NextResponse.json({ ok: true });
   }
 

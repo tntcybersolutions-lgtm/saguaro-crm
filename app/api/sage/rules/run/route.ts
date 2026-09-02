@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
 import { loadAutomationRules, logSageActivity } from '@/lib/sage-brain';
+import { must } from '@/lib/db-write';
 
 /**
  * POST /api/sage/rules/run — R18 execution: "Sage auto-acts under a rule, logged."
@@ -309,14 +310,14 @@ export async function POST(req: NextRequest) {
 
       /* store the run output on the rule (tolerant of missing migration) */
       try {
-        await (db as any)
+        await must((db as any)
           .from('sage_automation_rules')
           .update({
             config: { ...(rule.config ?? {}), lastRun: { at: ranAt, matches: hits.length, drafts, note } },
             updated_at: ranAt,
           })
           .eq('id', rule.id)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id), 'sage_automation_rules write');
       } catch { /* tolerant until migration applied */ }
 
       /* the activity-trail line IS the deliverable — actor: sage */

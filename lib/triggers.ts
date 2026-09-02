@@ -16,6 +16,7 @@ import {
   sendInsuranceExpiring,
   sendW9Request,
 } from './email';
+import { must } from '@/lib/db-write';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app';
 
@@ -312,7 +313,7 @@ export async function onSubInvitedToBid(bidPackageId: string, inviteId: string):
       `${APP_URL}/portals/sub/${inv.token}`
     );
 
-    await db.from('bid_package_invites').update({ invited_at: new Date().toISOString() }).eq('id', inviteId);
+    await must(db.from('bid_package_invites').update({ invited_at: new Date().toISOString() }).eq('id', inviteId), 'bid_package_invites update');
 
     await dispatchWebhookEvent(project.tenant_id, 'bid.invited', {
       invite_id: inviteId,
@@ -413,7 +414,7 @@ export async function onBidAwarded(bidSubmissionId: string): Promise<void> {
       }
     }
 
-    await db.from('bid_submissions').update({ status: 'not_awarded' }).eq('bid_package_id', pkg.id).neq('id', bidSubmissionId);
+    await must(db.from('bid_submissions').update({ status: 'not_awarded' }).eq('bid_package_id', pkg.id).neq('id', bidSubmissionId), 'bid_submissions update');
 
     // ── THE AWARD CHAIN — an award is a MONEY event, not just an email. ──
     // (a) Draft subcontract at the awarded amount, linked to the package.
@@ -456,10 +457,10 @@ export async function onBidAwarded(bidSubmissionId: string): Promise<void> {
         .limit(1)
         .maybeSingle();
       if (bLine) {
-        await db
+        await must(db
           .from('budget_lines')
           .update({ committed: (Number((bLine as any).committed) || 0) + awardAmount })
-          .eq('id', (bLine as any).id);
+          .eq('id', (bLine as any).id), 'budget_lines write');
       }
     }
     // (c) Kick off the sub's W-9 request via the existing onboarding cascade.
@@ -655,7 +656,7 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
       // live column, and `"100000" + 5000` CONCATENATES ("1000005000"), silently
       // corrupting the project's contract value on every CO approval.
       const newSum = (Number((currentProject as any).contract_amount) || 0) + (Number(c.cost_impact) || 0);
-      await db.from('projects').update({ contract_amount: newSum }).eq('id', project.id);
+      await must(db.from('projects').update({ contract_amount: newSum }).eq('id', project.id), 'projects update');
     }
 
     // Contracts module: revised_amount is GENERATED from original + approved_changes,
@@ -669,10 +670,10 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
       .limit(1)
       .maybeSingle();
     if (prime) {
-      await db
+      await must(db
         .from('contracts')
         .update({ approved_changes: ((prime as any).approved_changes || 0) + (c.cost_impact || 0) } as never)
-        .eq('id', (prime as any).id);
+        .eq('id', (prime as any).id), 'contracts write');
     }
 
     // Sync budget line committed cost. LIVE change_orders has NO cost_code column
@@ -698,10 +699,10 @@ export async function onChangeOrderApproved(changeOrderId: string): Promise<void
         .maybeSingle();
       if (budgetLine) {
         const bl = budgetLine as any;
-        await db
+        await must(db
           .from('budget_lines')
           .update({ committed: (bl.committed || 0) + (c.cost_impact || 0) })
-          .eq('id', bl.id);
+          .eq('id', bl.id), 'budget_lines write');
       }
     }
 
@@ -752,7 +753,7 @@ export async function onInsuranceExpiring(certId: string, daysLeft: number): Pro
       await sendInsuranceExpiring(gcEmail, sub?.name || 'Subcontractor', project.name, c.policy_type, c.expiry_date, daysLeft);
     }
 
-    await db.from('insurance_certificates').update({ last_checked_at: new Date().toISOString() }).eq('id', certId);
+    await must(db.from('insurance_certificates').update({ last_checked_at: new Date().toISOString() }).eq('id', certId), 'insurance_certificates update');
     await createNotification(
       project.tenant_id, null, 'insurance_expiring',
       `Insurance expiring in ${daysLeft} days — ${sub?.name || 'Subcontractor'}`,

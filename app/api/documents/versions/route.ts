@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 
 import { apiError } from '@/lib/api-error';
+import { must } from '@/lib/db-write';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -168,12 +169,12 @@ export async function POST(req: NextRequest) {
       const nextVersion = (doc.current_version || 0) + 1;
 
       // Supersede prior versions, then insert the new one.
-      await db
+      await must(db
         .from('document_control_versions')
         .update({ status: 'Superseded' })
         .eq('document_id', doc.id)
         .eq('tenant_id', user.tenantId)
-        .neq('status', 'Superseded');
+        .neq('status', 'Superseded'), 'document_control_versions write');
 
       const { data: ver, error: vErr } = await db
         .from('document_control_versions')
@@ -257,13 +258,13 @@ export async function POST(req: NextRequest) {
     if (vErr) throw vErr;
 
     // Owner gets an admin grant so the access list is populated from the start.
-    await db.from('document_control_grants').insert({
+    await must(db.from('document_control_grants').insert({
       tenant_id: user.tenantId,
       document_id: doc.id,
       grantee: user.email,
       role: 'admin',
       created_by: user.id,
-    });
+    }), 'document_control_grants insert');
 
     return NextResponse.json({ documentId: doc.id, version: ver });
   } catch (err: any) {

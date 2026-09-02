@@ -20,6 +20,7 @@
  */
 
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ENGINE CONFIGURATION — honest fallback, never a silent failure
@@ -206,7 +207,7 @@ export async function loadOrComputeStyleProfile(
 
   // Persist (tolerant — table may not exist yet)
   try {
-    await (db as any).from('sage_style_profiles').upsert(
+    await must((db as any).from('sage_style_profiles').upsert(
       {
         user_id: userId,
         tenant_id: tenantId,
@@ -225,7 +226,7 @@ export async function loadOrComputeStyleProfile(
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id' }
-    );
+    ), 'sage_style_profiles upsert');
   } catch { /* tolerant until migration applied */ }
 
   return computed;
@@ -511,7 +512,7 @@ export async function logSageActivity(entry: {
 }): Promise<void> {
   const db = createServerClient();
   try {
-    await (db as any).from('sage_activity_log').insert({
+    await must((db as any).from('sage_activity_log').insert({
       user_id: entry.userId,
       tenant_id: entry.tenantId,
       rule_id: entry.ruleId ?? null,
@@ -520,7 +521,7 @@ export async function logSageActivity(entry: {
       summary: entry.summary,
       detail: entry.detail ?? {},
       created_at: new Date().toISOString(),
-    });
+    }), 'sage_activity_log insert');
   } catch { /* tolerant until migration applied */ }
 }
 

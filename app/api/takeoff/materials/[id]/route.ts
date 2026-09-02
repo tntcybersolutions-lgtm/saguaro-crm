@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { ok, badRequest, notFound, serverError, unauthorized } from '@/lib/api-response';
+import { must } from '@/lib/db-write';
 
 /**
  * /api/takeoff/materials/[id] — inline line-item editing for the AI takeoff page.
@@ -144,11 +145,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         // Descending, so no two rows ever collide on the unique-ish ordering
         // while the shift is in flight.
         for (const r of below ?? []) {
-          await supabase
+          await must(supabase
             .from('takeoff_materials')
             .update({ sort_order: (Number(r.sort_order) || 0) + 1 })
             .eq('id', r.id)
-            .eq('tenant_id', user.tenantId);
+            .eq('tenant_id', user.tenantId), 'takeoff_materials write');
         }
         sortOrder = at + 1;
       } else {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 interface DismissBody {
   insightId: string;
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
     // No dismissed/user_id columns: collapse dismissal into status + dismissed_at,
     // and scope ownership via tenant + metadata user.
     const supabase = createServerClient();
-    await supabase
+    await must(supabase
       .from('sage_proactive_insights')
       .update({
         status: body.dismissed ? 'dismissed' : 'pending',
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', body.insightId)
       .eq('tenant_id', user.tenantId)
-      .eq('metadata->>user_id', user.id);
+      .eq('metadata->>user_id', user.id), 'sage_proactive_insights write');
 
     return NextResponse.json({ success: true });
   } catch {

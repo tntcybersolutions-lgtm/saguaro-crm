@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { createNotification } from '@/lib/notifications';
+import { must } from '@/lib/db-write';
 
 /**
  * Saguaro Radio — PANIC.
@@ -46,11 +47,11 @@ export async function POST(req: NextRequest) {
       if (!already) {
         const { error: updErr } = await db.from('radio_messages').update({ panic_resolved_at: resolvedAt } as never).eq('id', body.panicId);
         if (updErr) throw updErr;
-        await db.from('radio_messages').insert({
+        await must(db.from('radio_messages').insert({
           tenant_id: t, channel_id: (orig as any).channel_id, project_id: (orig as any).project_id,
           sender_user_id: g.user.id, sender_name: g.user.email || 'Team member',
           kind: 'alert', body: `ALL CLEAR — panic alarm resolved by ${g.user.email || 'a team member'}`,
-        } as never);
+        } as never), 'radio_messages insert');
       }
       return NextResponse.json({ ok: true, resolvedAt });
     }

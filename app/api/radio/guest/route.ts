@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { createServerClient } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
+import { must } from '@/lib/db-write';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -143,8 +144,8 @@ export async function DELETE(req: NextRequest) {
     const db = createServerClient() as any;
     const b = await req.json().catch(() => ({}));
     if (!b.linkId) return NextResponse.json({ error: 'linkId required' }, { status: 400 });
-    await db.from('radio_guest_links').update({ revoked_at: new Date().toISOString() } as never)
-      .eq('id', b.linkId).eq('tenant_id', g.user.tenantId);
+    await must(db.from('radio_guest_links').update({ revoked_at: new Date().toISOString() } as never)
+      .eq('id', b.linkId).eq('tenant_id', g.user.tenantId), 'radio_guest_links update');
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

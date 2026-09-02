@@ -24,6 +24,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import webpush, { WebPushError, type PushSubscription } from 'web-push';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { must } from '@/lib/db-write';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -128,7 +129,7 @@ async function tokensForUsers(db: SupabaseClient, userIds: string[]): Promise<To
 
 async function pruneToken(db: SupabaseClient, id: string): Promise<void> {
   try {
-    await (db as any).from('push_tokens').delete().eq('id', id);
+    await must((db as any).from('push_tokens').delete().eq('id', id), 'push_tokens delete');
   } catch {
     /* best-effort */
   }

@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must, tryWrite } from '@/lib/db-write';
 
 /**
  * POST /api/design/generate  (SSE streaming)
@@ -36,10 +37,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Mark session as processing
-    await db
+    await must(db
       .from('design_sessions')
       .update({ status: 'processing' })
-      .eq('id', design_session_id);
+      .eq('id', design_session_id), 'design_sessions write');
 
     const startTime = Date.now();
 
@@ -75,10 +76,10 @@ export async function POST(req: NextRequest) {
             : 'image/jpeg';
       }
     } catch {
-      await db.from('design_sessions').update({
+      await tryWrite(db.from('design_sessions').update({
         status: 'error',
         error_message: 'Failed to download original photo',
-      }).eq('id', design_session_id);
+      }).eq('id', design_session_id), 'design_sessions update');
       return new Response('Failed to download photo', { status: 500 });
     }
 
@@ -174,7 +175,7 @@ Return ONLY valid JSON, no markdown wrapping.`;
           const processingTime = Date.now() - startTime;
 
           // Update the design session with results
-          await db.from('design_sessions').update({
+          await must(db.from('design_sessions').update({
             ai_description: parsed.ai_description,
             estimated_sqft: parsed.estimated_sqft,
             estimated_cost_low: parsed.estimated_cost_low,
@@ -183,7 +184,7 @@ Return ONLY valid JSON, no markdown wrapping.`;
             features_detected: parsed.features_detected || [],
             status: 'completed',
             processing_time_ms: processingTime,
-          }).eq('id', design_session_id);
+          }).eq('id', design_session_id), 'design_sessions update');
 
           send('progress', { step: 'complete', message: 'Design analysis complete!' });
           send('result', {
@@ -195,11 +196,11 @@ Return ONLY valid JSON, no markdown wrapping.`;
           // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
     console.error('[design/generate]', err);
     const errorMessage = "AI analysis failed";
-          await db.from('design_sessions').update({
+          await tryWrite(db.from('design_sessions').update({
             status: 'error',
             error_message: errorMessage,
             processing_time_ms: Date.now() - startTime,
-          }).eq('id', design_session_id);
+          }).eq('id', design_session_id), 'design_sessions update');
 
           send('error', { message: errorMessage });
         } finally {

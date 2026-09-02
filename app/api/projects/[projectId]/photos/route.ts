@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signFields } from '@/lib/storage-signing';
+import { must } from '@/lib/db-write';
 
 /** GET — List project photos with optional filters */
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
@@ -209,7 +210,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
             created_at: new Date().toISOString(),
           }));
         if (tagRecords.length > 0) {
-          await supabase.from('photo_tags').insert(tagRecords);
+          await must(supabase.from('photo_tags').insert(tagRecords), 'photo_tags insert');
         }
       }
     }
@@ -226,12 +227,12 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
         .eq('entity_id', entity_id)
         .maybeSingle();
       if (!existingLink) {
-        await supabase.from('photo_entity_links').insert({
+        await must(supabase.from('photo_entity_links').insert({
           photo_id: photoId,
           entity_type,
           entity_id,
           created_at: new Date().toISOString(),
-        });
+        }), 'photo_entity_links insert');
       }
     }
 

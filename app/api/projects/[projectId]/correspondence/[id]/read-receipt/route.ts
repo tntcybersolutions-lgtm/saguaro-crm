@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,27 +45,27 @@ export async function POST(
       .maybeSingle();
 
     if (existing?.id) {
-      await db
+      await must(db
         .from('correspondence_read_receipts')
         .update({ read_at: readAt })
-        .eq('id', existing.id);
+        .eq('id', existing.id), 'correspondence_read_receipts write');
     } else {
-      await db.from('correspondence_read_receipts').insert({
+      await must(db.from('correspondence_read_receipts').insert({
         correspondence_id: id,
         recipient_email: recipientEmail,
         read_at: readAt,
-      });
+      }), 'correspondence_read_receipts insert');
     }
 
     // Best-effort: reflect read state on the parent item (tenant + project scoped).
     // Service-role bypasses RLS and project_id from the URL is attacker-controlled,
     // so pin the write to the caller's tenant.
-    await db
+    await must(db
       .from('correspondence')
       .update({ status: 'Read' })
       .eq('id', id)
       .eq('project_id', projectId)
-      .eq('tenant_id', user.tenantId);
+      .eq('tenant_id', user.tenantId), 'correspondence write');
 
     return NextResponse.json({ success: true });
   } catch {

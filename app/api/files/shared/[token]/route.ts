@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -21,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: { params: { token: stri
   const { data: f } = await admin.from('project_files').select('*').eq('id', share.file_id).single();
   if (!f || f.deleted_at) return NextResponse.json({ error: 'The shared file was removed.' }, { status: 404 });
 
-  await admin.from('file_shares').update({ view_count: (share.view_count || 0) + 1, last_viewed_at: new Date().toISOString() }).eq('id', share.id);
+  await must(admin.from('file_shares').update({ view_count: (share.view_count || 0) + 1, last_viewed_at: new Date().toISOString() }).eq('id', share.id), 'file_shares update');
 
   const signed = await signStoredUrl(f.storage_bucket || 'project-files', f.storage_path || f.file_url, 3600);
   if (!signed) return NextResponse.json({ error: 'Could not open the file.' }, { status: 500 });

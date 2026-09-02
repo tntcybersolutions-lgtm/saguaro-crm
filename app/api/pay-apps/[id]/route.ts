@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { toCents, toDollars, percentOf, subCents } from '@/lib/calc';
+import { must } from '@/lib/db-write';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -111,7 +112,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // bypasses RLS and this path is reachable without a prior ownership check when
     // only lineItems are sent, so an id-only delete would wipe another tenant's SOV rows.
     if (Array.isArray(body.lineItems)) {
-      await db.from('schedule_of_values').delete().eq('pay_app_id', id).eq('tenant_id', user.tenantId);
+      await must(db.from('schedule_of_values').delete().eq('pay_app_id', id).eq('tenant_id', user.tenantId), 'schedule_of_values delete');
       if (body.lineItems.length > 0) {
         const { error: liErr } = await db.from('schedule_of_values').insert(
           body.lineItems.map((item: any, i: number) => ({

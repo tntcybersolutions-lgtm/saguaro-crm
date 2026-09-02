@@ -37,6 +37,7 @@ import { isIP } from 'node:net';
 import { createServerClient } from '@/lib/supabase-server';
 import type { Json } from '@/lib/database.types';
 import type { WebhookEvent } from '@/lib/webhook-events';
+import { must } from '@/lib/db-write';
 
 type Db = ReturnType<typeof createServerClient>;
 
@@ -186,7 +187,7 @@ async function deliverOne(
   // Record the attempt. webhook_deliveries.endpoint_id has no FK, so it holds
   // the id from either source table.
   try {
-    await db.from('webhook_deliveries').insert({
+    await must(db.from('webhook_deliveries').insert({
       id: deliveryId,
       endpoint_id: target.id,
       event_type: event,
@@ -196,7 +197,7 @@ async function deliverOne(
       success: ok,
       attempt: 1,
       delivered_at: timestamp,
-    });
+    }), 'webhook_deliveries insert');
   } catch (err) {
     console.error('[webhook-dispatch] record delivery failed', err);
   }
@@ -204,18 +205,18 @@ async function deliverOne(
   // Update the source row's last-fired marker.
   try {
     if (target.source === 'outbound') {
-      await db
+      await must(db
         .from('outbound_webhooks')
         .update({ last_status: status || null, last_fired_at: timestamp })
-        .eq('id', target.id);
+        .eq('id', target.id), 'outbound_webhooks write');
     } else {
-      await db
+      await must(db
         .from('webhook_endpoints')
         .update({
           last_triggered: timestamp,
           failure_count: ok ? 0 : target.failureCount + 1,
         })
-        .eq('id', target.id);
+        .eq('id', target.id), 'webhook_endpoints write');
     }
   } catch (err) {
     console.error('[webhook-dispatch] last-fired update failed', err);

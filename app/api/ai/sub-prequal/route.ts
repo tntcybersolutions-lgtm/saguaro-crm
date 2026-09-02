@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
+import { tryWrite } from '@/lib/db-write';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -86,11 +87,11 @@ Return only raw JSON.`;
 
     // Optionally store result on sub record
     if (subId) {
-      await db.from('subcontractors').update({
+      await tryWrite(db.from('subcontractors').update({
         prequal_score: parsed.score as number | null,
         prequal_verdict: parsed.verdict as string | null,
         prequal_at: new Date().toISOString(),
-      }).eq('id', subId).eq('tenant_id', tenantId);
+      }).eq('id', subId).eq('tenant_id', tenantId), 'subcontractors update');
     }
 
     return NextResponse.json(parsed);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -53,9 +54,9 @@ export async function POST(req: NextRequest) {
         .limit(1)
         .maybeSingle();
       if (bLine) {
-        await db.from('budget_lines')
+        await must(db.from('budget_lines')
           .update({ committed: ((bLine as { committed: number | null }).committed || 0) + total })
-          .eq('id', (bLine as { id: string }).id);
+          .eq('id', (bLine as { id: string }).id), 'budget_lines write');
       }
     }
 

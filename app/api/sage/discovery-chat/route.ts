@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { SAGE_CONDUCT_MANDATE } from '@/lib/sage-prompts';
 import type { Database } from '@/lib/database.types';
+import { tryWrite } from '@/lib/db-write';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -199,7 +200,7 @@ Be conversational, use contractions, and never sound robotic. Keep responses con
                 { tone: detectedTone, at: new Date().toISOString() },
               ];
 
-              await db.from('sage_conversations').update({
+              await tryWrite(db.from('sage_conversations').update({
                 messages: updatedMessages,
                 messages_count: updatedMessages.length,
                 last_message_at: new Date().toISOString(),
@@ -208,7 +209,7 @@ Be conversational, use contractions, and never sound robotic. Keep responses con
                 current_page: page || conversation!.current_page,
                 customer_id: customer_id || conversation!.customer_id,
                 current_project_id: project_id || conversation!.current_project_id,
-              } as Database['public']['Tables']['sage_conversations']['Update']).eq('id', conversation!.id as string);
+              } as Database['public']['Tables']['sage_conversations']['Update']).eq('id', conversation!.id as string), 'sage_conversations update');
 
               send({
                 done: true,

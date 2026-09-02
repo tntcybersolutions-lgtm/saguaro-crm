@@ -6,6 +6,7 @@ import {
   logSageActivity,
   type SageStyleDimensions,
 } from '@/lib/sage-brain';
+import { must } from '@/lib/db-write';
 
 /**
  * R16 — Transparent communication style profile.
@@ -35,10 +36,10 @@ export async function POST(req: NextRequest) {
     // Force recompute: clear user_edited + computed_at so the loader rebuilds.
     const db = createServerClient();
     try {
-      await (db as any)
+      await must((db as any)
         .from('sage_style_profiles')
         .update({ user_edited: false, computed_at: null, updated_at: new Date().toISOString() })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id), 'sage_style_profiles write');
     } catch { /* tolerant */ }
     const profile = await loadOrComputeStyleProfile(user.id, user.tenantId);
     await logSageActivity({
@@ -99,7 +100,7 @@ export async function PUT(req: NextRequest) {
 
     let persisted = true;
     try {
-      await (db as any).from('sage_style_profiles').upsert(
+      await must((db as any).from('sage_style_profiles').upsert(
         {
           user_id: user.id,
           tenant_id: user.tenantId,
@@ -113,7 +114,7 @@ export async function PUT(req: NextRequest) {
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'user_id' }
-      );
+      ), 'sage_style_profiles upsert');
     } catch {
       persisted = false; // table not migrated yet — report honestly
     }

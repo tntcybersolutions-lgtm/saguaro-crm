@@ -20,6 +20,7 @@
  */
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -123,7 +124,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (pingRows.length) {
-    await admin.from('fleet_locations').insert(pingRows);
+    await must(admin.from('fleet_locations').insert(pingRows), 'fleet_locations insert');
   }
   // Fold newest ping into each asset's last-known + odometer (never regress the odometer).
   for (const [assetId, v] of lastByAsset) {
@@ -131,13 +132,13 @@ export async function POST(req: NextRequest) {
       last_lat: v.lat, last_lng: v.lng, last_speed_mph: v.mph, last_location_at: v.at,
     };
     if (v.odometer != null && (v.current == null || v.odometer >= v.current)) patch.odometer = Math.round(v.odometer);
-    await admin.from('fleet_assets').update(patch).eq('id', assetId).eq('tenant_id', tenantId);
+    await must(admin.from('fleet_assets').update(patch).eq('id', assetId).eq('tenant_id', tenantId), 'fleet_assets update');
   }
   // Heartbeat on the integration.
   await admin.rpc('increment_fleet_ping', { p_id: (integ as any).id, p_n: pingRows.length, p_at: nowISO })
     .then(() => {}, async () => {
       // Fallback if the RPC isn't present: plain update of last_ping_at.
-      await admin.from('fleet_integrations').update({ last_ping_at: nowISO }).eq('id', (integ as any).id);
+      await must(admin.from('fleet_integrations').update({ last_ping_at: nowISO }).eq('id', (integ as any).id), 'fleet_integrations update');
     });
 
   return Response.json({

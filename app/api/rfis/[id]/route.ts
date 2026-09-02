@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 const ALLOWED_RFI_COLUMNS = [
   'project_id', 'subject', 'question', 'answer', 'spec_section', 'due_date', 'status',
@@ -82,7 +83,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     const { data: owned } = await db.from('rfis').select('id').eq('id', id).eq('tenant_id', user.tenantId).single();
     if (!owned) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     // Delete responses first
-    await db.from('rfi_responses').delete().eq('rfi_id', id);
+    await must(db.from('rfi_responses').delete().eq('rfi_id', id), 'rfi_responses delete');
     const { error } = await db.from('rfis').delete().eq('id', id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });

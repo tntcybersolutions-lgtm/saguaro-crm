@@ -5,6 +5,8 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { must } from '@/lib/db-write';
+
 export interface AutopilotAlert {
   tenant_id: string;
   project_id: string | null;
@@ -66,8 +68,8 @@ export async function runAutopilotScan(db: any, tenantId: string, projectId?: st
   if ((recentRFICount || 0) >= 10) { alerts.push({ tenant_id: tenantId, project_id: projectId || null, severity: 'medium', alert_type: 'High RFI Velocity', title: 'High RFI Velocity', body: `${recentRFICount} RFIs in 14 days — possible design issue`, status: 'open' }); results.push(`RFI velocity spike (${recentRFICount})`); }
 
   // Replace this tenant/project's open alerts with the fresh set.
-  await scope(db.from('autopilot_alerts').delete().eq('tenant_id', tenantId).eq('status', 'open'));
-  if (alerts.length) await db.from('autopilot_alerts').insert(alerts);
+  await must(scope(db.from('autopilot_alerts').delete().eq('tenant_id', tenantId).eq('status', 'open')), 'autopilot_alerts delete');
+  if (alerts.length) await must(db.from('autopilot_alerts').insert(alerts), 'autopilot_alerts insert');
 
   return { alertsCreated: alerts.length, summary: alerts.length ? `Autopilot scan complete: ${results.join(', ')}.` : 'Autopilot scan complete. No new issues detected.' };
 }

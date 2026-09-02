@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { sendEmail } from '@/lib/email';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -73,11 +74,11 @@ export async function POST(
     });
 
     // Best-effort distribution timestamp (ignore failure)
-    await supabase
+    await must(supabase
       .from('meetings')
       .update({ distributed_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('project_id', projectId);
+      .eq('project_id', projectId), 'meetings write');
 
     return NextResponse.json({ success: true, message: 'Meeting minutes sent', to });
   } catch {

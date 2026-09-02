@@ -18,6 +18,7 @@
 import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { must } from '@/lib/db-write';
 
 export type ApiScope = 'read' | 'write' | 'admin';
 
@@ -103,7 +104,7 @@ export async function authenticateApiKey(req: NextRequest): Promise<ApiKeyAuthRe
   // Best-effort last-used bump — swallow any failure so it never blocks auth.
   try {
     const db = createServerClient();
-    await db.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', data.id);
+    await must(db.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', data.id), 'api_keys update');
   } catch {
     /* ignore — telemetry only */
   }

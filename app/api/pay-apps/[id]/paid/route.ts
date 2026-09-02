@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 /** Mark a pay app PAID — with the two links the old route dropped:
  *  1. GATE: unsigned conditional waivers that block payment stop the action
@@ -58,16 +59,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         .maybeSingle();
       if (prime) {
         const p = prime as unknown as { id: string; paid_amount: number | null };
-        await db.from('contracts')
+        await must(db.from('contracts')
           .update({ paid_amount: (p.paid_amount || 0) + paDue } as never)
-          .eq('id', p.id);
+          .eq('id', p.id), 'contracts write');
       }
     }
 
     // ── Payment cascade (2): signed conditionals convert to unconditional partials ──
     const signed = (waivers || []).filter((w: { status: string | null }) => w.status === 'signed');
     for (const w of signed as { id: string; sub_id: string | null; amount: number | null }[]) {
-      await db.from('lien_waivers').insert({
+      await must(db.from('lien_waivers').insert({
         tenant_id: user.tenantId,
         project_id: (pa as { project_id: string }).project_id,
         sub_id: w.sub_id,
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         through_date: (pa as { period_to: string | null }).period_to,
         status: 'pending',
         converted_from_id: w.id,
-      } as never);
+      } as never), 'lien_waivers insert');
     }
 
     return NextResponse.json({

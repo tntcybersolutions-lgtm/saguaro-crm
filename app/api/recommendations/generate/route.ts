@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { must } from '@/lib/db-write';
 
 /**
  * POST /api/recommendations/generate
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
     for (const rec of climateRecs) {
       const key = rec.recommendation_key as string;
       if (!existingKeys.has(key)) {
-        await db.from('customer_recommendations').insert({
+        await must(db.from('customer_recommendations').insert({
           tenant_id: user.tenantId,
           customer_id,
           recommendation_key: key,
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest) {
           annual_savings: rec.annual_savings,
           roi_years: rec.roi_years,
           priority: rec.priority,
-        } as Database['public']['Tables']['customer_recommendations']['Insert']);
+        } as Database['public']['Tables']['customer_recommendations']['Insert']), 'customer_recommendations insert');
         existingKeys.add(key);
         climateCount++;
       }
@@ -158,7 +159,7 @@ JSON only, no markdown:`;
         const aiSuggestions = JSON.parse(jsonMatch[0]);
         for (const suggestion of aiSuggestions) {
           if (!existingKeys.has(suggestion.recommendation_key)) {
-            await db.from('customer_recommendations').insert({
+            await must(db.from('customer_recommendations').insert({
               tenant_id: user.tenantId,
               customer_id,
               recommendation_key: suggestion.recommendation_key,
@@ -170,7 +171,7 @@ JSON only, no markdown:`;
               estimated_cost_high: suggestion.estimated_cost_high,
               annual_savings: suggestion.annual_savings,
               priority: suggestion.priority || 5,
-            });
+            }), 'customer_recommendations insert');
             existingKeys.add(suggestion.recommendation_key);
             aiCount++;
           }

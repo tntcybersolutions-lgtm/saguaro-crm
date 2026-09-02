@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { must, tryWrite } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -147,18 +148,18 @@ export async function GET(
         }
 
         // 3. Set status to analyzing
-        await supabase
+        await must(supabase
           .from('drone_jobs')
           .update({ status: 'analyzing' })
           .eq('id', jobId)
-          .eq('tenant_id', user.tenantId);
+          .eq('tenant_id', user.tenantId), 'drone_jobs write');
 
         send('progress', { step: 2, message: `Analyzing ${photos.length} photos...`, pct: 10 });
 
         // 4. Setup Anthropic
         if (!process.env.ANTHROPIC_API_KEY) {
           send('error', { message: 'AI service not configured. Add ANTHROPIC_API_KEY.' });
-          await supabase.from('drone_jobs').update({ status: 'failed' }).eq('id', jobId);
+          await tryWrite(supabase.from('drone_jobs').update({ status: 'failed' }).eq('id', jobId), 'drone_jobs update');
           return done();
         }
 
@@ -258,13 +259,13 @@ export async function GET(
               }
 
               // Update individual photo with analysis
-              await supabase
+              await must(supabase
                 .from('drone_photos')
                 .update({
                   ai_analysis: parsed,
                 })
                 .eq('id', photo.id)
-                .eq('tenant_id', user.tenantId);
+                .eq('tenant_id', user.tenantId), 'drone_photos write');
             } else {
               console.warn(`[drone/analyze] Could not parse AI response for photo ${photo.file_name}`);
             }
@@ -333,7 +334,7 @@ export async function GET(
         console.error('[drone/analyze]', err);
         send('error', { message });
         try {
-          await supabase.from('drone_jobs').update({ status: 'failed' }).eq('id', jobId);
+          await tryWrite(supabase.from('drone_jobs').update({ status: 'failed' }).eq('id', jobId), 'drone_jobs update');
         } catch { /* non-fatal */ }
         done();
       }

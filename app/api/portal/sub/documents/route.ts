@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
+import { must } from '@/lib/db-write';
 
 const BUCKET = 'project-files';
 const MAX_BYTES = 100 * 1024 * 1024; // 100 MB — videos allowed
@@ -103,25 +104,25 @@ export async function POST(req: NextRequest) {
 
     // Compliance categories flow straight into the compliance record + payment gate.
     if (COMPLIANCE_CATEGORIES.has(category) && session.sub_id) {
-      await db.from('portal_sub_compliance_docs').insert({
+      await must(db.from('portal_sub_compliance_docs').insert({
         tenant_id: session.tenant_id,
         sub_id: session.sub_id,
         doc_type: category,
         file_url: publicUrl,
         expiry_date: expiry,
         status: 'pending_review',
-      } as never);
+      } as never), 'portal_sub_compliance_docs insert');
     }
 
     // History — every action timestamped.
-    await db.from('portal_activity').insert({
+    await must(db.from('portal_activity').insert({
       tenant_id: session.tenant_id,
       project_id: session.project_id,
       session_id: session.id,
       action: 'document_uploaded',
       description: `Uploaded ${title} (${category})`,
       metadata: { title, category, file: safeName, size: file.size, by: session.sub_company },
-    } as never);
+    } as never), 'portal_activity insert');
 
     const signedUrl = await signStoredUrl(BUCKET, publicUrl, 3600).catch(() => publicUrl);
     return NextResponse.json({ success: true, document: { ...(doc as object), file_url: signedUrl } });

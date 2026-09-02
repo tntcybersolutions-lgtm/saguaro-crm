@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { must } from '@/lib/db-write';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,14 +38,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const db = createServerClient();
     // project_id is NOT NULL on geofence_events — only audit when known.
     if (projectId) {
-      await db.from('geofence_events').insert({
+      await must(db.from('geofence_events').insert({
         tenant_id: user.tenantId,
         user_id: workerId,
         project_id: projectId,
         event_type: 'weather-note',
         auto_clocked: false,
         created_at: timestamp,
-      });
+      }), 'geofence_events insert');
     }
 
     return NextResponse.json({ success: true, notes: body.notes ?? '' });

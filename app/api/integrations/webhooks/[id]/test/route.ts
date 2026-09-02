@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHmac } from 'node:crypto';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { tryWrite } from '@/lib/db-write';
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/integrations/webhooks/[id]/test                         */
@@ -71,11 +72,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     }
 
     const firedAt = new Date().toISOString();
-    await db
+    await tryWrite(db
       .from('outbound_webhooks')
       .update({ last_status: status, last_fired_at: firedAt })
       .eq('id', id)
-      .eq('tenant_id', user.tenantId);
+      .eq('tenant_id', user.tenantId), 'outbound_webhooks write');
 
     return NextResponse.json({
       success: status >= 200 && status < 300,

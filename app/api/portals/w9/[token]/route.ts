@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { sendW9Request } from '@/lib/email';
 import { generateW9, saveDocument } from '@/lib/pdf-engine';
+import { must } from '@/lib/db-write';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
         signedDate: d.date || d.signedDate || new Date().toISOString().split('T')[0],
       });
       pdfUrl = await saveDocument(r.project_id, 'w9', pdfBytes, d, r.tenant_id);
-      await db.from('w9_requests').update({ pdf_url: pdfUrl }).eq('token', token);
+      await must(db.from('w9_requests').update({ pdf_url: pdfUrl }).eq('token', token), 'w9_requests update');
     } catch (pdfErr) {
       console.error('[w9] pdf generation failed (form data still saved):', pdfErr);
     }

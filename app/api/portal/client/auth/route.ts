@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
+import { must } from '@/lib/db-write';
 
 /** Authenticate a portal session via token */
 async function getPortalSession(req: NextRequest) {
@@ -56,10 +57,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Update last_login timestamp
-    await db
+    await must(db
       .from('portal_client_sessions')
       .update({ last_login_at: new Date().toISOString() })
-      .eq('id', session.id);
+      .eq('id', session.id), 'portal_client_sessions write');
 
     // Fetch project info
     const { data: project } = await db

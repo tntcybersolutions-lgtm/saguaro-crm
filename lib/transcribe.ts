@@ -1,5 +1,6 @@
 import { translateRadioMessage } from '@/lib/translate';
 import { withTimeout } from '@/lib/storage-signing';
+import { must } from '@/lib/db-write';
 
 const BUCKET = 'project-files';
 
@@ -63,10 +64,10 @@ export async function transcribeRadioVoice(db: any, messageId: string, audioPath
     const langName = typeof out?.language === 'string' ? out.language.trim().toLowerCase() : '';
     const detected = LANG_CODES[langName] || (langName.length === 2 ? langName : '');
 
-    await db.from('radio_messages').update({
+    await must(db.from('radio_messages').update({
       transcript,
       ...(detected ? { detected_lang: detected } : {}),
-    } as never).eq('id', messageId);
+    } as never).eq('id', messageId), 'radio_messages update');
 
     // Same brain as text traffic: EN + ES renderings of the transcript.
     await translateRadioMessage(db, messageId, transcript);

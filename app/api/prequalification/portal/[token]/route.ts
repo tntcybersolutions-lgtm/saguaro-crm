@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { must } from '@/lib/db-write';
 
 export const runtime = 'nodejs';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -113,10 +114,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ tok
     // Mark opened (first view only) — status update is the source of truth and
     // works today; opened_at is a best-effort enhancement column (see migration).
     if (!alreadySubmitted && (invite.status === 'sent' || invite.status === 'pending' || !invite.status)) {
-      await db.from('prequalification_invites').update({ status: 'opened' }).eq('id', invite.id);
+      await must(db.from('prequalification_invites').update({ status: 'opened' }).eq('id', invite.id), 'prequalification_invites update');
       // opened_at may not exist yet (migration not applied) — never let it break the load.
       try {
-        await (db as any).from('prequalification_invites').update({ opened_at: new Date().toISOString() }).eq('id', invite.id);
+        await must((db as any).from('prequalification_invites').update({ opened_at: new Date().toISOString() }).eq('id', invite.id), 'prequalification_invites update');
       } catch { /* column not present yet — ignore */ }
     }
 
@@ -216,10 +217,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     if (insErr) throw insErr;
 
     // Mark the invite responded.
-    await db
+    await must(db
       .from('prequalification_invites')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
-      .eq('id', invite.id);
+      .eq('id', invite.id), 'prequalification_invites write');
 
     return NextResponse.json({ success: true });
   } catch {
