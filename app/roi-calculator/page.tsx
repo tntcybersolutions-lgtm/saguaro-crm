@@ -335,7 +335,7 @@ export default function ROICalculatorPage() {
         }
       `}</style>
 
-      <div style={{ background: DARK, minHeight: '100vh', color: TEXT, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
+      <div className="mkt-page" style={{ background: DARK, minHeight: '100vh', color: TEXT, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
 
         {/* NAV */}
         <nav style={{
@@ -385,7 +385,6 @@ export default function ROICalculatorPage() {
             <h1
               className="hero-headline"
               style={{
-                fontSize: 'clamp(26px, 4vw, 30px)',
                 fontWeight: 600,
                 lineHeight: 1.2,
                 margin: '0 0 18px',
@@ -683,7 +682,7 @@ export default function ROICalculatorPage() {
               }}>
                 Methodology
               </div>
-              <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>
+              <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>
                 Built on real GC data
               </h2>
             </div>
@@ -745,7 +744,7 @@ export default function ROICalculatorPage() {
             }}>
               Feature Comparison
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>
               {"What's included in the $499"}
             </h2>
             <p style={{ color: DIM, fontSize: 16, marginTop: 12 }}>
@@ -817,7 +816,7 @@ export default function ROICalculatorPage() {
             }}>
               Get Started Today
             </div>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 600, margin: '0 0 16px', letterSpacing: -0.4, lineHeight: 1.2 }}>
+            <h2 style={{ fontWeight: 600, margin: '0 0 16px', letterSpacing: -0.4, lineHeight: 1.2 }}>
               Ready to stop leaving<br />money on the table?
             </h2>
             <p style={{ color: DIM, fontSize: 16, lineHeight: 1.6, marginBottom: 40 }}>

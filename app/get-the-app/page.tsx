@@ -616,7 +616,7 @@ export default function GetTheAppPage() {
         }
       `}</style>
 
-      <div className="page">
+      <div className="mkt-page page">
         <PremiumFX />
 
         {/* ── NAV ── */}

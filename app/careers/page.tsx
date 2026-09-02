@@ -125,7 +125,7 @@ export default function CareersPage() {
   const [hasOpenRoles] = useState(true);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
 
       {/* Nav */}
       {/* One professional nav across every marketing page (fixed, 58px). */}
@@ -140,7 +140,7 @@ export default function CareersPage() {
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
             Careers at Saguaro
           </div>
-          <h1 style={{ fontSize: 'clamp(30px, 4.6vw, 44px)', fontWeight: 800, lineHeight: 1.12, margin: '0 0 20px', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 0 20px', letterSpacing: '-0.02em' }}>
             Build the software <span style={SHINE}>construction</span> runs on.
           </h1>
           <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', color: C.dim, maxWidth: 600, margin: '0 auto 36px', lineHeight: 1.65 }}>
@@ -162,7 +162,7 @@ export default function CareersPage() {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 18 }}>
               How we work
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>What we care about</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>What we care about</h2>
             <p style={{ fontSize: 15, color: C.dim, maxWidth: 560, margin: '0 auto', lineHeight: 1.6 }}>
               Saguaro replaces five tools and a stack of paperwork for general contractors. The way we build reflects who we build for.
             </p>
@@ -182,7 +182,7 @@ export default function CareersPage() {
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 56 }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
               <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>Benefits</div>
-              <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 22px)', fontWeight: 600, color: C.text, margin: 0 }}>Taken care of, so you can do your best work</h2>
+              <h2 style={{ fontWeight: 600, color: C.text, margin: 0 }}>Taken care of, so you can do your best work</h2>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px 40px' }}>
               {PERKS.map(p => (
@@ -205,7 +205,7 @@ export default function CareersPage() {
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.green }} />
               Open roles
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Come build with us</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Come build with us</h2>
             <p style={{ fontSize: 15, color: C.dim, maxWidth: 480, margin: '0 auto' }}>
               {hasOpenRoles ? 'All roles are fully remote within the US. Apply by email — a real person reads every one.' : "We're not actively hiring right now, but great people are always worth a conversation."}
             </p>
@@ -261,7 +261,7 @@ export default function CareersPage() {
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 56 }}>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
               <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>The process</div>
-              <h2 style={{ fontSize: 'clamp(20px, 2.5vw, 22px)', fontWeight: 600, color: C.text, margin: 0 }}>Hiring, the way it should be</h2>
+              <h2 style={{ fontWeight: 600, color: C.text, margin: 0 }}>Hiring, the way it should be</h2>
               <p style={{ fontSize: 14, color: C.dim, margin: '12px auto 0', maxWidth: 520, lineHeight: 1.6 }}>
                 No endless loops, no trick questions. Four focused steps, usually wrapped in under two weeks.
               </p>
@@ -283,7 +283,7 @@ export default function CareersPage() {
         {/* Final CTA */}
         <section style={{ padding: '112px 24px', borderTop: `1px solid ${C.border}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(24px, 3.4vw, 32px)', fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
               Want to see what you'd be <span style={SHINE}>building</span>?
             </h2>
             <p style={{ fontSize: 16, color: C.dim, margin: '0 0 36px', lineHeight: 1.6 }}>

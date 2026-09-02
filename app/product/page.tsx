@@ -65,7 +65,7 @@ function IncludedTag() {
 function ModCard({ mod }: { mod: Mod }) {
   const a = moduleAccent(mod.key);
   return (
-    <div className="prodCard">
+    <div className="mkt-page prodCard">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
         <span style={{
           width: 34, height: 34, borderRadius: 9, flexShrink: 0,
@@ -86,7 +86,7 @@ function GroupHeader({ eyebrow, title, sub }: { eyebrow: string; title: string; 
   return (
     <div style={{ marginBottom: 28 }}>
       <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#F59E0B', marginBottom: 10 }}>{eyebrow}</div>
-      <h2 style={{ fontSize: 'clamp(20px, 2.4vw, 26px)', fontWeight: 600, letterSpacing: '-0.02em', color: '#FFFFFF', margin: '0 0 8px', lineHeight: 1.2 }}>{title}</h2>
+      <h2 style={{ fontWeight: 600, letterSpacing: '-0.02em', color: '#FFFFFF', margin: '0 0 8px', lineHeight: 1.2 }}>{title}</h2>
       <p style={{ fontSize: 14.5, color: '#CBD5E1', lineHeight: 1.65, margin: 0, maxWidth: 560 }}>{sub}</p>
     </div>
   );
@@ -128,7 +128,7 @@ export default function ProductPage() {
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 100, padding: '6px 14px', marginBottom: 24, fontSize: 10.5, fontWeight: 500, color: '#CBD5E1', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
           The full module lineup
         </div>
-        <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.12, margin: '0 0 16px' }}>
+        <h1 style={{ fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.12, margin: '0 0 16px' }}>
           Every module. One platform.<br />Nothing sold in pieces.
         </h1>
         <p style={{ fontSize: 15, color: '#CBD5E1', lineHeight: 1.7, maxWidth: 620, margin: '0 auto' }}>
@@ -187,7 +187,7 @@ export default function ProductPage() {
       {/* ── RADIO DEMO ── */}
       <section id="radio-demo" className="prodSection" style={{ paddingTop: 0 }}>
         <div style={{ border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.04)', borderRadius: 16, padding: 28 }}>
-          <h2 style={{ fontSize: 'clamp(19px, 2.2vw, 24px)', fontWeight: 600, letterSpacing: '-0.02em', margin: '0 0 8px' }}>Try the radio</h2>
+          <h2 style={{ fontWeight: 600, letterSpacing: '-0.02em', margin: '0 0 8px' }}>Try the radio</h2>
           {demoRadioToken ? (
             <>
               <p style={{ fontSize: 14, color: '#CBD5E1', lineHeight: 1.65, margin: '0 0 18px', maxWidth: 620 }}>
@@ -221,7 +221,7 @@ export default function ProductPage() {
 
       {/* ── CTA ── */}
       <section className="prodSection" style={{ textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.12)', maxWidth: 'none', background: '#141416' }}>
-        <h2 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 600, letterSpacing: '-0.03em', margin: '0 0 24px' }}>All of it, in one login.</h2>
+        <h2 style={{ fontWeight: 600, letterSpacing: '-0.03em', margin: '0 0 24px' }}>All of it, in one login.</h2>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <GoldButton href="/signup">Start free trial</GoldButton>
           <GhostButton href="/get-the-app">Get the iOS app</GhostButton>

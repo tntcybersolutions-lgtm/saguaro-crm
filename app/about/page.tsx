@@ -87,7 +87,7 @@ function CheckIcon({ size = 16, color = C.green }: { size?: number; color?: stri
 }
 
 const Eyebrow = ({ children }: { children: React.ReactNode; color?: string; bg?: string; bd?: string }) => (
-  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, fontSize: 10.5, fontWeight: 500, color: C.dim, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 20 }}>
+  <div className="mkt-page" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 999, fontSize: 10.5, fontWeight: 500, color: C.dim, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 20 }}>
     <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold, flexShrink: 0 }} />
     {children}
   </div>
@@ -108,7 +108,7 @@ export default function AboutPage() {
         {/* Hero */}
         <section style={{ textAlign: 'center', padding: '120px 24px 72px', background: `radial-gradient(ellipse 900px 500px at 50% 0%, rgba(245, 158, 11,0.05) 0%, transparent 70%)` }}>
           <Eyebrow>About Saguaro Control Systems</Eyebrow>
-          <h1 style={{ fontSize: 'clamp(30px, 4.6vw, 44px)', fontWeight: 800, lineHeight: 1.12, margin: '0 auto 20px', letterSpacing: '-0.02em', maxWidth: 820, color: C.text }}>
+          <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 auto 20px', letterSpacing: '-0.02em', maxWidth: 820, color: C.text }}>
             We build the systems that make construction <span style={SHINE}>predictable</span>.
           </h1>
           <div style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 22 }}>
@@ -172,7 +172,7 @@ export default function AboutPage() {
         <section style={{ padding: '0 24px 0', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <Eyebrow>Core Values</Eyebrow>
-            <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', letterSpacing: '-0.02em', color: C.text }}>What we stand for</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: '-0.02em', color: C.text }}>What we stand for</h2>
             <p style={{ fontSize: 15, color: C.dim, maxWidth: 560, margin: '0 auto', lineHeight: 1.6 }}>
               Six principles that govern how we plan, communicate, and deliver on every project.
             </p>
@@ -192,7 +192,7 @@ export default function AboutPage() {
         <section style={{ padding: '88px 24px 0', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <Eyebrow>Our Services</Eyebrow>
-            <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', letterSpacing: '-0.02em', color: C.text }}>How we deliver</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: '-0.02em', color: C.text }}>How we deliver</h2>
             <p style={{ fontSize: 15, color: C.dim, maxWidth: 560, margin: '0 auto', lineHeight: 1.6 }}>
               End-to-end management and controls — from lease execution through grand opening, across every location.
             </p>
@@ -226,7 +226,7 @@ export default function AboutPage() {
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 12 }}>
               <Eyebrow>Our Delivery Philosophy</Eyebrow>
-              <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', letterSpacing: '-0.02em', color: C.text }}>
+              <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: '-0.02em', color: C.text }}>
                 Successful construction is driven by systems, not personalities.
               </h2>
               <p style={{ fontSize: 15, color: C.dim, maxWidth: 620, margin: '0 auto 44px', lineHeight: 1.6 }}>
@@ -249,7 +249,7 @@ export default function AboutPage() {
         <section style={{ padding: '88px 24px 0', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <Eyebrow>The Platform</Eyebrow>
-            <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', letterSpacing: '-0.02em', color: C.text }}>Our discipline, built into software</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: '-0.02em', color: C.text }}>Our discipline, built into software</h2>
             <p style={{ fontSize: 15, color: C.dim, maxWidth: 620, margin: '0 auto', lineHeight: 1.6 }}>
               We deliver our services on our own platform — so the plan, the controls, and the reporting live in one seamless system every stakeholder can see.
             </p>
@@ -282,7 +282,7 @@ export default function AboutPage() {
         {/* Final CTA */}
         <section style={{ marginTop: 96, padding: '112px 24px', background: `radial-gradient(ellipse at center, rgba(245, 158, 11,0.05) 0%, transparent 70%)`, borderTop: `1px solid ${C.border}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 660, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(24px, 3.4vw, 32px)', fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em', color: C.text }}>
+            <h2 style={{ fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em', color: C.text }}>
               Control every project. Deliver <span style={SHINE}>every promise</span>.
             </h2>
             <p style={{ fontSize: 15, color: C.dim, margin: '0 0 36px', lineHeight: 1.7 }}>

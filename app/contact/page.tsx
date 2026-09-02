@@ -174,7 +174,7 @@ export default function ContactPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
 
       <style>{`@media (max-width: 768px){ .contact-mnav-links{ display:none !important } }`}</style>
 
@@ -212,7 +212,7 @@ export default function ContactPage() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
             Real humans · 1-hour sales response
           </div>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 30px)', fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
+          <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
             Talk to the{' '}
             <span style={{ color: C.text }}>
               Saguaro team.
@@ -384,7 +384,7 @@ export default function ContactPage() {
         <section style={{ padding: '0 24px 112px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>Before you write</div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Quick answers</h2>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Quick answers</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
@@ -399,7 +399,7 @@ export default function ContactPage() {
         {/* Final CTA */}
         <section style={{ padding: '112px 24px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
+            <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
               Don&rsquo;t wait on us to{' '}
               <span style={{ color: C.text }}>get started.</span>
             </h2>

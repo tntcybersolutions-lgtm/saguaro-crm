@@ -197,7 +197,7 @@ function CheckIcon({ size = 16, color = C.green }: { size?: number; color?: stri
 
 export default function FeaturesPage() {
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
 
       <style>{`@media (max-width: 768px){ .features-mnav-links{ display:none !important } }`}</style>
 
@@ -214,7 +214,7 @@ export default function FeaturesPage() {
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
             The Complete Platform
           </div>
-          <h1 style={{ fontSize: 'clamp(30px, 4.6vw, 44px)', fontWeight: 800, lineHeight: 1.12, margin: '0 0 20px', letterSpacing: '-0.02em', maxWidth: 820, marginInline: 'auto' }}>
+          <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 0 20px', letterSpacing: '-0.02em', maxWidth: 820, marginInline: 'auto' }}>
             Everything you need to run the job —{' '}
             in <span style={SHINE}>one platform</span>
           </h1>
@@ -244,7 +244,7 @@ export default function FeaturesPage() {
                     <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
                     {f.eyebrow}
                   </div>
-                  <h2 style={{ fontSize: 20, fontWeight: 600, margin: '0 0 14px', lineHeight: 1.25, letterSpacing: '-0.02em' }}>{f.title}</h2>
+                  <h2 style={{ fontWeight: 600, margin: '0 0 14px', lineHeight: 1.25, letterSpacing: '-0.02em' }}>{f.title}</h2>
                   <p style={{ fontSize: 14.5, color: C.dim, lineHeight: 1.7, margin: 0 }}>{f.description}</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -267,7 +267,7 @@ export default function FeaturesPage() {
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
               One Platform Replaces
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 24px)', fontWeight: 600, margin: '0 0 28px', lineHeight: 1.25, letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontWeight: 600, margin: '0 0 28px', lineHeight: 1.25, letterSpacing: '-0.02em' }}>
               Cancel the stack. Run it all in Saguaro.
             </h2>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -287,7 +287,7 @@ export default function FeaturesPage() {
         {/* Final CTA */}
         <section style={{ padding: '100px 24px', background: C.raised, borderTop: `1px solid ${C.border}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(24px, 3.4vw, 32px)', fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
               See every feature on{' '}
               <span style={SHINE}>your own jobs</span>.
             </h2>

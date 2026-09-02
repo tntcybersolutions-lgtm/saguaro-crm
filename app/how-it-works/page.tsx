@@ -132,7 +132,7 @@ export default function HowItWorksPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
 
       {/* Nav */}
       {/* One professional nav across every marketing page (fixed, 58px). */}
@@ -147,7 +147,7 @@ export default function HowItWorksPage() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
             How it works
           </div>
-          <h1 style={{ fontSize: 'clamp(30px, 4.6vw, 44px)', fontWeight: 800, lineHeight: 1.12, margin: '0 0 18px', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 0 18px', letterSpacing: '-0.02em' }}>
             From blueprint to closeout{' '}
             in <span style={SHINE}>one platform</span>.
           </h1>
@@ -170,7 +170,7 @@ export default function HowItWorksPage() {
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               The Workflow
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Six steps, one source of truth</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Six steps, one source of truth</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 540, margin: '0 auto', lineHeight: 1.6 }}>
               Every stage of the project hands off cleanly to the next — no exporting, no rekeying, no lost paperwork.
             </p>
@@ -205,7 +205,7 @@ export default function HowItWorksPage() {
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap', boxShadow: 'none' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
               <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Coming from Procore?</div>
-              <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25 }}>We handle your migration. You do the heavy lifting on the job site.</h2>
+              <h2 style={{ fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25 }}>We handle your migration. You do the heavy lifting on the job site.</h2>
               <p style={{ fontSize: 15, color: C.dim, margin: '0 0 24px', lineHeight: 1.65 }}>
                 Switching platforms shouldn&apos;t mean losing months of history. Our team migrates everything from Procore, Buildertrend, CoConstruct, or a stack of spreadsheets — and you keep working the entire time. You go live the next business day.
               </p>
@@ -232,7 +232,7 @@ export default function HowItWorksPage() {
         <section style={{ padding: '0 24px 112px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>FAQ</div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Common questions</h2>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Common questions</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
@@ -254,7 +254,7 @@ export default function HowItWorksPage() {
         {/* Final CTA */}
         <section style={{ padding: '112px 24px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(24px, 3.4vw, 32px)', fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
               See your <span style={SHINE}>whole job</span> in{' '}
               one platform.
             </h2>

@@ -40,7 +40,7 @@ const DATA = [
 
 export default function SecurityPage() {
   return (
-    <div style={{minHeight:'100vh',background:DARK,color:TEXT,fontFamily:'system-ui,-apple-system,BlinkMacSystemFont,sans-serif'}}>
+    <div className="mkt-page" style={{minHeight:'100vh',background:DARK,color:TEXT,fontFamily:'system-ui,-apple-system,BlinkMacSystemFont,sans-serif'}}>
       <style>{`@media(max-width:640px){.sec-grid{grid-template-columns:1fr !important;}.data-grid{grid-template-columns:1fr !important;}}`}</style>
       {NAV}
 

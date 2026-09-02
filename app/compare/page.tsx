@@ -39,7 +39,7 @@ export default function ComparePage() {
   const competitors = Object.values(COMPETITORS);
 
   return (
-    <div style={{ minHeight: '100vh', background: DARK, color: TEXT, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: DARK, color: TEXT, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
       {/* NAV */}
       {/* One professional nav across every marketing page (fixed, 58px). */}
@@ -59,7 +59,7 @@ export default function ComparePage() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: GOLD, display: 'inline-block' }} />
             Head-to-head comparisons
           </div>
-          <h1 style={{ fontSize: 'clamp(30px, 4.6vw, 44px)', fontWeight: 800, lineHeight: 1.12, margin: '0 0 18px', letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 0 18px', letterSpacing: '-0.02em' }}>
             Saguaro vs. every construction
             <br />
             software tool — <span style={SHINE}>compared</span>
@@ -94,7 +94,7 @@ export default function ComparePage() {
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD, display: 'inline-block' }} />
                   Most popular comparison
                 </div>
-                <h2 style={{ fontSize: 22, fontWeight: 600, color: TEXT, margin: '0 0 8px' }}>
+                <h2 style={{ fontWeight: 600, color: TEXT, margin: '0 0 8px' }}>
                   Saguaro vs. Procore
                 </h2>
                 <p style={{ fontSize: 16, color: DIM, margin: '0 0 24px', lineHeight: 1.5 }}>
@@ -132,7 +132,7 @@ export default function ComparePage() {
 
         {/* COMPETITOR GRID */}
         <div style={{ maxWidth: 1100, margin: '0 auto 80px', padding: '0 32px' }}>
-          <h2 style={{ fontSize: 22, fontWeight: 600, color: TEXT, margin: '0 0 32px', textAlign: 'center', letterSpacing: -0.3 }}>
+          <h2 style={{ fontWeight: 600, color: TEXT, margin: '0 0 32px', textAlign: 'center', letterSpacing: -0.3 }}>
             All competitors
           </h2>
           <div style={{
@@ -195,7 +195,7 @@ export default function ComparePage() {
           textAlign: 'center',
         }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(24px, 3.4vw, 32px)', fontWeight: 800, color: TEXT, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
+            <h2 style={{ fontWeight: 800, color: TEXT, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
               Ready to see why GCs are <span style={SHINE}>switching</span>?
             </h2>
             <p style={{ fontSize: 16, color: DIM, margin: '0 0 36px', lineHeight: 1.6 }}>

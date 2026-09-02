@@ -46,7 +46,7 @@ const EXCLUSIONS = [
 
 export default function SLAPage() {
   return (
-    <div style={{minHeight:'100vh',background:DARK,color:TEXT,fontFamily:'system-ui,sans-serif'}}>
+    <div className="mkt-page" style={{minHeight:'100vh',background:DARK,color:TEXT,fontFamily:'system-ui,sans-serif'}}>
       {NAV}
 
       {/* Hero */}

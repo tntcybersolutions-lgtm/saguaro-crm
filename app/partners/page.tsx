@@ -257,7 +257,7 @@ export default function PartnersPage() {
   const shown = filter === 'All' ? INTEGRATIONS : INTEGRATIONS.filter(i => i.category === filter);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
       <style>{`@media (max-width: 768px){ .partners-mnav-links{ display:none !important } }`}</style>
 
       {/* Nav */}
@@ -295,7 +295,7 @@ export default function PartnersPage() {
             Saguaro Partner Program
           </div>
 
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 30px)', fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
+          <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
             Connect the tools{' '}
             <span style={{ color: C.text }}>
               your crews already run on.
@@ -320,7 +320,7 @@ export default function PartnersPage() {
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               Integrations
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Works with the tools you already use</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Works with the tools you already use</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 560, margin: '0 auto' }}>Push pay apps to your books, collect payments, sign documents, and pull drawings — without leaving the project.</p>
           </div>
 
@@ -377,7 +377,7 @@ export default function PartnersPage() {
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               Partner Program
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Three ways to partner with Saguaro</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Three ways to partner with Saguaro</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 540, margin: '0 auto' }}>Refer business, resell under your own brand, or build on our API. Free to join — every tier.</p>
           </div>
 
@@ -482,7 +482,7 @@ export default function PartnersPage() {
         <section style={{ padding: '0 24px 96px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>FAQ</div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Partner program questions</h2>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Partner program questions</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
@@ -504,7 +504,7 @@ export default function PartnersPage() {
         {/* Final CTA */}
         <section style={{ padding: '112px 24px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
+            <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
               Let&apos;s build{' '}
               <span style={{ color: C.text }}>something together.</span>
             </h2>

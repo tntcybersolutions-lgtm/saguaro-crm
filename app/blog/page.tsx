@@ -92,7 +92,7 @@ function ArrowIcon({ color = C.gold, size = 16 }: { color?: string; size?: numbe
 
 export default function BlogPage() {
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
 
       {/* Nav */}
       <nav style={{
@@ -127,7 +127,7 @@ export default function BlogPage() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
             The Saguaro blog
           </div>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 30px)', fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
+          <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
             Building the future of{' '}
             <span style={{ color: C.text }}>
               construction tech
@@ -152,7 +152,7 @@ export default function BlogPage() {
                 <span style={{ fontSize: 12, color: C.dim }}>{FEATURED.category}</span>
                 <span style={{ fontSize: 11, color: C.dim, background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, padding: '2px 10px', fontWeight: 500 }}>{FEATURED.tag}</span>
               </div>
-              <h2 style={{ fontSize: 'clamp(20px, 3vw, 24px)', fontWeight: 600, lineHeight: 1.25, margin: '0 0 16px', letterSpacing: -0.4, color: C.text, maxWidth: 760 }}>
+              <h2 style={{ fontWeight: 600, lineHeight: 1.25, margin: '0 0 16px', letterSpacing: -0.4, color: C.text, maxWidth: 760 }}>
                 {FEATURED.title}
               </h2>
               <p style={{ fontSize: 15, color: C.dim, lineHeight: 1.7, margin: '0 0 24px', maxWidth: 760 }}>
@@ -221,7 +221,7 @@ export default function BlogPage() {
         {/* CTA */}
         <section style={{ padding: '112px 24px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
+            <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
               Stop reading about it.{' '}
               <span style={{ color: C.text }}>Run a real bid.</span>
             </h2>

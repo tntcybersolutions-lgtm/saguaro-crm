@@ -50,7 +50,7 @@ export default function IntelligencePage() {
   ];
 
   return (
-    <div style={{padding:'40px 24px 80px',maxWidth:1200,margin:'0 auto'}}>
+    <div className="mkt-page" style={{padding:'40px 24px 80px',maxWidth:1200,margin:'0 auto'}}>
       <style>{`@media (max-width: 640px){ .pg-stack-1{ grid-template-columns: 1fr !important } }`}</style>
       <MarketingNav />
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:40,gap:24,flexWrap:'wrap'}}>
@@ -58,7 +58,7 @@ export default function IntelligencePage() {
           <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'5px 12px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',borderRadius:999,fontSize:11,fontWeight:500,letterSpacing:1,textTransform:'uppercase' as const,color:MUTED,marginBottom:14}}>
             <span style={{width:5,height:5,borderRadius:'50%',background:GOLD,display:'inline-block'}}/>AI Learning Engine
           </div>
-          <h1 style={{fontSize:26,fontWeight:600,color:TEXT,margin:'0 0 8px',letterSpacing:-0.3}}>Bid Intelligence</h1>
+          <h1 style={{fontWeight:600,color:TEXT,margin:'0 0 8px',letterSpacing:-0.3}}>Bid Intelligence</h1>
           <div style={{fontSize:14,color:DIM,lineHeight:1.5}}>Saguaro learns from every bid you win or lose. No competitor has this.</div>
         </div>
         <button onClick={()=>setScoring(!scoring)} style={{padding:'10px 18px',background:GOLD,border:'none',borderRadius:8,color:'#0a0a0a',fontSize:13,fontWeight:600,cursor:'pointer'}}>

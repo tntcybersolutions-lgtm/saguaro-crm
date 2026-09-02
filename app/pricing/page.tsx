@@ -85,7 +85,7 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
       <style>{`@media (max-width: 768px){ .pricing-mnav-links{ display:none !important } }`}</style>
 
       {/* Nav */}
@@ -102,7 +102,7 @@ export default function PricingPage() {
             Free migration included on all plans
           </div>
 
-          <h1 className="landing-display" style={{ fontSize: 'clamp(34px, 5.6vw, 68px)', fontWeight: 800, lineHeight: 1.04, margin: '0 0 18px', letterSpacing: '-0.025em', textWrap: 'balance' as const }}>
+          <h1 className="landing-display" style={{ fontWeight: 800, lineHeight: 1.04, margin: '0 0 18px', letterSpacing: '-0.025em', textWrap: 'balance' as const }}>
             One platform.{' '}
             <span style={{ background: 'linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
               Your whole team.
@@ -230,7 +230,7 @@ export default function PricingPage() {
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap', boxShadow: 'none' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
               <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Free migration — every plan</div>
-              <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25 }}>We move you over. Free.</h2>
+              <h2 style={{ fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25 }}>We move you over. Free.</h2>
               <p style={{ fontSize: 15, color: C.dim, margin: '0 0 24px', lineHeight: 1.65 }}>
                 Coming from Procore, Buildertrend, CoConstruct, or a spreadsheet? Our team migrates all your projects, contacts, documents, and history. You do nothing. We handle everything.
               </p>
@@ -259,7 +259,7 @@ export default function PricingPage() {
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               Add-Ons & Upgrades
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Power up your plan</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Power up your plan</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 480, margin: '0 auto' }}>Add only what you need. Cancel any add-on anytime.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
@@ -295,7 +295,7 @@ export default function PricingPage() {
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               One-Time Services
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Get up and running fast</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Get up and running fast</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 480, margin: '0 auto' }}>Optional professional services. Pay once, get set up right.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
@@ -329,7 +329,7 @@ export default function PricingPage() {
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               How We Stack Up
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>The construction software market — honestly</h2>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>The construction software market — honestly</h2>
           </div>
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, overflow: 'hidden', boxShadow: 'none' }}>
            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
@@ -379,7 +379,7 @@ export default function PricingPage() {
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
               Full Comparison
             </div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Everything, side by side</h2>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Everything, side by side</h2>
           </div>
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, overflow: 'hidden', boxShadow: 'none' }}>
            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
@@ -417,7 +417,7 @@ export default function PricingPage() {
         <section style={{ padding: '0 24px 80px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
             <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>FAQ</div>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Frequently asked questions</h2>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Frequently asked questions</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
@@ -442,7 +442,7 @@ export default function PricingPage() {
         {/* Final CTA */}
         <section style={{ padding: '72px 24px 80px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
+            <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
               Ready to stop paying{' '}
               <span style={{ color: C.text }}>per-seat prices?</span>
             </h2>

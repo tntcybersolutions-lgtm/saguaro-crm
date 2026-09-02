@@ -16,11 +16,11 @@ export default function BidsPage() {
   ];
 
   return (
-    <div style={{padding:'24px 28px',maxWidth:1300,margin:'0 auto'}}>
+    <div className="mkt-page" style={{padding:'24px 28px',maxWidth:1300,margin:'0 auto'}}>
       <MarketingNav />
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:24}}>
         <div>
-          <h1 style={{fontSize:26,fontWeight:600,color:TEXT,margin:0,letterSpacing:-0.4}}>Bid Center</h1>
+          <h1 style={{fontWeight:600,color:TEXT,margin:0,letterSpacing:-0.4}}>Bid Center</h1>
           <div style={{fontSize:13,color:DIM,marginTop:4}}>AI-scored opportunities and active bid packages</div>
         </div>
         <div style={{display:'flex',gap:10}}>

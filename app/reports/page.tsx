@@ -80,11 +80,11 @@ export default function ReportsPage() {
   }
 
   return (
-    <div style={{ padding: '24px 28px 96px', maxWidth: 1200, margin: '0 auto' }}>
+    <div className="mkt-page" style={{ padding: '24px 28px 96px', maxWidth: 1200, margin: '0 auto' }}>
       <MarketingNav />
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
       <div style={{ margin: '48px 0 32px' }}>
-        <h1 style={{ fontSize: 26, fontWeight: 600, color: TEXT, margin: 0, letterSpacing: -0.4 }}>Reports</h1>
+        <h1 style={{ fontWeight: 600, color: TEXT, margin: 0, letterSpacing: -0.4 }}>Reports</h1>
         <div style={{ fontSize: 14, color: DIM, marginTop: 8 }}>Generate and download live project and portfolio reports — PDF or CSV</div>
       </div>
 

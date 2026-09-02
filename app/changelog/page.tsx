@@ -146,7 +146,7 @@ function KindBadge({ kind }: { kind: Change['kind'] }) {
 
 export default function ChangelogPage() {
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
 
       {/* Nav */}
       <nav style={{
@@ -181,7 +181,7 @@ export default function ChangelogPage() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
             Product changelog
           </div>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 30px)', fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
+          <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
             What&apos;s new in{' '}
             <span style={{ color: C.text }}>
               Saguaro
@@ -229,7 +229,7 @@ export default function ChangelogPage() {
                     </span>
                   </div>
 
-                  <h2 style={{ fontSize: 'clamp(18px, 3vw, 20px)', fontWeight: 600, margin: '0 0 10px', lineHeight: 1.25, letterSpacing: -0.3 }}>
+                  <h2 style={{ fontWeight: 600, margin: '0 0 10px', lineHeight: 1.25, letterSpacing: -0.3 }}>
                     {rel.title}
                   </h2>
                   <p style={{ fontSize: 15, color: C.dim, lineHeight: 1.65, margin: '0 0 22px' }}>
@@ -262,7 +262,7 @@ export default function ChangelogPage() {
         {/* CTA */}
         <section style={{ padding: '96px 24px 112px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 620, margin: '0 auto' }}>
-            <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 16px', lineHeight: 1.25, letterSpacing: -0.3 }}>
+            <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.25, letterSpacing: -0.3 }}>
               Get every new feature{' '}
               <span style={{ color: C.text }}>the day it ships</span>
             </h2>

@@ -263,7 +263,7 @@ export default function HelpCenterPage() {
   const totalResults = matchedArticles.length + (searching ? matchedFaqs.length : 0);
 
   return (
-    <div style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: C.dark, color: C.text, fontFamily: C.font }}>
 
       {/* Nav */}
       <nav style={{
@@ -300,7 +300,7 @@ export default function HelpCenterPage() {
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
             Help Center
           </div>
-          <h1 style={{ fontSize: 'clamp(26px, 3.4vw, 32px)', fontWeight: 600, lineHeight: 1.15, margin: '0 0 16px', letterSpacing: -0.5 }}>
+          <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 16px', letterSpacing: -0.5 }}>
             How can we{' '}
             <span style={{ color: C.text }}>
               help you build?
@@ -358,7 +358,7 @@ export default function HelpCenterPage() {
           /* ---------- SEARCH RESULTS ---------- */
           <section style={{ padding: '0 24px 88px', maxWidth: 820, margin: '0 auto' }}>
             <div style={{ marginBottom: 24, display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-              <h2 style={{ fontSize: 'clamp(18px, 2.2vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>
+              <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>
                 {totalResults} result{totalResults === 1 ? '' : 's'}
               </h2>
               <span style={{ fontSize: 15, color: C.dim }}>for &ldquo;{query.trim()}&rdquo;</span>
@@ -422,7 +422,7 @@ export default function HelpCenterPage() {
           <>
             <section style={{ padding: '0 24px 88px', maxWidth: 1160, margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <h2 style={{ fontSize: 'clamp(18px, 2.2vw, 22px)', fontWeight: 600, margin: '0 0 8px', letterSpacing: -0.3 }}>Browse by category</h2>
+                <h2 style={{ fontWeight: 600, margin: '0 0 8px', letterSpacing: -0.3 }}>Browse by category</h2>
                 <p style={{ fontSize: 15, color: C.dim, margin: 0 }}>Tap any article to read it — {ARTICLES.length} guides across {CATEGORIES.length} topics.</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px 56px' }}>
@@ -472,7 +472,7 @@ export default function HelpCenterPage() {
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
                   Common Questions
                 </div>
-                <h2 style={{ fontSize: 'clamp(20px, 2.6vw, 26px)', fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Frequently asked questions</h2>
+                <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Frequently asked questions</h2>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {FAQS.map((faq, i) => (
@@ -501,7 +501,7 @@ export default function HelpCenterPage() {
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
                 Still need a hand?
               </div>
-              <h2 style={{ fontSize: 'clamp(20px, 2.6vw, 26px)', fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25, letterSpacing: -0.3 }}>Talk to a real human on our support team</h2>
+              <h2 style={{ fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25, letterSpacing: -0.3 }}>Talk to a real human on our support team</h2>
               <p style={{ fontSize: 15, color: C.dim, margin: '0 0 24px', lineHeight: 1.65 }}>
                 Our support team is built from people who have actually run construction jobs. Reach out and we will help you set up your company, run your first pay app, or migrate from your old platform.
               </p>

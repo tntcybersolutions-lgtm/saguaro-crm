@@ -9,7 +9,7 @@ export default function PortalsHub() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div className="mkt-page" style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ maxWidth: 600, width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <div style={{ color: '#F59E0B', fontWeight: 800, fontSize: 24, letterSpacing: '0.12em', marginBottom: 8 }}>SAGUARO</div>

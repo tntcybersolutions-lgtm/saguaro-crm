@@ -131,7 +131,7 @@ export default function SwitchFromProcorePage() {
         backdropFilter: 'blur(16px)',
         borderBottom: `1px solid ${BORDER}`,
       }}>
-        <div className="nav-container">
+        <div className="mkt-page nav-container">
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <img src="/logo-full.jpg" alt="Saguaro" style={{ height: 48 }} />
           </Link>

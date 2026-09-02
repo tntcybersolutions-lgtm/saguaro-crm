@@ -156,7 +156,7 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
     }
   };
   return (
-    <div style={{ background: C.code, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden', maxWidth: '100%' }}>
+    <div className="mkt-page" style={{ background: C.code, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden', maxWidth: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.02)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <span style={{ width: 11, height: 11, borderRadius: '50%', background: '#FF5F56', display: 'inline-block' }} />
@@ -219,7 +219,7 @@ export default function ApiDocsPage() {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
             Developer preview — REST API v1
           </div>
-          <h1 style={{ fontSize: 'clamp(26px, 4vw, 32px)', fontWeight: 600, lineHeight: 1.15, margin: '0 0 20px', letterSpacing: -0.5, color: C.text }}>
+          <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 20px', letterSpacing: -0.5, color: C.text }}>
             Build on the Saguaro API
           </h1>
           <p style={{ fontSize: 17, color: C.dim, maxWidth: 620, margin: '0 auto 36px', lineHeight: 1.65 }}>
