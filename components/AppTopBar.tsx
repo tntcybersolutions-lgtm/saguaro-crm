@@ -100,7 +100,8 @@ export default function AppTopBar({
       .catch(() => { /* the crumb keeps its fallback; navigation still works */ });
     return () => { cancelled = true; };
   }, [projId, crumbProjects]); // eslint-disable-line react-hooks/exhaustive-deps
-  const crumbs = segments.map((seg, i) => ({
+  const allCrumbs = segments.map((seg, i) => ({
+    seg,
     label:
       LABELS[seg] ||
       (UUID_RE.test(seg)
@@ -111,6 +112,21 @@ export default function AppTopBar({
     href: '/' + segments.slice(0, i + 1).join('/'),
     isLast: i === segments.length - 1,
   }));
+
+  /**
+   * The picker owns the project; the breadcrumb owns the tool.
+   *
+   * With both showing the job, its name appeared three times across one header
+   * — in the back button, in the picker, and in the crumb — and on a long name
+   * that pushed the actual page you were on off the edge. Procore's header
+   * never repeats it: the selector says which job, the trail says which tool.
+   * So the project crumb, and the "Projects" crumb above it, are dropped while
+   * you are inside a project, because the picker is already saying both.
+   */
+  const insideProject = Boolean(projId);
+  const crumbs = insideProject
+    ? allCrumbs.filter((c, i) => !UUID_RE.test(c.seg) && !(c.seg === 'projects' && i > 0))
+    : allCrumbs;
 
   return (
     <header

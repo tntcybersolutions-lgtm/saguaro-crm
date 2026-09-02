@@ -344,22 +344,20 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
         }
       `}</style>
 
-      {/* ── Project Sidebar (Desktop) ────────────────────────────────── */}
-      <aside className="sidebar-desktop" style={{
-        width: collapsed ? 56 : 220,
-        flexShrink: 0,
-        background: '#0a0a0a',
-        borderRight: `1px solid ${BORDER}`,
-        position: 'sticky',
-        top: 56,
-        height: 'calc(100vh - 56px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        transition: 'width .2s',
-        scrollbarWidth: 'thin',
-      }}>
-        {renderSidebarBody(collapsed)}
-      </aside>
+      {/* ── No second desktop rail ───────────────────────────────────────
+          This used to render a project rail beside the company rail, so every
+          project page carried two navigations at once: about twenty company
+          tools that do nothing from inside a job, next to about forty project
+          tools. Two columns of links competing is what made the product read
+          as scattered, and it is the one thing Procore never does.
+
+          The company rail (components/AppSidebar) now switches to this
+          project's tools whenever the URL is inside a project, reading the same
+          list from lib/project-nav. One rail, same position, contents that
+          match where you are.
+
+          The mobile slide-over below is untouched — on a phone there is only
+          ever one rail on screen, so it was never the problem. */}
 
       {/* ── Page Content ─────────────────────────────────────────────── */}
       <div style={{ flex: 1, minWidth: 0, background: '#0a0a0a' }}>

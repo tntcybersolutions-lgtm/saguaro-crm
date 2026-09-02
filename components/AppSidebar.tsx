@@ -59,6 +59,7 @@ import { useWhiteLabel } from './WhiteLabelProvider';
 import { useEntitlements } from '../lib/hooks/useEntitlements';
 import { moduleAccent } from '../lib/module-identity';
 import { Pill } from './ui/premium';
+import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 interface NavItem {
@@ -396,6 +397,43 @@ export default function AppSidebar({
   userInitials: string;
 }) {
   const pathname = usePathname();
+
+  /**
+   * One rail, two contexts — the whole point of this change.
+   *
+   * The app used to render the company rail AND a second project rail side by
+   * side, so every project page showed about twenty tools you cannot use from
+   * inside a job next to about forty you can. Two navigations competing is why
+   * it read as scattered.
+   *
+   * Inside a project the rail becomes that project's tools. Outside it, the
+   * company tools. Same rail, same position, contents that match where you
+   * are — which is the model every GC already knows.
+   */
+  const projectId = (() => {
+    const seg = (pathname ?? '').split('/').filter(Boolean);
+    const i = seg.indexOf('projects');
+    const candidate = i >= 0 ? seg[i + 1] : undefined;
+    const isUuid = !!candidate
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate);
+    return isUuid ? candidate : null;
+  })();
+  const inProject = Boolean(projectId);
+
+  /* Project sections, with hrefs resolved against this project. */
+  const projectSections = React.useMemo(() => {
+    if (!projectId) return [];
+    const base = `/app/projects/${projectId}`;
+    return PROJECT_NAV_SECTIONS.map((sec) => ({
+      title: sec.label,
+      items: sec.items.map((it) => ({
+        label: it.label,
+        href: it.href.startsWith('/app/') ? it.href : base + it.href,
+        icon: it.icon,
+        accentKey: it.accent,
+      })),
+    }));
+  }, [projectId]);
   const { features } = useEntitlements(); // fail-closed: gated items hidden until entitled
   /* showAll, its stored preference and the hidden-item count are gone with the
      filtering they served. The rail shows everything this tenant has, in one
@@ -436,7 +474,7 @@ export default function AppSidebar({
 
       {/* ── Navigation Sections ─────────────────────────────────────── */}
       <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '10px 0' }}>
-        {NAV_SECTIONS.map((section, sIdx) => {
+        {(inProject ? projectSections : NAV_SECTIONS).map((section: any, sIdx: number) => {
           /**
            * Everything the tenant is entitled to, always, in the same order.
            *
@@ -449,7 +487,7 @@ export default function AppSidebar({
            * that is a stable difference between tenants, not a moving target
            * within one.
            */
-          const visibleItems = section.items.filter((item) => !item.gate || features[item.gate] === true);
+          const visibleItems = section.items.filter((item: any) => !item.gate || features[item.gate] === true);
           // Hide an entire section (title + divider) when the tenant sees none of its items.
           if (visibleItems.length === 0) return null;
           return (
@@ -475,7 +513,7 @@ export default function AppSidebar({
             )}
 
             {/* Items */}
-            {visibleItems.map((item) => {
+            {visibleItems.map((item: any) => {
               const active = isActive(item.href);
               const Icon = item.icon;
               const accent = item.accentKey ? moduleAccent(item.accentKey) : null;

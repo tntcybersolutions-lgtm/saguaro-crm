@@ -1,5 +1,6 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { deriveTheme, themeToCssVars } from '@/lib/brand-theme';
 
 const SAGUARO_GOLD = '#F59E0B';
 
@@ -35,18 +36,29 @@ function safeHex(v: unknown): string | null {
   return typeof v === 'string' && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v.trim()) ? v.trim() : null;
 }
 
-// Override the single --brand-primary token (+ the derived strong/hover/alpha
-// vars that globals.css and design-tokens.ts resolve through), so one color
-// reskins the whole app.
-function applyBrandColor(c: string) {
+/**
+ * Paint the tenant's theme onto the document.
+ *
+ * This used to set the accent and nothing else, with the derived shades built
+ * by color-mix — which produces a plausible-looking colour and knows nothing
+ * about whether the text on top of it can be read. Now the whole palette comes
+ * from deriveTheme, which measures every pair against WCAG and adjusts what
+ * fails. A tenant can pick any colour on earth and the words stay legible.
+ *
+ * Surfaces are applied only when the tenant actually chose a ground. Leaving
+ * them alone otherwise keeps the platform's own dark theme exactly as it is
+ * for the majority who only ever set an accent.
+ */
+function applyBrandTheme(primary: string | null, surface: string | null) {
+  const theme = deriveTheme({ primary, surface });
   const root = document.documentElement.style;
-  root.setProperty('--brand-primary', c);
-  root.setProperty('--brand-primary-strong', `color-mix(in srgb, ${c} 78%, white)`);
-  root.setProperty('--brand-primary-hover', `color-mix(in srgb, ${c} 84%, black)`);
-  root.setProperty('--brand-primary-12', `color-mix(in srgb, ${c} 12%, transparent)`);
-  root.setProperty('--brand-primary-18', `color-mix(in srgb, ${c} 18%, transparent)`);
-  root.setProperty('--brand-primary-25', `color-mix(in srgb, ${c} 25%, transparent)`);
-  root.setProperty('--brand-primary-35', `color-mix(in srgb, ${c} 35%, transparent)`);
+  const vars = themeToCssVars(theme);
+  for (const [k, v] of Object.entries(vars)) {
+    /* Without a chosen ground, only the accent family is overridden. */
+    if (!surface && k.startsWith('--sg-')) continue;
+    root.setProperty(k, v);
+  }
+  return theme;
 }
 
 export default function WhiteLabelProvider({ children }: { children: React.ReactNode }) {
@@ -63,6 +75,7 @@ export default function WhiteLabelProvider({ children }: { children: React.React
 
         const enabled = !!data.white_label_enabled;
         const hex = safeHex(data.primary_color);
+        const surfaceHex = safeHex(data.surface_color);
 
         setBranding({
           logoUrl: typeof data.logo_url === 'string' ? data.logo_url : '',
@@ -75,7 +88,7 @@ export default function WhiteLabelProvider({ children }: { children: React.React
 
         // App-chrome reskin is gated to the white-label tier. Without it the app
         // stays fully Saguaro (the :root defaults are untouched).
-        if (enabled && hex) applyBrandColor(hex);
+        if (enabled) applyBrandTheme(hex, surfaceHex);
       } catch {
         // Silently keep Saguaro defaults.
       }
