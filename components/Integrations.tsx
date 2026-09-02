@@ -1,6 +1,7 @@
 'use client';
 import { SiQuickbooks, SiStripe, SiXero, SiSage, SiAutodesk } from 'react-icons/si';
 import type { IconType } from 'react-icons';
+import { ScribbleNote } from '@/components/Scribble';
 
 // Real vendor brand marks, rendered directly in each brand's color (react-icons /
 // Simple Icons glyphs). No image files to 404 on — the strip always renders. We only
@@ -37,6 +38,13 @@ export function IntegrationStrip({
 }) {
   return (
     <div style={{ padding: '36px 0', borderTop: '1px solid rgba(255,255,255,0.12)', borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
+      {/* The claim that lands with a GC is not that we integrate — everyone
+          says that — it is that connecting it does not come with a quote from
+          an implementation partner. That is the bill they have actually been
+          handed before, so it is the one worth naming. */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+        <ScribbleNote size={15} rotate={-4} color="#FBBF24">no implementation fee</ScribbleNote>
+      </div>
       <div style={{ textAlign: 'center', color: '#CBD5E1', fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 28, fontWeight: 600 }}>
         {heading}
       </div>

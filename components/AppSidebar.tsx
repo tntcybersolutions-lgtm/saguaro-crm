@@ -60,6 +60,7 @@ import { useEntitlements } from '../lib/hooks/useEntitlements';
 import { moduleAccent } from '../lib/module-identity';
 import { Pill } from './ui/premium';
 import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
+import BrandMark from '@/components/BrandMark';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 interface NavItem {
@@ -150,11 +151,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
           aria-label="Saguaro — Dashboard"
           style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', overflow: 'hidden' }}
         >
-          {collapsed ? (
-            <img src="/logo-badge.png" alt="Saguaro Control Systems" style={{ height: 40, width: 40, objectFit: 'contain', display: 'block' }} />
-          ) : (
-            <img src="/logo-horizontal.png" alt="Saguaro Control Systems" style={{ height: 40, width: 'auto', objectFit: 'contain', display: 'block' }} />
-          )}
+          <BrandMark size="sm" markOnly={collapsed} href={null} />
         </Link>
       </div>
     );

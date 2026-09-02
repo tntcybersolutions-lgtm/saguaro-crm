@@ -762,7 +762,23 @@ export default function DashboardPage() {
                     {openRFIs.slice(0, 8).map(rfi => {
                       const overdue = rfi.due_date && new Date(rfi.due_date) < new Date();
                       return (
-                        <tr key={rfi.id} style={{ borderBottom: `1px solid ${BORDER_SUBTLE}` }}>
+                        /* Clickable, because a row that shows you a
+                           problem and cannot take you to it is a report, not a
+                           dashboard — you read "RFI-020 overdue" and then go
+                           hunting for it. Procore makes every displayed record
+                           its own link; so do we. */
+                        <tr
+                          key={rfi.id}
+                          onClick={() => { if (rfi.project_id) window.location.href = `/app/projects/${rfi.project_id}/rfis`; }}
+                          title={rfi.project_id ? 'Open this RFI' : undefined}
+                          style={{
+                            borderBottom: `1px solid ${BORDER_SUBTLE}`,
+                            cursor: rfi.project_id ? 'pointer' : 'default',
+                            transition: 'background .12s ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
                           <td style={{ padding: '10px 16px', color: DIM }}>{rfi.rfi_number}</td>
                           <td style={{ padding: '10px 16px', color: TEXT, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rfi.subject}</td>
                           <td style={{ padding: '10px 16px' }}>

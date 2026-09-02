@@ -9,6 +9,7 @@ import { ScribbleNote, ScribbleArrow } from '../components/Scribble';
 import GetStartedTour from '../components/GetStartedTour';
 import { moduleAccent } from '../lib/module-identity';
 import { PLANS, TRIAL_DAYS, STARTING_PRICE_FLAT } from '../lib/plans';
+import BrandMark from '@/components/BrandMark';
 
 /* ── palette ── */
 const BG = '#0a0a0a';
@@ -120,7 +121,7 @@ export default function LandingPage() {
           }}>
             {/* Logo lockup — full horizontal badge + wordmark artwork */}
             <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-horizontal.png" alt="Saguaro Control Systems" height={46} style={{ height: 46, width: 'auto', display: 'block' }} />
+              <BrandMark size="md" href={null} />
             </Link>
 
             {/* Desktop menu */}

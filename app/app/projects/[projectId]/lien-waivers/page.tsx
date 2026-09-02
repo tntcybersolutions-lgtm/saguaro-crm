@@ -57,7 +57,15 @@ function buildMatrix(waivers:any[]):MatrixRow[]{
   return Object.values(bySubId);
 }
 
-function CellIcon({status,pdfUrl}:{status:string|undefined|null,pdfUrl?:string}){
+/**
+ * One cell of the waiver matrix.
+ *
+ * It used to be a read-only report: a tick, an hourglass or a dash. It told
+ * the GC that Phoenix HVAC has no conditional progress waiver and then left
+ * them to work out where to go and make one. In Procore a matrix cell IS the
+ * record — you click the gap to fill it. onGenerate makes the dash a control.
+ */
+function CellIcon({status,pdfUrl,onGenerate}:{status:string|undefined|null,pdfUrl?:string,onGenerate?:()=>void}){
   if(status==='signed'){
     return (
       <div style={{display:'flex',flexDirection:'column' as const,alignItems:'center',gap:4}}>
@@ -73,6 +81,36 @@ function CellIcon({status,pdfUrl}:{status:string|undefined|null,pdfUrl?:string})
   }
   if(status==='pending'){
     return <span style={{display:'inline-flex',verticalAlign:'middle',color:'#f59e0b'}} title="Pending signature"><Hourglass size={16} weight="fill" color="#f59e0b" /></span>;
+  }
+  /* Not generated. This was a dead dash — the cell that tells you something
+     is missing is exactly the cell that should let you fix it. */
+  if (onGenerate) {
+    return (
+      <button
+        type="button"
+        onClick={onGenerate}
+        title="Not generated — click to create this waiver"
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          minWidth: 34, minHeight: 26, padding: '0 8px', borderRadius: 6,
+          background: 'transparent', border: '1px dashed rgba(255,255,255,0.18)',
+          color: 'rgba(255,255,255,0.42)', fontSize: 13, cursor: 'pointer',
+          transition: 'border-color .12s ease, color .12s ease, background .12s ease',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = 'rgba(245,158,11,0.55)';
+          e.currentTarget.style.color = '#FBBF24';
+          e.currentTarget.style.background = 'rgba(245,158,11,0.10)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)';
+          e.currentTarget.style.color = 'rgba(255,255,255,0.42)';
+          e.currentTarget.style.background = 'transparent';
+        }}
+      >
+        +
+      </button>
+    );
   }
   return <span style={{fontSize:14,color:BORDER}}>—</span>;
 }
@@ -435,7 +473,10 @@ export default function LienWaiversPage() {
                           const w = row.waivers[t.key];
                           return (
                             <td key={t.key} style={{padding:'14px 16px',textAlign:'center' as const}}>
-                              <CellIcon status={w?.status} pdfUrl={w?.pdf_url}/>
+                              {/* Opens the generator with this sub and this
+                                  waiver type already chosen — the gap in the
+                                  matrix is the fastest route to filling it. */}
+                              <CellIcon status={w?.status} pdfUrl={w?.pdf_url} onGenerate={()=>{setFType(t.key);setFSubId(row.subId);setShowForm(true);}}/>
                             </td>
                           );
                         })}

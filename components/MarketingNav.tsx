@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import BrandMark from '@/components/BrandMark';
 
 export default function MarketingNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -43,11 +44,7 @@ export default function MarketingNav() {
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <Link href="/" aria-label="Saguaro Control Systems — home" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
-            <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '46px', width: 'auto', objectFit: 'contain', borderRadius: '5px', flexShrink: 0 }} />
-            <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-              <span style={{ fontWeight: 800, fontSize: '19px', letterSpacing: '0.11em', background: 'linear-gradient(90deg,#F59E0B,#FBBF24)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
-              <span style={{ fontSize: '9.5px', color: '#CBD5E1', letterSpacing: '0.2em', fontWeight: 700, textTransform: 'uppercase' }}>Control Systems</span>
-            </span>
+            <BrandMark size="md" href={null} />
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }} className="mn-desktop">

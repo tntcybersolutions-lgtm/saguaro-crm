@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { IntegrationStrip } from '@/components/Integrations';
 import MarketingNav from '@/components/MarketingNav';
 import { PLANS, PLAN_ADDONS, ONE_TIME_SERVICES, FEATURE_MATRIX, TRIAL_DAYS, PRICE_RANGE, SALES_EMAIL, STARTER, PROFESSIONAL, MAX_ANNUAL_SAVINGS } from '@/lib/plans';
+import { ScribbleNote } from '@/components/Scribble';
 
 const C = {
   dark: '#0B0B0F',
@@ -101,7 +102,7 @@ export default function PricingPage() {
             Free migration included on all plans
           </div>
 
-          <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, lineHeight: 1.12, margin: '0 0 16px', letterSpacing: '-0.02em' }}>
+          <h1 className="landing-display" style={{ fontSize: 'clamp(34px, 5.6vw, 68px)', fontWeight: 800, lineHeight: 1.04, margin: '0 0 18px', letterSpacing: '-0.025em', textWrap: 'balance' as const }}>
             One platform.{' '}
             <span style={{ background: 'linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
               Your whole team.

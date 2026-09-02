@@ -413,9 +413,16 @@ export function SectionCard({
     <div
       style={{
         position: 'relative', overflow: 'hidden',
-        background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 16,
-        // milled plate: drop + top light + full-perimeter inset ring (mobile cardShadow)
-        boxShadow: `0 24px 48px -32px ${A22}, inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03)`,
+        /* Glass, not paint.
+           A flat fill reads as a rectangle painted onto the page. A blurred,
+           slightly saturated pane with a lit top edge reads as something
+           sitting ABOVE it — which is what "raised" was supposed to mean, and
+           what makes the flat/raised distinction do any work. */
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))',
+        backdropFilter: 'blur(16px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+        border: '1px solid rgba(255,255,255,0.10)', borderRadius: 16,
+        boxShadow: `0 26px 54px -34px ${A22}, inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.02)`,
         ...style,
       }}
     >
@@ -495,15 +502,46 @@ export const goldButtonStyle: React.CSSProperties = {
 export const ghostButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
-  background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))', color: 'rgba(255,255,255,0.82)',
-  border: `1px solid ${BORDER}`, fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
+  /* The quietest tier, still glass so it reads as the same material as the
+     cards and the outlined button rather than a flat grey chip. */
+  background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))',
+  color: 'rgba(255,255,255,0.78)',
+  border: '1px solid rgba(255,255,255,0.11)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
+  backdropFilter: 'blur(10px) saturate(140%)',
+  WebkitBackdropFilter: 'blur(10px) saturate(140%)',
+  fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
 };
 
+/**
+ * The SECOND action on a screen, and it is deliberately not gold any more.
+ *
+ * There are 356 filled-gold buttons across the app and 86 gold-outlined ones,
+ * so a typical screen shouted in the same colour three or four times. When one
+ * colour means "this is the important thing" and it is used four times on one
+ * view, it has stopped meaning anything — the eye has nowhere to land and
+ * every page reads as a wall of amber. It is the same failure the status
+ * colours had before they were given one meaning each.
+ *
+ * Gold now marks exactly one thing per screen: the filled button, the action
+ * the GC came to that page to take. Everything beside it is a neutral outline
+ * — still obviously a button, still hoverable, just not competing. On the
+ * project overview that is the difference between "Run Autopilot" and "New Pay
+ * App" both demanding attention and one of them being the answer.
+ *
+ * Glass, like every other raised surface: a faint fill with a lit top edge
+ * rather than a flat panel.
+ */
 export const goldOutlineButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
-  background: A12, color: GOLD_HI, border: `1px solid ${A45}`,
-  fontWeight: 800, fontSize: 13.5, textDecoration: 'none',
+  background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025))',
+  color: 'rgba(255,255,255,0.88)',
+  border: '1px solid rgba(255,255,255,0.16)',
+  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
+  backdropFilter: 'blur(10px) saturate(140%)',
+  WebkitBackdropFilter: 'blur(10px) saturate(140%)',
+  fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
 };
 
 // ─── Machined buttons (mobile Btn port) ──────────────────────────────────────
