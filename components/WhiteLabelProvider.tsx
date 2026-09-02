@@ -12,6 +12,10 @@ export interface WhiteLabelBranding {
    *  (SVG, or a logo uploaded before tone detection existed). */
   logoTone: 'dark' | 'light' | 'unknown';
   primaryColor: string;
+  /** Optional page ground. Empty keeps the platform's dark base. */
+  surfaceColor: string;
+  /** False hides the "Powered by Saguaro" line for this tenant. */
+  showSaguaroCredit: boolean;
   companyName: string;
   whiteLabelEnabled: boolean;
 }
@@ -20,6 +24,8 @@ const defaults: WhiteLabelBranding = {
   logoUrl: '',
   logoTone: 'unknown',
   primaryColor: SAGUARO_GOLD,
+  surfaceColor: '',
+  showSaguaroCredit: true,
   companyName: '',
   whiteLabelEnabled: false,
 };
@@ -82,6 +88,8 @@ export default function WhiteLabelProvider({ children }: { children: React.React
           logoTone:
             data.logo_tone === 'dark' || data.logo_tone === 'light' ? data.logo_tone : 'unknown',
           primaryColor: hex ?? SAGUARO_GOLD,
+          surfaceColor: surfaceHex ?? '',
+          showSaguaroCredit: data.show_saguaro_credit !== false,
           companyName: typeof data.name === 'string' ? data.name : '',
           whiteLabelEnabled: enabled,
         });

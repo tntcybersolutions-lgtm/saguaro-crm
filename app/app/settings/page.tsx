@@ -59,6 +59,7 @@ const SETTINGS_SECTIONS = [
     sectionIcon: Users,
     items: [
       { icon: Users, label: 'Roles & Permissions', desc: 'Control what each team role can access', href: '/app/people?tab=access' },
+      { icon: Palette, label: 'Branding & White Label', desc: 'Your logo and colours across every screen, report and email', href: '/app/settings/branding' },
       { icon: Plugs, label: 'Integration Hub', desc: 'API keys, outbound webhooks, and the integration marketplace', href: '/app/settings/integrations-hub' },
       { icon: CloudArrowUp, label: 'External Storage', desc: 'Connect S3, OneDrive, SharePoint, Egnyte, Dropbox, Google Drive, or Box', href: '/app/settings/storage' },
     ],

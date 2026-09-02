@@ -24,6 +24,8 @@ export async function GET(req: NextRequest) {
     logo_w: settings.logo_w ?? null,
     logo_h: settings.logo_h ?? null,
     primary_color: settings.primary_color ?? '',
+    surface_color: settings.surface_color ?? '',
+    show_saguaro_credit: settings.show_saguaro_credit !== false,
   });
 }
 
@@ -44,6 +46,12 @@ export async function PUT(req: NextRequest) {
   // primary_color: accept a valid hex, OR an empty string to clear it.
   const hasColor      = typeof body.primary_color === 'string';
   const primary_color = hasColor ? (body.primary_color.trim() === '' ? '' : safeHex(body.primary_color)) : undefined;
+  /* The page ground. Empty clears it, which returns the tenant to the
+     platform's dark base rather than leaving them on a half-applied theme. */
+  const hasSurface    = typeof body.surface_color === 'string';
+  const surface_color = hasSurface ? (body.surface_color.trim() === '' ? '' : safeHex(body.surface_color)) : undefined;
+  /* The one place the Saguaro name appears once white-label is on. */
+  const show_saguaro_credit = typeof body.show_saguaro_credit === 'boolean' ? body.show_saguaro_credit : undefined;
 
   const db = createServerClient();
 
@@ -59,6 +67,8 @@ export async function PUT(req: NextRequest) {
   if (company_name !== undefined) updated.company_name = company_name;
   if (logo_url     !== undefined) updated.logo_url     = logo_url;
   if (primary_color !== undefined && primary_color !== null) updated.primary_color = primary_color;
+  if (surface_color !== undefined && surface_color !== null) updated.surface_color = surface_color;
+  if (show_saguaro_credit !== undefined) updated.show_saguaro_credit = show_saguaro_credit;
 
   const { error } = await db
     .from('tenants')
@@ -66,5 +76,5 @@ export async function PUT(req: NextRequest) {
     .eq('id', user.tenantId);
 
   if (error) return apiError('branding', error, undefined, 500);
-  return NextResponse.json({ ok: true, company_name: updated.company_name, logo_url: updated.logo_url, primary_color: updated.primary_color });
+  return NextResponse.json({ ok: true, company_name: updated.company_name, logo_url: updated.logo_url, primary_color: updated.primary_color, surface_color: updated.surface_color, show_saguaro_credit: updated.show_saguaro_credit });
 }

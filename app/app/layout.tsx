@@ -12,6 +12,7 @@ import CommandPalette from '../../components/CommandPalette';
 import HelpMode from '../../components/HelpMode';
 import { StatusFlashStyles } from '../../components/ui/Status';
 import HeaderMessages from '../../components/HeaderMessages';
+import PoweredBy from '../../components/PoweredBy';
 import SaguaroChatWidget from '../../components/SaguaroChatWidget';
 import SubscriptionWall from '../../components/SubscriptionWall';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -430,6 +431,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <ErrorBoundary>
           <SubscriptionWall>
             <PageTransition>{children}</PageTransition>
+          {/* The one place the Saguaro name appears once a tenant has branded
+              the platform — and switchable off from Settings → Branding. */}
+          <PoweredBy />
           </SubscriptionWall>
         </ErrorBoundary>
       </main>

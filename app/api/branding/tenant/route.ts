@@ -46,6 +46,8 @@ export async function GET(req: NextRequest) {
     logo_w: settings.logo_w ?? null,
     logo_h: settings.logo_h ?? null,
     primary_color: settings.primary_color ?? '',
+    surface_color: settings.surface_color ?? '',
+    show_saguaro_credit: settings.show_saguaro_credit !== false,
     white_label_enabled: whiteLabelEnabled,
     settings,
   });

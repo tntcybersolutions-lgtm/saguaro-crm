@@ -108,17 +108,39 @@ function findAnchor(step: TourStep): HTMLElement | null {
       : ['button, a, [role="button"], summary, label',
          'div, section, li, td, span, p, h1, h2, h3, h4'];
 
+    /**
+     * A match has to look like the thing, not merely contain the words.
+     *
+     * Widening the search to plain elements found the label but also found the
+     * empty container around where the label would be if there were data — the
+     * arrow ended up ringing a blank rectangle at the bottom of the Takeoff
+     * Studio page, because the tab strip exists before a takeoff is chosen and
+     * has nothing in it. An anchor with no visible text of its own, or one big
+     * enough to be a layout region rather than a control, is not the target.
+     */
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const plausible = (n: Element) => {
+      const t = visibleText(n);
+      if (!t) return false;
+      const r = n.getBoundingClientRect();
+      if (r.width * r.height > vw * vh * 0.35) return false; // a region, not a control
+      if (r.height > 220) return false;                      // a panel, not a label
+      return true;
+    };
+
     for (const scope of scopes) {
-      const nodes = Array.from(document.querySelectorAll(scope)).filter(isVisible);
+      const nodes = Array.from(document.querySelectorAll(scope)).filter(isVisible).filter(plausible);
       for (const want of step.anchorText) {
         const exact = nodes.filter((n) => visibleText(n) === want);
-        /* Smallest wins — an exact text match on <body> is not the target. */
+        /* Smallest wins — an exact text match on a wrapper is not the target. */
         if (exact.length) return smallest(exact);
       }
       for (const want of step.anchorText) {
         const partial = nodes.filter((n) => {
           const t = visibleText(n);
-          return t.length < 120 && t.toLowerCase().includes(want.toLowerCase());
+          /* Close to the label, not a paragraph that happens to mention it. */
+          return t.length < want.length * 3 + 20 && t.toLowerCase().includes(want.toLowerCase());
         });
         if (partial.length) return smallest(partial);
       }
