@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { Badge, Btn, Table, T } from '@/components/ui/shell';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { CheckCircle, XCircle, Clipboard, Warning, ShieldCheck } from '@phosphor-icons/react';
+import { openPdf } from '@/components/PdfViewer';
 
 interface ComplianceSub {
   id: string;
@@ -187,7 +188,7 @@ export default function CompliancePage() {
       const data = await res.json().catch(() => ({}));
       const url = data.url || data.pdfUrl;
       if (!res.ok || !url) throw new Error(data.error || 'generation failed');
-      window.open(url, '_blank');
+      openPdf({ url });
       setToast('Prevailing wage rate sheet generated.');
     } catch {
       setToast('Could not generate the prevailing wage rate sheet. Please try again.');

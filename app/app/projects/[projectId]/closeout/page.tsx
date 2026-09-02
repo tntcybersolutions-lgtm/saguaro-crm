@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/premium';
 import { CheckCircle, Hourglass, ChartBar, Check, Package, ListChecks } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
+import { openPdf } from '@/components/PdfViewer';
 
 interface ChecklistItem {
   id: string;
@@ -158,7 +159,7 @@ export default function CloseoutPage() {
       const data = await res.json().catch(() => ({}));
       const url = data.url || data.pdfUrl || data.downloadUrl;
       if (!res.ok || !url) throw new Error(data.error || 'generation failed');
-      window.open(url, '_blank');
+      openPdf({ url });
       setToast(`${item.generateLabel} generated successfully.`);
     } catch {
       setToast(`Could not generate ${item.generateLabel}. Please try again.`);
@@ -179,7 +180,7 @@ export default function CloseoutPage() {
       const data = await res.json().catch(() => ({}));
       const url = data.url || data.pdfUrl || data.downloadUrl;
       if (!res.ok || !url) throw new Error(data.error || 'generation failed');
-      window.open(url, '_blank');
+      openPdf({ url });
       setToast('Closeout package generated.');
     } catch {
       setToast('Could not generate the closeout package. Please try again.');

@@ -13,6 +13,7 @@ import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intellige
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_BID_DECISION } from '@/lib/suggestions';
 import { StatusPill } from '@/components/ui/Status';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -615,7 +616,7 @@ export default function BidPackagesPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: DIM, marginBottom: 12, flexWrap: 'wrap' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><CalendarBlank size={13} weight="regular" color={DIM} />{fmtDue(pkg.bid_due_date || (pkg as any).due_date)}</span>
                     {due != null && !isAwarded && <span style={{ fontWeight: 700, color: due < 0 ? '#ff7070' : due <= 3 ? GOLD : DIM }}>{due < 0 ? `${Math.abs(due)}d overdue` : due === 0 ? 'due today' : `${due}d left`}</span>}
-                    {pkg.jacket_pdf_url && <button type="button" onClick={e => { e.stopPropagation(); e.preventDefault(); window.open(pkg.jacket_pdf_url!, '_blank', 'noopener,noreferrer'); }} style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', color: GOLD, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><FileText size={12} weight="regular" color={GOLD} />Jacket</button>}
+                    {pkg.jacket_pdf_url && <button type="button" onClick={e => { e.stopPropagation(); e.preventDefault(); openPdf({ url: pkg.jacket_pdf_url! }); }} style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', color: GOLD, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><FileText size={12} weight="regular" color={GOLD} />Jacket</button>}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
                     <div style={{ background: '#101011', padding: '9px 12px' }}>

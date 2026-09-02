@@ -12,6 +12,7 @@ import { getAuthHeaders } from '@/lib/supabase-browser';
 import { humanError } from '@/lib/errors';
 import { Plus, DownloadSimple, CheckCircle, FloppyDisk, Receipt, Calculator, ListNumbers, Buildings, CurrencyDollar, Percent, Coins, Scales, ChartPieSlice } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { openPdf } from '@/components/PdfViewer';
 
 const PANEL = '#161b22', LINE = 'rgba(255,255,255,0.09)', GOLD = '#F59E0B', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399';
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -118,8 +119,8 @@ export default function PayAppPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json.error || !json.g702Url) throw new Error(json.error || 'PDF generation failed');
-      window.open(json.g702Url, '_blank');
-      if (json.g703Url) window.open(json.g703Url, '_blank');
+      openPdf({ url: json.g702Url });
+      if (json.g703Url) openPdf({ url: json.g703Url });
       setMsg(`✓ Application #${pa.app_number} G702/G703 generated — stored on the pay application`);
       router.push(`/app/projects/${pa.project_id || projectId}/pay-apps/${pa.id}`);
     } catch (e) {

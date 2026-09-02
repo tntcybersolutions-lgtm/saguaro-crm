@@ -12,6 +12,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030';
@@ -697,14 +698,15 @@ export default function DrawingsPage(){
                 )}
 
                 {selected.url&&(
-                  <a href={selected.url} target="_blank" rel="noreferrer"
+                  <button type="button"
+                    onClick={()=>openPdf({url:selected.url!,title:`${selected.number||''} ${selected.title||'Drawing'}`.trim(),editHref:`/field/drawings?projectId=${projectId}`})}
                     style={{display:'block',padding:'12px 14px',
                       background:'rgba(245,158,11,.1)',
                       border:'1px solid rgba(245,158,11,.3)',borderRadius:10,
                       color:'#FBBF24',fontSize:13,fontWeight:700,textDecoration:'none',
                       textAlign:'center'}}>
                     View PDF / Drawing
-                  </a>
+                  </button>
                 )}
               </div>
             ):null}

@@ -8,6 +8,7 @@ import { getAuthHeaders } from '@/lib/supabase-browser';
 import { Clipboard, CheckCircle, XCircle, ArrowLeft, ArrowRight, PencilSimple, FloppyDisk, FileText, Plus, X, CaretUp, CaretDown, Export, SealCheck, CurrencyDollar, Files, Lock, Receipt, CalendarBlank, TrendUp, Coins, ClockCounterClockwise, IdentificationCard } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowSteps, InsightRow, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { Skeleton, SkeletonKPI, SkeletonRow, SkeletonCard } from '@/components/ui/Skeleton';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='#F59E0B', DARK='#0a0a0a',
       BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF',
@@ -250,8 +251,8 @@ export default function PayAppDetailPage() {
       const d = await r.json();
       const url = d.g702Url || d.url || d.pdfUrl;
       if (url) {
-        window.open(url, '_blank');
-        if (d.g703Url) window.open(d.g703Url, '_blank');
+        openPdf({ url });
+        if (d.g703Url) openPdf({ url: d.g703Url });
         setToast({ msg: 'PDF opened in new tab', type: 'success' });
       } else {
         console.error('pay app PDF error', d.error); setToast({ msg: humanError(d.error, 'PDF generation failed. Please try again.'), type: 'error' });

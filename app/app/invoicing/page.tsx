@@ -19,6 +19,7 @@ import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INVOICES_OVERDUE } from '@/lib/suggestions';
 import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
+import { openPdf } from '@/components/PdfViewer';
 
 interface Invoice {
   id: string;
@@ -321,7 +322,7 @@ export default function InvoicingPage() {
       const res = await fetch(`/api/invoices/${inv.id}/pdf`, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.pdfUrl) throw new Error(data?.error || 'PDF generation failed');
-      window.open(data.pdfUrl, '_blank', 'noopener');
+      openPdf({ url: data.pdfUrl });
       await fetchInvoices();
     } catch (e: any) {
       console.error(e);

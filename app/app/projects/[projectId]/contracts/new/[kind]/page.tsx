@@ -8,6 +8,7 @@ import ESignatureFlow from '@/components/ESignatureFlow';
 import ContractVersions from '@/components/contracts/ContractVersions';
 import ContractCompare from '@/components/contracts/ContractCompare';
 import { CONTRACT_FORMS, type ContractKind } from '@/lib/document-templates/contract-fields';
+import { openPdf } from '@/components/PdfViewer';
 
 /**
  * Paper a contract from a template.
@@ -154,10 +155,10 @@ export default function NewContractFromTemplate() {
             />
 
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <a href={pdfUrl} target="_blank" rel="noopener noreferrer"
+              <button type="button" onClick={() => openPdf({ url: pdfUrl, title: 'Contract' })}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44, padding: '0 22px', borderRadius: 9, background: GOLD, color: '#241500', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
                 <DownloadSimple size={16} weight="bold" color="#241500" /> Open the PDF
-              </a>
+              </button>
               <button onClick={() => setSigning((v) => !v)}
                 style={{ minHeight: 44, padding: '0 22px', borderRadius: 9, background: 'transparent', border: `1px solid ${GOLD}`, color: GOLD, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>
                 {signing ? 'Hide signing' : 'Send for signature'}

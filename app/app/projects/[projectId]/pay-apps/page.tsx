@@ -15,6 +15,7 @@ import { useLiveStatus } from '@/lib/hooks/useLiveStatus';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_PAY_APPS_DUE } from '@/lib/suggestions';
 import { ScribbleNote } from '@/components/Scribble';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const SAGE='#45B37D',AMBER='#F0A63C';
@@ -193,8 +194,8 @@ export default function PayAppsPage() {
       const d = await r.json();
       const url = d.g702Url || d.url || d.pdfUrl;
       if(url) {
-        window.open(url,'_blank');
-        if(d.g703Url) window.open(d.g703Url,'_blank');
+        openPdf({ url });
+        if(d.g703Url) openPdf({ url: d.g703Url });
       } else { if (d.error) console.error('pay app PDF error', d.error); setToast({msg:humanError(d.error, 'PDF generation failed — check the Documents section.'),type:'error'}); }
     }catch{
       setToast({msg:'Failed to generate PDF.',type:'error'});

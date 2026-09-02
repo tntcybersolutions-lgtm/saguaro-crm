@@ -12,6 +12,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='#F59E0B', DARK='#0a0a0a', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
@@ -228,13 +229,13 @@ export default function InvoicesPage() {
   /** POST /api/invoices/[id]/pdf -> { pdfUrl }, then open the document. Rows
    *  that already carry pdf_url open the real .pdf directly. */
   async function handlePdf(inv: Invoice) {
-    if (inv.pdf_url) { window.open(`/api/files/open?u=${encodeURIComponent(inv.pdf_url)}`, '_blank', 'noopener'); return; }
+    if (inv.pdf_url) { openPdf({ url: `/api/files/open?u=${encodeURIComponent(inv.pdf_url)}` }); return; }
     setPdfBusy(inv.id);
     try {
       const res = await fetch(`/api/invoices/${inv.id}/pdf`, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.pdfUrl) throw new Error('pdf failed');
-      window.open(data.pdfUrl, '_blank', 'noopener');
+      openPdf({ url: data.pdfUrl });
       fetchInvoices();
     } catch {
       setErrorMsg('Could not generate the PDF. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);

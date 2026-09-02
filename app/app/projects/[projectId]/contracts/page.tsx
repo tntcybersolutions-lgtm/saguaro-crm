@@ -12,6 +12,7 @@ import { FileText, CurrencyDollar, Plus, FilePlus, FileArrowUp, Eye, FileDashed,
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='#F59E0B', DARK='#0a0a0a', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
@@ -556,7 +557,7 @@ export default function ContractsPage() {
                     <td style={{ padding: '10px 14px', color: DIM }}>{c.execution_date || '—'}</td>
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                       {c.pdf_url && (
-                        <button onClick={() => window.open(c.pdf_url!, '_blank')} style={{ ...rowBtn, marginRight: 6 }}><Eye size={13} weight="bold" /> View PDF</button>
+                        <button onClick={() => openPdf({ url: c.pdf_url! })} style={{ ...rowBtn, marginRight: 6 }}><Eye size={13} weight="bold" /> View PDF</button>
                       )}
                       <label style={rowBtn}>
                         <FileArrowUp size={13} weight="bold" /> {uploadingId === c.id ? 'Uploading...' : 'Upload Signed'}

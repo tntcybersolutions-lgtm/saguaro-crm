@@ -27,6 +27,7 @@ import {
   PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, Pill,
   goldButtonStyle, ghostButtonStyle,
 } from '@/components/ui/premium';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD = '#F59E0B';
 
@@ -282,13 +283,13 @@ export default function InvoiceDetailPage() {
    *  POST /api/invoices/[id]/pdf -> { pdfUrl }; the Document card below picks
    *  up the stored pdf_url on reload. */
   async function handlePdf(regenerate = false) {
-    if (!regenerate && invoice?.pdf_url) { window.open(`/api/files/open?u=${encodeURIComponent(invoice.pdf_url)}`, '_blank', 'noopener'); return; }
+    if (!regenerate && invoice?.pdf_url) { openPdf({ url: `/api/files/open?u=${encodeURIComponent(invoice.pdf_url)}` }); return; }
     setBusy('pdf');
     try {
       const res = await fetch(`/api/invoices/${id}/pdf`, { method: 'POST' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.pdfUrl) throw new Error(data?.error || 'PDF generation failed');
-      window.open(data.pdfUrl, '_blank', 'noopener');
+      openPdf({ url: data.pdfUrl });
       showToast(regenerate ? 'PDF regenerated' : 'PDF generated');
       await loadInvoice();
     } catch (e: any) {
@@ -504,9 +505,9 @@ export default function InvoiceDetailPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <a href={`/api/files/open?u=${encodeURIComponent(inv.pdf_url || '')}`} target="_blank" rel="noopener noreferrer" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13 }} className="pmBtn">
+              <button type="button" onClick={() => openPdf({ url: `/api/files/open?u=${encodeURIComponent(inv.pdf_url || '')}`, title: 'Invoice' })} style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13 }} className="pmBtn">
                 <ArrowSquareOut size={14} /> Open PDF
-              </a>
+              </button>
               <button onClick={() => handlePdf(true)} disabled={busy === 'pdf'} style={{ ...ghostButtonStyle, padding: '9px 16px', fontSize: 13, opacity: busy === 'pdf' ? 0.6 : 1, cursor: busy === 'pdf' ? 'not-allowed' : 'pointer' }} className="pmBtn">
                 <ArrowsClockwise size={14} /> {busy === 'pdf' ? 'Regenerating...' : 'Regenerate'}
               </button>

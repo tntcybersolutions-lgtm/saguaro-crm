@@ -13,6 +13,7 @@ import HelpMode from '../../components/HelpMode';
 import { StatusFlashStyles } from '../../components/ui/Status';
 import HeaderMessages from '../../components/HeaderMessages';
 import PoweredBy from '../../components/PoweredBy';
+import PdfViewer from '../../components/PdfViewer';
 import SaguaroChatWidget from '../../components/SaguaroChatWidget';
 import SubscriptionWall from '../../components/SubscriptionWall';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -450,6 +451,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mounted once for the whole shell so a walkthrough survives navigation:
           the arrow has to keep its place when a step moves you to another page. */}
       <HelpMode />
+
+      {/* Every document opens here instead of a browser tab — one reader for
+          drawings, pay applications, jackets and waivers alike. */}
+      <PdfViewer />
 
       {/* ── Bid Score Modal ────────────────────────────────────────────── */}
       {showScoreModal && (

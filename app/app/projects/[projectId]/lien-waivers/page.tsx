@@ -9,6 +9,7 @@ import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowS
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 import { StatusPill } from '@/components/ui/Status';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -62,10 +63,10 @@ function CellIcon({status,pdfUrl}:{status:string|undefined|null,pdfUrl?:string})
       <div style={{display:'flex',flexDirection:'column' as const,alignItems:'center',gap:4}}>
         <span style={{display:'inline-flex',color:'#3dd68c'}}><CheckCircle size={16} weight="fill" color="#3dd68c" /></span>
         {pdfUrl && (
-          <a href={pdfUrl} target="_blank" rel="noreferrer"
+          <button type="button" onClick={() => openPdf({ url: pdfUrl, title: 'Lien waiver' })}
             style={{fontSize:10,color:GOLD,textDecoration:'none',padding:'2px 7px',border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:4}}>
             PDF
-          </a>
+          </button>
         )}
       </div>
     );

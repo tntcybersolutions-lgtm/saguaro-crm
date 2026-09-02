@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
 import { Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
+import { openPdf } from '@/components/PdfViewer';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
 const MUTED='rgba(255,255,255,0.62)';        // section-header meta text
@@ -236,7 +237,7 @@ export default function BidPackageDetailPage() {
 
   async function downloadPDF() {
     if (pkg?.jacket_pdf_url) {
-      window.open(`/api/files/open?u=${encodeURIComponent(pkg.jacket_pdf_url)}`, '_blank');
+      openPdf({ url: `/api/files/open?u=${encodeURIComponent(pkg.jacket_pdf_url)}` });
       return;
     }
     try {
@@ -247,7 +248,7 @@ export default function BidPackageDetailPage() {
       const d = await r.json().catch(() => ({})) as any;
       const url = d.url || d.pdfUrl;
       if (!r.ok || !url) throw new Error(d.error || 'generation failed');
-      window.open(url, '_blank');
+      openPdf({ url });
     } catch { showToast('Could not generate the bid package PDF. Please try again.', '#ff7070'); }
   }
 
