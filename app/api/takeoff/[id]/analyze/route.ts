@@ -1116,6 +1116,9 @@ export async function GET(
           projectName:       meta.n   || '',
           buildingType:      meta.t   || '',
           estimatedSF:       buildingArea,
+          /* Already extracted from the drawings and written to the row; it was
+             just never sent, so the client drew a building out of the price. */
+          floorCount:        floorCount,
           confidence:        confidence,
           summary:           meta.s   || '',
           items:             expandedItems,

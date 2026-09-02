@@ -32,6 +32,8 @@ interface TakeoffResult {
   projectName: string;
   buildingType: string;
   estimatedSF: number;
+  /** Storeys the AI read off the drawings — not a number derived from price. */
+  floorCount?: number;
   confidence: number;
   summary: string;
   items: TakeoffItem[];
@@ -692,6 +694,7 @@ export default function TakeoffPage() {
         projectName:       String(data.project_name_detected || data.project_name || ''),
         buildingType:      String(data.building_type || ''),
         estimatedSF:       Number(data.building_area) || 0,
+        floorCount:        Number(data.floor_count) || 0,
         confidence:        Number(data.confidence)    || 0,
         summary:           String(data.summary        || ''),
         items,
@@ -2077,10 +2080,20 @@ export default function TakeoffPage() {
       )}
 
       {/* Building visualization */}
-      {result && (result.estimatedSF > 0 || result.itemCount > 0) && (() => {
-        const floors  = Math.max(1, result.estimatedSF > 0 ? Math.min(result.itemCount > 0 ? (Object.keys(groupedItems).length > 5 ? 2 : 1) : 1, 6) : 1);
-        const floorCount = result.itemCount > 0 ? Math.ceil(result.totalProjectCost / 1_000_000) || 1 : 1;
-        const displayFloors = Math.min(floorCount, 8);
+      {/* Building profile — the storeys the AI read off the drawings.
+          This used to be `Math.ceil(totalProjectCost / 1_000_000)`: the number of
+          floors was the PRICE divided by a million. A test set that extracted
+          0 SF drew eight floors because it happened to price at $7M, and the
+          card sat under a heading saying BUILDING PROFILE next to real
+          extracted data, so a GC would reasonably read it as their building.
+
+          The analyzer has always extracted the real floor count and written it
+          to takeoffs.floor_count — it simply was not sent to the client. Now it
+          is, and when the drawings did not say, nothing is drawn rather than
+          something invented. */}
+      {result && (result.floorCount ?? 0) > 0 && (() => {
+        const realFloors = Math.max(1, Math.round(result.floorCount || 1));
+        const displayFloors = Math.min(realFloors, 12);
         const bldgW   = 180;
         const floorH  = 28;
         const bldgH   = displayFloors * floorH;
@@ -2148,7 +2161,9 @@ export default function TakeoffPage() {
                 {/* SF label */}
                 <text x={padX + bldgW / 2} y={svgH - 6}
                   fill="rgba(255,255,255,0.3)" fontSize={10} textAnchor="middle">
-                  {fmtN(result.estimatedSF)} SF · {displayFloors} {displayFloors === 1 ? 'Story' : 'Stories'}
+                  {result.estimatedSF > 0 ? `${fmtN(result.estimatedSF)} SF · ` : ''}
+                  {realFloors} {realFloors === 1 ? 'Story' : 'Stories'}
+                  {realFloors > displayFloors ? ' (top 12 shown)' : ''}
                 </text>
               </svg>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', textAlign: 'center', marginTop: 4 }}>

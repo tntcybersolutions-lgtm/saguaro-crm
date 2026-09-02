@@ -7,6 +7,7 @@ import SaguaroDatePicker from '../../../../components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { PROJECT_TEMPLATES, templateByKey } from '@/lib/project-templates';
 import SetupStepper from '@/components/projects/SetupStepper';
+import ProjectPreview from '@/components/projects/ProjectPreview';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { SECTORS } from '@/lib/taxonomy';
 import { Plus, Buildings, MapPin, CalendarBlank, UsersThree, Sparkle, CurrencyDollar, ShieldCheck, Stack } from '@phosphor-icons/react';
@@ -613,8 +614,19 @@ export default function NewProjectPage() {
             </div>
           </div>
 
-          {/* Context rail — what gets created + what the system pre-filled */}
+          {/* Context rail — the job assembling itself, then what that means */}
           <div style={{position:'sticky' as const,top:80,display:'flex',flexDirection:'column',gap:16}}>
+            <ProjectPreview
+              name={name}
+              address={address}
+              projectNumber={projectNumber || `${year}-001`}
+              jurisdiction={stateJurisdiction}
+              retainagePct={Number(retainage) || 10}
+              contractType={contractType}
+              templateName={tpl?.name ?? null}
+              folders={tpl?.folders ?? []}
+              divisionCount={tpl?.divisions.length ?? 0}
+            />
             <SectionCard title="What Gets Created" icon={<Stack size={17} weight="duotone" color={GOLD} />} bodyStyle={{padding:'6px 20px 20px'}}>
               <FlowSteps title="" steps={[
                 {title:'Project workspace', desc:'Overview, directory, documents, daily logs and photo feed — live the moment you hit Create.'},
