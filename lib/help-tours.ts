@@ -58,6 +58,33 @@ export interface TourStep {
   nextRoute?: string;
 }
 
+/**
+ * Is the reader on the screen this step lives on?
+ *
+ * `startsWith` is the obvious implementation and it is wrong, because "/app"
+ * is a prefix of literally every route in the product. A step pinned to the
+ * dashboard read as on-route on /app/projects/new, so instead of offering to
+ * take you to the dashboard it hunted for a control that was never on that
+ * page and announced it could not find it. Every step of the first-day
+ * walkthrough failed that way.
+ *
+ * The rule, and it is the whole rule:
+ *
+ *   '/app'            exactly the dashboard, nothing under it
+ *   '/app/projects'   exactly the project list, not a project
+ *   '/app/projects/'  anywhere INSIDE a project — the trailing slash means
+ *                     "and below", which is the only case that wants it
+ */
+export function routeMatches(route: string | undefined, pathname: string): boolean {
+  if (!route) return true;
+  const here = (pathname || '').replace(/\/+$/, '') || '/';
+  if (route.endsWith('/')) {
+    const base = route.replace(/\/+$/, '');
+    return here !== base && here.startsWith(base + '/');
+  }
+  return here === route;
+}
+
 export interface Tour {
   id: string;
   /** Phrased the way a GC would ask it out loud. */

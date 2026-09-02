@@ -29,7 +29,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import { Lifebuoy, X, CaretRight, MagicWand } from '@phosphor-icons/react';
-import { TOURS, CATEGORY_ORDER, tourById, type Tour, type TourStep } from '@/lib/help-tours';
+import { TOURS, CATEGORY_ORDER, tourById, routeMatches, type Tour, type TourStep } from '@/lib/help-tours';
 
 const GOLD = '#F59E0B';
 const GOLD_HI = '#FBBF24';
@@ -38,9 +38,15 @@ const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
 const CARD = '#0D1D2E';
 
-/* Above the modal layer (200) and the toast layer (300): a walkthrough that
-   points at a button inside a dialog has to draw over the dialog. */
-const Z = 400;
+/**
+ * Above everything, and not by a margin that another component can close.
+ *
+ * 400 cleared the modal (200) and toast (300) layers but left the scrim under
+ * the top bar on some screens, which reads as the page going dark while the
+ * header stays lit and nothing explains why. This is a full-screen overlay
+ * that is only ever up deliberately; there is nothing it should sit beneath.
+ */
+const Z = 2147483000;
 
 const SS_TOUR = 'sag_help_tour';
 const SS_ON = 'sag_help_on';
@@ -161,7 +167,7 @@ export default function HelpMode() {
 
   const step: TourStep | null = tour ? tour.steps[stepIdx] ?? null : null;
   /* A step pinned to a route waits until the reader is actually on it. */
-  const onRoute = !step?.route || (pathname ?? '').startsWith(step.route);
+  const onRoute = routeMatches(step?.route, pathname ?? '');
 
   /* ── restore across navigation ──────────────────────────────────────── */
   useEffect(() => {
@@ -331,8 +337,9 @@ export default function HelpMode() {
        a link to where you are. Exact match only — being inside
        /app/projects/<id>/overview is NOT being on the project list, and that
        step really does still need the sidebar click. */
-    if (p === step.nextRoute) { advance(); return; }
-    if (changed && p.startsWith(step.nextRoute)) advance();
+    if (routeMatches(step.nextRoute, p)) { advance(); return; }
+    /* Landed somewhere under the destination — good enough for a nav step. */
+    if (changed && p.startsWith(step.nextRoute + '/')) advance();
   }, [pathname, on, step, advance]);
 
   /* Esc leaves */
@@ -664,10 +671,17 @@ export default function HelpMode() {
           )}
 
           {/* On the page, but the control is not on screen. */}
+          {/* Say which of the two things actually happened. "I can't find that
+              control" was shown for both a genuinely absent control and a
+              module the tenant is not entitled to — and, until the route
+              matcher was fixed, for simply being on the wrong page. A GC whose
+              plan has no Fleet should be told that, not told the product is
+              broken. */}
           {onRoute && missing && (
             <div style={{ marginTop: 11, fontSize: 12, color: '#F6C177', lineHeight: 1.5 }}>
-              I can’t find that control on this screen — it may be behind a tab, or named
-              differently in your setup. Use Skip to carry on.
+              {step?.anchor?.some((s) => s.startsWith('aside a[href='))
+                ? 'That section isn’t switched on for your account — ask whoever manages your plan, or press Next to read the rest.'
+                : 'That control isn’t on screen right now — it may sit behind a tab, or appear once there’s data here. Press Next to carry on.'}
             </div>
           )}
 
