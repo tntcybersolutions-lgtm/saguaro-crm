@@ -1,5 +1,6 @@
 'use client';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+import { openPdf } from '@/components/PdfViewer';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
@@ -134,7 +135,7 @@ export default function ReportsPage() {
       });
       const data = await res.json();
       if (data.download_url) {
-        window.open(data.download_url, '_blank');
+        openPdf({ url: data.download_url, title: 'Network Report' });
       }
       fetchData();
     } catch { /* */ }

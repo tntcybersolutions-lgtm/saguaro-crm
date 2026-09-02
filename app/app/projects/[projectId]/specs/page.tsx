@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { openPdf } from '@/components/PdfViewer';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Badge, Btn, Table, T } from '@/components/ui/shell';
@@ -201,7 +202,7 @@ export default function SpecsPage() {
       </span>,
       <div key="act" style={{ display: 'flex', gap: 6 }}>
         {s.url && (
-          <Btn size="sm" variant="ghost" onClick={() => window.open(s.url!, '_blank')}>View</Btn>
+          <Btn size="sm" variant="ghost" onClick={() => openPdf({ url: s.url!, title: `${s.section} — ${s.title}` })}>View</Btn>
         )}
         <label style={{ cursor: 'pointer' }}>
           <Btn size="sm" variant="ghost" disabled={uploading === s.id}>
@@ -428,7 +429,7 @@ export default function SpecsPage() {
               </span>,
               <div key="act" style={{ display: 'flex', gap: 6 }}>
                 {s.url && (
-                  <Btn size="sm" variant="ghost" onClick={() => window.open(s.url!, '_blank')}>View</Btn>
+                  <Btn size="sm" variant="ghost" onClick={() => openPdf({ url: s.url!, title: `${s.section} — ${s.title}` })}>View</Btn>
                 )}
                 <label style={{ cursor: 'pointer' }}>
                   <Btn size="sm" variant="ghost" disabled={uploading === s.id}>

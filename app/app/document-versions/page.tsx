@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { openPdf } from '@/components/PdfViewer';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
 import {
@@ -419,7 +420,7 @@ export default function DocumentVersionsPage() {
       });
       if (!r.ok) throw new Error((await r.json().catch(() => ({})))?.error || 'Download failed');
       const { url } = await r.json();
-      window.open(url, '_blank', 'noopener');
+      openPdf({ url, title: 'Document' });
     } catch (e: any) { showToast(e?.message || 'Download failed.', true); }
   };
 

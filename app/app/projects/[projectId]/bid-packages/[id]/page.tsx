@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
-import { Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText } from '@phosphor-icons/react';
+import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
@@ -312,8 +312,19 @@ export default function BidPackageDetailPage() {
   // Header action buttons (Download PDF + optional Close Bidding)
   const headerActions = (
     <>
+      {/* The jacket is the deliverable — drawings, specs, bid form and
+          requirements assembled into something a sub can actually work from.
+          The flat PDF stays available beside it, but it is the printed copy of
+          one section, not the package. */}
+      <Link
+        href={`/app/projects/${projectId}/bid-packages/${id}/jacket`}
+        style={{ ...goldButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}
+        className="pmBtn"
+      >
+        <FolderOpen size={16} weight="duotone" /> Open Bid Jacket
+      </Link>
       <button onClick={downloadPDF} style={ghostButtonStyle} className="pmBtn">
-        <FileText size={16} weight="regular" /> Download Bid Jacket PDF
+        <FileText size={16} weight="regular" /> Printed jacket PDF
       </button>
       {pkg.status !== 'closed' && pkg.status !== 'awarded' && (
         <button onClick={closeBids} disabled={closing} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 12, background: 'rgba(192,48,48,.12)', border: '1px solid rgba(192,48,48,.3)', color: '#ff7070', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', opacity: closing ? 0.6 : 1 }}>

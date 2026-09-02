@@ -16,8 +16,13 @@ export async function GET(req: NextRequest) {
     const db = createServerClient() as any;
     const projectId = req.nextUrl.searchParams.get('projectId');
     const type = req.nextUrl.searchParams.get('type');
+    // title distinguishes rows that otherwise all render as their doc_type —
+    // the library showed twenty-eight rows called "Bid Jacket" against the same
+    // project, with nothing to tell them apart. source_type/source_id let a
+    // generated document link back to the thing it was generated from, so a
+    // bid jacket can open the real jacket rather than its flattened PDF.
     let q = db.from('generated_documents')
-      .select('id, doc_type, project_id, status, created_at')
+      .select('id, doc_type, project_id, status, created_at, title, source_type, source_id')
       .eq('tenant_id', g.user.tenantId)
       .order('created_at', { ascending: false })
       .limit(300);

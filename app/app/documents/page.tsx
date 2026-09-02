@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { WarningCircle, FileText, Clipboard, Shield, Hammer, Buildings, NotePencil, CheckCircle, Square, Receipt, Plus, MagnifyingGlass } from '@phosphor-icons/react';
 import { humanError } from '@/lib/errors';
+import { openPdf } from '@/components/PdfViewer';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, IconChip,
   goldButtonStyle, goldOutlineButtonStyle,
@@ -191,7 +192,7 @@ export default function DocumentsPage() {
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok || !d.url) throw new Error(d.error || 'open failed');
-      window.open(d.url, '_blank', 'noopener');
+      openPdf({ url: d.url, title: doc.title || doc.doc_type || 'Document' });
     } catch { alert('Could not open the document. Try regenerating it.'); }
     finally { setBusyKey(null); }
   }
@@ -296,7 +297,7 @@ export default function DocumentsPage() {
     existingUrl: string | null | undefined,
     gen: { path: string; body: Record<string, unknown>; urlField?: string } | null,
   ) {
-    if (existingUrl) { window.open(existingUrl, '_blank'); return; }
+    if (existingUrl) { openPdf({ url: existingUrl, title: key }); return; }
     if (!gen) { alert('No document available to download.'); return; }
     setBusyKey(key);
     try {
@@ -308,7 +309,7 @@ export default function DocumentsPage() {
       const data = await res.json();
       const url = data[gen.urlField ?? 'pdfUrl'] ?? data.pdfUrl ?? data.g702Url;
       if (!res.ok || !url) { console.error('doc generation failed', res.status, data.error); alert(humanError(data.error, 'Document generation failed. Please try again.')); return; }
-      window.open(url, '_blank');
+      openPdf({ url, title: key });
     } catch {
       alert('Document generation failed.');
     } finally {
@@ -501,11 +502,35 @@ export default function DocumentsPage() {
                   {errorLib && !loadingLib && <ErrorRow colSpan={5} message="Couldn't load the library." onRetry={loadLibrary} />}
                   {!loadingLib && !errorLib && sortedLib.map(doc => (
                     <tr key={doc.id}>
-                      <td style={{ padding: '12px 16px', fontWeight: 700 }}>{docTypeLabel(doc.doc_type)}</td>
+                      {/* The library listed every row by its doc_type, so
+                          twenty-eight bid jackets on one project rendered as
+                          twenty-eight identical lines. The generator records a
+                          title; show it, and keep the type as the second line
+                          so the column still scans by kind. */}
+                      <td style={{ padding: '12px 16px', fontWeight: 700 }}>
+                        {doc.title || docTypeLabel(doc.doc_type)}
+                        {doc.title && (
+                          <div style={{ fontSize: 11.5, fontWeight: 500, color: '#9CA3AF', marginTop: 2 }}>
+                            {docTypeLabel(doc.doc_type)}
+                          </div>
+                        )}
+                      </td>
                       <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>{doc.projectName ?? '—'}</td>
                       <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>{fmtDay(doc.created_at) ?? '—'}</td>
                       <td style={{ padding: '12px 16px' }}><Badge label={(doc.status || 'generated').toUpperCase()} color="#34D27B" bg="rgba(52,210,123,0.12)" /></td>
                       <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                        {/* A bid jacket has a real jacket behind it — drawings,
+                            specs, bid form, requirements. Send the GC there
+                            rather than to the flattened PDF of one section. */}
+                        {doc.doc_type === 'bid_jacket' && doc.source_id && doc.project_id && (
+                          <Link
+                            href={`/app/projects/${doc.project_id}/bid-packages/${doc.source_id}/jacket`}
+                            className="pmBtn"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 8, textDecoration: 'none' }}
+                          >
+                            Open jacket
+                          </Link>
+                        )}
                         <button onClick={() => openLibDoc(doc)} disabled={busyKey === `lib-${doc.id}`} className="pmBtn" title="Open the PDF" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#E4E4E7' }}>
                           <PdfIcon size={16} /> {busyKey === `lib-${doc.id}` ? 'Opening…' : 'Open'}
                         </button>

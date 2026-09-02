@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import { openPdf } from '@/components/PdfViewer';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import Link from 'next/link';
 
@@ -1677,7 +1678,7 @@ export default function ClientPortalPage() {
                   style={{ ...btnOutline, padding: '8px 14px', fontSize: 12, marginTop: 4, width: '100%', textAlign: 'center' }}
                   onClick={() => {
                     if (doc.url) {
-                      window.open(doc.url, '_blank', 'noopener,noreferrer');
+                      openPdf({ url: doc.url, title: doc.title || 'Document' });
                     } else {
                       showToast('This document isn’t available for download yet. Please contact your contractor.', 'error');
                     }

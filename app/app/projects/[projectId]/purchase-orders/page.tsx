@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { openPdf } from '@/components/PdfViewer';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Badge, Table, T } from '@/components/ui/shell';
@@ -309,7 +310,7 @@ export default function PurchaseOrdersPage() {
       const json = await res.json().catch(() => ({}));
       const url = json.pdfUrl || json.url;
       if (!res.ok || !url) throw new Error(json.error || 'PDF generation failed');
-      window.open(url, '_blank');
+      openPdf({ url, title: 'Purchase Order' });
     } catch {
       setErrorMsg('Could not generate the PO PDF. Please try again.');
       setTimeout(() => setErrorMsg(''), 4000);
