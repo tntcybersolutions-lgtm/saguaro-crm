@@ -52,7 +52,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     try {
       const { data: sub } = await db.from('bid_submissions').select('sub_id, sub_name, sub_email, company_name, contact_name, contact_email, amount, base_amount').eq('id', body.submissionId).eq('tenant_id', user.tenantId).single();
       const { data: pkg } = await db.from('bid_packages').select('tenant_id, project_id, name, trade, csi_division').eq('id', id).eq('tenant_id', user.tenantId).single();
-      const amount = Number((sub?.amount ?? sub?.base_amount) || 0);
+      /* base_amount FIRST. bid_submissions.amount defaults to 0 rather than
+         null, so `amount ?? base_amount` never falls through — ?? only skips
+         null and undefined, and 0 is neither. A bid that filled base_amount
+         (which is what a submission actually sets) awarded at $0, and the
+         `amount > 0` guard below then skipped creating the purchase order
+         silently. Read the authoritative column first and treat 0 as absent. */
+      const amount = Number(sub?.base_amount ?? sub?.amount ?? 0) || Number(sub?.amount ?? 0) || 0;
       const vendor = sub?.company_name || sub?.sub_name || sub?.contact_name || 'Awarded subcontractor';
       await must(db.from('bid_packages').update({
         status: 'awarded', awarded_amount: amount, awarded_to: vendor, awarded_to_id: sub?.sub_id ?? null,

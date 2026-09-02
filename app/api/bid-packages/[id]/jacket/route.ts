@@ -65,44 +65,55 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     /* The package is proven to belong to the caller above; everything below is
        filtered by tenant as well, since these are service-role reads. */
-    const [items, drawings, specs, files, invites, submissions] = await Promise.all([
+    const [items, drawings, specs, packageDocs, packageReqs, invites, submissions] = await Promise.all([
       db.from('bid_package_items').select('*').eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('sort_order'),
       db.from('drawings').select('id,name,url,sheet_number,discipline,version,revision_date,status')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId).is('deleted_at', null)
         .order('sheet_number'),
       db.from('spec_sections').select('id,section_number,section_title,division,division_title,doc_url,revision,issued_date')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId).order('section_number'),
-      db.from('project_files').select('id,file_name,file_url,file_size,file_type,category,folder,created_at,entity_type,entity_id')
-        .eq('project_id', projectId).eq('tenant_id', user.tenantId).is('deleted_at', null)
-        .order('created_at', { ascending: false }),
+      db.from('bid_package_documents').select('id,file_name,file_url,file_type,category,label,sort_order,created_at')
+        .eq('bid_package_id', id).eq('tenant_id', user.tenantId).is('deleted_at', null)
+        .order('sort_order'),
+      /* bid_package_requirements has NO tenant_id column, so it cannot carry the
+         mandatory .eq('tenant_id') filter. Its parent package was proven to
+         belong to the caller above, and bid_package_id is the only key here —
+         the ownership check on the package IS the isolation for this read. */
+      db.from('bid_package_requirements').select('id,requirement_type,description,min_coverage,is_required,notes')
+        .eq('bid_package_id', id),
       db.from('bid_package_invites').select('id,company_name,sub_name,sub_email,trade,status,response_status,invited_at')
         .eq('bid_package_id', id).eq('tenant_id', user.tenantId),
       db.from('bid_submissions').select('id,company_name,sub_name,base_amount,amount,status,submitted_at')
         .eq('bid_package_id', id).eq('tenant_id', user.tenantId),
     ]);
 
-    const allFiles = (files.data || []) as Record<string, any>[];
+    /* Documents attached to THIS jacket live in bid_package_documents — a table
+       built for exactly this (bid_package_id, category, label, sort_order, soft
+       delete) that no code had ever read or written.
 
-    /* Files pinned to this package, plus project files a bidder needs. A file
-       is "in the jacket" if it was attached to the package, or it sits in a
-       category a bidder is expected to receive. */
-    const attached = allFiles.filter(
-      (f) => f.entity_type === 'bid_package' && f.entity_id === id,
-    );
-    const inCategory = (re: RegExp) =>
-      allFiles.filter((f) => re.test(String(f.category || f.folder || '')));
+       This previously filtered project_files, and did it wrongly in two ways:
+       the addenda test matched on `category || file_name` while the attachments
+       test matched on category alone, so a file named "Addendum 3.pdf" filed
+       under Attachments appeared in BOTH sections; and the category scan ran
+       across every file on the project with no check that the file belonged to
+       this package, so one package's addenda showed up inside another's jacket.
+       Keying on bid_package_id removes both by construction. */
+    const attachedDocs = (packageDocs.data || []) as Record<string, any>[];
 
-    const addenda = [
-      ...attached.filter((f) => /addend/i.test(String(f.category || f.file_name || ''))),
-      ...inCategory(/addend/i),
-    ].filter((f, i, a) => a.findIndex((x) => x.id === f.id) === i);
+    const isAddendum = (f: Record<string, any>) => /addend/i.test(String(f.category || ''));
+    const addenda = attachedDocs.filter(isAddendum);
+    const attached = attachedDocs.filter((f) => !isAddendum(f));
 
+    /* bid_package_documents carries `label` — the name the GC gave the document
+       when they put it in the jacket ("Addendum 01 — Fixture schedule"), which
+       reads far better on the shelf than the uploaded filename. Fall back to the
+       filename when no label was set. */
     const asDoc = (f: Record<string, any>): Doc => ({
       id: String(f.id),
-      name: String(f.file_name || 'Untitled'),
+      name: String(f.label || f.file_name || 'Untitled'),
       url: via(f.file_url),
-      meta: f.file_size ? `${Math.max(1, Math.round(Number(f.file_size) / 1024))} KB` : undefined,
-      sub: f.category || f.folder || undefined,
+      meta: f.file_type ? String(f.file_type).toUpperCase() : undefined,
+      sub: f.category || undefined,
       kind: 'pdf',
     });
 
@@ -171,19 +182,49 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       written('Special Requirements', p.special_requirements),
     ].filter(Boolean);
 
+    /* Requirements come from two places. bid_packages carries a fixed handful
+       of columns (GL, auto, workers' comp, bond, prevailing wage);
+       bid_package_requirements is a purpose-built table that can hold any
+       requirement with a coverage figure and a required/optional flag — and
+       which, like bid_package_documents, no code had ever read.
+
+       The structured rows win where they overlap: a GC who took the trouble to
+       record a specific requirement means it, and the flat columns are only
+       ever the six defaults. Anything the table holds beyond those six is
+       carried through as an extra line rather than dropped. */
+    const reqRows = (packageReqs.data || []) as Record<string, any>[];
+    const reqOf = (re: RegExp) => reqRows.find((r) => re.test(String(r.requirement_type || r.description || '')));
+    const cov = (r: Record<string, any> | undefined) =>
+      r && r.min_coverage != null ? Number(r.min_coverage) : null;
+
     const requirements = {
-      bond: !!p.requires_bond,
-      prevailingWage: !!p.requires_prevailing_wage,
-      insuranceAmount: p.insurance_required_amount ?? null,
-      generalLiability: p.general_liability ?? null,
-      autoLiability: p.auto_liability ?? null,
-      workersComp: p.workers_compensation ?? null,
-      insuranceText: p.insurance_requirements ?? null,
+      bond: !!p.requires_bond || !!reqOf(/bond/i)?.is_required,
+      prevailingWage: !!p.requires_prevailing_wage || !!reqOf(/prevailing|davis.?bacon/i)?.is_required,
+      insuranceAmount: cov(reqOf(/umbrella|excess|aggregate|minimum/i)) ?? p.insurance_required_amount ?? null,
+      generalLiability: cov(reqOf(/general.?liab|\bgl\b|cgl/i)) ?? p.general_liability ?? null,
+      autoLiability: cov(reqOf(/auto/i)) ?? p.auto_liability ?? null,
+      workersComp: cov(reqOf(/workers?.?comp|\bwc\b/i)) ?? p.workers_compensation ?? null,
+      insuranceText: p.insurance_requirements ?? reqOf(/insurance/i)?.description ?? null,
+      /* Requirements that are not one of the six the package columns model. */
+      additional: reqRows
+        .filter((r) => !/bond|prevailing|davis.?bacon|general.?liab|\bgl\b|cgl|auto|workers?.?comp|\bwc\b|umbrella|excess|aggregate|minimum/i
+          .test(String(r.requirement_type || '')))
+        .map((r) => ({
+          id: String(r.id),
+          type: r.requirement_type || 'Requirement',
+          description: r.description || null,
+          coverage: r.min_coverage != null ? Number(r.min_coverage) : null,
+          required: r.is_required !== false,
+          notes: r.notes || null,
+        })),
     };
     const hasRequirements =
       !!requirements.insuranceText ||
       requirements.insuranceAmount != null ||
       requirements.generalLiability != null ||
+      requirements.autoLiability != null ||
+      requirements.workersComp != null ||
+      requirements.additional.length > 0 ||
       requirements.bond ||
       requirements.prevailingWage;
 
@@ -250,9 +291,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         key: 'attachments',
         label: 'Attachments',
         required: false,
-        count: attached.filter((f) => !/addend/i.test(String(f.category || ''))).length,
+        count: attached.length,
         pages: [],
-        docs: attached.filter((f) => !/addend/i.test(String(f.category || ''))).map(asDoc),
+        docs: attached.map(asDoc),
       },
     ];
 

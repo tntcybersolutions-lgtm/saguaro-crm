@@ -56,6 +56,14 @@ export type Jacket = {
     bond: boolean; prevailingWage: boolean; insuranceAmount: number | null;
     generalLiability: number | null; autoLiability: number | null;
     workersComp: number | null; insuranceText: string | null;
+    /* Requirements recorded in bid_package_requirements that are not one of the
+       six the bid_packages columns model — a bonding capacity floor, a safety
+       EMR ceiling, a specific certification. Rendered as their own lines so a
+       requirement a GC took the trouble to write down is not silently dropped. */
+    additional?: Array<{
+      id: string; type: string; description: string | null;
+      coverage: number | null; required: boolean; notes: string | null;
+    }>;
   };
   bidders: { invited: number; responded: number };
   completeness: { complete: number; total: number; missing: string[] };
@@ -295,6 +303,13 @@ export default function BidJacketView({
                   <Req label="Minimum coverage" value={money(requirements.insuranceAmount)} />
                   <Req label="Payment & performance bond" value={requirements.bond ? 'Required' : 'Not required'} />
                   <Req label="Prevailing wage" value={requirements.prevailingWage ? 'Required' : 'Not required'} />
+                  {(requirements.additional ?? []).map((r) => (
+                    <Req
+                      key={r.id}
+                      label={r.type + (r.required ? '' : ' (optional)')}
+                      value={r.coverage != null ? money(r.coverage) : (r.description || (r.required ? 'Required' : 'Optional'))}
+                    />
+                  ))}
                 </div>
                 {active.pages.map((pg) => <Written key={pg.id} page={pg} />)}
               </SectionCard>
