@@ -159,6 +159,7 @@ export default function HelpMode() {
   const [rect, setRect] = useState<Rect | null>(null);
   const [missing, setMissing] = useState(false);
   const [reduced, setReduced] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const anchorRef = useRef<HTMLElement | null>(null);
   const calloutRef = useRef<HTMLDivElement | null>(null);
@@ -171,6 +172,7 @@ export default function HelpMode() {
 
   /* ── restore across navigation ──────────────────────────────────────── */
   useEffect(() => {
+    setMounted(true);
     setReduced(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     try {
       if (sessionStorage.getItem(SS_ON) === '1') setOn(true);
@@ -358,8 +360,16 @@ export default function HelpMode() {
   }, [stepIdx, tour?.id, rect, missing, onRoute]);
 
   if (!on) return null;
-  /* Nothing to portal into until the client has mounted. */
-  if (typeof document === 'undefined') return null;
+  /**
+   * Portals need a mounted flag, not a `typeof document` check.
+   *
+   * The server renders nothing and the client renders a portal, so testing
+   * `document` directly means the two passes disagree on the very first render
+   * whenever help mode was already on from a previous page — a hydration
+   * mismatch, which React resolves by throwing away and re-rendering the tree.
+   * `mounted` is false on both passes and flips in an effect, so the two agree.
+   */
+  if (!mounted) return null;
 
   /**
    * Everything renders into document.body.

@@ -5,6 +5,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { HelpModeButton } from '@/components/HelpMode';
+import HeaderProjectPicker from '@/components/HeaderProjectPicker';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -76,7 +77,28 @@ export default function AppTopBar({
   useEffect(() => {
     if (!projId || projectNames[projId]) return;
     const p = (crumbProjects as any[]).find((x: any) => x?.id === projId);
-    if (p) setProjectNames((prev) => ({ ...prev, [projId]: p.name || p.project_name || p.title || 'Project' }));
+    if (p) {
+      setProjectNames((prev) => ({ ...prev, [projId]: p.name || p.project_name || p.title || 'Project' }));
+      return;
+    }
+    /**
+     * Not in the shell's list — fetch it.
+     *
+     * useProjects caps at fifteen, so the sixteenth job fell through to the
+     * literal word "Project". The crumb whose entire job is telling you which
+     * job you are in was telling you nothing, which is exactly the complaint.
+     */
+    let cancelled = false;
+    fetch(`/api/projects/${projId}?fields=id,name`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled || !d) return;
+        const rec = d.project ?? d;
+        const nm = rec?.name || rec?.project_name || rec?.title;
+        if (nm) setProjectNames((prev) => ({ ...prev, [projId]: nm }));
+      })
+      .catch(() => { /* the crumb keeps its fallback; navigation still works */ });
+    return () => { cancelled = true; };
   }, [projId, crumbProjects]); // eslint-disable-line react-hooks/exhaustive-deps
   const crumbs = segments.map((seg, i) => ({
     label:
@@ -166,6 +188,12 @@ export default function AppTopBar({
           </span>
         </button>
       )}
+
+      {/* The job you are in — same place on every screen, and switching keeps
+          you on the screen you are looking at. */}
+      <HeaderProjectPicker />
+
+      <span aria-hidden style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', margin: '0 4px', flexShrink: 0 }} />
 
       {/* Breadcrumbs */}
       <nav style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, overflow: 'hidden' }}>
