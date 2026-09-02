@@ -10,6 +10,8 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatSt
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 import { SkeletonRow } from '@/components/ui/Skeleton';
 import { moduleAccent } from '@/lib/module-identity';
+import { LifecycleRail } from '@/components/ui/Status';
+import { useLiveStatus } from '@/lib/hooks/useLiveStatus';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_PAY_APPS_DUE } from '@/lib/suggestions';
 
@@ -39,36 +41,22 @@ function statusBadge(s:string){
 // waivers load. Inline primitive: premium.tsx is shared and intentionally untouched.
 const STAGE_RANK:Record<string,number> = {draft:0,submitted:1,approved:2,certified:2.5,paid:3};
 const STAGE_LABELS = ['Draft','Submitted','Approved','Paid'];
-function MiniPipeline({status,waivers}:{status:string;waivers?:{total:number;signed:number}}){
-  const rank = STAGE_RANK[status] ?? 0;
-  const current = Math.min(3, Math.floor(rank));
+/**
+ * The rail that started here now lives in components/ui/Status and is used by
+ * every module. This keeps the one thing that is specific to a pay
+ * application — waiver coverage, which gates whether payment can be released —
+ * and defers everything else to the shared treatment.
+ */
+function MiniPipeline({status,waivers,since,changed}:{status:string;waivers?:{total:number;signed:number};since?:string|null;changed?:boolean}){
   const allSigned = !!waivers && waivers.total>0 && waivers.signed===waivers.total;
   return (
-    <div style={{minWidth:150}} title={`Lifecycle: ${STAGE_LABELS.join(' -> ')} — now ${status}`}>
-      <div style={{display:'flex',alignItems:'center',marginBottom:5}}>
-        {STAGE_LABELS.map((label,i)=>{
-          const reached = rank>=i;
-          return (
-            <React.Fragment key={label}>
-              {i>0 && <div style={{width:16,height:2,background:reached?'rgba(245,158,11,0.55)':'rgba(255,255,255,0.14)'}}/>}
-              <div title={label} style={{
-                width:9,height:9,borderRadius:999,flexShrink:0,boxSizing:'border-box' as const,
-                background:reached?(i===3?'#3dd68c':GOLD):'transparent',
-                border:reached?'none':'1.5px solid rgba(255,255,255,0.28)',
-                boxShadow:current===i?`0 0 0 3px ${i===3?'rgba(61,214,140,0.16)':'rgba(245,158,11,0.16)'}`:'none',
-              }}/>
-            </React.Fragment>
-          );
-        })}
-      </div>
-      <div style={{display:'flex',alignItems:'center',gap:7}}>
-        {statusBadge(status)}
-        {waivers && waivers.total>0 && (
-          <span style={{fontSize:10,fontWeight:700,color:allSigned?'#3dd68c':AMBER,whiteSpace:'nowrap' as const}}>
-            {waivers.signed}/{waivers.total} waivers signed
-          </span>
-        )}
-      </div>
+    <div style={{minWidth:150}}>
+      <LifecycleRail module="pay_applications" status={status} since={since} changed={changed} showAction={false}/>
+      {waivers && waivers.total>0 && (
+        <div style={{fontSize:10,fontWeight:700,color:allSigned?'#3dd68c':AMBER,whiteSpace:'nowrap' as const,marginTop:3}}>
+          {waivers.signed}/{waivers.total} waivers signed
+        </div>
+      )}
     </div>
   );
 }
@@ -111,6 +99,8 @@ export default function PayAppsPage() {
       })(),
     ]);
   },[projectId]);
+
+
 
   const { dragHandlers, draggingIndex } = useDragReorder(payApps, (reordered) => {
     setPayApps(reordered);
@@ -177,6 +167,17 @@ export default function PayAppsPage() {
       setLoading(false);
     }
   },[projectId]);
+
+  /* Live: a status that changes while this table is open should change on the
+     table, not the next time somebody reloads. changed drives the flash so the
+     movement is noticed rather than silently swapped. */
+  const { changed: liveChanged } = useLiveStatus(
+    'pay_applications',
+    projectId ? `project_id=eq.${projectId}` : undefined,
+    load,
+    Boolean(projectId),
+  );
+
 
   useEffect(()=>{ load(); },[load]);
 
@@ -441,7 +442,7 @@ export default function PayAppsPage() {
                       {pa.period_to ? new Date(pa.period_to+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'}
                     </td>
                     <td style={{padding:'12px 14px'}}>
-                      <MiniPipeline status={pa.status||'draft'} waivers={waiversByApp[pa.id]}/>
+                      <MiniPipeline status={pa.status||'draft'} waivers={waiversByApp[pa.id]} since={pa.updated_at || pa.created_at} changed={liveChanged.has(pa.id)}/>
                     </td>
                     <td style={{padding:'12px 14px',color:TEXT,whiteSpace:'nowrap' as const}}>
                       {(()=>{ const done=Number(pa.total_completed_stored ?? pa.total_completed)||0; const cs=Number(pa.contract_sum_to_date ?? pa.contract_sum)||0; return (<>

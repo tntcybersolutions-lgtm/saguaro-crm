@@ -12,6 +12,7 @@ import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_BID_DECISION } from '@/lib/suggestions';
+import { StatusPill } from '@/components/ui/Status';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -68,19 +69,16 @@ interface WizardState {
 
 // ─── Badge ───────────────────────────────────────────────────────────────────
 
+/**
+ * Defers to the platform status treatment.
+ *
+ * This had its own four-colour table, in which "open" was gold — the colour
+ * that means "waiting on you" everywhere else, when a package that is out for
+ * bid is waiting on subs. A colour that means one thing here and another on
+ * the next screen carries no information at all.
+ */
 function StatusBadge({ status }: { status: string }) {
-  const cfg: Record<string, { c: string; bg: string }> = {
-    draft:   { c: DIM,      bg: 'rgba(148,163,192,.15)' },
-    open:    { c: '#F59E0B', bg: 'rgba(245,158,11,.12)' },
-    closed:  { c: ORANGE,   bg: 'rgba(184,92,42,.12)' },
-    awarded: { c: '#1db954', bg: 'rgba(26,138,74,.12)' },
-  };
-  const s = cfg[status] || cfg.draft;
-  return (
-    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: s.bg, color: s.c, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-      {status}
-    </span>
-  );
+  return <StatusPill module="bid_packages" status={status} size="sm" />;
 }
 
 // ─── Wizard Modal ─────────────────────────────────────────────────────────────
