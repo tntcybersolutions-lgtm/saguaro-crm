@@ -797,3 +797,14 @@ input:-webkit-autofill:focus {
   padding-left: 24px;
   padding-right: 24px;
 }
+
+/* Page-enter fade used by components/PageTransition.tsx.
+   Defined once here rather than injected per instance. The component drops the
+   animation entirely when it finishes: fill-mode forwards would otherwise leave
+   a permanent identity transform on the wrapper, and any transform makes that
+   wrapper the containing block for position:fixed children — which silently
+   re-anchors every modal in the app away from the viewport. */
+@keyframes saguaroPageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

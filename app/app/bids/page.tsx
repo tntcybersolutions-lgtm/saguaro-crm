@@ -784,7 +784,7 @@ function BidsPageInner() {
       />
 
       {/* ── Score a Bid Modal ─────────────────────────────────────────────────── */}
-      {showScore&&<div style={{position:'fixed',inset:0,background:'#0a0a0a',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
+      {showScore&&<div style={{position:'fixed',inset:0,background:'rgba(2,4,8,0.72)',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:28,width:480,maxWidth:'95vw',boxShadow:'0 24px 80px rgba(0,0,0,.6)'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
             <div style={{fontWeight:800,fontSize:17,color:TEXT,display:'inline-flex',alignItems:'center',gap:8}}><Robot size={18} weight="regular" />Score This Bid</div>

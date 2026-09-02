@@ -384,8 +384,6 @@ export default function SavedViewsPage() {
                     key={view.id}
                     style={{
                       background: CARD,
-                      backdropFilter: 'blur(16px)',
-                      WebkitBackdropFilter: 'blur(16px)',
                       border: `1px solid ${BORDER}`,
                       borderRadius: 16,
                       padding: '16px 20px',

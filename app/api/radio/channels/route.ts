@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     const projIds = [...new Set(list.map((c) => c.project_id).filter(Boolean))];
     const projNames = new Map<string, string>();
     if (projIds.length) {
-      const { data: projs } = await db.from('projects').select('id, name').in('id', projIds);
+      const { data: projs } = await db.from('projects').select('id, name').in('id', projIds).eq('tenant_id', t);
       for (const p of (projs || []) as any[]) projNames.set(p.id, p.name);
     }
 

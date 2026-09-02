@@ -87,7 +87,8 @@ export async function GET(req: NextRequest) {
         const { data: projs } = await db
           .from('projects')
           .select('id, name')
-          .in('id', Array.from(projectIds));
+          .in('id', Array.from(projectIds))
+          .eq('tenant_id', user.tenantId);
         for (const p of (projs || []) as Array<Record<string, unknown>>) {
           projectNames[String(p.id)] = String(p.name ?? '');
         }

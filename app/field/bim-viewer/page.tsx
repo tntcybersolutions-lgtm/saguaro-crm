@@ -613,7 +613,7 @@ function LoadingSkeleton() {
     <div style={{ padding: '12px 14px', maxWidth: 480, margin: '0 auto' }}>
       {[1, 2, 3].map(i => (
         <div key={i} style={{
-          background: CARD_GLASS, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+          background: CARD_GLASS,
           border: `1px solid ${BORDER}`, borderRadius: RADIUS, padding: 16, marginBottom: 10,
         }}>
           <div style={{ height: 16, width: '60%', background: 'rgba(0,0,0,0.06)', borderRadius: 8, marginBottom: 10 }} />

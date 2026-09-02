@@ -62,6 +62,42 @@ async function getUserFromRequest(req: NextRequest): Promise<{ id: string; tenan
   }
 }
 
+/**
+ * Prove the caller owns `projectId` before writing anything hung off it.
+ *
+ * Every write in this file goes through supabaseAdmin, which is the service
+ * role key — RLS is bypassed entirely, so the only thing separating one tenant
+ * from another is code like this. The bid-package and change-order branches
+ * below took projectId straight from the request body and inserted against it
+ * with no auth call at all, which let any caller write into any tenant's job by
+ * supplying its id.
+ *
+ * Returns the tenant on success, or the response to send back. Callers must
+ * check `denied` first — a helper that returned null on failure would let a
+ * missed check read as success.
+ */
+async function requireProjectAccess(
+  req: NextRequest,
+  projectId: string,
+): Promise<{ tenantId: string; denied: null } | { tenantId: null; denied: NextResponse }> {
+  const user = await getUserFromRequest(req);
+  if (!user) {
+    return { tenantId: null, denied: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
+  }
+  const { data: project } = await supabaseAdmin
+    .from('projects')
+    .select('id')
+    .eq('id', projectId)
+    .eq('tenant_id', user.tenantId)
+    .maybeSingle();
+  if (!project) {
+    // 404 rather than 403: confirming the row exists would tell an attacker
+    // which project ids are real.
+    return { tenantId: null, denied: NextResponse.json({ error: 'Project not found' }, { status: 404 }) };
+  }
+  return { tenantId: user.tenantId, denied: null };
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ActionItem {
@@ -526,10 +562,15 @@ export async function POST(
     const body = await req.json().catch(() => ({}));
     const { projectId, name, code, bidDue, scope } = body;
     if (!projectId || !name) return NextResponse.json({ error: 'projectId and name required' }, { status: 400 });
+    // projectId arrives from the request body and every query below runs on the
+    // service role key, so ownership has to be proved before anything is read
+    // or written against it.
+    const access = await requireProjectAccess(req, projectId);
+    if (access.denied) return access.denied;
     try {
-      const { count } = await supabaseAdmin.from('bid_packages').select('*', { count: 'exact', head: true }).eq('project_id', projectId);
+      const { count } = await supabaseAdmin.from('bid_packages').select('*', { count: 'exact', head: true }).eq('project_id', projectId).eq('tenant_id', access.tenantId);
       const autoCode = code || `BP-${String((count || 0) + 1).padStart(2, '0')}`;
-      const { data, error } = await supabaseAdmin.from('bid_packages').insert({ project_id: projectId, code: autoCode, name, scope: scope || '', status: 'draft', bid_due_date: bidDue || null }).select().single();
+      const { data, error } = await supabaseAdmin.from('bid_packages').insert({ tenant_id: access.tenantId, project_id: projectId, code: autoCode, name, scope: scope || '', status: 'draft', bid_due_date: bidDue || null }).select().single();
       if (error) throw error;
       return NextResponse.json({ success: true, bidPackage: data });
     } catch (err: unknown) {
@@ -630,10 +671,13 @@ export async function POST(
     const body = await req.json().catch(() => ({}));
     const { projectId, title, costImpact, scheduleImpactDays, reason, initiatedBy, description } = body;
     if (!projectId || !title) return NextResponse.json({ error: 'projectId and title required' }, { status: 400 });
+    // Same as bid-packages above: body-supplied projectId, service role client.
+    const access = await requireProjectAccess(req, projectId);
+    if (access.denied) return access.denied;
     try {
-      const { count } = await supabaseAdmin.from('change_orders').select('*', { count: 'exact', head: true }).eq('project_id', projectId);
+      const { count } = await supabaseAdmin.from('change_orders').select('*', { count: 'exact', head: true }).eq('project_id', projectId).eq('tenant_id', access.tenantId);
       const coNumber = `CO-${String((count || 0) + 1).padStart(3, '0')}`;
-      const { data, error } = await supabaseAdmin.from('change_orders').insert({ project_id: projectId, co_number: coNumber, title, description: description || '', status: 'pending', cost_impact: Number(costImpact) || 0, schedule_impact_days: Number(scheduleImpactDays) || 0, reason: reason || null, initiated_by: initiatedBy || null }).select().single();
+      const { data, error } = await supabaseAdmin.from('change_orders').insert({ tenant_id: access.tenantId, project_id: projectId, co_number: coNumber, title, description: description || '', status: 'pending', cost_impact: Number(costImpact) || 0, schedule_impact_days: Number(scheduleImpactDays) || 0, reason: reason || null, initiated_by: initiatedBy || null }).select().single();
       if (error) throw error;
       return NextResponse.json({ success: true, changeOrder: data });
     } catch (err: unknown) {

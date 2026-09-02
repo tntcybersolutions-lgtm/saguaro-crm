@@ -531,8 +531,6 @@ export default function ROICalculatorPage() {
                       background: isOn
                         ? 'rgba(255,255,255,0.06)'
                         : 'rgba(255,255,255,0.02)',
-                      backdropFilter: isOn ? 'blur(40px)' : 'none',
-                      WebkitBackdropFilter: isOn ? 'blur(40px)' : 'none',
                       borderLeft: isOn ? `3px solid ${GOLD}` : '3px solid transparent',
                       border: isOn
                         ? `1px solid rgba(245, 158, 11,0.2)`

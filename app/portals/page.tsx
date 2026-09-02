@@ -21,7 +21,7 @@ export default function PortalsHub() {
           {portals.map((p) => (
             <a key={p.href} href={p.href} style={{
               display: 'block', textDecoration: 'none',
-              background: '#141416', backdropFilter: 'blur(40px)',
+              background: '#141416',
               border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: '24px 28px',
               borderLeft: `4px solid ${p.color}`,
             }}>

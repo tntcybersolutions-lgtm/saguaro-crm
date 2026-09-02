@@ -174,7 +174,7 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
         alignItems: 'flex-start',
         justifyContent: 'center',
         paddingTop: 100,
-        background: '#0a0a0a',
+        background: 'rgba(2,4,8,0.72)',
         backdropFilter: 'blur(4px)',
       }}
     >

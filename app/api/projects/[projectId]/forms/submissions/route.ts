@@ -34,17 +34,49 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
   try {
     const body = await req.json();
     const supabase = createServerClient();
+
+    // projectId comes from the URL and this client is the service role key, so
+    // it has to be proved to belong to the caller before anything is written
+    // against it. Without this any signed-in user could post a submission into
+    // another tenant's job by editing the URL.
+    const { data: project } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('id', params.projectId)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+
+    // Named columns only. This used to spread ...body into the row, which let a
+    // caller set tenant_id, id or reviewed_by directly — the request deciding
+    // which tenant owns the record it creates.
     const record = {
+      tenant_id: user.tenantId,
       project_id: params.projectId,
-      ...body,
+      template_id: body.template_id ?? null,
+      data: body.data ?? null,
+      responses: body.responses ?? null,
+      location: body.location ?? null,
+      notes: body.notes ?? null,
       submitted_by: user.email,
       status: body.status || 'submitted',
+      submitted_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
     };
-    const { data, error } = await supabase.from('form_submissions').insert(record).select().single();
-    if (error) return NextResponse.json({ submission: { id: `fs-${Date.now()}`, ...record } });
+
+    const { data, error } = await supabase.from('form_submissions').insert(record as never).select().single();
+    if (error) {
+      // This previously answered 200 with a made-up `fs-<timestamp>` id when the
+      // insert failed. Since form_submissions.tenant_id is NOT NULL and the row
+      // above never set it, EVERY submission failed and every one of them was
+      // reported to the user as saved. Report the failure.
+      console.error('[projects/[projectId]/forms/submissions] write failed:', error.message);
+      return NextResponse.json({ error: 'Failed to submit form', detail: error.message }, { status: 500 });
+    }
     return NextResponse.json({ submission: data });
-  } catch {
-    return NextResponse.json({ error: 'Failed to submit form' }, { status: 500 });
+  } catch (e) {
+    const detail = e instanceof Error ? e.message : String(e);
+    console.error('[projects/[projectId]/forms/submissions] write failed:', detail);
+    return NextResponse.json({ error: 'Failed to submit form', detail }, { status: 500 });
   }
 }

@@ -2337,7 +2337,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     : tool === 'wall' ? ['Click corner → corner along the wall · Enter finishes'] : tool === 'place' ? ['Click the plan to drop a device · drag to move it'] : ['Click a device to select · drag to move']
                   : ['Click a device to select', 'Drag to move', 'Delete key (or the trash in the list) removes', 'Place tool adds']
                 ).map((h) => (
-                  <span key={h} style={{ background: 'rgba(15,17,22,0.72)', border: '1px solid rgba(255,255,255,0.12)', color: DIM, fontSize: fieldMode ? 12 : 10.5, fontWeight: fieldMode ? 700 : 600, padding: fieldMode ? '6px 12px' : '3px 8px', borderRadius: 999, backdropFilter: 'blur(8px)', boxShadow: '0 8px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)' }}>{h}</span>
+                  <span key={h} style={{ background: 'rgba(15,17,22,0.72)', border: '1px solid rgba(255,255,255,0.12)', color: DIM, fontSize: fieldMode ? 12 : 10.5, fontWeight: fieldMode ? 700 : 600, padding: fieldMode ? '6px 12px' : '3px 8px', borderRadius: 999, boxShadow: '0 8px 22px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08)' }}>{h}</span>
                 ))}
               </div>
               {/* Field mode: compact selected-device card — no panel needed to rename-level ops */}

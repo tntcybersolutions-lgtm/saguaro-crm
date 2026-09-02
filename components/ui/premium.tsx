@@ -419,8 +419,6 @@ export function SectionCard({
            sitting ABOVE it — which is what "raised" was supposed to mean, and
            what makes the flat/raised distinction do any work. */
         background: 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))',
-        backdropFilter: 'blur(16px) saturate(150%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(150%)',
         border: '1px solid rgba(255,255,255,0.10)', borderRadius: 16,
         boxShadow: `0 26px 54px -34px ${A22}, inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.02)`,
         ...style,
@@ -508,8 +506,6 @@ export const ghostButtonStyle: React.CSSProperties = {
   color: 'rgba(255,255,255,0.78)',
   border: '1px solid rgba(255,255,255,0.11)',
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
-  backdropFilter: 'blur(10px) saturate(140%)',
-  WebkitBackdropFilter: 'blur(10px) saturate(140%)',
   fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
 };
 
@@ -539,8 +535,6 @@ export const goldOutlineButtonStyle: React.CSSProperties = {
   color: 'rgba(255,255,255,0.88)',
   border: '1px solid rgba(255,255,255,0.16)',
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
-  backdropFilter: 'blur(10px) saturate(140%)',
-  WebkitBackdropFilter: 'blur(10px) saturate(140%)',
   fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
 };
 

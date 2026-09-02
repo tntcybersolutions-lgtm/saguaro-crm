@@ -46,7 +46,7 @@ export default function SubPortalLanding() {
           <p style={{ color: '#CBD5E1', fontSize: 14, margin: 0 }}>Upload documents, track pay apps, view compliance status.</p>
         </div>
 
-        <div style={{ background: '#141416', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
+        <div style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
           <div style={{ marginBottom: 24 }}>
             <label style={{ color: '#CBD5E1', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Access with your email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleEmailAccess()} placeholder="you@company.com" style={{ width: '100%', padding: '12px 16px', background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#FFFFFF', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />

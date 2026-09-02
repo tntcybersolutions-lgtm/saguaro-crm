@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const projIds = Array.from(new Set(((docs || []) as any[]).map((d) => d.project_id).filter(Boolean)));
     const names: Record<string, string> = {};
     if (projIds.length) {
-      const { data: projs } = await db.from('projects').select('id, name').in('id', projIds);
+      const { data: projs } = await db.from('projects').select('id, name').in('id', projIds).eq('tenant_id', g.user.tenantId);
       for (const p of (projs || []) as any[]) names[p.id] = p.name;
     }
     const out = ((docs || []) as any[]).map((d) => ({ ...d, projectName: names[d.project_id] ?? null }));

@@ -35,6 +35,22 @@ export async function POST(
 
     const db = createServerClient();
 
+    // correspondence_read_receipts has no tenant_id column, so the ONLY thing
+    // that can scope a receipt is the correspondence it hangs off — and both
+    // ids come from the URL on a service-role client that bypasses RLS. This
+    // check used to sit at the bottom, guarding the parent's status flip but
+    // not the receipt itself, so a signed-in user could attach a receipt to
+    // another tenant's correspondence just by editing the id in the path.
+    // Prove ownership before writing anything.
+    const { data: parent } = await db
+      .from('correspondence')
+      .select('id')
+      .eq('id', id)
+      .eq('project_id', projectId)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (!parent) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
     // De-dupe: one receipt per (correspondence, recipient). No unique index
     // exists, so check first then insert/update.
     const { data: existing } = await db

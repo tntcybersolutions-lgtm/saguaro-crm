@@ -336,7 +336,7 @@ export default function FieldHome() {
       {sageOpen && (
         <div
           onClick={handleBackdropClick}
-          style={{ position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', backdropFilter: 'blur(4px)' }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(2,4,8,0.72)', zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', backdropFilter: 'blur(4px)' }}
         >
           <div
             ref={drawerRef}

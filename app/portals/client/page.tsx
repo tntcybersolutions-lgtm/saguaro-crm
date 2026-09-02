@@ -46,7 +46,7 @@ export default function ClientPortalLanding() {
           <p style={{ color: '#CBD5E1', fontSize: 14, margin: 0 }}>View your project progress, budgets, photos, and documents in real time.</p>
         </div>
 
-        <div style={{ background: '#141416', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
+        <div style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
           <div style={{ marginBottom: 24 }}>
             <label style={{ color: '#CBD5E1', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Access with your email</label>
             <input
