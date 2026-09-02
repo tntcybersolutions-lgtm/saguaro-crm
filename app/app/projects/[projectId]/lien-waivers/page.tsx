@@ -495,7 +495,7 @@ export default function LienWaiversPage() {
                           </td>
                           <td style={{padding:'10px 14px'}}>
                             {w.pdf_url && (
-                              <a href={w.pdf_url} target="_blank" rel="noreferrer"
+                              <a href={`/api/files/open?u=${encodeURIComponent(w.pdf_url || '')}`} target="_blank" rel="noreferrer"
                                 style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:GOLD,fontSize:11,padding:'3px 9px',textDecoration:'none',cursor:'pointer'}}>
                                 <span style={{display:'inline-flex',alignItems:'center',gap:5,verticalAlign:'middle'}}><DownloadSimple size={12} weight="regular" color={GOLD} /> Download</span>
                               </a>

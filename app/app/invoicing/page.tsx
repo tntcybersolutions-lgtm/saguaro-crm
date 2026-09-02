@@ -299,10 +299,21 @@ export default function InvoicingPage() {
   }
 
   const [pdfBusy, setPdfBusy] = useState<string | null>(null);
-  /** POST /api/invoices/[id]/pdf -> { pdfUrl }. Once a row carries pdf_url,
-   *  the button opens the real .pdf directly. */
+  /**
+   * POST /api/invoices/[id]/pdf -> { pdfUrl }.
+   *
+   * This used to short-circuit: if the row already carried a pdf_url it opened
+   * that directly. But the stored value is a SIGNED url with an hour on it —
+   * the route that writes it says so in its own comment — so any invoice
+   * looked at more than an hour after its PDF was made opened to
+   *
+   *   {"error":"InvalidJWT","message":"\"exp\" claim timestamp check failed"}
+   *
+   * which is what a GC sees when they click PDF on last week's invoice. The
+   * stored value is a "this has a PDF" flag, not a link. Always ask for a
+   * fresh one; the route regenerates cheaply and returns a working URL.
+   */
   async function handlePdf(inv: Invoice) {
-    if (inv.pdf_url) { window.open(inv.pdf_url, '_blank', 'noopener'); return; }
     setPdfBusy(inv.id);
     try {
       const res = await fetch(`/api/invoices/${inv.id}/pdf`, { method: 'POST' });

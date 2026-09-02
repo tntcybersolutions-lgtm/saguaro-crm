@@ -1,6 +1,32 @@
 import { createServerClient } from '@/lib/supabase-server';
 
 const PUBLIC_MARKER = '/storage/v1/object/public/';
+/* An already-signed URL. saveDocument RETURNS a signed link and several routes
+   store what it returns, so rows across the app hold URLs with an hour on them.
+   Once that hour is up the link answers
+     {"error":"InvalidJWT","message":"\"exp\" claim timestamp check failed"}
+   which is what a GC gets clicking PDF on last week's invoice. Being able to
+   read the path back out of a signed URL means an expired one can simply be
+   re-signed instead of being a dead end. */
+const SIGNED_MARKER = '/storage/v1/object/sign/';
+
+/** Pull "<bucket>/<path>" out of a public OR signed storage URL. */
+function bucketAndPath(stored: string): { bucket: string; path: string } | null {
+  for (const marker of [PUBLIC_MARKER, SIGNED_MARKER]) {
+    const i = stored.indexOf(marker);
+    if (i < 0) continue;
+    const after = stored.slice(i + marker.length);
+    const slash = after.indexOf('/');
+    if (slash < 0) return null;
+    const bucket = after.slice(0, slash);
+    let path = after.slice(slash + 1);
+    const q = path.indexOf('?');            // drop ?token=… on a signed URL
+    if (q >= 0) path = path.slice(0, q);
+    try { path = decodeURIComponent(path); } catch { /* sign it as-is */ }
+    return { bucket, path };
+  }
+  return null;
+}
 
 /**
  * No signing call may hang a request.
@@ -107,21 +133,9 @@ export async function signStoredUrl(
  */
 export async function signUrl(stored: string | null | undefined, ttlSeconds = 3600): Promise<string> {
   if (!stored) return stored ?? '';
-  const i = stored.indexOf(PUBLIC_MARKER);
-  if (i < 0) return stored; // not a public-bucket URL (signed/foreign/path) — leave as-is
-  const after = stored.slice(i + PUBLIC_MARKER.length); // "<bucket>/<path>"
-  const slash = after.indexOf('/');
-  if (slash < 0) return stored;
-  const bucket = after.slice(0, slash);
-  // A public URL percent-encodes the object path; the storage API wants it raw.
-  let path = after.slice(slash + 1);
-  const q = path.indexOf('?');
-  if (q >= 0) path = path.slice(0, q);
-  try {
-    path = decodeURIComponent(path);
-  } catch {
-    /* not valid percent-encoding — sign it as-is */
-  }
+  const parsed = bucketAndPath(stored);
+  if (!parsed) return stored; // foreign URL, demo://, or a bare path — leave it alone
+  const { bucket, path } = parsed;
   try {
     const res = await withTimeout(
       createServerClient().storage.from(bucket).createSignedUrl(path, ttlSeconds),

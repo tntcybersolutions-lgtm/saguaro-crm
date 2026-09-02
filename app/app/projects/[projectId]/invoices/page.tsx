@@ -227,7 +227,7 @@ export default function InvoicesPage() {
   /** POST /api/invoices/[id]/pdf -> { pdfUrl }, then open the document. Rows
    *  that already carry pdf_url open the real .pdf directly. */
   async function handlePdf(inv: Invoice) {
-    if (inv.pdf_url) { window.open(inv.pdf_url, '_blank', 'noopener'); return; }
+    if (inv.pdf_url) { window.open(`/api/files/open?u=${encodeURIComponent(inv.pdf_url)}`, '_blank', 'noopener'); return; }
     setPdfBusy(inv.id);
     try {
       const res = await fetch(`/api/invoices/${inv.id}/pdf`, { method: 'POST' });

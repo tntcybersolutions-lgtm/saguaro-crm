@@ -282,7 +282,7 @@ export default function InvoiceDetailPage() {
    *  POST /api/invoices/[id]/pdf -> { pdfUrl }; the Document card below picks
    *  up the stored pdf_url on reload. */
   async function handlePdf(regenerate = false) {
-    if (!regenerate && invoice?.pdf_url) { window.open(invoice.pdf_url, '_blank', 'noopener'); return; }
+    if (!regenerate && invoice?.pdf_url) { window.open(`/api/files/open?u=${encodeURIComponent(invoice.pdf_url)}`, '_blank', 'noopener'); return; }
     setBusy('pdf');
     try {
       const res = await fetch(`/api/invoices/${id}/pdf`, { method: 'POST' });
@@ -504,7 +504,7 @@ export default function InvoiceDetailPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13 }} className="pmBtn">
+              <a href={`/api/files/open?u=${encodeURIComponent(inv.pdf_url || '')}`} target="_blank" rel="noopener noreferrer" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13 }} className="pmBtn">
                 <ArrowSquareOut size={14} /> Open PDF
               </a>
               <button onClick={() => handlePdf(true)} disabled={busy === 'pdf'} style={{ ...ghostButtonStyle, padding: '9px 16px', fontSize: 13, opacity: busy === 'pdf' ? 0.6 : 1, cursor: busy === 'pdf' ? 'not-allowed' : 'pointer' }} className="pmBtn">

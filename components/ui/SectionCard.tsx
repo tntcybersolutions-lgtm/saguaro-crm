@@ -63,7 +63,7 @@ export function SectionCard({
       style={{
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: 18,
+        borderRadius: 16,
         border: `1px solid ${lift ? gold(45) : 'var(--sg-border)'}`,
         background: 'linear-gradient(160deg, var(--sg-surface-from), var(--sg-surface-to))',
         boxShadow,

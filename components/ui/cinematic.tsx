@@ -360,8 +360,11 @@ export function SectionCard({
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
         background: CIN.surface,
         border: `1px solid ${CIN.border}`,
-        borderRadius: 18,
-        boxShadow: '0 20px 50px -30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.03)',
+        /* 16 and this shadow are the platform's card, shared with premium.tsx.
+           Three implementations each picked their own radius and drop, which is
+           the main reason two screens side by side did not look like one app. */
+        borderRadius: 16,
+        boxShadow: '0 24px 48px -32px rgba(245,158,11,0.22), inset 0 1px 0 rgba(255,255,255,0.06)',
         ...style,
       }}
     >

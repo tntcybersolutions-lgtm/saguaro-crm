@@ -709,7 +709,7 @@ export default function PayrollPage() {
                     </td>
                     <td style={{ padding: '12px 16px' }}>
                       {record.pdf_url ? (
-                        <a href={record.pdf_url} target="_blank" rel="noopener noreferrer" style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: GOLD, fontSize: 11, padding: '3px 10px', textDecoration: 'none', fontWeight: 700 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><FileText size={13} weight="regular" color={GOLD} /></span>WH-347 PDF</a>
+                        <a href={`/api/files/open?u=${encodeURIComponent(record.pdf_url || '')}`} target="_blank" rel="noopener noreferrer" style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 5, color: GOLD, fontSize: 11, padding: '3px 10px', textDecoration: 'none', fontWeight: 700 }}><span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}><FileText size={13} weight="regular" color={GOLD} /></span>WH-347 PDF</a>
                       ) : (
                         <span style={{ fontSize: 11, color: DIM }}>—</span>
                       )}

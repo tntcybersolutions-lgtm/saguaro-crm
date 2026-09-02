@@ -236,7 +236,7 @@ export default function BidPackageDetailPage() {
 
   async function downloadPDF() {
     if (pkg?.jacket_pdf_url) {
-      window.open(pkg.jacket_pdf_url, '_blank');
+      window.open(`/api/files/open?u=${encodeURIComponent(pkg.jacket_pdf_url)}`, '_blank');
       return;
     }
     try {

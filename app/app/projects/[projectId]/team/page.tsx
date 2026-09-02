@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import Link from 'next/link';
@@ -66,6 +66,17 @@ export default function TeamPage(){
       }
     })();
   }, [projectId]);
+
+  /* Opening the invite form has to take you to it. */
+  const inviteFormRef = useRef<HTMLDivElement | null>(null);
+  const openInvite = () => {
+    setShowInvite(true);
+    setInviteAuto({});
+    requestAnimationFrame(() => {
+      inviteFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      inviteFormRef.current?.querySelector('input')?.focus();
+    });
+  };
 
   async function handleInvite() {
     if (!inviteEmail.trim()) { setInviteMsg('Email is required.'); return; }
@@ -231,7 +242,7 @@ export default function TeamPage(){
       title="Project"
       accent="Team"
       subtitle="Manage project team members and access"
-      actions={<button onClick={()=>{setShowInvite(!showInvite);setInviteAuto({});}} style={goldButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
+      actions={<button onClick={()=>{ if (showInvite) { setShowInvite(false); } else { openInvite(); } }} style={goldButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
     />
 
     {!loading && (
@@ -253,7 +264,7 @@ export default function TeamPage(){
       </>
     )}
 
-    {showInvite && <div style={{marginBottom:24}}>
+    {showInvite && <div ref={inviteFormRef} style={{marginBottom:24}}>
       <div style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) 320px',gap:18,alignItems:'start'}}>
       <SectionCard title="Invite Team Member" icon={<UserPlus size={17} weight="duotone" color={GOLD} />} subtitle={ctx?.project?.name ? `Grants access to ${ctx.project.name}` : 'Send a role-scoped invitation to this project.'}>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14,marginBottom:16}}>
@@ -339,7 +350,7 @@ export default function TeamPage(){
             icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
             title="No team members yet"
             description={leadersAssigned>0 ? `The directory above lists ${leadersAssigned} leadership role${leadersAssigned===1?'':'s'} — invite them so they can log in, post daily logs, and run the schedule.` : 'Invite your PM, superintendent, and office staff — each gets role-scoped access to this project.'}
-            action={<button onClick={()=>setShowInvite(true)} style={goldButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
+            action={<button onClick={openInvite} style={goldButtonStyle} className="pmBtn"><UserPlus size={15} weight="bold" /> Invite Member</button>}
             compact
           />
         ) : (
