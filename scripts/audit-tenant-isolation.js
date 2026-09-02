@@ -36,6 +36,12 @@ const PUBLIC_BY_DESIGN = [
   /\/api\/contact/, /\/api\/demo-request/, /\/api\/sign\//, /\/api\/share\//,
   /\/api\/shared\//, /\/api\/network\/connect\//, /\/api\/documents\/sign\//,
   /\/api\/w9\//, /\/api\/prequal\//, /\/api\/og\//, /\/api\/sitemap/,
+  /* The bidder's jacket and their reply. A subcontractor has no account and
+     should not need one to price work, so the opaque per-invite token is the
+     capability — the same pattern as the prequalification and owner-approval
+     portals above. Tenant comes from the invite row and is cross-checked
+     against the package; the caller never names it. Rate limited by IP. */
+  /\/api\/bid-packages\/portal\//,
 ];
 
 /* Sites reviewed by hand and found safe, where the proof is in a shape the

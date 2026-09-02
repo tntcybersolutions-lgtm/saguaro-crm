@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * The bid jacket route.
+ * The bid jacket route (GC side).
  *
  * What this replaces: one generated PDF called "Bid Jacket". The Documents list
  * showed twenty-eight rows with that same name, and opening any of them gave a
@@ -9,8 +9,10 @@
  * who received it still had to go looking for everything that actually lets
  * them price the work.
  *
- * This route owns fetching, loading and failure only. What a jacket looks like
- * lives in components/BidJacketView, which takes its data as a prop.
+ * This route owns fetching, loading and failure. What a jacket looks like lives
+ * in components/BidJacketView; what a GC can DO with it lives in
+ * components/BidJacketAssembly, mounted into the view's slot so the same view
+ * can be rendered for a logged-out bidder without carrying GC-only actions.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -18,15 +20,18 @@ import { useParams, useRouter } from 'next/navigation';
 import { WarningCircle } from '@phosphor-icons/react';
 import { PremiumSurface, SectionCard, PremiumEmpty, ghostButtonStyle } from '@/components/ui/premium';
 import BidJacketView, { type Jacket } from '@/components/BidJacketView';
+import BidJacketAssembly, { type Drift, type Issued } from '@/components/BidJacketAssembly';
 
 const DIM = '#8BAAC8';
 const AMBER = '#F59E0B';
+
+type Payload = Jacket & { issued: Issued; drift: Drift | null };
 
 export default function BidJacketPage() {
   const { projectId, id } = useParams<{ projectId: string; id: string }>();
   const router = useRouter();
 
-  const [jacket, setJacket] = useState<Jacket | null>(null);
+  const [jacket, setJacket] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,7 +42,7 @@ export default function BidJacketPage() {
       const r = await fetch(`/api/bid-packages/${id}/jacket`);
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || 'Could not open this jacket.');
-      setJacket(d as Jacket);
+      setJacket(d as Payload);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not open this jacket.');
     } finally {
@@ -76,7 +81,24 @@ export default function BidJacketPage() {
 
   return (
     <PremiumSurface>
-      <BidJacketView jacket={jacket} projectId={projectId} packageId={id} />
+      <BidJacketView
+        jacket={jacket}
+        projectId={projectId}
+        packageId={id}
+        slot={
+          <BidJacketAssembly
+            packageId={id}
+            issued={jacket.issued}
+            drift={jacket.drift}
+            missing={jacket.completeness.missing}
+            invited={jacket.bidders.invited}
+            /* Re-fetch rather than patch local state: issuing and addenda both
+               change the manifest, and the drift read has to come from the
+               server that holds it. */
+            onChanged={load}
+          />
+        }
+      />
     </PremiumSurface>
   );
 }

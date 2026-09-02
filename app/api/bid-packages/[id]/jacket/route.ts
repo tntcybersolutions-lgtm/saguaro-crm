@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
-import { assembleJacket } from '@/lib/bid-jacket';
+import { assembleJacket, diffAgainstManifest } from '@/lib/bid-jacket';
 
 /**
  * GET /api/bid-packages/[id]/jacket — the GC's view of a jacket's contents.
@@ -37,16 +37,36 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .maybeSingle();
     if (!pkg) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
+    const p = pkg as Record<string, any>;
+
     const jacket = await assembleJacket(db, {
       packageId: id,
       tenantId: user.tenantId,
-      pkg: pkg as Record<string, any>,
+      pkg: p,
       /* Private buckets hand out expiring links, so documents open through the
          signing proxy rather than by their stored URL. */
       resolveUrl: (u) => (u ? `/api/files/open?u=${encodeURIComponent(u)}` : null),
     });
 
-    return NextResponse.json(jacket);
+    /* What has changed since this jacket was issued. The GC's view is live, so
+       a drawing revised after the invitations went out silently changes what
+       every bidder is pricing — with no addendum, and no record of what was
+       actually sent. Comparing live against the issued manifest turns that from
+       something nobody notices into "3 drawings revised — send an addendum". */
+    const drift = diffAgainstManifest(jacket, p.jacket_sections);
+
+    return NextResponse.json({
+      ...jacket,
+      issued: p.jacket_generated_at
+        ? {
+            at: p.jacket_generated_at,
+            version: p.jacket_version ?? 1,
+            invited: p.num_invited ?? 0,
+            addenda: p.addendum_count ?? 0,
+          }
+        : null,
+      drift,
+    });
   } catch (e) {
     return apiError('bid_jacket', e);
   }

@@ -266,3 +266,90 @@ export async function assembleJacket(
 }
 
 export type Jacket = Awaited<ReturnType<typeof assembleJacket>>;
+
+/* ── The manifest ──────────────────────────────────────────────────────────
+ *
+ * A jacket assembled live is right while a GC is building it and wrong the
+ * moment it is sent. If a drawing is revised after issue, every bidder is
+ * quietly pricing a different scope from the one they were invited to, with no
+ * addendum and no record of what was actually issued. That is how bid protests
+ * start, and it is the difference between a page that lists documents and a
+ * bid jacket.
+ *
+ * So issuing writes a manifest: what this jacket contained, at that version, on
+ * that date. bid_packages.jacket_sections (jsonb) and jacket_version (int) have
+ * existed all along with nothing writing them — this is what they are for.
+ *
+ * The GC side keeps serving live and diffs it against the manifest, which turns
+ * "something may have changed" into "3 drawings have been revised since you
+ * issued this — send an addendum."
+ */
+
+export type JacketManifest = {
+  version: number;
+  issuedAt: string;
+  /** Stable identity per document, so a revision is a change rather than a
+   *  delete plus an unrelated add. */
+  docs: Array<{ key: string; section: string; name: string; rev: string | null }>;
+  counts: Record<string, number>;
+};
+
+const docKey = (section: string, d: JacketDoc) => `${section}:${d.id}`;
+
+export function snapshotJacket(jacket: Jacket, version: number): JacketManifest {
+  const docs: JacketManifest['docs'] = [];
+  const counts: Record<string, number> = {};
+  for (const s of jacket.sections) {
+    counts[s.key] = s.count;
+    for (const d of s.docs) {
+      docs.push({ key: docKey(s.key, d), section: s.label, name: d.name, rev: d.meta ?? null });
+    }
+  }
+  return { version, issuedAt: new Date().toISOString(), docs, counts };
+}
+
+export type JacketDrift = {
+  hasDrift: boolean;
+  added: Array<{ section: string; name: string }>;
+  removed: Array<{ section: string; name: string }>;
+  revised: Array<{ section: string; name: string; from: string | null; to: string | null }>;
+  issuedVersion: number | null;
+  issuedAt: string | null;
+};
+
+/** What has changed in the live jacket since it was issued. */
+export function diffAgainstManifest(jacket: Jacket, manifest: unknown): JacketDrift {
+  const empty: JacketDrift = {
+    hasDrift: false, added: [], removed: [], revised: [], issuedVersion: null, issuedAt: null,
+  };
+  const m = manifest as JacketManifest | null;
+  if (!m || !Array.isArray(m.docs)) return empty;
+
+  const live = new Map<string, { section: string; name: string; rev: string | null }>();
+  for (const s of jacket.sections) {
+    for (const d of s.docs) live.set(docKey(s.key, d), { section: s.label, name: d.name, rev: d.meta ?? null });
+  }
+  const issued = new Map(m.docs.map((d) => [d.key, d]));
+
+  const added: JacketDrift['added'] = [];
+  const removed: JacketDrift['removed'] = [];
+  const revised: JacketDrift['revised'] = [];
+
+  for (const [key, d] of live) {
+    const was = issued.get(key);
+    if (!was) added.push({ section: d.section, name: d.name });
+    else if ((was.rev ?? null) !== (d.rev ?? null)) {
+      revised.push({ section: d.section, name: d.name, from: was.rev ?? null, to: d.rev ?? null });
+    }
+  }
+  for (const [key, d] of issued) {
+    if (!live.has(key)) removed.push({ section: d.section, name: d.name });
+  }
+
+  return {
+    hasDrift: added.length + removed.length + revised.length > 0,
+    added, removed, revised,
+    issuedVersion: m.version ?? null,
+    issuedAt: m.issuedAt ?? null,
+  };
+}
