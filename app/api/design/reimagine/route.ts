@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { tryWrite } from '@/lib/db-write';
+import { aiLimiter } from '@/lib/rate-limit';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -16,6 +17,14 @@ export const maxDuration = 120;
  * If REPLICATE_API_TOKEN is not set, falls back to Claude Vision text-only description.
  */
 export async function POST(req: NextRequest) {
+  // Public by design — /design is a marketing page, not behind the /app guard.
+  // But this runs Replicate SDXL and Claude Vision for up to 120s per call and
+  // writes into storage, all anonymously, so an unthrottled endpoint is an open
+  // tap on the AI budget. Uses the shared aiLimiter (30/min per IP) rather than
+  // a private counter.
+  const limited = aiLimiter.check(req);
+  if (limited) return limited;
+
   const encoder = new TextEncoder();
   const supabase = createServerClient();
 
@@ -74,9 +83,15 @@ export async function POST(req: NextRequest) {
           ? `${roomType} redesigned in ${styleName} style. ${customInstructions}. ${promptSuffix}`
           : `${roomType} redesigned in ${styleName} style. ${promptSuffix}`;
 
-        // Create design session record
+        // Create design session record.
+        // tenant_id used to be set from the customerId form field, which let the
+        // request decide which tenant owned the row. tenant_id must never come
+        // from the caller — and this endpoint is anonymous, so there is no
+        // tenant to assign. The /design page never sent the field either, so
+        // these rows were already landing with a null tenant. customer_id is
+        // kept: it is a lead reference, not an isolation boundary.
         const { data: session } = await supabase.from('design_sessions').insert({
-          tenant_id: customerId || null,
+          tenant_id: null,
           customer_id: customerId || null,
           original_photo_url: originalUrl,
           room_type: roomType,

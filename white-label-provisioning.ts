@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomBytes } from 'node:crypto';
 import { Resend } from 'resend';
 import { supabaseAdmin } from './supabase/admin';
+import { getUser } from './lib/supabase-server';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Config
@@ -43,6 +44,27 @@ function resend(): Resend | null {
 }
 function ok(d: Record<string, unknown>, s = 200) { return NextResponse.json(d, { status: s }); }
 function err(m: string, s = 400) { return NextResponse.json({ error: m }, { status: s }); }
+
+/**
+ * Every handler in this file is reached through /api/white-label/[...path],
+ * which is a thin dispatcher with no auth of its own — and each handler took
+ * its tenantId straight from the request body or query string.
+ *
+ * Nothing checked who was asking. POST /api/white-label/branding would accept
+ * any tenantId and rewrite that tenant's logo, colours, company name and custom
+ * domain; provision and add-client were open the same way. Anyone on the
+ * internet could repaint a paying customer's white-labelled platform, or point
+ * its domain somewhere else.
+ *
+ * The caller must be signed in AND be the tenant they are acting on. 404 rather
+ * than 403 on a mismatch, so this cannot be used to test which tenant ids exist.
+ */
+async function requireTenant(request: NextRequest, tenantId: string): Promise<NextResponse | null> {
+  const user = await getUser(request);
+  if (!user) return err('Unauthorized', 401);
+  if (user.tenantId !== tenantId) return err('Not found', 404);
+  return null;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STEP 2 — Provision the reseller account after payment
@@ -129,6 +151,9 @@ export async function provisionResellerHandler(request: NextRequest) {
     return err('tenantId, email, and companyName are required');
   }
 
+  const denied = await requireTenant(request, tenantId);
+  if (denied) return denied;
+
   try {
     const result = await provisionResellerAccount({ tenantId, email, companyName, planId });
     return ok({ success: true, ...result, status: 'onboarding' });
@@ -149,6 +174,9 @@ export async function saveBrandingHandler(request: NextRequest) {
   if (!body?.tenantId) return err('tenantId required');
 
   const tenantId = String(body.tenantId);
+
+  const denied = await requireTenant(request, tenantId);
+  if (denied) return denied;
 
   // Validate color format
   const hexRegex = /^#[0-9A-Fa-f]{6}$/;
@@ -209,6 +237,9 @@ export async function dnsInstructionsHandler(request: NextRequest) {
   const tenantId = request.nextUrl.searchParams.get('tenantId');
   if (!tenantId) return err('tenantId required');
 
+  const denied = await requireTenant(request, tenantId);
+  if (denied) return denied;
+
   const { data: reseller } = await supabaseAdmin
     .from('reseller_accounts')
     .select('custom_domain, cname_target, dns_verification_token, brand_slug, domain_verified, ssl_provisioned')
@@ -256,6 +287,9 @@ export async function verifyDnsHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const tenantId = String(body?.tenantId ?? '');
   if (!tenantId) return err('tenantId required');
+
+  const denied = await requireTenant(request, tenantId);
+  if (denied) return denied;
 
   const { data: reseller } = await supabaseAdmin
     .from('reseller_accounts')
@@ -401,6 +435,9 @@ export async function statusHandler(request: NextRequest) {
   const tenantId = request.nextUrl.searchParams.get('tenantId');
   if (!tenantId) return err('tenantId required');
 
+  const denied = await requireTenant(request, tenantId);
+  if (denied) return denied;
+
   const { data: reseller } = await supabaseAdmin
     .from('reseller_accounts')
     .select(`
@@ -452,6 +489,9 @@ export async function addClientHandler(request: NextRequest) {
   if (!resellerTenantId || !clientEmail) {
     return err('resellerTenantId and clientEmail are required');
   }
+
+  const denied = await requireTenant(request, resellerTenantId);
+  if (denied) return denied;
 
   // Get reseller account and check client limit
   const { data: reseller } = await supabaseAdmin
