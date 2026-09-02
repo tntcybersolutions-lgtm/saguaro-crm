@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
   const [
     projectQ, contractsQ, cosQ, payAppsQ, budgetQ, subsQ, packagesQ,
-    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ,
+    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ,
   ] = await Promise.all([
     safe(db.from('projects').select('id, name, status, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, open_punch_count, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
     safe(db.from('schedule_tasks').select('id, name, start_date, end_date, status, is_critical, pct_complete, trade').eq('project_id', projectId).eq('tenant_id', t).order('start_date').limit(200)),
     safe(db.from('daily_logs').select('log_date').eq('project_id', projectId).eq('tenant_id', t).order('log_date', { ascending: false }).limit(1)),
     safe(db.from('takeoffs').select('id, status, total_cost, page_count').eq('project_id', projectId).eq('tenant_id', t).order('created_at', { ascending: false }).limit(5)),
+    safe(db.from('contacts').select('id').eq('project_id', projectId).eq('tenant_id', t)),
   ]);
 
   const p = (projectQ as any)?.data ?? null;
@@ -108,6 +109,9 @@ export async function GET(req: NextRequest) {
         currentPaymentDue: N(lastPayApp.current_payment_due), totalCompletedStored: N(lastPayApp.total_completed_stored),
       } : null,
     },
+    /* Everyone on the job. The rail counts it so a GC can see at a glance
+       whether the directory has been filled in or is still just the owner. */
+    contactCount: (((contactsQ as any)?.data ?? []) as unknown[]).length,
     /* Has the plan set been priced? The journey step that produces the budget
        and the bid packages needs to know, and nothing else was reporting it. */
     takeoff: (() => {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -80,5 +81,69 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     // A failed read must not render as an empty result — return a real
     // status so the UI can show an error state with a retry.
     return NextResponse.json({ error: 'Failed to load contacts', detail }, { status: 500 });
+  }
+}
+
+/**
+ * Add or update one directory entry.
+ *
+ * The route was read-only, so the only names a project could ever hold were
+ * the two seeded at creation. Everyone else on the job — engineer, PM,
+ * superintendent, inspector — had nowhere to live, which is why the same
+ * details get retyped into every contract and RFI.
+ */
+export async function POST(req: NextRequest, { params }: { params: { projectId: string } }) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const body = await req.json().catch(() => ({}));
+    const name = String(body.name || '').trim();
+    if (!name) return NextResponse.json({ error: 'A name is required' }, { status: 400 });
+
+    const db = createServerClient();
+
+    /* The project must be this tenant's before anything is written against
+       it — projectId comes straight off the URL. */
+    const { data: project } = await db
+      .from('projects')
+      .select('id')
+      .eq('id', params.projectId)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+
+    const row = {
+      tenant_id: user.tenantId,
+      project_id: params.projectId,
+      name,
+      role: String(body.role || '').trim() || null,
+      contact_type: String(body.role || 'contact').trim().toLowerCase(),
+      company: String(body.company || '').trim() || null,
+      email: String(body.email || '').trim() || null,
+      phone: String(body.phone || '').trim() || null,
+      is_active: true,
+    };
+
+    if (body.id) {
+      const { error } = await db
+        .from('project_contacts')
+        .update(row as never)
+        .eq('id', String(body.id))
+        .eq('tenant_id', user.tenantId);
+      if (error) throw error;
+      return NextResponse.json({ success: true, id: body.id });
+    }
+
+    const { data, error } = await db
+      .from('project_contacts')
+      .insert(row as never)
+      .select('id')
+      .single();
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, id: (data as { id: string } | null)?.id ?? null });
+  } catch (e) {
+    return apiError('projects/contacts', e, 'Could not save that contact.');
   }
 }

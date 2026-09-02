@@ -98,6 +98,33 @@ export async function POST(req: NextRequest) {
       if (folderErr) console.error('[projects/create] folder seed', folderErr);
     }
 
+    /* The GC has just typed the owner and the architect into the form. Those
+       same two names are then asked for again by the prime contract, by every
+       RFI, by submittals and by the pay application — because nothing kept
+       them. They go into the directory now, at the moment they are known. */
+    const directory = [
+      { role: 'Owner',     name: body.ownerName,     email: body.ownerEmail },
+      { role: 'Architect', name: body.architectName, email: body.architectEmail },
+    ]
+      .filter((c) => String(c.name || '').trim())
+      .map((c) => ({
+        tenant_id: user.tenantId,
+        project_id: projectId,
+        name: String(c.name).trim(),
+        email: String(c.email || '').trim() || null,
+        role: c.role,
+        created_at: new Date().toISOString(),
+      }));
+
+    if (directory.length) {
+      /* `contacts` — the table /api/projects/[id]/directory reads, which is what
+         both the desktop directory and the field app show. project_contacts is a
+         second, older table; writing to it here would have put the owner and the
+         architect somewhere neither screen looks. */
+      const { error: dirErr } = await db.from('contacts').insert(directory as never);
+      if (dirErr) console.error('[projects/create] directory seed', dirErr);
+    }
+
     onProjectCreated(projectId).catch(console.error);
 
     return NextResponse.json({ projectId, project, success: true });

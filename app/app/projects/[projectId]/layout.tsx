@@ -91,6 +91,7 @@ const NAV_SECTIONS = [
   {
     label: 'TEAM',
     items: [
+      { label: 'Directory',       href: '/directory',         icon: Users, badge: null, accent: 'team' },
       { label: 'Team',            href: '/team',              icon: Users, badge: null, accent: 'team' },
       { label: 'Compliance',      href: '/compliance',        icon: ShieldCheck,  badge: null, accent: 'compliance' },
     ],
@@ -186,6 +187,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     '/schedule':         n(c?.counts?.scheduleTasks),
     '/punch-list':       n(c?.counts?.openPunch),
     '/subs':             n(c?.subs?.length),
+    '/directory':        n(c?.contactCount),
     '/crews':            n(c?.subs?.length),
     '/change-orders':    n(c?.money?.pendingCoCount),
   };

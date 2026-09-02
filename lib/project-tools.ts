@@ -48,6 +48,7 @@ export const CORE_TOOLS: readonly string[] = [
   '/budget',
   '/daily-logs',
   '/files',
+  '/directory',
   '/team',
 ];
 
