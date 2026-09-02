@@ -21,6 +21,15 @@ export interface SectionCardProps {
   glow?: boolean;
   hover?: boolean;
   accentBar?: boolean;
+  /**
+   * Content on the page rather than an object on a tray.
+   *
+   * Same meaning as the `flat` on the premium SectionCard, and written to match
+   * it: header kept as a small uppercase label over a hairline, tray dropped —
+   * no fill, no border, no radius, no shadow. Raised is reserved for things you
+   * would point at and name.
+   */
+  flat?: boolean;
   onClick?: () => void;
   className?: string;
   style?: React.CSSProperties;
@@ -37,6 +46,7 @@ export function SectionCard({
   glow = false,
   hover = false,
   accentBar = false,
+  flat = false,
   onClick,
   className,
   style,
@@ -44,6 +54,38 @@ export function SectionCard({
 }: SectionCardProps) {
   const [hovered, setHovered] = useState(false);
   const lift = hover && hovered;
+
+  if (flat) {
+    return (
+      <div className={className} onClick={onClick} style={{ position: 'relative', ...style }}>
+        {(title != null || icon != null || actions != null || subtitle != null) && (
+          <div
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              paddingBottom: 9, marginBottom: 14,
+              borderBottom: '1px solid var(--sg-border)',
+            }}
+          >
+            {icon != null && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9, color: GOLD }}>{icon}</span>}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              {title != null && (
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'var(--sg-text-2)', lineHeight: 1.3 }}>
+                  {title}
+                </div>
+              )}
+              {subtitle != null && (
+                <div style={{ fontSize: 12.5, color: 'var(--sg-text-2)', marginTop: 3, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
+                  {subtitle}
+                </div>
+              )}
+            </div>
+            {actions != null && <div style={{ flex: '0 0 auto', display: 'flex', gap: 8, alignItems: 'center' }}>{actions}</div>}
+          </div>
+        )}
+        {children != null && <div style={bodyStyle}>{children}</div>}
+      </div>
+    );
+  }
 
   const boxShadow = [
     glow ? `inset 0 0 60px ${gold(5)}` : `inset 0 1px 0 var(--sg-inner-glow)`,

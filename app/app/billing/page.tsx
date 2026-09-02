@@ -337,7 +337,7 @@ export default function BillingPage() {
 
         {/* Current Plan Card */}
         {loading ? (
-          <SectionCard style={{ marginBottom: 28 }}>
+          <SectionCard flat style={{ marginBottom: 28 }}>
             <Skeleton width={110} height={11} style={{ marginBottom: 12 }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <Skeleton width={180} height={26} />
@@ -358,7 +358,7 @@ export default function BillingPage() {
             />
           </SectionCard>
         ) : sub ? (
-          <SectionCard
+          <SectionCard flat
             icon={<CreditCard size={17} weight="duotone" color={GOLD} />}
             title="Current Plan"
             accent={sub.status === 'past_due' ? RED : GOLD}
@@ -416,7 +416,7 @@ export default function BillingPage() {
             )}
           </SectionCard>
         ) : (
-          <SectionCard style={{ marginBottom: 28 }}>
+          <SectionCard flat style={{ marginBottom: 28 }}>
             <PremiumEmpty
               icon={<CreditCard size={30} weight="duotone" color={GOLD} />}
               title="No active subscription"
@@ -622,7 +622,7 @@ export default function BillingPage() {
         </SectionCard>
 
         {/* Install App Section */}
-        <SectionCard
+        <SectionCard flat
           icon={<DeviceMobile size={17} weight="duotone" color={GOLD} />}
           title="Get the app for iPhone & iPad"
           subtitle="Saguaro Control Systems App"
@@ -639,7 +639,7 @@ export default function BillingPage() {
         </SectionCard>
 
         {/* FAQ */}
-        <SectionCard
+        <SectionCard flat
           icon={<Question size={17} weight="duotone" color={GOLD} />}
           title="Billing FAQ"
         >

@@ -339,7 +339,7 @@ export default function LienWaiversPage() {
           </SectionCard>
           {ctx && (
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <SectionCard title="How Waivers Flow" icon={<Lightning size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="How Waivers Flow" icon={<Lightning size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
                   {title:'Pay app approved', desc:subs.length>0?`Conditional waivers auto-generate for all ${subs.length} sub${subs.length===1?'':'s'}, each sized to their share of the certified amount.`:'Conditional waivers auto-generate for every sub on the roster, sized to their share.'},
                   {title:'Subs sign via portal', desc:'Each sub gets a secure signing link by email — status flips to signed here.'},
@@ -348,7 +348,7 @@ export default function LienWaiversPage() {
                 ]}/>
               </SectionCard>
               {lastApp && (
-                <SectionCard title={`Pay App #${lastApp.appNumber}`} icon={<Receipt size={17} weight="duotone" color={GOLD} />}>
+                <SectionCard flat title={`Pay App #${lastApp.appNumber}`} icon={<Receipt size={17} weight="duotone" color={GOLD} />}>
                   <InsightRow label="Status" value={String(lastApp.status||'—').replace(/_/g,' ')}/>
                   <InsightRow label="Certified" value={fmt(Number(lastApp.currentPaymentDue)||0)} accent="#3dd68c" strong/>
                   <InsightRow label="Period to" value={fmtDate(lastApp.periodTo)}/>
@@ -368,7 +368,7 @@ export default function LienWaiversPage() {
 
       {/* Loading */}
       {loading && (
-        <SectionCard>
+        <SectionCard flat>
           <div style={{padding:'24px 8px',textAlign:'center' as const,color:DIM,fontSize:13}}>Loading lien waivers…</div>
         </SectionCard>
       )}

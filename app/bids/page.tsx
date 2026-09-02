@@ -25,7 +25,7 @@ export default function BidsPage() {
         </div>
         <div style={{display:'flex',gap:10}}>
           <Link href="/app/intelligence" style={{padding:'9px 16px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,fontWeight:500,textDecoration:'none'}}>🧠 Bid Intelligence</Link>
-          <button style={{padding:'9px 18px',background:GOLD,border:'none',borderRadius:8,color:DARK,fontSize:13,fontWeight:600,cursor:'pointer'}}>+ Score Opportunity</button>
+          <Link href="/app/intelligence" style={{padding:'9px 18px',background:GOLD,border:'none',borderRadius:8,color:DARK,fontSize:13,fontWeight:600,cursor:'pointer',textDecoration:'none'}}>+ Score Opportunity</Link>
         </div>
       </div>
 
@@ -68,8 +68,8 @@ export default function BidsPage() {
                 <span style={{fontSize:10,fontWeight:600,padding:'3px 10px',borderRadius:4,background:ac.bg,color:ac.c,border:`1px solid ${ac.c}33`}}>{ac.label}</span>
               </td>
               <td style={{padding:'12px 14px',display:'flex',gap:6}}>
-                <button style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,padding:'3px 8px',cursor:'pointer'}}>Details</button>
-                {op.action==='bid'&&<button style={{background:GOLD,border:'none',borderRadius:5,color:DARK,fontSize:11,padding:'4px 10px',fontWeight:600,cursor:'pointer'}}>Bid →</button>}
+                <Link href="/app/intelligence" style={{background:'none',border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,padding:'3px 8px',cursor:'pointer',textDecoration:'none'}}>Details</Link>
+                {op.action==='bid'&&<Link href="/app/projects/new" style={{background:GOLD,border:'none',borderRadius:5,color:DARK,fontSize:11,padding:'4px 10px',fontWeight:600,cursor:'pointer',textDecoration:'none'}}>Bid →</Link>}
               </td>
             </tr>;
           })}</tbody>
@@ -79,7 +79,10 @@ export default function BidsPage() {
       {tab==='active'&&<div style={{textAlign:'center' as const,padding:60,color:DIM}}>
         <div style={{fontSize:40,marginBottom:12}}>📬</div>
         <div style={{fontSize:18,fontWeight:600,color:TEXT,marginBottom:8}}>Bid Packages</div>
-        <div style={{marginBottom:20}}>All awarded bid packages appear here. <Link href="/app/projects/demo-project-00000000-0000-0000-0000-000000000001/bid-packages" style={{color:GOLD}}>View project bid packages →</Link></div>
+        {/* Was a link to demo-project-0000…0001 — a UUID that exists in no
+            tenant, so the link 404'd for every real visitor. Bid packages hang
+            off a project, so the honest destination is the project list. */}
+        <div style={{marginBottom:20}}>All awarded bid packages appear here. <Link href="/app/projects" style={{color:GOLD}}>Open a project to see its bid packages →</Link></div>
       </div>}
 
       {tab==='history'&&<div style={{textAlign:'center' as const,padding:60,color:DIM}}>

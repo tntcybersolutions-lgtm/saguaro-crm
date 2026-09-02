@@ -513,7 +513,7 @@ export default function DashboardPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginBottom: 28 }}>
 
             {/* Project Budget Chart */}
-            <SectionCard title="Project Budgets" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Project Budgets" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
               {projects.length > 0 ? (
                 <div style={{ width: '100%', height: 220 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -541,7 +541,7 @@ export default function DashboardPage() {
             </SectionCard>
 
             {/* Portfolio Status Donut */}
-            <SectionCard title="Portfolio Status" icon={<TrendUp size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Portfolio Status" icon={<TrendUp size={17} weight="duotone" color={GOLD} />}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                 <div style={{ width: 160, height: 160 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -585,7 +585,7 @@ export default function DashboardPage() {
             </SectionCard>
 
             {/* Win Rate by Trade */}
-            <SectionCard title="Win Rate by Trade" icon={<Gavel size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Win Rate by Trade" icon={<Gavel size={17} weight="duotone" color={GOLD} />}>
               {winData && winData.factors.length > 0 ? (
                 <div style={{ width: '100%', height: 220 }}>
                   <ResponsiveContainer width="100%" height="100%">

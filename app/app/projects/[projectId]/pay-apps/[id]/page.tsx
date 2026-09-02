@@ -416,7 +416,7 @@ export default function PayAppDetailPage() {
         />
 
         {/* Progress bar */}
-        <SectionCard
+        <SectionCard flat
           title="Project Completion"
           icon={<TrendUp size={17} weight="duotone" color={GOLD} />}
           action={<span style={{ fontSize: 22, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums' }}>{completePct}%</span>}
@@ -539,7 +539,7 @@ export default function PayAppDetailPage() {
             </SectionCard>
 
             {/* G702 Summary section */}
-            <SectionCard title="G702 — Application Summary" icon={<FileText size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="G702 — Application Summary" icon={<FileText size={17} weight="duotone" color={GOLD} />}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 32px' }}>
                 {[
                   { label: '1. Original Contract Sum', value: fmt(payApp.contract_sum) },
@@ -566,7 +566,7 @@ export default function PayAppDetailPage() {
           {/* Sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {/* Approval / waiver / payment chain — where this app sits */}
-            <SectionCard title="Where This App Sits" icon={<SealCheck size={16} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Where This App Sits" icon={<SealCheck size={16} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
                 { title: 'Draft & schedule of values', done: true,
                   desc: `${lines.length} SOV line${lines.length === 1 ? '' : 's'} — ${fmt(sovScheduled)} scheduled.` },
@@ -593,7 +593,7 @@ export default function PayAppDetailPage() {
 
             {/* Prior application comparison */}
             {priorApp && (
-              <SectionCard title={`Compared to App #${priorApp._n}`} icon={<TrendUp size={16} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title={`Compared to App #${priorApp._n}`} icon={<TrendUp size={16} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Prior period" value={`${fmtDate(priorApp.period_from)} – ${fmtDate(priorApp.period_to)}`} />
                 <InsightRow label="Prior billed (period)" value={fmt(priorThis)} />
                 <InsightRow label="This app (period)" value={fmt(sovThis)} strong />
@@ -607,7 +607,7 @@ export default function PayAppDetailPage() {
             )}
 
             {/* Status timeline */}
-            <SectionCard
+            <SectionCard flat
               title="Status Timeline"
               icon={<ClockCounterClockwise size={16} weight="duotone" color={GOLD} />}
               action={
@@ -641,7 +641,7 @@ export default function PayAppDetailPage() {
             </SectionCard>
 
             {/* Details panel */}
-            <SectionCard title="Details" icon={<IdentificationCard size={16} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Details" icon={<IdentificationCard size={16} weight="duotone" color={GOLD} />}>
               {[
                 { label: 'Owner', value: payApp.owner_name || '—' },
                 { label: 'Architect', value: payApp.architect_name || '—' },
@@ -658,7 +658,7 @@ export default function PayAppDetailPage() {
             </SectionCard>
 
             {/* Retainage breakdown */}
-            <SectionCard title="Retainage Tracking" icon={<Coins size={16} weight="duotone" color={ORANGE} />} accent={ORANGE}>
+            <SectionCard flat title="Retainage Tracking" icon={<Coins size={16} weight="duotone" color={ORANGE} />} accent={ORANGE}>
               <div style={{ fontSize: 12, color: DIM, marginBottom: 4 }}>Rate</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: ORANGE, marginBottom: 10 }}>{retPct}%</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>

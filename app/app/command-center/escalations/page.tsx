@@ -87,7 +87,7 @@ export default function EscalationsPage() {
       <AttentionBanner red={summary.red} yellow={summary.yellow} noun="escalation" />
 
       {/* 4-level escalation matrix — who owns it as it ages (Super → PM → Director → Exec). */}
-      <SectionCard title="Escalation Matrix" subtitle="Who owns it now — ownership climbs as items age" icon={<Ladder size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+      <SectionCard flat title="Escalation Matrix" subtitle="Who owns it now — ownership climbs as items age" icon={<Ladder size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 10 }}>
           {[
             { n: 1, owner: 'Superintendent', hint: '0–2d overdue', color: '#34C759' },
@@ -125,12 +125,12 @@ export default function EscalationsPage() {
         <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading escalations…</div>
       ) : filtered.length === 0 ? (
         rows.length === 0 ? (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty icon={<Flag size={32} weight="duotone" color={C.gold} />} title="No escalations"
               description="Nothing has been escalated across your sites. When an RFI, submittal or action item runs past its date and gets bumped up the chain, it lands here — sorted worst-first so you always know what to chase." />
           </SectionCard>
         ) : (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty compact icon={<Flag size={26} weight="duotone" color={C.gold} />} title="Nothing matches this filter"
               description="No escalation matches the current severity or search. Clear the filters to see the full list." />
           </SectionCard>

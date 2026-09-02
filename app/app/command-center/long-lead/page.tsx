@@ -104,7 +104,7 @@ export default function LongLeadPage() {
               action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add your first item</GoldButton>} />
           </SectionCard>
         ) : (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty compact icon={<Package size={26} weight="duotone" color={C.gold} />} title="Nothing matches this filter"
               description="No item matches the current severity or search. Clear the filters to see the full tracker." />
           </SectionCard>

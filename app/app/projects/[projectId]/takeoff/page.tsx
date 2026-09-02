@@ -1630,6 +1630,7 @@ export default function TakeoffPage() {
 
           {/* Drop Zone — glowing gradient border, breathing, blueprint interior + scan beam */}
           <div
+            data-tour="takeoff-dropzone"
             onClick={() => fileInputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}

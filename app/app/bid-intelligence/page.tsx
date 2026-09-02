@@ -214,7 +214,7 @@ export default function IntelligencePage() {
           </div>
           <div className="pg-stack-1" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
             {[0,1].map(i=>(
-              <SectionCard key={i}>
+              <SectionCard flat key={i}>
                 <Skeleton height={16} width="42%" style={{marginBottom:18}} />
                 {[0,1,2,3].map(r=>(
                   <div key={r} style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
@@ -248,7 +248,7 @@ export default function IntelligencePage() {
       ) : (
       <div className="pg-stack-1" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'start'}}>
         {/* Win rate profile — learned trade factors + real headline stats */}
-        <SectionCard
+        <SectionCard flat
           title="Bid intelligence profile"
           subtitle="Learned trade factors from your recorded outcomes"
           icon={<TrendUp size={17} weight="duotone" color={BIDS.hex} />}

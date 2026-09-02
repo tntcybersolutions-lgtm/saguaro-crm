@@ -54,7 +54,7 @@ function Badge({ label, color }: { label: string; color: string }) {
   return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: `${color}22`, color, textTransform: 'uppercase' as const, letterSpacing: .5 }}>{label}</span>;
 }
 function Card({ title, children, action, icon }: { title: string; children: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
-  return <SectionCard title={title} action={action} icon={icon} style={{ marginBottom: 18 }}>{children}</SectionCard>;
+  return <SectionCard flat title={title} action={action} icon={icon} style={{ marginBottom: 18 }}>{children}</SectionCard>;
 }
 function Spinner() {
   return <div style={{ display: 'inline-block', width: 16, height: 16, border: `2px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />;

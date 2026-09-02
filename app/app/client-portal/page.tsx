@@ -942,7 +942,7 @@ export default function ClientPortalPage() {
         Manage which clients can access which projects. Check a box to grant access.
       </p>
       {projects.length === 0 ? (
-        <SectionCard flush>
+        <SectionCard flat flush>
           <PremiumEmpty
             icon={<Buildings size={30} weight="duotone" color={GOLD} />}
             title="No projects to share yet"
@@ -1054,7 +1054,7 @@ export default function ClientPortalPage() {
       </div>
 
       {/* log entries — re-housed in the kit's SectionCard */}
-      <SectionCard
+      <SectionCard flat
         title="Audit Trail"
         subtitle="Logins, page views, and approvals — timestamped with IP"
         icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}
@@ -1115,7 +1115,7 @@ export default function ClientPortalPage() {
       </SectionCard>
 
       {/* top users by activity */}
-      <SectionCard
+      <SectionCard flat
         title="Most Active Users"
         subtitle="Ranked by total portal actions"
         icon={<UsersThree size={17} weight="duotone" color={GOLD} />}

@@ -354,7 +354,7 @@ export default function InsurancePage() {
 
         {/* Loading */}
         {loading && (
-          <SectionCard>
+          <SectionCard flat>
             <div style={{padding:'28px 8px',textAlign:'center' as const,color:DIM,fontSize:13}}>Loading certificates…</div>
           </SectionCard>
         )}

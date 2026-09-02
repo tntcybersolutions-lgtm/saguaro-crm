@@ -459,7 +459,7 @@ export default function BudgetPage() {
           </SectionCard>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {csiDiv !== '' && (
-              <SectionCard title={`Division ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name || ''}`} icon={<Stack size={16} weight="duotone" color={CIN.goldHi} />}>
+              <SectionCard flat title={`Division ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name || ''}`} icon={<Stack size={16} weight="duotone" color={CIN.goldHi} />}>
                 {divLines.length > 0 ? (
                   <>
                     <InsightRow label="Existing lines" value={String(divLines.length)} />
@@ -471,7 +471,7 @@ export default function BudgetPage() {
                 )}
               </SectionCard>
             )}
-            <SectionCard title="After You Add" icon={<Lightning size={16} weight="duotone" color={CIN.goldHi} />}>
+            <SectionCard flat title="After You Add" icon={<Lightning size={16} weight="duotone" color={CIN.goldHi} />}>
               <FlowSteps title="" steps={[
                 { title: 'Committed fills itself', desc: 'Awarded subcontracts and POs coded to this line book as committed cost.' },
                 { title: 'Actuals flow from bills', desc: 'Approved invoices land on the line — nothing re-typed.' },
@@ -531,7 +531,7 @@ export default function BudgetPage() {
             )}
           </SectionCard>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <SectionCard title="What the System Knows" icon={<Wallet size={16} weight="duotone" color={CIN.goldHi} />}>
+            <SectionCard flat title="What the System Knows" icon={<Wallet size={16} weight="duotone" color={CIN.goldHi} />}>
               <InsightRow label="Prime contract" value={primeContract > 0 ? fmt(primeContract) : '—'} strong />
               <InsightRow label="Approved COs" value={approvedCoCount > 0 ? `${approvedCoCount} · +${fmt(approvedCoTotal)}` : 'none yet'} accent={approvedCoCount > 0 ? '#3dd68c' : undefined} />
               <InsightRow label="Bid packages" value={String(bidPackages.length)} />
@@ -540,7 +540,7 @@ export default function BudgetPage() {
                 <div style={{ fontSize: 11.5, color: CIN.muted, lineHeight: 1.55, marginTop: 8 }}>A complete budget allocates the full {fmt(primeContract)} contract across divisions.</div>
               )}
             </SectionCard>
-            <SectionCard title="How Money Flows In" icon={<Lightning size={16} weight="duotone" color={CIN.goldHi} />}>
+            <SectionCard flat title="How Money Flows In" icon={<Lightning size={16} weight="duotone" color={CIN.goldHi} />}>
               <FlowSteps title="" steps={[
                 { title: 'Seed lines by division', desc: 'From bid-package pricing or a blank line — CSI-coded either way.' },
                 { title: 'Committed books automatically', desc: 'Awarded subcontracts and POs land on their coded lines.' },

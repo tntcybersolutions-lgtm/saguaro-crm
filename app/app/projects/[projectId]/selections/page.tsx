@@ -266,7 +266,7 @@ export default function SelectionsPage(){
           {/* Budget bar */}
           {totalAllowance>0&&(
             <div style={{marginBottom:20}}>
-              <SectionCard
+              <SectionCard flat
                 title="Budget vs Allowance"
                 icon={<ChartBar size={17} weight="duotone" color={GOLD}/>}
                 action={<span style={{fontSize:13,fontWeight:800,color:overage>0?RED:GREEN}}>

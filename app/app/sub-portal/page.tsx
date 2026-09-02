@@ -750,7 +750,7 @@ export default function SubPortalPage() {
           </SectionCard>
 
           {/* what happens next */}
-          <SectionCard icon={<ListChecks size={17} weight="duotone" color={GOLD} />} title="After You Invite">
+          <SectionCard flat icon={<ListChecks size={17} weight="duotone" color={GOLD} />} title="After You Invite">
             <FlowSteps title="" steps={[
               { title: 'Invitation email goes out', desc: 'The sub gets a secure portal link tied to their email — no password to manage.' },
               { title: 'They show as Pending', desc: 'The roster tracks them until first login. Resend the invite from Sub Users any time.' },
@@ -816,7 +816,7 @@ export default function SubPortalPage() {
       {/*  TAB: ACTIVITY LOG                          */}
       {/* ════════════════════════════════════════════ */}
       {tab === 'activity' && (
-        <SectionCard flush icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />} title="Portal Activity Log" subtitle="Track when subs logged in and what they viewed" action={<span style={{ color: DIM, fontSize: 13 }}>{activity.length} entries{intel.events7 > 0 ? ` · ${intel.events7} this week` : ''}</span>}>
+        <SectionCard flat flush icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />} title="Portal Activity Log" subtitle="Track when subs logged in and what they viewed" action={<span style={{ color: DIM, fontSize: 13 }}>{activity.length} entries{intel.events7 > 0 ? ` · ${intel.events7} this week` : ''}</span>}>
           {/* activity context — engagement at a glance before the raw feed */}
           {activity.length > 0 && (
             <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', padding: '12px 20px', borderBottom: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.02)', fontSize: 12.5, color: DIM }}>
@@ -1079,7 +1079,7 @@ export default function SubPortalPage() {
           </SectionCard>
 
           {/* announcement history */}
-          <SectionCard flush icon={<Envelope size={17} weight="duotone" color={GOLD} />} title="Announcement History">
+          <SectionCard flat flush icon={<Envelope size={17} weight="duotone" color={GOLD} />} title="Announcement History">
             {announcements.length === 0 && (
               <PremiumEmpty compact icon={<Envelope size={30} weight="duotone" color={GOLD} />} title="No announcements sent yet" description="Broadcasts you send to your subcontractors will appear here." />
             )}

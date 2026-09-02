@@ -452,7 +452,7 @@ export default function WarrantyClaimsPage() {
       )}
 
       {!selectedProject && (
-        <SectionCard>
+        <SectionCard flat>
           <PremiumEmpty
             icon={<Buildings size={30} weight="duotone" color={GOLD} />}
             title="Select a project"
@@ -511,16 +511,16 @@ export default function WarrantyClaimsPage() {
 
           {/* charts row */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 20, marginTop: 24 }}>
-            <SectionCard title="Claims by Status" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Claims by Status" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
               <MiniBar data={stats.byStatus} colorMap={STATUS_COLORS} />
             </SectionCard>
-            <SectionCard title="Claims by Category" icon={<Tag size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Claims by Category" icon={<Tag size={17} weight="duotone" color={GOLD} />}>
               <MiniBar data={stats.byCat} emptyNote="No claim has a category set yet." />
             </SectionCard>
-            <SectionCard title="Cost by Category" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Cost by Category" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
               <MiniBar data={stats.costByCat} money emptyNote="No repair cost has been recorded yet." />
             </SectionCard>
-            <SectionCard title="Claims by Trade" icon={<Wrench size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Claims by Trade" icon={<Wrench size={17} weight="duotone" color={GOLD} />}>
               <MiniBar data={stats.byTrade} emptyNote="No claim has been dispatched to a trade yet." />
             </SectionCard>
           </div>
@@ -675,14 +675,14 @@ export default function WarrantyClaimsPage() {
 
         {/* Context rail — what the program already knows + what happens next */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <SectionCard title="Program Snapshot" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Program Snapshot" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
             <InsightRow label="Open claims" value={stats.open} />
             <InsightRow label="Emergency" value={stats.emergency} accent={stats.emergency > 0 ? RED : undefined} />
             <InsightRow label="Avg resolution" value={`${stats.avgDays} days`} />
             <InsightRow label="Warranty cost" value={`$${(Number(stats.totalCost) || 0).toLocaleString()}`} accent={GOLD} />
             {Object.keys(stats.byCat).length > 0 && <InsightRow label="Most reported" value={Object.entries(stats.byCat).sort((a, b) => b[1] - a[1])[0][0]} />}
           </SectionCard>
-          <SectionCard title="After You Create" icon={<Timer size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="After You Create" icon={<Timer size={17} weight="duotone" color={GOLD} />}>
             <FlowSteps title="" steps={[
               { title: 'Claim enters the pipeline', desc: 'Starts at submitted — acknowledge it to start the clock.' },
               { title: 'Dispatch the trade', desc: 'Assign a contractor and service date straight from the claims list.' },

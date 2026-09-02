@@ -871,7 +871,7 @@ export default function DashboardConfigPage() {
         </div>
 
         {/* ── Footer Summary ── */}
-        <SectionCard style={{ marginTop: 20 }}>
+        <SectionCard flat style={{ marginTop: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <div style={{ fontSize: 12, color: DIM }}>
               <span style={{ fontWeight: 600, color: TEXT }}>{layout.name || 'Untitled'}</span>

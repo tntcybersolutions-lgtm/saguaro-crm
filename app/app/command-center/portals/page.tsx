@@ -86,7 +86,7 @@ export default function PortalsPage() {
         {loading ? (
           <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
         ) : list.length === 0 ? (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty
               icon={<LinkSimple size={32} weight="duotone" color={C.gold} />}
               title="No owner portals yet"

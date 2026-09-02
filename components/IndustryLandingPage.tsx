@@ -387,7 +387,7 @@ export default function IndustryLandingPage({ industry }: Props) {
           <Link href="/pricing" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Pricing</Link>
           <Link href="/compare/procore" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>vs Procore</Link>
           <Link href="/sandbox" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>AI Takeoff Demo</Link>
-          <Link href="/field-app" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Field App</Link>
+          <Link href="/get-the-app" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Field App</Link>
           <Link href="/privacy" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Privacy</Link>
           <Link href="/terms" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Terms</Link>
         </div>

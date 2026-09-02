@@ -336,13 +336,13 @@ export default function PrevailingWagePage() {
         {/* Right: Results */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {loading ? (
-            <SectionCard>
+            <SectionCard flat>
               <div style={{ textAlign: 'center', color: DIM, fontSize: 14, padding: '20px 0' }}>
                 Loading rate schedule…
               </div>
             </SectionCard>
           ) : !rate ? (
-            <SectionCard>
+            <SectionCard flat>
               <PremiumEmpty
                 icon={<FileMagnifyingGlass size={30} weight="duotone" color={GOLD} />}
                 title="No determination found"

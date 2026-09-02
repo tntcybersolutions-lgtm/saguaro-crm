@@ -114,7 +114,7 @@ export default function BudgetPage() {
                 <div style={{ fontSize: 12.5, color: C.dim }}>Create a project first — its budget page is ready the moment the project exists.</div>
               )}
             </SectionCard>
-            <SectionCard>
+            <SectionCard flat>
               <FlowSteps title="How the roll-up builds" steps={[
                 { title: 'Seed lines by CSI division', desc: 'On each project: pick a division, or pull bid-package estimates in one tap.' },
                 { title: 'Committed books itself', desc: 'Awarded subcontracts and POs land on their coded lines.' },

@@ -542,14 +542,14 @@ export default function RFIsPage() {
               </div>
             </SectionCard>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard title="Project Routing" icon={<Buildings size={17} weight="duotone" color={T.gold} />}>
+              <SectionCard flat title="Project Routing" icon={<Buildings size={17} weight="duotone" color={T.gold} />}>
                 <InsightRow label="Project" value={ctx?.project?.name || '—'} />
                 <InsightRow label="Architect" value={architectName || 'Not on file'} />
                 <InsightRow label="Owner" value={ctx?.defaults?.ownerName || ctx?.project?.ownerName || '—'} />
                 <InsightRow label="Subs on roster" value={String(subs.length)} />
                 <InsightRow label="Open / Overdue" value={`${openCount} / ${overdueCount}`} accent={overdueCount > 0 ? T.red : undefined} strong />
               </SectionCard>
-              <SectionCard title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={T.gold} />}>
+              <SectionCard flat title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={T.gold} />}>
                 <FlowSteps title="" steps={[
                   { title: 'RFI logs and routes', desc: `Numbered #${nextRfiNumber} automatically — the ball-in-court gets the email and in-app notification.` },
                   { title: 'The clock starts', desc: 'Days-open and overdue tracking run against the response-due date.' },

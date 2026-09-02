@@ -270,7 +270,7 @@ export default function NetworkWizardPage() {
 
       {/* Streaming Output */}
       {streamText && !result && (
-        <SectionCard
+        <SectionCard flat
           title="AI is designing your network…"
           icon={<Robot size={17} weight="duotone" color={GOLD} />}
           flush
@@ -287,7 +287,7 @@ export default function NetworkWizardPage() {
         <>
           {/* Summary */}
           {result.summary && (
-            <SectionCard title="Design Summary" icon={<Sparkle size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
+            <SectionCard flat title="Design Summary" icon={<Sparkle size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
               <div style={{ color: TEXT, fontSize: 14, lineHeight: 1.6 }}>{result.summary}</div>
             </SectionCard>
           )}
@@ -386,7 +386,7 @@ export default function NetworkWizardPage() {
 
           {/* Firewall Summary */}
           {result.firewall_rules && result.firewall_rules.length > 0 && (
-            <SectionCard title="Firewall Rules" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
+            <SectionCard flat title="Firewall Rules" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
               {result.firewall_rules.map((rule, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 0', borderBottom: i < result.firewall_rules.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
                   <span style={{
@@ -403,7 +403,7 @@ export default function NetworkWizardPage() {
 
           {/* WiFi SSIDs */}
           {result.wifi_ssids && result.wifi_ssids.length > 0 && (
-            <SectionCard title="WiFi SSID Recommendations" icon={<WifiHigh size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
+            <SectionCard flat title="WiFi SSID Recommendations" icon={<WifiHigh size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}>
               {result.wifi_ssids.map((ssid, i) => (
                 <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '8px 0', borderBottom: i < result.wifi_ssids.length - 1 ? `1px solid ${BORDER}` : 'none' }}>
                   <span style={{ display: 'inline-flex' }}><WifiHigh size={18} weight="regular" color={TEXT} /></span>
@@ -423,7 +423,7 @@ export default function NetworkWizardPage() {
 
           {/* Cable Estimate */}
           {result.cable_estimate && (
-            <SectionCard title="Cable Estimate" icon={<Path size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
+            <SectionCard flat title="Cable Estimate" icon={<Path size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
                 <StatCard icon={<Path size={19} weight="duotone" color={GOLD} />} label="Cat6 Runs" value={String(result.cable_estimate.cat6_runs)} />
                 <StatCard icon={<Path size={19} weight="duotone" color={GOLD} />} label="Cat6a Runs" value={String(result.cable_estimate.cat6a_runs)} />

@@ -330,7 +330,7 @@ export default function SpecsPage() {
         </SectionCard>
         {ctx && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <SectionCard title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={T.gold} />}>
+            <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={T.gold} />}>
               <InsightRow label="Spec sections" value={`${specs.length} across ${coveredDivisions} division${coveredDivisions === 1 ? '' : 's'}`} />
               <InsightRow label="Bid packages" value={String(pkgs.length)} />
               <InsightRow label="Open submittals" value={String(openSubmittals)} accent={openSubmittals > 0 ? T.gold : undefined} />
@@ -341,7 +341,7 @@ export default function SpecsPage() {
                 </div>
               )}
             </SectionCard>
-            <SectionCard title="After You Save" icon={<FileText size={17} weight="duotone" color={T.gold} />}>
+            <SectionCard flat title="After You Save" icon={<FileText size={17} weight="duotone" color={T.gold} />}>
               <FlowSteps title="" steps={[
                 { title: 'Section files by division', desc: 'The book groups itself in CSI MasterFormat order.' },
                 { title: 'Upload the PDF', desc: 'Attach the section document right from the register row.' },

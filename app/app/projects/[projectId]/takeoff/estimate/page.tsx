@@ -590,7 +590,7 @@ function EstimatePage() {
         {/* MAIN AREA */}
         <div style={{ flex: '2 1 440px', minWidth: 0 }}>
           {!selectedSheet ? (
-            <SectionCard flush>
+            <SectionCard flat flush>
               <PremiumEmpty
                 icon={<FileText size={30} weight="duotone" color={GOLD} />}
                 title="Select or add a sheet to begin"

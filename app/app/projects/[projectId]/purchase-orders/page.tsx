@@ -535,14 +535,14 @@ export default function PurchaseOrdersPage() {
           {/* Context rail — what creating this PO sets in motion */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {selLine && (
-              <SectionCard title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color="#F59E0B" />}>
+              <SectionCard flat title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color="#F59E0B" />}>
                 <InsightRow label="Line budget" value={fmt(lineBudget)} />
                 <InsightRow label="Committed to date" value={fmt(lineCommitted)} />
                 <InsightRow label="This PO" value={fmt(poTotal)} accent={T.gold} />
                 <InsightRow label="Remaining after" value={fmt(lineRemaining)} accent={lineRemaining < 0 ? T.red : T.green} strong />
               </SectionCard>
             )}
-            <SectionCard title="After You Create" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
+            <SectionCard flat title="After You Create" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
               <FlowSteps title="" steps={[
                 { title: 'Draft PO on the log', desc: `Saved as ${form.po_num || nextPoStr} in the procurement log for this project.` },
                 { title: 'Budget committed rolls up server-side', desc: form.cost_code ? `${fmt(poTotal)} commits against ${form.cost_code} the moment you save.` : 'Pick a cost code and the total commits against that budget line automatically.' },

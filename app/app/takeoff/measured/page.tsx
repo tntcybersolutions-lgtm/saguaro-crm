@@ -1270,7 +1270,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
         {/* divisions */}
         {r.byDivision.length > 0 && (
-          <SectionCard title="By Division" icon={<Stack size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 14 }}>
+          <SectionCard flat title="By Division" icon={<Stack size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 14 }}>
             {r.byDivision.map((d) => <div key={d.trade} style={{ display: 'flex', padding: '6px 0', borderBottom: `1px solid ${LINE}` }}><span style={{ flex: 1 }}>{d.trade}</span><span style={{ color: DIM, marginRight: 14, fontSize: 13 }}>{d.lines} lines</span><span style={{ fontWeight: 700 }}>{usd(d.totalCents)}</span></div>)}
           </SectionCard>
         )}

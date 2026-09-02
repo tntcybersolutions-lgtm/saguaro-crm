@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import NotificationBell from '../../components/NotificationBell';
 import CommandPalette from '../../components/CommandPalette';
+import HelpMode from '../../components/HelpMode';
 import SaguaroChatWidget from '../../components/SaguaroChatWidget';
 import SubscriptionWall from '../../components/SubscriptionWall';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -432,6 +433,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Command Palette ────────────────────────────────────────────── */}
       <CommandPalette onScoreBid={() => setShowScoreModal(true)} />
+
+      {/* ── Help Mode ──────────────────────────────────────────────────── */}
+      {/* Mounted once for the whole shell so a walkthrough survives navigation:
+          the arrow has to keep its place when a step moves you to another page. */}
+      <HelpMode />
 
       {/* ── Bid Score Modal ────────────────────────────────────────────── */}
       {showScoreModal && (

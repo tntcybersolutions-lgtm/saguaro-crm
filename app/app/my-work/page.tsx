@@ -168,7 +168,7 @@ export default function MyWorkPage() {
 
       {/* Error */}
       {error && !isLoading && (
-        <SectionCard>
+        <SectionCard flat>
           <PremiumEmpty
             tone="error"
             icon={<WarningCircle size={30} weight="duotone" color={RED} />}
@@ -231,7 +231,7 @@ export default function MyWorkPage() {
             // be capped server-side — never show "all clear" while counts say otherwise.
             const countOpen = ['todos', 'rfis', 'punch', 'issues', 'tmAwaiting', 'assists'].reduce((n, k) => n + (Number(counts[k]) || 0), 0);
             return (
-              <SectionCard
+              <SectionCard flat
                 key={pid || idx}
                 accent={acc.hex}
                 title={

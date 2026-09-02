@@ -465,7 +465,7 @@ export default function ApiDocsPage() {
             </div>
           </SectionCard>
 
-          <SectionCard
+          <SectionCard flat
             title="Webhook Payload Format"
             subtitle="Every delivery carries these headers and this body shape"
             icon={<BracketsCurly size={17} weight="duotone" color={API_ACCENT} />}

@@ -269,7 +269,7 @@ export default function BidPackageDetailPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
         <SkeletonKPI /><SkeletonKPI /><SkeletonKPI /><SkeletonKPI />
       </div>
-      <SectionCard title="Invited Subcontractors" icon={<UsersThree size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard flat title="Invited Subcontractors" icon={<UsersThree size={17} weight="duotone" color={GOLD} />} flush>
         <SkeletonRow />
         <SkeletonRow />
         <SkeletonRow />
@@ -409,7 +409,7 @@ export default function BidPackageDetailPage() {
         {/* Scope */}
         {scopeText && (
           <div style={{ marginBottom: 20 }}>
-            <SectionCard title="Scope of Work" icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Scope of Work" icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}>
               <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{scopeText}</div>
             </SectionCard>
           </div>

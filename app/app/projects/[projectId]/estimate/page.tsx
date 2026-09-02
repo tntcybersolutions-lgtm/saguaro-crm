@@ -302,7 +302,7 @@ export default function EstimatePage() {
           )}
 
           {/* Line Items Table */}
-          <SectionCard
+          <SectionCard flat
             title="Line Items"
             icon={<Rows size={17} weight="duotone" color="#F59E0B" />}
             action={<span style={{ fontSize: 12, color: T.muted }}>{takeoff.materials.length} items</span>}
@@ -322,7 +322,7 @@ export default function EstimatePage() {
           </SectionCard>
 
           {/* Summary Footer */}
-          <SectionCard
+          <SectionCard flat
             title="Estimate Summary"
             icon={<Receipt size={17} weight="duotone" color="#F59E0B" />}
             style={{ marginTop: 20 }}

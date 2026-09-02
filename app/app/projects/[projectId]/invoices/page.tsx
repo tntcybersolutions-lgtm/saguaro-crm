@@ -441,7 +441,7 @@ export default function InvoicesPage() {
           </SectionCard>
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Original contract" value={fmt(original)} />
                 {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
                 <InsightRow label="Revised contract" value={fmt(revised)} />
@@ -455,7 +455,7 @@ export default function InvoicesPage() {
                   </>
                 )}
               </SectionCard>
-              <SectionCard title="After You Create" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Create" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
                   { title: 'Draft is saved', desc: 'Edit the amount or adjust by % any time before sending.' },
                   { title: 'Send to owner', desc: 'One click emails the invoice to the bill-to address above.' },

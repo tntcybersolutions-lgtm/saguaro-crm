@@ -431,14 +431,14 @@ export default function BillsPage() {
           {/* Context rail — what the system does with this bill */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {selLine && (
-              <SectionCard title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Line budget" value={fmt(lineBudget)} />
                 <InsightRow label="Actual to date" value={fmt(lineActual)} />
                 <InsightRow label="This bill" value={fmt(grandTotal)} accent={GOLD} />
                 <InsightRow label="Remaining after" value={fmt(lineRemaining)} accent={lineRemaining < 0 ? RED : GREEN} strong />
               </SectionCard>
             )}
-            <SectionCard title="After You Save" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="After You Save" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
                 { title: 'Bill lands as Pending', desc: 'Queued in payables with overdue tracking off the due date — no follow-up spreadsheet.' },
                 { title: 'Budget actual rolls up server-side', desc: form.cost_code ? `${fmt(grandTotal)} posts to ${form.cost_code} actual the moment you save.` : 'Pick a cost code and the total posts to that budget line automatically.' },

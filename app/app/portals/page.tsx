@@ -298,7 +298,7 @@ export default function PortalsPage() {
       )}
 
       {/* Workflow explainer */}
-      <SectionCard title="How Portal Access Works" icon={<ListNumbers size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
+      <SectionCard flat title="How Portal Access Works" icon={<ListNumbers size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
           {[
             { n: '1', title: 'Create Access', desc: 'Click Invite Client or Invite Subcontractor above', color: GOLD },

@@ -248,7 +248,7 @@ export default function AutopilotPage() {
 
       {/* Context rail — each check, its live output, and the money it guards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard
+        <SectionCard flat
           title="Scan Pipeline"
           subtitle={running ? 'Running checks…' : 'Runs automatically every 6 hours'}
           icon={<ListChecks size={17} weight="duotone" color={GOLD} />}
@@ -260,7 +260,7 @@ export default function AutopilotPage() {
           }))} />
         </SectionCard>
         {ctx && (
-          <SectionCard title="What These Checks Guard" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="What These Checks Guard" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
             <InsightRow label="Revised contract" value={fmtM(money?.revisedContract)} strong />
             <InsightRow label="Billed to date" value={`${fmtM(money?.billedToDate)} · ${Number(money?.billedPct) || 0}%`} />
             <InsightRow label="Paid to date" value={fmtM(money?.paidToDate)} accent={GREEN} />

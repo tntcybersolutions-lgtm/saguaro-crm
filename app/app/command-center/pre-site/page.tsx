@@ -67,7 +67,7 @@ export default function PreSitePage() {
         {loading ? (
           <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
         ) : view.list.length === 0 ? (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty
               icon={<Clipboard size={32} weight="duotone" color={C.gold} />}
               title="No pre-site checklist for this site"

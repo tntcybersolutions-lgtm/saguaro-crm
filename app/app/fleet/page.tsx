@@ -151,7 +151,7 @@ export default function FleetPage() {
           <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Maint. cost" value={usd(summary.totalMaintenanceCostCents)} sub={`across ${records.length} service record${records.length === 1 ? '' : 's'}`} delay={0.22} />
         </div>
 
-        {assets.some((a) => a.last_lat) ? <SectionCard title="Live Map" icon={<MapPin size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}><FleetMap assets={assets} pings={selId ? pings : []} selId={selId} onSelect={setSelId} /></SectionCard> : null}
+        {assets.some((a) => a.last_lat) ? <SectionCard flat title="Live Map" icon={<MapPin size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}><FleetMap assets={assets} pings={selId ? pings : []} selId={selId} onSelect={setSelId} /></SectionCard> : null}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 320px) minmax(0, 1fr)', gap: 16, marginTop: 16, alignItems: 'start' }}>
           {/* registry */}
@@ -188,7 +188,7 @@ export default function FleetPage() {
 
           {/* detail */}
           <div>
-            {!sel ? <SectionCard><PremiumEmpty icon={<Truck size={30} weight="duotone" color={GOLD} />} title="Select an asset" description="Choose a vehicle or piece of equipment from the registry to view its full record — maintenance history, documents, warnings, and last-known location." /></SectionCard> : (
+            {!sel ? <SectionCard flat><PremiumEmpty icon={<Truck size={30} weight="duotone" color={GOLD} />} title="Select an asset" description="Choose a vehicle or piece of equipment from the registry to view its full record — maintenance history, documents, warnings, and last-known location." /></SectionCard> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <SectionCard>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -212,7 +212,7 @@ export default function FleetPage() {
                 ) : null; })()}
 
                 {/* location */}
-                <SectionCard title="Last known location" icon={<MapPin size={17} weight="duotone" color={GOLD} />} action={sel.last_lat ? <a href={`https://maps.google.com/?q=${sel.last_lat},${sel.last_lng}`} target="_blank" rel="noreferrer" style={{ color: GOLD, fontSize: 13, textDecoration: 'none', display: 'inline-flex', gap: 5, alignItems: 'center' }}>Open in Maps <ArrowSquareOut size={13} /></a> : null}>
+                <SectionCard flat title="Last known location" icon={<MapPin size={17} weight="duotone" color={GOLD} />} action={sel.last_lat ? <a href={`https://maps.google.com/?q=${sel.last_lat},${sel.last_lng}`} target="_blank" rel="noreferrer" style={{ color: GOLD, fontSize: 13, textDecoration: 'none', display: 'inline-flex', gap: 5, alignItems: 'center' }}>Open in Maps <ArrowSquareOut size={13} /></a> : null}>
                   {sel.last_lat ? (
                     <div style={{ fontSize: 13.5 }}><MapPin size={15} color={GOLD} weight="fill" style={{ verticalAlign: -2 }} /> {sel.last_lat.toFixed(5)}, {sel.last_lng.toFixed(5)} · <span style={{ color: DIM }}>{fmt(sel.last_location_at)}{sel.last_speed_mph ? ` · ${Math.round(sel.last_speed_mph)} mph` : ''}</span>
                       {trip.points > 1 ? <div style={{ color: DIM, fontSize: 12.5, marginTop: 6 }}>Recent trip: {trip.distanceMiles} mi · max {trip.maxSpeedMph} mph · {trip.durationMin} min ({trip.points} pings)</div> : null}
@@ -221,7 +221,7 @@ export default function FleetPage() {
                 </SectionCard>
 
                 {/* maintenance */}
-                <SectionCard title="Maintenance" icon={<Wrench size={17} weight="duotone" color={GOLD} />} action={<button onClick={() => setAddingMaint(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">+ Log service</button>}>
+                <SectionCard flat title="Maintenance" icon={<Wrench size={17} weight="duotone" color={GOLD} />} action={<button onClick={() => setAddingMaint(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">+ Log service</button>}>
                   {selRecords.length === 0 ? <span style={{ color: DIM, fontSize: 13 }}>No maintenance logged.</span> : selRecords.map((r) => (
                     <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${BORDER}`, fontSize: 13.5 }}>
                       <Wrench size={15} color={DIM} />

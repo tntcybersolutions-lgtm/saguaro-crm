@@ -70,7 +70,7 @@ export default function VendorsPage() {
         {loading ? (
           <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
         ) : rows.length === 0 ? (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty
               icon={<Truck size={32} weight="duotone" color={C.gold} />}
               title="No vendor deliveries scheduled"

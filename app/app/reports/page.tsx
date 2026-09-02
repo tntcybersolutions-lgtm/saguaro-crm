@@ -601,7 +601,7 @@ export default function ReportsPage() {
 
           {/* Loading / Progress state */}
           {pageState === 'loading' && (
-            <SectionCard flush style={{ marginBottom: 20 }} bodyStyle={{ padding: '40px 32px', textAlign: 'center' }}>
+            <SectionCard flat flush style={{ marginBottom: 20 }} bodyStyle={{ padding: '40px 32px', textAlign: 'center' }}>
               <div style={{
                 width: 52, height: 52, borderRadius: 14,
                 background: `linear-gradient(135deg, ${GOLD}22, ${GOLD}44)`,

@@ -1139,7 +1139,7 @@ export default function TakeoffPage() {
 
                     {/* AI Summary */}
                     {selectedTakeoff.summary && (
-                      <SectionCard title="AI Summary" icon={<Sparkle size={16} weight="fill" color={GOLD} />}>
+                      <SectionCard flat title="AI Summary" icon={<Sparkle size={16} weight="fill" color={GOLD} />}>
                         <p style={{ margin: 0, color: T.muted, fontSize: 13, lineHeight: 1.7 }}>
                           {selectedTakeoff.summary}
                         </p>
@@ -1150,7 +1150,7 @@ export default function TakeoffPage() {
 
                 {/* Recommendations Tab */}
                 {activeTab === 'recs' && (
-                  <SectionCard title="Estimator Recommendations" icon={<Lightbulb size={16} weight="duotone" color={GOLD} />}>
+                  <SectionCard flat title="Estimator Recommendations" icon={<Lightbulb size={16} weight="duotone" color={GOLD} />}>
                       {selectedTakeoff.recommendations?.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                           {selectedTakeoff.recommendations.map((rec, i) => (

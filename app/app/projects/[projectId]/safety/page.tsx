@@ -587,7 +587,7 @@ export default function SafetyPage() {
             </div>
           </SectionCard>
           {ctx && (
-            <SectionCard title="After You Report" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="After You Report" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
                 { title: 'Incident enters the log', desc: formIsRecordable ? 'Flagged OSHA-recordable for the 300 log.' : 'Saved for internal tracking and trends.' },
                 { title: 'Corrective action opens', desc: 'The corrective-action text becomes a tracked item with its own status flow.' },

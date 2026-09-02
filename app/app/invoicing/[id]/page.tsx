@@ -525,7 +525,7 @@ export default function InvoiceDetailPage() {
       </SectionCard>
 
       {/* Vendor & meta */}
-      <SectionCard title="Vendor & Meta" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
+      <SectionCard flat title="Vendor & Meta" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 18 }}>
           {[
             { l: 'Vendor', v: inv.vendor_name || '—' },
@@ -544,7 +544,7 @@ export default function InvoiceDetailPage() {
 
       {/* Payment (only if relevant) */}
       {(inv.paid_at || inv.paid_amount != null || inv.payment_method || inv.check_number) && (
-        <SectionCard title="Payment" icon={<CreditCard size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
+        <SectionCard flat title="Payment" icon={<CreditCard size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 18 }}>
             {[
               { l: 'Paid Amount', v: money(inv.paid_amount) },
@@ -563,7 +563,7 @@ export default function InvoiceDetailPage() {
 
       {/* Notes */}
       {inv.notes && (
-        <SectionCard title="Notes" icon={<Note size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
+        <SectionCard flat title="Notes" icon={<Note size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
           <div style={{ fontSize: font.size.md, color: colors.text, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
             {inv.notes}
           </div>

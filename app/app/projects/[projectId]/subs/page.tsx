@@ -328,7 +328,7 @@ export default function SubsPage() {
           </SectionCard>
 
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
-            <SectionCard title="Compliance Snapshot" icon={picked ? (hasComplianceIssue(picked) ? <ShieldWarning size={17} weight="duotone" color="#EF4444" /> : <ShieldCheck size={17} weight="duotone" color="#22C55E" />) : <ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Compliance Snapshot" icon={picked ? (hasComplianceIssue(picked) ? <ShieldWarning size={17} weight="duotone" color="#EF4444" /> : <ShieldCheck size={17} weight="duotone" color="#22C55E" />) : <ShieldCheck size={17} weight="duotone" color={GOLD} />}>
               {picked ? (
                 <>
                   <InsightRow label="W-9" value={w9Ok(picked)?'On file':'Missing'} accent={w9Ok(picked)?'#22C55E':'#EF4444'} strong/>
@@ -346,7 +346,7 @@ export default function SubsPage() {
                 </>
               )}
             </SectionCard>
-            <SectionCard title="After You Add" icon={<AddressBook size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="After You Add" icon={<AddressBook size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
                 {title:'Saved to your directory',desc:'The company lands in the tenant directory, ready for bid invites and contracts.'},
                 {title:'W-9 request auto-sends',desc:'Over $600 with an email on file, a W-9 e-request goes out automatically.'},
@@ -360,7 +360,7 @@ export default function SubsPage() {
 
       {/* Loading */}
       {loading && (
-        <SectionCard>
+        <SectionCard flat>
           <div style={{padding:40,textAlign:'center',color:DIM}}>Loading subcontractors…</div>
         </SectionCard>
       )}

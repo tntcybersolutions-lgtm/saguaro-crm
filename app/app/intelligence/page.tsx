@@ -539,7 +539,7 @@ export default function IntelligencePage() {
       {/* Loading — skeletons shaped like the surface they become */}
       {summaryLoading && !error && (
         <>
-          <SectionCard
+          <SectionCard flat
             title="Portfolio Insights"
             icon={<Lightbulb size={17} weight="duotone" color={GOLD} />}
             style={{ marginBottom: 24 }}
@@ -555,7 +555,7 @@ export default function IntelligencePage() {
       {rows.length > 0 && (
         <>
           {/* 1 — INSIGHTS: the honest sentences, severity first */}
-          <SectionCard
+          <SectionCard flat
             title="Portfolio Insights"
             subtitle="What the numbers say across your selected projects"
             icon={<Lightbulb size={17} weight="duotone" color={GOLD} />}

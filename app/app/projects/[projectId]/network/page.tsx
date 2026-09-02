@@ -252,7 +252,7 @@ export default function NetworkDashboard() {
               </button>
             </div>
           </SectionCard>
-          <SectionCard icon={<Robot size={17} weight="duotone" color={GOLD} />} title="What You Get">
+          <SectionCard flat icon={<Robot size={17} weight="duotone" color={GOLD} />} title="What You Get">
             <FlowSteps title="" steps={[
               { title: 'AI Network Wizard', desc: 'Describe the site — the wizard drafts the device list, VLAN plan, and IP scheme.' },
               { title: 'Device & VLAN inventory', desc: 'Every switch, AP, and camera tracked with IP, MAC, VLAN, and location.' },
@@ -366,7 +366,7 @@ export default function NetworkDashboard() {
 
       {/* Readiness rail — derived from the live inventory */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard icon={<CheckCircle size={17} weight="duotone" color={GOLD} />} title="Network Readiness">
+        <SectionCard flat icon={<CheckCircle size={17} weight="duotone" color={GOLD} />} title="Network Readiness">
           <FlowSteps title="" steps={[
             { title: 'Module configured', done: true, desc: `${(networkProject?.site_type || 'site').replace(/_/g, ' ')} · ${(networkProject?.total_sq_ft || 0).toLocaleString()} SF · ${networkProject?.floor_count || 1} floor${(networkProject?.floor_count || 1) > 1 ? 's' : ''}.` },
             { title: 'Device inventory', done: devices.length > 0, desc: devices.length > 0 ? `${devices.length} device${devices.length === 1 ? '' : 's'} — ${devices.filter(d => d.status === 'online').length} online.` : 'Add devices by hand, or let the AI wizard draft the design.' },
@@ -375,7 +375,7 @@ export default function NetworkDashboard() {
             { title: 'Alerts clear', done: openAlerts === 0, desc: openAlerts > 0 ? `${openAlerts} open alert${openAlerts === 1 ? '' : 's'} below need attention.` : 'No open alerts on this network.' },
           ]} />
         </SectionCard>
-        <SectionCard icon={<Globe size={17} weight="duotone" color={GOLD} />} title="Site Profile">
+        <SectionCard flat icon={<Globe size={17} weight="duotone" color={GOLD} />} title="Site Profile">
           <InsightRow label="Site type" value={(networkProject?.site_type || '—').replace(/_/g, ' ')} />
           <InsightRow label="Square footage" value={`${(networkProject?.total_sq_ft || 0).toLocaleString()} SF`} />
           <InsightRow label="Floors" value={String(networkProject?.floor_count || 1)} />
@@ -448,7 +448,7 @@ export default function NetworkDashboard() {
 
       {/* Open Alerts */}
       {alerts.filter(a => !a.resolved).length > 0 && (
-        <SectionCard
+        <SectionCard flat
           icon={<Warning size={17} weight="duotone" color={RED} />}
           title="Open Alerts"
           accent={RED}

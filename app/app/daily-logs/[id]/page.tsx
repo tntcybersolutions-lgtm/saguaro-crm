@@ -229,7 +229,7 @@ export default function DailyLogDetailPage() {
   if (notFound || (!log && !error)) {
     return (
       <PremiumSurface maxWidth={1100}>
-        <SectionCard flush>
+        <SectionCard flat flush>
           <PremiumEmpty
             icon={<ClipboardText size={30} weight="duotone" color={ACCENT.hex} />}
             title="Daily log not found"
@@ -244,7 +244,7 @@ export default function DailyLogDetailPage() {
   if (error && !log) {
     return (
       <PremiumSurface maxWidth={1100}>
-        <SectionCard flush>
+        <SectionCard flat flush>
           <PremiumEmpty
             tone="error"
             icon={<Warning size={30} weight="duotone" color={RED} />}
@@ -577,7 +577,7 @@ export default function DailyLogDetailPage() {
 
       {/* Photos (rendered only when the row carries a photo array) */}
       {photos.length > 0 && (
-        <SectionCard
+        <SectionCard flat
           title="Photos"
           subtitle={`${photos.length} attached`}
           icon={<ImageSquare size={16} weight="duotone" color={ACCENT.hex} />}
@@ -600,7 +600,7 @@ export default function DailyLogDetailPage() {
       )}
 
       {/* Meta — log date edits through SaguaroDatePicker; project/created stay read-only */}
-      <SectionCard
+      <SectionCard flat
         title="Meta"
         icon={<Info size={16} weight="duotone" color={ACCENT.hex} />}
         accent={ACCENT.hex}

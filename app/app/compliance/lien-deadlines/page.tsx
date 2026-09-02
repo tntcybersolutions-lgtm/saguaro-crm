@@ -392,7 +392,7 @@ export default function LienDeadlinePage() {
           />
         </SectionCard>
       ) : (
-        <SectionCard
+        <SectionCard flat
           title="Upcoming Deadlines"
           icon={<CalendarBlank size={17} weight="duotone" color={GOLD} />}
           subtitle={sorted.length === 1 ? '1 deadline tracked' : `${sorted.length} deadlines tracked`}

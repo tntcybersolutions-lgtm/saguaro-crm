@@ -115,7 +115,12 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   const curIdx = steps.findIndex(s => !s.done);
 
   if (!loaded || !hydrated) return null; // never flash a wrong journey
-  if (doneCount === 8) return null;     // journey complete — get out of the way
+  /* steps.length, not a literal. This read `=== 8` while the list held nine —
+     "Price the drawings" was added and the two hardcoded counts were not — so
+     the rail vanished with "Get paid" still open and the bar could read over
+     100%. The header beside it already used steps.length, which is how the
+     mismatch was visible: "8 of 9 steps" next to a full bar. */
+  if (doneCount >= steps.length) return null;   // journey complete — get out of the way
 
   /* Open for a job that still needs the guidance; folded once it is moving.
      Three steps done means the project exists, the plans are priced and the
@@ -137,7 +142,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   }
 
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div data-tour="getting-started" style={{ marginBottom: 24 }}>
       <SectionCard
         title="Your path to first payment"
         subtitle={
@@ -189,7 +194,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
           <>
             {/* Progress */}
             <div style={{ height: 6, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginBottom: 18 }}>
-              <div style={{ height: '100%', width: `${(doneCount / 8) * 100}%`, background: `linear-gradient(90deg,${GOLD},${GOLD_HI})`, borderRadius: 999, transition: 'width .4s ease' }} />
+              <div style={{ height: '100%', width: `${(doneCount / steps.length) * 100}%`, background: `linear-gradient(90deg,${GOLD},${GOLD_HI})`, borderRadius: 999, transition: 'width .4s ease' }} />
             </div>
 
             {/* The pipeline — FlowSteps anatomy, every row deep-linked */}

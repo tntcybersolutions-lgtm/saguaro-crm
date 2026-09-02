@@ -292,7 +292,7 @@ export default function TeamPage(){
           <button onClick={()=>{setShowInvite(false);setInviteMsg('');}} style={ghostButtonStyle} className="pmBtn">Cancel</button>
         </div>
       </SectionCard>
-      <SectionCard title="After You Send" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard flat title="After You Send" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
         <FlowSteps title="" steps={[
           {title:'Invitation email goes out', desc:'A secure accept link is emailed — it expires after 7 days.'},
           {title:'They create their login', desc:'One click sets up their account under your company.'},

@@ -78,13 +78,13 @@ export default function ChecklistsPage() {
 
       {loading ? <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
       : groups.length === 0 ? (
-        <SectionCard>
+        <SectionCard flat>
           <PremiumEmpty icon={<CheckCircle size={32} weight="duotone" color={C.gold} />} title="No checklist for this site"
             description="Sites launched from the standardized template come pre-loaded with the full Phase 1–4 checklist." />
         </SectionCard>
       ) : (
         <>
-          <SectionCard
+          <SectionCard flat
             title="Overall progress"
             subtitle={`${overall.done} of ${overall.total} steps complete`}
             icon={<Flag size={16} weight="duotone" color={C.gold} />}

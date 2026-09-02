@@ -488,7 +488,7 @@ export default function ChangeOrdersPage() {
 
             {/* Context rail — live contract position, prior CO, downstream automation */}
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <SectionCard title="Contract Position" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Contract Position" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Original contract" value={fmt(contractSum)}/>
                 <InsightRow label={`Approved COs (${approvedCount})`} value={(approvedCOs>=0?'+':'')+fmt(approvedCOs)} accent={approvedCOs>0?'#3dd68c':undefined}/>
                 {pendingCount>0 && <InsightRow label={`Pending COs (${pendingCount})`} value={(pendingCOs>=0?'+':'')+fmt(pendingCOs)} accent={GOLD}/>}
@@ -498,14 +498,14 @@ export default function ChangeOrdersPage() {
                 {fSchedNum>0 && <InsightRow label="Schedule impact" value={`+${fSchedNum} day${fSchedNum===1?'':'s'}`} accent={ORANGE}/>}
               </SectionCard>
               {lastCo && (
-                <SectionCard title={`Last CO — CO-${padCo(lastCo.co_number)}`} icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+                <SectionCard flat title={`Last CO — CO-${padCo(lastCo.co_number)}`} icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
                   <InsightRow label="Title" value={<span style={{display:'inline-block',maxWidth:170,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',verticalAlign:'bottom'}}>{lastCo.title||'—'}</span>}/>
                   <InsightRow label="Status" value={String(lastCo.status||'pending')} accent={statusStyle(lastCo.status||'pending').c}/>
                   <InsightRow label="Cost impact" value={(Number(lastCo.cost_impact||0)>=0?'+':'')+fmt(Number(lastCo.cost_impact)||0)} accent={Number(lastCo.cost_impact||0)>0?ORANGE:undefined}/>
                   <InsightRow label="Schedule" value={Number(lastCo.schedule_impact||0)>0?`+${Number(lastCo.schedule_impact)||0} days`:'—'}/>
                 </SectionCard>
               )}
-              <SectionCard title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
                   {title:'CO logged as pending', desc:`Numbered CO-${padCo(nextCoNumber)} automatically and queued for a decision.`},
                   {title:'Owner approval', desc:'Approve or reject right from this list — status flips instantly.'},

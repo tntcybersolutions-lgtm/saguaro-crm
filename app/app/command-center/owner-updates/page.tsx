@@ -117,7 +117,7 @@ export default function OwnerUpdatesPage() {
         {loading ? (
           <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
         ) : updates.length === 0 ? (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty
               icon={<EnvelopeSimple size={32} weight="duotone" color={C.gold} />}
               title="No active sites yet"

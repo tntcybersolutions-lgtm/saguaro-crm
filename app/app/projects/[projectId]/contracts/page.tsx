@@ -413,7 +413,7 @@ export default function ContractsPage() {
           </SectionCard>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <SectionCard title={selSub ? 'Party Snapshot' : selPkg ? 'Award Snapshot' : 'Ready to Paper'} icon={<UsersThree size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title={selSub ? 'Party Snapshot' : selPkg ? 'Award Snapshot' : 'Ready to Paper'} icon={<UsersThree size={17} weight="duotone" color={GOLD} />}>
               {selSub ? (
                 <>
                   <InsightRow label="Company" value={selSub.companyName || '—'} strong/>
@@ -452,7 +452,7 @@ export default function ContractsPage() {
                 <div style={{ fontSize: 12.5, color: DIM, lineHeight: 1.6 }}>Pick a roster sub or an awarded bid package above and the contract fills itself in.</div>
               )}
             </SectionCard>
-            <SectionCard title="After You Save" icon={<Signature size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="After You Save" icon={<Signature size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
                 { title: 'Draft on the ledger', desc: 'The contract lands here as a Draft, counted in sub commitments.' },
                 { title: 'Send for signature', desc: 'Send the package out — status moves to Sent while you wait on ink.' },

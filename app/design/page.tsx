@@ -1029,19 +1029,23 @@ export default function DesignStudioPage() {
         {/* ════════════════════════════════════════════════════════════════ */}
         <footer style={{ background: '#0b0e13', borderTop: '1px solid rgba(255,255,255,0.08)', color: '#A3A3A3', padding: '64px 24px 32px' }}>
           <div style={{ maxWidth: 1160, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 40, marginBottom: 48 }}>
+            {/* Every one of these was href="#" — fourteen footer links that took
+                a click and did nothing. Each now points at the page it names.
+                "Press" is gone rather than aimed somewhere wrong: there is no
+                press page, and a link to the wrong page is worse than no link. */}
             {[
-              { title: 'Product', links: ['AI Design', 'Takeoff', 'Field App', 'Portals'] },
-              { title: 'Company', links: ['About', 'Careers', 'Contact', 'Press'] },
-              { title: 'Resources', links: ['Help Center', 'API Docs', 'Blog', 'Compare'] },
-              { title: 'Legal', links: ['Privacy', 'Terms', 'Security'] },
+              { title: 'Product', links: [['AI Design', '/design'], ['Takeoff', '/takeoff'], ['Field App', '/get-the-app'], ['Portals', '/portals']] },
+              { title: 'Company', links: [['About', '/about'], ['Careers', '/careers'], ['Contact', '/contact']] },
+              { title: 'Resources', links: [['Help Center', '/help-center'], ['API Docs', '/api-docs'], ['Blog', '/blog'], ['Compare', '/compare']] },
+              { title: 'Legal', links: [['Privacy', '/privacy'], ['Terms', '/terms'], ['Security', '/security']] },
             ].map((col, i) => (
               <div key={i}>
                 <div style={{ color: '#fff', fontSize: 13, fontWeight: 600, marginBottom: 16 }}>{col.title}</div>
-                {col.links.map(link => (
-                  <a key={link} href="#" style={{ display: 'block', color: '#A3A3A3', fontSize: 13, textDecoration: 'none', marginBottom: 10, transition: 'color .15s' }}
+                {col.links.map(([label, href]) => (
+                  <Link key={label} href={href} style={{ display: 'block', color: '#A3A3A3', fontSize: 13, textDecoration: 'none', marginBottom: 10, transition: 'color .15s' }}
                     onMouseEnter={e => (e.currentTarget.style.color = '#fff')} onMouseLeave={e => (e.currentTarget.style.color = '#A3A3A3')}>
-                    {link}
-                  </a>
+                    {label}
+                  </Link>
                 ))}
               </div>
             ))}

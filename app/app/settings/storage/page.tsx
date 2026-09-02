@@ -152,7 +152,7 @@ function StorageSettings() {
       )}
 
       {/* Existing connections */}
-      <SectionCard
+      <SectionCard flat
         title="Connected Storage"
         subtitle={connectors.length ? 'Test, tune, or remove existing connections' : undefined}
         icon={<CloudArrowUp size={17} weight="duotone" color={GOLD} />}

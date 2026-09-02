@@ -248,7 +248,7 @@ export default function QuickBooksPage() {
       ]} />
 
       {/* Connection Status */}
-      <SectionCard accent={connected ? GREEN : GOLD} style={{ marginBottom: 24 }}>
+      <SectionCard flat accent={connected ? GREEN : GOLD} style={{ marginBottom: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{

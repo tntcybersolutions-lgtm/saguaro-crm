@@ -534,7 +534,7 @@ export default function PrequalificationPage() {
                 </SectionCard>
 
                 {/* Expiring certs/insurance */}
-                <SectionCard title="Expiring Documents" icon={<Clock size={17} weight="duotone" color={GOLD} />}>
+                <SectionCard flat title="Expiring Documents" icon={<Clock size={17} weight="duotone" color={GOLD} />}>
                   {/* Expiry outlook buckets — the 90-day insurance/cert horizon at a glance */}
                   {docStats.tot > 0 && (
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
@@ -580,7 +580,7 @@ export default function PrequalificationPage() {
 
               {/* Score visualization — distribution histogram + per-trade averages */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20, marginTop: 20 }}>
-              <SectionCard title="Score Distribution" subtitle={scoredCount > 0 ? `${scoredCount} scored submission${scoredCount === 1 ? '' : 's'}` : undefined} icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Score Distribution" subtitle={scoredCount > 0 ? `${scoredCount} scored submission${scoredCount === 1 ? '' : 's'}` : undefined} icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
                 {scoredCount === 0 ? (
                   <div style={{ color: DIM, fontSize: 13, padding: 20, textAlign: 'center' }}>Scores appear here as submissions arrive.</div>
                 ) : (
@@ -607,7 +607,7 @@ export default function PrequalificationPage() {
                 )}
               </SectionCard>
 
-              <SectionCard title="Score by Trade" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Score by Trade" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
                   {Array.from(new Set(submissions.map(s => s.sub_trade))).map(trade => {
                     const tradeSubs = submissions.filter(s => s.sub_trade === trade);

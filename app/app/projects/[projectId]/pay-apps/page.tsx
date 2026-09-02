@@ -336,7 +336,7 @@ export default function PayAppsPage() {
 
       {/* Loading — skeleton rows shaped like the real table (house pattern: rfis) */}
       {loading && (
-        <SectionCard flush>
+        <SectionCard flat flush>
           <SkeletonRow />
           <SkeletonRow />
           <SkeletonRow />

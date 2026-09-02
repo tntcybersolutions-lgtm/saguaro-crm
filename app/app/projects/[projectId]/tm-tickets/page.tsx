@@ -780,7 +780,7 @@ export default function TmTicketsPage() {
 
             {/* Context rail — live ticket math + what happens after submit */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard title="Ticket Math" subtitle="Live — matches the saved total to the cent" icon={<CurrencyCircleDollar size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Ticket Math" subtitle="Live — matches the saved total to the cent" icon={<CurrencyCircleDollar size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Labor (OT at 1.5x)" value={fmtUSD(previewLabor)} />
                 <InsightRow label="Materials" value={fmtUSD(previewMaterials)} />
                 <InsightRow label="Equipment" value={fmtUSD(previewEquipment)} />
@@ -791,12 +791,12 @@ export default function TmTicketsPage() {
                 <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
                 <InsightRow label="Ticket total" value={fmtUSD(previewTotal)} accent={GOLD} strong />
               </SectionCard>
-              <SectionCard title="Signatures" icon={<Signature size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Signatures" icon={<Signature size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Contractor" value={contractorSig ? 'Captured' : 'Not signed'} accent={contractorSig ? GREEN : undefined} />
                 <InsightRow label="Owner / GC" value={ownerSig ? 'Captured' : 'Not signed'} accent={ownerSig ? GREEN : undefined} />
                 <div style={HINT}>A signed ticket is the strongest backup when the extra hits the pay app. Both pads are optional on drafts.</div>
               </SectionCard>
-              <SectionCard title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
                   { title: 'Ticket numbered + logged', desc: 'Auto-numbered and queued for approval with the total locked server-side.' },
                   { title: 'Approve or reject inline', desc: 'The approver is stamped on the ticket with a timestamp.' },
@@ -852,7 +852,7 @@ export default function TmTicketsPage() {
 
         {/* Loading — skeleton shaped like the table it becomes */}
         {loading && (
-          <SectionCard flush>
+          <SectionCard flat flush>
             <div style={{ padding: 20 }}>
               <Skeleton height={16} width="40%" style={{ marginBottom: 18 }} />
               {[0, 1, 2, 3, 4].map(i => (

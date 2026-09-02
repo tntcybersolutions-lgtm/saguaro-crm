@@ -258,7 +258,7 @@ export default function OverviewPage(){
       </div>}
 
       {alerts.length>0&&<div style={{marginBottom:18}}>
-        <SectionCard title="Autopilot Alerts" icon={<Lightning size={18} weight="duotone" color={CIN.goldHi}/>}>
+        <SectionCard flat title="Autopilot Alerts" icon={<Lightning size={18} weight="duotone" color={CIN.goldHi}/>}>
           {alerts.slice(0,3).map((a:any)=>(
             <div key={a.id} style={{display:'flex',alignItems:'flex-start',gap:10,padding:'8px 0',borderBottom:`1px solid ${CIN.border}`}}>
               <div style={{width:6,height:6,borderRadius:'50%',background:GOLD,marginTop:6,flexShrink:0,boxShadow:'0 0 8px rgba(245,158,11,.7)'}}/>

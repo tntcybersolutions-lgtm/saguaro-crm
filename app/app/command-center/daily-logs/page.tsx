@@ -54,7 +54,7 @@ export default function DailyLogsPage() {
       )}
 
       {/* 4 PM compliance */}
-      <SectionCard
+      <SectionCard flat
         title="Today's 4 PM Compliance"
         icon={<CheckCircle size={16} weight="duotone" color={C.gold} />}
         action={<span style={{ fontSize: 13, fontWeight: 700, color: compliance.reported === compliance.total ? C.green : C.red, whiteSpace: 'nowrap' }}>{compliance.reported}/{compliance.total} reported</span>}

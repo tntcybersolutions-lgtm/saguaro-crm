@@ -249,7 +249,7 @@ export default function PermitsPage() {
 
       {/* Status pipeline — where every permit sits in the AHJ lifecycle */}
       {permits.length > 0 && (
-        <SectionCard style={{ marginBottom: 20 }} bodyStyle={{ padding: '16px 20px' }}>
+        <SectionCard flat style={{ marginBottom: 20 }} bodyStyle={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, overflowX: 'auto' }}>
             {PIPELINE.map((st, i) => (
               <React.Fragment key={st.key}>
@@ -339,7 +339,7 @@ export default function PermitsPage() {
           </SectionCard>
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={T.gold} />}>
+              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={T.gold} />}>
                 <InsightRow label="Site" value={addr ? addr.split(',')[0] : '—'} />
                 {city ? <InsightRow label="Jurisdiction" value={city} /> : null}
                 <InsightRow label="Owner" value={ctx.defaults?.ownerName || '—'} />
@@ -348,7 +348,7 @@ export default function PermitsPage() {
                 <InsightRow label="Open permits" value={String(openCount)} />
                 <InsightRow label="Expiring ≤ 30 days" value={String(expiringSoon.length)} accent={expiringSoon.length > 0 ? T.amber : undefined} strong={expiringSoon.length > 0} />
               </SectionCard>
-              <SectionCard title="After You Save" icon={<CheckCircle size={17} weight="duotone" color={T.gold} />}>
+              <SectionCard flat title="After You Save" icon={<CheckCircle size={17} weight="duotone" color={T.gold} />}>
                 <FlowSteps title="" steps={[
                   { title: 'Permit enters the pipeline', desc: 'Starts as Applied and moves through issuance, inspections, and closeout.' },
                   { title: 'Expiry is watched', desc: 'The row flags amber 30 days before expiry and red once lapsed.' },

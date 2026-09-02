@@ -134,7 +134,7 @@ export default function ProjectsPage() {
       {/* Error */}
       {error && (
         <div style={{marginBottom:20}}>
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty
               tone="error"
               icon={<WarningCircle size={30} weight="duotone" color={colors.red} />}
@@ -184,7 +184,7 @@ export default function ProjectsPage() {
             const contract = Number(p.contract_amount||0);
             const acc = accentForProject(p.id);
             return (
-              <Link key={p.id} href={`/app/projects/${p.id}`} className="pmHover"
+              <Link key={p.id} data-tour="project-card" href={`/app/projects/${p.id}`} className="pmHover"
                 style={{textDecoration:'none',position:'relative',overflow:'hidden',background:PANEL,border:`1px solid ${PANEL_BORDER}`,borderRadius:16,padding:18,boxShadow:PANEL_SHADOW,display:'block'}}
               >
                 <div aria-hidden style={{position:'absolute',left:0,top:0,bottom:0,width:3,background:`linear-gradient(180deg, ${acc.hex}, transparent)`,opacity:0.85}}/>

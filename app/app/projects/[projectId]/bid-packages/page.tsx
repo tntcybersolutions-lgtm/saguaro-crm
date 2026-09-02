@@ -651,7 +651,7 @@ export default function BidPackagesPage() {
 
           {/* Context rail — the pipeline this module actually enforces */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <SectionCard title="Award Pipeline" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Award Pipeline" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
                 { title: 'Package out to subs', desc: rosterCount > 0 ? `Invites go to your roster (${rosterCount} subs) or any email — each gets a portal link.` : 'Invites go out by email — each sub gets a portal link.', done: totalInvited > 0 || packages.length > 0 },
                 { title: 'Bids come back priced', desc: 'Subs price your line items in the portal; responses land here in real time.', done: totalSubmissions > 0 },
@@ -661,7 +661,7 @@ export default function BidPackagesPage() {
               ]} />
             </SectionCard>
             {ctx && (
-              <SectionCard title="Procurement Snapshot" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Procurement Snapshot" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Project budget" value={fmt(budgetOriginal)} />
                 <InsightRow label="Committed to date" value={fmt(budgetCommitted)} />
                 <InsightRow label="Awarded via bids" value={fmt(awardedTotal)} accent={awardedTotal > 0 ? GOLD : undefined} strong />

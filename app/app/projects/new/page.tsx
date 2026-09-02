@@ -405,6 +405,7 @@ export default function NewProjectPage() {
               <button
                 key={t.key}
                 type="button"
+                data-tour={`job-type-${t.key}`}
                 onClick={() => {
                   setTemplateKey(t.key);
                   setRetainage(String(t.retainagePct));
@@ -478,7 +479,7 @@ export default function NewProjectPage() {
                     </div>
                   </FIELD>
                 )}
-                  <FIELD label="Project Name"><input value={name} onChange={e=>setName(e.target.value)} required placeholder="e.g. Riverdale Medical Pavilion" style={INPUT_STYLE}/></FIELD>
+                  <FIELD label="Project Name"><input data-tour="project-name" value={name} onChange={e=>setName(e.target.value)} required placeholder="e.g. Riverdale Medical Pavilion" style={INPUT_STYLE}/></FIELD>
                 {/* Number, building type, category and description are all seeded or
                     optional. Two fields is the promise; these are here when wanted. */}
                 {showDetails && (<>
@@ -501,7 +502,7 @@ export default function NewProjectPage() {
                 </SectionCard>
 
                 <SectionCard title="Location" icon={<MapPin size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
-                  <FIELD label="Project Address"><input value={address} onChange={e=>setAddress(e.target.value)} required placeholder="123 Main St, Phoenix, AZ 85001" style={INPUT_STYLE}/></FIELD>
+                  <FIELD label="Project Address"><input data-tour="project-address" value={address} onChange={e=>setAddress(e.target.value)} required placeholder="123 Main St, Phoenix, AZ 85001" style={INPUT_STYLE}/></FIELD>
                 {/* Defaults to the portfolio standard; only matters if it differs. */}
                 {showDetails && (
                   <FIELD label="State Jurisdiction" auto={auto.state} hint="Sets statutory lien-waiver forms, preliminary notice deadlines and wage rules.">
@@ -585,7 +586,7 @@ export default function NewProjectPage() {
             </div>
 
             <div style={{display:'flex',gap:12,alignItems:'center',marginTop:6,flexWrap:'wrap' as const}}>
-              <button type="submit" onClick={() => { nextRef.current = 'takeoff'; }}
+              <button type="submit" data-tour="create-project-submit" onClick={() => { nextRef.current = 'takeoff'; }}
                 disabled={submitDisabled} className="pmBtn"
                 style={{...goldButtonStyle,padding:'13px 32px',fontSize:15,cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
                 {saving?'Creating…':'Create & add drawings →'}
@@ -627,7 +628,7 @@ export default function NewProjectPage() {
               folders={tpl?.folders ?? []}
               divisionCount={tpl?.divisions.length ?? 0}
             />
-            <SectionCard title="What Gets Created" icon={<Stack size={17} weight="duotone" color={GOLD} />} bodyStyle={{padding:'6px 20px 20px'}}>
+            <SectionCard flat title="What Gets Created" icon={<Stack size={17} weight="duotone" color={GOLD} />} bodyStyle={{padding:'6px 20px 20px'}}>
               <FlowSteps title="" steps={[
                 {title:'Project workspace', desc:'Overview, directory, documents, daily logs and photo feed — live the moment you hit Create.'},
                 {title:'Budget & bid packages', desc:'CSI-coded budget lines and trade bid packages — sub awards commit dollars automatically.'},
@@ -636,7 +637,7 @@ export default function NewProjectPage() {
               ]}/>
             </SectionCard>
 
-            <SectionCard title="Smart Defaults" icon={<Sparkle size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Smart Defaults" icon={<Sparkle size={17} weight="duotone" color={GOLD} />}>
               <InsightRow label="Project number" value={projectNumber||'—'} accent={GOLD} strong/>
               <InsightRow label="Category" value={PROJECT_CATEGORIES.find(c=>c.value===type)?.label||type}/>
               <InsightRow label="Retainage" value={`${Number(retainage)||10}%`}/>

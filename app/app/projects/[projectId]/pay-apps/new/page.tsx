@@ -345,7 +345,7 @@ export default function NewPayAppPage() {
 
             {/* Context rail — prior app + what the system automates */}
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
-              <SectionCard title={lastApp ? `Last Application — #${lastApp.appNumber}` : 'First Application'} icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title={lastApp ? `Last Application — #${lastApp.appNumber}` : 'First Application'} icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
                 {lastApp ? (
                   <>
                     <InsightRow label="Period" value={`${fmtDate(lastApp.periodFrom)} – ${fmtDate(lastApp.periodTo)}`}/>
@@ -359,7 +359,7 @@ export default function NewPayAppPage() {
                   </div>
                 )}
               </SectionCard>
-              <SectionCard title="After You Submit" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Submit" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
                   {title:'Owner receives the G702/G703', desc:'A signed application packet goes out for one-click owner approval.'},
                   {title:'Lien waivers auto-generate', desc: subCount>0 ? `Conditional waivers for all ${subCount} subs, each sized to their share of this period.` : 'Conditional waivers for every sub on the job, sized to their share of this period.'},
@@ -459,7 +459,7 @@ export default function NewPayAppPage() {
 
             {/* Live Calc Panel */}
             <div style={{width:256,flexShrink:0,position:'sticky' as const,top:80}}>
-              <SectionCard title="Live G702 Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="Live G702 Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Original contract" value={fmt(contractSumNum)}/>
                 {coTotal!==0 && <InsightRow label="Approved COs" value={(coTotal>0?'+':'')+fmt(coTotal)} accent="#3dd68c"/>}
                 {coTotal!==0 && <InsightRow label="Contract to date" value={fmt(contractSumNum+coTotal)}/>}

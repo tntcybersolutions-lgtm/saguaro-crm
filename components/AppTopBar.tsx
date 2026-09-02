@@ -4,6 +4,7 @@
  * Sits to the right of the sidebar.
  */
 import React, { useState, useEffect } from 'react';
+import { HelpModeButton } from '@/components/HelpMode';
 import { useProjects } from '@/lib/hooks/useProjects';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -231,6 +232,10 @@ export default function AppTopBar({
           ⌘K
         </kbd>
       </button>
+
+      {/* Help Mode — sits before Sage: the arrows are the answer to "where is
+          the button", Sage is the answer to "what should I do". */}
+      <HelpModeButton />
 
       {/* Sage AI */}
       <button

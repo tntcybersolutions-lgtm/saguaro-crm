@@ -307,7 +307,7 @@ export default function InspectionsPage() {
           </SectionCard>
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Project" value={`${pctComplete}% complete`} />
                 <InsightRow label="Inspections held" value={String(inspections.length)} />
                 <InsightRow label="Pass rate" value={resulted > 0 ? `${passRate}%` : '—'} accent={resulted > 0 && passRate >= 80 ? GREEN : undefined} />
@@ -322,7 +322,7 @@ export default function InspectionsPage() {
                   </>
                 )}
               </SectionCard>
-              <SectionCard title="After You Schedule" icon={<CalendarCheck size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Schedule" icon={<CalendarCheck size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
                   { title: 'Inspection is on the calendar', desc: 'Saved as Scheduled with the inspector and agency of record.' },
                   { title: 'Record the result', desc: 'Pass, fail, or conditional — checklist deficiencies are counted per inspection.' },

@@ -273,7 +273,7 @@ function CashFlowContent() {
       </div>
 
       {/* Cash Flow Chart */}
-      <SectionCard
+      <SectionCard flat
         title="6-Month Cash Flow Projection"
         icon={<ChartBar size={17} weight="duotone" color={GOLD} />}
         style={{ marginBottom: 24 }}
@@ -468,7 +468,7 @@ function CashFlowContent() {
 
       {/* Live budget + collections — committed vs actual from the project snapshot */}
       {ctx && (
-        <SectionCard title="Budget & Collections" icon={<Wallet size={17} weight="duotone" color={GOLD} />} subtitle={`${Number(budget?.lineCount) || 0} budget lines — committed vs actual, plus what the owner still owes`} style={{ marginBottom: 24 }}>
+        <SectionCard flat title="Budget & Collections" icon={<Wallet size={17} weight="duotone" color={GOLD} />} subtitle={`${Number(budget?.lineCount) || 0} budget lines — committed vs actual, plus what the owner still owes`} style={{ marginBottom: 24 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '0 40px' }}>
             <div>
               <InsightRow label="Budget (original)" value={fmt0(budgetOriginal)} />
@@ -487,7 +487,7 @@ function CashFlowContent() {
       )}
 
       {/* Project context card */}
-      <SectionCard title="Contract Position" icon={<Buildings size={17} weight="duotone" color={GOLD} />}>
+      <SectionCard flat title="Contract Position" icon={<Buildings size={17} weight="duotone" color={GOLD} />}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 20 }}>
           <div>
             <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 4 }}>Adjusted Contract</div>

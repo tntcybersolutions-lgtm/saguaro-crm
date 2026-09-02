@@ -328,7 +328,7 @@ export default function PunchListPage(){
         {/* Completion bar */}
         {items.length>0&&(
           <div style={{marginBottom:22}}>
-            <SectionCard
+            <SectionCard flat
               title="Overall Completion"
               icon={<CheckCircle size={17} weight="duotone" color={GOLD}/>}
               action={<span style={{fontSize:13,fontWeight:800,color:TEXT,fontVariantNumeric:'tabular-nums'}}>{pct}%</span>}

@@ -96,7 +96,7 @@ export default function OacPage() {
 
       {/* GC / Saguaro weekly-call cadence — one call per site per week (per the spec's GC/Saguaro weekly call). */}
       {gcCadence.total > 0 && (
-        <SectionCard
+        <SectionCard flat
           title="GC / Saguaro Weekly Call"
           icon={<CalendarBlank size={16} weight="duotone" color={C.gold} />}
           action={<span style={{ fontSize: 13, fontWeight: 700, color: gcCadence.onTrack === gcCadence.total ? C.green : C.gold, whiteSpace: 'nowrap' }}>{gcCadence.onTrack}/{gcCadence.total} on cadence this week</span>}
@@ -159,7 +159,7 @@ export default function OacPage() {
         )
       ) : (
         sortedActions.length === 0 ? (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty icon={<CheckCircle size={32} weight="duotone" color={C.gold} />} title="No action items"
               description="Action items captured in OAC meetings show up here — assigned, dated, and checkable from anywhere." />
           </SectionCard>

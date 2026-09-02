@@ -256,20 +256,39 @@ export default function TimeClockPage() {
     const meal = Math.max(0, parseInt(manual.meal) || 0);
     const gross = Math.max(0, (Date.parse(outISO) - Date.parse(inISO)) / 3600000);
     const hrs = round2(Math.max(0, gross - meal / 60)); const { regular, overtime } = splitOT(hrs);
+    /* Every write on this page is payroll. supabase-js resolves with { error }
+       rather than throwing, so the try/catch wrapped around these never fired:
+       a rejected insert closed the dialog, reloaded the list, and the hours
+       were simply gone — with "Week submitted for approval" on screen. Each
+       result is now read and thrown so the catch below does its job. */
     try {
-      if (manual.id) await sb.from('time_entries').update({ work_date: manual.date, clock_in: inISO, clock_out: outISO, hours_worked: hrs, regular_hours: round2(regular), overtime_hours: round2(overtime), meal_break_mins: meal, csi_division: manual.csi || null, cost_code_description: manual.csi ? (CSI_DIVISIONS[manual.csi]?.name || null) : null, ...rates() }).eq('id', manual.id);
-      else await sb.from('time_entries').insert({ tenant_id: tenantId, employee_id: emp.id, project_id: projectId, work_date: manual.date, clock_in: inISO, clock_out: outISO, hours_worked: hrs, regular_hours: round2(regular), overtime_hours: round2(overtime), meal_break_mins: meal, status: 'pending', timezone: TZ, entry_type: 'regular', ...(manual.csi ? { csi_division: manual.csi, cost_code_description: CSI_DIVISIONS[manual.csi]?.name || null } : {}), ...rates() });
+      const { error } = manual.id
+        ? await sb.from('time_entries').update({ work_date: manual.date, clock_in: inISO, clock_out: outISO, hours_worked: hrs, regular_hours: round2(regular), overtime_hours: round2(overtime), meal_break_mins: meal, csi_division: manual.csi || null, cost_code_description: manual.csi ? (CSI_DIVISIONS[manual.csi]?.name || null) : null, ...rates() }).eq('id', manual.id)
+        : await sb.from('time_entries').insert({ tenant_id: tenantId, employee_id: emp.id, project_id: projectId, work_date: manual.date, clock_in: inISO, clock_out: outISO, hours_worked: hrs, regular_hours: round2(regular), overtime_hours: round2(overtime), meal_break_mins: meal, status: 'pending', timezone: TZ, entry_type: 'regular', ...(manual.csi ? { csi_division: manual.csi, cost_code_description: CSI_DIVISIONS[manual.csi]?.name || null } : {}), ...rates() });
+      if (error) throw error;
       setManual(null); await loadEntries(emp.id);
     } catch (e: any) { console.error(e); say(humanError(e, "Couldn't save that time entry."), 'err'); }
   };
   const saveLeave = async () => {
     if (!emp || !leave) return;
-    try { await sb.from('time_entries').insert({ tenant_id: tenantId, employee_id: emp.id, work_date: leave.date, entry_type: leave.type, hours_worked: parseFloat(leave.hours) || 8, total_hours: parseFloat(leave.hours) || 8, status: 'pending', timezone: TZ }); setLeave(null); await loadEntries(emp.id); say('Logged'); } catch (e: any) { console.error(e); say(humanError(e, "Couldn't log that leave."), 'err'); }
+    try {
+      const { error } = await sb.from('time_entries').insert({ tenant_id: tenantId, employee_id: emp.id, work_date: leave.date, entry_type: leave.type, hours_worked: parseFloat(leave.hours) || 8, total_hours: parseFloat(leave.hours) || 8, status: 'pending', timezone: TZ });
+      if (error) throw error;
+      setLeave(null); await loadEntries(emp.id); say('Logged');
+    } catch (e: any) { console.error(e); say(humanError(e, "Couldn't log that leave."), 'err'); }
   };
-  const del = async (id: string) => { await sb.from('time_entries').delete().eq('id', id); if (emp) loadEntries(emp.id); };
+  const del = async (id: string) => {
+    const { error } = await sb.from('time_entries').delete().eq('id', id);
+    if (error) { console.error(error); say(humanError(error, "Couldn't delete that entry."), 'err'); return; }
+    if (emp) loadEntries(emp.id);
+  };
   const submitWeek = async () => {
     if (!week || !emp) return;
-    try { await sb.from('timesheets').insert({ tenant_id: tenantId, employee_id: emp.id, employee_name: emp.full_name || emp.first_name, week_ending: localDay(new Date(new Date(thisWeekKey + 'T12:00').getTime() + 6 * 86400000)), hours_regular: week.regularHours, hours_overtime: week.overtimeHours, status: 'submitted', submitted_at: new Date().toISOString() }); say('Week submitted for approval'); } catch (e: any) { console.error(e); say(humanError(e, "Couldn't submit the week for approval."), 'err'); }
+    try {
+      const { error } = await sb.from('timesheets').insert({ tenant_id: tenantId, employee_id: emp.id, employee_name: emp.full_name || emp.first_name, week_ending: localDay(new Date(new Date(thisWeekKey + 'T12:00').getTime() + 6 * 86400000)), hours_regular: week.regularHours, hours_overtime: week.overtimeHours, status: 'submitted', submitted_at: new Date().toISOString() });
+      if (error) throw error;
+      say('Week submitted for approval');
+    } catch (e: any) { console.error(e); say(humanError(e, "Couldn't submit the week for approval."), 'err'); }
   };
 
   const inp: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
@@ -327,7 +346,7 @@ export default function TimeClockPage() {
           </SectionCard>
 
           {week && (
-            <SectionCard
+            <SectionCard flat
               title={`Week of ${fmtDate(week.weekStart)}`}
               subtitle={`${week.regularHours.toFixed(2)} h regular · ${week.overtimeHours.toFixed(2)} h overtime${regRate > 0 ? ` · est. ${fmtMoney(estGross)} gross` : ''}`}
               icon={<Clock size={17} weight="duotone" color={GOLD} />}
@@ -391,7 +410,7 @@ export default function TimeClockPage() {
 
         {/* Context rail — what the system does with these hours */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <SectionCard title="This Week at a Glance" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="This Week at a Glance" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
             <InsightRow label="Worked hours" value={`${(week?.workedHours ?? 0).toFixed(2)} h`} />
             <InsightRow label="Regular / OT" value={`${(week?.regularHours ?? 0).toFixed(2)} / ${(week?.overtimeHours ?? 0).toFixed(2)}`} accent={(week?.overtimeHours ?? 0) > 0 ? GOLD : undefined} />
             <InsightRow label="Leave logged" value={`${leaveHours.toFixed(2)} h`} />
@@ -399,7 +418,7 @@ export default function TimeClockPage() {
             {regRate > 0 && <InsightRow label="Est. gross" value={fmtMoney(estGross)} accent={GREEN} strong />}
             <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5, marginTop: 8 }}>Overtime splits automatically past 40 h/week and 8 h/shift. Rates come from your employee record.</div>
           </SectionCard>
-          <SectionCard title="After You Clock Out" icon={<PaperPlaneRight size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="After You Clock Out" icon={<PaperPlaneRight size={17} weight="duotone" color={GOLD} />}>
             <FlowSteps title="" steps={[
               { title: 'Entry lands as pending', desc: 'GPS-stamped, timezone-aware, meal break deducted.' },
               { title: 'CSI division prices the labor', desc: csiDiv ? `Coding to Div ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name}.` : 'Pick a cost code above so hours hit the right budget line.' },

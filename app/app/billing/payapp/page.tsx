@@ -202,7 +202,7 @@ export default function PayAppPage() {
       </SectionCard>
 
       {/* G702 summary */}
-      <SectionCard title="G702 — Application Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
+      <SectionCard flat title="G702 — Application Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           {g702Stats.map((s) => (
             <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} accent={s.accent} />

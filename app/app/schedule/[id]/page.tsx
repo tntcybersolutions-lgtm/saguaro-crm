@@ -145,7 +145,7 @@ export default function ScheduleTaskDetailPage() {
   if (notFound) {
     return (
       <PremiumSurface maxWidth={1100}>
-        <SectionCard flush>
+        <SectionCard flat flush>
           <PremiumEmpty
             icon={<CalendarBlank size={30} weight="duotone" color={ACCENT.hex} />}
             title="Task not found"
@@ -160,7 +160,7 @@ export default function ScheduleTaskDetailPage() {
   if (error && !task) {
     return (
       <PremiumSurface maxWidth={1100}>
-        <SectionCard flush>
+        <SectionCard flat flush>
           <PremiumEmpty
             tone="error"
             icon={<Warning size={30} weight="duotone" color={RED} />}
@@ -227,7 +227,7 @@ export default function ScheduleTaskDetailPage() {
       ]} />
 
       {/* Progress */}
-      <SectionCard
+      <SectionCard flat
         title="Progress"
         icon={<ChartBar size={16} weight="duotone" color={ACCENT.hex} />}
         accent={ACCENT.hex}
@@ -242,7 +242,7 @@ export default function ScheduleTaskDetailPage() {
       </SectionCard>
 
       {/* Task details */}
-      <SectionCard
+      <SectionCard flat
         title="Task Details"
         icon={<ClipboardText size={16} weight="duotone" color={ACCENT.hex} />}
         accent={ACCENT.hex}

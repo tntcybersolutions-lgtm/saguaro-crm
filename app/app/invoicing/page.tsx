@@ -582,7 +582,7 @@ export default function InvoicingPage() {
               </div>
             </form>
           </SectionCard>
-          <SectionCard title="Project Intelligence" icon={<CurrencyDollar size={17} weight="duotone" color="#F59E0B" />}>
+          <SectionCard flat title="Project Intelligence" icon={<CurrencyDollar size={17} weight="duotone" color="#F59E0B" />}>
             {ctx ? (
               <div>
                 <div style={{ fontSize: 10.5, fontWeight: 900, color: colors.textDim, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>{ctx.project?.name || 'Project'}</div>

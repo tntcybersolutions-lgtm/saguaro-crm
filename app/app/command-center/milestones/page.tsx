@@ -88,12 +88,12 @@ export default function MilestonesPage() {
         <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading milestones…</div>
       ) : filtered.length === 0 ? (
         rows.length === 0 ? (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty icon={<FlagCheckered size={32} weight="duotone" color={C.gold} />} title="No milestones yet"
               description="Milestones roll up here from every site's schedule. Once baseline and forecast dates are set, the tracker computes each one's slip against baseline and surfaces what's blowing the schedule." />
           </SectionCard>
         ) : (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty compact icon={<FlagCheckered size={26} weight="duotone" color={C.gold} />} title="Nothing matches this filter"
               description="No milestone matches the current severity or search. Clear the filters to see the full board." />
           </SectionCard>

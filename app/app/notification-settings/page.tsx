@@ -673,7 +673,7 @@ export default function NotificationSettingsPage() {
       </div>
 
       {/* Global toggle */}
-      <SectionCard style={{ marginBottom: 20 }}>
+      <SectionCard flat style={{ marginBottom: 20 }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',

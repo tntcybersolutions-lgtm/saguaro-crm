@@ -90,7 +90,7 @@ export default function DirectoryPage() {
               action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add your first</GoldButton>} />
           </SectionCard>
         ) : (
-          <SectionCard>
+          <SectionCard flat>
             <PremiumEmpty compact icon={<Users size={26} weight="duotone" color={C.gold} />} title="Nothing matches"
               description="No stakeholder matches this site or search. Clear the filters to see the full roster." />
           </SectionCard>

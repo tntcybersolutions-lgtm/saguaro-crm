@@ -710,7 +710,7 @@ export default function ApprovalWorkflowsPage() {
               ))}
             </div>
 
-            <SectionCard title="Approval Pipeline by Module" icon={<Gauge size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Approval Pipeline by Module" icon={<Gauge size={17} weight="duotone" color={GOLD} />}>
               {stats.map(s => {
                 const total = (Number(s.pending) || 0) + (Number(s.approved) || 0) + (Number(s.rejected) || 0);
                 const pc = (n: number) => total > 0 ? (n / total) * 100 : 0;

@@ -272,7 +272,7 @@ export default function ProposalPage() {
           </SectionCard>
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
                 <InsightRow label="Original contract" value={fmt(original)} />
                 {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
                 <InsightRow label="Contract to date" value={fmt(revised)} strong />
@@ -285,7 +285,7 @@ export default function ProposalPage() {
                   </>
                 )}
               </SectionCard>
-              <SectionCard title="After You Create" icon={<SealCheck size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Create" icon={<SealCheck size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
                   { title: 'Draft is versioned', desc: 'Prior versions mark themselves Superseded — the history stays intact.' },
                   { title: 'Attach the PDF & send', desc: 'Upload the signed proposal and mark it sent to the client.' },

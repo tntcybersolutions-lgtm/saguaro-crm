@@ -228,7 +228,7 @@ export default function CustomersPage() {
         {detailTab === 'overview' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {/* Geo Info */}
-            <SectionCard title="Location & Geo" icon={<MapPin size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Location & Geo" icon={<MapPin size={17} weight="duotone" color={GOLD} />}>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   ['City', c.city || '—'],
@@ -247,7 +247,7 @@ export default function CustomersPage() {
             </SectionCard>
 
             {/* Lead Score Breakdown */}
-            <SectionCard title="Lead Score Breakdown" icon={<Gauge size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Lead Score Breakdown" icon={<Gauge size={17} weight="duotone" color={GOLD} />}>
               {Object.entries(sb).map(([key, val]) => (
                 <div key={key} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -282,7 +282,7 @@ export default function CustomersPage() {
             </SectionCard>
 
             {/* Projects & lifetime value — matched from live project data */}
-            <SectionCard title="Projects & Lifetime Value" icon={<Buildings size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard flat title="Projects & Lifetime Value" icon={<Buildings size={17} weight="duotone" color={GOLD} />}>
               {(projectRollup.get(c.id)?.count || 0) > 0 ? (
                 <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
@@ -314,7 +314,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'discovery' && (
-          <SectionCard title="Discovery Answers" icon={<Clipboard size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Discovery Answers" icon={<Clipboard size={17} weight="duotone" color={GOLD} />}>
             {c.discovery_answers && Object.keys(c.discovery_answers).length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {Object.entries(c.discovery_answers).map(([key, val]) => (
@@ -349,7 +349,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'recommendations' && (
-          <SectionCard title="Recommendations" icon={<Target size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Recommendations" icon={<Target size={17} weight="duotone" color={GOLD} />}>
             {c.recommendations && c.recommendations.length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {c.recommendations.map(rec => (
@@ -385,7 +385,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'designs' && (
-          <SectionCard title="Design Sessions" icon={<House size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Design Sessions" icon={<House size={17} weight="duotone" color={GOLD} />}>
             {c.design_sessions && c.design_sessions.length > 0 ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
                 {c.design_sessions.map(ds => (
@@ -415,7 +415,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'materials' && (
-          <SectionCard title="Material Selections" icon={<Package size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Material Selections" icon={<Package size={17} weight="duotone" color={GOLD} />}>
             {c.material_selections && c.material_selections.length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {c.material_selections.map((ms, i) => (
@@ -443,7 +443,7 @@ export default function CustomersPage() {
         )}
 
         {detailTab === 'conversations' && (
-          <SectionCard title="Sage Conversations" icon={<Cactus size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard flat title="Sage Conversations" icon={<Cactus size={17} weight="duotone" color={GOLD} />}>
             {c.conversations && c.conversations.length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
                 {c.conversations.map((cv, i) => (
@@ -549,7 +549,7 @@ export default function CustomersPage() {
           />
         </SectionCard>
       ) : !loading && customers.length === 0 ? (
-        <SectionCard>
+        <SectionCard flat>
           <PremiumEmpty
             icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
             title="No customers yet"

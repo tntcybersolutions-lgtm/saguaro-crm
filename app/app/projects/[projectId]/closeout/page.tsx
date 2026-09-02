@@ -277,7 +277,7 @@ export default function CloseoutPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 22, alignItems: 'start' }}>
       <div style={{ minWidth: 0 }}>
       {/* Progress Bar */}
-      <SectionCard
+      <SectionCard flat
         title="Closeout Progress"
         icon={<ChartBar size={17} weight="duotone" color="#F59E0B" />}
         action={<span style={{ fontSize: 14, fontWeight: 800, color: pct === 100 ? T.green : '#FBBF24', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>}
@@ -357,7 +357,7 @@ export default function CloseoutPage() {
 
       {/* Context rail — the path to handover, from live project data */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard title="Path to Handover" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
+        <SectionCard flat title="Path to Handover" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
           <FlowSteps title="" steps={[
             { title: 'Clear the punch list', done: !!ctx && openPunch === 0, desc: openPunch > 0 ? `${openPunch} item${openPunch === 1 ? '' : 's'} still open.` : 'No open punch items on record.' },
             { title: 'Bill the contract out', done: billedPct >= 100, desc: revised > 0 ? `${fmtM(billed)} of ${fmtM(revised)} billed (${billedPct}%).` : 'Contract money flows in from pay applications.' },
@@ -368,7 +368,7 @@ export default function CloseoutPage() {
           ]} />
         </SectionCard>
         {ctx && (
-          <SectionCard title="What Saguaro Knows" icon={<ChartBar size={17} weight="duotone" color="#F59E0B" />}>
+          <SectionCard flat title="What Saguaro Knows" icon={<ChartBar size={17} weight="duotone" color="#F59E0B" />}>
             <InsightRow label="Revised contract" value={fmtM(revised)} strong />
             <InsightRow label="Billed to date" value={`${fmtM(billed)} · ${billedPct}%`} />
             <InsightRow label="Balance to finish" value={fmtM(balanceToFinish)} accent={balanceToFinish > 0 ? '#FBBF24' : T.green} />

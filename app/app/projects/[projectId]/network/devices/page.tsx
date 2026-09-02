@@ -348,7 +348,7 @@ export default function DeviceInventoryPage() {
       {/* Device Detail Panel */}
       {selectedDevice && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard
+          <SectionCard flat
             title={selectedDevice.hostname}
             subtitle={`${selectedDevice.manufacturer} ${selectedDevice.model} · ${selectedDevice.device_type.replace(/_/g, ' ')}`}
             icon={<DeviceTypeIcon type={selectedDevice.device_type} size={18} color={GOLD} />}

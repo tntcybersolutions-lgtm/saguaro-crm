@@ -326,7 +326,7 @@ export default function CompliancePage() {
             const verdictColor = result.verdict === 'pass' ? '#3dd68c' : result.verdict === 'flag' ? '#f59e0b' : '#ff7070';
             const verdictBg = result.verdict === 'pass' ? 'rgba(26,138,74,.08)' : result.verdict === 'flag' ? 'rgba(217,119,6,.08)' : 'rgba(192,48,48,.08)';
             return (
-              <SectionCard key={subId} accent={verdictColor} style={{ marginBottom: 12, border: `1px solid ${verdictColor}30` }}>
+              <SectionCard flat key={subId} accent={verdictColor} style={{ marginBottom: 12, border: `1px solid ${verdictColor}30` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div style={{ fontWeight: 700, color: T.white }}>{sub.name} — AI Prequalification</div>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

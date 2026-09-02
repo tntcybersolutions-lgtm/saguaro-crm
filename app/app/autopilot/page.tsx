@@ -285,7 +285,7 @@ export default function AutopilotPage() {
 
       {/* Context rail — every stage of the scan, its live output, and where the alerts live */}
       <div style={{display:'flex',flexDirection:'column',gap:16}}>
-        <SectionCard
+        <SectionCard flat
           title="Scan Pipeline"
           subtitle={scanning ? 'Running checks…' : lastScanAt ? `Last on-demand scan ${lastScanAt.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}` : 'Runs automatically every 6 hours'}
           icon={<ListChecks size={17} weight="duotone" color={GOLD} />}

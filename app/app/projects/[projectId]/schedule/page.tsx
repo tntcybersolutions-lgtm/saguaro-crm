@@ -450,7 +450,7 @@ export default function SchedulePage(){
 
           {/* Gantt view */}
           {viewMode==='gantt'&&!loading&&!loadError&&tasks.length>0&&(
-            <SectionCard title="Timeline" subtitle="Today marked with a gold line"
+            <SectionCard flat title="Timeline" subtitle="Today marked with a gold line"
               icon={<CalendarBlank size={17} weight="duotone" color={moduleAccent('schedule').hex} />}
               style={{marginBottom:20}} bodyStyle={{overflowX:'auto'}}>
               <GanttChart tasks={filtered.length?filtered:tasks}/>
@@ -481,7 +481,7 @@ export default function SchedulePage(){
 
           {/* LOADING — skeleton rows, never computed zeros */}
           {loading&&(
-            <SectionCard flush>
+            <SectionCard flat flush>
               {Array.from({length:6}).map((_,i)=><SkeletonRow key={i}/>)}
             </SectionCard>
           )}
