@@ -271,10 +271,10 @@ export default function OverviewPage(){
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(380px,1fr))',gap:18,alignItems:'start'}}>
         <div style={{display:'flex',flexDirection:'column',gap:18}}>
-          <SectionCard title="Project Details" icon={<ClipboardText size={18} weight="duotone" color={CIN.goldHi}/>} delay={0.05}>
+          <SectionCard flat title="Project Details" icon={<ClipboardText size={18} weight="duotone" color={CIN.goldHi}/>} delay={0.05}>
             {[['Status',p.status||'active'],['Type',p.project_type||'—'],['State',p.state||'—'],['Owner',p.owner_entity?.name||'—'],['Architect',p.architect_entity?.name||'—'],['Start Date',p.start_date||'—'],['End Date',p.end_date||'—'],['GC License',p.gc_license||'—'],['Prevailing Wage',p.prevailing_wage?'Yes':'No'],['Public Project',p.is_public_project?'Yes':'No']].map(([l,v]:any)=>detailRow(l,v))}
           </SectionCard>
-          {budgetHealth.lineCount>0&&<SectionCard title="Budget Health" icon={<ChartLineUp size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/budget'}>View Budget <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.1}>
+          {budgetHealth.lineCount>0&&<SectionCard flat title="Budget Health" icon={<ChartLineUp size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/budget'}>View Budget <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.1}>
             <div style={{marginBottom:16}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:12}}>
                 <span style={{color:CIN.faint}}>Actual vs. Budget</span>
@@ -286,7 +286,7 @@ export default function OverviewPage(){
             </div>
             {[['Original Budget',fmt(budgetHealth.originalBudget)],['Committed Cost',fmt(budgetHealth.committedCost)],['Actual Cost',fmt(budgetHealth.actualCost)],['Forecast',fmt(budgetHealth.forecastCost)],['Variance',fmt(Math.abs(budgetVariance))+(budgetVariance>0?' over':' under')]].map(([l,v]:any)=>summaryRow(l,v,l==='Variance'?(budgetVariance>0?RED:GREEN):undefined))}
           </SectionCard>}
-          {ctx&&<SectionCard title="Next Scheduled Work" icon={<CalendarCheck size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/schedule'}>Full Schedule <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.15}>
+          {ctx&&<SectionCard flat title="Next Scheduled Work" icon={<CalendarCheck size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/schedule'}>Full Schedule <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.15}>
             {nextTasks.length===0
               ?<div style={{color:CIN.faint,fontSize:13,lineHeight:1.6,padding:'4px 0'}}>
                 {Number(ctx?.counts?.scheduleTasks)>0
@@ -307,7 +307,7 @@ export default function OverviewPage(){
               <Warning size={14} weight="fill" color={RED}/> {criticalTasks} critical-path task{criticalTasks===1?'':'s'} open — a slip here moves the finish date.
             </div>}
           </SectionCard>}
-          {ctx&&<SectionCard title="Recent Activity" icon={<ClockCounterClockwise size={18} weight="duotone" color={CIN.goldHi}/>} delay={0.2}>
+          {ctx&&<SectionCard flat title="Recent Activity" icon={<ClockCounterClockwise size={18} weight="duotone" color={CIN.goldHi}/>} delay={0.2}>
             {[
               {icon:<Receipt size={15} weight="duotone" color={CIN.goldHi}/>, href:'/app/projects/'+projectId+'/pay-apps',
                 title: ctxLastApp?'Pay App #'+ctxLastApp.appNumber+' · '+String(ctxLastApp.status||'draft').replace(/_/g,' '):'No pay applications yet',
@@ -339,7 +339,7 @@ export default function OverviewPage(){
           </SectionCard>}
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:18}}>
-          <SectionCard title="Financial Summary" icon={<CurrencyDollar size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/pay-apps'}>All Pay Apps <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.05}>
+          <SectionCard flat title="Financial Summary" icon={<CurrencyDollar size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/pay-apps'}>All Pay Apps <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.05}>
             {heroContract>0&&<div style={{marginBottom:14}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:7,fontSize:12}}>
                 <span style={{color:CIN.faint}}>Billed {fmt(heroBilled)} of {fmt(heroContract)}</span>
@@ -351,7 +351,7 @@ export default function OverviewPage(){
             </div>}
             {[['Original Contract',fmt(Number(p.original_contract)||Number(p.contract_amount)||Number(cm?.originalContract)||0)],['Change Orders','+'+fmt(approvedCOs>0?approvedCOs:ctxCoTotal)],['Contract to Date',fmt(heroContract)],['Billed to Date',fmt(heroBilled)+' ('+fmtPct(heroBilled,heroContract)+')'],['Retainage Held',fmt(retainageHeld)],['Total Paid',fmt(heroPaid)],['Balance Due',fmt(balanceDue)]].map(([l,v]:any)=>summaryRow(l,v))}
           </SectionCard>
-          {punchSummary.total>0&&<SectionCard title="Punch List" icon={<ListChecks size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/punch-list'}>View All <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.1}>
+          {punchSummary.total>0&&<SectionCard flat title="Punch List" icon={<ListChecks size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/punch-list'}>View All <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.1}>
             <div style={{display:'flex',gap:12,marginBottom:14}}>
               {[
                 {v:punchSummary.open,l:'Open',c:RED,bg:'rgba(239,68,68,.08)',bd:'rgba(239,68,68,.22)'},
@@ -368,7 +368,7 @@ export default function OverviewPage(){
               <div style={{height:'100%',background:GREEN,width:(punchSummary.complete/punchSummary.total*100).toFixed(1)+'%',borderRadius:999,boxShadow:'0 0 12px rgba(34,197,94,.4)'}}/>
             </div>}
           </SectionCard>}
-          {schedulePhases.length>0&&<SectionCard title="Schedule" icon={<CalendarCheck size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/schedule'}>Full Schedule <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.15}>
+          {schedulePhases.length>0&&<SectionCard flat title="Schedule" icon={<CalendarCheck size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/schedule'}>Full Schedule <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.15}>
             {schedulePhases.slice(0,4).map((phase:any)=>{
               const planned = phase.planned_end;
               const actual = phase.actual_end||phase.forecast_end;

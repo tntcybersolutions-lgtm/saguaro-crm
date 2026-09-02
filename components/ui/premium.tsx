@@ -346,6 +346,7 @@ export function SectionCard({
   children,
   accent = GOLD,
   flush = false,
+  flat = false,
   style,
   bodyStyle,
 }: {
@@ -356,9 +357,45 @@ export function SectionCard({
   children: React.ReactNode;
   accent?: string;
   flush?: boolean;
+  /**
+   * Content on the page rather than an object on a tray.
+   *
+   * Nine of these stacked on one screen, each with its own background, border,
+   * radius, drop shadow and inset light ring — and when everything is raised,
+   * nothing is. Elevation stops meaning "this is a thing you act on" and
+   * becomes wallpaper.
+   *
+   * flat keeps the header — the small uppercase label is still how you find
+   * your way down a page — and drops the tray: no fill, no border, no shadow,
+   * a hairline rule instead. Reserve the raised form for objects you would
+   * point at and name: the line-item table, the takeoff result, a form.
+   */
+  flat?: boolean;
   style?: React.CSSProperties;
   bodyStyle?: React.CSSProperties;
 }) {
+  if (flat) {
+    return (
+      <div style={{ position: 'relative', ...style }}>
+        {(title || icon || action) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 9, marginBottom: 14, borderBottom: `1px solid ${BORDER}` }}>
+            {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9 }}>{icon}</span>}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              {title && (
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: MUTED, lineHeight: 1.3 }}>
+                  {title}
+                </div>
+              )}
+              {subtitle && <div style={{ fontSize: 12.5, color: MUTED, marginTop: 3, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>{subtitle}</div>}
+            </div>
+            {action && <div style={{ flex: '0 0 auto' }}>{action}</div>}
+          </div>
+        )}
+        <div style={bodyStyle}>{children}</div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{

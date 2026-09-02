@@ -304,6 +304,7 @@ export function SectionCard({
   action,
   children,
   noPad = false,
+  flat = false,
   delay = 0,
   style,
 }: {
@@ -313,9 +314,45 @@ export function SectionCard({
   action?: React.ReactNode;
   children: React.ReactNode;
   noPad?: boolean;
+  /**
+   * Content on the page rather than an object on a tray.
+   *
+   * Nine of these stacked on the project overview, each with its own surface,
+   * border, 18px radius and drop shadow. When everything is raised nothing is:
+   * elevation stops meaning "this is a thing you act on" and becomes wallpaper,
+   * and the eye has no way to rank what it is looking at.
+   *
+   * flat keeps the header — the small label is still how you find your way down
+   * a long page — and drops the tray: no fill, no border, no shadow, a hairline
+   * rule instead. The raised form is reserved for what you would point at and
+   * name: something you act on, or a distinct object like a table or a form.
+   */
+  flat?: boolean;
   delay?: number;
   style?: React.CSSProperties;
 }) {
+  if (flat) {
+    return (
+      <div style={{ position: 'relative', animation: `sgRise .5s ease ${delay.toFixed(2)}s both`, ...style }}>
+        {(title || action) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 9, marginBottom: 14, borderBottom: `1px solid ${CIN.border}` }}>
+            {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.85 }}>{icon}</span>}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              {title && (
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: CIN.faint, lineHeight: 1.3 }}>
+                  {title}
+                </div>
+              )}
+              {subtitle && <div style={{ fontSize: 12, color: CIN.faint, marginTop: 3 }}>{subtitle}</div>}
+            </div>
+            {action && <div style={{ flexShrink: 0 }}>{action}</div>}
+          </div>
+        )}
+        <div>{children}</div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
