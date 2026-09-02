@@ -11,6 +11,7 @@ import NotificationBell from '../../components/NotificationBell';
 import CommandPalette from '../../components/CommandPalette';
 import HelpMode from '../../components/HelpMode';
 import { StatusFlashStyles } from '../../components/ui/Status';
+import HeaderMessages from '../../components/HeaderMessages';
 import SaguaroChatWidget from '../../components/SaguaroChatWidget';
 import SubscriptionWall from '../../components/SubscriptionWall';
 import ErrorBoundary from '../../components/ErrorBoundary';
@@ -287,6 +288,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           onLogout={handleLogout}
           userInitials={userInitials}
         />
+        {/* Anything the GC must see lands here — one strip, same place, every
+            screen. It sits inside the fixed header and publishes its height so
+            the page moves down instead of being covered by it. */}
+        <HeaderMessages />
       </div>
 
       {/* ── AI Expert Chat Panel ─────────────────────────────────────── */}
@@ -417,7 +422,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         className="main-content-area"
         style={{
           marginLeft: sidebarWidth,
-          paddingTop: sidebarTokens.headerHeight,
+          paddingTop: `calc(${sidebarTokens.headerHeight}px + var(--sag-header-msg-h, 0px))`,
           minHeight: '100vh',
           transition: 'margin-left .2s ease',
         }}

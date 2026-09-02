@@ -262,9 +262,16 @@ export default function HelpMode() {
         setMissing(false);
         const r = el.getBoundingClientRect();
         setRect((prev) => {
-          const next = { x: r.left, y: r.top, w: r.width, h: r.height };
-          if (prev && Math.abs(prev.x - next.x) < 0.5 && Math.abs(prev.y - next.y) < 0.5
-            && Math.abs(prev.w - next.w) < 0.5 && Math.abs(prev.h - next.h) < 0.5) return prev;
+          /* Whole pixels. Sub-pixel layout means getBoundingClientRect returns
+             values that wobble in the third decimal every frame, and each
+             wobble was a state update and a re-render — the arrow and callout
+             twitching in place with nothing actually moving. */
+          const next = {
+            x: Math.round(r.left), y: Math.round(r.top),
+            w: Math.round(r.width), h: Math.round(r.height),
+          };
+          if (prev && prev.x === next.x && prev.y === next.y
+            && prev.w === next.w && prev.h === next.h) return prev;
           return next;
         });
       } else {
@@ -283,9 +290,20 @@ export default function HelpMode() {
   /* Scroll the target into view when a step begins. */
   useEffect(() => {
     if (!rect || !anchorRef.current) return;
+    const el = anchorRef.current;
+
+    /* Nothing to scroll to if the target is pinned to the viewport. Most nav
+       steps point at the sidebar or the top bar, and scrolling the page for
+       those moves the content the reader is looking at while leaving the
+       target exactly where it was. */
+    for (let n: HTMLElement | null = el; n; n = n.parentElement) {
+      const pos = window.getComputedStyle(n).position;
+      if (pos === 'fixed' || pos === 'sticky') return;
+    }
+
     const r = rect;
     if (r.y < 60 || r.y + r.h > window.innerHeight - 60) {
-      anchorRef.current.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
     }
     // Only when the step changes, not on every reflow.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -638,7 +656,13 @@ export default function HelpMode() {
             borderRadius: 14,
             padding: '15px 17px 14px',
             boxShadow: '0 26px 60px -22px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.07)',
-            transition: reduced ? 'none' : 'left .22s cubic-bezier(.2,.7,.3,1), top .22s cubic-bezier(.2,.7,.3,1)',
+            /* No transition on left/top.
+               The anchor rect is re-measured every animation frame, so a
+               0.22s ease on position meant the card was always animating
+               toward a target that had already moved — it visibly shook, and
+               worse while the page was smooth-scrolling the anchor into view.
+               Sixty updates a second is already smooth; easing on top of it is
+               what made it judder. */
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -687,7 +711,12 @@ export default function HelpMode() {
               matcher was fixed, for simply being on the wrong page. A GC whose
               plan has no Fleet should be told that, not told the product is
               broken. */}
-          {onRoute && missing && (
+          {/* Only for a step you actually have to DO something on.
+              A 'read' step has nothing to click — it explains. Announcing that
+              a control cannot be found on a step that never wanted one reads
+              as a broken product at the exact moment the reader is trusting
+              the help, which is the worst possible place to be wrong. */}
+          {onRoute && missing && step?.advance !== 'read' && (step?.anchor?.length || step?.anchorText?.length) && (
             <div style={{ marginTop: 11, fontSize: 12, color: '#F6C177', lineHeight: 1.5 }}>
               {step?.anchor?.some((s) => s.startsWith('aside a[href='))
                 ? 'That section isn’t switched on for your account — ask whoever manages your plan, or press Next to read the rest.'
