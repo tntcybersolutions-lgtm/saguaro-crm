@@ -18,6 +18,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INVOICES_OVERDUE } from '@/lib/suggestions';
 import Suggest from '@/components/ui/Suggest';
+import { StatusPill } from '@/components/ui/Status';
 
 interface Invoice {
   id: string;
@@ -379,14 +380,7 @@ export default function InvoicingPage() {
         const overdue = isOverdue(info.row.original);
         return (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={{
-              padding: '3px 10px', borderRadius: 999, fontSize: font.size.xs, fontWeight: font.weight.bold,
-              textTransform: 'uppercase', letterSpacing: 0.5,
-              background: `${STATUS_COLORS[s] ?? colors.textDim}20`,
-              color: STATUS_COLORS[s] ?? colors.textDim,
-            }}>
-              {s}
-            </span>
+            <StatusPill module="invoices" status={s} size="sm" />
             {overdue && <Pill tone="red" caps>Overdue</Pill>}
           </span>
         );
@@ -439,6 +433,7 @@ export default function InvoicingPage() {
         accentColor={INV_ACCENT.hex}
         title="Invoicing"
         subtitle="Manage invoices, track payments, and send to vendors."
+        note="money owed to you"
         actions={
           <button data-tour="new-invoice" onClick={() => (showCreate ? closeComposer() : setShowCreate(true))} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> New Invoice

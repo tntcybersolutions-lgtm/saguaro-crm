@@ -8,6 +8,7 @@ import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
+import { StatusPill } from '@/components/ui/Status';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -240,6 +241,7 @@ export default function LienWaiversPage() {
         subtitle={loading
           ? 'Loading lien waivers…'
           : 'State-specific conditional & unconditional waivers by sub — auto-generated when a pay app is approved, gating mark-paid until signed.'}
+        note="sign before you pay"
         actions={<>
           <button onClick={()=>setShowForm(!showForm)} style={goldOutlineButtonStyle} className="pmBtn">
             + Generate Waiver
@@ -487,11 +489,7 @@ export default function LienWaiversPage() {
                           <td style={{padding:'10px 14px',color:TEXT}}>{fmt(Number(w.amount)||0)}</td>
                           <td style={{padding:'10px 14px',color:DIM}}>{fmtDate(w.through_date?String(w.through_date).slice(0,10):null)}</td>
                           <td style={{padding:'10px 14px'}}>
-                            <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,textTransform:'uppercase' as const,
-                              background:w.status==='signed'?'rgba(26,138,74,.14)':'rgba(245, 158, 11,.14)',
-                              color:w.status==='signed'?'#3dd68c':GOLD}}>
-                              {w.status||'pending'}
-                            </span>
+                            <StatusPill module="lien_waivers" status={w.status||'pending'} size="sm" />
                           </td>
                           <td style={{padding:'10px 14px'}}>
                             {w.pdf_url && (

@@ -20,6 +20,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_DAILY_LOG_GAP } from '@/lib/suggestions';
 import Suggest from '@/components/ui/Suggest';
+import { StatusPill } from '@/components/ui/Status';
 
 interface DailyLog {
   id: string;
@@ -36,6 +37,9 @@ interface DailyLog {
   visitors: string;
   notes: string;
   superintendent?: string | null;
+  /* draft | submitted — the column existed in the database and nowhere on
+     screen, so a log somebody started and abandoned looked filed. */
+  status?: string | null;
   created_at: string;
 }
 
@@ -280,6 +284,14 @@ export default function DailyLogsPage() {
         return v ? <span style={{ fontWeight: font.weight.semibold }}>{new Date(v).toLocaleDateString()}</span> : '—';
       },
     }),
+    /* Draft or submitted. The column did not exist, so a log somebody started
+       and never finished looked exactly like one that was filed — and an
+       unsubmitted daily log is a hole in the record that only shows up when
+       somebody goes looking for it two years later. */
+    columnHelper.accessor('status', {
+      header: 'Status',
+      cell: (info) => <StatusPill module="daily_logs" status={info.getValue() as string} size="sm" />,
+    }),
     columnHelper.accessor('weather', {
       header: 'Weather',
       cell: (info) => info.getValue() || '—',
@@ -351,6 +363,7 @@ export default function DailyLogsPage() {
         title="Daily"
         accent="Logs"
         subtitle="Track daily field activity, weather, crew, and work progress."
+        note="wins the argument in 2 years"
         actions={
           <button data-tour="new-daily-log" onClick={openCreate} className="pmBtn" style={goldButtonStyle}>
             <Plus size={16} weight="bold" /> New Log

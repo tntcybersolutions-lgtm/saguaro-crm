@@ -14,6 +14,7 @@
  * All animation is disabled under prefers-reduced-motion.
  */
 import React from 'react';
+import { ScribbleNote } from '@/components/Scribble';
 
 /* ── Palette (matches the takeoff gold-standard + design-tokens dark ramp) ── */
 export const CIN = {
@@ -132,6 +133,7 @@ export function ModuleHero({
   title,
   accent,
   subtitle,
+  note,
   actions,
   children,
 }: {
@@ -141,6 +143,8 @@ export function ModuleHero({
   title: React.ReactNode;
   accent?: React.ReactNode;
   subtitle?: React.ReactNode;
+  /** Handwritten margin note. Plain text, one short line. */
+  note?: string;
   actions?: React.ReactNode;
   children?: React.ReactNode;
 }) {
@@ -188,6 +192,13 @@ export function ModuleHero({
             <p style={{ animation: 'sgRise .6s ease .1s both', color: CIN.muted, fontSize: 14.5, margin: '12px 0 0', lineHeight: 1.55, maxWidth: 620 }}>
               {subtitle}
             </p>
+          )}
+          {/* Same margin note as the premium hero — the bit the official
+              subtitle leaves out, in a super's handwriting. */}
+          {note && (
+            <div style={{ margin: '9px 0 0' }}>
+              <ScribbleNote size={15} rotate={-3}>{note}</ScribbleNote>
+            </div>
           )}
         </div>
         {actions && (

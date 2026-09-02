@@ -18,6 +18,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { StatusPill } from '@/components/ui/Status';
 
 // Semantic accents — tuned to match the dashboard's Sonoran palette.
 const GOLD = '#F59E0B';
@@ -654,7 +655,7 @@ export default function SafetyPage() {
                   {i.description}
                 </span>,
                 <Badge key="sev" label={i.severity} color={SEVERITY_BADGE[i.severity] || 'muted'} />,
-                <Badge key="st" label={i.status} color={STATUS_BADGE[i.status] || 'muted'} />,
+                <StatusPill key="st" module="safety_incidents" status={i.status} size="sm" />,
               ])}
             />
           )}

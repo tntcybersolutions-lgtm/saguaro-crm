@@ -120,7 +120,7 @@ export default function LandingPage() {
           }}>
             {/* Logo lockup — full horizontal badge + wordmark artwork */}
             <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-horizontal.png" alt="Saguaro Control Systems" height={34} style={{ height: 34, width: 'auto', display: 'block' }} />
+              <img src="/logo-horizontal.png" alt="Saguaro Control Systems" height={46} style={{ height: 46, width: 'auto', display: 'block' }} />
             </Link>
 
             {/* Desktop menu */}

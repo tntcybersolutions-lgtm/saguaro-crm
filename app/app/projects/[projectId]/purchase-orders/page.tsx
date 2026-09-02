@@ -16,6 +16,7 @@ import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { StatusPill } from '@/components/ui/Status';
 
 interface LineItem {
   description: string;
@@ -599,7 +600,7 @@ export default function PurchaseOrdersPage() {
               p.vendor,
               <span key="d" style={{ color: T.muted }}>{p.description}</span>,
               <span key="a" style={{ fontWeight: 700 }}>${(p.amount || 0).toLocaleString()}</span>,
-              <Badge key="s" label={p.status} color={STATUS_BADGE[p.status] || 'muted'} />,
+              <StatusPill key="s" module="purchase_orders" status={p.status} size="sm" />,
               <span key="dt" style={{ color: T.muted }}>{p.issued_date}</span>,
               <div key="act" style={{ display: 'flex', gap: 6 }}>
                 <button className="pmBtn" onClick={() => handleGeneratePdf(p)} style={smallGhost}>PDF</button>

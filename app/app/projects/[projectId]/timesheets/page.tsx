@@ -24,6 +24,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { StatusPill } from '@/components/ui/Status';
 
 interface TimeEntry {
   id: string;
@@ -357,7 +358,7 @@ export default function TimesheetsPage() {
               <span key="oh" style={{ color: e.ot_hrs > 0 ? T.amber : T.muted }}>{e.ot_hrs}</span>,
               <span key="th" style={{ fontWeight: 700, color: T.gold }}>{(e.regular_hrs + e.ot_hrs).toFixed(1)}h</span>,
               <span key="cl" style={{ color: T.muted }}>{e.classification}</span>,
-              <Badge key="st" label={e.status} color={e.status === 'approved' ? 'green' : e.status === 'rejected' ? 'red' : 'amber'} />,
+              <StatusPill key="st" module="timesheets" status={e.status} size="sm" />,
               <div key="act" style={{ display: 'flex', gap: 6 }}>
                 {e.status === 'pending' && (
                   <>

@@ -501,6 +501,7 @@ export default function BidPackagesPage() {
         title="Bid"
         accent="Packages"
         subtitle="Solicit, level, and award subcontractor bids — awards are compliance-gated (W-9 + COI) and write committed cost automatically"
+        note="same scope, same page"
         actions={
           <button onClick={() => setShowWizard(true)} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> Create Bid Package

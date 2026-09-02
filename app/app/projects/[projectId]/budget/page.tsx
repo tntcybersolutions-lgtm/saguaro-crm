@@ -319,6 +319,7 @@ export default function BudgetPage() {
       icon={<Wallet size={26} weight="duotone" color={moduleAccent('budget').hex} />}
       title="Project Budget"
       subtitle="Job costing by CSI cost code — committed, actual, cost-to-complete, and forecast at completion."
+      note="this is where the money truth lives"
       actions={<>
         <HeroButton variant="ghost" onClick={() => setShowAddForm(v => !v)} icon={<Plus size={15} weight="bold" color={CIN.goldHi} />}>Add Line</HeroButton>
         <HeroButton onClick={exportReport} disabled={exporting} icon={<DownloadSimple size={15} weight="bold" color="#241a05" />}>{exporting ? 'Exporting…' : 'Export'}</HeroButton>

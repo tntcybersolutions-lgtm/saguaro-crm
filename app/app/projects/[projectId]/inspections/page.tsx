@@ -9,6 +9,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import { StatusPill } from '@/components/ui/Status';
 
 const GOLD='#F59E0B', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
@@ -413,7 +414,7 @@ export default function InspectionsPage() {
                       {(Number(i.deficiency_count) || 0) > 0 ? i.deficiency_count : '—'}
                     </td>
                     <td style={{ padding: '10px 14px', color: DIM }}>{i.notes || '—'}</td>
-                    <td style={{ padding: '10px 14px', color: /complete/i.test(i.status) ? GREEN : '#f59e0b' }}>{i.status}</td>
+                    <td style={{ padding: '10px 14px' }}><StatusPill module="inspections" status={i.status} size="sm" /></td>
                   </tr>
                 ))}
               </tbody>

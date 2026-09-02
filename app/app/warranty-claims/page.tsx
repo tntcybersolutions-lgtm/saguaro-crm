@@ -11,6 +11,7 @@ import {
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { StatusPill } from '@/components/ui/Status';
 
 /* ───── PALETTE ───── */
 const GOLD = '#F59E0B', BG = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)',
@@ -588,7 +589,7 @@ export default function WarrantyClaimsPage() {
                       <td style={css.td}><span title={c.category} style={{ fontSize: 16 }}>{CATEGORY_ICONS[c.category] || '\u2731'}</span></td>
                       <td style={{ ...css.td, maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</td>
                       <td style={css.td}><span style={css.badge(PRIORITY_COLORS[c.priority] || DIM)}>{c.priority}</span></td>
-                      <td style={css.td}><span style={css.badge(STATUS_COLORS[c.status] || DIM)}>{c.status.replace('_', ' ')}</span></td>
+                      <td style={css.td}><StatusPill module="warranty_claims" status={c.status} size="sm" /></td>
                       <td style={{ ...css.td, fontSize: 12, color: DIM }}>{c.reported_date}</td>
                       <td style={{ ...css.td, fontSize: 12 }}>{c.assigned_contractor || <span style={{ color: DIM }}>---</span>}</td>
                       <td style={{ ...css.td, fontFamily: 'monospace' }}>{Number(c.cost) ? `$${(Number(c.cost) || 0).toLocaleString()}` : '---'}</td>
@@ -706,7 +707,7 @@ export default function WarrantyClaimsPage() {
                 <span style={{ fontFamily: 'monospace', color: GOLD, fontSize: 13 }}>{detailClaim.claim_number}</span>
                 <h2 style={{ ...css.h2, marginTop: 4 }}>{detailClaim.title}</h2>
                 <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                  <span style={css.badge(STATUS_COLORS[detailClaim.status] || DIM)}>{detailClaim.status.replace('_', ' ')}</span>
+                  <StatusPill module="warranty_claims" status={detailClaim.status} />
                   <span style={css.badge(PRIORITY_COLORS[detailClaim.priority] || DIM)}>{detailClaim.priority}</span>
                   <span style={{ ...css.badge(GOLD), fontSize: 13 }}>{CATEGORY_ICONS[detailClaim.category] || ''} {detailClaim.category}</span>
                   {isExpired(detailClaim.warranty_expiry) && <span style={css.expiredTag}>WARRANTY EXPIRED</span>}
@@ -986,7 +987,7 @@ export default function WarrantyClaimsPage() {
                       <td style={css.td}>{c.title}</td>
                       <td style={css.td}><span style={{ textTransform: 'capitalize' }}>{c.category}</span></td>
                       <td style={css.td}>{c.warranty_expiry}</td>
-                      <td style={css.td}><span style={css.badge(STATUS_COLORS[c.status] || DIM)}>{c.status.replace('_',' ')}</span></td>
+                      <td style={css.td}><StatusPill module="warranty_claims" status={c.status} size="sm" /></td>
                       <td style={css.td}>
                         <span style={{ fontWeight: 700, color: daysLeft < 0 ? RED : daysLeft <= 7 ? AMBER : GREEN }}>
                           {daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d`}

@@ -14,6 +14,7 @@ import { LifecycleRail } from '@/components/ui/Status';
 import { useLiveStatus } from '@/lib/hooks/useLiveStatus';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_PAY_APPS_DUE } from '@/lib/suggestions';
+import { ScribbleNote } from '@/components/Scribble';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const SAGE='#45B37D',AMBER='#F0A63C';
@@ -278,6 +279,7 @@ export default function PayAppsPage() {
         title="Pay"
         accent="Applications"
         subtitle="AIA G702/G703 — Application and Certificate for Payment"
+          note="retainage comes off the top"
         actions={
           <Link data-tour="new-pay-app"
             href={`/app/projects/${projectId}/pay-apps/new`}

@@ -34,6 +34,7 @@ import RadioEvidence, {
   stripRadioProvenance,
   type RadioEvidenceSource,
 } from '@/components/RadioEvidence';
+import { StatusPill } from '@/components/ui/Status';
 
 interface RFI {
   id: string;
@@ -413,6 +414,7 @@ export default function RFIsPage() {
         title="Requests for"
         accent="Information"
         subtitle="Track questions, route the ball-in-court, and close out clarifications before they slow the field."
+        note="get it in writing"
         actions={
           showForm ? (
             <button onClick={closeCreate} style={ghostButtonStyle} className="pmBtn">Cancel</button>
@@ -651,7 +653,7 @@ export default function RFIsPage() {
                     )}
                   </div>,
                   <div key="s" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <Badge label={displayStatus} color={STATUS_BADGE[displayStatus] || 'muted'} />
+                    <StatusPill module="rfis" status={displayStatus} size="sm" />
                     {rfi.is_overdue && rfi.status !== 'overdue' && <Badge label="overdue" color="red" />}
                   </div>,
                   <span key="bic" style={{ color: bic ? T.white : T.faint, fontWeight: bic ? 600 : 400 }}>{bic || 'Unassigned'}</span>,

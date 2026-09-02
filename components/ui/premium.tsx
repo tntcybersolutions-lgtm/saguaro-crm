@@ -15,6 +15,7 @@
 
 import React from 'react';
 import { moduleAccent } from '@/lib/module-identity';
+import { ScribbleNote } from '@/components/Scribble';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------
 const GOLD = 'var(--brand-primary)';        // #F59E0B default
@@ -146,6 +147,7 @@ export function ModuleHero({
   title,
   accent,
   subtitle,
+  note,
   actions,
   align = 'left',
   accentColor,
@@ -157,6 +159,8 @@ export function ModuleHero({
   title: React.ReactNode;
   accent?: React.ReactNode;
   subtitle?: React.ReactNode;
+  /** Handwritten margin note. Plain text, one short line. */
+  note?: string;
   actions?: React.ReactNode;
   align?: 'left' | 'center';
   /** Module accent HEX (lib/module-identity moduleAccent). When set, the eyebrow
@@ -234,6 +238,15 @@ export function ModuleHero({
           <p style={{ animation: 'pmRise .6s ease .1s both', color: 'rgba(255,255,255,0.66)', fontSize: 15, margin: '12px 0 0', maxWidth: 620, lineHeight: 1.6, marginInline: centered ? 'auto' : undefined }}>
             {subtitle}
           </p>
+        )}
+        {/* A mark in the margin, the way a super writes on a drawing — the bit
+            the official subtitle leaves out. One line on a screen, never two:
+            the value is that it reads as a person, and a page covered in them
+            reads as a gimmick. */}
+        {note && (
+          <div style={{ margin: '9px 0 0', marginInline: centered ? 'auto' : undefined }}>
+            <ScribbleNote size={15} rotate={-3}>{note}</ScribbleNote>
+          </div>
         )}
       </div>
       {actions && (

@@ -12,6 +12,7 @@ import { CSI_DIVISIONS, SUB_TRADES } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
+import { StatusPill } from '@/components/ui/Status';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030',ORANGE='#c07830';
@@ -428,7 +429,7 @@ export default function SubmittalsPage(){
                           </td>
                           <td style={{padding:'11px 14px'}}>
                             <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
-                              <Pill label={STATUS_LABELS[s.status]||s.status} color={STATUS_COLORS[s.status]||DIM}/>
+                              <StatusPill module="submittals" status={s.status} size="sm"/>
                               {od&&<Pill label="OVERDUE" color={RED}/>}
                             </div>
                           </td>

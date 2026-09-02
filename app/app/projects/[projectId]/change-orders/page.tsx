@@ -12,6 +12,7 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatSt
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { moduleAccent } from '@/lib/module-identity';
 import Suggest from '@/components/ui/Suggest';
+import { StatusPill } from '@/components/ui/Status';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const AMBER='#d97706';
@@ -380,6 +381,7 @@ export default function ChangeOrdersPage() {
           title="Change"
           accent="Orders"
           subtitle={loading ? 'Loading…' : `${cos.length} change order${cos.length!==1?'s':''} — track scope changes, owner requests, and unforeseen conditions.`}
+          note="price it BEFORE you build it"
           actions={
             <button onClick={()=>{ if(showForm) closeCoForm(); else setShowForm(true); }} style={goldButtonStyle} className="pmBtn">
               {showForm
@@ -592,9 +594,7 @@ export default function ChangeOrdersPage() {
                         {co.description && <div style={{fontSize:11,color:DIM,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' as const,maxWidth:230}}>{co.description}</div>}
                       </td>
                       <td style={{padding:'12px 14px'}}>
-                        <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c,textTransform:'uppercase' as const,letterSpacing:.3}}>
-                          {co.status||'pending'}
-                        </span>
+                        <StatusPill module="change_orders" status={co.status||'pending'} size="sm" />
                       </td>
                       <td style={{padding:'12px 14px',position:'relative' as const}}>
                         {coEditId===co.id ? (

@@ -79,6 +79,7 @@ export default function CompliancePage(){
       title="Subcontractor"
       accent="Compliance"
       subtitle="W-9, insurance, and lien waiver scorecard across your subcontractors."
+      note="expired COI = your problem"
     />
 
     {/* Risk intelligence strip — the paperwork translated into dollars */}

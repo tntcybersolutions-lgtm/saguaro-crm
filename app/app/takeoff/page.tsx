@@ -16,6 +16,7 @@ import {
 import { Skeleton, SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
 import { divColor, divName } from '@/lib/takeoff/divisions';
 import { humanError } from '@/lib/errors';
+import { StatusPill } from '@/components/ui/Status';
 
 // ─── Heatmap shipping palette (single source of truth — identical to app/field/heatmap) ─
 const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.1)';
@@ -502,6 +503,7 @@ export default function TakeoffPage() {
           title="Takeoff"
           accent="Studio"
           subtitle="AI blueprint analysis, measured takeoff, assemblies and cost rates — every estimating tool in one place."
+          note="no spreadsheet"
           actions={
             <>
               <Badge label={`${takeoffs.length} Total`} color="muted" />
@@ -805,7 +807,7 @@ export default function TakeoffPage() {
                             {fmtDate(t.created_at)} · #{t.id.slice(0, 8)}
                           </div>
                         </div>
-                        <Badge label={t.status} color={statusColor(t.status)} />
+                        <StatusPill module="takeoffs" status={t.status} size="sm" />
                       </div>
                       {t.status === 'complete' && t.confidence > 0 && (
                         <div style={{ marginTop: 8 }}>
@@ -933,7 +935,7 @@ export default function TakeoffPage() {
                       {/* action row */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <Badge label={t.status} color={statusColor(t.status)} />
+                          <StatusPill module="takeoffs" status={t.status} size="sm" />
                           {t.building_type && <Badge label={t.building_type} color="blue" />}
                           <span style={{ color: MUTED, fontSize: 12 }}>#{t.id.slice(0, 8)}</span>
                           {t.analyzed_at && <span style={{ color: MUTED, fontSize: 12 }}>Analyzed {fmtDate(t.analyzed_at)}</span>}

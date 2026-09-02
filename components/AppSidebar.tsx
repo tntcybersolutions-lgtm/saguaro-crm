@@ -150,9 +150,9 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
           style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', overflow: 'hidden' }}
         >
           {collapsed ? (
-            <img src="/logo-badge.png" alt="Saguaro Control Systems" style={{ height: 32, width: 32, objectFit: 'contain', display: 'block' }} />
+            <img src="/logo-badge.png" alt="Saguaro Control Systems" style={{ height: 40, width: 40, objectFit: 'contain', display: 'block' }} />
           ) : (
-            <img src="/logo-horizontal.png" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', objectFit: 'contain', display: 'block' }} />
+            <img src="/logo-horizontal.png" alt="Saguaro Control Systems" style={{ height: 40, width: 'auto', objectFit: 'contain', display: 'block' }} />
           )}
         </Link>
       </div>

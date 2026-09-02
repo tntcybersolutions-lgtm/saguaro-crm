@@ -312,6 +312,7 @@ export default function TimeClockPage() {
         title="Time"
         accent="Clock"
         subtitle="Timezone-aware, GPS-stamped, CSI-coded labor — the same deterministic engine as the phone."
+        note="GPS stamped — no more paper"
         actions={
           <>
             <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inp, width: 'auto', minWidth: 170 }}>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
