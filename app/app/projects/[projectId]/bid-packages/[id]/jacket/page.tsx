@@ -88,6 +88,8 @@ export default function BidJacketPage() {
         slot={
           <BidJacketAssembly
             packageId={id}
+            projectId={projectId}
+            responded={jacket.bidders.responded}
             issued={jacket.issued}
             drift={jacket.drift}
             missing={jacket.completeness.missing}

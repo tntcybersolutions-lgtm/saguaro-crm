@@ -22,8 +22,9 @@
  */
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import {
-  PaperPlaneTilt, WarningCircle, CheckCircle, Plus, X, ArrowsClockwise,
+  PaperPlaneTilt, WarningCircle, CheckCircle, Plus, X, ArrowsClockwise, Paperclip, Scales,
 } from '@phosphor-icons/react';
 import { SectionCard, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 
@@ -46,9 +47,12 @@ export type Drift = {
 export type Issued = { at: string; version: number; invited: number; addenda: number } | null;
 
 export default function BidJacketAssembly({
-  packageId, issued, drift, missing, invited, onChanged,
+  packageId, projectId, issued, drift, missing, invited, responded, onChanged,
 }: {
   packageId: string;
+  projectId: string;
+  /** Bids received. Levelling only becomes a real action once one has landed. */
+  responded?: number;
   issued: Issued;
   drift: Drift | null;
   missing: string[];
@@ -60,6 +64,8 @@ export default function BidJacketAssembly({
   const [confirmIncomplete, setConfirmIncomplete] = useState(false);
   const [addendumOpen, setAddendumOpen] = useState(false);
   const [summary, setSummary] = useState('');
+  const fileRef = React.useRef<HTMLInputElement | null>(null);
+  const [category, setCategory] = useState('attachment');
 
   async function issue(force: boolean) {
     setBusy('issue');
@@ -91,6 +97,48 @@ export default function BidJacketAssembly({
       setNote({ tone: 'bad', text: e instanceof Error ? e.message : 'Could not issue this jacket.' });
     } finally {
       setBusy(null);
+    }
+  }
+
+  /* Two calls on purpose. Storage goes through /api/files/upload — service
+     role, tenant-prefixed path, already proven — and this only files a
+     REFERENCE into the jacket. Re-implementing upload here would be a second
+     storage path for one concept, which is exactly how the portal_sub_bid_*
+     fork happened. */
+  async function attach(files: FileList | null) {
+    if (!files || !files.length) return;
+    setBusy('attach');
+    setNote(null);
+    try {
+      let placed = 0;
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('projectId', projectId);
+        fd.append('entityType', 'bid_package');
+        fd.append('entityId', packageId);
+        fd.append('category', category);
+
+        const up = await fetch('/api/files/upload', { method: 'POST', body: fd });
+        const ud = await up.json().catch(() => ({}));
+        if (!up.ok || !ud.file?.id) throw new Error(ud.error || `Could not upload ${file.name}.`);
+
+        const at = await fetch(`/api/bid-packages/${packageId}/documents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectFileId: ud.file.id, category, label: file.name }),
+        });
+        const ad = await at.json().catch(() => ({}));
+        if (!at.ok) throw new Error(ad.error || `Could not file ${file.name} in the jacket.`);
+        placed++;
+      }
+      setNote({ tone: 'ok', text: `${placed} document${placed === 1 ? '' : 's'} added to the jacket.` });
+      onChanged();
+    } catch (e) {
+      setNote({ tone: 'bad', text: e instanceof Error ? e.message : 'Could not add the document.' });
+    } finally {
+      setBusy(null);
+      if (fileRef.current) fileRef.current.value = '';
     }
   }
 
@@ -291,6 +339,54 @@ export default function BidJacketAssembly({
           <button onClick={onChanged} style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
             <ArrowsClockwise size={15} weight="bold" /> Re-check for changes
           </button>
+        )}
+
+        {/* Put a document in the jacket. The picker is driven from a hidden
+            input because a bare file input cannot be styled to match anything. */}
+        {!addendumOpen && (
+          <>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              aria-label="Which divider"
+              style={{
+                background: 'rgba(0,0,0,0.35)', border: `1px solid ${HAIR}`, borderRadius: 10,
+                padding: '9px 11px', color: TEXT, fontSize: 13, outline: 'none',
+              }}
+            >
+              <option value="attachment">Attachments</option>
+              <option value="addendum">Addenda</option>
+              <option value="drawing">Drawings</option>
+              <option value="specification">Specifications</option>
+              <option value="permit">Permits</option>
+              <option value="form">Forms</option>
+            </select>
+            <input
+              ref={fileRef}
+              type="file"
+              multiple
+              onChange={(e) => attach(e.target.files)}
+              style={{ display: 'none' }}
+            />
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={busy !== null}
+              style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7 }}
+            >
+              <Paperclip size={15} weight="bold" />
+              {busy === 'attach' ? 'Adding…' : 'Add document'}
+            </button>
+          </>
+        )}
+
+        {/* Levelling is only a real action once a bid has landed. */}
+        {(responded ?? 0) > 0 && !addendumOpen && (
+          <Link
+            href={`/app/projects/${projectId}/bid-packages/${packageId}/leveling`}
+            style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}
+          >
+            <Scales size={15} weight="bold" /> Level {responded} bid{responded === 1 ? '' : 's'}
+          </Link>
         )}
       </div>
 
