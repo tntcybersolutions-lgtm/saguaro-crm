@@ -25,8 +25,24 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
-const ROOT = process.argv[2] || 'app/api';
+const ROOT = process.argv[2] === '--reseal' ? 'app/api' : process.argv[2] || 'app/api';
+const RESEAL = process.argv.includes('--reseal');
+const SEALS = 'scripts/reviewed-safe.seals.json';
+
+/* An exemption that never expires is not a review, it is a hole with a note on
+   it. Each REVIEWED_SAFE entry is sealed against the file's hash at the moment
+   it was reviewed: edit the route and the seal breaks, the exemption lapses,
+   and the route is reported again until someone looks and re-seals with
+   `node scripts/audit-tenant-isolation.js --reseal`.
+
+   This was added after a fault injection: an exempt route that started doing an
+   unscoped write went completely unreported, because being on the list skipped
+   every later check. It now reappears the moment its bytes change. */
+const seals = fs.existsSync(SEALS) ? JSON.parse(fs.readFileSync(SEALS, 'utf8')) : {};
+const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
+const staleSeals = [];
 
 /* Routes that are public on purpose. Each is listed in the report so the set
    stays visible and small, rather than quietly growing. */
@@ -51,6 +67,72 @@ const PUBLIC_BY_DESIGN = [
    tenant check vouch for an unguarded POST in the same file.
    Recheck an entry whenever its route changes. */
 const REVIEWED_SAFE = new Map([
+  /* ── retired: answers, but touches nothing ─────────────────────────────── */
+  ['app/api/clock/in/route.ts',
+   '410 tombstone. Returns "Moved to /api/timeclock/in" and makes no database call at all'],
+  ['app/api/clock/out/route.ts',
+   '410 tombstone. Returns "Moved to /api/timeclock/out" and makes no database call at all'],
+
+  /* ── thin dispatchers: the guard is in the handler module ──────────────── */
+  ['app/api/billing/[...path]/route.ts',
+   'dispatcher only — every handler in stripe-billing.ts calls getUser before touching data'],
+  ['app/api/insurance/[...path]/route.ts',
+   'dispatcher only — the COI handlers in insurance-tracker.ts authenticate'],
+  ['app/api/white-label/[...path]/route.ts',
+   'dispatcher only — white-label-provisioning.ts authenticates'],
+  ['app/api/leads/[...path]/route.ts',
+   'public lead capture by design: contact / demo-request / referral / whitelabel forms. No tenant data is read'],
+
+  /* ── capability tokens instead of a session ───────────────────────────── */
+  ['app/api/heatmap/approve/route.ts',
+   'HMAC share token checked against the design row CURRENT nonce and stored expiry, same rule as the read route so a revoked link cannot approve. tenant_id comes from the row, never the body. Idempotent'],
+  ['app/api/fleet/ingest/route.ts',
+   'telematics webhook: auth is the tenant opaque ingest_token in fleet_integrations, and every write is pinned to that row tenant_id. A GPS provider has no session to offer'],
+
+  /* ── no tenant data to leak ───────────────────────────────────────────── */
+  ['app/api/network/subnet-calc/route.ts',
+   'pure CIDR arithmetic, no database access'],
+  ['app/api/roi/calculate/route.ts',
+   'roi_configs has no tenant_id column — a global pricing catalog, verified against the live schema'],
+  ['app/api/customers/geo/route.ts',
+   'reads roi_configs, which has no tenant_id column'],
+  ['app/api/smart-packages/customize-public/route.ts',
+   'reads roi_configs, which has no tenant_id column'],
+  ['app/api/design/styles/route.ts',
+   'design_style_presets has no tenant_id column — a global style catalog'],
+  ['app/api/discovery/questions/route.ts',
+   'already scoped to the global rows with .is(tenant_id, null); the public quiz never sees a tenant row'],
+  ['app/api/smart-packages/route.ts',
+   'already scoped to the global rows with .is(tenant_id, null)'],
+  ['app/api/design/reimagine/route.ts',
+   'anonymous marketing flow. Writes design_sessions with tenant_id NULL deliberately — it used to take tenant from a customerId form field, which is exactly the bug this audit exists to catch. Behind aiLimiter'],
+
+  /* ── capability token in the path: the link IS the credential ─────────── */
+  ['app/api/files/shared/[token]/route.ts',
+   'share row looked up by token, rejected when revoked or past expires_at; the file URL is re-signed per request rather than stored'],
+  ['app/api/franchise/portal/[token]/route.ts',
+   'token row carries tenant_id + project_id and expires; every downstream query is scoped to both. The caller never names a tenant'],
+  ['app/api/heatmap/share/[id]/route.ts',
+   'HMAC token verified against the row CURRENT share_nonce (revoke clears it) and the expiry stored on the row, so a client cannot extend its own link'],
+  ['app/api/takeoff/share/[id]/route.ts',
+   'same nonce + stored-expiry rule as the heatmap share route'],
+  ['app/api/owner-portal/approve/[token]/route.ts',
+   'owner_approval_token is an unguessable per-pay-app credential, the same pattern as the signing portal. Replay blocked by the approved_at check before any write'],
+  ['app/api/prequalification/portal/[token]/route.ts',
+   'tenant_id is derived from the invite row and never from the request body; every query is scoped to it'],
+  ['app/api/storage/oauth/[provider]/callback/route.ts',
+   'no session by nature — tenant comes from the ENCRYPTED state parameter (decryptSecret, provider-matched, 10-minute TTL), not from the query string'],
+
+  /* ── public inference, throttled ──────────────────────────────────────── */
+  ['app/api/sage/public/route.ts',
+   'public Sage widget, no database access, behind publicAiLimiter (8/min, 60/hr per IP)'],
+  ['app/api/chat/sage-notes/route.ts',
+   'no database access, behind publicAiLimiter'],
+  ['app/api/discovery/recommend/route.ts',
+   'no database access, behind publicAiLimiter'],
+  ['app/api/chat/marketing/route.ts',
+   'no database access, behind marketingChatLimiter (30/hr per IP, signup prompt on 429)'],
+
   ['app/api/catalog/image/route.ts',
    'catalog_items is a shared global reference set (tenant_id IS NULL by design); gated by requirePermission(Projects, Full)'],
   ['app/api/platform/integrations/[app]/route.ts',
@@ -255,6 +337,15 @@ function payloadCarriesTenant(src, chain, fromIndex) {
   return false;
 }
 
+/** Exempt only while the file still matches the bytes that were reviewed. */
+function sealed(rel, src) {
+  if (!REVIEWED_SAFE.has(rel)) return false;
+  if (RESEAL) { seals[rel] = sha(src); return true; }
+  if (seals[rel] === sha(src)) return true;
+  staleSeals.push(rel);
+  return false;
+}
+
 const results = { ok: [], noAuth: [], unscopedRead: [], unscopedWrite: [], publicByDesign: [], reviewed: [] };
 
 for (const file of files) {
@@ -271,6 +362,13 @@ for (const file of files) {
      alarms is worse than no report — people stop reading it. */
   const hasAuth = /\b(getUser|requirePermission|requireApiKey|authenticateApiKey|getPortalSession|getTenantId)\s*\(/.test(src);
   if (!hasAuth) {
+    /* A route can be correct without a session: a capability token, a shared
+       secret, a global catalog, or no data at all. REVIEWED_SAFE already
+       records those verdicts for the unscoped checks; it was never consulted
+       here, so every one of them showed up as an unguarded route. Twenty-six
+       entries the reader has to know are fine is not a security report, it is
+       a list people learn to skip. */
+    if (sealed(rel, src)) { results.reviewed.push(rel); continue; }
     results.noAuth.push(rel);
     continue;
   }
@@ -310,9 +408,14 @@ for (const file of files) {
   }
 
   if (!findings.length) { results.ok.push(rel); continue; }
-  if (REVIEWED_SAFE.has(rel)) { results.reviewed.push(rel); continue; }
+  if (sealed(rel, src)) { results.reviewed.push(rel); continue; }
   const bucket = findings.some((f) => f.isWrite) ? 'unscopedWrite' : 'unscopedRead';
   results[bucket].push({ file: rel, findings });
+}
+
+if (RESEAL) {
+  fs.writeFileSync(SEALS, JSON.stringify(seals, null, 2) + '\n');
+  console.log(`resealed ${Object.keys(seals).length} reviewed-safe entries -> ${SEALS}`);
 }
 
 const total = files.length;
@@ -332,6 +435,17 @@ for (const rel of results.reviewed) {
   console.log(`    ${rel}\n      ${REVIEWED_SAFE.get(rel)}`);
 }
 console.log('');
+
+if (staleSeals.length) {
+  console.log('--- EXEMPTION SEAL BROKEN ----------------------------------------------');
+  console.log('  These were reviewed and found safe, then edited. The exemption does');
+  console.log('  NOT apply to code nobody has looked at, so they are reported below as');
+  console.log('  if they had never been reviewed. Read the change, confirm the reason');
+  console.log('  in REVIEWED_SAFE still holds, then re-seal:');
+  console.log('      node scripts/audit-tenant-isolation.js --reseal');
+  for (const rel of staleSeals) console.log(`    ${rel}\n      was: ${REVIEWED_SAFE.get(rel)}`);
+  console.log('');
+}
 
 if (results.noAuth.length) {
   console.log('--- NO AUTH GUARD ------------------------------------------------------');

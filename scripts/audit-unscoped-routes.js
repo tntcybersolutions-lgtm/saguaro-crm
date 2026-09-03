@@ -15,14 +15,29 @@
 const fs = require('fs');
 const path = require('path');
 
-/* Tables with no tenant column, or scoped some other way. */
+/* Tables with no tenant column, or scoped some other way. Each of the last two
+   was confirmed against the live schema — information_schema.columns has no
+   tenant_id row for either — not assumed from the name. */
 const GLOBAL = new Set([
   'tenants', 'users', 'plans', 'features', 'feature_flags', 'csi_codes',
   'wage_determinations', 'union_rate_classes', 'system_settings',
   'email_templates', 'roi_configs', 'cost_index', 'waitlist', 'leads',
   'contact_submissions', 'demo_requests', 'referrals', 'api_keys', 'sessions',
   'zip_codes', 'states', 'counties', 'trades', 'uom', 'countries',
+  'platform_integrations', 'design_style_presets',
 ]);
+
+/* A tenant filter is not the only correct scope. A route that pins every query
+   to the SIGNED-IN USER's own id is strictly narrower — a user belongs to one
+   tenant, so rows reachable by user.id are a subset of that tenant's rows.
+   presence/leave, sage/activity and the project notifications route all do
+   exactly this, and reporting them made the file's promise — "every hit here is
+   real" — untrue, which is the one thing this audit cannot afford.
+
+   Deliberately narrow: the id must come from the session binding, so
+   .eq('user_id', user.id). A caller-supplied .eq('user_id', body.userId) still
+   counts as unscoped, because it is. */
+const USER_SCOPED = /\.eq\(\s*['"`]user_id['"`]\s*,\s*(?:\w+\.)?user\.id\s*\)/;
 
 /* Public by design — reviewed separately, not by this rule. */
 const PUBLIC = /\/(cron|webhooks?|stripe|portals?|public|auth|health|share|shared|sign)\//;
@@ -43,6 +58,9 @@ for (const file of walk(process.argv[2] || 'app/api')) {
 
   const src = fs.readFileSync(file, 'utf8');
   if (/tenant/i.test(src)) continue;
+  /* Only when the session is actually proved. Without a guard, `user` could be
+     anything, and pinning to an unauthenticated id scopes nothing. */
+  if (USER_SCOPED.test(src) && /\b(getUser|requirePermission)\s*\(/.test(src)) continue;
 
   const tables = [...src.matchAll(/\.from\(\s*['"`]([a-zA-Z0-9_]+)['"`]\s*\)/g)]
     .map((m) => m[1])

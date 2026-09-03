@@ -2,7 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sandboxCheckHandler, sandboxSignupHandler } from '../../../../sandbox-manager-route';
 import { SandboxManager } from '../../../../sandbox-manager';
 import { supabaseAdmin } from '../../../../supabase/admin';
+import { getUser } from '@/lib/supabase-server';
 
+/**
+ * /check and /signup are public by design — that is the trial funnel.
+ *
+ * /stats and /event were not. Both took the tenant id from the caller (a query
+ * param and a request body) on an unauthenticated route backed by the service
+ * role, so anyone holding a tenant UUID could read that tenant's sandbox usage
+ * or write events against it. tenant_id never comes from the request; it comes
+ * from the session. Neither endpoint has a caller anywhere in the app, so this
+ * closes a door that was serving nobody.
+ *
+ * /lifecycle stays on the cron secret.
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
@@ -13,9 +26,10 @@ export async function GET(
   if (segment === 'check') return sandboxCheckHandler(req);
 
   if (segment === 'stats') {
-    const tenantId = req.nextUrl.searchParams.get('tenantId');
-    if (!tenantId) return Response.json({ error: 'tenantId required' }, { status: 400 });
-    const stats = await SandboxManager.getUpsellStats(tenantId);
+    const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Deliberately ignores ?tenantId= — the session decides whose stats these are.
+    const stats = await SandboxManager.getUpsellStats(user.tenantId);
     return Response.json(stats);
   }
 
@@ -32,10 +46,14 @@ export async function POST(
   if (segment === 'signup') return sandboxSignupHandler(req);
 
   if (segment === 'event') {
+    const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json().catch(() => ({}));
-    const tenantId = String(body.tenantId ?? '');
+    // body.tenantId is ignored on purpose. It used to decide which tenant got
+    // the event written against it, which is the whole hole.
+    const tenantId = user.tenantId;
     const eventType = String(body.eventType ?? '');
-    if (!tenantId || !eventType) return Response.json({ error: 'tenantId and eventType required' }, { status: 400 });
+    if (!eventType) return Response.json({ error: 'eventType required' }, { status: 400 });
     const { data: sb } = await supabaseAdmin.from('sandbox_tenants').select('id').eq('tenant_id', tenantId).maybeSingle();
     if (!sb) return Response.json({ tracked: false });
     const result = await SandboxManager.trackSandboxEvent(sb.id as string, tenantId, eventType, body.eventData ?? {});
