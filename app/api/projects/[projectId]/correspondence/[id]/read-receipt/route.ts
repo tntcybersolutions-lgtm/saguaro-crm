@@ -57,6 +57,7 @@ export async function POST(
       .from('correspondence_read_receipts')
       .select('id')
       .eq('correspondence_id', id)
+      .eq('tenant_id', user.tenantId)
       .eq('recipient_email', recipientEmail)
       .maybeSingle();
 
@@ -64,9 +65,11 @@ export async function POST(
       await must(db
         .from('correspondence_read_receipts')
         .update({ read_at: readAt })
-        .eq('id', existing.id), 'correspondence_read_receipts write');
+        .eq('id', existing.id)
+        .eq('tenant_id', user.tenantId), 'correspondence_read_receipts write');
     } else {
       await must(db.from('correspondence_read_receipts').insert({
+        tenant_id: user.tenantId,
         correspondence_id: id,
         recipient_email: recipientEmail,
         read_at: readAt,

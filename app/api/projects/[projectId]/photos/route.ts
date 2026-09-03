@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       let linkQuery = supabase
         .from('photo_entity_links')
         .select('photo_id')
-        .eq('project_id', params.projectId);
+        .eq('tenant_id', user.tenantId);
       if (entity_type) linkQuery = linkQuery.eq('entity_type', entity_type);
       if (entity_id) linkQuery = linkQuery.eq('entity_id', entity_id);
       const { data: linkData } = await linkQuery;
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       const { data: tagData } = await supabase
         .from('photo_tags')
         .select('photo_id')
-        .eq('project_id', params.projectId)
+        .eq('tenant_id', user.tenantId)
         .eq('tag', tag);
       taggedPhotoIds = (tagData || []).map((t: { photo_id: string }) => t.photo_id);
       if (taggedPhotoIds.length === 0) {
@@ -101,7 +101,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       const { data: linkCounts } = await supabase
         .from('photo_entity_links')
         .select('photo_id')
-        .eq('project_id', params.projectId)
+        .eq('tenant_id', user.tenantId)
         .in('photo_id', photoIds);
       const countMap: Record<string, number> = {};
       (linkCounts || []).forEach((l: { photo_id: string }) => {
@@ -200,11 +200,13 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
         const { data: existingTags } = await supabase
           .from('photo_tags')
           .select('tag')
-          .eq('photo_id', photoId);
+          .eq('photo_id', photoId)
+          .eq('tenant_id', user.tenantId);
         const have = new Set((existingTags || []).map((t: { tag: string }) => t.tag));
         const tagRecords = tagList
           .filter(tag => !have.has(tag))
           .map(tag => ({
+            tenant_id: user.tenantId,
             photo_id: photoId,
             tag,
             created_at: new Date().toISOString(),
@@ -223,11 +225,13 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
         .from('photo_entity_links')
         .select('id')
         .eq('photo_id', photoId)
+        .eq('tenant_id', user.tenantId)
         .eq('entity_type', entity_type)
         .eq('entity_id', entity_id)
         .maybeSingle();
       if (!existingLink) {
         await must(supabase.from('photo_entity_links').insert({
+          tenant_id: user.tenantId,
           photo_id: photoId,
           entity_type,
           entity_id,

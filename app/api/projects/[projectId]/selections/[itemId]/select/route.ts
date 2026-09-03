@@ -70,6 +70,7 @@ async function choose(req: NextRequest, params: { projectId: string; itemId: str
     if (UUID_RE.test(optionId) && typeof body.categoryId === 'string' && UUID_RE.test(body.categoryId)) {
       try {
         await must(supabase.from('selection_picks').insert({
+          tenant_id: user.tenantId,
           category_id: body.categoryId,
           option_id: optionId,
           project_id: params.projectId,

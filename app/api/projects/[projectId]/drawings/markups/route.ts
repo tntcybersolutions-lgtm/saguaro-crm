@@ -63,6 +63,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       const { data: commentData, error: cErr } = await supabase
         .from('drawing_markup_comments')
         .select('*')
+        .eq('tenant_id', user.tenantId)
         .in('markup_id', rows.map((m) => m.id))
         .order('created_at', { ascending: true });
       if (cErr) {

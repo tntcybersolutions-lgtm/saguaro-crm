@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -1983,6 +1983,7 @@ export type Database = {
           min_coverage: number | null
           notes: string | null
           requirement_type: string
+          tenant_id: string | null
         }
         Insert: {
           bid_package_id: string
@@ -1993,6 +1994,7 @@ export type Database = {
           min_coverage?: number | null
           notes?: string | null
           requirement_type: string
+          tenant_id?: string | null
         }
         Update: {
           bid_package_id?: string
@@ -2003,6 +2005,7 @@ export type Database = {
           min_coverage?: number | null
           notes?: string | null
           requirement_type?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -2010,6 +2013,13 @@ export type Database = {
             columns: ["bid_package_id"]
             isOneToOne: false
             referencedRelation: "bid_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_package_requirements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -4991,6 +5001,7 @@ export type Database = {
           bid_package_id: string | null
           bond_required: boolean | null
           bonding_required: string | null
+          bonding_verified: boolean | null
           contract_amount: number | null
           contract_number: string | null
           contract_type: string | null
@@ -5011,6 +5022,7 @@ export type Database = {
           id: string
           insurance_required: boolean | null
           insurance_requirements: string | null
+          insurance_verified: boolean | null
           invoiced_amount: number | null
           liquidated_damages: number | null
           notes: string | null
@@ -5058,6 +5070,7 @@ export type Database = {
           bid_package_id?: string | null
           bond_required?: boolean | null
           bonding_required?: string | null
+          bonding_verified?: boolean | null
           contract_amount?: number | null
           contract_number?: string | null
           contract_type?: string | null
@@ -5078,6 +5091,7 @@ export type Database = {
           id?: string
           insurance_required?: boolean | null
           insurance_requirements?: string | null
+          insurance_verified?: boolean | null
           invoiced_amount?: number | null
           liquidated_damages?: number | null
           notes?: string | null
@@ -5125,6 +5139,7 @@ export type Database = {
           bid_package_id?: string | null
           bond_required?: boolean | null
           bonding_required?: string | null
+          bonding_verified?: boolean | null
           contract_amount?: number | null
           contract_number?: string | null
           contract_type?: string | null
@@ -5145,6 +5160,7 @@ export type Database = {
           id?: string
           insurance_required?: boolean | null
           insurance_requirements?: string | null
+          insurance_verified?: boolean | null
           invoiced_amount?: number | null
           liquidated_damages?: number | null
           notes?: string | null
@@ -5367,18 +5383,21 @@ export type Database = {
           id: string
           read_at: string | null
           recipient_email: string
+          tenant_id: string | null
         }
         Insert: {
           correspondence_id: string
           id?: string
           read_at?: string | null
           recipient_email: string
+          tenant_id?: string | null
         }
         Update: {
           correspondence_id?: string
           id?: string
           read_at?: string | null
           recipient_email?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -5386,6 +5405,13 @@ export type Database = {
             columns: ["correspondence_id"]
             isOneToOne: false
             referencedRelation: "correspondence"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "correspondence_read_receipts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -8947,6 +8973,7 @@ export type Database = {
           created_at: string | null
           id: string
           markup_id: string
+          tenant_id: string | null
         }
         Insert: {
           author_name: string
@@ -8954,6 +8981,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           markup_id: string
+          tenant_id?: string | null
         }
         Update: {
           author_name?: string
@@ -8961,6 +8989,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           markup_id?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -8968,6 +8997,13 @@ export type Database = {
             columns: ["markup_id"]
             isOneToOne: false
             referencedRelation: "drawing_markups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drawing_markup_comments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -17045,6 +17081,7 @@ export type Database = {
           entity_type: string
           id: string
           photo_id: string
+          tenant_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -17052,6 +17089,7 @@ export type Database = {
           entity_type: string
           id?: string
           photo_id: string
+          tenant_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -17059,6 +17097,7 @@ export type Database = {
           entity_type?: string
           id?: string
           photo_id?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -17066,6 +17105,13 @@ export type Database = {
             columns: ["photo_id"]
             isOneToOne: false
             referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_entity_links_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -17076,18 +17122,21 @@ export type Database = {
           id: string
           photo_id: string
           tag: string
+          tenant_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           photo_id: string
           tag: string
+          tenant_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           photo_id?: string
           tag?: string
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -17095,6 +17144,13 @@ export type Database = {
             columns: ["photo_id"]
             isOneToOne: false
             referencedRelation: "photos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "photo_tags_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -20091,6 +20147,51 @@ export type Database = {
           },
         ]
       }
+      project_folders: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          project_id: string
+          seeded_from: string | null
+          sort_order: number | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          project_id: string
+          seeded_from?: string | null
+          sort_order?: number | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          seeded_from?: string | null
+          sort_order?: number | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_folders_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_folders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_intelligence: {
         Row: {
           analysis_version: number | null
@@ -21709,6 +21810,7 @@ export type Database = {
           cost_to_correct: number | null
           created_at: string | null
           created_by: string | null
+          deleted_at: string | null
           description: string | null
           drawing_reference: string | null
           drawing_sheet_id: string | null
@@ -21720,7 +21822,10 @@ export type Database = {
           id: string
           inspector_name: string | null
           item_number: number | null
+          latitude: number | null
           location: string | null
+          longitude: number | null
+          metadata: Json | null
           notes: string | null
           photo_url: string | null
           photos: Json | null
@@ -21761,6 +21866,7 @@ export type Database = {
           cost_to_correct?: number | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           drawing_reference?: string | null
           drawing_sheet_id?: string | null
@@ -21772,7 +21878,10 @@ export type Database = {
           id?: string
           inspector_name?: string | null
           item_number?: number | null
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
+          metadata?: Json | null
           notes?: string | null
           photo_url?: string | null
           photos?: Json | null
@@ -21813,6 +21922,7 @@ export type Database = {
           cost_to_correct?: number | null
           created_at?: string | null
           created_by?: string | null
+          deleted_at?: string | null
           description?: string | null
           drawing_reference?: string | null
           drawing_sheet_id?: string | null
@@ -21824,7 +21934,10 @@ export type Database = {
           id?: string
           inspector_name?: string | null
           item_number?: number | null
+          latitude?: number | null
           location?: string | null
+          longitude?: number | null
+          metadata?: Json | null
           notes?: string | null
           photo_url?: string | null
           photos?: Json | null
@@ -21970,6 +22083,7 @@ export type Database = {
           delivery_date: string | null
           description: string | null
           id: string
+          issued_date: string | null
           line_items: Json | null
           notes: string | null
           pdf_url: string | null
@@ -21998,6 +22112,7 @@ export type Database = {
           delivery_date?: string | null
           description?: string | null
           id?: string
+          issued_date?: string | null
           line_items?: Json | null
           notes?: string | null
           pdf_url?: string | null
@@ -22026,6 +22141,7 @@ export type Database = {
           delivery_date?: string | null
           description?: string | null
           id?: string
+          issued_date?: string | null
           line_items?: Json | null
           notes?: string | null
           pdf_url?: string | null
@@ -22510,6 +22626,53 @@ export type Database = {
             columns: ["channel_id"]
             isOneToOne: false
             referencedRelation: "radio_channels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      radio_message_records: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_name: string | null
+          id: string
+          message_id: string
+          project_id: string | null
+          record_id: string
+          record_label: string | null
+          record_type: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          message_id: string
+          project_id?: string | null
+          record_id: string
+          record_label?: string | null
+          record_type: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_name?: string | null
+          id?: string
+          message_id?: string
+          project_id?: string | null
+          record_id?: string
+          record_label?: string | null
+          record_type?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_message_records_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "radio_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -25719,6 +25882,7 @@ export type Database = {
           picked_by: string
           project_id: string
           status: string | null
+          tenant_id: string | null
         }
         Insert: {
           approved_at?: string | null
@@ -25733,6 +25897,7 @@ export type Database = {
           picked_by: string
           project_id: string
           status?: string | null
+          tenant_id?: string | null
         }
         Update: {
           approved_at?: string | null
@@ -25747,6 +25912,7 @@ export type Database = {
           picked_by?: string
           project_id?: string
           status?: string | null
+          tenant_id?: string | null
         }
         Relationships: [
           {
@@ -25782,6 +25948,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_picks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -29295,6 +29468,7 @@ export type Database = {
           sell_price: number | null
           share_expires_at: string | null
           share_nonce: string | null
+          source_files: Json
           status: string
           storage_path: string | null
           subtotal: number | null
@@ -29396,6 +29570,7 @@ export type Database = {
           sell_price?: number | null
           share_expires_at?: string | null
           share_nonce?: string | null
+          source_files?: Json
           status?: string
           storage_path?: string | null
           subtotal?: number | null
@@ -29497,6 +29672,7 @@ export type Database = {
           sell_price?: number | null
           share_expires_at?: string | null
           share_nonce?: string | null
+          source_files?: Json
           status?: string
           storage_path?: string | null
           subtotal?: number | null
@@ -29725,10 +29901,12 @@ export type Database = {
           plan: string | null
           primary_color: string | null
           settings: Json | null
+          show_saguaro_credit: boolean
           slug: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_status: string | null
+          surface_color: string | null
           trial_ends_at: string | null
           updated_at: string | null
         }
@@ -29746,10 +29924,12 @@ export type Database = {
           plan?: string | null
           primary_color?: string | null
           settings?: Json | null
+          show_saguaro_credit?: boolean
           slug?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
+          surface_color?: string | null
           trial_ends_at?: string | null
           updated_at?: string | null
         }
@@ -29767,10 +29947,12 @@ export type Database = {
           plan?: string | null
           primary_color?: string | null
           settings?: Json | null
+          show_saguaro_credit?: boolean
           slug?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
+          surface_color?: string | null
           trial_ends_at?: string | null
           updated_at?: string | null
         }
@@ -31322,16 +31504,23 @@ export type Database = {
       warranty_claims: {
         Row: {
           assigned_to: string | null
+          category: string | null
+          claim_number: string | null
           communication_log: Json | null
+          cost: number | null
+          covered_under_warranty: boolean | null
           created_at: string | null
           description: string | null
           id: string
           location: string | null
+          notes: string | null
           photo_urls: Json | null
           project_id: string
           reported_by: string | null
+          reported_date: string | null
           resolution: string | null
           resolved_at: string | null
+          scheduled_date: string | null
           severity: string | null
           status: string | null
           tenant_id: string
@@ -31342,16 +31531,23 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          category?: string | null
+          claim_number?: string | null
           communication_log?: Json | null
+          cost?: number | null
+          covered_under_warranty?: boolean | null
           created_at?: string | null
           description?: string | null
           id?: string
           location?: string | null
+          notes?: string | null
           photo_urls?: Json | null
           project_id: string
           reported_by?: string | null
+          reported_date?: string | null
           resolution?: string | null
           resolved_at?: string | null
+          scheduled_date?: string | null
           severity?: string | null
           status?: string | null
           tenant_id: string
@@ -31362,16 +31558,23 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          category?: string | null
+          claim_number?: string | null
           communication_log?: Json | null
+          cost?: number | null
+          covered_under_warranty?: boolean | null
           created_at?: string | null
           description?: string | null
           id?: string
           location?: string | null
+          notes?: string | null
           photo_urls?: Json | null
           project_id?: string
           reported_by?: string | null
+          reported_date?: string | null
           resolution?: string | null
           resolved_at?: string | null
+          scheduled_date?: string | null
           severity?: string | null
           status?: string | null
           tenant_id?: string
@@ -31937,6 +32140,657 @@ export type Database = {
         }
         Relationships: []
       }
+      zz_backup_projects_20260831: {
+        Row: {
+          actual_end_date: string | null
+          actual_start_date: string | null
+          address: string | null
+          aia_project_number: string | null
+          approved_change_orders: number | null
+          approved_co_count: number | null
+          architect: string | null
+          architect_contact: string | null
+          architect_email: string | null
+          architect_entity: string | null
+          architect_firm: string | null
+          architect_license: string | null
+          architect_name: string | null
+          architect_phone: string | null
+          archived_at: string | null
+          archived_by: string | null
+          assigned_to: string | null
+          assigned_to_name: string | null
+          award_date: string | null
+          balance_to_finish: number | null
+          bid_date: string | null
+          bid_due_date: string | null
+          bid_number: string | null
+          billed_to_date: number | null
+          bond_amount: number | null
+          bond_pct: number | null
+          bonded: boolean | null
+          building_type: string | null
+          certified_payroll_required: boolean | null
+          change_order_count: number | null
+          city: string | null
+          closeout_date: string | null
+          completeness_score: number | null
+          construction_type: string | null
+          contingency: number | null
+          contract_amount: number | null
+          contract_date: string | null
+          contract_execution_date: string | null
+          contract_sum: number | null
+          contract_type: string | null
+          contract_value: number | null
+          cost_to_date: number | null
+          county: string | null
+          cover_photo_url: string | null
+          created_at: string | null
+          created_by: string | null
+          created_by_name: string | null
+          current_pay_app_number: number | null
+          custom_fields: Json | null
+          davis_bacon_wage_decision: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string | null
+          divisions: string[] | null
+          end_date: string | null
+          engineer_email: string | null
+          engineer_entity: string | null
+          engineer_name: string | null
+          engineer_phone: string | null
+          estimated_completion: string | null
+          estimated_cost: number | null
+          external_id: string | null
+          federal_project_number: string | null
+          final_completion: string | null
+          final_completion_date: string | null
+          foreman: string | null
+          foreman_email: string | null
+          foreman_name: string | null
+          foreman_phone: string | null
+          gc_address: string | null
+          gc_email: string | null
+          gc_entity: string | null
+          gc_insurance_expiry: string | null
+          gc_license: string | null
+          gc_license_expiry: string | null
+          gc_license_number: string | null
+          gc_name: string | null
+          gc_phone: string | null
+          geofence_lat: number | null
+          geofence_lng: number | null
+          geofence_radius_meters: number | null
+          groundbreaking_date: string | null
+          health_score: number | null
+          id: string | null
+          inspector_email: string | null
+          inspector_name: string | null
+          inspector_phone: string | null
+          insurance_pct: number | null
+          insurance_required: number | null
+          integration_source: string | null
+          internal_notes: string | null
+          is_archived: boolean | null
+          is_deleted: boolean | null
+          is_public_project: boolean | null
+          is_template: boolean | null
+          last_activity_at: string | null
+          last_log_at: string | null
+          last_pay_app_at: string | null
+          last_photo_at: string | null
+          last_rfi_at: string | null
+          latitude: number | null
+          leed_level: string | null
+          leed_required: boolean | null
+          legal_description: string | null
+          lien_deadline_date: string | null
+          liquidated_damages: number | null
+          liquidated_damages_per: string | null
+          logo_url: string | null
+          longitude: number | null
+          metadata: Json | null
+          mobilization_pct: number | null
+          name: string | null
+          net_change_by_co: number | null
+          notes: string | null
+          notice_to_proceed: string | null
+          notice_to_proceed_date: string | null
+          ntp_date: string | null
+          num_floors: number | null
+          num_units: number | null
+          occupancy_date: string | null
+          occupancy_type: string | null
+          open_punch_count: number | null
+          original_contract: number | null
+          original_contract_amount: number | null
+          original_contract_value: number | null
+          osha_required: boolean | null
+          overhead_pct: number | null
+          owner_address: string | null
+          owner_email: string | null
+          owner_entity: string | null
+          owner_name: string | null
+          owner_occupancy_date: string | null
+          owner_phone: string | null
+          parcel_number: string | null
+          pay_app_count: number | null
+          payment_bond_required: boolean | null
+          percent_complete: number | null
+          performance_bond_required: boolean | null
+          permit_expiry: string | null
+          permit_number: string | null
+          phase: string | null
+          photo_count: number | null
+          pm_email: string | null
+          pm_name: string | null
+          pm_phone: string | null
+          prevailing_wage: boolean | null
+          profit_pct: number | null
+          project_lead: string | null
+          project_lead_name: string | null
+          project_manager: string | null
+          project_number: string | null
+          project_type: string | null
+          projected_cost: number | null
+          projected_end_date: string | null
+          projected_start_date: string | null
+          public_project: string | null
+          punch_count: number | null
+          punch_list_complete_date: string | null
+          punch_list_due_date: string | null
+          retainage_held: number | null
+          retainage_pct: number | null
+          retainage_percent: string | null
+          retention_release_date: string | null
+          revised_completion_date: string | null
+          revised_contract_value: number | null
+          rfi_count: number | null
+          rollout_stage: string | null
+          scheduled_value: number | null
+          scope_of_work: string | null
+          setup_complete: boolean | null
+          setup_dismissed: boolean | null
+          setup_step: number | null
+          source: string | null
+          sq_footage: number | null
+          square_footage: number | null
+          start_date: string | null
+          state: string | null
+          state_jurisdiction: string | null
+          status: string | null
+          stored_materials_allowed: boolean | null
+          sub_address: string | null
+          sub_email: string | null
+          sub_entity: string | null
+          sub_license: string | null
+          sub_name: string | null
+          sub_phone: string | null
+          substantial_completion: string | null
+          substantial_completion_date: string | null
+          substantial_date: string | null
+          super_email: string | null
+          super_name: string | null
+          super_phone: string | null
+          superintendent: string | null
+          tags: string[] | null
+          target_finish_date: string | null
+          tax_pct: number | null
+          template_name: string | null
+          tenant_id: string | null
+          total_billed: number | null
+          total_contract_amount: number | null
+          total_earned: number | null
+          total_paid: number | null
+          total_pending: number | null
+          total_retainage: number | null
+          type: string | null
+          updated_at: string | null
+          updated_by: string | null
+          updated_by_name: string | null
+          warranty_expiry_date: string | null
+          work_days: string[] | null
+          work_hours_end: string | null
+          work_hours_start: string | null
+          zip: string | null
+          zoning: string | null
+        }
+        Insert: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          address?: string | null
+          aia_project_number?: string | null
+          approved_change_orders?: number | null
+          approved_co_count?: number | null
+          architect?: string | null
+          architect_contact?: string | null
+          architect_email?: string | null
+          architect_entity?: string | null
+          architect_firm?: string | null
+          architect_license?: string | null
+          architect_name?: string | null
+          architect_phone?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          award_date?: string | null
+          balance_to_finish?: number | null
+          bid_date?: string | null
+          bid_due_date?: string | null
+          bid_number?: string | null
+          billed_to_date?: number | null
+          bond_amount?: number | null
+          bond_pct?: number | null
+          bonded?: boolean | null
+          building_type?: string | null
+          certified_payroll_required?: boolean | null
+          change_order_count?: number | null
+          city?: string | null
+          closeout_date?: string | null
+          completeness_score?: number | null
+          construction_type?: string | null
+          contingency?: number | null
+          contract_amount?: number | null
+          contract_date?: string | null
+          contract_execution_date?: string | null
+          contract_sum?: number | null
+          contract_type?: string | null
+          contract_value?: number | null
+          cost_to_date?: number | null
+          county?: string | null
+          cover_photo_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          created_by_name?: string | null
+          current_pay_app_number?: number | null
+          custom_fields?: Json | null
+          davis_bacon_wage_decision?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          divisions?: string[] | null
+          end_date?: string | null
+          engineer_email?: string | null
+          engineer_entity?: string | null
+          engineer_name?: string | null
+          engineer_phone?: string | null
+          estimated_completion?: string | null
+          estimated_cost?: number | null
+          external_id?: string | null
+          federal_project_number?: string | null
+          final_completion?: string | null
+          final_completion_date?: string | null
+          foreman?: string | null
+          foreman_email?: string | null
+          foreman_name?: string | null
+          foreman_phone?: string | null
+          gc_address?: string | null
+          gc_email?: string | null
+          gc_entity?: string | null
+          gc_insurance_expiry?: string | null
+          gc_license?: string | null
+          gc_license_expiry?: string | null
+          gc_license_number?: string | null
+          gc_name?: string | null
+          gc_phone?: string | null
+          geofence_lat?: number | null
+          geofence_lng?: number | null
+          geofence_radius_meters?: number | null
+          groundbreaking_date?: string | null
+          health_score?: number | null
+          id?: string | null
+          inspector_email?: string | null
+          inspector_name?: string | null
+          inspector_phone?: string | null
+          insurance_pct?: number | null
+          insurance_required?: number | null
+          integration_source?: string | null
+          internal_notes?: string | null
+          is_archived?: boolean | null
+          is_deleted?: boolean | null
+          is_public_project?: boolean | null
+          is_template?: boolean | null
+          last_activity_at?: string | null
+          last_log_at?: string | null
+          last_pay_app_at?: string | null
+          last_photo_at?: string | null
+          last_rfi_at?: string | null
+          latitude?: number | null
+          leed_level?: string | null
+          leed_required?: boolean | null
+          legal_description?: string | null
+          lien_deadline_date?: string | null
+          liquidated_damages?: number | null
+          liquidated_damages_per?: string | null
+          logo_url?: string | null
+          longitude?: number | null
+          metadata?: Json | null
+          mobilization_pct?: number | null
+          name?: string | null
+          net_change_by_co?: number | null
+          notes?: string | null
+          notice_to_proceed?: string | null
+          notice_to_proceed_date?: string | null
+          ntp_date?: string | null
+          num_floors?: number | null
+          num_units?: number | null
+          occupancy_date?: string | null
+          occupancy_type?: string | null
+          open_punch_count?: number | null
+          original_contract?: number | null
+          original_contract_amount?: number | null
+          original_contract_value?: number | null
+          osha_required?: boolean | null
+          overhead_pct?: number | null
+          owner_address?: string | null
+          owner_email?: string | null
+          owner_entity?: string | null
+          owner_name?: string | null
+          owner_occupancy_date?: string | null
+          owner_phone?: string | null
+          parcel_number?: string | null
+          pay_app_count?: number | null
+          payment_bond_required?: boolean | null
+          percent_complete?: number | null
+          performance_bond_required?: boolean | null
+          permit_expiry?: string | null
+          permit_number?: string | null
+          phase?: string | null
+          photo_count?: number | null
+          pm_email?: string | null
+          pm_name?: string | null
+          pm_phone?: string | null
+          prevailing_wage?: boolean | null
+          profit_pct?: number | null
+          project_lead?: string | null
+          project_lead_name?: string | null
+          project_manager?: string | null
+          project_number?: string | null
+          project_type?: string | null
+          projected_cost?: number | null
+          projected_end_date?: string | null
+          projected_start_date?: string | null
+          public_project?: string | null
+          punch_count?: number | null
+          punch_list_complete_date?: string | null
+          punch_list_due_date?: string | null
+          retainage_held?: number | null
+          retainage_pct?: number | null
+          retainage_percent?: string | null
+          retention_release_date?: string | null
+          revised_completion_date?: string | null
+          revised_contract_value?: number | null
+          rfi_count?: number | null
+          rollout_stage?: string | null
+          scheduled_value?: number | null
+          scope_of_work?: string | null
+          setup_complete?: boolean | null
+          setup_dismissed?: boolean | null
+          setup_step?: number | null
+          source?: string | null
+          sq_footage?: number | null
+          square_footage?: number | null
+          start_date?: string | null
+          state?: string | null
+          state_jurisdiction?: string | null
+          status?: string | null
+          stored_materials_allowed?: boolean | null
+          sub_address?: string | null
+          sub_email?: string | null
+          sub_entity?: string | null
+          sub_license?: string | null
+          sub_name?: string | null
+          sub_phone?: string | null
+          substantial_completion?: string | null
+          substantial_completion_date?: string | null
+          substantial_date?: string | null
+          super_email?: string | null
+          super_name?: string | null
+          super_phone?: string | null
+          superintendent?: string | null
+          tags?: string[] | null
+          target_finish_date?: string | null
+          tax_pct?: number | null
+          template_name?: string | null
+          tenant_id?: string | null
+          total_billed?: number | null
+          total_contract_amount?: number | null
+          total_earned?: number | null
+          total_paid?: number | null
+          total_pending?: number | null
+          total_retainage?: number | null
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          updated_by_name?: string | null
+          warranty_expiry_date?: string | null
+          work_days?: string[] | null
+          work_hours_end?: string | null
+          work_hours_start?: string | null
+          zip?: string | null
+          zoning?: string | null
+        }
+        Update: {
+          actual_end_date?: string | null
+          actual_start_date?: string | null
+          address?: string | null
+          aia_project_number?: string | null
+          approved_change_orders?: number | null
+          approved_co_count?: number | null
+          architect?: string | null
+          architect_contact?: string | null
+          architect_email?: string | null
+          architect_entity?: string | null
+          architect_firm?: string | null
+          architect_license?: string | null
+          architect_name?: string | null
+          architect_phone?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          award_date?: string | null
+          balance_to_finish?: number | null
+          bid_date?: string | null
+          bid_due_date?: string | null
+          bid_number?: string | null
+          billed_to_date?: number | null
+          bond_amount?: number | null
+          bond_pct?: number | null
+          bonded?: boolean | null
+          building_type?: string | null
+          certified_payroll_required?: boolean | null
+          change_order_count?: number | null
+          city?: string | null
+          closeout_date?: string | null
+          completeness_score?: number | null
+          construction_type?: string | null
+          contingency?: number | null
+          contract_amount?: number | null
+          contract_date?: string | null
+          contract_execution_date?: string | null
+          contract_sum?: number | null
+          contract_type?: string | null
+          contract_value?: number | null
+          cost_to_date?: number | null
+          county?: string | null
+          cover_photo_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          created_by_name?: string | null
+          current_pay_app_number?: number | null
+          custom_fields?: Json | null
+          davis_bacon_wage_decision?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          divisions?: string[] | null
+          end_date?: string | null
+          engineer_email?: string | null
+          engineer_entity?: string | null
+          engineer_name?: string | null
+          engineer_phone?: string | null
+          estimated_completion?: string | null
+          estimated_cost?: number | null
+          external_id?: string | null
+          federal_project_number?: string | null
+          final_completion?: string | null
+          final_completion_date?: string | null
+          foreman?: string | null
+          foreman_email?: string | null
+          foreman_name?: string | null
+          foreman_phone?: string | null
+          gc_address?: string | null
+          gc_email?: string | null
+          gc_entity?: string | null
+          gc_insurance_expiry?: string | null
+          gc_license?: string | null
+          gc_license_expiry?: string | null
+          gc_license_number?: string | null
+          gc_name?: string | null
+          gc_phone?: string | null
+          geofence_lat?: number | null
+          geofence_lng?: number | null
+          geofence_radius_meters?: number | null
+          groundbreaking_date?: string | null
+          health_score?: number | null
+          id?: string | null
+          inspector_email?: string | null
+          inspector_name?: string | null
+          inspector_phone?: string | null
+          insurance_pct?: number | null
+          insurance_required?: number | null
+          integration_source?: string | null
+          internal_notes?: string | null
+          is_archived?: boolean | null
+          is_deleted?: boolean | null
+          is_public_project?: boolean | null
+          is_template?: boolean | null
+          last_activity_at?: string | null
+          last_log_at?: string | null
+          last_pay_app_at?: string | null
+          last_photo_at?: string | null
+          last_rfi_at?: string | null
+          latitude?: number | null
+          leed_level?: string | null
+          leed_required?: boolean | null
+          legal_description?: string | null
+          lien_deadline_date?: string | null
+          liquidated_damages?: number | null
+          liquidated_damages_per?: string | null
+          logo_url?: string | null
+          longitude?: number | null
+          metadata?: Json | null
+          mobilization_pct?: number | null
+          name?: string | null
+          net_change_by_co?: number | null
+          notes?: string | null
+          notice_to_proceed?: string | null
+          notice_to_proceed_date?: string | null
+          ntp_date?: string | null
+          num_floors?: number | null
+          num_units?: number | null
+          occupancy_date?: string | null
+          occupancy_type?: string | null
+          open_punch_count?: number | null
+          original_contract?: number | null
+          original_contract_amount?: number | null
+          original_contract_value?: number | null
+          osha_required?: boolean | null
+          overhead_pct?: number | null
+          owner_address?: string | null
+          owner_email?: string | null
+          owner_entity?: string | null
+          owner_name?: string | null
+          owner_occupancy_date?: string | null
+          owner_phone?: string | null
+          parcel_number?: string | null
+          pay_app_count?: number | null
+          payment_bond_required?: boolean | null
+          percent_complete?: number | null
+          performance_bond_required?: boolean | null
+          permit_expiry?: string | null
+          permit_number?: string | null
+          phase?: string | null
+          photo_count?: number | null
+          pm_email?: string | null
+          pm_name?: string | null
+          pm_phone?: string | null
+          prevailing_wage?: boolean | null
+          profit_pct?: number | null
+          project_lead?: string | null
+          project_lead_name?: string | null
+          project_manager?: string | null
+          project_number?: string | null
+          project_type?: string | null
+          projected_cost?: number | null
+          projected_end_date?: string | null
+          projected_start_date?: string | null
+          public_project?: string | null
+          punch_count?: number | null
+          punch_list_complete_date?: string | null
+          punch_list_due_date?: string | null
+          retainage_held?: number | null
+          retainage_pct?: number | null
+          retainage_percent?: string | null
+          retention_release_date?: string | null
+          revised_completion_date?: string | null
+          revised_contract_value?: number | null
+          rfi_count?: number | null
+          rollout_stage?: string | null
+          scheduled_value?: number | null
+          scope_of_work?: string | null
+          setup_complete?: boolean | null
+          setup_dismissed?: boolean | null
+          setup_step?: number | null
+          source?: string | null
+          sq_footage?: number | null
+          square_footage?: number | null
+          start_date?: string | null
+          state?: string | null
+          state_jurisdiction?: string | null
+          status?: string | null
+          stored_materials_allowed?: boolean | null
+          sub_address?: string | null
+          sub_email?: string | null
+          sub_entity?: string | null
+          sub_license?: string | null
+          sub_name?: string | null
+          sub_phone?: string | null
+          substantial_completion?: string | null
+          substantial_completion_date?: string | null
+          substantial_date?: string | null
+          super_email?: string | null
+          super_name?: string | null
+          super_phone?: string | null
+          superintendent?: string | null
+          tags?: string[] | null
+          target_finish_date?: string | null
+          tax_pct?: number | null
+          template_name?: string | null
+          tenant_id?: string | null
+          total_billed?: number | null
+          total_contract_amount?: number | null
+          total_earned?: number | null
+          total_paid?: number | null
+          total_pending?: number | null
+          total_retainage?: number | null
+          type?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          updated_by_name?: string | null
+          warranty_expiry_date?: string | null
+          work_days?: string[] | null
+          work_hours_end?: string | null
+          work_hours_start?: string | null
+          zip?: string | null
+          zoning?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       autopilot_project_risk_summary: {
@@ -32167,12 +33021,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -32196,11 +33050,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -32221,11 +33075,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -32246,11 +33100,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -32263,11 +33117,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

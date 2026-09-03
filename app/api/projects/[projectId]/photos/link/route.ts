@@ -73,7 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     let query = supabase
       .from('photo_entity_links')
       .select('*')
-      .eq('project_id', params.projectId);
+      .eq('tenant_id', user.tenantId);
 
     if (photo_id) {
       query = query.eq('photo_id', photo_id);

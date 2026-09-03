@@ -146,6 +146,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
     const { data, error } = await supabase
       .from('drawing_markup_comments')
       .insert({
+        tenant_id: user.tenantId,
         markup_id: id,
         content,
         author_name: typeof body.author_name === 'string' && body.author_name

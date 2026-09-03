@@ -80,11 +80,8 @@ export async function assembleJacket(
       .eq('project_id', projectId).eq('tenant_id', tenantId).order('section_number'),
     db.from('bid_package_documents').select('id,file_name,file_url,file_type,category,label,sort_order,created_at')
       .eq('bid_package_id', packageId).eq('tenant_id', tenantId).is('deleted_at', null).order('sort_order'),
-    /* bid_package_requirements has no tenant_id column, so it cannot carry the
-       mandatory tenant filter. Its parent package is proven to belong to the
-       caller before this runs — that ownership check IS the isolation here. */
     db.from('bid_package_requirements').select('id,requirement_type,description,min_coverage,is_required,notes')
-      .eq('bid_package_id', packageId),
+      .eq('bid_package_id', packageId).eq('tenant_id', tenantId),
     db.from('bid_package_invites').select('id,company_name,sub_name,sub_email,trade,status,response_status,invited_at')
       .eq('bid_package_id', packageId).eq('tenant_id', tenantId),
     db.from('bid_submissions').select('id,company_name,sub_name,base_amount,amount,status,submitted_at')
