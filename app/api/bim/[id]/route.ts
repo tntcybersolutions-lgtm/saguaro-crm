@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signStoredUrl } from '@/lib/storage-signing';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(
   req: NextRequest,
@@ -54,9 +55,6 @@ export async function GET(
     });
   } catch (err: unknown) {
     console.error('[bim/get]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to fetch model' },
-      { status: 500 },
-    );
+    return apiError('bim/id', err, 'Failed to fetch model');
   }
 }

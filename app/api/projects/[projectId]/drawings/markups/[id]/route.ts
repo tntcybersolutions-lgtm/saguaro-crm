@@ -9,7 +9,7 @@ import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission, hasPermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
 
-import { apiError } from '@/lib/api-error';
+import { apiError, apiFail } from '@/lib/api-error';
 export const dynamic = 'force-dynamic';
 
 type MarkupUpdate = Database['public']['Tables']['drawing_markups']['Update'];
@@ -47,18 +47,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
       .single();
 
     if (error) {
-      console.error('[markups PATCH] update failed:', error.message);
+      // "Markup not found" is our sentence and is safe to return. The other
+      // branch was handing back Postgres's, which names the table and the
+      // constraint it tripped on.
       const notFound = error.code === 'PGRST116'; // zero rows matched
-      return NextResponse.json(
-        { error: notFound ? 'Markup not found' : error.message },
-        { status: notFound ? 404 : 500 },
-      );
+      if (notFound) return apiFail('Markup not found', 404);
+      return apiError('projects/drawings/markups', error, 'Could not save the markup.');
     }
     return NextResponse.json({ markup: data });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[markups PATCH] failed:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/projectId/drawings/markups/id', e);
   }
 }
 
@@ -82,7 +82,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
       .maybeSingle();
     if (readErr) {
       console.error('[markups DELETE] lookup failed:', readErr.message);
-      return NextResponse.json({ error: readErr.message }, { status: 500 });
+      return apiError('projects/projectId/drawings/markups/id', readErr);
     }
     if (!existing) return NextResponse.json({ error: 'Markup not found' }, { status: 404 });
 
@@ -107,7 +107,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[markups DELETE] failed:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/projectId/drawings/markups/id', e);
   }
 }
 
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
       .maybeSingle();
     if (mErr) {
       console.error('[markup comment POST] lookup failed:', mErr.message);
-      return NextResponse.json({ error: mErr.message }, { status: 500 });
+      return apiError('projects/projectId/drawings/markups/id', mErr);
     }
     if (!markup) return NextResponse.json({ error: 'Markup not found' }, { status: 404 });
 
@@ -164,6 +164,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[markup comment POST] failed:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/projectId/drawings/markups/id', e);
   }
 }

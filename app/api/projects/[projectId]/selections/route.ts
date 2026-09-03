@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,10 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
 
   if (error) {
     console.error('[projects/selections] read failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to load selections', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('projects/projectId/selections', error, 'Failed to load selections');
   }
 
   return NextResponse.json({ selections: data ?? [] });

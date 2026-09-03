@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 // ─── GET: fetch calibrations ────────────────────────────────────────────────
 
@@ -39,10 +40,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data: data || [], calibration: data?.[0] ?? null });
   } catch (err: unknown) {
     console.error('[ar/calibration]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to fetch calibrations' },
-      { status: 500 },
-    );
+    return apiError('ar/calibration', err, 'Failed to fetch calibrations');
   }
 }
 
@@ -164,9 +162,6 @@ export async function POST(req: NextRequest) {
     }, { status: existing ? 200 : 201 });
   } catch (err: unknown) {
     console.error('[ar/calibration]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to save calibration' },
-      { status: 500 },
-    );
+    return apiError('ar/calibration', err, 'Failed to save calibration');
   }
 }

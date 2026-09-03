@@ -7,6 +7,7 @@ import {
   withExtension,
   UnsupportedImageError,
 } from '@/lib/image-thumb';
+import { apiError } from '@/lib/api-error';
 
 // sharp is a native module and a 12MP re-encode takes ~1-2s, so this handler is
 // pinned to the Node runtime with headroom rather than the default edge limits.
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
         // A HEIC we have no codec for. Storing it would put an object in the
         // bucket that no browser and no Android device can display — refuse
         // loudly instead of reporting a success that isn't one.
-        return NextResponse.json({ error: e.message, code: e.code }, { status: 415 });
+        return apiError('photos/upload', e, undefined, 415);
       }
       // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
     console.error('[photos/upload]', e);
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     if (uploadError || !uploadData) {
       console.error('[photos/upload] storage error:', uploadError?.message);
-      return NextResponse.json({ error: uploadError?.message || 'Upload failed' }, { status: 500 });
+      return apiError('photos/upload', uploadError, 'Upload failed');
     }
 
     const { data: urlData } = db.storage.from(BUCKET).getPublicUrl(storagePath);
@@ -176,7 +177,7 @@ export async function POST(req: NextRequest) {
       // No row means nothing will ever reference these objects. Clean them up so
       // a failed upload does not silently accrue orphaned bytes in the bucket.
       await removeQuietly(db, thumbPath ? [storagePath, thumbPath] : [storagePath]);
-      return NextResponse.json({ error: insertError?.message || 'Failed to save photo' }, { status: 500 });
+      return apiError('photos/upload', insertError, 'Failed to save photo');
     }
 
     return NextResponse.json({

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -124,6 +125,6 @@ export async function GET(req: NextRequest) {
       risk_level: warnings.length === 0 ? 'low' : warnings.length <= 2 ? 'medium' : 'high',
     });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('ai/cost-warning', err, 'Internal server error');
   }
 }

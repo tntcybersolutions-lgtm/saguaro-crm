@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/todos/create
@@ -43,10 +44,7 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error('[todos/create] insert failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to create todo', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('todos/create', error, 'Failed to create todo');
   }
 
   return NextResponse.json({ success: true, todo: data });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { randomBytes } from 'crypto';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to list webhook endpoints', details: error.message }, { status: 500 });
+      return apiError('webhooks/endpoints', error, 'Failed to list webhook endpoints');
     }
 
     // Mask secrets in response
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ endpoints });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('webhooks/endpoints', err, 'Internal server error');
   }
 }
 
@@ -84,12 +85,12 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to create webhook endpoint', details: error.message }, { status: 500 });
+      return apiError('webhooks/endpoints', error, 'Failed to create webhook endpoint');
     }
 
     // Return full secret only on creation
     return NextResponse.json({ endpoint: data }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('webhooks/endpoints', err, 'Internal server error');
   }
 }

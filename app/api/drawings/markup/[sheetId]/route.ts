@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, getUser } from '@/lib/supabase-server'
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ shee
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('[legacy markup GET] failed:', msg)
-    return NextResponse.json({ error: msg, markup_data: [] }, { status: 500 })
+    return apiError('drawings/markup/sheetId', e);
   }
 }
 
@@ -126,6 +127,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ she
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('[legacy markup POST] failed:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiError('drawings/markup/sheetId', e);
   }
 }

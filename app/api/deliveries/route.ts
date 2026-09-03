@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,10 +35,7 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error('[deliveries] read failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to load deliveries', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('deliveries', error, 'Failed to load deliveries');
   }
 
   const deliveries = (data ?? []).map((d) => {

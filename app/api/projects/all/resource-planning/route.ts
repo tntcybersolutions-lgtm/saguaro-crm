@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,7 +93,7 @@ export async function GET(req: NextRequest) {
     console.error('[projects/all/resource-planning] read failed:', detail);
     // A failed read must not render as an empty result — return a real
     // status so the UI can show an error state with a retry.
-    return NextResponse.json({ error: 'Failed to load data', detail }, { status: 500 });
+    return apiError('projects/all/resource-planning', e, 'Failed to load data');
   }
 }
 
@@ -114,9 +115,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data: toPage(data as DbRow) }, { status: 201 });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Internal server error' },
-      { status: 500 },
-    );
+    return apiError('projects/all/resource-planning', e, 'Internal server error');
   }
 }

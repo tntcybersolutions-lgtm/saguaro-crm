@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,10 +36,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
 
   if (error) {
     console.error('[projects/punch-list] read failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to load punch list', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('projects/projectId/punch-list', error, 'Failed to load punch list');
   }
 
   return NextResponse.json({ items: data ?? [] });
@@ -94,10 +92,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
   if (error) {
     console.error('[projects/punch-list] insert failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to create punch item', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('projects/projectId/punch-list', error, 'Failed to create punch item');
   }
 
   return NextResponse.json({ success: true, item: data });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,10 +39,7 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     console.error('[photos] storage list failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to load photos', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('photos', error, 'Failed to load photos');
   }
 
   const entries = (files ?? []).filter((f) => !f.name.startsWith('.'));

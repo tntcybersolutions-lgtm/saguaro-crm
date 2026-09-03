@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ talks });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg, talks: [] }, { status: 500 });
+    return apiError('safety-talks', e);
   }
 }
 
@@ -122,6 +123,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, talk: data });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('safety-talks', e);
   }
 }

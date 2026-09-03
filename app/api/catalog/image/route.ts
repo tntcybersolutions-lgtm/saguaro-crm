@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /** /api/catalog/image — attach a REAL product image to a materials-catalog item.
  *
@@ -109,7 +110,7 @@ export async function POST(req: NextRequest) {
       .upload(storagePath, buffer, { contentType: mime });
     if (uploadErr || !uploaded) {
       console.error('[catalog/image] storage error:', uploadErr?.message);
-      return NextResponse.json({ error: uploadErr?.message || 'Upload failed' }, { status: 500 });
+      return apiError('catalog/image', uploadErr, 'Upload failed');
     }
     const { data: urlData } = storage.storage.from('project-files').getPublicUrl(storagePath);
     const imageUrl = urlData?.publicUrl || null;

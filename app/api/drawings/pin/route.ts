@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +68,6 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[drawings/pin] insert failed:', msg);
-    return NextResponse.json({ error: `[drawings/pin] ${msg}` }, { status: 500 });
+    return apiError('drawings/pin', err, '[drawings/pin] ${msg}');
   }
 }

@@ -7,6 +7,7 @@ import {
   withExtension,
   UnsupportedImageError,
 } from '@/lib/image-thumb';
+import { apiError } from '@/lib/api-error';
 
 // sharp is a native module and a 12MP re-encode takes ~1-2s.
 export const runtime = 'nodejs';
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       processed = await processImageUpload(original);
     } catch (e: unknown) {
       if (e instanceof UnsupportedImageError) {
-        return NextResponse.json({ error: e.message, code: e.code }, { status: 415 });
+        return apiError('photos/id/upload', e, undefined, 415);
       }
       // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
     console.error('[photos/id/upload]', e);
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (uploadError || !uploadData) {
       console.error('[photos/[id]/upload] storage error:', uploadError?.message);
-      return NextResponse.json({ error: uploadError?.message || 'Upload failed' }, { status: 500 });
+      return apiError('photos/id/upload', uploadError, 'Upload failed');
     }
 
     const { data: urlData } = db.storage.from(BUCKET).getPublicUrl(storagePath);
@@ -139,7 +140,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       console.error('[photos/[id]/upload] update error:', updateError?.message);
       // The row still points at the old object, so nothing references these.
       await removeQuietly(db, thumbPath ? [storagePath, thumbPath] : [storagePath]);
-      return NextResponse.json({ error: updateError?.message || 'Failed to update photo' }, { status: 500 });
+      return apiError('photos/id/upload', updateError, 'Failed to update photo');
     }
 
     return NextResponse.json({

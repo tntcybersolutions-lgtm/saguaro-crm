@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /**
  * Format a measurement value for display based on its unit.
@@ -89,10 +90,7 @@ export async function PATCH(
     return NextResponse.json({ success: true, data });
   } catch (err: unknown) {
     console.error('[laser/measurements/patch]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Update failed' },
-      { status: 500 },
-    );
+    return apiError('laser/measurements/id', err, 'Update failed');
   }
 }
 
@@ -127,9 +125,6 @@ export async function DELETE(
     return NextResponse.json({ success: true, deleted: data });
   } catch (err: unknown) {
     console.error('[laser/measurements/delete]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Delete failed' },
-      { status: 500 },
-    );
+    return apiError('laser/measurements/id', err, 'Delete failed');
   }
 }

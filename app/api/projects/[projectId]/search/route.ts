@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 const SEARCHABLE_TABLES = [
   { table: 'rfis', module: 'RFIs', titleField: 'subject', searchFields: ['subject', 'question'] },
@@ -64,6 +65,6 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     console.error('[projects/[projectId]/search] read failed:', detail);
     // A failed read must not render as an empty result — return a real
     // status so the UI can show an error state with a retry.
-    return NextResponse.json({ error: 'Failed to load results', detail }, { status: 500 });
+    return apiError('projects/projectId/search', e, 'Failed to load results');
   }
 }

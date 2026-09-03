@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { runReport, ReportRunError } from '@/lib/reports/run';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result);
   } catch (e: unknown) {
     if (e instanceof ReportRunError) {
-      return NextResponse.json({ error: e.message }, { status: e.status });
+      return apiError('reports/run', e);
     }
     // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
     console.error('[reports/run]', e);

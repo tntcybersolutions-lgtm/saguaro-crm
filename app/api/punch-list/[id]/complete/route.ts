@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 /**
  * PATCH /api/punch-list/[id]/complete
@@ -38,10 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) {
     console.error('[punch-list/complete] update failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to update punch item', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('punch-list/id/complete', error, 'Failed to update punch item');
   }
 
   if (!data || data.length === 0) {

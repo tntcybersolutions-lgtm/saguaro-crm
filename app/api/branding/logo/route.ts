@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
   const { error: upErr } = await db.storage
     .from('branding')
     .upload(path, bytes, { contentType: file.type || `image/${ext}`, upsert: true });
-  if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
+  if (upErr) return apiError('branding/logo', upErr);
 
   // Public bucket → permanent URL (logos are public by nature; they go on PDFs,
   // portals, and emails sent to owners/subs).
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
     .from('tenants')
     .update({ settings, updated_at: new Date().toISOString() })
     .eq('id', user.tenantId);
-  if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
+  if (updErr) return apiError('branding/logo', updErr);
 
   return NextResponse.json({ ok: true, logo_url, logo_tone, logo_w, logo_h });
 }

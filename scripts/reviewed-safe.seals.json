@@ -1,6 +1,6 @@
 {
   "app/api/billing/[...path]/route.ts": "580e68779a485e25",
-  "app/api/catalog/image/route.ts": "b0f5f45cfe36bbc1",
+  "app/api/catalog/image/route.ts": "5e9c3d8b1cafc267",
   "app/api/chat/marketing/route.ts": "538f84ed10f3bacb",
   "app/api/chat/sage-notes/route.ts": "0e7af72baae1edf4",
   "app/api/clock/in/route.ts": "cefe6515190f58ab",
@@ -25,7 +25,7 @@
   "app/api/projects/[projectId]/photos/link/route.ts": "bc80368afa16cbaa",
   "app/api/roi/calculate/route.ts": "0f0e418d931dbb54",
   "app/api/sage/public/route.ts": "63872df20ffcd359",
-  "app/api/signatures/route.ts": "4745adc8d796ba71",
+  "app/api/signatures/route.ts": "a5a361638d0fb6ac",
   "app/api/smart-packages/customize-public/route.ts": "fc87ffebab2d2b06",
   "app/api/smart-packages/route.ts": "34155f11edd42bd7",
   "app/api/storage/oauth/[provider]/callback/route.ts": "0930158c69629d40",

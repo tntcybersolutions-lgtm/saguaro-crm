@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -135,6 +136,6 @@ Return as JSON: {
 
     return NextResponse.json({ talk: toolboxTalk, record: saved, saved: true }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('ai/toolbox-talk', err, 'Internal server error');
   }
 }

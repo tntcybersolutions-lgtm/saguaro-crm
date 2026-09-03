@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ incidents: data || [] });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg, incidents: [] }, { status: 500 });
+    return apiError('safety/incidents', e);
   }
 }
 
@@ -105,6 +106,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, incident: data });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('safety/incidents', e);
   }
 }

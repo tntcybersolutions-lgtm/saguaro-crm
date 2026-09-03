@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { randomUUID } from 'crypto';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -141,9 +142,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, model: data });
   } catch (err: unknown) {
     console.error('[bim/upload]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Upload failed' },
-      { status: 500 },
-    );
+    return apiError('bim/upload', err, 'Upload failed');
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,12 +28,12 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to list saved views', details: error.message }, { status: 500 });
+      return apiError('saved-views', error, 'Failed to list saved views');
     }
 
     return NextResponse.json({ views: data || [] });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('saved-views', err, 'Internal server error');
   }
 }
 
@@ -85,11 +86,11 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to create saved view', details: error.message }, { status: 500 });
+      return apiError('saved-views', error, 'Failed to create saved view');
     }
 
     return NextResponse.json({ view: data }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('saved-views', err, 'Internal server error');
   }
 }

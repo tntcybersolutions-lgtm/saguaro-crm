@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     const base = ((f as any).file_name || 'image').replace(/\.[^.]+$/, '').replace(/[^\w.\-() ]+/g, '_');
     const newPath = `${dir}${Date.now()}-${base}-edited.jpg`;
     const { error: upErr } = await admin.storage.from(bucket).upload(newPath, edited.buffer, { contentType: 'image/jpeg', upsert: false });
-    if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
+    if (upErr) return apiError('files/crop', upErr);
     await admin.storage.from(bucket).remove([path]).catch(() => {});
 
     const { data: updated, error: updErr } = await admin.from('project_files').update({

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,6 +23,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ inspections: data || [] });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg, inspections: [] }, { status: 500 });
+    return apiError('inspections/list', e);
   }
 }

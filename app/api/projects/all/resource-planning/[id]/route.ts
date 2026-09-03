@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { toDb } from '../route';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,10 +77,7 @@ async function update(req: NextRequest, id: string) {
     if (error) throw error;
     return NextResponse.json({ data: toPage(data as DbRow) });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Internal server error' },
-      { status: 500 },
-    );
+    return apiError('projects/all/resource-planning/id', e, 'Internal server error');
   }
 }
 
@@ -107,9 +105,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Internal server error' },
-      { status: 500 },
-    );
+    return apiError('projects/all/resource-planning/id', e, 'Internal server error');
   }
 }

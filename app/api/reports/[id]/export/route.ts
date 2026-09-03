@@ -18,6 +18,7 @@ import {
   computeCurrencyTotals,
   resolveBrandingValues,
 } from '@/lib/document-templates/exec-report-generator';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -183,7 +184,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       resolved = await resolveReport(supabase, user.tenantId, row as Record<string, unknown>, td, title);
     } catch (e) {
       if (e instanceof ReportRunError) {
-        return NextResponse.json({ error: e.message }, { status: e.status });
+        return apiError('reports/id/export', e);
       }
       throw e;
     }

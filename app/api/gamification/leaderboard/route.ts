@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to fetch leaderboard', details: error.message }, { status: 500 });
+      return apiError('gamification/leaderboard', error, 'Failed to fetch leaderboard');
     }
 
     // Map to the shape the page expects: { id, name, score, rank, trend, is_current_user }
@@ -56,6 +57,6 @@ export async function GET(req: NextRequest) {
       period: period || 'all_time',
     });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('gamification/leaderboard', err, 'Internal server error');
   }
 }

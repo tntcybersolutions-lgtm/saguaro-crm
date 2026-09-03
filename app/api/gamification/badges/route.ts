@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to list badges', details: error.message }, { status: 500 });
+      return apiError('gamification/badges', error, 'Failed to list badges');
     }
 
     // Map to the shape the leaderboard page expects: { id, icon, name, description, earned_date }
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ badges });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('gamification/badges', err, 'Internal server error');
   }
 }
 
@@ -104,7 +105,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to award badge', details: error.message }, { status: 500 });
+      return apiError('gamification/badges', error, 'Failed to award badge');
     }
 
     // Update user points in leaderboard
@@ -123,6 +124,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ badge: data }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('gamification/badges', err, 'Internal server error');
   }
 }

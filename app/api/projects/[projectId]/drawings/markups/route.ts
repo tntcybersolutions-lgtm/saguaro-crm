@@ -68,7 +68,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
         .order('created_at', { ascending: true });
       if (cErr) {
         console.error('[markups GET] comments query failed:', cErr.message);
-        return NextResponse.json({ error: cErr.message }, { status: 500 });
+        return apiError('projects/projectId/drawings/markups', cErr);
       }
       for (const c of commentData ?? []) {
         (comments[c.markup_id] ||= []).push(c);
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[markups GET] failed:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/projectId/drawings/markups', e);
   }
 }
 
@@ -141,6 +141,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error('[markups POST] failed:', msg);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return apiError('projects/projectId/drawings/markups', e);
   }
 }

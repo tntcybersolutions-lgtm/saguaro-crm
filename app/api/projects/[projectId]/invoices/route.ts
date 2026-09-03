@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -21,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     console.error('[projects/[projectId]/invoices] read failed:', detail);
     // A failed read must not render as an empty result — return a real
     // status so the UI can show an error state with a retry.
-    return NextResponse.json({ error: 'Failed to load invoices', detail }, { status: 500 });
+    return apiError('projects/projectId/invoices', e, 'Failed to load invoices');
   }
 }
 

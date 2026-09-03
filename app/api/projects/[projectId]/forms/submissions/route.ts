@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest, { params }: { params: { projectId: string } }) {
   const user = await getUser(req);
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       .order('created_at', { ascending: false });
     if (error) {
       console.error('[projects/[projectId]/forms/submissions] read failed:', error.message);
-      return NextResponse.json({ error: 'Failed to load submissions', detail: error.message }, { status: 500 });
+      return apiError('projects/projectId/forms/submissions', error, 'Failed to load submissions');
     }
     return NextResponse.json({ submissions: data || [] });
   } catch (e) {
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     console.error('[projects/[projectId]/forms/submissions] read failed:', detail);
     // A failed read must not render as an empty result — return a real
     // status so the UI can show an error state with a retry.
-    return NextResponse.json({ error: 'Failed to load submissions', detail }, { status: 500 });
+    return apiError('projects/projectId/forms/submissions', e, 'Failed to load submissions');
   }
 }
 
@@ -71,12 +72,12 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       // above never set it, EVERY submission failed and every one of them was
       // reported to the user as saved. Report the failure.
       console.error('[projects/[projectId]/forms/submissions] write failed:', error.message);
-      return NextResponse.json({ error: 'Failed to submit form', detail: error.message }, { status: 500 });
+      return apiError('projects/projectId/forms/submissions', error, 'Failed to submit form');
     }
     return NextResponse.json({ submission: data });
   } catch (e) {
     const detail = e instanceof Error ? e.message : String(e);
     console.error('[projects/[projectId]/forms/submissions] write failed:', detail);
-    return NextResponse.json({ error: 'Failed to submit form', detail }, { status: 500 });
+    return apiError('projects/projectId/forms/submissions', e, 'Failed to submit form');
   }
 }

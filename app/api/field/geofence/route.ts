@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (eventError) {
-      return NextResponse.json({ error: 'Failed to log geofence event', details: eventError.message }, { status: 500 });
+      return apiError('field/geofence', eventError, 'Failed to log geofence event');
     }
 
     // Optionally auto-clock in/out via internal clock API
@@ -76,6 +77,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ event, clock: clockResult }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('field/geofence', err, 'Internal server error');
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/deliveries/create
@@ -59,10 +60,7 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error('[deliveries/create] insert failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to log delivery', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('deliveries/create', error, 'Failed to log delivery');
   }
 
   return NextResponse.json({ success: true, delivery: data });

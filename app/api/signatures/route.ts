@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 // GET - List signature requests for a project
 export async function GET(req: NextRequest) {
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: sigReq });
   } catch (err: unknown) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to create signature request' }, { status: 500 });
+    return apiError('signatures', err, 'Failed to create signature request');
   }
 }
 
@@ -185,6 +186,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: sig });
   } catch (err: unknown) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to record signature' }, { status: 500 });
+    return apiError('signatures', err, 'Failed to record signature');
   }
 }

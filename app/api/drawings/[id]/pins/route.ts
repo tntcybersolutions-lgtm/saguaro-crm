@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
 // spellings on read forever.
 
 type PinInsert = Database['public']['Tables']['drawing_pins']['Insert'];
+import { apiError } from '@/lib/api-error';
 
 /** 'punch' → 'punch_item'; everything else passes through. */
 function normalizeEntityType(et: unknown): string | null {
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('[drawing pins GET] failed:', msg)
-    return NextResponse.json({ error: msg, pins: [] }, { status: 500 })
+    return apiError('drawings/id/pins', e);
   }
 }
 
@@ -103,7 +104,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('[drawing pins POST] failed:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiError('drawings/id/pins', e);
   }
 }
 
@@ -130,6 +131,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('[drawing pins DELETE] failed:', msg)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiError('drawings/id/pins', e);
   }
 }

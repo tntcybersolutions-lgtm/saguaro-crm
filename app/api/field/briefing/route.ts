@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -116,11 +117,11 @@ Provide a structured briefing with: 1) Weather alert if relevant, 2) Top priorit
       .single();
 
     if (saveError) {
-      return NextResponse.json({ error: 'Failed to save briefing', details: saveError.message }, { status: 500 });
+      return apiError('field/briefing', saveError, 'Failed to save briefing');
     }
 
     return NextResponse.json({ briefing: saved, source: 'generated' });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('field/briefing', err, 'Internal server error');
   }
 }

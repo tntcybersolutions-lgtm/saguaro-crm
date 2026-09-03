@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -30,12 +31,12 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to list deliveries', details: error.message }, { status: 500 });
+      return apiError('field/delivery-tracking', error, 'Failed to list deliveries');
     }
 
     return NextResponse.json({ deliveries: data || [] });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('field/delivery-tracking', err, 'Internal server error');
   }
 }
 
@@ -78,11 +79,11 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to create delivery', details: error.message }, { status: 500 });
+      return apiError('field/delivery-tracking', error, 'Failed to create delivery');
     }
 
     return NextResponse.json({ delivery: data }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('field/delivery-tracking', err, 'Internal server error');
   }
 }

@@ -8,6 +8,7 @@ import {
   summarizeContract,
   type Cents,
 } from '@/lib/calc';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,6 +103,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg, summary: {} }, { status: 500 });
+    return apiError('financial/project-report', e);
   }
 }

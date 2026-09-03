@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -74,10 +75,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ data: data || [] });
   } catch (err: unknown) {
     console.error('[laser/measurements]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to fetch measurements' },
-      { status: 500 },
-    );
+    return apiError('laser/measurements', err, 'Failed to fetch measurements');
   }
 }
 
@@ -156,9 +154,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (err: unknown) {
     console.error('[laser/measurements]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Failed to create measurement' },
-      { status: 500 },
-    );
+    return apiError('laser/measurements', err, 'Failed to create measurement');
   }
 }

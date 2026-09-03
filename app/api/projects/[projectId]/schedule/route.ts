@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,10 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
 
   if (error) {
     console.error('[projects/schedule] read failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to load schedule', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('projects/projectId/schedule', error, 'Failed to load schedule');
   }
 
   return NextResponse.json({ tasks: data ?? [] });

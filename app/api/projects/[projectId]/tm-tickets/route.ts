@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       .order('created_at', { ascending: false });
     if (error) {
       console.error('[projects/[projectId]/tm-tickets] read failed:', error.message);
-      return NextResponse.json({ error: 'Failed to load tickets', detail: error.message }, { status: 500 });
+      return apiError('projects/projectId/tm-tickets', error, 'Failed to load tickets');
     }
     return NextResponse.json({ tickets: data || [] });
   } catch (e) {
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     console.error('[projects/[projectId]/tm-tickets] read failed:', detail);
     // A failed read must not render as an empty result — return a real
     // status so the UI can show an error state with a retry.
-    return NextResponse.json({ error: 'Failed to load tickets', detail }, { status: 500 });
+    return apiError('projects/projectId/tm-tickets', e, 'Failed to load tickets');
   }
 }
 

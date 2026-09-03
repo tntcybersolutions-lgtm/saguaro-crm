@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -111,7 +112,7 @@ export async function POST(req: NextRequest) {
       .order('created_at', { ascending: true });
 
     if (rfiError) {
-      return NextResponse.json({ error: 'Failed to query RFIs', details: rfiError.message }, { status: 500 });
+      return apiError('ai/escalation-check', rfiError, 'Failed to query RFIs');
     }
 
     // Find RFIs past their due date
@@ -195,6 +196,6 @@ export async function POST(req: NextRequest) {
       threshold_hours: hoursThreshold,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('ai/escalation-check', err, 'Internal server error');
   }
 }

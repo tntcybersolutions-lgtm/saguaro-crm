@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 /**
  * POST /api/safety/create
@@ -42,10 +43,7 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error('[safety/create] insert failed:', error.message);
-    return NextResponse.json(
-      { error: 'Failed to log safety incident', detail: error.message },
-      { status: 500 },
-    );
+    return apiError('safety/create', error, 'Failed to log safety incident');
   }
 
   return NextResponse.json({ success: true, incident: data });

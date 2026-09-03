@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import type { Database } from '@/lib/database.types';
 import { randomUUID } from 'crypto';
+import { apiError } from '@/lib/api-error';
 
 export const runtime = 'nodejs';
 
@@ -244,9 +245,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err: unknown) {
     console.error('[drone/upload]', err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Upload failed' },
-      { status: 500 },
-    );
+    return apiError('drone/upload', err, 'Upload failed');
   }
 }

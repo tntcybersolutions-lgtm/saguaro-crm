@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { signUrl } from '@/lib/storage-signing';
 import type { Database } from '@/lib/database.types';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
       });
 
     if (uploadError) {
-      return NextResponse.json({ error: 'Failed to upload audio', details: uploadError.message }, { status: 500 });
+      return apiError('voice-memos/create', uploadError, 'Failed to upload audio');
     }
 
     const { data: urlData } = db.storage.from('project-files').getPublicUrl(fileName);
@@ -80,12 +81,12 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (insertError) {
-      return NextResponse.json({ error: 'Failed to save voice memo', details: insertError.message }, { status: 500 });
+      return apiError('voice-memos/create', insertError, 'Failed to save voice memo');
     }
 
     if (memo?.audio_url) (memo as any).audio_url = await signUrl((memo as any).audio_url);
     return NextResponse.json({ memo }, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('voice-memos/create', err, 'Internal server error');
   }
 }

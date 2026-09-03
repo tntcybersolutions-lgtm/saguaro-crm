@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     console.error('[projects/[projectId]/drawings] read failed:', detail);
     // A failed read must not render as an empty result — return a real
     // status so the UI can show an error state with a retry.
-    return NextResponse.json({ error: 'Failed to load drawings', detail }, { status: 500 });
+    return apiError('projects/projectId/drawings', e, 'Failed to load drawings');
   }
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
       .order('updated_at', { ascending: false });
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to fetch crew locations', details: error.message }, { status: 500 });
+      return apiError('field/crew-locations', error, 'Failed to fetch crew locations');
     }
 
     // Map DB columns to the shape the page expects (lat/lng, name).
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ crew });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('field/crew-locations', err, 'Internal server error');
   }
 }
 
@@ -87,11 +88,11 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to update location', details: error.message }, { status: 500 });
+      return apiError('field/crew-locations', error, 'Failed to update location');
     }
 
     return NextResponse.json({ location: data });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('field/crew-locations', err, 'Internal server error');
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,11 +28,11 @@ export async function GET(req: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to list voice memos', details: error.message }, { status: 500 });
+      return apiError('voice-memos/list', error, 'Failed to list voice memos');
     }
 
     return NextResponse.json({ memos: data || [] });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('voice-memos/list', err, 'Internal server error');
   }
 }

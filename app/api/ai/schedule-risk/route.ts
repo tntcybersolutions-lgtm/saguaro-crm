@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
     ]);
 
     if (phasesRes.error) {
-      return NextResponse.json({ error: 'Failed to fetch schedule phases', details: phasesRes.error.message }, { status: 500 });
+      return apiError('ai/schedule-risk', phasesRes.error, 'Failed to fetch schedule phases');
     }
 
     const phases = phasesRes.data || [];
@@ -119,6 +120,6 @@ Return as JSON: { "risk_level": "...", "findings": [...], "actions": [...], "pre
       ai_assessment: aiAssessment,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: 'Internal server error', details: err.message }, { status: 500 });
+    return apiError('ai/schedule-risk', err, 'Internal server error');
   }
 }

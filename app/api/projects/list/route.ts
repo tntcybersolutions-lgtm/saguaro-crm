@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,6 +25,6 @@ export async function GET(req: NextRequest) {
     console.error('[projects/list] read failed:', detail);
     // A failed read must not render as an empty result — return a real
     // status so the UI can show an error state with a retry.
-    return NextResponse.json({ error: 'Failed to load projects', detail }, { status: 500 });
+    return apiError('projects/list', e, 'Failed to load projects');
   }
 }

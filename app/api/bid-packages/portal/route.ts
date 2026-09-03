@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -80,10 +81,7 @@ export async function POST(req: NextRequest) {
 
     if (submitErr || !submission) {
       console.error('[api/bid-packages/portal] bid_submissions insert failed:', submitErr?.message, submitErr?.details);
-      return NextResponse.json(
-        { error: submitErr?.message || 'Your bid could not be saved. Nothing was recorded — please try again or contact the general contractor directly.' },
-        { status: 500 },
-      );
+      return apiError('bid-packages/portal', submitErr, 'Your bid could not be saved. Nothing was recorded — please try again or contact the general contractor directly.');
     }
 
     // Only now that the bid row is confirmed written may the invite be closed out.

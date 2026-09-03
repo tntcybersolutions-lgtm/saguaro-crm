@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import Anthropic from '@anthropic-ai/sdk';
+import { apiError } from '@/lib/api-error';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -160,9 +161,6 @@ Return as JSON:
     }, { status: 200 });
   } catch (err: any) {
     console.error('[trade-assistant]', err);
-    return NextResponse.json(
-      { error: 'Internal server error', details: err.message },
-      { status: 500 }
-    );
+    return apiError('ai/trade-assistant', err, 'Internal server error');
   }
 }
