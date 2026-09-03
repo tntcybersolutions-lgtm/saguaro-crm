@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId),
       db.from('schedule_phases')
-        .select('name, phase_name, percent_complete, start_date, end_date')
+        .select('name, percent_complete, start_date, end_date')
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId),
       db.from('change_orders')

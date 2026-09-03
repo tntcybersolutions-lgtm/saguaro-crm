@@ -87,13 +87,16 @@ for (const f of walk('app/api').concat(walk('lib'))) {
   if (!/\.from\(/.test(src)) continue;
   checked++;
 
-  /* Each .from('table') owns the chained calls up to the next .from( or the end
-     of the statement. A generous window is fine — the next .from() bounds it. */
-  const froms = [...src.matchAll(/\.from\(\s*['"`](\w+)['"`]\s*\)/g)];
+  /* EVERY .from( bounds a chain, not only the ones naming a literal table.
+     Matching literals alone let a window run straight through
+     `.from(src.table as any).eq('project_id', …)` and blame a `.from('projects')`
+     further up the file — three findings that were nothing of the sort. A
+     dynamic table cannot be checked, but it must still stop the previous one. */
+  const froms = [...src.matchAll(/\.from\(\s*(?:['"`](\w+)['"`]\s*)?/g)];
   for (let i = 0; i < froms.length; i++) {
     const table = froms[i][1];
-    const cols = schema.get(table);
-    if (!cols) continue; // unknown table — storage buckets, or types not regenerated
+    const cols = table ? schema.get(table) : null;
+    if (!cols) continue; // dynamic table, storage bucket, or types not regenerated
     queries++;
 
     const start = froms[i].index + froms[i][0].length;

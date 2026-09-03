@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     // Fetch insurance certs for compliance scoring
     const subIds = (allTenantSubs || []).map((s: any) => s.id);
     const { data: certs } = subIds.length > 0
-      ? await db.from('insurance_certificates').select('subcontractor_id, expiry_date, policy_type').eq('tenant_id', tenantId).in('subcontractor_id', subIds)
+      ? await db.from('insurance_certificates').select('sub_id, expiry_date, policy_type').eq('tenant_id', tenantId).in('sub_id', subIds)
       : { data: [] };
 
     const certMap = new Map<string, any[]>();

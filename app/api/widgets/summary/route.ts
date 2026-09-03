@@ -72,8 +72,8 @@ export async function GET(req: NextRequest) {
       .from('insurance_certificates')
       .select('*', { count: 'exact', head: true })
       .eq('tenant_id', user.tenantId)
-      .lte('expiration_date', thirtyDays)
-      .gte('expiration_date', today);
+      .lte('expiry_date', thirtyDays)
+      .gte('expiry_date', today);
 
     // Open alerts
     const { count: openAlerts } = await db

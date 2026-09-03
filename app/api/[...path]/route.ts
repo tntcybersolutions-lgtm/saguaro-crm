@@ -280,12 +280,15 @@ export async function GET(
           items.push({ type: 'insurance', title: 'COI Expiring Soon', subtitle: `${coi.sub_name} — expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`, urgency: daysLeft <= 7 ? 'high' : 'medium', actionUrl: `/app/projects/${coi.project_id}/insurance`, actionLabel: 'Request Renewal' });
         }
       }
-      const { data: notifications } = await supabase.from('notifications').select('id, type, title, message, entity_id, urgency').eq('read', false).order('created_at', { ascending: false }).limit(5);
+      const { data: notifications } = await supabase.from('notifications').select('id, type, title, message, entity_id, priority').eq('read', false).order('created_at', { ascending: false }).limit(5);
       if (notifications && notifications.length > 0) {
         for (const n of notifications) {
           const nType = n.type as ActionItem['type'];
           if (!['pay-app', 'insurance', 'rfi', 'compliance'].includes(nType)) continue;
-          items.push({ type: nType, title: n.title ?? 'Notification', subtitle: n.message ?? '', urgency: (n.urgency as ActionItem['urgency']) ?? 'medium', actionUrl: `/app/projects/${n.entity_id ?? 'unknown'}`, actionLabel: 'View' });
+          /* notifications.priority, not .urgency — the column is priority and
+             the select above was asking for one that does not exist, so this
+             read was always undefined and every action item came out 'medium'. */
+          items.push({ type: nType, title: n.title ?? 'Notification', subtitle: n.message ?? '', urgency: (n.priority as ActionItem['urgency']) ?? 'medium', actionUrl: `/app/projects/${n.entity_id ?? 'unknown'}`, actionLabel: 'View' });
         }
       }
       items.sort((a, b) => (URGENCY_ORDER[a.urgency] ?? 2) - (URGENCY_ORDER[b.urgency] ?? 2));
@@ -380,7 +383,7 @@ export async function GET(
     try {
       const { data, error } = await supabaseAdmin
         .from('rfis')
-        .select('id, number, title, status, priority, assigned_to, response_due_date, cost_impact_amount, schedule_impact_days, created_at')
+        .select('id, rfi_number, subject, status, priority, assigned_to, response_due_date, cost_impact, schedule_impact_days, created_at')
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId)
         .order('created_at', { ascending: false });
@@ -476,7 +479,7 @@ export async function GET(
     try {
       const { data, error } = await supabaseAdmin
         .from('bid_packages')
-        .select('id, code, name, trade, status, bid_due_date, awarded_to, awarded_amount, created_at')
+        .select('id, package_number, name, trade, status, bid_due_date, awarded_to, awarded_amount, created_at')
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId)
         .order('created_at', { ascending: true });
@@ -586,9 +589,13 @@ export async function POST(
     try { const body = await req.json(); trade = body.trade || ''; projectId = body.projectId || ''; } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }); }
     try {
       const tradeKeyword = trade.replace(/^Division \d+ — /, '').toLowerCase();
-      const { data, error } = await supabaseAdmin.from('sub_performance').select('id, name, trade, email, win_rate, last_project, last_project_date, rating').ilike('trade', `%${tradeKeyword}%`).order('win_rate', { ascending: false }).limit(10);
+      const { data, error } = await supabaseAdmin.from('sub_performance').select('id, sub_name, trade, email, win_rate, last_project_date, avg_rating').ilike('trade', `%${tradeKeyword}%`).order('win_rate', { ascending: false }).limit(10);
       if (error) throw error;
-      const subs = (data || []).map((row: { id: string; name: string; trade: string; email: string; win_rate: number; last_project: string; last_project_date: string; rating: number }) => ({ id: row.id, name: row.name, trade: row.trade, email: row.email, winRate: row.win_rate, lastProject: row.last_project, lastProjectDate: row.last_project_date, rating: row.rating }));
+      /* sub_performance calls them sub_name / avg_rating, and has no
+         last_project at all — only last_project_date. The select was asking
+         for three columns that do not exist, so name, lastProject and rating
+         came back undefined on every suggested subcontractor. */
+      const subs = (data || []).map((row: { id: string; sub_name: string; trade: string; email: string; win_rate: number; last_project_date: string; avg_rating: number }) => ({ id: row.id, name: row.sub_name, trade: row.trade, email: row.email, winRate: row.win_rate, lastProjectDate: row.last_project_date, rating: row.avg_rating }));
       return NextResponse.json({ subs });
     } catch (err: unknown) {
       const msg = 'Internal server error';
@@ -619,7 +626,7 @@ export async function POST(
         suggestions = perfData.map((sub: Record<string, unknown>) => ({ id: sub.id as string, name: sub.sub_name as string, trade: sub.trade as string, winRate: sub.win_rate as number | null, lastProjectDate: sub.last_project_date as string | null, email: sub.email as string | null, phone: sub.phone as string | null, suggestedReason: buildSuggestedReason(sub) }));
         source = 'sub_performance';
       } else {
-        const { data: subData, error: subError } = await supabase.from('subcontractors').select('id, name, trade, email, phone, rating').eq('tenant_id', tenantId).ilike('trade', `%${tradeRequired}%`).limit(5);
+        const { data: subData, error: subError } = await supabase.from('subcontractors').select('id, company_name, trade, email, phone, rating').eq('tenant_id', tenantId).ilike('trade', `%${tradeRequired}%`).limit(5);
         if (!subError && subData?.length) {
           suggestions = subData.map((sub: Record<string, unknown>) => ({ id: sub.id as string, name: sub.name as string, trade: sub.trade as string, winRate: null, lastProjectDate: null, email: sub.email as string | null, phone: sub.phone as string | null, suggestedReason: 'Matching sub in your database' }));
           source = 'subcontractors';

@@ -9,11 +9,11 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getUser(req);
     const db = createServerClient();
-    let query = db.from('subcontractors').select('*').order('name').limit(50);
+    let query = db.from('subcontractors').select('*').order('company_name').limit(50);
     if (user?.tenantId) query = query.eq('tenant_id', user.tenantId);
     if (trade) query = query.ilike('trade', `%${trade}%`);
     if (state) query = query.eq('state', state);
-    if (q) query = query.ilike('name', `%${q}%`);
+    if (q) query = query.ilike('company_name', `%${q}%`);
     const { data } = await query;
     return NextResponse.json({ subs: data || [] });
   } catch {

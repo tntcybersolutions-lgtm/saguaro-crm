@@ -15,10 +15,10 @@ export async function GET(req: NextRequest) {
   // Fetch all active subcontractors
   let subQuery = db
     .from('subcontractors')
-    .select('id, name, trade, email, contract_amount, project_id, w9_status, status')
+    .select('id, company_name, trade, email, contract_amount, project_id, w9_status, status')
     .eq('tenant_id', tenantId)
     .neq('status', 'inactive')
-    .order('name', { ascending: true });
+    .order('company_name', { ascending: true });
   if (projectId) subQuery = subQuery.eq('project_id', projectId);
   const { data: subs } = await subQuery;
 
@@ -33,9 +33,9 @@ export async function GET(req: NextRequest) {
   // Fetch all insurance certificates for these subs
   const { data: certs } = await db
     .from('insurance_certificates')
-    .select('subcontractor_id, policy_type, expiry_date, status')
+    .select('sub_id, policy_type, expiry_date, status')
     .eq('tenant_id', tenantId)
-    .in('subcontractor_id', subIds);
+    .in('sub_id', subIds);
 
   // Fetch all lien waivers for these subs
   const { data: waivers } = await db

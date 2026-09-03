@@ -50,7 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 
     const { data, error } = await folders(db)
       .select('id, name, sort_order, seeded_from')
-      .eq('project_id', params.projectId)
+      .eq('id', params.projectId)
       .eq('tenant_id', user.tenantId)
       .order('sort_order', { ascending: true });
 

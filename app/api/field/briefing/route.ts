@@ -38,9 +38,9 @@ export async function GET(req: NextRequest) {
     const [rfisRes, insuranceRes, approvalsRes, punchRes, projectRes] = await Promise.all([
       db.from('rfis').select('id, rfi_number, subject, status, due_date')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId).eq('status', 'open'),
-      db.from('insurance_certificates').select('id, company_name, policy_type, expiration_date')
+      db.from('insurance_certificates').select('id, sub_name, policy_type, expiry_date')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId)
-        .lte('expiration_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
+        .lte('expiry_date', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]),
       db.from('change_orders').select('id, title, status, amount')
         .eq('project_id', projectId).eq('tenant_id', user.tenantId).eq('status', 'pending'),
       db.from('punch_list').select('id, title, status, location')

@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     if (trade) {
       const { data: articles } = await db
         .from('trade_knowledge')
-        .select('title, summary, content')
+        .select('title, content')
         .eq('tenant_id', user.tenantId)
         .eq('trade', trade)
         .order('views', { ascending: false })

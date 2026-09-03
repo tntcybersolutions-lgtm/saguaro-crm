@@ -22,8 +22,8 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    if (module) query = query.eq('module', module);
-    if (actionUser) query = query.eq('user_email', actionUser);
+    if (module) query = query.eq('entity_type', module);
+    if (actionUser) query = query.eq('user_name', actionUser);
 
     const { data, error } = await query;
     if (error) {

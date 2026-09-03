@@ -132,7 +132,7 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
         const { data: existing } = await client
           .from('lien_waivers')
           .select('id')
-          .eq('pay_app_id', payAppId)
+          .eq('pay_application_id', payAppId)
           .eq('sub_id', sub.id)
           .single();
 

@@ -2246,7 +2246,7 @@ export async function POST(req: NextRequest) {
         .order('updated_at', { ascending: false })
         .limit(20),
       db.from('bids')
-        .select('id, project_name, bid_amount, status, due_date, ai_score')
+        .select('id, project_name, amount, status, due_date, score')
         .eq('tenant_id', user.tenantId)
         .order('due_date', { ascending: true })
         .limit(10),
@@ -2271,8 +2271,8 @@ export async function POST(req: NextRequest) {
         .order('due_date', { ascending: true })
         .limit(10),
       db.from('profiles')
-        .select('full_name, company_name')
-        .eq('user_id', user.id)
+        .select('full_name, company')
+        .eq('id', user.id)
         .maybeSingle(),
     ]);
 

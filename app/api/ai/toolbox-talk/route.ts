@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (!trades || trades.length === 0) {
       const { data: teamData } = await db
         .from('project_team')
-        .select('trade, company_name')
+        .select('trade, company')
         .eq('project_id', project_id)
         .eq('tenant_id', user.tenantId)
         .not('trade', 'is', null);

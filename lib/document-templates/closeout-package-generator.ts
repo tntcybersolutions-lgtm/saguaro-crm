@@ -48,7 +48,7 @@ export async function getCloseoutChecklist(
 
     const { data: subs } = await supabaseAdmin
       .from('subcontractors')
-      .select('id, name')
+      .select('id, company_name')
       .eq('project_id', projectId);
 
     const docTypes = new Set((generatedDocs || []).map((d: any) => d.doc_type));
