@@ -135,7 +135,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             /* Per-bid suggested gap, keyed by bid id so the row can offer it. */
             suggested: Object.fromEntries(
               (((analysisRow.data as Bid).analysis?.reading ?? []) as Bid[])
-                .map((r) => [String(r.bidderId), { gap: Number(r.gapDollars) || 0, basis: r.gapBasis || null, excluded: r.excluded ?? 0, clarify: r.clarify ?? 0 }]),
+                .map((r) => [String(r.bidderId), {
+                  gap: Number(r.gapDollars) || 0,
+                  basis: r.gapBasis || null,
+                  excluded: r.excluded ?? 0,
+                  clarify: r.clarify ?? 0,
+                  /* The per-line included/excluded/clarify matrix. The leveling
+                     board renders this directly, so an analysed package opens
+                     with the scope grid already filled in rather than every
+                     cell needing a click. */
+                  scope: r.scope ?? [],
+                }]),
             ),
           }
         : null,

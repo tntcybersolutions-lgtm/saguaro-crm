@@ -7,7 +7,8 @@
  * Full premium anatomy: aurora surface, module hero, stat strip over the matrix,
  * machined table material with sticky first columns — zero behavior changes.
  */
-import { useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { humanError } from '@/lib/errors';
 import { levelBids, usd, TRADE_TEMPLATES, type ScopeLine, type Bidder, type ScopeStatus } from '@/lib/bidleveling';
 import {
@@ -29,7 +30,7 @@ const STC: Record<ScopeStatus, string> = { included: GREEN, excluded: RED, clari
 const STL: Record<ScopeStatus, string> = { included: 'Incl', excluded: 'Excl', clarify: 'Clar', alternate: 'Alt' };
 const nextStatus = (s: ScopeStatus): ScopeStatus => ({ included: 'excluded', excluded: 'clarify', clarify: 'alternate', alternate: 'included' } as const)[s];
 
-export default function BidLevelingPage() {
+function BidLevelingBoard() {
   const [scopeLines, setScopeLines] = useState<ScopeLine[]>([]);
   const [bidders, setBidders] = useState<Bidder[]>([]);
   const [selAlts, setSelAlts] = useState<string[]>([]);
@@ -38,6 +39,112 @@ export default function BidLevelingPage() {
   const [tplOpen, setTplOpen] = useState(false);
   const [adjOpen, setAdjOpen] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
+
+  /* ── Package mode ──────────────────────────────────────────────────────────
+     Without ?package= this screen is exactly what it was: a scratchpad where a
+     GC types scope lines and bidders by hand. With one, it loads a real bid
+     package — its line items become the scope checklist, its submissions become
+     the bidders, and Sage's reading (if it has been run) fills the scope grid
+     in already. Same board, same deterministic engine; the only difference is
+     where the rows come from and that they can be saved back.
+
+     This is the reconciliation of two leveling screens. There was a simpler
+     package-scoped one that reimplemented base+gap while this richer board and
+     lib/bidleveling already existed — two places to level a bid, giving two
+     answers. This is the one board. */
+  const packageId = useSearchParams().get('package');
+  const [pkgName, setPkgName] = useState<string | null>(null);
+  const [pkgBusy, setPkgBusy] = useState(false);
+  const [pkgComplete, setPkgComplete] = useState(false);
+  const [aiNote, setAiNote] = useState<string | null>(null);
+
+  const loadPackage = useCallback(async () => {
+    if (!packageId) return;
+    setPkgBusy(true);
+    try {
+      const r = await fetch(`/api/bid-packages/${packageId}/leveling`);
+      const d = await r.json();
+      if (!r.ok) { setMsg(d.error || 'Could not load that bid package.'); return; }
+
+      setPkgName(d.package?.trade || d.package?.name || null);
+      setPkgComplete(!!d.package?.levelingComplete);
+      if (d.package?.budget) setBudget(String(d.package.budget));
+
+      const lines: ScopeLine[] = (d.scopeLines || []).map((l: any) => ({
+        id: String(l.id), csi: l.code || undefined,
+        description: l.description || 'Scope item', required: true,
+      }));
+      setScopeLines(lines);
+
+      const suggested = d.analysis?.suggested || {};
+      setBidders((d.bids || []).map((b: any) => {
+        const ai = suggested[b.id];
+        return {
+          id: String(b.id),
+          name: b.company || 'Bidder',
+          /* The board is entirely in cents; the API speaks dollars. */
+          baseBidCents: Math.round(Number(b.base || 0) * 100),
+          scope: Array.isArray(ai?.scope) && ai.scope.length
+            ? ai.scope
+            : lines.map((l) => ({ scopeLineId: l.id, status: 'included' as ScopeStatus })),
+          adjustments: b.gap ? { carryCents: Math.round(Number(b.gap) * 100), note: 'Scope gap' } : undefined,
+          bondIncluded: !!b.bond,
+          note: b.exclusions || undefined,
+        } as Bidder;
+      }));
+      setAiNote(d.analysis?.recommendation || null);
+    } catch {
+      setMsg('Could not load that bid package.');
+    } finally {
+      setPkgBusy(false);
+    }
+  }, [packageId]);
+
+  useEffect(() => { loadPackage(); }, [loadPackage]);
+
+  /* Push the levelled figures back onto the real submissions. The carry
+     adjustment a GC set on the board IS the scope gap, so it lands in
+     scope_gap_amount and the engine's low bid becomes is_low_bid. */
+  async function savePackage(markComplete: boolean) {
+    if (!packageId) return;
+    setPkgBusy(true);
+    try {
+      for (const b of bidders) {
+        const gapDollars = Math.round((b.adjustments?.carryCents || 0) / 100);
+        await fetch(`/api/bid-packages/${packageId}/leveling`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bidId: b.id, gap: gapDollars }),
+        });
+      }
+      if (markComplete) {
+        await fetch(`/api/bid-packages/${packageId}/leveling`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ complete: true, scopeLines }),
+        });
+        setPkgComplete(true);
+      }
+      setMsg(markComplete ? 'Levelling saved and marked complete.' : 'Levelling saved to the bid package.');
+    } catch {
+      setMsg('Could not save back to the bid package.');
+    } finally {
+      setPkgBusy(false);
+    }
+  }
+
+  async function analysePackage() {
+    if (!packageId) return;
+    setPkgBusy(true);
+    setMsg('');
+    try {
+      const r = await fetch(`/api/bid-packages/${packageId}/leveling/analyze`, { method: 'POST' });
+      const d = await r.json().catch(() => ({}));
+      if (d.configured === false || d.error) { setMsg(d.error || 'The analysis could not be completed.'); return; }
+      await loadPackage();
+    } finally {
+      setPkgBusy(false);
+    }
+  }
 
   const result = useMemo(() => levelBids(scopeLines, bidders, { selectedAlternateKeys: selAlts, budgetCents: toCents(budget) || undefined }), [scopeLines, bidders, selAlts, budget]);
   const altKeys = useMemo(() => Array.from(new Set(bidders.flatMap((b) => (b.alternates || []).map((a) => a.key)))), [bidders]);
@@ -103,13 +210,42 @@ export default function BidLevelingPage() {
       <ModuleHero
         eyebrow="Bid Tabulation · Deterministic"
         eyebrowIcon={<Scales size={13} weight="fill" color={BIDS.hex} />}
-        title="Bid"
+        title={pkgName ? `${pkgName} —` : 'Bid'}
         accent="Leveling"
         subtitle="Normalize every sub bid to the same scope, compare against your budget, and award on price + coverage — not just the lowest number."
-        actions={bidders.length > 0 ? (
-          <button onClick={exportPdf} style={ghostButtonStyle} className="pmBtn"><FilePdf size={15} weight="bold" /> Export bid tab</button>
-        ) : undefined}
+        actions={
+          <>
+            {/* Package mode only: these push the levelled figures back onto the
+                real submissions. In scratchpad mode they are simply absent —
+                there is nothing to save to. */}
+            {packageId && (
+              <>
+                <button onClick={analysePackage} disabled={pkgBusy} style={ghostButtonStyle} className="pmBtn">
+                  <Sparkle size={15} weight="bold" /> {pkgBusy ? 'Working…' : 'Ask Sage to find the gaps'}
+                </button>
+                <button onClick={() => savePackage(false)} disabled={pkgBusy} style={ghostButtonStyle} className="pmBtn">
+                  Save to package
+                </button>
+                <button onClick={() => savePackage(true)} disabled={pkgBusy || pkgComplete} style={goldButtonStyle} className="pmBtn">
+                  {pkgComplete ? 'Levelling complete' : 'Save &amp; mark complete'}
+                </button>
+              </>
+            )}
+            {bidders.length > 0 && (
+              <button onClick={exportPdf} style={ghostButtonStyle} className="pmBtn"><FilePdf size={15} weight="bold" /> Export bid tab</button>
+            )}
+          </>
+        }
       />
+
+      {aiNote && (
+        <SectionCard flat title="Sage read the bids" icon={<Sparkle size={17} weight="duotone" color={GOLD} />}>
+          <div style={{ fontSize: 14, lineHeight: 1.65, color: TEXT, maxWidth: '72ch' }}>{aiNote}</div>
+          <div style={{ fontSize: 12, color: DIM, marginTop: 8 }}>
+            A reading, not a quote. The scope grid below is pre-filled from it — every cell is still yours to change.
+          </div>
+        </SectionCard>
+      )}
 
       {/* toolbar: budget + template */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -312,3 +448,15 @@ export default function BidLevelingPage() {
 }
 const cell: React.CSSProperties = { padding: '7px 10px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' };
 const cellL: React.CSSProperties = { padding: '7px 10px', textAlign: 'left', color: '#CBD5E1', position: 'sticky', left: 0, background: '#141416' };
+
+
+/* useSearchParams needs a Suspense boundary in a client component under the
+   App Router, or the whole route opts out of static rendering with a build
+   warning. */
+export default function BidLevelingPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, color: DIM }}>Loading leveling…</div>}>
+      <BidLevelingBoard />
+    </Suspense>
+  );
+}
