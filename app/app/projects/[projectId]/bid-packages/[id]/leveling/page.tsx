@@ -29,7 +29,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Scales, WarningCircle, CheckCircle, CaretLeft, Trophy, ClockCountdown,
+  Scales, WarningCircle, CheckCircle, CaretLeft, Trophy, ClockCountdown, Sparkle,
 } from '@phosphor-icons/react';
 import { PremiumSurface, SectionCard, StatCard, PremiumEmpty, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 
@@ -53,6 +53,12 @@ type Payload = {
   bids: Bid[];
   scopeLines: Array<{ id: string; code: string; description: string; quantity: number | null; unit: string }>;
   awaiting: Array<{ company: string; status: string }>;
+  analysis: {
+    recommendation: string | null;
+    at: string | null;
+    observations: string[];
+    suggested: Record<string, { gap: number; basis: string | null; excluded: number; clarify: number }>;
+  } | null;
   summary: { received: number; invited: number; low: number | null; high: number | null; spreadPct: number; vsBudget: number | null };
 };
 
@@ -68,6 +74,7 @@ export default function BidLevelingPage() {
   const [error, setError] = useState<string | null>(null);
   const [gaps, setGaps] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
+  const [aiNote, setAiNote] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -96,6 +103,25 @@ export default function BidLevelingPage() {
         body: JSON.stringify({ bidId, gap: Number(String(gaps[bidId] || '').replace(/[^0-9.-]/g, '')) || 0 }),
       });
       await load();
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /* Sage reads each bidder's own words against the scope checklist. It fills in
+     the reading; the deterministic engine in lib/bidleveling does the maths, and
+     the GC decides what to accept. */
+  async function analyse() {
+    setBusy('analyse');
+    setAiNote(null);
+    try {
+      const r = await fetch(`/api/bid-packages/${id}/leveling/analyze`, { method: 'POST' });
+      const d = await r.json().catch(() => ({}));
+      if (d.configured === false) { setAiNote(d.error || 'AI is not configured on this deployment.'); return; }
+      if (!r.ok || d.error) { setAiNote(d.error || 'The analysis could not be completed.'); return; }
+      await load();
+    } catch {
+      setAiNote('The analysis could not be completed.');
     } finally {
       setBusy(null);
     }
@@ -226,6 +252,38 @@ export default function BidLevelingPage() {
           </SectionCard>
         )}
 
+        {/* ── What Sage read ────────────────────────────────────────────────
+            Placed above the table because it changes how the numbers below
+            should be read, and phrased as a suggestion throughout: the GC
+            accepts a figure into the gap column or ignores it. */}
+        {data.analysis && (
+          <SectionCard
+            flat
+            title="Sage read the bids"
+            icon={<Sparkle size={17} weight="duotone" color={GOLD} />}
+          >
+            {data.analysis.recommendation && (
+              <div style={{ fontSize: 14, lineHeight: 1.65, color: TEXT, marginBottom: 12, maxWidth: '72ch' }}>
+                {data.analysis.recommendation}
+              </div>
+            )}
+            {data.analysis.observations.length > 0 && (
+              <ul style={{ margin: '0 0 10px', paddingLeft: 18, color: DIM, fontSize: 13.5, lineHeight: 1.75 }}>
+                {data.analysis.observations.map((o, i) => <li key={i}>{o}</li>)}
+              </ul>
+            )}
+            <div style={{ fontSize: 12, color: DIM }}>
+              A reading, not a quote. Suggested gap figures appear beside each bid — accept one to
+              use it, or type your own.
+              {data.analysis.at ? ` Last run ${new Date(data.analysis.at).toLocaleString()}.` : ''}
+            </div>
+          </SectionCard>
+        )}
+
+        {aiNote && (
+          <div style={{ color: AMBER, fontSize: 13.5, fontWeight: 600, marginBottom: 14 }}>{aiNote}</div>
+        )}
+
         {bids.length === 0 ? (
           <SectionCard>
             <PremiumEmpty
@@ -276,6 +334,30 @@ export default function BidLevelingPage() {
                             }}
                           />
                           {busy === b.id && <span style={{ marginLeft: 8, fontSize: 11, color: DIM }}>saving…</span>}
+                          {(() => {
+                            const sug = data.analysis?.suggested?.[b.id];
+                            if (!sug || !sug.gap || Number(gaps[b.id] || 0) === sug.gap) return null;
+                            return (
+                              <div style={{ marginTop: 6 }}>
+                                <button
+                                  onClick={() => { setGaps((g) => ({ ...g, [b.id]: String(sug.gap) })); setTimeout(() => saveGap(b.id), 0); }}
+                                  title={sug.basis || undefined}
+                                  style={{
+                                    background: 'rgba(200,150,15,0.14)', border: `1px solid rgba(200,150,15,0.4)`,
+                                    color: GOLD, borderRadius: 999, padding: '3px 9px', fontSize: 11,
+                                    fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  Use {money(sug.gap)}
+                                </button>
+                                {sug.excluded > 0 && (
+                                  <div style={{ fontSize: 10.5, color: DIM, marginTop: 3 }}>
+                                    {sug.excluded} line{sug.excluded === 1 ? '' : 's'} excluded
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td style={{ padding: '12px 14px', fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: isLow ? GREEN : TEXT }}>
                           {money(b.adjusted)}
@@ -312,6 +394,14 @@ export default function BidLevelingPage() {
             >
               <CheckCircle size={15} weight="bold" />
               {pkg.levelingComplete ? 'Levelling complete' : busy === 'complete' ? 'Saving…' : 'Mark levelling complete'}
+            </button>
+            <button
+              onClick={analyse}
+              disabled={busy !== null}
+              style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7 }}
+            >
+              <Sparkle size={15} weight="bold" />
+              {busy === 'analyse' ? 'Reading the bids…' : data.analysis ? 'Re-read the bids' : 'Ask Sage to find the gaps'}
             </button>
             <span style={{ color: DIM, fontSize: 12.5 }}>
               Gap values save as you leave each field, and the low bid is recalculated on adjusted totals.

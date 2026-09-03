@@ -56,7 +56,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!pkg) return NextResponse.json({ error: 'Bid package not found' }, { status: 404 });
     const p = pkg as Bid;
 
-    const [subs, invites, items] = await Promise.all([
+    const [subs, invites, items, analysisRow] = await Promise.all([
       db.from('bid_submissions')
         .select('id, company_name, sub_name, contact_email, base_amount, amount, base_bid, scope_gap_amount, scope_gap_flags, adjusted_amount, is_low_bid, leveling_notes, exclusions, inclusions, clarifications, schedule_days, bid_bond_submitted, status, submitted_at')
         .eq('bid_package_id', id).eq('tenant_id', user.tenantId),
@@ -66,6 +66,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       db.from('bid_package_items')
         .select('id, description, title, csi_code, quantity, unit, uom')
         .eq('bid_package_id', id).eq('tenant_id', user.tenantId).order('sort_order'),
+      /* Any stored AI reading. The page renders it as a SUGGESTION beside each
+         bid — the GC accepts a figure into scope_gap_amount or ignores it. */
+      db.from('bid_leveling_analyses')
+        .select('analysis, recommendation, updated_at, created_at')
+        .eq('bid_package_id', id).eq('tenant_id', user.tenantId).maybeSingle(),
     ]);
 
     const bids = ((subs.data || []) as Bid[])
@@ -122,6 +127,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           company: i.company_name || i.sub_name || i.sub_email,
           status: i.response_status || i.status || 'invited',
         })),
+      analysis: analysisRow.data
+        ? {
+            recommendation: (analysisRow.data as Bid).recommendation || null,
+            at: (analysisRow.data as Bid).updated_at || (analysisRow.data as Bid).created_at || null,
+            observations: ((analysisRow.data as Bid).analysis?.observations ?? []) as string[],
+            /* Per-bid suggested gap, keyed by bid id so the row can offer it. */
+            suggested: Object.fromEntries(
+              (((analysisRow.data as Bid).analysis?.reading ?? []) as Bid[])
+                .map((r) => [String(r.bidderId), { gap: Number(r.gapDollars) || 0, basis: r.gapBasis || null, excluded: r.excluded ?? 0, clarify: r.clarify ?? 0 }]),
+            ),
+          }
+        : null,
       summary: {
         received: bids.length,
         invited: allInvites.length,
