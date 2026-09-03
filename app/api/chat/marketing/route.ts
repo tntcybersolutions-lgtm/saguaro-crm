@@ -2,30 +2,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
 import { getPublicSagePrompt } from '@/lib/sage-prompts';
 import { isSageEngineConfigured, SAGE_ENGINE_UNCONFIGURED_MESSAGE } from '@/lib/sage-brain';
+import { marketingChatLimiter } from '@/lib/rate-limit';
 
 const client = new Anthropic();
 
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 3_600_000 });
-    return true;
-  }
-  if (entry.count >= 30) return false;
-  entry.count++;
-  return true;
-}
-
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
-  if (!checkRateLimit(ip)) {
-    return Response.json(
-      { error: 'Message limit reached. Sign up for a free Saguaro account to keep going — no credit card required.' },
-      { status: 429 }
-    );
-  }
+  const limited = marketingChatLimiter.check(req);
+  if (limited) return limited;
 
   try {
     const { messages, memoryContext, styleInstructions } = await req.json();

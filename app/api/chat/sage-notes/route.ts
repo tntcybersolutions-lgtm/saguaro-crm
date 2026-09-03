@@ -1,9 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
+import { publicAiLimiter } from '@/lib/rate-limit';
 
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
+  const limited = publicAiLimiter.check(req);
+  if (limited) return limited;
+
   const { recentMessages, existingNotes, messageCount, identity } = await req.json();
 
   const response = await client.messages.create({

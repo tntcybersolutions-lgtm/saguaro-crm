@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSagePublicPromptV6 } from '@/lib/sage-prompts-v6';
+import { publicAiLimiter } from '@/lib/rate-limit';
 
 interface PublicMessage {
   role: string;
@@ -12,6 +13,9 @@ interface PublicRequestBody {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = publicAiLimiter.check(req);
+  if (limited) return limited;
+
   try {
     const body: PublicRequestBody = await req.json();
 

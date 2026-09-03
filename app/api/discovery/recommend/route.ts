@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { publicAiLimiter } from '@/lib/rate-limit';
 
 /**
  * POST /api/discovery/recommend   (public — no auth required)
@@ -27,6 +28,9 @@ type Rec = {
 };
 
 export async function POST(req: NextRequest) {
+  const limited = publicAiLimiter.check(req);
+  if (limited) return limited;
+
   try {
     const body = await req.json().catch(() => ({}));
     const answers: Record<string, string> = body?.answers ?? {};

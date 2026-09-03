@@ -81,6 +81,61 @@ export const aiLimiter = {
 };
 
 /**
+ * Unauthenticated inference endpoints — the public Sage widget, the discovery
+ * quiz, the notes summarizer. Nobody has signed in, so there is no account to
+ * bill and nothing to revoke: the only thing standing between a curl loop and
+ * the Anthropic invoice is this. Tighter than aiLimiter on purpose, because
+ * aiLimiter's 30/min sits behind a login and these do not.
+ */
+export const publicAiLimiter = {
+  check(req: Request): Response | null {
+    const ip = getClientIP(req);
+    const perMin = checkRateLimit(`public-ai:${ip}`, 8, 60_000);
+    const perHour = checkRateLimit(`public-ai-hr:${ip}`, 60, 3_600_000);
+    const hit = !perMin.allowed ? perMin : !perHour.allowed ? perHour : null;
+    if (!hit) return null;
+    return new Response(
+      JSON.stringify({ error: 'Rate limit exceeded. Please try again shortly.' }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil(hit.resetIn / 1000)),
+        },
+      },
+    );
+  },
+};
+
+/**
+ * The marketing chat on the public site. A deliberately different policy from
+ * publicAiLimiter: a generous hourly allowance and a message that asks for a
+ * signup rather than reading like an error, because hitting this cap is the
+ * point at which a visitor should become a user. Lived inline in the route as
+ * its own Map; it belongs here with every other limit.
+ */
+export const marketingChatLimiter = {
+  check(req: Request): Response | null {
+    const ip = getClientIP(req);
+    const { allowed, resetIn } = checkRateLimit(`marketing:${ip}`, 30, 3_600_000);
+    if (allowed) return null;
+    return new Response(
+      JSON.stringify({
+        error:
+          'Message limit reached. Sign up for a free Saguaro account to keep going — no credit card required.',
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil(resetIn / 1000)),
+        },
+      },
+    );
+  },
+};
+
+/**
  * Pre-configured rate limiter for auth routes (10 requests per minute).
  */
 export const authLimiter = {
