@@ -23,12 +23,12 @@ export async function POST(req: NextRequest) {
     if (!trades || trades.length === 0) {
       const { data: teamData } = await db
         .from('project_team')
-        .select('trade, company')
+        .select('role, company')
         .eq('project_id', project_id)
         .eq('tenant_id', user.tenantId)
-        .not('trade', 'is', null);
+        .not('role', 'is', null);
 
-      activeTrades = [...new Set((teamData || []).map((t: any) => t.trade).filter(Boolean))];
+      activeTrades = [...new Set((teamData || []).map((t: any) => t.role).filter(Boolean))];
     }
 
     // Fetch recent incidents or observations for context

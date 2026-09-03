@@ -9,6 +9,7 @@ import {
 import { trackDocumentGenerated, trackPayAppSubmitted } from '../analytics';
 import { supabaseAdmin } from '../../supabase/admin';
 import { generateLienWaiver } from '../document-templates/lien-waiver-generator';
+import { subsOnProject } from '@/lib/project-subs';
 
 // ─── onDocumentGenerated ──────────────────────────────────────────────────────
 
@@ -137,16 +138,13 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
       .eq('id', (payApp as any).project_id)
       .single();
 
-    const { data: subs } = await supabaseAdmin
-      .from('subcontractors')
-      .select('*')
-      .eq('project_id', (payApp as any).project_id);
+    const subs = await subsOnProject(supabaseAdmin as any, (payApp as any).project_id, (payApp as any).tenant_id);
 
-    for (const sub of (subs as any[]) || []) {
+    for (const sub of subs) {
       const waiverInput = {
         projectId: (payApp as any).project_id,
         waiverType: 'conditional_progress' as const,
-        claimantName: sub.name,
+        claimantName: sub.company_name,
         claimantAddress: sub.address || '',
         ownerName: (project as any)?.owner_entity?.name || 'Owner',
         projectName: (project as any)?.name || 'Project',
@@ -158,12 +156,12 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
 
       const { pdfUrl } = await generateLienWaiver(waiverInput);
 
-      if (sub.primary_email) {
+      if (sub.email) {
         await sendEmail({
-          to: sub.primary_email,
+          to: sub.email,
           subject: `Lien Waiver Request \u2014 ${(project as any)?.name} \u2014 Pay App #${(payApp as any).app_number}`,
           html: lienWaiverRequestEmail({
-            subName: sub.name,
+            subName: sub.company_name,
             projectName: (project as any)?.name || 'Project',
             waiverType: 'conditional_progress',
             amount: sub.contract_amount || 0,

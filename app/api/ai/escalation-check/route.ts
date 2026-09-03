@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
         .eq('tenant_id', user.tenantId)
         .eq('item_type', 'rfi')
         .eq('item_id', item.rfi_id)
-        .eq('resolved', false)
+        .is('resolved_at', null)
         .limit(1);
 
       if (!existing || existing.length === 0) {

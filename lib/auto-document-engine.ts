@@ -14,6 +14,7 @@
 import { createServerClient } from './supabase-server';
 import { createNotification } from './notifications';
 import { must } from '@/lib/db-write';
+import { subsOnProject } from '@/lib/project-subs';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app';
 
@@ -119,11 +120,7 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
     if (!project) return;
 
     // Auto-generate conditional lien waivers for all active subs (idempotent check)
-    const { data: subs } = await client
-      .from('subcontractors')
-      .select('*')
-      .eq('project_id', project.id)
-      .neq('status', 'inactive');
+    const subs = await subsOnProject(client as any, project.id, project.tenant_id);
 
     let waiverCount = 0;
     if (subs && subs.length > 0) {

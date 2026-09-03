@@ -2246,9 +2246,9 @@ export async function POST(req: NextRequest) {
         .order('updated_at', { ascending: false })
         .limit(20),
       db.from('bids')
-        .select('id, project_name, amount, status, due_date, score')
+        .select('id, project_id, bidder_company, trade, amount, status, score, submitted_at')
         .eq('tenant_id', user.tenantId)
-        .order('due_date', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(10),
       db.from('contacts')
         .select('id, name, company, role, email, phone')

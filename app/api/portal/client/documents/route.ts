@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       .select('*')
       .eq('project_id', session.project_id)
       .eq('tenant_id', session.tenant_id)
-      .eq('visible_to_client', true)
+      .eq('status', 'visible')
       .order('category', { ascending: true })
       .order('created_at', { ascending: false });
 

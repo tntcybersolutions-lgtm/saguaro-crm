@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       .eq('sub_id', session.sub_id!)
       .eq('project_id', session.project_id!)
       .eq('tenant_id', session.tenant_id)
-      .order('start_date', { ascending: true });
+      .order('due_date', { ascending: true });
 
     if (error) throw error;
 

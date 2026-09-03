@@ -11,13 +11,35 @@ export async function GET(req: NextRequest) {
     if (!user) return NextResponse.json({ workers: [], source: 'unauth' }, { status: 401 });
 
     const db = createServerClient();
+
+    // A worker belongs to the tenant, not to a project — the same crew moves
+    // between jobs. crew_assignments is what puts a worker on a project on a
+    // date. Filtering workers.project_id named a column that does not exist, so
+    // asking for one project's crew errored and the planner showed nobody.
+    let ids: string[] | null = null;
+    if (projectId) {
+      const { data: assigned, error: aErr } = await db
+        .from('crew_assignments')
+        .select('worker_id')
+        .eq('tenant_id', user.tenantId)
+        .eq('project_id', projectId);
+      if (aErr) throw aErr;
+      ids = [...new Set(((assigned || []) as any[]).map((a) => a.worker_id).filter(Boolean))];
+      // Nobody assigned means nobody on the crew — not "everyone in the tenant".
+      if (ids.length === 0) return NextResponse.json({ workers: [], source: 'live' });
+    }
+
     let query = db.from('workers').select('*').eq('tenant_id', user.tenantId).order('name', { ascending: true });
-    if (projectId) query = query.eq('project_id', projectId);
+    if (ids) query = query.in('id', ids);
     if (trade) query = query.eq('trade', trade);
     const { data, error } = await query;
     if (error) throw error;
     return NextResponse.json({ workers: data || [], source: 'live' });
-  } catch {
+  } catch (e) {
+    // The planner reads `source` to tell an empty crew from a failed load, so an
+    // empty array here is not a silent success — but it was silent in the log,
+    // which is how a broken filter sat unnoticed. Say what happened.
+    console.error('[resource-planning/workers] read failed:', e instanceof Error ? e.message : String(e));
     return NextResponse.json({ workers: [], source: 'error' });
   }
 }

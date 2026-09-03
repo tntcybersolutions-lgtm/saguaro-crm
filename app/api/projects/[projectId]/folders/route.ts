@@ -48,9 +48,10 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const db = createServerClient();
     if (!(await ownsProject(db, params.projectId, user.tenantId))) return apiFail('Project not found', 404);
 
+    // audit-column-refs: project_folders
     const { data, error } = await folders(db)
       .select('id, name, sort_order, seeded_from')
-      .eq('id', params.projectId)
+      .eq('project_id', params.projectId)
       .eq('tenant_id', user.tenantId)
       .order('sort_order', { ascending: true });
 

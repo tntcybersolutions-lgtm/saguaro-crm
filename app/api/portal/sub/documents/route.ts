@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       .select('*')
       .eq('project_id', session.project_id!)
       .eq('tenant_id', session.tenant_id)
-      .contains('visible_to', ['sub'])
+      .or(`status.eq.visible,session_id.eq.${session.id}`)
       .order('created_at', { ascending: false });
     if (category) query = query.eq('category', category);
     const { data: documents, error } = await query;
@@ -96,7 +96,6 @@ export async function POST(req: NextRequest) {
         file_size: file.size,
         status: 'submitted',
         uploaded_by: session.sub_company || 'sub',
-        visible_to: ['sub', 'gc'],
       } as never)
       .select()
       .single();

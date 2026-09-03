@@ -93,6 +93,23 @@ for (const f of walk('app/api').concat(walk('lib'))) {
      further up the file — three findings that were nothing of the sort. A
      dynamic table cannot be checked, but it must still stop the previous one. */
   const froms = [...src.matchAll(/\.from\(\s*(?:['"`](\w+)['"`]\s*)?/g)];
+
+  /* A query can also start at a local helper — `folders(db).select(…)` — where
+     the .from() literal sits in the helper's body, pages earlier. The window
+     then runs on from whatever .from() came last and blames the wrong table.
+     An explicit annotation rebinds it:
+
+       // audit-column-refs: project_folders
+       const { data } = await folders(db).select('id, name, sort_order')
+
+     This is not a mute. It ASSERTS the table, and every column after it is
+     checked against that table — a wrong annotation produces findings, not
+     silence. */
+  for (const a of src.matchAll(/\/[/*]\s*audit-column-refs:\s*(\w+)/g)) {
+    froms.push(Object.assign([a[0], a[1]], { index: a.index }));
+  }
+  froms.sort((x, y) => x.index - y.index);
+
   for (let i = 0; i < froms.length; i++) {
     const table = froms[i][1];
     const cols = table ? schema.get(table) : null;
@@ -104,10 +121,15 @@ for (const f of walk('app/api').concat(walk('lib'))) {
     const chain = src.slice(start, stop);
 
     /* Filters naming a literal column. */
-    for (const c of chain.matchAll(/\.(eq|neq|gt|gte|lt|lte|like|ilike|is|in|contains|order)\(\s*['"`]([\w.]+)['"`]/g)) {
+    for (const c of chain.matchAll(/\.(eq|neq|gt|gte|lt|lte|like|ilike|is|in|contains|order)\(\s*['"`]([\w.]+)['"`](\s+as\s+\w+)?/g)) {
       const col = c[2];
       /* A dotted reference is a filter on an embedded table — out of scope. */
       if (col.includes('.')) continue;
+      /* `.eq('user_id' as never, …)` — the cast exists BECAUSE the column is
+         not in the types. That is an author saying "I know", and the call sites
+         that write it pair it with a 42703 check and a fallback path. Flagging
+         it is flagging the handling, not the hazard. */
+      if (c[3]) continue;
       if (!cols.has(col)) {
         problems.push(
           `${rel}:${lineAt(src, start + c.index)}\n      .${c[1]}('${col}') — ${table} has no column "${col}"\n      the client takes a string, so nothing here fails until it runs`,

@@ -280,7 +280,7 @@ export async function GET(
           items.push({ type: 'insurance', title: 'COI Expiring Soon', subtitle: `${coi.sub_name} — expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`, urgency: daysLeft <= 7 ? 'high' : 'medium', actionUrl: `/app/projects/${coi.project_id}/insurance`, actionLabel: 'Request Renewal' });
         }
       }
-      const { data: notifications } = await supabase.from('notifications').select('id, type, title, message, entity_id, priority').eq('read', false).order('created_at', { ascending: false }).limit(5);
+      const { data: notifications } = await supabase.from('notifications').select('id, type, title, message, project_id, priority').eq('read', false).order('created_at', { ascending: false }).limit(5);
       if (notifications && notifications.length > 0) {
         for (const n of notifications) {
           const nType = n.type as ActionItem['type'];
@@ -288,7 +288,7 @@ export async function GET(
           /* notifications.priority, not .urgency — the column is priority and
              the select above was asking for one that does not exist, so this
              read was always undefined and every action item came out 'medium'. */
-          items.push({ type: nType, title: n.title ?? 'Notification', subtitle: n.message ?? '', urgency: (n.priority as ActionItem['urgency']) ?? 'medium', actionUrl: `/app/projects/${n.entity_id ?? 'unknown'}`, actionLabel: 'View' });
+          items.push({ type: nType, title: n.title ?? 'Notification', subtitle: n.message ?? '', urgency: (n.priority as ActionItem['urgency']) ?? 'medium', actionUrl: `/app/projects/${n.project_id ?? 'unknown'}`, actionLabel: 'View' });
         }
       }
       items.sort((a, b) => (URGENCY_ORDER[a.urgency] ?? 2) - (URGENCY_ORDER[b.urgency] ?? 2));
@@ -435,7 +435,7 @@ export async function GET(
     const projectId = searchParams.get('projectId') || '';
     try {
       // Tenant comes from the authed session, NEVER a client-supplied ?tenantId=.
-      let q = supabaseAdmin.from('autopilot_alerts').select('*').eq('dismissed', false).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }).limit(50);
+      let q = supabaseAdmin.from('autopilot_alerts').select('*').is('dismissed_at', null).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }).limit(50);
       if (projectId) q = q.eq('project_id', projectId);
       const { data, error } = await q;
       if (error) throw error;
@@ -455,10 +455,10 @@ export async function GET(
     const projectId = searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId query param required' }, { status: 400 });
     try {
-      const { data, error } = await supabaseAdmin.from('takeoffs').select('id, project_id, status, materials').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      const { data, error } = await supabaseAdmin.from('takeoffs').select('id, project_id, status, extracted_line_items').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (error) throw error;
       if (!data) return NextResponse.json({ takeoff: null });
-      return NextResponse.json({ takeoff: { id: data.id, projectId: data.project_id, status: data.status, materials: data.materials ?? [] } });
+      return NextResponse.json({ takeoff: { id: data.id, projectId: data.project_id, status: data.status, materials: data.extracted_line_items ?? [] } });
     } catch {
       return NextResponse.json({ takeoff: null });
     }

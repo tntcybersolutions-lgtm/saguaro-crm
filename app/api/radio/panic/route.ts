@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     try {
       const sid = process.env.TWILIO_ACCOUNT_SID, tok = process.env.TWILIO_AUTH_TOKEN, from = process.env.TWILIO_FROM;
       if (sid && tok && from && userIds.length) {
-        const { data: users } = await db.from('users').select('id, phone').in('id', userIds);
+        const { data: users } = await db.from('profiles').select('id, phone').eq('tenant_id', t).in('id', userIds);
         const phones = ((users || []) as any[]).map((u) => u.phone).filter(Boolean).slice(0, 25);
         const auth = Buffer.from(`${sid}:${tok}`).toString('base64');
         for (const to of phones) {

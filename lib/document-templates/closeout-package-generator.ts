@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
 import { getProjectContext, saveDocument, mergePDFs, fmtCurrency } from '../pdf-engine';
 import { brandDoc } from './report-theme';
+import { subsOnProject } from '@/lib/project-subs';
 
 export interface CloseoutItem {
   id: string;
@@ -46,10 +47,7 @@ export async function getCloseoutChecklist(
       .select('waiver_type')
       .eq('project_id', projectId);
 
-    const { data: subs } = await supabaseAdmin
-      .from('subcontractors')
-      .select('id, company_name')
-      .eq('project_id', projectId);
+    const subs = await subsOnProject(supabaseAdmin as any, projectId);
 
     const docTypes = new Set((generatedDocs || []).map((d: any) => d.doc_type));
     const allSubsHaveFinalWaivers =
