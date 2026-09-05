@@ -24,7 +24,20 @@ import Anthropic from '@anthropic-ai/sdk';
 import { Resend } from 'resend';
 
 import { supabaseAdmin } from './supabase/admin';
+import { getUser } from './lib/supabase-server';
 import { getProjectContext } from './project-context';
+
+/**
+ * Resolves the caller's tenant from their session.
+ *
+ * These handlers previously read tenantId out of the request body or query
+ * string with no authentication, behind a catch-all route that adds none.
+ */
+async function requireTenant(request: NextRequest): Promise<string | NextResponse> {
+  const user = await getUser(request);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  return user.tenantId;
+}
 
 const client  = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
@@ -64,7 +77,9 @@ function getRequiredLimits(contractAmount: number): {
 
 export async function requestCOIHandler(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-  const tenantId    = String(body['tenantId']    ?? '');
+  const tenant = await requireTenant(req);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId    = tenant;
   const projectId   = String(body['projectId']   ?? '');
   const vendorName  = String(body['vendorName']  ?? '');
   const vendorEmail = String(body['vendorEmail'] ?? '');
@@ -336,7 +351,9 @@ export async function uploadCOIHandler(req: NextRequest) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function getCOIListHandler(req: NextRequest, projectId: string) {
-  const tenantId = req.nextUrl.searchParams.get('tenantId');
+  const tenant = await requireTenant(req);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
   if (!tenantId) return NextResponse.json({ error: 'tenantId required' }, { status: 400 });
 
   const { data } = await supabaseAdmin

@@ -92,6 +92,46 @@ function statementAt(src, idx) {
   return src.slice(idx, idx + 4000);
 }
 
+// ---------- guard detection ----------
+// A guard must be CALLED, not merely mentioned. lib/supabase-server.ts defines
+// getUser and lib/auth-helper.ts defines requireAuth, so matching the bare name
+// would mark every file that imports a Supabase client as authenticated — a
+// false negative that hides exactly the holes this script exists to find.
+const hasGuard = (src) =>
+  /await\s+getUser\s*\(/.test(src) ||
+  /await\s+requireAuth\s*\(/.test(src) ||
+  // app/api/[...path] resolves the caller itself via a bearer token
+  /await\s+tenantFromToken\s*\(/.test(src) ||
+  /await\s+\w+\.auth\.getUser\s*\(/.test(src);
+
+// Never treat the definition sites as evidence of a guard.
+const GUARD_DEFINITION = /[/\\]lib[/\\](supabase-server|auth-helper)(\.tsx?)?$/;
+
+/**
+ * True when a module this file imports performs the guard instead. One level
+ * deep, local paths only — enough for the dispatcher pattern
+ * (app/api/billing/[...path] -> stripe-billing.ts) without walking the graph.
+ */
+function importsGuard(file, src) {
+  const dir = path.dirname(file);
+  for (const m of src.matchAll(/from\s+['"](\.{1,2}\/[^'"]+|@\/[^'"]+)['"]/g)) {
+    const spec = m[1];
+    const base = spec.startsWith('@/')
+      ? path.join(ROOT, spec.slice(2))
+      : path.resolve(dir, spec);
+    if (GUARD_DEFINITION.test(base)) continue;
+    for (const ext of ['.ts', '.tsx', '/index.ts', '/index.tsx']) {
+      const p = base + ext;
+      if (!fs.existsSync(p)) continue;
+      try {
+        if (hasGuard(fs.readFileSync(p, 'utf8'))) return true;
+      } catch { /* unreadable module — treat as unguarded */ }
+      break;
+    }
+  }
+  return false;
+}
+
 // ---------- route table ----------
 const routes = new Set();
 for (const f of files) {
@@ -129,7 +169,12 @@ for (const f of files) {
     // Two valid guards in this codebase: getUser(req) from lib/supabase-server,
     // and requireAuth() from lib/auth-helper (which also resolves tenant_id
     // from profiles and returns a 401 NextResponse the caller returns).
-    const guarded = /getUser\s*\(/.test(src) || /requireAuth\s*\(/.test(src);
+    //
+    // Several routes are thin dispatchers that delegate straight to a module —
+    // app/api/billing/[...path] -> stripe-billing.ts, for instance — so the
+    // guard lives one file away. Follow local imports one level before calling
+    // a route unauthenticated.
+    const guarded = hasGuard(src) || importsGuard(f, src);
     if (handlers && !guarded && !isPublic) {
       add("P0", "unauthenticated-route", f, 1, `${handlers} handler(s), no getUser() guard`);
     }

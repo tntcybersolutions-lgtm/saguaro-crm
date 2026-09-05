@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomBytes } from 'node:crypto';
 import { Resend } from 'resend';
 import { supabaseAdmin } from './supabase/admin';
+import { getUser } from './lib/supabase-server';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Config
@@ -43,6 +44,18 @@ function resend(): Resend | null {
 }
 function ok(d: Record<string, unknown>, s = 200) { return NextResponse.json(d, { status: s }); }
 function err(m: string, s = 400) { return NextResponse.json({ error: m }, { status: s }); }
+
+/**
+ * Resolves the caller's tenant from their session.
+ *
+ * These handlers previously read tenantId out of the request body or query
+ * string with no authentication, behind a catch-all route that adds none.
+ */
+async function requireTenant(request: NextRequest): Promise<string | NextResponse> {
+  const user = await getUser(request);
+  if (!user) return err('Unauthorized', 401);
+  return user.tenantId;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STEP 2 — Provision the reseller account after payment
@@ -120,7 +133,9 @@ export async function provisionResellerAccount(opts: {
 
 export async function provisionResellerHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const tenantId    = String(body?.tenantId    ?? '');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId    = tenant;
   const email       = String(body?.email       ?? '').toLowerCase().trim();
   const companyName = String(body?.companyName ?? '').trim();
   const planId      = String(body?.planId      ?? 'white_label_growth');
@@ -148,7 +163,9 @@ export async function saveBrandingHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
   if (!body?.tenantId) return err('tenantId required');
 
-  const tenantId = String(body.tenantId);
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
 
   // Validate color format
   const hexRegex = /^#[0-9A-Fa-f]{6}$/;
@@ -206,7 +223,9 @@ export async function saveBrandingHandler(request: NextRequest) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function dnsInstructionsHandler(request: NextRequest) {
-  const tenantId = request.nextUrl.searchParams.get('tenantId');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
   if (!tenantId) return err('tenantId required');
 
   const { data: reseller } = await supabaseAdmin
@@ -254,7 +273,9 @@ export async function dnsInstructionsHandler(request: NextRequest) {
 
 export async function verifyDnsHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const tenantId = String(body?.tenantId ?? '');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
   if (!tenantId) return err('tenantId required');
 
   const { data: reseller } = await supabaseAdmin
@@ -398,7 +419,9 @@ async function triggerSslProvisioning(tenantId: string, domain: string) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function statusHandler(request: NextRequest) {
-  const tenantId = request.nextUrl.searchParams.get('tenantId');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
   if (!tenantId) return err('tenantId required');
 
   const { data: reseller } = await supabaseAdmin

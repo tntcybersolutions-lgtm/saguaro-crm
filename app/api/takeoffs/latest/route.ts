@@ -1,10 +1,20 @@
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
-import { ok, badRequest, serverError } from '@/lib/api-response';
+import { createServerClient, getUser } from '@/lib/supabase-server';
+import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response';
 
 export const dynamic = 'force-dynamic';
 
+/* Latest completed takeoff for a project.
+ *
+ * Had no auth guard and no tenant filter on the service role client, so any
+ * caller who knew or guessed a project id could read that project's takeoff
+ * and its material pricing.
+ */
+
 export async function GET(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return unauthorized();
+
   try {
     const supabase = createServerClient();
     const { searchParams } = new URL(req.url);
@@ -15,6 +25,7 @@ export async function GET(req: NextRequest) {
     const { data: takeoff, error } = await supabase
       .from('takeoffs')
       .select('*')
+      .eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .eq('status', 'complete')
       .order('created_at', { ascending: false })
@@ -29,6 +40,7 @@ export async function GET(req: NextRequest) {
     const { data: materials } = await supabase
       .from('takeoff_materials')
       .select('*')
+      .eq('tenant_id', user.tenantId)
       .eq('takeoff_id', takeoff.id)
       .order('sort_order', { ascending: true });
 

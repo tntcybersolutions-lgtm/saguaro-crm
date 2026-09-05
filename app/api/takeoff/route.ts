@@ -1,10 +1,20 @@
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
-import { ok, serverError } from '@/lib/api-response';
+import { createServerClient, getUser } from '@/lib/supabase-server';
+import { ok, unauthorized, serverError } from '@/lib/api-response';
 
 export const dynamic = 'force-dynamic';
 
+/* Takeoff list.
+ *
+ * This route had no auth guard and no tenant filter while using the service
+ * role client, so an anonymous GET with no projectId returned every takeoff in
+ * the database across every tenant — including material pricing.
+ */
+
 export async function GET(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return unauthorized();
+
   try {
     const supabase = createServerClient();
     const { searchParams } = new URL(req.url);
@@ -15,6 +25,7 @@ export async function GET(req: NextRequest) {
     let query = supabase
       .from('takeoffs')
       .select('*')
+      .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false })
       .limit(limit);
 
@@ -35,6 +46,7 @@ export async function GET(req: NextRequest) {
       const { data: projects } = await supabase
         .from('projects')
         .select('id, name')
+        .eq('tenant_id', user.tenantId)
         .in('id', projectIds);
       if (projects) {
         projectMap = Object.fromEntries(projects.map((p: { id: string; name: string }) => [p.id, p.name]));

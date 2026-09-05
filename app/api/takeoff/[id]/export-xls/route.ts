@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 import * as XLSX from 'xlsx';
 
 export const runtime = 'nodejs';
@@ -18,9 +18,14 @@ const CSI_DIVISION_NAMES: Record<string, string> = {
 };
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Was unauthenticated on the service role client: any caller with a takeoff
+  // id could download another tenant's priced takeoff as a spreadsheet.
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { id: takeoffId } = await params;
   const supabase = createServerClient();
 
@@ -28,6 +33,7 @@ export async function GET(
   const { data: takeoff, error: tErr } = await supabase
     .from('takeoffs')
     .select('*')
+    .eq('tenant_id', user.tenantId)
     .eq('id', takeoffId)
     .single();
 
@@ -39,6 +45,7 @@ export async function GET(
   const { data: materials } = await supabase
     .from('takeoff_materials')
     .select('*')
+    .eq('tenant_id', user.tenantId)
     .eq('takeoff_id', takeoffId)
     .order('sort_order', { ascending: true });
 

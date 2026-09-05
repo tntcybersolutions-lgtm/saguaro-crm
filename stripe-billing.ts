@@ -31,6 +31,7 @@
 import Stripe from 'stripe';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from './supabase/admin';
+import { getUser } from './lib/supabase-server';
 import { Resend } from 'resend';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -61,6 +62,19 @@ function err(msg: string, status = 400) {
   return NextResponse.json({ error: msg }, { status });
 }
 
+/**
+ * Resolves the caller's tenant from their session.
+ *
+ * These handlers previously read tenantId out of the request body or query
+ * string with no authentication, so anyone could act on anyone's billing.
+ * The webhook is the one legitimate exception and does not use this.
+ */
+async function requireTenant(request: NextRequest): Promise<string | NextResponse> {
+  const user = await getUser(request);
+  if (!user) return err('Unauthorized', 401);
+  return user.tenantId;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Plan → Stripe price ID mapping (prices live in DB + env fallback)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -89,11 +103,13 @@ export async function createCheckoutHandler(request: NextRequest) {
 
   const planId   = String(body.planId   ?? '');
   const interval = String(body.interval ?? 'monthly') as 'monthly' | 'annual';
-  const tenantId = String(body.tenantId ?? '');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
   const email    = String(body.email    ?? '').toLowerCase().trim();
 
-  if (!planId || !tenantId || !email) {
-    return err('planId, tenantId, and email are required');
+  if (!planId || !email) {
+    return err('planId and email are required');
   }
 
   const priceId = await getStripePriceId(planId, interval);
@@ -403,8 +419,9 @@ async function handleInvoiceFailed(invoice: Stripe.Invoice) {
 
 export async function billingPortalHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const tenantId = String(body?.tenantId ?? '');
-  if (!tenantId) return err('tenantId required');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
 
   const { data: sub } = await supabaseAdmin
     .from('subscriptions')
@@ -429,8 +446,9 @@ export async function billingPortalHandler(request: NextRequest) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function getSubscriptionHandler(request: NextRequest) {
-  const tenantId = request.nextUrl.searchParams.get('tenantId');
-  if (!tenantId) return err('tenantId required');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
 
   const { data: sub } = await supabaseAdmin
     .from('subscriptions')
@@ -477,8 +495,9 @@ export async function getSubscriptionHandler(request: NextRequest) {
 
 export async function cancelHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const tenantId = String(body?.tenantId ?? '');
-  if (!tenantId) return err('tenantId required');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId = tenant;
 
   const { data: sub } = await supabaseAdmin
     .from('subscriptions')
@@ -554,11 +573,13 @@ export async function cancelHandler(request: NextRequest) {
 
 export async function changePlanHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const tenantId    = String(body?.tenantId    ?? '');
+  const tenant = await requireTenant(request);
+  if (typeof tenant !== 'string') return tenant;
+  const tenantId    = tenant;
   const newPlanId   = String(body?.newPlanId   ?? '');
   const newInterval = (String(body?.newInterval ?? 'monthly')) as 'monthly' | 'annual';
 
-  if (!tenantId || !newPlanId) return err('tenantId and newPlanId are required');
+  if (!newPlanId) return err('newPlanId is required');
 
   const { data: sub } = await supabaseAdmin
     .from('subscriptions')
