@@ -51,7 +51,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Replace SOV line items if provided
     if (Array.isArray(body.lineItems)) {
-      await db.from('schedule_of_values').delete().eq('pay_app_id', id);
+      await db.from('schedule_of_values').delete().eq('tenant_id', user.tenantId).eq('pay_app_id', id);
       if (body.lineItems.length > 0) {
         const { error: liErr } = await db.from('schedule_of_values').insert(
           body.lineItems.map((item: any, i: number) => ({
@@ -126,7 +126,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const db = createServerClient();
     // Remove SOV child rows first, then the pay app (tenant-scoped).
-    await db.from('schedule_of_values').delete().eq('pay_app_id', id);
+    await db.from('schedule_of_values').delete().eq('tenant_id', user.tenantId).eq('pay_app_id', id);
     const { error } = await db
       .from('pay_applications')
       .delete()

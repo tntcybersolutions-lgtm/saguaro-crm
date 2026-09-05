@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
 
     await supabase
       .from('sage_trigger_events')
-      .update({ insight_id: insightRow.id })
+      .update({ insight_id: insightRow.id }).eq('tenant_id', user.tenantId)
       .eq('id', triggerRow.id);
 
     return NextResponse.json({ success: true, insightCreated: true });

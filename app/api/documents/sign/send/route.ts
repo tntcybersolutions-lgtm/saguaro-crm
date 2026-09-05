@@ -30,12 +30,12 @@ export async function POST(req: NextRequest) {
         token: newToken,
         status: 'pending',
         sent_at: new Date().toISOString(),
-      })
+      }).eq('tenant_id', user.tenantId)
       .eq('id', existing.id);
 
     await db
       .from('document_signatures')
-      .update({ status: 'pending' })
+      .update({ status: 'pending' }).eq('tenant_id', user.tenantId)
       .eq('id', body.resend_signature_id);
 
     return NextResponse.json({ success: true, resent: true });

@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
               sync_frequency: body.sync_frequency ?? 'manual',
             },
             updated_at: new Date().toISOString(),
-          })
+          }).eq('tenant_id', user.tenantId)
           .eq('id', existing.id);
       } else {
         await db.from('integrations').insert({

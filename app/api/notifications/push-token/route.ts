@@ -56,7 +56,7 @@ export async function DELETE(req: NextRequest) {
     const db = createServerClient();
     const { error } = await db
       .from('push_tokens')
-      .delete()
+      .delete().eq('tenant_id', user.tenantId)
       .eq('user_id', user.id)
       .eq('token', token);
 

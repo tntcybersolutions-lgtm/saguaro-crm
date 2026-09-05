@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from('correspondence')
-      .update({ ...body, updated_at: new Date().toISOString() })
+      .update({ ...body, updated_at: new Date().toISOString() }).eq('tenant_id', user.tenantId)
       .eq('id', params.id)
       .eq('project_id', params.projectId)
       .select()
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
         correspondence_id: params.id,
         read_by: user.email,
         read_at: new Date().toISOString(),
-      });
+      }).eq('tenant_id', user.tenantId);
     if (error) return NextResponse.json({ success: true });
     return NextResponse.json({ success: true });
   } catch {

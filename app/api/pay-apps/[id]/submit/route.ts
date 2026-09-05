@@ -10,7 +10,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const db = createServerClient();
     const { error } = await db
       .from('pay_applications')
-      .update({ status: 'submitted', submitted_date: new Date().toISOString().split('T')[0] })
+      .update({ status: 'submitted', submitted_date: new Date().toISOString().split('T')[0] }).eq('tenant_id', user.tenantId)
       .eq('id', id);
     if (error) throw error;
     onPayAppSubmitted(id).catch(console.error);

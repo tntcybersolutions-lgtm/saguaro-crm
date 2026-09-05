@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }).select().single();
     if (error) throw error;
     // Update last_contact_date on the lead
-    await supabase.from('lead_pipeline').update({ last_contact_date: new Date().toISOString().split('T')[0], updated_at: new Date().toISOString() }).eq('id', params.id);
+    await supabase.from('lead_pipeline').update({ last_contact_date: new Date().toISOString().split('T')[0], updated_at: new Date().toISOString() }).eq('tenant_id', user.tenantId).eq('id', params.id);
     return NextResponse.json({ activity: data }, { status: 201 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Failed';

@@ -5,6 +5,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const db = createServerClient();
 
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     ]);
 
     // Update pay app with PDF URLs
-    await db.from('pay_applications').update({ g702_pdf_url: g702Url, g703_pdf_url: g703Url }).eq('id', body.payAppId);
+    await db.from('pay_applications').update({ g702_pdf_url: g702Url, g703_pdf_url: g703Url }).eq('tenant_id', user.tenantId).eq('id', body.payAppId);
 
     return NextResponse.json({ g702Url, g703Url, success: true });
   } catch {

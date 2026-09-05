@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     );
     const { error } = await supabase
       .from('bills')
-      .update({ status: 'Approved', approved_at: new Date().toISOString() })
+      .update({ status: 'Approved', approved_at: new Date().toISOString() }).eq('tenant_id', user.tenantId)
       .eq('id', params.id);
     if (error) throw error;
     return NextResponse.json({ success: true });

@@ -194,7 +194,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
           tag,
           created_at: new Date().toISOString(),
         }));
-        await supabase.from('photo_tags').upsert(tagRecords, { onConflict: 'photo_id,tag' });
+        await supabase.from('photo_tags').upsert(tagRecords, { onConflict: 'photo_id,tag' }).eq('tenant_id', user.tenantId);
       }
     }
 
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
         entity_id,
         linked_by: user.email,
         created_at: new Date().toISOString(),
-      }, { onConflict: 'photo_id,entity_type,entity_id' });
+      }, { onConflict: 'photo_id,entity_type,entity_id' }).eq('tenant_id', user.tenantId);
     }
 
     return NextResponse.json({

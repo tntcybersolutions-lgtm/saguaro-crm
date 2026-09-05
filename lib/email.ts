@@ -4,6 +4,8 @@
  * Graceful fallback to console.log when RESEND_API_KEY is not set
  */
 import { Resend } from 'resend';
+import { signToken, DAY_MS } from '@/lib/signed-token';
+import { UNSUBSCRIBE_PURPOSE } from '@/lib/unsubscribe';
 
 const FROM = process.env.EMAIL_FROM || 'Saguaro CRM <noreply@saguarocrm.com>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguaro-crm-rho.vercel.app';
@@ -29,7 +31,7 @@ function layout(body: string): string {
 <tr><td style="background:#f4f4f5;padding:16px 32px;border-top:1px solid #e5e7eb;">
   <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
     &copy; ${new Date().getFullYear()} Saguaro CRM &mdash; All rights reserved.<br>
-    <a href="${APP_URL}/unsubscribe" style="color:#9ca3af;">Unsubscribe</a> &middot;
+    <a href="${APP_URL}/unsubscribe?token=__UNSUB_TOKEN__" style="color:#9ca3af;">Unsubscribe</a> &middot;
     <a href="${APP_URL}" style="color:#9ca3af;">saguarocrm.com</a>
   </p>
 </td></tr>
@@ -65,10 +67,26 @@ async function send(to: string | string[], subject: string, html: string): Promi
     console.log(`[Email SKIPPED — no RESEND_API_KEY] To: ${to} | Subject: ${subject}`);
     return;
   }
-  try {
-    await resend.emails.send({ from: FROM, to: Array.isArray(to) ? to : [to], subject, html });
-  } catch (err) {
-    console.error('[Email] Send failed:', err);
+  // One send per recipient: each needs its own unsubscribe token, and it keeps
+  // co-recipients from seeing each other.
+  const recipients = Array.isArray(to) ? to : [to];
+  for (const recipient of recipients) {
+    let body = html;
+    try {
+      body = html.replace(
+        /__UNSUB_TOKEN__/g,
+        encodeURIComponent(signToken(UNSUBSCRIBE_PURPOSE, recipient, 365 * DAY_MS)),
+      );
+    } catch (err) {
+      // Missing SAGUARO_API_SECRET must not stop transactional mail going out.
+      console.error('[Email] unsubscribe token unavailable:', err instanceof Error ? err.message : err);
+      body = html.replace(/\?token=__UNSUB_TOKEN__/g, '');
+    }
+    try {
+      await resend.emails.send({ from: FROM, to: [recipient], subject, html: body });
+    } catch (err) {
+      console.error('[Email] Send failed:', err);
+    }
   }
 }
 

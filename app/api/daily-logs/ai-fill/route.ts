@@ -169,7 +169,7 @@ Return this exact JSON structure:
 
   let logId: string
   if (existing?.id) {
-    await supabase.from('daily_logs').update(logInsert).eq('id', existing.id)
+    await supabase.from('daily_logs').update(logInsert).eq('tenant_id', tenantId).eq('id', existing.id)
     logId = existing.id
   } else {
     const { data: newLog, error: logErr } = await supabase

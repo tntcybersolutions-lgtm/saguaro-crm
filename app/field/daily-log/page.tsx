@@ -14,6 +14,8 @@ import { fieldFetch } from '@/lib/field-fetch';
 import ErrorBanner from '@/components/field/ErrorBanner';
 import EmptyState from '@/components/field/EmptyState';
 import { useAutoSave, getDraft } from '@/hooks/useAutoSave';
+import FieldPageHeader from '../FieldPageHeader';
+import { scopedFieldIcon } from '../field-icons';
 import DraftRestoredBanner from '@/components/field/DraftRestoredBanner';
 
 

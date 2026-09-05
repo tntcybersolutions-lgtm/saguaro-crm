@@ -6,6 +6,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json().catch(() => ({}));
     const db = createServerClient();
 
@@ -16,7 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         rejected_by: user?.id,
         rejected_at: new Date().toISOString(),
         rejection_reason: body.reason || null,
-      })
+      }).eq('tenant_id', user.tenantId)
       .eq('id', id)
       .select('*, projects(*)')
       .single();

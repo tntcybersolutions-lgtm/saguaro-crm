@@ -8,7 +8,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const body = await req.json();
     const db = createServerClient();
-    const { data, error } = await db.from('change_orders').update(body).eq('id', id).select().single();
+    const { data, error } = await db.from('change_orders').update(body).eq('tenant_id', user.tenantId).eq('id', id).select().single();
     if (error) throw error;
     return NextResponse.json({ changeOrder: data });
   } catch {

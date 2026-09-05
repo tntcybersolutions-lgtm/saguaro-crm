@@ -10,7 +10,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
     const allowed = ['ticket_number','waste_date','waste_type','disposal_method','quantity','unit','hauler_name','hauler_ticket','destination_facility','cost','recycled','diverted','manifest_number','notes','photos'];
     for (const k of allowed) if (body[k] !== undefined) updates[k] = body[k];
-    const { data, error } = await supabase.from('waste_tracking').update(updates).eq('id', params.id).eq('project_id', params.projectId).select().single();
+    const { data, error } = await supabase.from('waste_tracking').update(updates).eq('tenant_id', user.tenantId).eq('id', params.id).eq('project_id', params.projectId).select().single();
     if (error) throw error;
     return NextResponse.json({ record: data });
   } catch (e: unknown) {

@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
           status: 'active',
           settings: settings || {},
           updated_at: new Date().toISOString(),
-        })
+        }).eq('tenant_id', user.tenantId)
         .eq('id', existing.id)
         .select()
         .single();

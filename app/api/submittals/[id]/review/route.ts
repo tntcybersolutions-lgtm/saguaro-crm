@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         reviewer_notes: notes || null,
         reviewed_by: user.email,
         reviewed_at: new Date().toISOString(),
-      })
+      }).eq('tenant_id', user.tenantId)
       .eq('id', params.id)
       .select()
       .single();

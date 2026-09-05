@@ -136,7 +136,7 @@ Return this exact JSON structure:
 
   let certId: string
   if (existing?.id) {
-    await supabase.from('subcontractor_insurance').update(insuranceRecord).eq('id', existing.id)
+    await supabase.from('subcontractor_insurance').update(insuranceRecord).eq('tenant_id', tenantId).eq('id', existing.id)
     certId = existing.id
   } else {
     const { data: newCert, error: insErr } = await supabase

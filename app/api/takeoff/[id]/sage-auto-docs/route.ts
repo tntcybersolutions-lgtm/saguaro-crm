@@ -11,7 +11,7 @@
  * All fields are populated with correct project name, dates, and trade-specific content.
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 
@@ -60,6 +60,7 @@ export async function GET(
   const encoder = new TextEncoder();
   const supabase = createServerClient();
   const user = await getUser(req).catch(() => null);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id: takeoffId } = await params;
 
   const stream = new ReadableStream({
@@ -247,8 +248,8 @@ Rules:
         if (existingPkgs && existingPkgs.length > 0) {
           send('progress', { step: 3, pct: 32, message: `Replacing ${existingPkgs.length} existing packages...` });
           const existingIds = existingPkgs.map((p: { id: string }) => p.id);
-          await supabase.from('bid_package_items').delete().in('bid_package_id', existingIds);
-          await supabase.from('bid_packages').delete().eq('project_id', takeoff.project_id);
+          await supabase.from('bid_package_items').delete().eq('tenant_id', user.tenantId).in('bid_package_id', existingIds);
+          await supabase.from('bid_packages').delete().eq('tenant_id', user.tenantId).eq('project_id', takeoff.project_id);
         }
 
         send('progress', { step: 3, pct: 35, message: `Creating ${divisions.length} bid packages in database...` });
@@ -377,7 +378,7 @@ Rules:
 
               await supabase
                 .from('bid_packages')
-                .update({ jacket_pdf_url: pdfUrl })
+                .update({ jacket_pdf_url: pdfUrl }).eq('tenant_id', user.tenantId)
                 .eq('id', pkg.id);
 
               jacketsGenerated++;

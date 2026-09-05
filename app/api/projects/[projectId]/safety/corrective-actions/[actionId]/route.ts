@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     // Try dedicated table first
     const { data, error } = await supabase
       .from('safety_corrective_actions')
-      .update(updates)
+      .update(updates).eq('tenant_id', user.tenantId)
       .eq('id', params.actionId)
       .eq('project_id', params.projectId)
       .select()
@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
       // Fall back to safety_incidents table
       const fallback = await supabase
         .from('safety_incidents')
-        .update(updates)
+        .update(updates).eq('tenant_id', user.tenantId)
         .eq('id', params.actionId)
         .eq('project_id', params.projectId)
         .select()

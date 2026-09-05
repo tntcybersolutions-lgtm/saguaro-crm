@@ -28,7 +28,7 @@ export async function GET(
 
     // Increment view count (fire and forget)
     db.from('trade_knowledge')
-      .update({ view_count: (data.view_count || 0) + 1 })
+      .update({ view_count: (data.view_count || 0) + 1 }).eq('tenant_id', user.tenantId)
       .eq('id', id)
       .then(() => { /* non-blocking */ });
 

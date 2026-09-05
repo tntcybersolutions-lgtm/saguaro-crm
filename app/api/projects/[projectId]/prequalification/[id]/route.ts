@@ -11,9 +11,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     const allowed = ['name','description','questions','scoring_criteria','required_documents','auto_qualify_threshold','status','answers','documents','score','reviewed_by','reviewed_at','review_notes'];
     for (const k of allowed) if (body[k] !== undefined) updates[k] = body[k];
     // Try forms first, then submissions
-    let { data, error } = await supabase.from('prequalification_forms').update(updates).eq('id', params.id).select().single();
+    let { data, error } = await supabase.from('prequalification_forms').update(updates).eq('tenant_id', user.tenantId).eq('id', params.id).select().single();
     if (error) {
-      const res = await supabase.from('prequalification_submissions').update(updates).eq('id', params.id).select().single();
+      const res = await supabase.from('prequalification_submissions').update(updates).eq('tenant_id', user.tenantId).eq('id', params.id).select().single();
       data = res.data; error = res.error;
     }
     if (error) throw error;

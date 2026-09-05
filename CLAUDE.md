@@ -36,11 +36,51 @@ npx tsc --noEmit 2>&1 | head -10
 npm run build 2>&1 | grep -E "Compiled|error|Error" | head -5
 ```
 
-- If either command shows new errors introduced by your code: **STOP**.
+- If either command shows **any** error: **STOP**.
 - Fix the error. Re-run both commands. Confirm clean output.
 - Only then proceed to the next file.
-- Pre-existing errors in files you did not touch are noted but not blocking.
 - Skipping this loop invalidates all subsequent work in the session.
+
+### 2.1 FIX EVERY ERROR YOU SEE — YOURS OR NOT (MANDATORY)
+
+There is no such thing as "a pre-existing error, not blocking." If `tsc`, the
+build, the console, or a test surfaces an error during your session, **you fix
+it in that same pass**. You do not note it and move on. You do not leave it for
+later. You do not file it as tech debt.
+
+- Errors in files you did not touch: **fix them**.
+- Errors that predate your session by months: **fix them**.
+- Errors that look unrelated to your directive: **fix them**.
+- If a fix is genuinely out of scope, it is still fixed first, then flagged in
+  your final message — never left in the tree.
+
+A session that ends with a known error still in the app is a failed session,
+regardless of what else got built. `npx tsc --noEmit` and `npm run build` must
+both come back clean before you report done.
+
+Corollary: a broken build outranks every feature directive. If you discover the
+app does not build, stop the directive, fix the build, then resume.
+
+### 2.2 NO STUBS. EVER. (MANDATORY)
+
+Everything you create is finished on the first pass. The user should never have
+to ask twice for the same thing to be completed.
+
+Banned outright:
+- Placeholder components that render a title and nothing else
+- Functions that `return null`, `return []`, or `return {}` to satisfy a type
+- `// implement later`, `// wire this up`, `// placeholder`, `throw new Error('not implemented')`
+- Buttons with no handler, forms with no submit, tabs with no panel
+- An icon/text/token map covering only the two names you happened to need
+- Copying a design token file and filling half the values
+
+If a component takes props, every prop works. If a page has five tabs, all five
+render real data. If a helper is exported, it is complete for its whole input
+domain, not just the current caller. If you cannot finish something in this pass,
+you do not create it at all — you say so in your final message instead.
+
+When you fix a list of defects, work the list **in order, all the way down**.
+Do not stop after the first item and report back for permission to continue.
 
 ---
 

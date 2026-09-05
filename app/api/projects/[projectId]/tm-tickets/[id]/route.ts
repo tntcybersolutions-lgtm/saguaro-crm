@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from('tm_tickets')
-      .update({ ...body, updated_at: new Date().toISOString(), updated_by: user.email })
+      .update({ ...body, updated_at: new Date().toISOString(), updated_by: user.email }).eq('tenant_id', user.tenantId)
       .eq('id', params.id)
       .eq('project_id', params.projectId)
       .select()

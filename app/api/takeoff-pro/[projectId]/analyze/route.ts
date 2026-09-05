@@ -596,7 +596,7 @@ Return ONLY the JSON object.`
                 ),
                 sample_count: count,
                 last_updated: new Date().toISOString(),
-              })
+              }).eq('tenant_id', tenantId)
               .eq('id', existing.data.id)
           } else {
             await supabase.from('takeoff_benchmarks').insert({

@@ -7,7 +7,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   try {
     const db = createServerClient();
-    await db.from('bid_packages').update({ status: 'closed' }).eq('id', id);
+    await db.from('bid_packages').update({ status: 'closed' }).eq('tenant_id', user.tenantId).eq('id', id);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

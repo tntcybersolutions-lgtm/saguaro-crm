@@ -27,6 +27,28 @@ function corsHeaders() {
   };
 }
 
+
+// ─── Tenant resolution ────────────────────────────────────────────────────────
+
+/**
+ * Resolves the caller's real tenant_id from a bearer token.
+ *
+ * user.id is NOT the tenant id. They match only for the account that created
+ * the tenant, so reading user.id gave every other team member a tenant that
+ * does not exist. Always go through profiles.
+ */
+async function tenantFromToken(token: string | undefined | null): Promise<string | null> {
+  if (!token) return null;
+  const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+  if (!user) return null;
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single();
+  return profile?.tenant_id ?? null;
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ActionItem {
@@ -237,7 +259,7 @@ export async function GET(
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const token = req.headers.get('authorization')?.replace('Bearer ', '');
       let tenantId: string | null = null;
-      if (token) { const { data: { user } } = await supabase.auth.getUser(token); tenantId = user?.id ?? null; }
+      tenantId = await tenantFromToken(token);
       if (!tenantId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
@@ -270,8 +292,7 @@ export async function GET(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         );
-        const { data: { user } } = await supabase.auth.getUser(token);
-        tenantId = user?.id ?? null;
+        tenantId = await tenantFromToken(token);
       }
       if (!tenantId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -514,7 +535,7 @@ export async function POST(
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const token = req.headers.get('authorization')?.replace('Bearer ', '');
       let tenantId: string | null = null;
-      if (token) { const { data: { user } } = await supabase.auth.getUser(token); tenantId = user?.id ?? null; }
+      tenantId = await tenantFromToken(token);
       let suggestions: SubSuggestion[] = [];
       let source = 'none';
       if (!tenantId) {
@@ -554,7 +575,7 @@ export async function POST(
       const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
       const token = req.headers.get('authorization')?.replace('Bearer ', '');
       let tenantId: string | null = null;
-      if (token) { const { data: { user } } = await supabase.auth.getUser(token); tenantId = user?.id ?? null; }
+      tenantId = await tenantFromToken(token);
       const bidHistoryContext = tenantId ? await buildBidHistoryContext(supabase, tenantId, projectType) : 'No bid history available.';
       const Anthropic = (await import('@anthropic-ai/sdk')).default;
       const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -630,13 +651,11 @@ export async function POST(
     const publicProject  = Boolean(body.publicProject ?? false);
     const contractType  = body.contractType ? String(body.contractType) : 'Lump Sum GMP';
     const state         = body.state ? String(body.state) : 'AZ';
-    let tenantId = String(body.tenantId ?? '');
+    // tenant_id comes from the token only — never from the request body.
     const bearer = req.headers.get('authorization');
-    if (bearer?.startsWith('Bearer ') && !tenantId) {
-      const token = bearer.slice(7);
-      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-      tenantId = user?.user_metadata?.tenant_id ?? user?.id ?? tenantId;
-    }
+    const tenantId = await tenantFromToken(
+      bearer?.startsWith('Bearer ') ? bearer.slice(7) : null,
+    );
     if (!tenantId) return NextResponse.json({ error: 'Unauthorized — tenantId required' }, { status: 401 });
     if (!name) return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
     const year = new Date().getFullYear();
@@ -657,17 +676,40 @@ export async function POST(
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     const alertId = String(body.alertId ?? '');
     if (!alertId) return NextResponse.json({ error: 'alertId required' }, { status: 400 });
-    try {
-      await supabaseAdmin.from('autopilot_alerts').update({ dismissed: true, dismissed_at: new Date().toISOString() }).eq('id', alertId);
-    } catch { /* non-fatal */ }
+
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Was unauthenticated and unscoped: any caller could dismiss any tenant's
+    // alerts. The catch also swallowed failures and still returned success.
+    const { error } = await supabaseAdmin
+      .from('autopilot_alerts')
+      .update({ dismissed: true, dismissed_at: new Date().toISOString() })
+      .eq('tenant_id', tenantId)
+      .eq('id', alertId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
   }
 
   // POST /api/change-orders/:id/approve
   if (seg0 === 'change-orders' && seg1 && seg2 === 'approve') {
-    try {
-      await supabaseAdmin.from('change_orders').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', seg1);
-    } catch { /* non-fatal */ }
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    // Approving a change order moves money. This was unauthenticated and
+    // unscoped — any caller could approve any tenant's change order by id —
+    // and the swallowed catch reported success even when the write failed.
+    const { data, error } = await supabaseAdmin
+      .from('change_orders')
+      .update({ status: 'approved', approved_at: new Date().toISOString() })
+      .eq('tenant_id', tenantId)
+      .eq('id', seg1)
+      .select('id')
+      .maybeSingle();
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) return NextResponse.json({ error: 'Change order not found' }, { status: 404 });
     return NextResponse.json({ success: true });
   }
 

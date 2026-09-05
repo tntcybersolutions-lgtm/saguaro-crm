@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
 
     const { data, error } = await supabase
       .from('drawing_markups')
-      .update(updates)
+      .update(updates).eq('tenant_id', user.tenantId)
       .eq('id', id)
       .eq('project_id', projectId)
       .select()
@@ -42,7 +42,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ p
 
     const { error } = await supabase
       .from('drawing_markups')
-      .delete()
+      .delete().eq('tenant_id', user.tenantId)
       .eq('id', id)
       .eq('project_id', projectId);
 

@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
         // Mark the answer as upsell-triggered
         await db
           .from('discovery_answers')
-          .update({ upsell_triggered: true })
+          .update({ upsell_triggered: true }).eq('tenant_id', user.tenantId)
           .eq('id', answer.id);
 
         // For each tag, create a recommendation if one doesn't already exist

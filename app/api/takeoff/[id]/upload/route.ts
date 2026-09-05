@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 import { getPdfPageCount, generateThumbnail } from '@/lib/blueprint-processor';
 import { detectImageType } from '@/lib/image-detect';
 
@@ -27,6 +27,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const supabase = createServerClient();
     const { id: takeoffId } = await params;
 
@@ -142,7 +144,7 @@ export async function POST(
         const { data: { publicUrl: thumbUrl } } = supabase.storage
           .from('blueprints').getPublicUrl(thumbPath);
         await supabase.from('takeoffs')
-          .update({ thumbnail_url: thumbUrl })
+          .update({ thumbnail_url: thumbUrl }).eq('tenant_id', user.tenantId)
           .eq('id', takeoffId);
       }
     }).catch((err) => {
@@ -165,7 +167,7 @@ export async function POST(
 
     const { data: updated, error: updateError } = await supabase
       .from('takeoffs')
-      .update(updatePayload)
+      .update(updatePayload).eq('tenant_id', user.tenantId)
       .eq('id', takeoffId)
       .select()
       .single();

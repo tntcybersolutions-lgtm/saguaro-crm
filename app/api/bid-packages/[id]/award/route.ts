@@ -11,9 +11,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const db = createServerClient();
 
     // Award the winning submission
-    await db.from('bid_submissions').update({ status: 'awarded', awarded_at: new Date().toISOString() }).eq('id', body.submissionId);
+    await db.from('bid_submissions').update({ status: 'awarded', awarded_at: new Date().toISOString() }).eq('tenant_id', user.tenantId).eq('id', body.submissionId);
     // Close bid package
-    await db.from('bid_packages').update({ status: 'awarded' }).eq('id', id);
+    await db.from('bid_packages').update({ status: 'awarded' }).eq('tenant_id', user.tenantId).eq('id', id);
 
     onBidAwarded(body.submissionId).catch(console.error);
     return NextResponse.json({ success: true });

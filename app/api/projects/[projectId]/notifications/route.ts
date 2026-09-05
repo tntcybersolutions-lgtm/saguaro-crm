@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     if (body.mark_all_read) {
       await supabase
         .from('notifications')
-        .update({ read: true })
+        .update({ read: true }).eq('tenant_id', user.tenantId)
         .eq('project_id', params.projectId)
         .eq('user_id', user.id)
         .eq('read', false);
@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     if (body.id) {
       await supabase
         .from('notifications')
-        .update({ read: true })
+        .update({ read: true }).eq('tenant_id', user.tenantId)
         .eq('id', body.id);
       return NextResponse.json({ success: true });
     }

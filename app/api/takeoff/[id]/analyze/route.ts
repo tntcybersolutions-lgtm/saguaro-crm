@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase-server';
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient, getUser } from '@/lib/supabase-server';
 import { processBlueprint } from '@/lib/blueprint-processor';
 
 export const runtime = 'nodejs';
@@ -155,11 +155,13 @@ interface TakeoffResult {
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const encoder = new TextEncoder();
   const supabase = createServerClient();
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const { id: takeoffId } = await params;
 
   const stream = new ReadableStream({
@@ -205,7 +207,7 @@ export async function GET(
         }
 
         if (!takeoff.storage_path && !takeoff.file_url) {
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
           send('error', { message: 'No blueprint uploaded. Please upload a file first.' });
           return done();
         }
@@ -217,7 +219,7 @@ export async function GET(
           send('error', { message: 'Analysis already in progress for this takeoff.' });
           return done();
         }
-        await supabase.from('takeoffs').update({ status: 'analyzing' }).eq('id', takeoffId);
+        await supabase.from('takeoffs').update({ status: 'analyzing' }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
         send('progress', { step: 2, message: 'Connecting to AI...', pct: 10 });
 
         // ── 3. Fetch file from storage (with heartbeat — can take 5-15s) ─
@@ -259,7 +261,7 @@ export async function GET(
 
         if (processed.error) {
           send('error', { message: processed.error });
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
           return done();
         }
 
@@ -320,13 +322,13 @@ export async function GET(
         if (!parsed) {
           console.error('[analyze] No JSON parsed. Raw:', accumulated.slice(0, 500));
           send('error', { message: 'AI returned an unexpected format. Please try again.' });
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
           return done();
         }
 
         if ('error' in parsed && typeof (parsed as any).error === 'string') {
           send('error', { message: (parsed as any).error });
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
           return done();
         }
 
@@ -371,12 +373,12 @@ export async function GET(
         if (items.length === 0 && allRawItems.length > 0) {
           console.error('[analyze] All items filtered out. Raw count:', allRawItems.length, 'Sample:', JSON.stringify(allRawItems[0]));
           send('error', { message: 'AI returned items but all had zero quantity or zero cost. Try a higher-resolution blueprint or a clearer PDF.' });
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
           return done();
         }
         if (items.length === 0) {
           send('error', { message: 'No materials extracted from this blueprint. Try a clearer image or a PDF with visible dimensions.' });
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
           return done();
         }
 
@@ -396,7 +398,7 @@ export async function GET(
           // Delete first (in a separate step), then insert — this is safe because
           // we already have the full set of items ready. UPSERT on sort_order+takeoff_id
           // would work but requires a unique constraint; delete+insert is simpler here.
-          const { error: delErr } = await supabase.from('takeoff_materials').delete().eq('takeoff_id', takeoffId);
+          const { error: delErr } = await supabase.from('takeoff_materials').delete().eq('tenant_id', user.tenantId).eq('takeoff_id', takeoffId);
           if (delErr) console.warn('[analyze] delete materials warning:', delErr.message);
 
           // Insert in batches of 50 to avoid payload limits
@@ -426,7 +428,7 @@ export async function GET(
           labor_cost:            realLaborTotal,
           contingency_pct:       contingencyPct,
           analyzed_at:           new Date().toISOString(),
-        }).eq('id', takeoffId);
+        }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
 
         if (updateErr) console.error('[analyze] update takeoff error:', updateErr);
 
@@ -476,7 +478,7 @@ export async function GET(
         console.error('[takeoff/analyze]', err);
         send('error', { message });
         try {
-          await supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId);
+          await supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
         } catch { /* non-fatal */ }
         done();
       }

@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
     if (existingInt) {
       await db
         .from('integrations')
-        .update({ status: 'active', updated_at: new Date().toISOString() })
+        .update({ status: 'active', updated_at: new Date().toISOString() }).eq('tenant_id', user.tenantId)
         .eq('id', existingInt.id);
     } else {
       await db.from('integrations').insert({

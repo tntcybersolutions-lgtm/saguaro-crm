@@ -308,7 +308,7 @@ export default function ApiDocsPage() {
               background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 16,
               fontFamily: 'monospace', fontSize: 13, color: GREEN, marginBottom: 20,
             }}>
-              <div style={{ color: DIM, marginBottom: 8 }}>// Include in every request:</div>
+              <div style={{ color: DIM, marginBottom: 8 }}>{"// Include in every request:"}</div>
               <div>Authorization: Bearer {'<your_access_token>'}</div>
             </div>
 

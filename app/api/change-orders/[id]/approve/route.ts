@@ -6,12 +6,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const db = createServerClient();
     const { error } = await db.from('change_orders').update({
       status: 'approved',
       approved_by: user?.id,
       approved_at: new Date().toISOString(),
-    }).eq('id', id);
+    }).eq('tenant_id', user.tenantId).eq('id', id);
     if (error) throw error;
     onChangeOrderApproved(id).catch(console.error);
     return NextResponse.json({ success: true });

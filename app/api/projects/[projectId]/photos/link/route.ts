@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     };
     const { data, error } = await supabase
       .from('photo_entity_links')
-      .upsert(record, { onConflict: 'photo_id,entity_type,entity_id' })
+      .upsert(record, { onConflict: 'photo_id,entity_type,entity_id' }).eq('tenant_id', user.tenantId)
       .select()
       .single();
     if (error) throw error;
@@ -86,14 +86,14 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
     if (link_id) {
       const { error } = await supabase
         .from('photo_entity_links')
-        .delete()
+        .delete().eq('tenant_id', user.tenantId)
         .eq('id', link_id)
         .eq('project_id', params.projectId);
       if (error) throw error;
     } else if (photo_id && entity_type && entity_id) {
       const { error } = await supabase
         .from('photo_entity_links')
-        .delete()
+        .delete().eq('tenant_id', user.tenantId)
         .eq('project_id', params.projectId)
         .eq('photo_id', photo_id)
         .eq('entity_type', entity_type)

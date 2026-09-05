@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const supabase = createServerClient();
     await supabase
       .from('sage_proactive_insights')
-      .update({ dismissed: body.dismissed })
+      .update({ dismissed: body.dismissed }).eq('tenant_id', user.tenantId)
       .eq('id', body.insightId)
       .eq('user_id', user.id);
 

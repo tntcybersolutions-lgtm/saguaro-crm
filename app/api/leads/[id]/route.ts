@@ -24,7 +24,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const supabase = createServerClient();
-    await supabase.from('lead_activities').delete().eq('lead_id', params.id);
+    await supabase.from('lead_activities').delete().eq('tenant_id', user.tenantId).eq('lead_id', params.id);
     const { error } = await supabase.from('lead_pipeline').delete().eq('id', params.id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ ok: true });

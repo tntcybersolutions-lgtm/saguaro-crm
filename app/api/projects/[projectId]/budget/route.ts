@@ -76,7 +76,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { projectId:
     const { id, ...updates } = body;
     const { error } = await supabase
       .from('budget_lines')
-      .update(updates)
+      .update(updates).eq('tenant_id', user.tenantId)
       .eq('id', id as string)
       .eq('project_id', params.projectId);
     if (error) throw error;

@@ -188,7 +188,7 @@ Be conversational, use contractions, and never sound robotic. Keep responses con
                 current_page: page || conversation!.current_page,
                 customer_id: customer_id || conversation!.customer_id,
                 current_project_id: project_id || conversation!.current_project_id,
-              }).eq('id', conversation!.id);
+              }).eq('tenant_id', user.tenantId).eq('id', conversation!.id);
 
               send({
                 done: true,

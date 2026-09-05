@@ -54,7 +54,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
     const supabase = createServerClient();
     await supabase
       .from('favorites')
-      .delete()
+      .delete().eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .eq('user_id', user.id)
       .eq('item_id', itemId);

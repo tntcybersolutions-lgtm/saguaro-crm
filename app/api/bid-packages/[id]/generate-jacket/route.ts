@@ -56,7 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const pdfUrl = await saveDocument(project?.id || id, 'bid-jacket', pdfBytes, { bidPackageId: id }, p.tenant_id);
 
     // Update bid package with jacket URL
-    await db.from('bid_packages').update({ jacket_pdf_url: pdfUrl }).eq('id', id);
+    await db.from('bid_packages').update({ jacket_pdf_url: pdfUrl }).eq('tenant_id', user.tenantId).eq('id', id);
 
     return NextResponse.json({ pdfUrl, success: true });
   } catch {

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       status: 'signed',
       signed_date: new Date().toISOString().split('T')[0],
       signed_by: body.signedBy,
-    }).eq('id', id);
+    }).eq('tenant_id', user.tenantId).eq('id', id);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch {

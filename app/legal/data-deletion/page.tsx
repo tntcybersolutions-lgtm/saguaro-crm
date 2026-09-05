@@ -11,6 +11,10 @@ export default function DataDeletionPage() {
   const [loading, setLoading] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [confirmText, setConfirmText] = useState('')
+  // null until submitted. true = recorded from the session. false = a confirmation
+  // link was mailed and nothing is scheduled until the recipient follows it.
+  const [verified, setVerified] = useState<boolean | null>(null)
+  const [linkError, setLinkError] = useState('')
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -18,16 +22,32 @@ export default function DataDeletionPage() {
     })
   }, [supabase])
 
+  // The email confirmation link redirects back here with ?status=
+  // (read from location rather than useSearchParams, which would need Suspense).
+  useEffect(() => {
+    const status = new URLSearchParams(window.location.search).get('status')
+    if (status === 'confirmed') { setVerified(true); setSubmitted(true) }
+    else if (status) { setLinkError(status) }
+  }, [])
+
   const handleSubmit = async () => {
     if (!email) return
     setLoading(true)
-    await fetch('/api/account/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, reason, confirmed: confirmText === 'DELETE' }),
-    })
-    setSubmitted(true)
-    setLoading(false)
+    try {
+      const res = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, reason, confirmed: confirmText === 'DELETE' }),
+      })
+      const data = await res.json().catch(() => ({}))
+      setVerified(Boolean(data?.verified))
+      setSubmitted(true)
+    } catch (e) {
+      console.error('deletion request failed:', e)
+      setLinkError('error')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -37,15 +57,39 @@ export default function DataDeletionPage() {
         <h1 style={{ fontSize: 32, fontWeight: 900, color: '#0f172a', marginBottom: 8 }}>Data Deletion Request</h1>
         <p style={{ fontSize: 14, color: '#64748b', marginBottom: 32 }}>Request deletion of your account and all associated data.</p>
 
+        {linkError && !submitted && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '20px 24px', marginBottom: 24 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: '#dc2626', margin: '0 0 6px' }}>
+              {linkError === 'expired' ? 'That confirmation link has expired' : 'That confirmation link could not be used'}
+            </p>
+            <p style={{ fontSize: 13, color: '#374151', margin: 0, lineHeight: 1.6 }}>
+              Links are valid for one hour. Submit the form below to request a new one.
+            </p>
+          </div>
+        )}
+
         {submitted ? (
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '32px', textAlign: 'center' }}>
-            <div style={{ fontSize: 40, marginBottom: 16 }}>&#x2705;</div>
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#166534', marginBottom: 8 }}>Request Received</h2>
-            <p style={{ color: '#374151', fontSize: 14, lineHeight: 1.7 }}>
-              We&apos;ve received your data deletion request for <strong>{email}</strong>.
-              Your account and all associated data will be permanently deleted within <strong>30 days</strong>.
-              You&apos;ll receive a confirmation email once deletion is complete.
-            </p>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>{verified ? '✅' : '✉️'}</div>
+            {verified ? (
+              <>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: '#166534', marginBottom: 8 }}>Deletion Scheduled</h2>
+                <p style={{ color: '#374151', fontSize: 14, lineHeight: 1.7 }}>
+                  Your data deletion request for <strong>{email}</strong> is confirmed.
+                  Your account and all associated data will be permanently deleted within <strong>30 days</strong>.
+                  You&apos;ll receive a confirmation email once deletion is complete.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 style={{ fontSize: 20, fontWeight: 800, color: '#166534', marginBottom: 8 }}>Check Your Email</h2>
+                <p style={{ color: '#374151', fontSize: 14, lineHeight: 1.7 }}>
+                  If an account exists for <strong>{email}</strong>, we&apos;ve sent a confirmation link to that address.
+                  <strong> Nothing has been scheduled yet</strong> — deletion begins only once you follow the link,
+                  which confirms you own the mailbox. The link expires in one hour.
+                </p>
+              </>
+            )}
             <p style={{ color: '#64748b', fontSize: 13, marginTop: 16 }}>
               Questions? Email <a href="mailto:privacy@saguarocrm.com" style={{ color: '#D4A017' }}>privacy@saguarocrm.com</a>
             </p>
