@@ -13,6 +13,7 @@ import {
 import { moduleAccent } from '@/lib/module-identity';
 import { PdfIcon } from '@/components/ui/FileTypeIcon';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
+import DocumentManager from '@/components/documents/DocumentManager';
 
 const GOLD = '#F59E0B';
 const BORDER = 'rgba(255,255,255,0.12)';
@@ -76,7 +77,7 @@ function SkeletonRows({ rows = 4, cols }: { rows?: number; cols: number }) {
   );
 }
 
-const TABS = ['Library', 'Pay Applications', 'Lien Waivers', 'Bonds & Forms', 'Payroll', 'Closeout'] as const;
+const TABS = ['Library', 'File Manager', 'Pay Applications', 'Lien Waivers', 'Bonds & Forms', 'Payroll', 'Closeout'] as const;
 type Tab = typeof TABS[number];
 
 // Generated-document type slugs -> human labels; anything unmapped prettifies.
@@ -546,6 +547,10 @@ export default function DocumentsPage() {
               </table>
             </div>
           </SectionCard>
+        )}
+
+        {activeTab === 'File Manager' && (
+          <DocumentManager projectId={selectedProject || undefined} />
         )}
 
         {activeTab === 'Pay Applications' && (

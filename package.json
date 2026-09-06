@@ -36,7 +36,7 @@
     "engine:sync": "node scripts/sync-heatmap-engine.mjs --sync",
     "engine:test": "npx -y tsx lib/heatmap/sanity.test.ts",
     "prebuild": "node scripts/sync-heatmap-engine.mjs --check && node scripts/sync-takeoff-engine.mjs --check",
-    "test:sanity": "tsx lib/heatmap/sanity.test.ts && tsx lib/navGuard.sanity.test.ts && tsx scripts/takeoff-golden.test.mjs && tsx scripts/vector-pdf.test.mjs",
+    "test:sanity": "tsx lib/heatmap/sanity.test.ts && tsx lib/navGuard.sanity.test.ts && tsx lib/earned-value.sanity.test.ts && tsx lib/capacity.sanity.test.ts && tsx scripts/takeoff-golden.test.mjs && tsx scripts/vector-pdf.test.mjs",
     "test:jest": "jest --passWithNoTests"
   },
   "dependencies": {

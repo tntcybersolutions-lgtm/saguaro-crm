@@ -49,15 +49,22 @@ function isJWT(s: string): boolean {
   return typeof s === 'string' && /^[\w-]+\.[\w-]+\.[\w-]+$/.test(s.trim());
 }
 
-/** Look up tenant_id for a given auth user id. Falls back to user.id. */
-async function getTenant(userId: string): Promise<string> {
+/**
+ * Look up tenant_id for a given auth user id.
+ *
+ * Returns null when no tenant can be resolved — never a fabricated one. The
+ * previous `|| userId` fallback invented a tenant id equal to the user's own
+ * id, which silently filed that user's writes under a tenant nobody else
+ * shares and made them invisible to every correctly-scoped read.
+ */
+async function getTenant(userId: string): Promise<string | null> {
   const admin = createServerClient();
   const { data } = await admin
     .from('profiles')
     .select('tenant_id')
     .eq('id', userId)
     .single();
-  return (data as any)?.tenant_id || userId;
+  return (data as any)?.tenant_id ?? null;
 }
 
 /**
@@ -94,7 +101,11 @@ export async function getUser(
     if (accessToken) {
       const { data: { user }, error } = await supabase.auth.getUser(accessToken);
       if (!error && user) {
-        return { id: user.id, tenantId: await getTenant(user.id), email: user.email || '' };
+        const tenantId = await getTenant(user.id);
+        // Fail closed: an authenticated user with no resolvable tenant must not
+        // read or write tenant-scoped data under a fabricated id.
+        if (!tenantId) return null;
+        return { id: user.id, tenantId, email: user.email || '' };
       }
     }
 
@@ -114,7 +125,9 @@ export async function getUser(
             maxAge: 60 * 60 * 24 * 365,
           });
         }
-        return { id: data.user.id, tenantId: await getTenant(data.user.id), email: data.user.email || '' };
+        const tenantId = await getTenant(data.user.id);
+        if (!tenantId) return null;
+        return { id: data.user.id, tenantId, email: data.user.email || '' };
       }
     }
 

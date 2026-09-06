@@ -16,3 +16,12 @@ node_modules/
 # local build/install scratch
 *.log
 audit-*.json
+
+# temporary E2E auth harness (not for commit)
+.tmp-e2e-auth.js
+.tmp-e2e-pw
+.tmp-e2e-session.json
+.tmp-e2e-seed.js
+.tmp-seed-out.txt
+.tmp-upload-test.pdf
+.tmp-drawings.pdf

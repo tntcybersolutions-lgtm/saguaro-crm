@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { ChartLineUp, Lightbulb, SquaresFour, Selection, ArrowsClockwise } from '@phosphor-icons/react';
+import { ChartLineUp, Lightbulb, SquaresFour, Selection, ArrowsClockwise, Gauge, UsersThree } from '@phosphor-icons/react';
 import {
   PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip,
   InsightRow, Pill, GoldButton, GhostButton, goldButtonStyle,
@@ -11,6 +11,8 @@ import { useProjects } from '@/lib/hooks/useProjects';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
+import PerformancePanel from '@/components/intelligence/PerformancePanel';
+import CapacityPanel from '@/components/intelligence/CapacityPanel';
 
 // No 'intelligence' key exists in lib/module-identity — this surface stays on
 // the gold ground (money + flagship voice) rather than inventing a module hue.
@@ -554,6 +556,29 @@ export default function IntelligencePage() {
 
       {rows.length > 0 && (
         <>
+          {/* 0 — WHERE IT IS GOING. Insights below say what has happened; this
+              says what it lands at, which is the half that can still change. */}
+          <SectionCard flat
+            title="Cost & Schedule Performance"
+            subtitle="Earned value — is the money spent buying the progress it was supposed to buy?"
+            icon={<Gauge size={17} weight="duotone" color={GOLD} />}
+            style={{ marginBottom: 24 }}
+          >
+            <PerformancePanel projectIds={ids} />
+          </SectionCard>
+
+          {/* 0b — CREW & CASH. Cost performance says whether the money is
+              buying progress; this says whether the people exist to deliver the
+              dates, and what the spend curve lands at. */}
+          <SectionCard flat
+            title="Crew Capacity & Cost Curve"
+            subtitle="Where demand outruns the crew you have, which tasks can move, and where the spend lands"
+            icon={<UsersThree size={17} weight="duotone" color={GOLD} />}
+            style={{ marginBottom: 24 }}
+          >
+            <CapacityPanel projectIds={ids} />
+          </SectionCard>
+
           {/* 1 — INSIGHTS: the honest sentences, severity first */}
           <SectionCard flat
             title="Portfolio Insights"
