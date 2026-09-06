@@ -49,6 +49,25 @@ const PUBLIC_ROUTE = new RegExp(
     '[/\\\\]api[/\\\\]account[/\\\\]delete[/\\\\]',
     '[/\\\\]api[/\\\\]prequal[/\\\\]',
     '[/\\\\]api[/\\\\]integrations[/\\\\]quickbooks[/\\\\]',
+    // Read on 2026-09-05 and confirmed genuinely public:
+    //   leads/[...path]       inbound contact / demo / referral forms
+    //   chat/marketing        marketing chatbot
+    //   sage/public           public chatbot, capped at 20 messages
+    //   network/subnet-calc   pure computation, touches no table
+    //   roi/calculate         reads roi_configs, which has no tenant_id column
+    //   smart-packages        4 rows, tenant_id NULL — global catalog
+    //   discovery/questions   30 rows, tenant_id NULL — global catalog
+    //   sandbox/[...path]     trial signup; its lifecycle branch guards itself
+    //   design-addon          feature disabled, every method returns 503
+    '[/\\\\]api[/\\\\]leads[/\\\\]',
+    '[/\\\\]api[/\\\\]chat[/\\\\]marketing[/\\\\]',
+    '[/\\\\]api[/\\\\]sage[/\\\\]public[/\\\\]',
+    '[/\\\\]api[/\\\\]network[/\\\\]subnet-calc[/\\\\]',
+    '[/\\\\]api[/\\\\]roi[/\\\\]',
+    '[/\\\\]api[/\\\\]smart-packages[/\\\\]',
+    '[/\\\\]api[/\\\\]discovery[/\\\\]',
+    '[/\\\\]api[/\\\\]sandbox[/\\\\]',
+    '[/\\\\]api[/\\\\]design-addon[/\\\\]',
   ].join('|'),
 );
 
@@ -102,7 +121,9 @@ const hasGuard = (src) =>
   /await\s+requireAuth\s*\(/.test(src) ||
   // app/api/[...path] resolves the caller itself via a bearer token
   /await\s+tenantFromToken\s*\(/.test(src) ||
-  /await\s+\w+\.auth\.getUser\s*\(/.test(src);
+  /await\s+\w+\.auth\.getUser\s*\(/.test(src) ||
+  // scheduled jobs authenticate with a shared secret, not a session
+  (/CRON_SECRET|SAGUARO_API_SECRET/.test(src) && /401/.test(src));
 
 // Never treat the definition sites as evidence of a guard.
 const GUARD_DEFINITION = /[/\\]lib[/\\](supabase-server|auth-helper)(\.tsx?)?$/;
@@ -175,8 +196,22 @@ for (const f of files) {
     // guard lives one file away. Follow local imports one level before calling
     // a route unauthenticated.
     const guarded = hasGuard(src) || importsGuard(f, src);
+
+    // A route whose every handler just returns 503 is switched off — the Design
+    // Studio group is like this. It holds no data and needs no guard today, but
+    // it will need one the moment it is re-enabled. Reported at P2 rather than
+    // exempted, so removing the 503 puts it straight back on the P0 list.
+    const bodies = src.match(/export\s+async\s+function\s+(GET|POST|PUT|PATCH|DELETE)/g) || [];
+    const disabled = bodies.length > 0 &&
+      (src.match(/status:\s*503/g) || []).length >= bodies.length;
+
     if (handlers && !guarded && !isPublic) {
-      add("P0", "unauthenticated-route", f, 1, `${handlers} handler(s), no getUser() guard`);
+      if (disabled) {
+        add("P2", "disabled-route-needs-guard-when-revived", f, 1,
+            `${handlers} handler(s) return 503; add a guard before re-enabling`);
+      } else {
+        add("P0", "unauthenticated-route", f, 1, `${handlers} handler(s), no auth guard`);
+      }
     }
 
     if (!isPublic) {

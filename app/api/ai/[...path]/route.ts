@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getUser } from '@/lib/supabase-server';
 import { chatSuggestionsHandler } from '../../../../ai-chat-route';
 import { AutoPopulator } from '../../../../auto-populator';
 
@@ -227,6 +228,11 @@ export async function GET(
   const { path } = await params;
   const [segment, subAction] = path;
 
+  // Unauthenticated proxy to the Anthropic API: anyone could spend the
+  // account's model budget, and prefill read tenant data from the body.
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   if (segment === 'chat' && subAction === 'suggestions') return chatSuggestionsHandler(req);
 
   return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -239,16 +245,19 @@ export async function POST(
   const { path } = await params;
   const [segment] = path;
 
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   if (segment === 'chat') return robustChatHandler(req);
 
   if (segment === 'prefill') {
     const body = await req.json().catch(() => null);
-    if (!body?.formType || !body?.tenantId || !body?.projectId) {
-      return NextResponse.json({ error: 'formType, tenantId, and projectId are required' }, { status: 400 });
+    if (!body?.formType || !body?.projectId) {
+      return NextResponse.json({ error: 'formType and projectId are required' }, { status: 400 });
     }
     try {
       const result = await AutoPopulator.prefillForm({
-        tenantId:  String(body.tenantId),
+        tenantId:  user.tenantId,
         projectId: String(body.projectId),
         formType:  String(body.formType) as Parameters<typeof AutoPopulator.prefillForm>[0]['formType'],
         context:   body.context ?? {},
@@ -256,7 +265,9 @@ export async function POST(
       });
       return NextResponse.json(result);
     } catch (err) {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      const message = err instanceof Error ? err.message : 'Internal server error';
+      console.error('[ai/prefill] error:', message);
+      return NextResponse.json({ error: message }, { status: 500 });
     }
   }
 
