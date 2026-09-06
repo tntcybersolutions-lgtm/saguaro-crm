@@ -119,7 +119,9 @@ const add = (tour, step, kind, detail) => findings.push({ tour, step, kind, deta
 
 const tourBlocks = [];
 {
-  const re = /^  \{\n    id: '([^']+)'/gm;
+  // \r? matters: lib/help-tours.ts is CRLF, so `\{\n` matched nothing and the
+  // audit read zero tours while reporting a clean run over them.
+  const re = /^  \{\r?\n    id: '([^']+)'/gm;
   let m;
   const starts = [];
   while ((m = re.exec(toursSrc)) !== null) starts.push({ id: m[1], at: m.index });

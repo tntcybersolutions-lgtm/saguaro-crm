@@ -72,16 +72,16 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
         recipient_email: user.email,
         read_at: new Date().toISOString(),
       });
-    // A duplicate receipt is not a failure worth surfacing, but a real write
-    // error should not be reported as success.
+    // A failed write used to return success. It now fails properly — through
+    // apiError, so the Postgres detail stays in the log and the client gets a
+    // correlation id instead of a schema map.
     if (error) {
-      console.error('[correspondence read-receipt] upsert failed:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiError('correspondence/read-receipt', error,
+        'Could not record the read receipt. Please try again.');
     }
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : 'Failed to record read receipt';
-    console.error('[correspondence read-receipt] error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return apiError('correspondence/read-receipt', e,
+      'Could not record the read receipt. Please try again.');
   }
 }
