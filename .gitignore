@@ -26,3 +26,4 @@ audit-*.json
 .tmp-upload-test.pdf
 .tmp-drawings.pdf
 .tmp-commit-e2e.mjs
+.tmp-grid-e2e.mjs

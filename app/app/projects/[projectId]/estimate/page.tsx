@@ -7,6 +7,7 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatSt
 import { toCents, toDollars, extend, sumCents, addCents } from '@/lib/calc';
 import { Package, HardHat, CurrencyDollar, Ruler, Rows, Receipt, DownloadSimple, Stack } from '@phosphor-icons/react';
 import { CSI_DIVISIONS, classifyToCSI } from '@/lib/construction-intelligence';
+import EstimateGrid from '@/components/estimate/EstimateGrid';
 
 interface EstimateLine {
   csi_code: string;
@@ -43,8 +44,12 @@ export default function EstimatePage() {
       const res = await fetch(`/api/takeoffs/latest?projectId=${projectId}`);
       if (!res.ok) { setTakeoff(null); return; }
       const data = await res.json();
-      if (data.takeoff) {
-        const t = data.takeoff;
+      /* /api/takeoffs/latest returns { data: <takeoff> }; this read `data.takeoff`,
+         which the endpoint has never sent. The result was that a project with a
+         completed takeoff and priced line items showed "No takeoff data yet"
+         permanently. Accept either shape rather than pinning the page to one. */
+      const t = data.takeoff ?? data.data ?? null;
+      if (t) {
         const materials: EstimateLine[] = (t.materials || t.line_items || []).map((m: any) => {
           const quantity = m.quantity || 0;
           const unit_cost = m.unit_cost || m.unit_price || 0;
@@ -233,6 +238,21 @@ export default function EstimatePage() {
               sub={takeoff.square_footage > 0 ? `${takeoff.square_footage.toLocaleString()} SF` : undefined}
             />
           </div>
+
+          {/* Editable grid — this page could previously only be read. Sits
+              above the rollups because typing is what an estimator came here
+              to do; the summaries below are what they check afterwards. */}
+          {takeoff?.id && (
+            <SectionCard
+              title="Estimate Lines"
+              subtitle="Type, tab and paste straight from Excel — four cost buckets per line, waste factor, allowances and exclusions"
+              icon={<Rows size={17} weight="duotone" color="#F59E0B" />}
+              flush
+              style={{ marginBottom: 24 }}
+            >
+              <EstimateGrid takeoffId={takeoff.id} onSaved={() => void fetchTakeoff()} />
+            </SectionCard>
+          )}
 
           {/* Division Rollup — canonical MasterFormat, tied to the budget */}
           {rollup.length > 0 && (
