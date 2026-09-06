@@ -25,10 +25,13 @@ const check = (name: string, cond: boolean, detail: string) => {
   if (!cond) failures++;
 };
 
+/* Already-adopted lines: carried_* explicitly 0, so these exercise pure
+   derivation. Adoption itself — where carried_* is absent — is covered in its
+   own section further down. */
 const lines: BudgetLine[] = [
-  { id: 'L1', cost_code: '01-000', division: '01', description: 'General Conditions', original_budget: 175000, approved_changes: 0, revised_budget: 175000, committed: 0, actual: 62000, projected: 0 },
-  { id: 'L2', cost_code: '03-300', division: '03', description: 'Cast-in-Place Concrete', original_budget: 450000, approved_changes: 28000, revised_budget: 478000, committed: 0, actual: 360000, projected: 0 },
-  { id: 'L3', cost_code: '05-120', division: '05', description: 'Structural Steel', original_budget: 620000, approved_changes: 0, revised_budget: 620000, committed: 0, actual: 0, projected: 0 },
+  { id: 'L1', cost_code: '01-000', division: '01', description: 'General Conditions', original_budget: 175000, approved_changes: 0, revised_budget: 175000, committed: 0, actual: 62000, projected: 0, carried_actual: 0, carried_committed: 0 },
+  { id: 'L2', cost_code: '03-300', division: '03', description: 'Cast-in-Place Concrete', original_budget: 450000, approved_changes: 28000, revised_budget: 478000, committed: 0, actual: 360000, projected: 0, carried_actual: 0, carried_committed: 0 },
+  { id: 'L3', cost_code: '05-120', division: '05', description: 'Structural Steel', original_budget: 620000, approved_changes: 0, revised_budget: 620000, committed: 0, actual: 0, projected: 0, carried_actual: 0, carried_committed: 0 },
 ];
 
 /* ── matching ────────────────────────────────────────────────────────────── */
@@ -103,9 +106,16 @@ check('projected follows a commitment above budget',
 
 /* ── idempotence: the whole point ────────────────────────────────────────── */
 
+/* A real round-trip: the writer persists carried_* alongside the figures, so
+   the next pass reads them back instead of re-adopting. Forgetting to carry
+   them forward is precisely how a rollup would double-count itself. */
 const applied: BudgetLine[] = lines.map((l) => {
   const u = byId[l.id];
-  return { ...l, committed: u.committed, actual: u.actual, projected: u.projected };
+  return {
+    ...l,
+    committed: u.committed, actual: u.actual, projected: u.projected,
+    carried_actual: u.carriedActual, carried_committed: u.carriedCommitted,
+  };
 });
 const again = rollup(applied, pos, bills, invoices);
 check('running the rollup twice changes nothing',
@@ -159,20 +169,64 @@ check('zeroing is still reported as a change where the row held a value',
 check('no budget lines at all is handled', rollup([], pos, bills, invoices).updates.length === 0,
   `and every document becomes an orphan: ${rollup([], pos, bills, invoices).unmatched.length} codes`);
 
-/* ── the legacy-data guard ───────────────────────────────────────────────────
-   Computing zero from zero documents is correct arithmetic and a destructive
-   migration. A budget carrying hand-entered actuals from before this chain
-   existed would lose them to the first PO anyone raised on the project — which
-   is exactly what happened on the demo project the first time this ran, wiping
-   $422,000 of figures no document supported. The flag lets the writer refuse
-   while the preview still shows what the derived numbers would be. */
-check('a project with no source documents is flagged',
-  empty.noSourceDocuments === true, 'noSourceDocuments=true when POs, bills and invoices are all empty');
-check('a project with any source document is NOT flagged',
-  rollup(lines, pos, [], []).noSourceDocuments === false, 'one PO is enough to make the ledger authoritative');
-check('the flag does not suppress the computed preview',
-  empty.updates.length === lines.length,
-  'the figures are still reported so the difference can be seen before it is adopted');
+/* ── carrying: adoption must not destroy history ─────────────────────────────
+   The first live run of this zeroed $422,000 of hand-entered actuals on the
+   demo project, because no document explained them. Arithmetically right for a
+   derived ledger and a destructive migration. A project-level guard only
+   deferred the problem to the first PO anyone raised and made adoption a
+   one-way door. Carrying the unexplained balance onto the line removes the
+   choice entirely: nothing is destroyed, and deletion still releases the part
+   the ledger actually contributed. */
+
+const legacy: BudgetLine[] = [
+  // Never adopted (carried_* absent) and holding a hand-entered actual.
+  { id: 'G1', cost_code: '01-000', revised_budget: 175000, committed: 0, actual: 62000, projected: 0 },
+];
+
+const adopt = rollup(legacy, [], [], []);
+const g = adopt.updates[0];
+check('adoption captures the unexplained balance instead of zeroing it',
+  g.actual === 62000 && g.carriedActual === 62000 && g.derivedActual === 0,
+  `actual=${g.actual} carried=${g.carriedActual} derived=${g.derivedActual} (was 62,000 with no documents)`);
+check('the adopting pass is flagged', g.adopting === true, 'adopting=true');
+
+// Apply it, then add a real bill on the same line.
+const adopted: BudgetLine[] = [{ ...legacy[0], actual: g.actual, committed: g.committed, carried_actual: g.carriedActual, carried_committed: g.carriedCommitted }];
+const withBill = rollup(adopted, [], [{ cost_code: '01-000', status: 'paid', total: 20000 }], []);
+const wb = withBill.updates[0];
+check('a new bill ADDS to the carried balance rather than replacing it',
+  wb.actual === 82000 && wb.carriedActual === 62000 && wb.derivedActual === 20000,
+  `actual=${wb.actual} (62,000 carried + 20,000 billed)`);
+check('a line already adopted is not re-adopted', wb.adopting === false, 'adopting=false on later passes');
+
+// Delete that bill: only the ledger's contribution comes back out.
+const afterBillGone = rollup(
+  [{ ...adopted[0], actual: wb.actual, carried_actual: wb.carriedActual, carried_committed: wb.carriedCommitted }],
+  [], [], []);
+check('deleting the bill releases ONLY the derived part',
+  afterBillGone.updates[0].actual === 62000,
+  `actual back to ${afterBillGone.updates[0].actual}, not 0 — the carried history survives`);
+
+// A carried balance of zero is a real answer and must not re-trigger adoption.
+const zeroCarried = rollup(
+  [{ id: 'Z', cost_code: '09-000', revised_budget: 1000, actual: 0, committed: 0, carried_actual: 0, carried_committed: 0 }],
+  [], [{ cost_code: '09-000', status: 'paid', total: 400 }], []);
+check('carried zero is respected, not treated as unset',
+  zeroCarried.updates[0].actual === 400 && zeroCarried.updates[0].adopting === false,
+  `actual=${zeroCarried.updates[0].actual}, adopting=${zeroCarried.updates[0].adopting}`);
+
+// Documents present at adoption time explain themselves; only the excess carries.
+const partly = rollup(
+  [{ id: 'P', cost_code: '03-300', revised_budget: 500000, actual: 100000, committed: 0 }],
+  [], [{ cost_code: '03-300', status: 'paid', total: 30000 }], []);
+check('only the balance documents cannot explain is carried',
+  partly.updates[0].carriedActual === 70000 && partly.updates[0].actual === 100000,
+  `carried=${partly.updates[0].carriedActual} (100,000 held − 30,000 explained), actual unchanged at ${partly.updates[0].actual}`);
+
+check('carrying never invents money: derived alone when nothing was held',
+  rollup([{ id: 'N', cost_code: '05-120', revised_budget: 10, actual: 0, committed: 0 }],
+    [{ cost_code: '05-120', status: 'issued', total: 900 }], [], []).updates[0].committed === 900,
+  'committed=900 with carried 0');
 
 console.log(failures === 0 ? '\nALL COMMITMENT ASSERTIONS HELD' : `\n${failures} ASSERTION(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

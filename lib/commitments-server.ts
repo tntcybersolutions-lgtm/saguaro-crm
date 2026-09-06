@@ -25,7 +25,7 @@ export interface RecomputeOutcome extends RollupResult {
 export async function previewProject(db: Db, tenantId: string, projectId: string): Promise<RollupResult> {
   const [lineRes, poRes, billRes, invRes] = await Promise.all([
     db.from('budget_lines')
-      .select('id, cost_code, division, description, original_budget, approved_changes, revised_budget, committed, actual, projected')
+      .select('id, cost_code, division, description, original_budget, approved_changes, revised_budget, committed, actual, projected, carried_actual, carried_committed')
       .eq('tenant_id', tenantId).eq('project_id', projectId),
     db.from('purchase_orders')
       .select('id, cost_code, status, total, subtotal')
@@ -56,18 +56,14 @@ export async function previewProject(db: Db, tenantId: string, projectId: string
  */
 export async function recomputeProject(db: Db, tenantId: string, projectId: string): Promise<RecomputeOutcome> {
   const result = await previewProject(db, tenantId, projectId);
-
-  /* Never wipe a project that has no source documents. Computing zero from zero
-     is correct arithmetic and a destructive migration: a budget carrying
-     hand-entered actuals from before this chain existed would lose them to the
-     first PO anyone raised. The preview still shows what the derived figures
-     would be, so adopting them stays a deliberate act. */
-  if (result.noSourceDocuments) {
-    return { ...result, written: 0, projectId };
-  }
-
   const changed = result.updates.filter((u) => u.changed);
 
+  /* No project-level guard any more. It used to skip projects with no source
+     documents, because a rollup would otherwise zero hand-entered actuals — but
+     that only deferred the problem to the first purchase order anyone raised,
+     and made adoption a one-way door for the whole project. Carrying the
+     unexplained balance onto the line removes the need: nothing is destroyed
+     whether or not documents exist, so the rollup is always safe to run. */
   for (const u of changed) {
     const { error } = await db.from('budget_lines')
       .update({
@@ -75,6 +71,10 @@ export async function recomputeProject(db: Db, tenantId: string, projectId: stri
         actual: u.actual,
         projected: u.projected,
         variance: u.variance,
+        /* Written every time, but only ever COMPUTED on the adopting pass —
+           after that these come back out of the row unchanged. */
+        carried_actual: u.carriedActual,
+        carried_committed: u.carriedCommitted,
         updated_at: new Date().toISOString(),
       })
       .eq('id', u.id)

@@ -45,6 +45,17 @@ export interface BudgetLine {
   committed?: unknown;
   actual?: unknown;
   projected?: unknown;
+  /**
+   * Cost carried in from before this line joined the document ledger.
+   *
+   * NULL means the line has never been through a rollup. On its first pass the
+   * balance no document explains is captured here instead of being zeroed —
+   * which is what stops adopting the ledger from destroying figures a GC
+   * entered by hand years ago. Once set (commonly to 0) it is never recomputed,
+   * so deleting a purchase order releases only the part the ledger contributed.
+   */
+  carried_actual?: unknown;
+  carried_committed?: unknown;
 }
 
 export interface SourceDoc {
@@ -97,6 +108,14 @@ export interface LineUpdate {
   committed: number;
   actual: number;
   projected: number;
+  /** The part the document ledger accounts for. */
+  derivedCommitted: number;
+  derivedActual: number;
+  /** The part carried in from before the ledger — preserved, never recomputed. */
+  carriedCommitted: number;
+  carriedActual: number;
+  /** True on the pass that first captures the carried balance for this line. */
+  adopting: boolean;
   /** Budget minus projected: negative is an overrun on this line. */
   variance: number;
   /** What the row holds now, so a caller can show the diff before writing. */
@@ -111,17 +130,8 @@ export interface RollupResult {
   /** Documents whose cost code matched no budget line — real money, no home. */
   unmatched: { costCode: string; committed: number; actual: number; docs: number }[];
   totals: { committed: number; actual: number; projected: number; budget: number };
-  /**
-   * True when the project has no purchase orders, bills or invoices at all.
-   *
-   * A derived ledger computing zero from zero documents is arithmetically
-   * correct and practically destructive: a project carrying hand-entered
-   * actuals from before this existed would have them wiped by the first PO
-   * anyone raised on it. Callers that WRITE must refuse to when this is set;
-   * the preview still reports the figures so the difference is visible before
-   * anybody adopts it. Once a project has a single source document its ledger
-   * is being kept properly, and the rollup is authoritative from then on.
-   */
+  /** True when the project has no purchase orders, bills or invoices at all.
+   *  Informational only now — carrying makes the rollup safe either way. */
   noSourceDocuments: boolean;
 }
 
@@ -206,21 +216,43 @@ export function rollup(
 
   const updates: LineUpdate[] = lines.map((l) => {
     const budget = num(l.revised_budget) || num(l.original_budget) + num(l.approved_changes);
-    const committed = round2(committedBy.get(l.id) ?? 0);
-    const actual = round2(actualBy.get(l.id) ?? 0);
-    const projected = round2(Math.max(budget, committed, actual));
+    const derivedCommitted = round2(committedBy.get(l.id) ?? 0);
+    const derivedActual = round2(actualBy.get(l.id) ?? 0);
     const wasCommitted = round2(num(l.committed));
     const wasActual = round2(num(l.actual));
     const wasProjected = round2(num(l.projected));
+
+    /* Adoption. A line that has never been rolled up carries whatever balance
+       its documents cannot explain — money entered by hand, or imported from
+       whatever the GC used before. Capturing it once, here, is what makes
+       adopting the ledger non-destructive; zeroing it would be arithmetically
+       correct and would delete real history. Afterwards the value is fixed, so
+       deleting a purchase order releases only the ledger's own contribution. */
+    const adopting = l.carried_actual == null || l.carried_committed == null;
+    const carriedActual = l.carried_actual == null
+      ? round2(Math.max(0, wasActual - derivedActual))
+      : round2(num(l.carried_actual));
+    const carriedCommitted = l.carried_committed == null
+      ? round2(Math.max(0, wasCommitted - derivedCommitted))
+      : round2(num(l.carried_committed));
+
+    const committed = round2(carriedCommitted + derivedCommitted);
+    const actual = round2(carriedActual + derivedActual);
+    const projected = round2(Math.max(budget, committed, actual));
+
     return {
       id: l.id,
       costCode: codeOf(l.cost_code) || '—',
       description: String(l.description ?? ''),
       budget: round2(budget),
       committed, actual, projected,
+      derivedCommitted, derivedActual,
+      carriedCommitted, carriedActual,
+      adopting,
       variance: round2(budget - projected),
       wasCommitted, wasActual, wasProjected,
-      changed: committed !== wasCommitted || actual !== wasActual || projected !== wasProjected,
+      changed:
+        committed !== wasCommitted || actual !== wasActual || projected !== wasProjected || adopting,
     };
   });
 
