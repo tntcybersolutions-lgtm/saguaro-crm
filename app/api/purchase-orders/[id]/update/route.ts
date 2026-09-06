@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { recomputeAfter } from '@/lib/commitments-server';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -38,6 +39,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // No row matched — wrong id, or another tenant's PO. That is a failed write,
     // not a success, and the client must not report it as one.
     if (!data) return NextResponse.json({ error: 'Purchase order not found.' }, { status: 404 });
+    recomputeAfter(db, user.tenantId, (data as { project_id?: string } | null)?.project_id, 'po:update');
     return NextResponse.json({ success: true, purchase_order: data });
   } catch (err) {
     console.error('[purchase-orders/update]', err);

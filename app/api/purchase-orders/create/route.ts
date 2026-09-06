@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { recomputeAfter } from '@/lib/commitments-server';
 import { must } from '@/lib/db-write';
 
 export async function POST(req: NextRequest) {
@@ -40,25 +41,11 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    // ── A PO is a COMMITMENT — roll its total into the matching budget line so
-    //    committed cost never goes stale (same matching the CO cascade uses). ──
-    const total = Number(body.total) || Number(body.subtotal) || 0;
-    if (total > 0 && body.cost_code) {
-      const div = String(body.cost_code).slice(0, 2);
-      const { data: bLine } = await db
-        .from('budget_lines')
-        .select('id, committed')
-        .eq('project_id', body.project_id)
-        .eq('tenant_id', user.tenantId)
-        .or(`cost_code.eq.${body.cost_code},division.eq.${div}`)
-        .limit(1)
-        .maybeSingle();
-      if (bLine) {
-        await must(db.from('budget_lines')
-          .update({ committed: ((bLine as { committed: number | null }).committed || 0) + total })
-          .eq('id', (bLine as { id: string }).id), 'budget_lines write');
-      }
-    }
+    /* A PO is a COMMITMENT, so committed cost has to move. This used to do
+       `committed = committed + total` right here, which only ever added: a PO
+       that was later cancelled, edited down or deleted left its full value
+       committed forever. The rollup recomputes from source — lib/commitments.ts. */
+    recomputeAfter(db, user.tenantId, body.project_id, 'po:create');
 
     return NextResponse.json({ purchaseOrder: data });
   } catch {

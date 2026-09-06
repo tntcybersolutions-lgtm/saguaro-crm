@@ -25,3 +25,4 @@ audit-*.json
 .tmp-seed-out.txt
 .tmp-upload-test.pdf
 .tmp-drawings.pdf
+.tmp-commit-e2e.mjs

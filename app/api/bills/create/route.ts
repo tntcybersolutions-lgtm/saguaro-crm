@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { recomputeAfter } from '@/lib/commitments-server';
 import { must } from '@/lib/db-write';
 
 export async function POST(req: NextRequest) {
@@ -41,25 +42,12 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
 
-    // ── A bill is ACTUAL COST — roll it into the matching budget line so the
-    //    budget's actual column tracks reality without manual reconciliation. ──
-    const total = Number(body.total) || Number(body.amount) || 0;
-    if (total > 0 && body.cost_code) {
-      const div = String(body.cost_code).slice(0, 2);
-      const { data: bLine } = await db
-        .from('budget_lines')
-        .select('id, actual')
-        .eq('project_id', body.project_id)
-        .eq('tenant_id', user.tenantId)
-        .or(`cost_code.eq.${body.cost_code},division.eq.${div}`)
-        .limit(1)
-        .maybeSingle();
-      if (bLine) {
-        await must(db.from('budget_lines')
-          .update({ actual: ((bLine as { actual: number | null }).actual || 0) + total })
-          .eq('id', (bLine as { id: string }).id), 'budget_lines write');
-      }
-    }
+    /* A bill is ACTUAL COST, so the budget line has to move. This used to do
+       `actual = actual + total` right here, which was only ever correct on the
+       way in: editing, voiding or deleting the bill never took the money back
+       out, so `actual` drifted permanently upward. The rollup recomputes the
+       whole project from source instead — see lib/commitments.ts. */
+    recomputeAfter(db, user.tenantId, body.project_id, 'bill:create');
 
     return NextResponse.json({ bill: data });
   } catch {

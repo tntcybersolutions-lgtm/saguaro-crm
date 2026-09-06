@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { recomputeAfter } from '@/lib/commitments-server';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Full');
@@ -22,6 +23,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (error) throw error;
     if (!data) return NextResponse.json({ error: 'Bill not found' }, { status: 404 });
 
+    recomputeAfter(db, user.tenantId, (data as { project_id?: string } | null)?.project_id, 'bill:pay');
     return NextResponse.json({ success: true, bill: data });
   } catch (err) {
     console.error('[bills/pay] error:', err);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { recomputeAfter } from '@/lib/commitments-server';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -18,6 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .select()
       .single();
     if (error) throw error;
+    recomputeAfter(db, user.tenantId, (data as { project_id?: string } | null)?.project_id, 'po:status');
     return NextResponse.json({ success: true, purchase_order: data });
   } catch (err) {
     console.error('[purchase-orders/status]', err);
