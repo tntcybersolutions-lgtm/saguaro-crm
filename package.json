@@ -18,7 +18,7 @@
     "ship": "node scripts/ship.mjs",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,css,md}\"",
-    "test": "jest",
+    "test": "npm run test:sanity && jest --passWithNoTests",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "clean": "rm -rf .next node_modules",
@@ -35,7 +35,9 @@
     "engine:check": "node scripts/sync-heatmap-engine.mjs --check",
     "engine:sync": "node scripts/sync-heatmap-engine.mjs --sync",
     "engine:test": "npx -y tsx lib/heatmap/sanity.test.ts",
-    "prebuild": "node scripts/sync-heatmap-engine.mjs --check && node scripts/sync-takeoff-engine.mjs --check"
+    "prebuild": "node scripts/sync-heatmap-engine.mjs --check && node scripts/sync-takeoff-engine.mjs --check",
+    "test:sanity": "tsx lib/heatmap/sanity.test.ts && tsx lib/navGuard.sanity.test.ts && tsx scripts/takeoff-golden.test.mjs && tsx scripts/vector-pdf.test.mjs",
+    "test:jest": "jest --passWithNoTests"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
@@ -111,9 +113,11 @@
     "eslint": "^8.50.0",
     "eslint-config-next": "^14.0.0",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.5.1",
     "jsdom": "^22.1.0",
     "prettier": "^3.0.0",
     "ts-node": "^10.9.0",
+    "tsx": "^4.23.13",
     "typescript": "^5.3.0"
   },
   "engines": {
