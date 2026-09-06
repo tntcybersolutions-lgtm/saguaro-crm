@@ -34,7 +34,7 @@ import { createPortal } from 'react-dom';
 import {
   X, CaretLeft, CaretRight, MagnifyingGlassPlus, MagnifyingGlassMinus,
   DownloadSimple, ArrowsOutSimple, Columns, ArrowSquareOut, PencilSimple, Rows,
-  ArrowClockwise, MagnifyingGlass, SquaresFour, CircleNotch,
+  ArrowClockwise, MagnifyingGlass, SquaresFour, CircleNotch, ArrowsInSimple,
 } from '@phosphor-icons/react';
 
 const EVENT = 'saguaro-open-pdf';
@@ -90,11 +90,14 @@ export function openPdf(req: OpenPdfRequest) {
 
 /* ── one pane ───────────────────────────────────────────────────────────── */
 
+/** How the sheet is sized: to the pane width, to the whole page, or free zoom. */
+export type FitMode = 'width' | 'page' | 'off';
+
 function Pane({
-  url, label, zoom, page, onPages, fit, rotation = 0,
+  url, label, zoom, page, onPages, fitMode, rotation = 0,
 }: {
   url: string; label?: string; zoom: number; page: number;
-  onPages?: (n: number) => void; fit: boolean; rotation?: number;
+  onPages?: (n: number) => void; fitMode: FitMode; rotation?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -103,6 +106,26 @@ function Pane({
   /* Renders are async and a fast page or zoom change can land out of order,
      painting an older page over a newer one. Only the newest render wins. */
   const seq = useRef(0);
+
+  /* A fit is only correct for the pane size it was measured against. Without
+     this, dragging the window wider leaves a "fit to width" sheet at its old
+     width with a growing empty margin beside it — and opening the compare pane,
+     which halves the available width, does the same in reverse. Re-measuring on
+     resize is what makes the fit modes actually mean what they say. */
+  const [paneSize, setPaneSize] = useState(0);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0]?.contentRect;
+      if (!r) return;
+      /* Quantised so a one-pixel scrollbar flicker cannot start a render loop:
+         re-render only when the pane really changed size. */
+      setPaneSize(Math.round(r.width / 16) * 1000 + Math.round(r.height / 16));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -124,8 +147,19 @@ function Pane({
            because a sheet turned 90° is as wide as it was tall and fitting the
            unrotated width would push half of it off screen. */
         const base = p.getViewport({ scale: 1, rotation });
-        const avail = (wrapRef.current?.clientWidth ?? 900) - 48;
-        const scale = fit ? Math.max(0.2, avail / base.width) : zoom;
+        /* Floored: a pane that is collapsed, hidden or mid-layout reports a
+           width near zero, and dividing by it yields a scale that renders the
+           sheet as a smudge. Fall back to something readable instead. */
+        const availW = Math.max(240, (wrapRef.current?.clientWidth ?? 900) - 48);
+        const availH = Math.max(240, (wrapRef.current?.clientHeight ?? 700) - 48);
+        /* Fit-width fills the pane horizontally, which is what you want reading
+           a spec. Fit-page shows the whole sheet at once, which is what you want
+           checking one drawing against another. Different jobs, different fit —
+           a single "Fit" button can only ever serve one of them. */
+        const scale =
+          fitMode === 'width' ? Math.max(0.2, availW / base.width)
+            : fitMode === 'page' ? Math.max(0.2, Math.min(availW / base.width, availH / base.height))
+              : zoom;
 
         /* Raster at device pixel ratio, or a dimension string on a plan is a
            blur the GC has to zoom into to read. */
@@ -150,7 +184,7 @@ function Pane({
     })();
 
     return () => { cancelled = true; };
-  }, [url, zoom, page, fit, rotation, onPages]);
+  }, [url, zoom, page, fitMode, rotation, paneSize, onPages]);
 
   return (
     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -314,7 +348,7 @@ function Thumbs({
 export default function PdfViewer() {
   const [req, setReq] = useState<OpenPdfRequest | null>(null);
   const [zoom, setZoom] = useState(1.2);
-  const [fit, setFit] = useState(true);
+  const [fitMode, setFitMode] = useState<FitMode>('width');
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [compare, setCompare] = useState(false);
@@ -335,7 +369,7 @@ export default function PdfViewer() {
     const onOpen = (e: Event) => {
       const d = (e as CustomEvent).detail as OpenPdfRequest;
       setReq(d);
-      setZoom(1.2); setFit(true); setPage(1); setPages(1);
+      setZoom(1.2); setFitMode('width'); setPage(1); setPages(1);
       setCompare(Boolean(d.compareUrl)); setStacked(false); setSplit(50);
       setRotation(0); setRail(false); setPageInput('');
       setQuery(''); setHits(null); setSearching(false);
@@ -360,9 +394,10 @@ export default function PdfViewer() {
       if (e.key === 'Escape') close();
       else if (e.key === 'ArrowRight') setPage((p) => Math.min(p + 1, pages));
       else if (e.key === 'ArrowLeft') setPage((p) => Math.max(p - 1, 1));
-      else if (e.key === '+' || e.key === '=') { setFit(false); setZoom((z) => Math.min(z + 0.2, 5)); }
-      else if (e.key === '-') { setFit(false); setZoom((z) => Math.max(z - 0.2, 0.3)); }
-      else if (e.key === '0') setFit(true);
+      else if (e.key === '+' || e.key === '=') { setFitMode('off'); setZoom((z) => Math.min(z + 0.2, 5)); }
+      else if (e.key === '-') { setFitMode('off'); setZoom((z) => Math.max(z - 0.2, 0.3)); }
+      else if (e.key === '0') setFitMode('width');
+      else if (e.key === '9') setFitMode('page');
       else if (e.key === 'r' || e.key === 'R') setRotation((r) => (r + 90) % 360);
       else if (e.key === 't' || e.key === 'T') setRail((v) => !v);
       else if (e.key === 'Home') setPage(1);
@@ -524,17 +559,28 @@ export default function PdfViewer() {
 
         <span style={{ width: 1, height: 20, background: HAIR, margin: '0 5px' }} />
 
-        <button style={chip} onClick={() => { setFit(false); setZoom((z) => Math.max(0.3, z - 0.2)); }} aria-label="Zoom out">
+        <button style={chip} onClick={() => { setFitMode('off'); setZoom((z) => Math.max(0.3, z - 0.2)); }} aria-label="Zoom out">
           <MagnifyingGlassMinus size={14} weight="bold" />
         </button>
         <span style={{ fontSize: 12.5, color: DIM, minWidth: 52, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
-          {fit ? 'Fit' : `${Math.round(zoom * 100)}%`}
+          {fitMode === 'off' ? `${Math.round(zoom * 100)}%` : fitMode === 'width' ? 'Width' : 'Page'}
         </span>
-        <button style={chip} onClick={() => { setFit(false); setZoom((z) => Math.min(5, z + 0.2)); }} aria-label="Zoom in">
+        <button style={chip} onClick={() => { setFitMode('off'); setZoom((z) => Math.min(5, z + 0.2)); }} aria-label="Zoom in">
           <MagnifyingGlassPlus size={14} weight="bold" />
         </button>
-        <button style={{ ...chip, ...(fit ? active : {}) }} onClick={() => setFit(true)}>
-          <ArrowsOutSimple size={14} weight="bold" /> Fit
+        <button
+          style={{ ...chip, ...(fitMode === 'width' ? active : {}) }}
+          onClick={() => setFitMode('width')}
+          title="Fit the sheet to the pane width — best for reading a spec"
+        >
+          <ArrowsOutSimple size={14} weight="bold" /> Width
+        </button>
+        <button
+          style={{ ...chip, ...(fitMode === 'page' ? active : {}) }}
+          onClick={() => setFitMode('page')}
+          title="Fit the whole sheet — best for comparing drawings"
+        >
+          <ArrowsInSimple size={14} weight="bold" /> Page
         </button>
         <button
           style={{ ...chip, ...(rotation ? active : {}) }}
@@ -652,7 +698,7 @@ export default function PdfViewer() {
         {compare && req.compareUrl && (
           <>
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, flex: stacked ? 1 : `0 0 ${split}%` }}>
-              <Pane url={req.compareUrl} label={req.compareTitle || 'Previous revision'} zoom={zoom} page={page} fit={fit} rotation={rotation} />
+              <Pane url={req.compareUrl} label={req.compareTitle || 'Previous revision'} zoom={zoom} page={page} fitMode={fitMode} rotation={rotation} />
             </div>
 
             {/* Draggable divider. Wide enough to grab, thin enough to ignore. */}
@@ -678,7 +724,7 @@ export default function PdfViewer() {
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, flex: 1 }}>
-          <Pane url={req.url} label={compare ? (req.title || 'Current') : undefined} zoom={zoom} page={page} onPages={onPages} fit={fit} rotation={rotation} />
+          <Pane url={req.url} label={compare ? (req.title || 'Current') : undefined} zoom={zoom} page={page} onPages={onPages} fitMode={fitMode} rotation={rotation} />
         </div>
       </div>
       </div>
@@ -694,7 +740,7 @@ export default function PdfViewer() {
         <span style={{ margin: '0 10px', opacity: 0.4 }}>·</span>
         <kbd style={{ color: TEXT }}>+</kbd> <kbd style={{ color: TEXT }}>−</kbd> zoom
         <span style={{ margin: '0 10px', opacity: 0.4 }}>·</span>
-        <kbd style={{ color: TEXT }}>0</kbd> fit
+        <kbd style={{ color: TEXT }}>0</kbd>/<kbd style={{ color: TEXT }}>9</kbd> fit width/page
         <span style={{ margin: '0 10px', opacity: 0.4 }}>·</span>
         <kbd style={{ color: TEXT }}>R</kbd> rotate
         <span style={{ margin: '0 10px', opacity: 0.4 }}>·</span>

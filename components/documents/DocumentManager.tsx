@@ -133,6 +133,11 @@ export default function DocumentManager({ projectId }: { projectId?: string }) {
   const [versions, setVersions] = useState<ManagedFile[] | null>(null);
   const [versionsLoading, setVersionsLoading] = useState(false);
 
+  /* Bulk selection. Filing twenty uploads one at a time is the single most
+     tedious thing in every document manager on the market, PMWeb's included. */
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState<string | null>(null);
+
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
@@ -220,6 +225,68 @@ export default function DocumentManager({ projectId }: { projectId?: string }) {
       setUploading(false);
     }
   }, [activeProject, activeFolder, load]);
+
+  const togglePick = useCallback((id: string) => {
+    setPicked((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }, []);
+
+  /* Every bulk action is one request per file against the endpoints that
+     already exist. Failures are counted rather than thrown, so one locked file
+     does not abandon the other nineteen halfway through. */
+  const bulkPatch = useCallback(async (body: Record<string, unknown>, verb: string) => {
+    const ids = [...picked];
+    if (ids.length === 0) return;
+    setBulkBusy(verb);
+    let ok = 0, failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/files/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        res.ok ? ok++ : failed++;
+      } catch { failed++; }
+    }
+    setBulkBusy(null);
+    setPicked(new Set());
+    setUploadMsg(failed ? `${verb}: ${ok} done, ${failed} failed` : `${verb}: ${ok} file${ok === 1 ? '' : 's'}`);
+    await load();
+  }, [picked, load]);
+
+  const bulkDelete = useCallback(async () => {
+    const ids = [...picked];
+    if (ids.length === 0) return;
+    setBulkBusy('Deleting');
+    let ok = 0, failed = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/files/${id}`, { method: 'DELETE' });
+        res.ok ? ok++ : failed++;
+      } catch { failed++; }
+    }
+    setBulkBusy(null);
+    setPicked(new Set());
+    setUploadMsg(`Moved to trash: ${ok}${failed ? `, ${failed} failed` : ''} — restorable`);
+    await load();
+  }, [picked, load]);
+
+  /* Opens each file through the signing proxy on a stagger. Browsers block a
+     burst of simultaneous window.opens; spacing them keeps every file coming. */
+  const bulkOpen = useCallback(async () => {
+    const chosen = files.filter((f) => picked.has(f.id) && openUrl(f));
+    setBulkBusy('Opening');
+    for (const f of chosen) {
+      window.open(openUrl(f), '_blank', 'noopener');
+      await new Promise((r) => setTimeout(r, 220));
+    }
+    setBulkBusy(null);
+    setUploadMsg(`Opened ${chosen.length} file${chosen.length === 1 ? '' : 's'} in new tabs`);
+  }, [files, picked]);
 
   const rows = useMemo(() => {
     const cf = colFilter;
@@ -472,10 +539,86 @@ export default function DocumentManager({ projectId }: { projectId?: string }) {
           </div>
         )}
 
+        {picked.size > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+            padding: '8px 12px', borderBottom: `1px solid ${BORDER}`,
+            background: 'rgba(245,158,11,0.10)',
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: GOLD }}>
+              {picked.size} selected
+            </span>
+            <span style={{ fontSize: 11, color: DIM }}>
+              {bytes(files.filter((f) => picked.has(f.id)).reduce((s, f) => s + (Number(f.file_size) || 0), 0))}
+            </span>
+
+            <span style={{ flex: 1 }} />
+
+            {bulkBusy ? (
+              <span style={{ fontSize: 11.5, color: DIM, fontWeight: 700 }}>{bulkBusy}…</span>
+            ) : (
+              <>
+                <button type="button" onClick={bulkOpen}
+                  style={{ background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, color: TEXT, fontSize: 11, fontWeight: 700, padding: '5px 9px', cursor: 'pointer' }}>
+                  Open all
+                </button>
+
+                <select
+                  aria-label="Move selected to folder"
+                  defaultValue=""
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    e.target.value = '';
+                    if (v === '__new') {
+                      const name = window.prompt('Move to which folder?');
+                      if (name && name.trim()) void bulkPatch({ folder: name.trim() }, `Moved to ${name.trim()}`);
+                    } else if (v) {
+                      void bulkPatch({ folder: v === '__unfiled' ? '' : v }, `Moved to ${v === '__unfiled' ? 'Unfiled' : v}`);
+                    }
+                  }}
+                  style={{ ...inputStyle, width: 'auto', padding: '5px 7px', fontSize: 11 }}
+                >
+                  <option value="">Move to…</option>
+                  {[...new Set(files.map((f) => f.folder).filter((f): f is string => !!f))].map((f) => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                  <option value="__unfiled">Unfiled</option>
+                  <option value="__new">New folder…</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm(`Move ${picked.size} file${picked.size === 1 ? '' : 's'} to trash? They stay restorable.`)) void bulkDelete();
+                  }}
+                  style={{ background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.45)', borderRadius: 6, color: '#FCA5A5', fontSize: 11, fontWeight: 700, padding: '5px 9px', cursor: 'pointer' }}
+                >
+                  Trash
+                </button>
+
+                <button type="button" onClick={() => setPicked(new Set())}
+                  style={{ background: 'none', border: 'none', color: DIM, fontSize: 11, fontWeight: 700, padding: '5px 4px', cursor: 'pointer' }}>
+                  Clear
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
         <div style={{ maxHeight: 610, overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 2, background: '#141a22' }}>
               <tr>
+                <th style={{ ...thStyle, width: 30, paddingRight: 0 }}>
+                  <input
+                    type="checkbox"
+                    aria-label="Select all shown"
+                    checked={rows.length > 0 && rows.every((r) => picked.has(r.id))}
+                    ref={(el) => { if (el) el.indeterminate = picked.size > 0 && !rows.every((r) => picked.has(r.id)); }}
+                    onChange={(e) => setPicked(e.target.checked ? new Set(rows.map((r) => r.id)) : new Set())}
+                    style={{ accentColor: GOLD, cursor: 'pointer' }}
+                  />
+                </th>
                 <SortTh k="file_name">Document</SortTh>
                 <th style={{ ...thStyle, width: 74 }}>Ext</th>
                 <SortTh k="version_number" width={66}>Rev</SortTh>
@@ -486,6 +629,7 @@ export default function DocumentManager({ projectId }: { projectId?: string }) {
                 <SortTh k="created_at" width={110}>Date</SortTh>
               </tr>
               <tr>
+                <th style={{ borderBottom: `1px solid ${BORDER}` }} />
                 <th style={{ padding: '5px 8px', borderBottom: `1px solid ${BORDER}` }}>
                   <input value={colFilter.name} onChange={(e) => setColFilter((s) => ({ ...s, name: e.target.value }))} placeholder="Filter…" style={inputStyle} />
                 </th>
@@ -507,11 +651,11 @@ export default function DocumentManager({ projectId }: { projectId?: string }) {
 
             <tbody>
               {loading && (
-                <tr><td colSpan={8} style={{ padding: 26, textAlign: 'center', color: DIM, fontSize: 12 }}>Loading documents…</td></tr>
+                <tr><td colSpan={9} style={{ padding: 26, textAlign: 'center', color: DIM, fontSize: 12 }}>Loading documents…</td></tr>
               )}
 
               {!loading && error && (
-                <tr><td colSpan={8} style={{ padding: 22, textAlign: 'center' }}>
+                <tr><td colSpan={9} style={{ padding: 22, textAlign: 'center' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#ef4444', fontSize: 12.5, fontWeight: 600 }}>
                     <WarningCircle size={16} weight="fill" /> {error}
                   </div>
@@ -520,7 +664,7 @@ export default function DocumentManager({ projectId }: { projectId?: string }) {
               )}
 
               {!loading && !error && rows.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: 30, textAlign: 'center', color: DIM, fontSize: 12.5 }}>
+                <tr><td colSpan={9} style={{ padding: 30, textAlign: 'center', color: DIM, fontSize: 12.5 }}>
                   {filtersActive ? 'No documents match these filters.' : 'No documents yet — drop files anywhere on this panel to upload.'}
                 </td></tr>
               )}
@@ -529,7 +673,7 @@ export default function DocumentManager({ projectId }: { projectId?: string }) {
                 <React.Fragment key={g.key || 'all'}>
                   {groupBy !== 'none' && (
                     <tr>
-                      <td colSpan={8} style={{ padding: '7px 10px', background: SUNK, borderBottom: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 800, color: GOLD, letterSpacing: 0.3 }}>
+                      <td colSpan={9} style={{ padding: '7px 10px', background: SUNK, borderBottom: `1px solid ${BORDER}`, fontSize: 11, fontWeight: 800, color: GOLD, letterSpacing: 0.3 }}>
                         {g.label} <span style={{ color: DIM, fontWeight: 700 }}>· {g.items.length}</span>
                       </td>
                     </tr>
@@ -543,6 +687,15 @@ export default function DocumentManager({ projectId }: { projectId?: string }) {
                         onDoubleClick={() => { if (isPdf(f)) openPdf({ url: openUrl(f), title: f.file_name || 'Document' }); else if (openUrl(f)) window.open(openUrl(f), '_blank', 'noopener'); }}
                         style={{ cursor: 'pointer', background: on ? 'rgba(245,158,11,0.10)' : 'transparent', borderBottom: `1px solid ${BORDER}` }}
                       >
+                        <td style={{ padding: '8px 4px 8px 10px' }} onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${f.file_name || 'file'}`}
+                            checked={picked.has(f.id)}
+                            onChange={() => togglePick(f.id)}
+                            style={{ accentColor: GOLD, cursor: 'pointer' }}
+                          />
+                        </td>
                         <td style={{ padding: '8px 10px', fontSize: 12.5, color: TEXT, fontWeight: 600, minWidth: 0 }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
                             <KindIcon f={f} />

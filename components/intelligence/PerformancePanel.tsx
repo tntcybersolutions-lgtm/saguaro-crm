@@ -14,6 +14,7 @@
 
 import React, { useState } from 'react';
 import useSWR from 'swr';
+import CostCodeDrill from '@/components/intelligence/CostCodeDrill';
 import {
   TrendUp, TrendDown, WarningCircle, CheckCircle, Warning,
   CaretDown, CaretRight, Gauge,
@@ -141,6 +142,7 @@ export default function PerformancePanel({ projectIds }: { projectIds?: string[]
     revalidateOnFocus: false,
   });
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [drill, setDrill] = useState<{ projectId: string; division: string } | null>(null);
 
   const card: React.CSSProperties = {
     background: NEST, border: `1px solid ${NEST_BORDER}`, borderRadius: 12, padding: 14,
@@ -305,19 +307,38 @@ export default function PerformancePanel({ projectIds }: { projectIds?: string[]
                   <div style={{ marginTop: 14 }}>
                     <div style={{ fontSize: 10, fontWeight: 800, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
                       Where the overrun is
+                      <span style={{ color: DIM, opacity: 0.7, fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}> — click a division to open it</span>
                     </div>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
-                        {p.worstCodes.map((c) => (
-                          <tr key={c.code} style={{ borderTop: `1px solid ${HAIR}` }}>
-                            <td style={{ padding: '5px 0', fontSize: 11.5, color: TEXT, fontWeight: 700, whiteSpace: 'nowrap' }}>{c.code}</td>
-                            <td style={{ padding: '5px 8px', fontSize: 11, color: DIM, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>{c.description}</td>
-                            <td style={{ padding: '5px 0', fontSize: 11, color: DIM, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{money(c.budget)}</td>
-                            <td style={{ padding: '5px 0 5px 10px', fontSize: 11.5, color: RED, textAlign: 'right', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{money(c.variance)}</td>
-                          </tr>
-                        ))}
+                        {p.worstCodes.map((c) => {
+                          const open = drill?.projectId === p.id && drill?.division === c.code;
+                          return (
+                            <tr
+                              key={c.code}
+                              onClick={() => setDrill(open ? null : { projectId: p.id, division: c.code })}
+                              style={{
+                                borderTop: `1px solid ${HAIR}`, cursor: 'pointer',
+                                background: open ? 'rgba(245,158,11,0.10)' : 'transparent',
+                              }}
+                            >
+                              <td style={{ padding: '5px 0', fontSize: 11.5, color: open ? GOLD : TEXT, fontWeight: 700, whiteSpace: 'nowrap' }}>{c.code}</td>
+                              <td style={{ padding: '5px 8px', fontSize: 11, color: DIM, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>{c.description}</td>
+                              <td style={{ padding: '5px 0', fontSize: 11, color: DIM, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{money(c.budget)}</td>
+                              <td style={{ padding: '5px 0 5px 10px', fontSize: 11.5, color: RED, textAlign: 'right', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{money(c.variance)}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
+
+                    {drill?.projectId === p.id && (
+                      <CostCodeDrill
+                        projectId={drill.projectId}
+                        division={drill.division}
+                        onClose={() => setDrill(null)}
+                      />
+                    )}
                   </div>
                 )}
 
