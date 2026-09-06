@@ -50,17 +50,38 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
   const user = g.user;
   try {
     const supabase = createServerClient();
-    // Record read receipt
+
+    // The correspondence id arrives in the URL. Confirm it belongs to this
+    // tenant before writing against it — otherwise a signed-in user could post
+    // a read receipt onto another tenant's correspondence, and the row landed
+    // with no tenant_id of its own so nothing would ever surface it again.
+    const { data: parent } = await supabase
+      .from('correspondence')
+      .select('id')
+      .eq('id', params.id)
+      .eq('project_id', params.projectId)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (!parent) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
     const { error } = await supabase
       .from('correspondence_read_receipts')
       .upsert({
+        tenant_id: user.tenantId,
         correspondence_id: params.id,
         recipient_email: user.email,
         read_at: new Date().toISOString(),
       });
-    if (error) return NextResponse.json({ success: true });
+    // A duplicate receipt is not a failure worth surfacing, but a real write
+    // error should not be reported as success.
+    if (error) {
+      console.error('[correspondence read-receipt] upsert failed:', error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to record read receipt' }, { status: 500 });
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : 'Failed to record read receipt';
+    console.error('[correspondence read-receipt] error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
