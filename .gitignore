@@ -148,3 +148,7 @@ bundle-report.html
 # NEVER commit signing material or env — added during WIP preservation 2026-08-20
 android/*.keystore
 *.tgz
+
+# Electron build output — 335 MB of regenerable binaries were committed here
+# once and blocked every push (a 177 MB exe exceeds GitHub's hard limit).
+dist-electron/
