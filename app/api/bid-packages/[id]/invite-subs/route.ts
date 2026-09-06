@@ -6,6 +6,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { id } = await params;
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const db = createServerClient();
 
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       // Skip if already invited
       const { data: existing } = await db
         .from('bid_package_invites')
-        .select('id')
+        .select('id').eq('tenant_id', user.tenantId)
         .eq('bid_package_id', id)
         .eq('sub_email', sub.email)
         .single();

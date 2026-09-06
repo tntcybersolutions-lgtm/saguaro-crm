@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
 
   const { data: project } = await supabase
     .from('projects')
-    .select('name, address, city, state, building_type')
+    .select('name, address, city, state, building_type').eq('tenant_id', tenantId)
     .eq('id', projectId)
     .single()
 
@@ -174,7 +174,7 @@ Return this exact JSON structure:
   } else {
     const { data: newLog, error: logErr } = await supabase
       .from('daily_logs')
-      .insert(logInsert)
+      .insert({ ...logInsert, tenant_id: tenantId })
       .select('id')
       .single()
     if (logErr) return NextResponse.json({ error: logErr.message }, { status: 500 })

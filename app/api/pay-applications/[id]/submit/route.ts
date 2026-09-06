@@ -44,7 +44,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     try {
       const { data: project } = await db
         .from('projects')
-        .select('name, pm_name')
+        .select('name, pm_name').eq('tenant_id', user.tenantId)
         .eq('id', pa.project_id as string)
         .single();
 

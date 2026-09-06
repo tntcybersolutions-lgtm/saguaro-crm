@@ -52,7 +52,7 @@ export async function GET(
   // Get project name
   const { data: project } = await supabase
     .from('projects')
-    .select('name')
+    .select('name').eq('tenant_id', tenantId)
     .eq('id', projectId)
     .single();
 

@@ -93,7 +93,9 @@ export default function PortalSageChat({ token, portalType, projectContext, user
               full += evt.text;
               setMessages(prev => [...prev.slice(0, -1), { role: 'assistant', content: full }]);
             }
-          } catch {}
+          } catch (e) {
+            console.error('[portal sage] stream failed:', e);
+          }
         }
       }
     } catch {

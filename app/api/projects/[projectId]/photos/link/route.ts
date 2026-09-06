@@ -49,7 +49,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     let query = supabase
       .from('photo_entity_links')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId);
 
     if (photo_id) {

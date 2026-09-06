@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
         .order('win_rate', { ascending: false })
         .limit(20),
       db.from('subcontractors')
-        .select('*')
+        .select('*').eq('tenant_id', user.tenantId)
         .eq('project_id', projectId)
         .ilike('trade', `%${trade}%`),
       db.from('subcontractors')

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const [{ data: project }, { data: gc }, { data: timeEntries }] = await Promise.all([
     supabase
       .from('projects')
-      .select('name, address, city, state, project_number, davis_bacon_wage_decision, prevailing_wage, federal_project_number, awarding_agency')
+      .select('name, address, city, state, project_number, davis_bacon_wage_decision, prevailing_wage, federal_project_number, awarding_agency').eq('tenant_id', tenantId)
       .eq('id', projectId)
       .single(),
     supabase

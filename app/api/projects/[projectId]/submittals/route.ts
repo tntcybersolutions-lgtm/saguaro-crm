@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 
     const { data, error } = await supabase
       .from('submittals')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .order('created_at', { ascending: false });
     if (error) throw error;

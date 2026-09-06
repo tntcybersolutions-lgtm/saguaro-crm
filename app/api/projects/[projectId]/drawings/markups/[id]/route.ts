@@ -76,7 +76,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
     const { data, error } = await supabase
       .from('drawing_markup_comments')
-      .insert(row)
+      .insert({ ...row, tenant_id: user.tenantId })
       .select()
       .single();
 

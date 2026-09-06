@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [{ data: project }, { data: gc }, { data: primeContract }, { count: existingCOs }] = await Promise.all([
-    supabase.from('projects').select('name,address,city,state,building_type,contract_value,start_date,end_date,owner_name').eq('id', projectId).single(),
+    supabase.from('projects').select('name,address,city,state,building_type,contract_value,start_date,end_date,owner_name').eq('tenant_id', tenantId).eq('id', projectId).single(),
     supabase.from('tenant_settings').select('company_name,default_retainage_pct,default_payment_terms,signature_name,signature_title,license_number,company_address,company_city,company_state,company_zip').eq('tenant_id', tenantId).maybeSingle(),
     supabase.from('prime_contracts').select('*').eq('project_id', projectId).eq('tenant_id', tenantId).maybeSingle(),
     supabase.from('change_orders').select('*', { count: 'exact', head: true }).eq('project_id', projectId).eq('tenant_id', tenantId),

@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const url = new URL(req.url);
     const week = url.searchParams.get('week');
     const status = url.searchParams.get('status');
-    let q = supabase.from('timesheets').select('*').eq('project_id', params.projectId);
+    let q = supabase.from('timesheets').select('*').eq('tenant_id', user.tenantId).eq('project_id', params.projectId);
     if (week) q = q.eq('week_ending', week);
     if (status) q = q.eq('status', status);
     const { data, error } = await q.order('work_date', { ascending: false });

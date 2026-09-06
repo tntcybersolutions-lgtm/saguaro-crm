@@ -102,7 +102,8 @@ function getBookmarks(): string[] {
   } catch { return []; }
 }
 function setBookmarks(ids: string[]) {
-  try { localStorage.setItem('saguaro-spec-bookmarks', JSON.stringify(ids)); } catch {}
+  try { localStorage.setItem('saguaro-spec-bookmarks', JSON.stringify(ids)); }
+  catch { /* localStorage unavailable (private mode / blocked cookies) */ }
 }
 function getRecentlyViewed(): string[] {
   try {
@@ -115,7 +116,7 @@ function addRecentlyViewed(id: string) {
     const recent = getRecentlyViewed().filter(r => r !== id);
     recent.unshift(id);
     localStorage.setItem('saguaro-spec-recent', JSON.stringify(recent.slice(0, 20)));
-  } catch {}
+  } catch { /* localStorage unavailable (private mode / blocked cookies) */ }
 }
 
 /* ══════════════════════════════════════════════════════════

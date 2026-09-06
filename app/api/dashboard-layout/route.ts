@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from('dashboard_layouts').select('*').eq('user_id', user.id).single();
+    const { data, error } = await supabase.from('dashboard_layouts').select('*').eq('tenant_id', user.tenantId).eq('user_id', user.id).single();
     if (error && error.code !== 'PGRST116') throw error;
     return NextResponse.json({ layout: data ?? { widgets: [] } });
   } catch { return NextResponse.json({ layout: { widgets: [] } }); }

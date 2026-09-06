@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   const config = LETTER_CONFIGS[typed]
 
   const [{ data: project }, { data: gc }, { data: primeContract }] = await Promise.all([
-    supabase.from('projects').select('*').eq('id', projectId).single(),
+    supabase.from('projects').select('*').eq('tenant_id', tenantId).eq('id', projectId).single(),
     supabase.from('tenant_settings').select('*').eq('tenant_id', tenantId).maybeSingle(),
     supabase
       .from('prime_contracts')

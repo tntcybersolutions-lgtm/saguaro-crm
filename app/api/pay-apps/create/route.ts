@@ -13,13 +13,13 @@ export async function POST(req: NextRequest) {
     const projectId = body.projectId;
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-    const { data: project } = await db.from('projects').select('*').eq('id', projectId).single();
+    const { data: project } = await db.from('projects').select('*').eq('tenant_id', user.tenantId).eq('id', projectId).single();
     const p = project as any;
 
     // Get next application number
     const { data: lastApp } = await db
       .from('pay_applications')
-      .select('application_number')
+      .select('application_number').eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .order('application_number', { ascending: false })
       .limit(1)

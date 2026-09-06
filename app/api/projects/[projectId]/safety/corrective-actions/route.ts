@@ -14,7 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 
     const result = await supabase
       .from('safety_corrective_actions')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .order('created_at', { ascending: false });
 
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       // Table doesn't exist, try safety_incidents with type='corrective_action'
       const fallback = await supabase
         .from('safety_incidents')
-        .select('*')
+        .select('*').eq('tenant_id', user.tenantId)
         .eq('project_id', params.projectId)
         .eq('type', 'corrective_action')
         .order('created_at', { ascending: false });
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     // Try dedicated table first
     const { data, error } = await supabase
       .from('safety_corrective_actions')
-      .insert(record)
+      .insert({ ...record, tenant_id: user.tenantId })
       .select()
       .single();
 
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
 
       const fallback = await supabase
         .from('safety_incidents')
-        .insert(fallbackRecord)
+        .insert({ ...fallbackRecord, tenant_id: user.tenantId })
         .select()
         .single();
 

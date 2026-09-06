@@ -31,7 +31,7 @@ export async function POST(
       .select('company_name, company_address, company_city, company_state, company_zip, company_phone, company_email, license_number, license_state, ein, signature_name, signature_title')
       .eq('tenant_id', tenantId).maybeSingle(),
     supabase.from('projects')
-      .select('name, address, city, state, owner_name, owner_company')
+      .select('name, address, city, state, owner_name, owner_company').eq('tenant_id', tenantId)
       .eq('id', waiver.project_id).maybeSingle(),
   ])
 

@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, created: 0, message: 'No awarded subs found' })
   }
 
-  const { data, error } = await supabase.from('lien_waivers').insert(inserts).select('id')
+  const { data, error } = await supabase.from('lien_waivers').insert(inserts.map((row) => ({ ...row, tenant_id: tenantId }))).select('id')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ success: true, created: data?.length ?? 0, state: stateCode })

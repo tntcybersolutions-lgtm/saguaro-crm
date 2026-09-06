@@ -7,7 +7,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   try {
     const db = createServerClient();
-    const { data, error } = await db.from('rfis').select('*, projects(name)').eq('id', id).single();
+    const { data, error } = await db.from('rfis').select('*, projects(name)').eq('tenant_id', user.tenantId).eq('id', id).single();
     if (error) throw error;
     return NextResponse.json({ rfi: data });
   } catch {

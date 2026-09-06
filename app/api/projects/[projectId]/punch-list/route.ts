@@ -16,7 +16,7 @@ export async function GET(
     );
     const { data, error } = await supabase
       .from('punch_list_items')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .neq('trade', 'delivery')   // exclude delivery logs stored in same table
       .order('created_at', { ascending: false });

@@ -8,8 +8,9 @@ export async function GET(req: NextRequest) {
   const q = searchParams.get('q') || '';
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const db = createServerClient();
-    let query = db.from('subcontractors').select('*').order('name').limit(50);
+    let query = db.from('subcontractors').select('*').eq('tenant_id', user.tenantId).order('name').limit(50);
     if (user?.tenantId) query = query.eq('tenant_id', user.tenantId);
     if (trade) query = query.ilike('trade', `%${trade}%`);
     if (state) query = query.eq('state', state);

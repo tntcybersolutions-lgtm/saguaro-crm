@@ -83,7 +83,7 @@ export async function GET(
         // Two separate queries — avoid FK join (can fail with PGRST200)
         const { data: takeoff } = await supabase
           .from('takeoffs')
-          .select('*')
+          .select('*').eq('tenant_id', user.tenantId)
           .eq('id', takeoffId)
           .single();
 
@@ -94,7 +94,7 @@ export async function GET(
 
         const { data: materialsData } = await supabase
           .from('takeoff_materials')
-          .select('*')
+          .select('*').eq('tenant_id', user.tenantId)
           .eq('takeoff_id', takeoffId)
           .order('sort_order', { ascending: true });
 
@@ -107,7 +107,7 @@ export async function GET(
         // ── 2. Load project ─────────────────────────────────────────────────
         const { data: project } = await supabase
           .from('projects')
-          .select('*')
+          .select('*').eq('tenant_id', user.tenantId)
           .eq('id', takeoff.project_id)
           .single();
 
@@ -242,7 +242,7 @@ Rules:
         // Remove any existing packages for this project before regenerating (idempotent)
         const { data: existingPkgs } = await supabase
           .from('bid_packages')
-          .select('id')
+          .select('id').eq('tenant_id', user.tenantId)
           .eq('project_id', takeoff.project_id);
 
         if (existingPkgs && existingPkgs.length > 0) {
@@ -406,7 +406,7 @@ Rules:
         try {
           const { data: lastApp } = await supabase
             .from('pay_applications')
-            .select('app_number')
+            .select('app_number').eq('tenant_id', user.tenantId)
             .eq('project_id', takeoff.project_id)
             .order('app_number', { ascending: false })
             .limit(1)

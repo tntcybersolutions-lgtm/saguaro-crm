@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await db
       .from('network_vlans')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('network_project_id', networkProjectId)
       .order('vlan_id', { ascending: true });
 

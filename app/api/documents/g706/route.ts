@@ -5,13 +5,14 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const db = createServerClient();
-    const { data: project } = await db.from('projects').select('*').eq('id', body.projectId).single();
+    const { data: project } = await db.from('projects').select('*').eq('tenant_id', user.tenantId).eq('id', body.projectId).single();
     const p = project as any;
 
     // Check if all lien waivers received
-    const { count: pendingWaivers } = await db.from('lien_waivers').select('*', { count: 'exact', head: true }).eq('project_id', body.projectId).neq('status', 'signed');
+    const { count: pendingWaivers } = await db.from('lien_waivers').select('*', { count: 'exact', head: true }).eq('tenant_id', user.tenantId).eq('project_id', body.projectId).neq('status', 'signed');
     const allWaiversReceived = (pendingWaivers || 0) === 0;
 
     const pdfBytes = await generateG706({

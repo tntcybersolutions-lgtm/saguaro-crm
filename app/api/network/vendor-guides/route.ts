@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     let query = db
       .from('network_vendor_guides')
-      .select('id, vendor, model_family, category, title, difficulty, estimated_minutes, tags, created_at', { count: 'exact' })
+      .select('id, vendor, model_family, category, title, difficulty, estimated_minutes, tags, created_at', { count: 'exact' }).eq('tenant_id', user.tenantId)
       .or(tenantFilter)
       .order('vendor')
       .order('title')
@@ -38,14 +38,14 @@ export async function GET(req: NextRequest) {
     // Distinct vendors and categories for filter dropdowns
     const { data: vRows } = await db
       .from('network_vendor_guides')
-      .select('vendor')
+      .select('vendor').eq('tenant_id', user.tenantId)
       .or(tenantFilter)
       .order('vendor');
     const vendors = [...new Set((vRows || []).map((r: { vendor: string }) => r.vendor))];
 
     const { data: cRows } = await db
       .from('network_vendor_guides')
-      .select('category')
+      .select('category').eq('tenant_id', user.tenantId)
       .or(tenantFilter)
       .order('category');
     const categories = [...new Set((cRows || []).map((r: { category: string }) => r.category))];

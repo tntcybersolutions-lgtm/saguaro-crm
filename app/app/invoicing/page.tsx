@@ -127,7 +127,10 @@ export default function InvoicingPage() {
     try {
       await fetch(`/api/invoices/${deleteConfirm}/delete`, { method: 'DELETE' });
       await fetchInvoices();
-    } catch {}
+    } catch (e) {
+      console.error('[invoicing] delete failed:', e);
+      setError('Could not delete that invoice. Please try again.');
+    }
     setDeleting(false);
     setDeleteConfirm(null);
   }
@@ -136,7 +139,10 @@ export default function InvoicingPage() {
     try {
       await fetch(`/api/invoices/${id}/send`, { method: 'POST' });
       await fetchInvoices();
-    } catch {}
+    } catch (e) {
+      console.error('[invoicing] send failed:', e);
+      setError('Could not send that invoice. Please try again.');
+    }
   }
 
   const columns = useMemo(() => [

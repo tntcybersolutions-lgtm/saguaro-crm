@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 })
 
   const [projectRes, gcRes, itemsRes, pkgRes] = await Promise.all([
-    supabase.from('projects').select('name, address, city, state, owner_name, end_date').eq('id', projectId).single(),
+    supabase.from('projects').select('name, address, city, state, owner_name, end_date').eq('tenant_id', tenantId).eq('id', projectId).single(),
     supabase.from('tenant_settings').select('company_name, signature_name, signature_title, company_phone, company_email').eq('tenant_id', tenantId).maybeSingle(),
     supabase.from('closeout_items').select('id, category, title, required_from, status, received_at, notes').eq('project_id', projectId).eq('tenant_id', tenantId).order('category'),
     supabase.from('closeout_packages').select('*').eq('project_id', projectId).eq('tenant_id', tenantId).eq('is_active', true).maybeSingle(),

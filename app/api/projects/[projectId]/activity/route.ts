@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     let query = supabase
       .from('activity_log')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);

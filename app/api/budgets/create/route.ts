@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         const batch = rows.slice(i, i + 50);
         const { error: itemErr } = await supabase
           .from('budget_line_items')
-          .insert(batch);
+          .insert({ ...batch, tenant_id: user.tenantId });
         if (itemErr) {
           console.error('[budgets/create] line item insert error:', itemErr);
         }

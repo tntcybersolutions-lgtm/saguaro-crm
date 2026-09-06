@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from('bid_packages')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .order('created_at', { ascending: false });
     if (error) return NextResponse.json({ packages: [] });

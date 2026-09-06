@@ -184,7 +184,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               full += evt.text;
               setAiMessages(prev => [...prev.slice(0, -1), { role: 'assistant', content: full }]);
             }
-          } catch {}
+          } catch (e) {
+            console.error('[sage chat] stream failed:', e);
+          }
         }
       }
     } catch {

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
 
     const { data, error } = await supabase
       .from('drawings')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .order('sheet', { ascending: true });
     if (error) throw error;

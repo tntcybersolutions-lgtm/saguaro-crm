@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from('meetings')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .order('meeting_date', { ascending: false });
     if (error) return NextResponse.json({ meetings: [] });
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       status: body.status || 'scheduled',
       created_at: new Date().toISOString(),
     };
-    const { data, error } = await supabase.from('meetings').insert(record).select().single();
+    const { data, error } = await supabase.from('meetings').insert({ ...record, tenant_id: user.tenantId }).select().single();
     if (error) return NextResponse.json({ meeting: { id: `mtg-${Date.now()}`, ...record } });
     return NextResponse.json({ meeting: data });
   } catch {

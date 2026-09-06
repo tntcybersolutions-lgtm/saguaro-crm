@@ -10,8 +10,8 @@ export async function POST(req: NextRequest) {
     const db = createServerClient();
 
     const [{ data: payApp }, { data: lineItems }] = await Promise.all([
-      db.from('pay_applications').select('*, projects(*)').eq('id', body.payAppId).single(),
-      db.from('schedule_of_values').select('*').eq('pay_app_id', body.payAppId).order('line_number'),
+      db.from('pay_applications').select('*, projects(*)').eq('tenant_id', user.tenantId).eq('id', body.payAppId).single(),
+      db.from('schedule_of_values').select('*').eq('tenant_id', user.tenantId).eq('pay_app_id', body.payAppId).order('line_number'),
     ]);
 
     if (!payApp) return NextResponse.json({ error: 'Pay app not found' }, { status: 404 });

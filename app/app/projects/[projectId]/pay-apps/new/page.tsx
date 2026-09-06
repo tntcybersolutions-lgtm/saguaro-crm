@@ -52,7 +52,10 @@ export default function NewPayAppPage() {
         const d = await r.json();
         const p = (d.projects||[]).find((x:any)=>x.id===projectId);
         if(p?.contract_amount) setContractSum(String(p.contract_amount));
-      }catch{}
+      } catch (e) {
+        // Prefill only — the field stays empty and the user can type it.
+        console.error('[pay-apps/new] contract prefill failed:', e);
+      }
     })();
   },[projectId]);
 

@@ -152,7 +152,8 @@ function BudgetPage() {
     try {
       await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
     } catch {
-      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); } catch {}
+      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); }
+      catch (e) { console.error('[field/budget] offline queue failed — this edit is lost:', e); }
     }
     showFieldToast('Amount updated');
     closeActionSheet();
@@ -166,7 +167,8 @@ function BudgetPage() {
     try {
       await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
     } catch {
-      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); } catch {}
+      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); }
+      catch (e) { console.error('[field/budget] offline queue failed — this edit is lost:', e); }
     }
     showFieldToast(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
     closeActionSheet();
@@ -184,7 +186,8 @@ function BudgetPage() {
     try {
       await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
     } catch {
-      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); } catch {}
+      try { const { enqueue } = await import('@/lib/field-db'); await enqueue({ url, method: 'PATCH', body, contentType: 'application/json', isFormData: false }); }
+      catch (e) { console.error('[field/budget] offline queue failed — this edit is lost:', e); }
     }
     showFieldToast('Budget line deleted');
     setDeleteConfirm(null);

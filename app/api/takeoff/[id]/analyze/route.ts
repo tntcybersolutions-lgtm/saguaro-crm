@@ -199,7 +199,7 @@ export async function GET(
         send('progress', { step: 1, message: 'Loading blueprint...', pct: 5 });
 
         const { data: takeoff, error: takeoffErr } = await supabase
-          .from('takeoffs').select('*').eq('id', takeoffId).single();
+          .from('takeoffs').select('*').eq('tenant_id', user.tenantId).eq('id', takeoffId).single();
 
         if (takeoffErr || !takeoff) {
           send('error', { message: 'Takeoff not found.' });
@@ -214,7 +214,7 @@ export async function GET(
 
         // ── 2. Mark as analyzing ─────────────────────────────────────────
         // Guard: if already analyzing (concurrent double-click), abort
-        const { data: current } = await supabase.from('takeoffs').select('status').eq('id', takeoffId).single();
+        const { data: current } = await supabase.from('takeoffs').select('status').eq('tenant_id', user.tenantId).eq('id', takeoffId).single();
         if (current?.status === 'analyzing') {
           send('error', { message: 'Analysis already in progress for this takeoff.' });
           return done();

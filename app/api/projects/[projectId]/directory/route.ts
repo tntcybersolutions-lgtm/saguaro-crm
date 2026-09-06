@@ -8,14 +8,14 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from('project_directory')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .order('name');
     if (error) {
       // Fallback: try team table
       const { data: team } = await supabase
         .from('project_team')
-        .select('*')
+        .select('*').eq('tenant_id', user.tenantId)
         .eq('project_id', params.projectId)
         .order('name');
       return NextResponse.json({ contacts: team || [] });
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       created_by: user.email,
       created_at: new Date().toISOString(),
     };
-    const { data, error } = await supabase.from('project_directory').insert(record).select().single();
+    const { data, error } = await supabase.from('project_directory').insert({ ...record, tenant_id: user.tenantId }).select().single();
     if (error) return NextResponse.json({ contact: { id: `dir-${Date.now()}`, ...record } });
     return NextResponse.json({ contact: data });
   } catch {

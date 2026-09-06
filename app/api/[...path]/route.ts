@@ -184,20 +184,23 @@ export async function GET(
 
   // GET /api/dashboard/stats
   if (seg0 === 'dashboard' && seg1 === 'stats') {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
       const supabase = createClient(supabaseUrl, supabaseKey);
       const [{ count: activeProjects }, { count: openBids }, { count: pendingPayApps }, { data: contractData }] = await Promise.all([
-        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('bids').select('id', { count: 'exact', head: true }).in('status', ['draft', 'submitted', 'under_review']),
-        supabase.from('pay_applications').select('id', { count: 'exact', head: true }).eq('status', 'submitted'),
-        supabase.from('projects').select('contract_amount').eq('status', 'active'),
+        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('status', 'active'),
+        supabase.from('bids').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).in('status', ['draft', 'submitted', 'under_review']),
+        supabase.from('pay_applications').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('status', 'submitted'),
+        supabase.from('projects').select('contract_amount').eq('tenant_id', tenantId).eq('status', 'active'),
       ]);
       const totalContractValue = (contractData ?? []).reduce((sum: number, p: { contract_amount: number }) => sum + (p.contract_amount ?? 0), 0);
       const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0, 0, 0, 0);
-      const { data: revenueRows } = await supabase.from('pay_applications').select('current_payment_due').eq('status', 'approved').gte('submitted_at', startOfMonth.toISOString());
+      const { data: revenueRows } = await supabase.from('pay_applications').select('current_payment_due').eq('tenant_id', tenantId).eq('status', 'approved').gte('submitted_at', startOfMonth.toISOString());
       const monthlyRevenue = (revenueRows ?? []).reduce((sum: number, r: { current_payment_due: number }) => sum + (r.current_payment_due ?? 0), 0);
       return NextResponse.json({ activeProjects: activeProjects ?? 0, openBids: openBids ?? 0, pendingPayApps: pendingPayApps ?? 0, totalContractValue, monthlyRevenue });
     } catch (err: unknown) {
@@ -209,13 +212,16 @@ export async function GET(
 
   // GET /api/dashboard/today
   if (seg0 === 'dashboard' && seg1 === 'today') {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const items: ActionItem[] = [];
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       if (!supabaseUrl || !supabaseKey) throw new Error('Supabase not configured');
       const supabase = createClient(supabaseUrl, supabaseKey);
-      const { data: payApps } = await supabase.from('pay_applications').select('id, application_number, status, project_id, projects(name)').eq('status', 'submitted').limit(5);
+      const { data: payApps } = await supabase.from('pay_applications').select('id, application_number, status, project_id, projects(name)').eq('tenant_id', tenantId).eq('status', 'submitted').limit(5);
       if (payApps && payApps.length > 0) {
         for (const pa of payApps) {
           const projectName = (pa.projects as { name?: string } | null)?.name ?? 'Unknown Project';
@@ -223,7 +229,7 @@ export async function GET(
         }
       }
       const thirtyDaysOut = new Date(); thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
-      const { data: cois } = await supabase.from('insurance_certificates').select('id, sub_name, expiry_date, project_id').lte('expiry_date', thirtyDaysOut.toISOString().split('T')[0]).gte('expiry_date', new Date().toISOString().split('T')[0]).limit(5);
+      const { data: cois } = await supabase.from('insurance_certificates').select('id, sub_name, expiry_date, project_id').eq('tenant_id', tenantId).lte('expiry_date', thirtyDaysOut.toISOString().split('T')[0]).gte('expiry_date', new Date().toISOString().split('T')[0]).limit(5);
       if (cois && cois.length > 0) {
         for (const coi of cois) {
           const expiry = new Date(coi.expiry_date);
@@ -231,7 +237,7 @@ export async function GET(
           items.push({ type: 'insurance', title: 'COI Expiring Soon', subtitle: `${coi.sub_name} — expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`, urgency: daysLeft <= 7 ? 'high' : 'medium', actionUrl: `/app/projects/${coi.project_id}/insurance`, actionLabel: 'Request Renewal' });
         }
       }
-      const { data: notifications } = await supabase.from('notifications').select('id, type, title, message, entity_id, urgency').eq('read', false).order('created_at', { ascending: false }).limit(5);
+      const { data: notifications } = await supabase.from('notifications').select('id, type, title, message, entity_id, urgency').eq('tenant_id', tenantId).eq('read', false).order('created_at', { ascending: false }).limit(5);
       if (notifications && notifications.length > 0) {
         for (const n of notifications) {
           const nType = n.type as ActionItem['type'];
@@ -322,6 +328,9 @@ export async function GET(
 
   // GET /api/rfis?projectId=...
   if (seg0 === 'rfis' && !seg1) {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId') || '';
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
@@ -329,6 +338,7 @@ export async function GET(
       const { data, error } = await supabaseAdmin
         .from('rfis')
         .select('id, number, title, status, priority, assigned_to, response_due_date, cost_impact_amount, schedule_impact_days, created_at')
+        .eq('tenant_id', tenantId)
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -342,6 +352,9 @@ export async function GET(
 
   // GET /api/change-orders?projectId=...
   if (seg0 === 'change-orders' && !seg1) {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId') || '';
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
@@ -349,6 +362,7 @@ export async function GET(
       const { data, error } = await supabaseAdmin
         .from('change_orders')
         .select('id, co_number, title, status, cost_impact, schedule_impact_days, reason, created_at')
+        .eq('tenant_id', tenantId)
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -374,9 +388,8 @@ export async function GET(
     const projectId = searchParams.get('projectId') || '';
     const tenantId = searchParams.get('tenantId') || '';
     try {
-      let q = supabaseAdmin.from('autopilot_alerts').select('*').eq('dismissed', false).order('created_at', { ascending: false }).limit(50);
+      let q = supabaseAdmin.from('autopilot_alerts').select('*').eq('tenant_id', tenantId).eq('dismissed', false).order('created_at', { ascending: false }).limit(50);
       if (projectId) q = q.eq('project_id', projectId);
-      if (tenantId) q = q.eq('tenant_id', tenantId);
       const { data, error } = await q;
       if (error) throw error;
       return NextResponse.json({ alerts: data ?? [] });
@@ -389,11 +402,14 @@ export async function GET(
 
   // GET /api/takeoffs/latest
   if (seg0 === 'takeoffs' && seg1 === 'latest') {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId');
     if (!projectId) return NextResponse.json({ error: 'projectId query param required' }, { status: 400 });
     try {
-      const { data, error } = await supabaseAdmin.from('takeoffs').select('id, project_id, status, materials').eq('project_id', projectId).order('created_at', { ascending: false }).limit(1).maybeSingle();
+      const { data, error } = await supabaseAdmin.from('takeoffs').select('id, project_id, status, materials').eq('tenant_id', tenantId).eq('project_id', projectId).order('created_at', { ascending: false }).limit(1).maybeSingle();
       if (error) throw error;
       if (!data) return NextResponse.json({ takeoff: null });
       return NextResponse.json({ takeoff: { id: data.id, projectId: data.project_id, status: data.status, materials: data.materials ?? [] } });
@@ -409,6 +425,9 @@ export async function GET(
 
   // GET /api/bid-packages?projectId=...  (list all for a project)
   if (seg0 === 'bid-packages' && !seg1) {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId') || '';
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
@@ -416,6 +435,7 @@ export async function GET(
       const { data, error } = await supabaseAdmin
         .from('bid_packages')
         .select('id, code, name, trade, status, bid_due_date, awarded_to, awarded_amount, created_at')
+        .eq('tenant_id', tenantId)
         .eq('project_id', projectId)
         .order('created_at', { ascending: true });
       if (error) throw error;
@@ -429,9 +449,12 @@ export async function GET(
 
   // GET /api/bid-packages/:id
   if (seg0 === 'bid-packages' && seg1 && !seg2) {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const id = seg1;
     try {
-      const { data, error } = await supabaseAdmin.from('bid_packages').select(`id, code, name, trade, scope, status, bid_due_date, project_id, awarded_to, awarded_amount, created_at, sov_items(*), bid_package_invites(id, sub_id, status, bid_amount, invited_at, responded_at, subs(id, company_name, contact_name, email))`).eq('id', id).single();
+      const { data, error } = await supabaseAdmin.from('bid_packages').select(`id, code, name, trade, scope, status, bid_due_date, project_id, awarded_to, awarded_amount, created_at, sov_items(*), bid_package_invites(id, sub_id, status, bid_amount, invited_at, responded_at, subs(id, company_name, contact_name, email))`).eq('tenant_id', tenantId).eq('id', id).single();
       if (error || !data) return NextResponse.json({ error: 'Bid package not found' }, { status: 404 });
       const invitedSubs: InvitedSub[] = (data.bid_package_invites || []).map((inv: any) => ({ id: inv.id, company_name: inv.subs?.company_name || 'Unknown', contact_name: inv.subs?.contact_name || '', email: inv.subs?.email || '', status: inv.status, bid_amount: inv.bid_amount, invited_at: inv.invited_at, responded_at: inv.responded_at }));
       return NextResponse.json({ bidPackage: { ...data, invited_subs: invitedSubs, sov_items: data.sov_items || [] } });
@@ -491,13 +514,16 @@ export async function POST(
 
   // POST /api/bid-packages/create
   if (seg0 === 'bid-packages' && seg1 === 'create') {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json().catch(() => ({}));
     const { projectId, name, code, bidDue, scope } = body;
     if (!projectId || !name) return NextResponse.json({ error: 'projectId and name required' }, { status: 400 });
     try {
-      const { count } = await supabaseAdmin.from('bid_packages').select('*', { count: 'exact', head: true }).eq('project_id', projectId);
+      const { count } = await supabaseAdmin.from('bid_packages').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('project_id', projectId);
       const autoCode = code || `BP-${String((count || 0) + 1).padStart(2, '0')}`;
-      const { data, error } = await supabaseAdmin.from('bid_packages').insert({ project_id: projectId, code: autoCode, name, scope: scope || '', status: 'draft', bid_due_date: bidDue || null }).select().single();
+      const { data, error } = await supabaseAdmin.from('bid_packages').insert({ tenant_id: tenantId, project_id: projectId, code: autoCode, name, scope: scope || '', status: 'draft', bid_due_date: bidDue || null }).select().single();
       if (error) throw error;
       return NextResponse.json({ success: true, bidPackage: data });
     } catch (err: unknown) {
@@ -509,11 +535,14 @@ export async function POST(
 
   // POST /api/bid-packages/suggest-subs
   if (seg0 === 'bid-packages' && seg1 === 'suggest-subs') {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     let trade = ''; let projectId = '';
     try { const body = await req.json(); trade = body.trade || ''; projectId = body.projectId || ''; } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }); }
     try {
       const tradeKeyword = trade.replace(/^Division \d+ — /, '').toLowerCase();
-      const { data, error } = await supabaseAdmin.from('sub_performance').select('id, name, trade, email, win_rate, last_project, last_project_date, rating').ilike('trade', `%${tradeKeyword}%`).order('win_rate', { ascending: false }).limit(10);
+      const { data, error } = await supabaseAdmin.from('sub_performance').select('id, name, trade, email, win_rate, last_project, last_project_date, rating').eq('tenant_id', tenantId).ilike('trade', `%${tradeKeyword}%`).order('win_rate', { ascending: false }).limit(10);
       if (error) throw error;
       const subs = (data || []).map((row: { id: string; name: string; trade: string; email: string; win_rate: number; last_project: string; last_project_date: string; rating: number }) => ({ id: row.id, name: row.name, trade: row.trade, email: row.email, winRate: row.win_rate, lastProject: row.last_project, lastProjectDate: row.last_project_date, rating: row.rating }));
       return NextResponse.json({ subs });
@@ -595,13 +624,16 @@ export async function POST(
 
   // POST /api/change-orders/create
   if (seg0 === 'change-orders' && seg1 === 'create') {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json().catch(() => ({}));
     const { projectId, title, costImpact, scheduleImpactDays, reason, initiatedBy, description } = body;
     if (!projectId || !title) return NextResponse.json({ error: 'projectId and title required' }, { status: 400 });
     try {
-      const { count } = await supabaseAdmin.from('change_orders').select('*', { count: 'exact', head: true }).eq('project_id', projectId);
+      const { count } = await supabaseAdmin.from('change_orders').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('project_id', projectId);
       const coNumber = `CO-${String((count || 0) + 1).padStart(3, '0')}`;
-      const { data, error } = await supabaseAdmin.from('change_orders').insert({ project_id: projectId, co_number: coNumber, title, description: description || '', status: 'pending', cost_impact: Number(costImpact) || 0, schedule_impact_days: Number(scheduleImpactDays) || 0, reason: reason || null, initiated_by: initiatedBy || null }).select().single();
+      const { data, error } = await supabaseAdmin.from('change_orders').insert({ tenant_id: tenantId, project_id: projectId, co_number: coNumber, title, description: description || '', status: 'pending', cost_impact: Number(costImpact) || 0, schedule_impact_days: Number(scheduleImpactDays) || 0, reason: reason || null, initiated_by: initiatedBy || null }).select().single();
       if (error) throw error;
       return NextResponse.json({ success: true, changeOrder: data });
     } catch (err: unknown) {
@@ -740,13 +772,16 @@ export async function POST(
 
   // POST /api/rfis/create
   if (seg0 === 'rfis' && seg1 === 'create') {
+    const bearer = req.headers.get('authorization');
+    const tenantId = await tenantFromToken(bearer?.startsWith('Bearer ') ? bearer.slice(7) : null);
+    if (!tenantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json().catch(() => ({}));
     const { projectId, title, priority, assignedTo, responseDue, drawingRef, specSection, description } = body;
     if (!projectId || !title) return NextResponse.json({ error: 'projectId and title required' }, { status: 400 });
     try {
-      const { count } = await supabaseAdmin.from('rfis').select('*', { count: 'exact', head: true }).eq('project_id', projectId);
+      const { count } = await supabaseAdmin.from('rfis').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('project_id', projectId);
       const number = `RFI-${String((count || 0) + 1).padStart(3, '0')}`;
-      const { data, error } = await supabaseAdmin.from('rfis').insert({ project_id: projectId, number, title, description: description || '', status: 'open', priority: priority || 'normal', assigned_to: assignedTo || null, response_due_date: responseDue || null, drawing_reference: drawingRef || null, spec_section: specSection || null }).select().single();
+      const { data, error } = await supabaseAdmin.from('rfis').insert({ tenant_id: tenantId, project_id: projectId, number, title, description: description || '', status: 'open', priority: priority || 'normal', assigned_to: assignedTo || null, response_due_date: responseDue || null, drawing_reference: drawingRef || null, spec_section: specSection || null }).select().single();
       if (error) throw error;
       return NextResponse.json({ success: true, rfi: data });
     } catch (err: unknown) {

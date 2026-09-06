@@ -2122,7 +2122,7 @@ export async function POST(req: NextRequest) {
         .order('created_at', { ascending: false })
         .limit(10),
       db.from('pay_applications')
-        .select('id, project_id, app_number, status, net_payment_due, period_to, submitted_at')
+        .select('id, project_id, app_number, status, net_payment_due, period_to, submitted_at').eq('tenant_id', user.tenantId)
         .order('created_at', { ascending: false })
         .limit(10),
       db.from('rfis')
@@ -2132,7 +2132,7 @@ export async function POST(req: NextRequest) {
         .order('due_date', { ascending: true })
         .limit(10),
       db.from('user_profiles')
-        .select('full_name, company_name')
+        .select('full_name, company_name').eq('tenant_id', user.tenantId)
         .eq('user_id', user.id)
         .maybeSingle(),
     ]);

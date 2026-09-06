@@ -124,7 +124,7 @@ async function robustChatHandler(req: NextRequest): Promise<Response> {
   const encoder = new TextEncoder();
 
   const send = (controller: ReadableStreamDefaultController, data: object) => {
-    try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)); } catch {}
+    try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)); } catch { /* client disconnected — the stream is already closed */ }
   };
 
   const stream = new ReadableStream({
@@ -204,9 +204,9 @@ async function robustChatHandler(req: NextRequest): Promise<Response> {
         try {
           send(controller, { type: 'delta', text: "I had a brief hiccup — could you repeat your question?" });
           send(controller, { type: 'done', sessionId: 'error' });
-        } catch {}
+        } catch { /* client disconnected before the error could be sent */ }
       } finally {
-        try { controller.close(); } catch {}
+        try { controller.close(); } catch { /* stream already closed */ }
       }
     }
   });

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       db.from('pay_applications').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('application_number', { ascending: false }),
       db.from('change_orders').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }),
       db.from('rfis').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('created_at', { ascending: false }),
-      db.from('project_team').select('*').eq('project_id', projectId),
+      db.from('project_team').select('*').eq('tenant_id', user.tenantId).eq('project_id', projectId),
       db.from('budget_lines').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('cost_code', { ascending: true }),
       db.from('punch_list_items').select('id, status').eq('project_id', projectId).eq('tenant_id', user.tenantId),
       db.from('schedule_phases').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('planned_start', { ascending: true }),

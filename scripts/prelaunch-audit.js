@@ -74,6 +74,12 @@ const PUBLIC_ROUTE = new RegExp(
 // Global tables that are not tenant-scoped.
 const GLOBAL_TABLE = /^(tenants|profiles|users|subscriptions|plans|states|state_.*|lien_waiver_templates|auth\.|storage\.)$/;
 
+// Tables that genuinely have no tenant_id column — verified against
+// information_schema, and shared with the codemods so the two cannot drift.
+// A child row such as daily_log_crew is reached through its parent, and the
+// parent lookup is what carries the tenant filter.
+const { NO_TENANT_COLUMN, NOT_IN_DB } = require('./lib/tenant-codemod');
+
 function walk(dir, out = []) {
   let ents;
   try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return out; }
@@ -218,8 +224,27 @@ for (const f of files) {
       for (const m of src.matchAll(/\.from\(\s*['"`]([\w.]+)['"`]\s*\)/g)) {
         const table = m[1];
         if (GLOBAL_TABLE.test(table)) continue;
+        if (NO_TENANT_COLUMN.has(table)) continue;
+        // Absent from the database entirely — a different and worse problem,
+        // but not a tenancy one. Reported separately so it is not lost.
+        if (NOT_IN_DB.has(table)) {
+          add("P1", "table-not-in-database", f, lineOf(src, m.index),
+              `${table}: no such table in the public schema`);
+          continue;
+        }
+        // supabase.storage.from('bucket') is object storage, not a table.
+        // Buckets are namespaced by object path, so a tenant column does not
+        // exist and a filter here would be meaningless.
+        if (/\.storage\s*$/.test(src.slice(Math.max(0, m.index - 40), m.index).replace(/\s+$/, ''))) continue;
         const stmt = statementAt(src, m.index);
         if (/tenant_id/.test(stmt)) continue;
+
+        // A query keyed to the caller's own identity is scoped more tightly
+        // than a tenant filter would be. app/api/sub-portal/me does this: a
+        // subcontractor may work for several general contractors, so their own
+        // user id — not a tenant — is the correct key.
+        if (/\.eq\(\s*['"`](user_id|created_by|owner_id|auth_user_id)['"`]\s*,\s*user\.id/.test(stmt)) continue;
+        if (/\.eq\(\s*['"`]email['"`]\s*,\s*user\.email/.test(stmt)) continue;
 
         // The payload is often a variable built earlier — e.g.
         //   const inviteRows = subs.map(s => ({ tenant_id: tenantId, ... }));
@@ -267,10 +292,34 @@ for (const f of files) {
   }
 
   if (isDark && !isPortal) {
-    for (const m of src.matchAll(/(background|backgroundColor)\s*:\s*['"`](#fff(fff)?|white|#FAFBFC|#F8F9FA)['"`]/gi))
+    // White is correct in several places and flagging them trains people to
+    // ignore the report. Verified by reading all 25 hits on 2026-09-05:
+    //   toggle knobs   a small absolutely-positioned circle sliding on a
+    //                  coloured track — 19 of the 25
+    //   QR containers  CLAUDE.md section 4 allows white behind a QR code
+    //   PDF iframes    the embedded document renders its own page
+    //   print layouts  e.g. the WH-347 Department of Labor payroll form, which
+    //                  is shown exactly as it prints and has a window.print()
+    const printLayout = /window\.print|@media\s+print|WH-?347/.test(src);
+
+    const legitimate = (idx) => {
+      const near = src.slice(Math.max(0, idx - 320), idx + 320);
+      // a knob: small fixed box, rounded, positioned over a track
+      if (/borderRadius/.test(near) && /position:\s*['"`]absolute/.test(near)
+          && /\bwidth:\s*(?:1[0-9]|2[0-9]|3[0-2])\b/.test(near)) return true;
+      if (/<canvas|QRCode|qr_data|qrRef|wifi_qr/i.test(near)) return true;
+      if (/<iframe/i.test(near)) return true;
+      return printLayout;
+    };
+
+    for (const m of src.matchAll(/(background|backgroundColor)\s*:\s*['"`](#fff(fff)?|white|#FAFBFC|#F8F9FA)['"`]/gi)) {
+      if (legitimate(m.index)) continue;
       add("P2", "light-theme-leak", f, lineOf(src, m.index), m[0].slice(0, 46));
-    for (const m of src.matchAll(/className=["'][^"']*\bbg-white\b/g))
+    }
+    for (const m of src.matchAll(/className=["'][^"']*\bbg-white\b/g)) {
+      if (legitimate(m.index)) continue;
       add("P2", "light-theme-leak", f, lineOf(src, m.index), "bg-white class");
+    }
   }
 }
 

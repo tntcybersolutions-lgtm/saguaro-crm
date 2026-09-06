@@ -30,10 +30,10 @@ export async function POST(req: NextRequest) {
   if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 })
 
   const [{ data: project }, { data: gc }, pkgRes, submissionRes] = await Promise.all([
-    supabase.from('projects').select('*').eq('id', projectId).single(),
+    supabase.from('projects').select('*').eq('tenant_id', tenantId).eq('id', projectId).single(),
     supabase.from('tenant_settings').select('*').eq('tenant_id', tenantId).maybeSingle(),
-    bidPackageId ? supabase.from('bid_packages').select('*').eq('id', bidPackageId).single() : Promise.resolve({ data: null }),
-    bidSubmissionId ? supabase.from('bid_submissions').select('*').eq('id', bidSubmissionId).single() : Promise.resolve({ data: null }),
+    bidPackageId ? supabase.from('bid_packages').select('*').eq('tenant_id', tenantId).eq('id', bidPackageId).single() : Promise.resolve({ data: null }),
+    bidSubmissionId ? supabase.from('bid_submissions').select('*').eq('tenant_id', tenantId).eq('id', bidSubmissionId).single() : Promise.resolve({ data: null }),
   ])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

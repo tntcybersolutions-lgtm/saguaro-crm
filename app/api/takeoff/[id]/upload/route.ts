@@ -99,7 +99,7 @@ export async function POST(
     // Get takeoff to find project_id
     const { data: takeoff } = await supabase
       .from('takeoffs')
-      .select('project_id')
+      .select('project_id').eq('tenant_id', user.tenantId)
       .eq('id', takeoffId)
       .single();
 

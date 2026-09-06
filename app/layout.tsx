@@ -140,7 +140,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js').catch(function() {});
+              navigator.serviceWorker.register('/sw.js').catch(function () {
+                /* registration is best-effort; the app works without it */
+              });
             });
           }
         `}} />

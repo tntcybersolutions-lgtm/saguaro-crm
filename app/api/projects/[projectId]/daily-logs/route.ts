@@ -26,7 +26,7 @@ export async function GET(
 
     const { data, error } = await supabase
       .from('daily_logs')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .order('log_date', { ascending: false })
       .limit(limit);

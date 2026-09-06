@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from('notification_preferences').select('*').eq('user_id', user.id);
+    const { data, error } = await supabase.from('notification_preferences').select('*').eq('tenant_id', user.tenantId).eq('user_id', user.id);
     if (error) throw error;
     return NextResponse.json({ preferences: data ?? [] });
   } catch { return NextResponse.json({ preferences: [] }); }

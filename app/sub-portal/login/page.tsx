@@ -81,7 +81,7 @@ export default function SubPortalLoginPage() {
         </form>
 
         <div style={{ marginTop: 20, textAlign: 'center' }}>
-          <a href="/auth/reset" style={{ color: C.dim, fontSize: 12, textDecoration: 'none' }}>Forgot password?</a>
+          <a href="/forgot-password" style={{ color: C.dim, fontSize: 12, textDecoration: 'none' }}>Forgot password?</a>
         </div>
       </div>
     </div>

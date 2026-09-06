@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const supabase = createServerClient();
     const { data } = await supabase
       .from('sage_proactive_insights')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('user_id', user.id)
       .eq('delivered', false)
       .eq('dismissed', false)

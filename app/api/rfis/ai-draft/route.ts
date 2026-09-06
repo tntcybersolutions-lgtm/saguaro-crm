@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
   const [{ data: project }, { data: gc }, { count: rfiCount }] = await Promise.all([
     supabase
       .from('projects')
-      .select('name, building_type, architect_name, architect_email, engineer_name, owner_name')
+      .select('name, building_type, architect_name, architect_email, engineer_name, owner_name').eq('tenant_id', tenantId)
       .eq('id', projectId)
       .single(),
     supabase.from('tenant_settings').select('company_name, signature_name').eq('tenant_id', tenantId).maybeSingle(),

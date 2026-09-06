@@ -5,12 +5,13 @@ import { generateDailyReport } from '@/lib/document-templates/daily-report-gener
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const db = createServerClient();
 
     const { data: project } = await db
       .from('projects')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('id', body.projectId)
       .single();
     const p = project as any;
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     // Fetch the daily log entry
     const { data: dailyLog } = await db
       .from('daily_logs')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('id', body.dailyLogId)
       .single();
 

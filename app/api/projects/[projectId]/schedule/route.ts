@@ -16,7 +16,7 @@ export async function GET(
     );
     const { data, error } = await supabase
       .from('schedule_tasks')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .order('start_date', { ascending: true });
     if (error) throw error;

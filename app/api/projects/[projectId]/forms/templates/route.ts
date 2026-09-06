@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from('form_templates')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .or(`project_id.eq.${params.projectId},is_global.eq.true`)
       .order('name');
     if (error) return NextResponse.json({ templates: [] });
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       created_by: user.email,
       created_at: new Date().toISOString(),
     };
-    const { data, error } = await supabase.from('form_templates').insert(record).select().single();
+    const { data, error } = await supabase.from('form_templates').insert({ ...record, tenant_id: user.tenantId }).select().single();
     if (error) return NextResponse.json({ template: { id: `ft-${Date.now()}`, ...record } });
     return NextResponse.json({ template: data });
   } catch {

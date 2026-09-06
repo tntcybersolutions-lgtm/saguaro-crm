@@ -5,13 +5,14 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const db = createServerClient();
-    const { data: project } = await db.from('projects').select('*').eq('id', body.projectId).single();
+    const { data: project } = await db.from('projects').select('*').eq('tenant_id', user.tenantId).eq('id', body.projectId).single();
     const p = project as any;
 
     // Get punch list items
-    const { data: punchList } = await db.from('punch_list_items').select('description').eq('project_id', body.projectId).eq('status', 'open').limit(10);
+    const { data: punchList } = await db.from('punch_list_items').select('description').eq('tenant_id', user.tenantId).eq('project_id', body.projectId).eq('status', 'open').limit(10);
 
     const pdfBytes = await generateG704({
       projectName: p?.name || body.projectName,

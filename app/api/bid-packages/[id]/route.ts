@@ -9,9 +9,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const db = createServerClient();
     const [{ data: pkg }, { data: items }, { data: invites }, { data: submissions }] = await Promise.all([
       db.from('bid_packages').select('*, projects(*)').eq('id', id).eq('tenant_id', user.tenantId).single(),
-      db.from('bid_package_items').select('*').eq('bid_package_id', id).order('id'),
-      db.from('bid_package_invites').select('*').eq('bid_package_id', id).order('created_at', { ascending: false }),
-      db.from('bid_submissions').select('*').eq('bid_package_id', id).order('bid_amount'),
+      db.from('bid_package_items').select('*').eq('tenant_id', user.tenantId).eq('bid_package_id', id).order('id'),
+      db.from('bid_package_invites').select('*').eq('tenant_id', user.tenantId).eq('bid_package_id', id).order('created_at', { ascending: false }),
+      db.from('bid_submissions').select('*').eq('tenant_id', user.tenantId).eq('bid_package_id', id).order('bid_amount'),
     ]);
     if (!pkg) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ bidPackage: pkg, items: items || [], invites: invites || [], submissions: submissions || [] });

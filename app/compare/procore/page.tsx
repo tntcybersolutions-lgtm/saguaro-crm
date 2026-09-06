@@ -1109,7 +1109,7 @@ export default function CompareProcorePage() {
           }}>
             Start Free Trial →
           </a>
-          <a href="/contact" style={{
+          <a href="mailto:sales@saguarocontrol.net" style={{
             padding: '16px 36px',
             background: 'transparent',
             border: `1px solid ${C.border}`,

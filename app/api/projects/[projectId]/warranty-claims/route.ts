@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     const { data: project } = await supabase.from('projects').select('id').eq('id', params.projectId).eq('tenant_id', user.tenantId).single();
     if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    const { data, error } = await supabase.from('warranty_claims').select('*').eq('project_id', params.projectId).order('reported_date', { ascending: false });
+    const { data, error } = await supabase.from('warranty_claims').select('*').eq('tenant_id', user.tenantId).eq('project_id', params.projectId).order('reported_date', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ claims: data ?? [] });
   } catch { return NextResponse.json({ claims: [] }); }
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
   try {
     const supabase = createServerClient();
     const body = await req.json();
-    const count = await supabase.from('warranty_claims').select('id', { count: 'exact', head: true }).eq('project_id', params.projectId);
+    const count = await supabase.from('warranty_claims').select('id', { count: 'exact', head: true }).eq('tenant_id', user.tenantId).eq('project_id', params.projectId);
     const num = (count.count || 0) + 1;
     const { data, error } = await supabase.from('warranty_claims').insert({
       tenant_id: user.tenantId, project_id: params.projectId,

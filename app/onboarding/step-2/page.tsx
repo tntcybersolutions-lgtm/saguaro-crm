@@ -57,7 +57,10 @@ export default function OnboardingStep2() {
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify(form),
       });
-    } catch {}
+    } catch (e) {
+      console.error('[onboarding step-2] save failed:', e);
+      setError('We could not save that. Your answers are kept — please try again.');
+    }
     window.location.href = '/onboarding/step-3';
   }
 

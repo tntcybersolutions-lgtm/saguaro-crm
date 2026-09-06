@@ -131,7 +131,10 @@ function IntelligenceChat() {
                 m.id === assistantId ? { ...m, isStreaming: false } : m
               ));
             }
-          } catch {}
+          } catch (e) {
+            // Keep whatever streamed through; the partial answer is still useful.
+            console.error('[intelligence] stream failed:', e);
+          }
         }
       }
 

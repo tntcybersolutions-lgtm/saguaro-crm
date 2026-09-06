@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    const { data, error } = await supabase.from('proposals').insert(body).select().single();
+    const { data, error } = await supabase.from('proposals').insert({ ...body, tenant_id: user.tenantId }).select().single();
     if (error) throw error;
     return NextResponse.json({ success: true, proposal: data });
   } catch (err: unknown) {

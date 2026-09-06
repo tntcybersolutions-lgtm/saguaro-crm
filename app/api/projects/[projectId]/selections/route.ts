@@ -7,7 +7,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
   try {
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-    const { data, error } = await supabase.from('selections').select('*').eq('project_id', params.projectId).order('date', { ascending: false });
+    const { data, error } = await supabase.from('selections').select('*').eq('tenant_id', user.tenantId).eq('project_id', params.projectId).order('date', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ selections: data || [] });
   } catch (err: unknown) {

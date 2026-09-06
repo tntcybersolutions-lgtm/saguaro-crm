@@ -5,6 +5,7 @@ import { generateA101 } from '@/lib/document-templates/a101-generator';
 export async function POST(req: NextRequest) {
   try {
     const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const db = createServerClient();
 
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     // Verify project exists
     const { data: project } = await db
       .from('projects')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('id', body.projectId)
       .single();
 

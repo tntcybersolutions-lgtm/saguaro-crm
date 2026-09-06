@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   const { data: project } = await supabase
     .from('projects')
-    .select('name, building_type, end_date, substantial_completion_date')
+    .select('name, building_type, end_date, substantial_completion_date').eq('tenant_id', tenantId)
     .eq('id', projectId)
     .single()
 

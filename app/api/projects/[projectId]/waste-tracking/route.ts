@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const url = new URL(req.url);
     const type = url.searchParams.get('type');
     const method = url.searchParams.get('method');
-    let q = supabase.from('waste_tracking').select('*').eq('project_id', params.projectId);
+    let q = supabase.from('waste_tracking').select('*').eq('tenant_id', user.tenantId).eq('project_id', params.projectId);
     if (type) q = q.eq('waste_type', type);
     if (method) q = q.eq('disposal_method', method);
     const { data, error } = await q.order('waste_date', { ascending: false });

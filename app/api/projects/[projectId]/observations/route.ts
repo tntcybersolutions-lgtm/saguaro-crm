@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from('observations')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .order('created_at', { ascending: false });
     if (error) return NextResponse.json({ observations: [] });
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       status: body.status || 'open',
       created_at: new Date().toISOString(),
     };
-    const { data, error } = await supabase.from('observations').insert(record).select().single();
+    const { data, error } = await supabase.from('observations').insert({ ...record, tenant_id: user.tenantId }).select().single();
     if (error) return NextResponse.json({ observation: { id: `obs-${Date.now()}`, ...record } });
     return NextResponse.json({ observation: data });
   } catch {

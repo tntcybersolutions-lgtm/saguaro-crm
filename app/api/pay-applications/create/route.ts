@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
         sort_order: idx,
       }));
 
-      const { error: sovErr } = await db.from('sov_line_items').insert(rows);
+      const { error: sovErr } = await db.from('sov_line_items').insert(rows.map((row) => ({ ...row, tenant_id: user.tenantId })));
       if (sovErr) console.error('[pay-applications/create] sov insert:', sovErr.message);
     }
 
@@ -250,7 +250,7 @@ export async function POST(req: NextRequest) {
           };
         });
 
-        const { error: batchErr } = await db.from('lien_waivers').insert(waiverRows);
+        const { error: batchErr } = await db.from('lien_waivers').insert(waiverRows.map((row) => ({ ...row, tenant_id: user.tenantId })));
         if (batchErr) console.error('[PAY-APP] Waiver batch insert failed:', batchErr.message);
         else console.log('[PAY-APP] Auto-created', waiverRows.length, 'conditional_partial waivers for pay app', pa.id);
       }

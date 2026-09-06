@@ -8,7 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const supabase = createServerClient();
     const { data, error } = await supabase
       .from('favorites')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -28,6 +28,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     const { data, error } = await supabase
       .from('favorites')
       .insert({
+        tenant_id: user.tenantId,
         project_id: params.projectId,
         user_id: user.id,
         item_id: body.item_id,

@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     // Fetch markups: show all 'all' visibility + user's own 'private' markups
     const { data, error } = await supabase
       .from('drawing_markups')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', projectId)
       .eq('drawing_id', drawingId)
       .or(`visibility.eq.all,created_by.eq.${user.email}`)
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     if (markupIds.length > 0) {
       const { data: commentData } = await supabase
         .from('drawing_markup_comments')
-        .select('*')
+        .select('*').eq('tenant_id', user.tenantId)
         .in('markup_id', markupIds)
         .order('created_at', { ascending: true });
 
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ pro
 
     const { data, error } = await supabase
       .from('drawing_markups')
-      .insert(row)
+      .insert({ ...row, tenant_id: user.tenantId })
       .select()
       .single();
 

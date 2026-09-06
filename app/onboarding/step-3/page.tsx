@@ -53,7 +53,10 @@ export default function OnboardingStep3() {
         }),
       });
       await res.json();
-    } catch {}
+    } catch (e) {
+      console.error('[onboarding step-3] save failed:', e);
+      setError('We could not save that. Your answers are kept — please try again.');
+    }
     window.location.href = '/onboarding/step-4';
   }
 

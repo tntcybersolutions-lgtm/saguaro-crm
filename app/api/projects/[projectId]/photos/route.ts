@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (entity_type || entity_id) {
       let linkQuery = supabase
         .from('photo_entity_links')
-        .select('photo_id')
+        .select('photo_id').eq('tenant_id', user.tenantId)
         .eq('project_id', params.projectId);
       if (entity_type) linkQuery = linkQuery.eq('entity_type', entity_type);
       if (entity_id) linkQuery = linkQuery.eq('entity_id', entity_id);
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (tag) {
       const { data: tagData } = await supabase
         .from('photo_tags')
-        .select('photo_id')
+        .select('photo_id').eq('tenant_id', user.tenantId)
         .eq('project_id', params.projectId)
         .eq('tag', tag);
       taggedPhotoIds = (tagData || []).map((t: { photo_id: string }) => t.photo_id);
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     // Build main photos query
     let query = supabase
       .from('photos')
-      .select('*')
+      .select('*').eq('tenant_id', user.tenantId)
       .eq('project_id', params.projectId);
 
     if (filterIds) {
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       const photoIds = photos.map((p: { id: string }) => String(p.id));
       const { data: linkCounts } = await supabase
         .from('photo_entity_links')
-        .select('photo_id')
+        .select('photo_id').eq('tenant_id', user.tenantId)
         .eq('project_id', params.projectId)
         .in('photo_id', photoIds);
       const countMap: Record<string, number> = {};

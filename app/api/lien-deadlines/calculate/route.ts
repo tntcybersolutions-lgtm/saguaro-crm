@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       .select('company_name, sub_name, base_bid, amount, created_at')
       .eq('project_id', projectId).eq('tenant_id', tenantId).eq('is_awarded', true),
     supabase.from('projects')
-      .select('start_date, end_date, state, name').eq('id', projectId).single(),
+      .select('start_date, end_date, state, name').eq('tenant_id', tenantId).eq('id', projectId).single(),
   ])
 
   const stateCode = (project as { state?: string } | null)?.state || 'XX'

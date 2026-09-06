@@ -10,8 +10,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const db = createServerClient();
     const [{ data: pkg }, { data: items }] = await Promise.all([
-      db.from('bid_packages').select('*, projects(*)').eq('id', id).single(),
-      db.from('bid_package_items').select('*').eq('bid_package_id', id),
+      db.from('bid_packages').select('*, projects(*)').eq('tenant_id', user.tenantId).eq('id', id).single(),
+      db.from('bid_package_items').select('*').eq('tenant_id', user.tenantId).eq('bid_package_id', id),
     ]);
     if (!pkg) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 

@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const url = new URL(req.url);
     const status = url.searchParams.get('status');
     const type = url.searchParams.get('type');
-    let q = supabase.from('coordination_issues').select('*').eq('project_id', params.projectId);
+    let q = supabase.from('coordination_issues').select('*').eq('tenant_id', user.tenantId).eq('project_id', params.projectId);
     if (status) q = q.eq('status', status);
     if (type) q = q.eq('issue_type', type);
     const { data, error } = await q.order('created_at', { ascending: false });
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
   try {
     const supabase = createServerClient();
     const body = await req.json();
-    const count = await supabase.from('coordination_issues').select('id', { count: 'exact', head: true }).eq('project_id', params.projectId);
+    const count = await supabase.from('coordination_issues').select('id', { count: 'exact', head: true }).eq('tenant_id', user.tenantId).eq('project_id', params.projectId);
     const num = (count.count || 0) + 1;
     const { data, error } = await supabase.from('coordination_issues').insert({
       tenant_id: user.tenantId, project_id: params.projectId,

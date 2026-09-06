@@ -8,8 +8,8 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const { createClient } = await import('@supabase/supabase-js');
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
     const [incidents, inspections] = await Promise.all([
-      supabase.from('safety_incidents').select('*').eq('project_id', params.projectId).order('date', { ascending: false }),
-      supabase.from('safety_inspections').select('*').eq('project_id', params.projectId).order('date', { ascending: false }),
+      supabase.from('safety_incidents').select('*').eq('tenant_id', user.tenantId).eq('project_id', params.projectId).order('date', { ascending: false }),
+      supabase.from('safety_inspections').select('*').eq('tenant_id', user.tenantId).eq('project_id', params.projectId).order('date', { ascending: false }),
     ]);
     if (incidents.error && inspections.error) {
       throw new Error(`Incidents: ${incidents.error.message}; Inspections: ${inspections.error.message}`);

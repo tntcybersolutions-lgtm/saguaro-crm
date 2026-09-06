@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const url = new URL(req.url);
     const type = url.searchParams.get('type');
     const status = url.searchParams.get('status');
-    let q = supabase.from('contracts').select('*').eq('project_id', params.projectId);
+    let q = supabase.from('contracts').select('*').eq('tenant_id', user.tenantId).eq('project_id', params.projectId);
     if (type) q = q.eq('contract_type', type);
     if (status) q = q.eq('status', status);
     const { data, error } = await q.order('created_at', { ascending: false });

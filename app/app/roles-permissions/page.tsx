@@ -348,7 +348,8 @@ export default function RolesPermissionsPage() {
       } : r));
       addAudit('Role Updated', formName.trim(), `Role "${formName.trim()}" permissions and details updated.`);
       try { await fetch(`/api/roles/${editRoleId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formName.trim(), description: formDesc.trim(), color: formColor, permissions: formPerms }) }); } catch {}
+        body: JSON.stringify({ name: formName.trim(), description: formDesc.trim(), color: formColor, permissions: formPerms }) }); }
+    catch (e) { console.error('[roles] update failed:', e); setError('Role saved locally but the server rejected the change.'); }
     } else {
       /* create new */
       const role: Role = {
@@ -360,7 +361,8 @@ export default function RolesPermissionsPage() {
       setSelectedRoleId(role.id);
       addAudit('Role Created', role.name, `Custom role "${role.name}" created.`);
       try { await fetch('/api/roles', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(role) }); } catch {}
+        body: JSON.stringify(role) }); }
+    catch (e) { console.error('[roles] create failed:', e); setError('Role created locally but the server rejected it.'); }
     }
     setShowRoleModal(false);
   };
@@ -384,7 +386,8 @@ export default function RolesPermissionsPage() {
     setAssignments(prev => prev.filter(a => a.roleId !== id));
     addAudit('Role Deleted', r.name, `Custom role "${r.name}" deleted.`);
     if (selectedRoleId === id) setSelectedRoleId(roles[0]?.id ?? null);
-    try { await fetch(`/api/roles/${id}`, { method: 'DELETE' }); } catch {}
+    try { await fetch(`/api/roles/${id}`, { method: 'DELETE' }); }
+    catch (e) { console.error('[roles] delete failed:', e); setError('Role removed locally but the server rejected it.'); }
   };
 
   const togglePerm = (roleId: string, category: string, level: PermLevel) => {
@@ -415,7 +418,8 @@ export default function RolesPermissionsPage() {
     setAssignRoleId('');
     setAssignProjectId('');
     try { await fetch('/api/roles/assignments', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newAssign) }); } catch {}
+      body: JSON.stringify(newAssign) }); }
+    catch (e) { console.error('[roles] assign failed:', e); setError('Assignment saved locally but the server rejected it.'); }
   };
 
   const removeAssignment = async (id: string) => {
@@ -424,7 +428,8 @@ export default function RolesPermissionsPage() {
     setAssignments(prev => prev.filter(x => x.id !== id));
     const role = roles.find(r => r.id === a.roleId);
     addAudit('User Unassigned', role?.name ?? 'Unknown', `${a.userName} removed${a.projectName ? ` from ${a.projectName}` : ''}.`);
-    try { await fetch(`/api/roles/assignments/${id}`, { method: 'DELETE' }); } catch {}
+    try { await fetch(`/api/roles/assignments/${id}`, { method: 'DELETE' }); }
+    catch (e) { console.error('[roles] unassign failed:', e); setError('Assignment removed locally but the server rejected it.'); }
   };
 
   /* ── filtered assignments ── */
