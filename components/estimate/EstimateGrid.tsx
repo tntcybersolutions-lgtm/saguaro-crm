@@ -21,13 +21,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Plus, Trash, CopySimple, FloppyDisk, CaretDown, CaretRight, MagnifyingGlass,
-  WarningCircle, X, Package, Truck, ArrowCounterClockwise,
+  WarningCircle, X, Package, Truck, ArrowCounterClockwise, UploadSimple,
 } from '@phosphor-icons/react';
 import {
   parseClipboard, clipboardToRows, lineTotals, groupRows, estimateTotals,
   divisionOf, CSI_DIVISIONS, PASTE_COLUMNS, parseNumber,
   type GridRow,
 } from '@/lib/estimate-grid';
+import ImportDialog from '@/components/estimate/ImportDialog';
 
 const GOLD = '#F59E0B', DIM = '#CBD5E1', TEXT = '#FFFFFF';
 const GREEN = '#45B37D', RED = '#E0644E', AMBER = '#F0A63C';
@@ -118,6 +119,7 @@ export default function EstimateGrid({
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [cursor, setCursor] = useState<{ r: number; c: number }>({ r: 0, c: 1 });
   const [picker, setPicker] = useState<{ rowKey: string } | null>(null);
+  const [importing, setImporting] = useState(false);
 
   const cellRefs = useRef<Map<string, HTMLInputElement>>(new Map());
   const gridRef = useRef<HTMLDivElement | null>(null);
@@ -387,6 +389,10 @@ export default function EstimateGrid({
           <Plus size={12} weight="bold" /> Add line
         </button>
 
+        <button type="button" onClick={() => setImporting(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, color: TEXT, fontSize: 11.5, fontWeight: 700, padding: '5px 10px', cursor: 'pointer' }}>
+          <UploadSimple size={12} weight="bold" /> Import
+        </button>
+
         <span style={{ fontSize: 11, color: DIM }}>
           {totals.lines} line{totals.lines === 1 ? '' : 's'}
           {totals.allowances > 0 && ` · ${totals.allowances} allowance${totals.allowances === 1 ? '' : 's'}`}
@@ -543,6 +549,21 @@ export default function EstimateGrid({
           {money(totals.total)}
         </span>
       </div>
+
+      {importing && (
+        <ImportDialog
+          onClose={() => setImporting(false)}
+          onImport={(incoming) => {
+            /* Imported rows land unsaved at the end so they can be reviewed,
+               re-coded or abandoned before anything reaches the database. */
+            setRows((prev) => [
+              ...prev,
+              ...incoming.map((p, i) => ({ _key: newKey(), _new: true, description: '', sort_order: prev.length + i, ...p } as Row)),
+            ]);
+            setMsg(`Imported ${incoming.length} row${incoming.length === 1 ? '' : 's'} — review, then Save`);
+          }}
+        />
+      )}
 
       {picker && (
         <CatalogPicker
