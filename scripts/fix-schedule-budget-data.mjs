@@ -41,6 +41,12 @@ const { suggestLogic, applyLogic, durationFromDates, findDuplicates } = await im
 const { assessSchedule } = await import('../lib/schedule-health.ts');
 const { assessBudget, forecastLine } = await import('../lib/budget-health.ts');
 const { parseDependencies } = await import('../lib/schedule-cpm.ts');
+const { CSI_DIVISIONS } = await import('../lib/construction-intelligence.ts');
+
+/** Canonical MasterFormat names, so a new line is named the way the rest are. */
+const CSI_NAMES = Object.fromEntries(
+  Object.entries(CSI_DIVISIONS).map(([k, v]) => [k, v?.name ?? `Division ${k}`]),
+);
 
 const m = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
 const say = (s = '') => console.log(s);
@@ -203,12 +209,70 @@ for (const pid of byProject) {
    * makes a second run a no-op, which is the same reason the commitment rollup
    * and the selection variance are recomputed rather than incremented.
    */
+  /* ── open a budget line for approved scope that has nowhere to go ──────
+   *
+   * An approved change order is scope the owner has agreed to pay for and the
+   * crew will build. If there is no cost code for it, the money is invisible
+   * until it lands as an overrun on whichever line absorbs it — which is how
+   * electrical work ends up making the concrete line look bad.
+   *
+   * The new line opens at an ORIGINAL budget of zero, because this scope was
+   * genuinely not in the original budget. It arrived by change order, and the
+   * waterfall says so: 0 original + the change orders = the revised budget.
+   * Back-dating it into the original would erase the fact that the job grew.
+   */
+  const findLine = (div) => lines.find((l) => String(l.division ?? '').padStart(2, '0') === div
+    || String(l.cost_code ?? '').startsWith(div));
+
+  const needed = new Map();
+  for (const co of approved) {
+    const div = divisionOfCO(co.title);
+    if (!div || findLine(div)) continue;
+    const a = needed.get(div) ?? []; a.push(co); needed.set(div, a);
+  }
+
+  for (const [div, cos2] of needed) {
+    const total = Math.round(cos2.reduce((s, c) => s + Number(c.amount || 0), 0) * 100) / 100;
+    const name = CSI_NAMES[div] ?? `Division ${div}`;
+    const row = {
+      tenant_id: lines[0]?.tenant_id,
+      project_id: pid,
+      cost_code: `${div}-000`,
+      description: name,
+      division: div,
+      /* General requirements are overhead; everything else here is work in
+         place, which is what `direct` means on the existing lines. */
+      category: div === '01' ? 'indirect' : 'direct',
+      original_budget: 0,
+      approved_changes: total,
+      revised_budget: total,
+      committed: 0,
+      actual: 0,
+      projected: total,
+      variance: 0,
+      percent_complete: 0,
+      notes: `Opened for approved change order${cos2.length === 1 ? '' : 's'} ${cos2.map((c) => `CO-${c.co_number}`).join(', ')} — scope added after the original budget was set.`,
+      sort_order: 0,
+    };
+    say(`   + NEW LINE ${row.cost_code} ${name} — ${m(total)} from ${cos2.map((c) => `CO-${c.co_number}`).join(', ')}`);
+    for (const c of cos2) say(`             "${String(c.title).slice(0, 52)}"`);
+    say(`             original 0 + approved ${m(total)} = revised ${m(total)} — this scope was not in the original budget`);
+
+    if (WRITE) {
+      const { data: created, error } = await db.from('budget_lines').insert(row).select().single();
+      if (error) { console.error('   line create failed:', error.message); process.exit(1); }
+      lines.push(created);
+    } else {
+      lines.push({ ...row, id: `pending-${div}` });
+    }
+    changes++;
+  }
+
   const homeless = [];
   const coByLine = new Map();
   for (const co of approved) {
     const div = divisionOfCO(co.title);
-    const target = div ? lines.find((l) => String(l.division ?? '').padStart(2, '0') === div
-      || String(l.cost_code ?? '').startsWith(div)) : null;
+    const target = div ? findLine(div) : null;
     if (!target) { homeless.push({ co, div }); continue; }
     const a = coByLine.get(target.id) ?? []; a.push(co); coByLine.set(target.id, a);
   }
