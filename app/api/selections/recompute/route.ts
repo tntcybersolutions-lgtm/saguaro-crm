@@ -32,6 +32,19 @@ export async function POST(req: NextRequest) {
   if (!g.ok) return g.res;
   const { db, user } = g;
 
+  /* requirePermission resolves what this user may DO, not what they may reach:
+     an admin has Full on every category, so a projectId belonging to another
+     tenant passed the guard and came back 200. No data moved — the tenant filter
+     below matched nothing — but answering "success" for someone else's project
+     is a confusing contract and one refactor away from being a real leak. */
+  if (projectId) {
+    const { data: proj, error: pErr } = await db
+      .from('projects').select('id')
+      .eq('id', projectId).eq('tenant_id', user.tenantId).maybeSingle();
+    if (pErr) return apiError('selections/recompute', pErr, 'Failed to verify the project');
+    if (!proj) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+  }
+
   let q = db.from('selections').select('id, allowance, selected_amount, variance').eq('tenant_id', user.tenantId);
   if (projectId) q = q.eq('project_id', projectId);
 

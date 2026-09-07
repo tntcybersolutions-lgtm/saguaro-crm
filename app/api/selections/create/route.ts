@@ -11,6 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'projectId and item are required' }, { status: 400 });
     }
     const db = createServerClient();
+    const rawAmount = body.cost ?? body.selected_amount;
 
     // The page sends a richer model than the legacy schema: item->item_name,
     // cost->selected_amount. Product attributes (manufacturer/model/color/finish/
@@ -23,7 +24,14 @@ export async function POST(req: NextRequest) {
       project_id: body.projectId,
       category: body.category || 'Other',
       item_name: body.item || body.item_name || '',
-      selected_amount: Number(body.cost ?? body.selected_amount) || 0,
+      /* NULL when nothing has been chosen, never 0.
+         `Number(...) || 0` turned an empty price box into a decision made at no
+         cost: the row read as "selected, exactly on allowance" the moment it was
+         created, so an untouched $8,000 allowance looked settled. 0 stays a real
+         value — an option that genuinely costs nothing is a decision. */
+      selected_amount: rawAmount === undefined || rawAmount === null || rawAmount === ''
+        ? null
+        : (Number.isFinite(Number(rawAmount)) ? Number(rawAmount) : null),
       allowance: Number(body.allowance) || 0,
       status: body.status || 'pending',
       selected_by: body.selected_by || body.selectedBy || '',

@@ -6,6 +6,10 @@ const GOLD = '#F59E0B', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#1a8a4a', RED = '#c03030', ORANGE = '#B85C2A';
 
 const fmt = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+/* A per-unit rate keeps its cents. Rounding $10.67/SF to "$11" beside a
+   $12,804 total invites the client to multiply and find the arithmetic wrong —
+   the same rounding mistake that once reported a $1.50 cost-per-dollar as $1. */
+const rate = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 interface PricedOption {
   id: string; name: string; description?: string | null; manufacturer?: string | null;
@@ -31,7 +35,10 @@ export default function SelectionOptions({
 }: {
   selectionId: string;
   allowance: number;
-  onPicked: (amount: number, name: string) => void;
+  /* Awaited so the list can refresh once the pick has actually landed —
+     otherwise the option the user just chose keeps offering "Choose", because
+     isChosen is derived server-side from the amount now on the selection. */
+  onPicked: (amount: number, name: string) => void | Promise<void>;
 }) {
   const [options, setOptions] = useState<PricedOption[] | null>(null);
   const [adding, setAdding] = useState(false);
@@ -160,7 +167,7 @@ export default function SelectionOptions({
                   {o.isChosen && <CheckCircle size={13} weight="fill" color="#4ade80" />}
                 </div>
                 <div style={{ fontSize: 11, color: DIM, marginTop: 1 }}>
-                  {[o.manufacturer, o.quantity && o.unit_cost ? `${o.quantity} × ${fmt(o.unit_cost)}` : null].filter(Boolean).join(' · ')}
+                  {[o.manufacturer, o.quantity && o.unit_cost ? `${o.quantity} × ${rate(o.unit_cost)}` : null].filter(Boolean).join(' · ')}
                 </div>
                 <div style={{ fontSize: 11.5, fontWeight: 700, marginTop: 2, color: over ? RED : o.varianceIfChosen ? GREEN : DIM }}>
                   {fmt(o.cost)} — {o.effect}
@@ -168,9 +175,13 @@ export default function SelectionOptions({
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'flex-end', flexShrink: 0 }}>
-                {!o.isChosen && (
-                  <button onClick={() => onPicked(o.cost, o.name)} disabled={busy}
-                    style={{ padding: '3px 9px', background: 'rgba(26,138,74,.14)', border: `1px solid ${GREEN}55`, borderRadius: 5, color: '#4ade80', fontSize: 11, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                {o.isChosen ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: '#4ade80', whiteSpace: 'nowrap' }}>
+                    <CheckCircle size={12} weight="fill" /> Chosen
+                  </span>
+                ) : (
+                  <button onClick={async () => { setBusy(true); try { await onPicked(o.cost, o.name); await load(); } finally { setBusy(false); } }} disabled={busy}
+                    style={{ padding: '3px 9px', background: 'rgba(26,138,74,.14)', border: `1px solid ${GREEN}55`, borderRadius: 5, color: '#4ade80', fontSize: 11, fontWeight: 700, cursor: busy ? 'wait' : 'pointer', whiteSpace: 'nowrap', opacity: busy ? .5 : 1 }}>
                     Choose
                   </button>
                 )}

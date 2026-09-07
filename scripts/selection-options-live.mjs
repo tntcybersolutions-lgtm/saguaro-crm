@@ -35,6 +35,13 @@ const originalNotes = sel.notes;
 const originalVariance = sel.variance;
 console.log(`\nselection: ${sel.item_name} — allowance ${m(sel.allowance)}, currently picked ${m(sel.selected_amount)}\n`);
 
+/* The demo project now carries seeded options permanently, so every count here
+   is measured against what was already there. Asserting absolute totals made
+   this script pass only on a project nobody had used. */
+const { data: preExisting } = await db.from('selection_options').select('id').eq('selection_id', sel.id);
+const baseline = (preExisting ?? []).map((o) => o.id);
+console.log(`  ${baseline.length} option(s) already present\n`);
+
 const made = [];
 try {
   /* ── 1. present three options, as the builder would ─────────────────── */
@@ -60,7 +67,8 @@ try {
   check('an option cannot be orphaned', !!neitherErr, neitherErr ? 'rejected by the check constraint' : 'ACCEPTED — constraint missing');
 
   /* ── 3. priced against the allowance ─────────────────────────────────── */
-  const { data: opts } = await db.from('selection_options').select('*').eq('selection_id', sel.id).order('sort_order');
+  const { data: allOpts } = await db.from('selection_options').select('*').eq('selection_id', sel.id).order('sort_order');
+  const opts = allOpts.filter((o) => made.includes(o.id));
   const priced = priceOptions(sel, opts);
   for (const o of priced) console.log(`    ${o.name.padEnd(18)} ${m(o.cost).padStart(10)}   ${o.effect}${o.is_recommended ? '   ★ recommended' : ''}`);
   check('the recommended option leads', priced[0].name === 'Porcelain plank', priced[0].name);
@@ -97,7 +105,8 @@ try {
 
   /* ── 5. cascade: deleting a selection takes its options ───────────────── */
   const { count: before } = await db.from('selection_options').select('id', { count: 'exact', head: true }).eq('selection_id', sel.id);
-  check('options are attached to the selection', before === 3, `${before} options on the row`);
+  check('this run’s options are attached to the selection',
+    before === baseline.length + 3, `${before} on the row = ${baseline.length} pre-existing + 3 created here`);
 
 } finally {
   /* ── restore ─────────────────────────────────────────────────────────── */
@@ -107,8 +116,11 @@ try {
     status: 'selected', selected_by: null, selected_at: null,
   }).eq('id', sel.id);
   const { data: back } = await db.from('selections').select('selected_amount, variance, notes').eq('id', sel.id).single();
-  const { count: left } = await db.from('selection_options').select('id', { count: 'exact', head: true }).eq('selection_id', sel.id);
-  check('every option created here was removed', left === 0, `${left} left behind`);
+  const { data: remaining } = await db.from('selection_options').select('id').eq('selection_id', sel.id);
+  const left = (remaining ?? []).filter((o) => made.includes(o.id)).length;
+  check('every option created here was removed, and only those',
+    left === 0 && (remaining ?? []).length === baseline.length,
+    `${left} of mine left behind; ${(remaining ?? []).length} pre-existing options untouched`);
   check('the selection was restored',
     String(back.selected_amount) === String(originalAmount) && String(back.variance ?? '') === String(originalVariance ?? ''),
     `back to ${m(back.selected_amount)}, variance ${back.variance}`);

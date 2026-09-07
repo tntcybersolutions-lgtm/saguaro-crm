@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { variance } from '@/lib/selections';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,8 +23,25 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // Map the page's field names onto real columns.
     if (body.item !== undefined) fields.item_name = body.item;
     else if (body.item_name !== undefined) fields.item_name = body.item_name;
-    if (body.cost !== undefined) fields.selected_amount = Number(body.cost) || 0;
-    else if (body.selected_amount !== undefined) fields.selected_amount = Number(body.selected_amount) || 0;
+    /* Clearing the price box means "no decision yet" (NULL), not "decided, and
+       it costs nothing" (0). `Number(...) || 0` collapsed the two, so blanking a
+       price silently reported the full allowance as an underrun. */
+    const rawAmount = body.cost !== undefined ? body.cost
+      : body.selected_amount !== undefined ? body.selected_amount
+      : undefined;
+    if (rawAmount !== undefined) {
+      fields.selected_amount = rawAmount === null || rawAmount === ''
+        ? null
+        : (Number.isFinite(Number(rawAmount)) ? Number(rawAmount) : null);
+      /* Keep the cached column in step at the moment it changes rather than
+         waiting for a recompute that may never be run. */
+      const { data: current } = await db
+        .from('selections').select('allowance')
+        .eq('id', id).eq('tenant_id', user.tenantId).maybeSingle();
+      if (current) {
+        fields.variance = variance({ allowance: current.allowance, selected_amount: fields.selected_amount });
+      }
+    }
 
     if (Object.keys(fields).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
