@@ -24,6 +24,10 @@ const WRITABLE = [
   'waste_factor_pct', 'unit_material_cost', 'unit_labor_cost',
   'unit_equipment_cost', 'unit_sub_cost', 'category', 'is_allowance',
   'is_excluded', 'notes', 'sort_order', 'cost_key', 'manually_edited',
+  /* The formula text a cell was driven by, and which library assembly expanded
+     into this line. The evaluated number still lands in the numeric column, so
+     these are inputs the grid round-trips — not a second source of truth. */
+  'formulas', 'assembly_id',
 ] as const;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

@@ -41,6 +41,16 @@ export interface GridRow {
   sort_order?: number | null;
   /** Set by the grid when a user edits a row the AI produced. */
   manually_edited?: boolean | null;
+  /**
+   * field → formula text driving that cell, e.g. `{ unit_labor_cost: '=MAT*0.65' }`.
+   *
+   * The evaluated number still lives in the numeric column, so everything that
+   * reads a row — totals, the proposal builder, reports — is unaffected by
+   * whether a person or a formula produced it. See lib/estimate-formula.ts.
+   */
+  formulas?: Record<string, string> | null;
+  /** The library assembly this line was expanded from, if any. */
+  assembly_id?: string | null;
 }
 
 /**
