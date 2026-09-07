@@ -3,7 +3,8 @@ import React, { useState, useMemo } from 'react';
 import { X, Stack, Warning, MagnifyingGlass, Info } from '@phosphor-icons/react';
 import {
   ASSEMBLIES, expandAssembly, searchAssemblies, assemblyNeedsPricing,
-  type Assembly, type ExpandedLine,
+  defaultParams, paramSensitivity,
+  type Assembly, type ExpandedLine, type AssemblyParam,
 } from '@/lib/estimate-assemblies';
 import { CSI_DIVISIONS } from '@/lib/estimate-grid';
 
@@ -31,13 +32,34 @@ export default function AssemblyPicker({
   const [q, setQ] = useState('');
   const [selected, setSelected] = useState<Assembly | null>(null);
   const [driver, setDriver] = useState<string>('');
+  /* Parameter values for the current assembly. Reset whenever the assembly
+     changes, because a HEIGHT carried over from a partition means nothing on a
+     slab. */
+  const [params, setParams] = useState<Record<string, number>>({});
+  const [showSensitivity, setShowSensitivity] = useState<string | null>(null);
 
   const results = useMemo(() => searchAssemblies(q), [q]);
   const driverQty = Number(driver);
   const preview = useMemo(
-    () => (selected && driverQty > 0 ? expandAssembly(selected, driverQty) : null),
-    [selected, driverQty],
+    () => (selected && driverQty > 0 ? expandAssembly(selected, driverQty, { params }) : null),
+    [selected, driverQty, params],
   );
+
+  const pick = (a: Assembly) => {
+    setSelected(a);
+    setParams(defaultParams(a));
+    setShowSensitivity(null);
+    if (!driver) setDriver('100');
+  };
+
+  /* What each setting of one parameter would do to the price — the question an
+     estimator actually has, which is not "what does this cost" but "what does
+     going to 24-inch spacing save me". */
+  const sensitivity = useMemo(() => {
+    if (!selected || !showSensitivity || driverQty <= 0) return null;
+    const p = selected.params?.find((x) => x.name === showSensitivity);
+    return p ? { param: p, rows: paramSensitivity(selected, driverQty, p, params) } : null;
+  }, [selected, showSensitivity, driverQty, params]);
   const pricing = useMemo(() => (preview ? assemblyNeedsPricing(preview.lines) : null), [preview]);
 
   if (!open) return null;
@@ -91,7 +113,7 @@ export default function AssemblyPicker({
                 return (
                   <button
                     key={a.id}
-                    onClick={() => { setSelected(a); if (!driver) setDriver('100'); }}
+                    onClick={() => pick(a)}
                     style={{
                       display: 'block', width: '100%', textAlign: 'left', padding: '10px 13px',
                       background: on ? 'rgba(245,158,11,.10)' : 'transparent',
@@ -143,6 +165,88 @@ export default function AssemblyPicker({
                     </div>
                   )}
                 </div>
+
+                {/* Parameters. One entry covers every height, spacing and layer
+                    count, so these are where the estimate actually gets made —
+                    and every change re-prices the whole expansion live. */}
+                {selected.params && selected.params.length > 0 && (
+                  <div style={{ marginTop: 10, padding: 12, background: RAISED, border: '1px solid ' + BORDER, borderRadius: 10 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: GOLD, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 9 }}>
+                      Adjust to the job
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
+                      {selected.params.map((p: AssemblyParam) => (
+                        <div key={p.name}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 4 }}>
+                            {p.label}{p.unit ? <span style={{ fontWeight: 500 }}> ({p.unit})</span> : null}
+                            <button
+                              type="button"
+                              onClick={() => setShowSensitivity(showSensitivity === p.name ? null : p.name)}
+                              title="What does changing this do to the price?"
+                              style={{ marginLeft: 'auto', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: showSensitivity === p.name ? GOLD : 'rgba(255,255,255,.3)', fontSize: 11, fontWeight: 800 }}
+                            >
+                              ±
+                            </button>
+                          </label>
+                          {p.options ? (
+                            <select
+                              value={params[p.name] ?? p.default}
+                              onChange={(e) => setParams((v) => ({ ...v, [p.name]: Number(e.target.value) }))}
+                              style={{ ...inp, width: '100%', fontSize: 12.5, padding: '6px 8px' }}
+                            >
+                              {p.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                            </select>
+                          ) : (
+                            <input
+                              type="number"
+                              value={params[p.name] ?? p.default}
+                              min={p.min} max={p.max} step={p.step ?? 1}
+                              onChange={(e) => setParams((v) => ({ ...v, [p.name]: Number(e.target.value) }))}
+                              style={{ ...inp, width: '100%', fontSize: 12.5, padding: '6px 8px' }}
+                            />
+                          )}
+                          {p.help && <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,.42)', marginTop: 3, lineHeight: 1.4 }}>{p.help}</div>}
+                        </div>
+                      ))}
+                    </div>
+
+                    {sensitivity && (
+                      <div style={{ marginTop: 11, paddingTop: 10, borderTop: '1px solid ' + BORDER }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: TEXT, marginBottom: 6 }}>
+                          {sensitivity.param.label} — what each setting costs
+                        </div>
+                        <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                          {sensitivity.rows.map((row) => {
+                            const current = (params[sensitivity.param.name] ?? sensitivity.param.default) === row.value;
+                            return (
+                              <button
+                                key={row.value}
+                                onClick={() => setParams((v) => ({ ...v, [sensitivity.param.name]: row.value }))}
+                                style={{
+                                  padding: '6px 10px', borderRadius: 7, cursor: 'pointer', textAlign: 'left',
+                                  background: current ? 'rgba(245,158,11,.16)' : '#0f0f11',
+                                  border: `1px solid ${current ? GOLD + '77' : BORDER}`,
+                                }}
+                              >
+                                <div style={{ fontSize: 11.5, fontWeight: 700, color: TEXT }}>{row.label}</div>
+                                <div style={{ fontSize: 11, color: DIM, marginTop: 1 }}>{money(row.total)}</div>
+                                <div style={{ fontSize: 10.5, fontWeight: 700, marginTop: 1, color: row.delta === 0 ? DIM : row.delta > 0 ? '#E0644E' : '#45B37D' }}>
+                                  {row.delta === 0 ? 'current' : `${row.delta > 0 ? '+' : '−'}${money(Math.abs(row.delta))} (${row.deltaPct > 0 ? '+' : ''}${row.deltaPct}%)`}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {preview && preview.skipped.length > 0 && (
+                  <div style={{ marginTop: 10, fontSize: 11, color: 'rgba(255,255,255,.45)', lineHeight: 1.5 }}>
+                    Not included at these settings: {preview.skipped.join(', ')}.
+                  </div>
+                )}
 
                 {preview && preview.lines.length > 0 && (
                   <>

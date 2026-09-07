@@ -640,3 +640,74 @@ export function validateFormula(src: string): FormulaErrorCode | null {
 
 /** Every function name, for the in-grid help. */
 export const FUNCTION_NAMES = Object.keys(FUNCTIONS).sort();
+
+/* ── help, because a language nobody can discover is a language nobody uses ── */
+
+export interface FunctionHelp { name: string; sig: string; what: string; example?: string }
+
+export const FUNCTION_HELP: FunctionHelp[] = [
+  { name: 'SUM', sig: 'SUM(a, b, …)', what: 'Adds numbers or a column range.', example: '=SUM(F1:F20)' },
+  { name: 'ROUND', sig: 'ROUND(n, places)', what: 'Rounds to the nearest.', example: '=ROUND(QTY/27,2)' },
+  { name: 'ROUNDUP', sig: 'ROUNDUP(n, places)', what: 'Always rounds away from zero.' },
+  { name: 'ROUNDDOWN', sig: 'ROUNDDOWN(n, places)', what: 'Always rounds toward zero.' },
+  { name: 'CEILING', sig: 'CEILING(n, multiple)', what: 'Rounds up to a multiple — buying material in fixed lengths.', example: '=CEILING(QTY/10,1)' },
+  { name: 'FLOOR', sig: 'FLOOR(n, multiple)', what: 'Rounds down to a multiple.' },
+  { name: 'INT', sig: 'INT(n)', what: 'Drops the decimal part.' },
+  { name: 'MIN', sig: 'MIN(a, b, …)', what: 'Smallest of the values.' },
+  { name: 'MAX', sig: 'MAX(a, b, …)', what: 'Largest of the values.', example: '=MAX(QTY*0.05,500)' },
+  { name: 'AVERAGE', sig: 'AVERAGE(a, b, …)', what: 'Mean of the values. AVG works too.' },
+  { name: 'COUNT', sig: 'COUNT(range)', what: 'How many values there are.' },
+  { name: 'PRODUCT', sig: 'PRODUCT(a, b, …)', what: 'Multiplies everything together.' },
+  { name: 'ABS', sig: 'ABS(n)', what: 'Drops the sign.' },
+  { name: 'SQRT', sig: 'SQRT(n)', what: 'Square root — a square room’s side from its area.' },
+  { name: 'POWER', sig: 'POWER(n, exponent)', what: 'Raises to a power. ^ does the same.' },
+  { name: 'IF', sig: 'IF(test, then, else)', what: 'Picks between two values. The branch not taken is never evaluated.', example: '=IF(QTY>1000,MAT*0.9,MAT)' },
+  { name: 'AND', sig: 'AND(a, b, …)', what: '1 when everything is non-zero.' },
+  { name: 'OR', sig: 'OR(a, b, …)', what: '1 when anything is non-zero.' },
+  { name: 'NOT', sig: 'NOT(a)', what: 'Flips 1 and 0.' },
+];
+
+export const ROW_NAME_HELP: { name: string; what: string }[] = [
+  { name: 'QTY', what: 'This row’s quantity' },
+  { name: 'WASTE', what: 'This row’s waste factor, as a percent' },
+  { name: 'MAT', what: 'This row’s unit material cost' },
+  { name: 'LAB', what: 'This row’s unit labor cost' },
+  { name: 'EQP', what: 'This row’s unit equipment cost' },
+  { name: 'SUB', what: 'This row’s unit subcontract cost' },
+];
+
+export const COLUMN_HELP: { letter: string; what: string }[] = [
+  { letter: 'C', what: 'Quantity' }, { letter: 'E', what: 'Waste %' },
+  { letter: 'F', what: 'Material' }, { letter: 'G', what: 'Labor' },
+  { letter: 'H', what: 'Equipment' }, { letter: 'I', what: 'Subcontract' },
+  { letter: 'J', what: 'Line total (read-only)' },
+];
+
+/**
+ * Worked formulas for the things estimators actually compute.
+ *
+ * The gap between "this grid supports formulas" and "I used a formula today" is
+ * almost entirely a blank-page problem. These are the recipes that close it.
+ */
+export const FORMULA_RECIPES: { label: string; formula: string; what: string }[] = [
+  { label: 'Studs at 16" o.c.', formula: '=CEILING(QTY/16*12,1)+1',
+    what: 'From linear feet of wall — one per interval, plus one to close the run.' },
+  { label: 'Sheets from an area', formula: '=CEILING(QTY/32,1)',
+    what: '32 SF per 4x8 sheet, rounded up because you buy whole sheets.' },
+  { label: 'Cubic yards from SF and inches', formula: '=ROUND(QTY*4/12/27,2)',
+    what: '4 inches deep — 27 cubic feet to the cubic yard.' },
+  { label: 'Labor as a share of material', formula: '=MAT*0.65',
+    what: 'Survives sorting, because it names the row rather than a position.' },
+  { label: 'Add a waste allowance', formula: '=QTY*1.1',
+    what: 'Ten percent. The Waste % column does this without a formula.' },
+  { label: 'Buy in fixed lengths', formula: '=CEILING(QTY/10,1)*10',
+    what: 'Round a run up to whole 10ft sticks.' },
+  { label: 'Percentage of another line', formula: '=J1*0.08',
+    what: 'Eight percent of row 1’s line total — general conditions, bond, fee.' },
+  { label: 'Minimum charge', formula: '=MAX(QTY*12.5,750)',
+    what: 'Unit rate, but never below a mobilisation minimum.' },
+  { label: 'Volume discount', formula: '=IF(QTY>5000,MAT*0.92,MAT)',
+    what: 'Eight percent off above five thousand units.' },
+  { label: 'Total of a column', formula: '=SUM(J1:J40)',
+    what: 'Sum forty line totals into a single roll-up row.' },
+];

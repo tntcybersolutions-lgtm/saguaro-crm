@@ -30,6 +30,7 @@ import {
 } from '@/lib/estimate-grid';
 import ImportDialog from '@/components/estimate/ImportDialog';
 import AssemblyPicker from '@/components/estimate/AssemblyPicker';
+import FormulaHelp from '@/components/estimate/FormulaHelp';
 import { recalcRows, isFormula, type RowWithFormulas } from '@/lib/estimate-formula';
 
 const GOLD = '#F59E0B', DIM = '#CBD5E1', TEXT = '#FFFFFF';
@@ -123,6 +124,7 @@ export default function EstimateGrid({
   const [picker, setPicker] = useState<{ rowKey: string } | null>(null);
   const [importing, setImporting] = useState(false);
   const [assembling, setAssembling] = useState(false);
+  const [helping, setHelping] = useState(false);
 
   const cellRefs = useRef<Map<string, HTMLInputElement>>(new Map());
   const gridRef = useRef<HTMLDivElement | null>(null);
@@ -454,6 +456,9 @@ export default function EstimateGrid({
         <button type="button" onClick={() => setAssembling(true)} title="Insert a priced assembly — one quantity expands to every line the work takes" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, color: TEXT, fontSize: 11.5, fontWeight: 700, padding: '5px 10px', cursor: 'pointer' }}>
           <Stack size={12} weight="bold" /> Assembly
         </button>
+        <button type="button" onClick={() => setHelping(true)} title="Formula reference and recipes — start any number cell with = " style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, color: TEXT, fontSize: 11.5, fontWeight: 700, padding: '5px 10px', cursor: 'pointer' }}>
+          <span style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 800, color: GOLD }}>ƒ</span> Formulas
+        </button>
 
         <span style={{ fontSize: 11, color: DIM }}>
           {totals.lines} line{totals.lines === 1 ? '' : 's'}
@@ -641,6 +646,22 @@ export default function EstimateGrid({
           }}
         />
       )}
+
+      <FormulaHelp
+        open={helping}
+        onClose={() => setHelping(false)}
+        onInsert={(formula) => {
+          /* Lands in the cell the cursor is on. A reference the user has to
+             retype into the right place is a reference they stop opening. */
+          const target = ordered.flat[cursor.r];
+          const col = COLUMNS[cursor.c];
+          if (!target || !col || col.kind === 'text') {
+            setMsg('Select a number cell first, then insert the formula.');
+            return;
+          }
+          setCell(target.row._key, col.key, formula, col.kind);
+        }}
+      />
 
       <AssemblyPicker
         open={assembling}

@@ -94,7 +94,7 @@ try {
 
   /* ── an assembly expansion persists with its provenance ──────────────── */
 
-  const exp = expandAssembly(ASSEMBLY_BY_ID['partition-stud-gwb-2side'], 240, { startSortOrder: 10 });
+  const exp = expandAssembly(ASSEMBLY_BY_ID['partition-stud-gwb'], 240, { startSortOrder: 10 });
   const put2 = await api(`/api/takeoff/${tk.id}/line-items`, {
     method: 'PUT',
     body: JSON.stringify({ rows: [...back.map((r) => ({ ...r })), ...exp.lines] }),
@@ -102,15 +102,17 @@ try {
   check('an assembly expansion saves', put2.status === 200, `${put2.status}, ${exp.lines.length} lines`);
 
   const got2 = await api(`/api/takeoff/${tk.id}/line-items`);
-  const expanded = got2.body.lineItems.filter((r) => r.assembly_id === 'partition-stud-gwb-2side');
+  const expanded = got2.body.lineItems.filter((r) => r.assembly_id === 'partition-stud-gwb');
   check('every expanded line kept its assembly id',
     expanded.length === exp.lines.length, `${expanded.length} of ${exp.lines.length}`);
   check('the quantities persisted exactly',
-    Number(expanded.find((r) => /metal stud/.test(r.description))?.quantity) === 181,
-    `${expanded.find((r) => /metal stud/.test(r.description))?.quantity} studs`);
+    Number(expanded.find((r) => /Metal stud/.test(r.description))?.quantity) === 181,
+    `${expanded.find((r) => /Metal stud/.test(r.description))?.quantity} studs`);
+  /* The basis no longer names "16 inches" because spacing is a parameter now —
+     it explains the rule instead of one setting of it, which is the point. */
   check('the basis note persisted',
-    /16 inches on centre/.test(expanded.find((r) => /metal stud/.test(r.description))?.notes ?? ''),
-    'the reasoning is still on the row');
+    /per spacing interval/.test(expanded.find((r) => /Metal stud/.test(r.description))?.notes ?? ''),
+    `"${expanded.find((r) => /Metal stud/.test(r.description))?.notes}"`);
 
   /* ── clearing a formula clears it in the database too ────────────────── */
 
