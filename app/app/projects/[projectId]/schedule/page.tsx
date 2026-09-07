@@ -6,7 +6,8 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
-import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks } from '@phosphor-icons/react';
+import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks, Path } from '@phosphor-icons/react';
+import ScheduleIntelligence from '@/components/schedule/ScheduleIntelligence';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/module-identity';
@@ -450,6 +451,21 @@ export default function SchedulePage(){
           </div>
 
           {/* Gantt view */}
+          {/* Critical path, float, and whether the schedule means anything.
+              schedule_tasks has carried es/ef/ls/lf/total_float/is_critical
+              since it was created and nothing ever computed them — es was null
+              on all 42 live tasks while is_critical was set on five. */}
+          {!loading&&!loadError&&tasks.length>0&&(
+            <SectionCard
+              title="Schedule Intelligence"
+              subtitle="Critical path method over the real logic, and the DCMA assessment an owner's scheduler will run on you"
+              icon={<Path size={17} weight="duotone" color="#F59E0B" />}
+              style={{marginBottom:24}}
+            >
+              <ScheduleIntelligence tasks={tasks} />
+            </SectionCard>
+          )}
+
           {viewMode==='gantt'&&!loading&&!loadError&&tasks.length>0&&(
             <SectionCard flat title="Timeline" subtitle="Today marked with a gold line"
               icon={<CalendarBlank size={17} weight="duotone" color={moduleAccent('schedule').hex} />}

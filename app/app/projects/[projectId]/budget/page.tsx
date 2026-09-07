@@ -10,6 +10,7 @@ import {
 } from '@phosphor-icons/react';
 import { Skeleton, SkeletonKPI } from '../../../../../components/ui/Skeleton';
 import { toCents, toDollars, sumCents, subCents, addCents, scaleCents } from '@/lib/calc';
+import BudgetIntelligence from '@/components/budget/BudgetIntelligence';
 import {
   CinematicPage, ModuleHero, HeroButton, StatCard, SectionCard, EmptyStatePremium, CIN,
 } from '@/components/ui/cinematic';
@@ -401,6 +402,21 @@ export default function BudgetPage() {
           <StatCard key={k.l} delay={0.02 + i * 0.04} icon={k.icon} label={k.l} value={k.v} valueColor={k.c} accentColor={k.ac} />
         ))}
       </div>
+
+      {/* Whether the budget foots and the forecast is honest. The waterfall
+          is printed in order — original, approved changes, revised — so a
+          budget that does not reconcile is visible rather than buried in a
+          variance column nothing recomputes. */}
+      {lines.length > 0 && (
+        <SectionCard
+          title="Budget Intelligence"
+          subtitle="Cost at completion three ways, and what does not add up"
+          icon={<ChartLineUp size={18} weight="duotone" color={CIN.goldHi} />}
+          style={{ marginBottom: 20 }}
+        >
+          <BudgetIntelligence lines={lines as any} />
+        </SectionCard>
+      )}
 
       {/* Add Line Form */}
       {showAddForm && (
