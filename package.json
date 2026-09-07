@@ -36,7 +36,7 @@
     "engine:sync": "node scripts/sync-heatmap-engine.mjs --sync",
     "engine:test": "npx -y tsx lib/heatmap/sanity.test.ts",
     "prebuild": "node scripts/sync-heatmap-engine.mjs --check && node scripts/sync-takeoff-engine.mjs --check",
-    "test:sanity": "tsx lib/heatmap/sanity.test.ts && tsx lib/navGuard.sanity.test.ts && tsx lib/earned-value.sanity.test.ts && tsx lib/capacity.sanity.test.ts && tsx lib/commitments.sanity.test.ts && tsx lib/estimate-grid.sanity.test.ts && tsx lib/estimate-import.sanity.test.ts && tsx lib/selections.sanity.test.ts && tsx lib/proposal-build.sanity.test.ts && tsx lib/estimate-formula.sanity.test.ts && tsx lib/estimate-assemblies.sanity.test.ts && tsx scripts/estimate-scale.test.mjs && tsx scripts/estimate-import-xlsx.test.mjs && tsx scripts/takeoff-golden.test.mjs && tsx scripts/vector-pdf.test.mjs",
+    "test:sanity": "tsx lib/heatmap/sanity.test.ts && tsx lib/navGuard.sanity.test.ts && tsx lib/earned-value.sanity.test.ts && tsx lib/capacity.sanity.test.ts && tsx lib/commitments.sanity.test.ts && tsx lib/estimate-grid.sanity.test.ts && tsx lib/estimate-import.sanity.test.ts && tsx lib/selections.sanity.test.ts && tsx lib/proposal-build.sanity.test.ts && tsx lib/estimate-formula.sanity.test.ts && tsx lib/estimate-assemblies.sanity.test.ts && tsx lib/estimate-bid.sanity.test.ts && tsx scripts/estimate-scale.test.mjs && tsx scripts/estimate-import-xlsx.test.mjs && tsx scripts/takeoff-golden.test.mjs && tsx scripts/vector-pdf.test.mjs",
     "test:jest": "jest --passWithNoTests"
   },
   "dependencies": {

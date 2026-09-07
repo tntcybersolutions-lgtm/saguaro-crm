@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { Table, T } from '@/components/ui/shell';
@@ -8,6 +8,8 @@ import { toCents, toDollars, extend, sumCents, addCents } from '@/lib/calc';
 import { Package, HardHat, CurrencyDollar, Ruler, Rows, Receipt, DownloadSimple, Stack } from '@phosphor-icons/react';
 import { CSI_DIVISIONS, classifyToCSI } from '@/lib/construction-intelligence';
 import EstimateGrid from '@/components/estimate/EstimateGrid';
+import BidSummary from '@/components/estimate/BidSummary';
+import { lineTotals, type GridRow } from '@/lib/estimate-grid';
 
 interface EstimateLine {
   csi_code: string;
@@ -37,6 +39,11 @@ export default function EstimatePage() {
   const [takeoff, setTakeoff] = useState<TakeoffData | null>(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  /* The real rows the grid edits, not the summarised `materials` shape. The bid
+     waterfall and the readiness check need the four cost buckets, the waste
+     factor, the exclusion flags and the assembly provenance — all of which the
+     summary view flattens away. */
+  const [lineRows, setLineRows] = useState<GridRow[]>([]);
 
   const fetchTakeoff = useCallback(async () => {
     setLoading(true);
@@ -87,6 +94,16 @@ export default function EstimatePage() {
 
   useEffect(() => { fetchTakeoff(); }, [fetchTakeoff]);
 
+  const loadLineRows = useCallback(async (takeoffId: string) => {
+    try {
+      const r = await fetch(`/api/takeoff/${takeoffId}/line-items`);
+      const j = await r.json();
+      setLineRows(r.ok ? (j.lineItems ?? []) : []);
+    } catch { setLineRows([]); }
+  }, []);
+
+  useEffect(() => { if (takeoff?.id) void loadLineRows(takeoff.id); }, [takeoff?.id, loadLineRows]);
+
   // Project intelligence — one snapshot ties the estimate to the live contract,
   // budget, and bid-package money. Enhancement-only; the page renders without it.
   const { ctx } = useProjectContext(projectId);
@@ -102,6 +119,51 @@ export default function EstimatePage() {
   const awardedPkgs = bidPackages.filter(b => String(b.status || '').toLowerCase() === 'awarded');
   const awardedTotal = awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0);
 
+  /* ── the estimate's real numbers ───────────────────────────────────────
+   *
+   * /api/takeoffs/latest returns a takeoff SUMMARY — it carries the stored
+   * labor_cost column and an empty materials array, because the line items live
+   * in their own table. Reading the page off that summary reported this project
+   * as a $3,281 estimate when the three lines in the grid total $13,001.17, and
+   * material cost as $0.00 against $9,721 of actual material.
+   *
+   * takeoff_line_items is what the grid edits and saves, so it is what every
+   * number on this page is now derived from. The summary is used only as a
+   * fallback for a takeoff whose lines have not loaded.
+   */
+  const derived = useMemo(() => {
+    if (lineRows.length === 0) return null;
+    let material = 0, labor = 0, equipment = 0, sub = 0, total = 0;
+    const materials: EstimateLine[] = lineRows.map((r) => {
+      const t = lineTotals(r);
+      material += t.material; labor += t.labor; equipment += t.equipment; sub += t.sub; total += t.total;
+      const qty = Number(r.quantity) || 0;
+      return {
+        csi_code: String(r.csi_code ?? r.csi_division ?? ''),
+        description: String(r.description ?? ''),
+        quantity: qty,
+        unit: String(r.unit ?? 'EA'),
+        /* The all-in unit rate, so the exported line reconciles with its own
+           total rather than showing material only. */
+        unit_cost: qty > 0 ? Math.round((t.total / qty) * 100) / 100 : 0,
+        total: t.total,
+      };
+    });
+    const r2 = (n: number) => Math.round(n * 100) / 100;
+    return {
+      materials,
+      material_cost: r2(material), labor_cost: r2(labor),
+      equipment_cost: r2(equipment), sub_cost: r2(sub), total_cost: r2(total),
+    };
+  }, [lineRows]);
+
+  /* Every read below goes through these, so the header, the cards, the rollup,
+     the export and the line table can never disagree with the grid again. */
+  const estMaterials: EstimateLine[] = derived?.materials ?? takeoff?.materials ?? [];
+  const estMaterialCost = derived?.material_cost ?? takeoff?.material_cost ?? 0;
+  const estLaborCost = derived?.labor_cost ?? takeoff?.labor_cost ?? 0;
+  const estTotalCost = derived?.total_cost ?? takeoff?.total_cost ?? 0;
+
   // ── Canonical CSI division rollup — every line lands in a MasterFormat division ──
   const divKey = (code: string, desc: string) => {
     const digits = String(code || '').replace(/[^0-9]/g, '').slice(0, 2);
@@ -113,7 +175,7 @@ export default function EstimatePage() {
     budgetByDiv.set(d, (budgetByDiv.get(d) || 0) + (Number(b.original) || 0));
   }
   const rollupMap = new Map<string, { cents: number; count: number }>();
-  for (const m of (takeoff?.materials || [])) {
+  for (const m of estMaterials) {
     const d = divKey(m.csi_code, m.description);
     const prev = rollupMap.get(d) || { cents: 0, count: 0 };
     rollupMap.set(d, { cents: addCents(prev.cents, toCents(m.total)), count: prev.count + 1 });
@@ -121,20 +183,20 @@ export default function EstimatePage() {
   const rollup = Array.from(rollupMap.entries())
     .map(([div, r]) => ({ div, name: CSI_DIVISIONS[div]?.name || 'Uncategorized', total: toDollars(r.cents), count: r.count, budget: budgetByDiv.get(div) || 0 }))
     .sort((a, b) => a.div.localeCompare(b.div));
-  const estBudgetDelta = takeoff ? takeoff.total_cost - budgetOriginal : 0;
-  const matBudgetDelta = takeoff ? takeoff.material_cost - budgetOriginal : 0;
-  const impliedMargin = takeoff ? revisedContract - takeoff.total_cost : 0;
+  const estBudgetDelta = takeoff ? estTotalCost - budgetOriginal : 0;
+  const matBudgetDelta = takeoff ? estMaterialCost - budgetOriginal : 0;
+  const impliedMargin = takeoff ? revisedContract - estTotalCost : 0;
 
   function exportCSV() {
     if (!takeoff) return;
     setExporting(true);
     const header = 'CSI Code,Description,Quantity,Unit,Unit Cost,Total\n';
-    const rows = takeoff.materials.map(m =>
+    const rows = estMaterials.map(m =>
       `"${m.csi_code}","${m.description}",${m.quantity},"${m.unit}",${m.unit_cost},${m.total}`
     ).join('\n');
-    const summary = `\n\nMaterial Cost,,,,,"${fmt(takeoff.material_cost)}"\nLabor Cost,,,,,"${fmt(takeoff.labor_cost)}"\nTotal,,,,,"${fmt(takeoff.total_cost)}"`;
+    const summary = `\n\nMaterial Cost,,,,,"${fmt(estMaterialCost)}"\nLabor Cost,,,,,"${fmt(estLaborCost)}"\nTotal,,,,,"${fmt(estTotalCost)}"`;
     if (takeoff.square_footage > 0) {
-      const costPerSF = takeoff.total_cost / takeoff.square_footage;
+      const costPerSF = estTotalCost / takeoff.square_footage;
       // appending to summary
     }
     const blob = new Blob([header + rows + summary], { type: 'text/csv' });
@@ -202,7 +264,7 @@ export default function EstimatePage() {
             eyebrowIcon={<Ruler size={13} weight="fill" color="#F59E0B" />}
             title="Project"
             accent="Estimate"
-            subtitle={`Priced from the latest blueprint takeoff — ${takeoff.materials.length} line${takeoff.materials.length === 1 ? '' : 's'} across ${rollup.length} CSI division${rollup.length === 1 ? '' : 's'}`}
+            subtitle={`Priced from the latest blueprint takeoff — ${estMaterials.length} line${estMaterials.length === 1 ? '' : 's'} across ${rollup.length} CSI division${rollup.length === 1 ? '' : 's'}`}
             actions={
               <button
                 onClick={exportCSV}
@@ -218,7 +280,7 @@ export default function EstimatePage() {
           {/* Contract + budget context — the live money the estimate answers to */}
           {ctx && (
             <StatStrip items={[
-              { label: 'Estimate Total', value: fmt0(takeoff.total_cost), accent: '#FBBF24', sub: takeoff.materials.length + ' lines · ' + rollup.length + ' division' + (rollup.length === 1 ? '' : 's') },
+              { label: 'Estimate Total', value: fmt0(estTotalCost), accent: '#FBBF24', sub: estMaterials.length + ' lines · ' + rollup.length + ' division' + (rollup.length === 1 ? '' : 's') },
               { label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'no budget lines yet' },
               { label: 'Est. vs Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', accent: budgetOriginal > 0 ? (estBudgetDelta > 0 ? '#ef4444' : '#3dd68c') : undefined, sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'estimate runs over the budget' : 'estimate fits inside the budget') : 'seed the budget to compare' },
               { label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
@@ -228,13 +290,13 @@ export default function EstimatePage() {
 
           {/* Summary Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-            <StatCard icon={<Package size={19} weight="duotone" color="#F59E0B" />} label="Material Cost" value={fmt(takeoff.material_cost)} />
-            <StatCard icon={<HardHat size={19} weight="duotone" color="#F59E0B" />} label="Labor Cost" value={fmt(takeoff.labor_cost)} />
-            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color="#F59E0B" />} label="Total" value={fmt(takeoff.total_cost)} accent="#F59E0B" />
+            <StatCard icon={<Package size={19} weight="duotone" color="#F59E0B" />} label="Material Cost" value={fmt(estMaterialCost)} />
+            <StatCard icon={<HardHat size={19} weight="duotone" color="#F59E0B" />} label="Labor Cost" value={fmt(estLaborCost)} />
+            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color="#F59E0B" />} label="Total" value={fmt(estTotalCost)} accent="#F59E0B" />
             <StatCard
               icon={<Ruler size={19} weight="duotone" color="#F59E0B" />}
               label="Cost per SF"
-              value={takeoff.square_footage > 0 ? fmt(takeoff.total_cost / takeoff.square_footage) : 'N/A'}
+              value={takeoff.square_footage > 0 ? fmt(estTotalCost / takeoff.square_footage) : 'N/A'}
               sub={takeoff.square_footage > 0 ? `${takeoff.square_footage.toLocaleString()} SF` : undefined}
             />
           </div>
@@ -250,7 +312,24 @@ export default function EstimatePage() {
               flush
               style={{ marginBottom: 24 }}
             >
-              <EstimateGrid takeoffId={takeoff.id} onSaved={() => void fetchTakeoff()} />
+              <EstimateGrid takeoffId={takeoff.id} onSaved={() => { void fetchTakeoff(); void loadLineRows(takeoff.id); }} />
+            </SectionCard>
+          )}
+
+          {/* Cost to bid price, and whether the bid is ready to send. The two
+              things an estimator does after the lines are typed, and the two
+              that estimating software usually leaves to a spreadsheet. */}
+          {takeoff?.id && lineRows.length > 0 && (
+            <SectionCard
+              title="Bid Summary"
+              subtitle="Direct cost through contingency, overhead, profit and bond — with what is still unresolved"
+              icon={<CurrencyDollar size={17} weight="duotone" color="#F59E0B" />}
+              style={{ marginBottom: 24 }}
+            >
+              <BidSummary
+                rows={lineRows}
+                budgetDivisions={Array.from(budgetByDiv.keys())}
+              />
             </SectionCard>
           )}
 
@@ -268,14 +347,17 @@ export default function EstimatePage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5 }}>
                   <thead>
                     <tr>
-                      {['Div', 'Division', 'Items', 'Estimate', '% of Materials', ...(budgetLineCount > 0 ? ['Budget', 'Variance'] : [])].map(h => (
+                      {['Div', 'Division', 'Items', 'Estimate', '% of Estimate', ...(budgetLineCount > 0 ? ['Budget', 'Variance'] : [])].map(h => (
                         <th key={h} style={{ padding: '9px 14px', textAlign: h === 'Div' || h === 'Division' ? 'left' : 'right', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, color: T.muted, borderBottom: '1px solid rgba(255,255,255,0.12)', whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {rollup.map(r => {
-                      const pctOfMat = takeoff.material_cost > 0 ? (r.total / takeoff.material_cost) * 100 : 0;
+                      /* Share of the ESTIMATE, not of material cost. A division total
+                         includes labor, so dividing it by material alone reported
+                         concrete as 120% of an estimate it was 90% of. */
+                      const pctOfMat = estTotalCost > 0 ? (r.total / estTotalCost) * 100 : 0;
                       const variance = r.total - r.budget;
                       return (
                         <tr key={r.div} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -301,9 +383,12 @@ export default function EstimatePage() {
                   </tbody>
                   <tfoot>
                     <tr style={{ borderTop: '2px solid rgba(255,255,255,0.12)' }}>
-                      <td colSpan={2} style={{ padding: '10px 14px', fontWeight: 800, fontSize: 11.5, color: T.white, textTransform: 'uppercase', letterSpacing: 0.3 }}>All Divisions — Materials</td>
-                      <td style={{ padding: '10px 14px', textAlign: 'right', color: T.muted }}>{takeoff.materials.length}</td>
-                      <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: T.gold, whiteSpace: 'nowrap' }}>{fmt(takeoff.material_cost)}</td>
+                      <td colSpan={2} style={{ padding: '10px 14px', fontWeight: 800, fontSize: 11.5, color: T.white, textTransform: 'uppercase', letterSpacing: 0.3 }}>All Divisions</td>
+                      <td style={{ padding: '10px 14px', textAlign: 'right', color: T.muted }}>{estMaterials.length}</td>
+                      {/* The footer totals what the rows above actually add to —
+                          the ESTIMATE, not material cost, or the column does not
+                          foot against its own body. */}
+                      <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 800, color: T.gold, whiteSpace: 'nowrap' }}>{fmt(estTotalCost)}</td>
                       <td style={{ padding: '10px 14px', textAlign: 'right', color: T.muted }}>100%</td>
                       {budgetLineCount > 0 && (
                         <>
@@ -316,7 +401,7 @@ export default function EstimatePage() {
                 </table>
               </div>
               <div style={{ padding: '10px 14px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: 11.5, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>
-                Labor of {fmt(takeoff.labor_cost)} is carried outside the division rollup — grand total {fmt(takeoff.total_cost)}.{budgetLineCount > 0 ? ' Division budgets come from the project budget lines; variance is estimate minus budget.' : ' Seed the project budget to see division-by-division variance here.'}
+                Labor of {fmt(estLaborCost)} is carried inside the division rollup — grand total {fmt(estTotalCost)}.{budgetLineCount > 0 ? ' Division budgets come from the project budget lines; variance is estimate minus budget.' : ' Seed the project budget to see division-by-division variance here.'}
               </div>
             </SectionCard>
           )}
@@ -325,12 +410,12 @@ export default function EstimatePage() {
           <SectionCard flat
             title="Line Items"
             icon={<Rows size={17} weight="duotone" color="#F59E0B" />}
-            action={<span style={{ fontSize: 12, color: T.muted }}>{takeoff.materials.length} items</span>}
+            action={<span style={{ fontSize: 12, color: T.muted }}>{estMaterials.length} items</span>}
             flush
           >
             <Table
               headers={['CSI Code', 'Description', 'Quantity', 'Unit', 'Unit Cost', 'Total']}
-              rows={takeoff.materials.map(m => [
+              rows={estMaterials.map(m => [
                 <span key="c" style={{ color: T.gold, fontWeight: 600, fontFamily: 'monospace' }}>{m.csi_code}</span>,
                 m.description,
                 <span key="q" style={{ color: T.white }}>{m.quantity.toLocaleString()}</span>,
@@ -350,20 +435,20 @@ export default function EstimatePage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 32, flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', marginBottom: 4 }}>Material Cost</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>{fmt(takeoff.material_cost)}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>{fmt(estMaterialCost)}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', marginBottom: 4 }}>Labor Cost</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>{fmt(takeoff.labor_cost)}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: T.white }}>{fmt(estLaborCost)}</div>
               </div>
               <div style={{ textAlign: 'right', paddingLeft: 24, borderLeft: `1px solid ${T.border}` }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: T.gold, textTransform: 'uppercase', marginBottom: 4 }}>Total</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: T.white }}>{fmt(takeoff.total_cost)}</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: T.white }}>{fmt(estTotalCost)}</div>
               </div>
               {takeoff.square_footage > 0 && (
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', marginBottom: 4 }}>Cost per SF</div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: T.gold }}>{fmt(takeoff.total_cost / takeoff.square_footage)}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: T.gold }}>{fmt(estTotalCost / takeoff.square_footage)}</div>
                 </div>
               )}
               {budgetOriginal > 0 && (
