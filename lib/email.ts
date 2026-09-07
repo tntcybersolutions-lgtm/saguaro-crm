@@ -4,10 +4,13 @@
  * Graceful fallback to console.log when RESEND_API_KEY is not set
  */
 import { Resend } from 'resend';
+import { platformFrom } from './brand';
 
 // Fallbacks use the VERIFIED Resend domain (saguarocontrol.net). Prod sets EMAIL_FROM
 // explicitly; these defaults just keep sends valid if the env var is ever missing.
-const FROM = process.env.EMAIL_FROM || 'Saguaro Control Systems <noreply@saguarocontrol.net>';
+// platformFrom quotes the display name — the platform name carries an em dash
+// and an ampersand, which RFC 5322 requires to be inside a quoted-string.
+const FROM = process.env.EMAIL_FROM || platformFrom('noreply@saguarocontrol.net');
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://saguarocontrol.net';
 
 function getResend(): Resend | null {
@@ -18,7 +21,7 @@ function getResend(): Resend | null {
 
 // ─── HTML Template Helpers ────────────────────────────────────────────────────
 function layout(body: string): string {
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Saguaro Control Systems</title></head>
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Saguaro Control Systems — Construction Management & Project Controls</title></head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 0;">
 <tr><td align="center">
@@ -30,7 +33,7 @@ function layout(body: string): string {
 <tr><td style="padding:32px;">${body}</td></tr>
 <tr><td style="background:#f4f4f5;padding:16px 32px;border-top:1px solid #e5e7eb;">
   <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
-    &copy; ${new Date().getFullYear()} Saguaro Control Systems &mdash; All rights reserved.<br>
+    &copy; ${new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls &mdash; All rights reserved.<br>
     <a href="${APP_URL}/unsubscribe" style="color:#9ca3af;">Unsubscribe</a> &middot;
     <a href="${APP_URL}" style="color:#9ca3af;">saguarocrm.com</a>
   </p>
@@ -92,8 +95,8 @@ async function send(to: string | string[], subject: string, html: string): Promi
 // ─── All Email Functions ──────────────────────────────────────────────────────
 
 export async function sendWelcome(to: string, name: string, company: string) {
-  await send(to, `Welcome to Saguaro Control Systems, ${name}!`, layout(`
-    ${h(`Welcome to Saguaro Control Systems, ${name}!`)}
+  await send(to, `Welcome to Saguaro Control Systems — Construction Management & Project Controls, ${name}!`, layout(`
+    ${h(`Welcome to Saguaro Control Systems — Construction Management & Project Controls, ${name}!`)}
     ${p(`Your account for <strong>${company}</strong> is ready. Here's what you can do right now:`)}
     <ul style="color:#374151;font-size:14px;line-height:2.2;margin:12px 0;">
       <li>Upload blueprints for instant AI takeoffs</li>
@@ -394,7 +397,7 @@ export async function sendCorrespondenceEmail(opts: {
     ${h(opts.subject)}
     ${meta ? table(meta) : ''}
     ${p(escaped)}
-    ${p(`<small style="color:#9ca3af;">Sent by ${opts.fromName || 'the project team'} via Saguaro Control Systems.</small>`)}
+    ${p(`<small style="color:#9ca3af;">Sent by ${opts.fromName || 'the project team'} via Saguaro Control Systems — Construction Management & Project Controls.</small>`)}
   `);
 
   try {
@@ -534,11 +537,11 @@ export async function sendTrialExpiring(to: string, userName: string, daysLeft: 
 }
 
 export async function sendInviteTeamMember(to: string, inviterName: string, companyName: string, role: string, acceptUrl: string) {
-  await send(to, `You're invited to join ${companyName} on Saguaro Control Systems`, layout(`
+  await send(to, `You're invited to join ${companyName} on Saguaro Control Systems — Construction Management & Project Controls`, layout(`
     ${h(`You've been invited to join ${companyName}`)}
-    ${p(`<strong>${inviterName}</strong> has invited you to collaborate on <strong>${companyName}</strong>'s projects on Saguaro Control Systems.`)}
+    ${p(`<strong>${inviterName}</strong> has invited you to collaborate on <strong>${companyName}</strong>'s projects on Saguaro Control Systems — Construction Management & Project Controls.`)}
     ${table(row('Company', companyName) + row('Your Role', role) + row('Invited By', inviterName))}
-    ${p('Saguaro Control Systems is a construction project management platform for GCs and subs — manage projects, documents, bids, and more.')}
+    ${p('Saguaro Control Systems — Construction Management & Project Controls is a construction project management platform for GCs and subs — manage projects, documents, bids, and more.')}
     ${btn('Accept Invitation', acceptUrl)}
     ${p('<small style="color:#9ca3af;">This invitation expires in 7 days.</small>')}
   `));

@@ -37,7 +37,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       timestamp: new Date().toISOString(),
       data: {
         id: '00000000-0000-0000-0000-000000000000',
-        message: `Sample "${eventType}" event from Saguaro Control Systems`,
+        message: `Sample "${eventType}" event from Saguaro Control Systems — Construction Management & Project Controls`,
       },
     };
     const bodyStr = JSON.stringify(payload);

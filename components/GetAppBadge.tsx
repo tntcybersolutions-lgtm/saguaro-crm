@@ -11,7 +11,7 @@ export function GetAppBadge() {
   const [noBadge, setNoBadge] = useState(false);
   if (!noBadge) {
     return (
-      <a href={TESTFLIGHT} target="_blank" rel="noopener noreferrer" aria-label="Get Saguaro Control Systems for iOS">
+      <a href={TESTFLIGHT} target="_blank" rel="noopener noreferrer" aria-label="Get Saguaro Control Systems — Construction Management & Project Controls for iOS">
         <img
           src="/badges/app-store.svg"
           alt="Download on the App Store"

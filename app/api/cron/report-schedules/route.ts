@@ -262,7 +262,7 @@ function buildReportEmail(title: string, columns: string[], rows: string[][], te
   <p style="margin:22px 0 0;font-size:12px;color:#9ca3af;">The complete dataset is attached as a CSV. Manage this schedule in <a href="${APP_URL}/app/reports/builder#schedules" style="color:#9ca3af;">Reports</a>.</p>
 </td></tr>
 <tr><td style="background:#f4f4f5;padding:16px 32px;border-top:1px solid #e5e7eb;">
-  <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">&copy; ${new Date().getFullYear()} Saguaro Control Systems &mdash; automated scheduled report.</p>
+  <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">&copy; ${new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls &mdash; automated scheduled report.</p>
 </td></tr>
 </table>
 </td></tr>

@@ -72,11 +72,11 @@ const RELEASES: Release[] = [
     date: 'April 28, 2026',
     tag: 'Field App',
     tagColor: C.green,
-    title: 'Saguaro Control Systems — the mobile app for the jobsite',
+    title: 'Saguaro Control Systems — Construction Management & Project Controls — the mobile app for the jobsite',
     summary:
-      'The field crew finally has a tool built for gloves and sunlight. Saguaro Control Systems puts daily logs, photos, time, and punch lists in everyone\'s pocket — and it keeps working when the cell signal does not.',
+      'The field crew finally has a tool built for gloves and sunlight. Saguaro Control Systems — Construction Management & Project Controls puts daily logs, photos, time, and punch lists in everyone\'s pocket — and it keeps working when the cell signal does not.',
     changes: [
-      { kind: 'New', text: 'Saguaro Control Systems app for iOS and Android — daily logs, jobsite photos, and punch lists from the field.' },
+      { kind: 'New', text: 'Saguaro Control Systems — Construction Management & Project Controls app for iOS and Android — daily logs, jobsite photos, and punch lists from the field.' },
       { kind: 'New', text: 'Full offline mode — capture logs and photos with no signal and sync automatically when you reconnect.' },
       { kind: 'New', text: 'Photos geotag and timestamp to the right project and cost code on capture.' },
       { kind: 'Improved', text: 'Field updates flow into the office dashboard in real time — no end-of-day data entry.' },
@@ -157,8 +157,8 @@ export default function ChangelogPage() {
         display: 'flex', alignItems: 'center', padding: '0 32px', gap: 0,
       }}>
         <style>{`@media (max-width: 768px){ .cl-nav-links{ display:none !important } }`}</style>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, marginRight: 40 }} aria-label="Saguaro Control Systems — home">
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, marginRight: 40 }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 36, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
         </Link>
         <div className="cl-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
           {NAV_LINKS.map(link => (
@@ -290,8 +290,8 @@ export default function ChangelogPage() {
         {/* Footer */}
         <footer style={{ borderTop: `1px solid ${C.hairline}`, padding: '48px 32px', background: C.raised }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 32 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
@@ -303,7 +303,7 @@ export default function ChangelogPage() {
                 <Link key={link.label} href={link.href} style={{ fontSize: 13, color: C.dim, textDecoration: 'none', fontWeight: 500 }}>{link.label}</Link>
               ))}
             </div>
-            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems</div>
+            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls</div>
           </div>
         </footer>
 

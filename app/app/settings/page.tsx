@@ -50,7 +50,7 @@ const SETTINGS_SECTIONS = [
     sectionIcon: CreditCard,
     items: [
       { icon: CreditCard, label: 'Subscription & Plan', desc: 'Manage your plan, upgrade, view invoices', href: '/app/billing', highlight: true },
-      { icon: DeviceMobile, label: 'Get the iOS App', desc: 'Download Saguaro Control Systems for iPhone & iPad on Apple TestFlight — Android coming soon', href: '/get-the-app' },
+      { icon: DeviceMobile, label: 'Get the iOS App', desc: 'Download Saguaro Control Systems — Construction Management & Project Controls for iPhone & iPad on Apple TestFlight — Android coming soon', href: '/get-the-app' },
       { icon: Bell, label: 'Notifications', desc: 'Configure email and push notification preferences', href: '/app/notification-settings' },
     ],
   },
@@ -649,7 +649,7 @@ export default function SettingsPage() {
           <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ fontSize: 40, display: 'flex' }}><DeviceMobile size={40} weight="duotone" color={GOLD} /></div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Get the Saguaro Control Systems iOS app</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Get the Saguaro Control Systems — Construction Management & Project Controls iOS app</div>
               <div style={{ fontSize: 13, color: DIM }}>Native iOS app on Apple TestFlight — free for your entire team. Android coming soon.</div>
             </div>
             <Link href="/get-the-app" className="pmBtn" style={{ ...goldButtonStyle, whiteSpace: 'nowrap' }}>

@@ -31,12 +31,23 @@ interface Line {
  * price, not inside it, so counting it would report a proposal as reconciling
  * when the client has not agreed to buy that part.
  */
-export default function ProposalLines({ proposalId, headerAmount }: { proposalId: string; headerAmount: number }) {
+export default function ProposalLines({ proposalId, headerAmount, onChanged }: {
+  proposalId: string;
+  headerAmount: number;
+  /* Fires after a reconciliation changes the proposal, so the version table
+     above can refresh its stated amount rather than showing the old one. */
+  onChanged?: () => void;
+}) {
   const [lines, setLines] = useState<Line[] | null>(null);
   const [lineTotal, setLineTotal] = useState(0);
   const [optionalTotal, setOptionalTotal] = useState(0);
   const [reconciles, setReconciles] = useState(true);
   const [difference, setDifference] = useState(0);
+  const [remedy, setRemedy] = useState<'none' | 'add-line' | 'sync-header'>('none');
+  const [suggestedLabel, setSuggestedLabel] = useState('');
+  const [label, setLabel] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [fixError, setFixError] = useState('');
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
@@ -49,12 +60,31 @@ export default function ProposalLines({ proposalId, headerAmount }: { proposalId
       setOptionalTotal(Number(d.optionalTotal) || 0);
       setReconciles(d.reconciles !== false);
       setDifference(Number(d.difference) || 0);
+      setRemedy(d.remedy ?? 'none');
+      setSuggestedLabel(d.suggestedLabel ?? '');
     } catch {
       setError('Could not load the breakdown.'); setLines([]);
     }
   }, [proposalId]);
 
   useEffect(() => { load(); }, [load]);
+
+  async function fix(mode: 'add-line' | 'sync-header') {
+    setBusy(true); setFixError('');
+    try {
+      const r = await fetch(`/api/proposals/${proposalId}/lines`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, description: label.trim() || undefined }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.error || 'Could not reconcile this proposal.');
+      setLabel('');
+      await load();
+      onChanged?.();
+    } catch (e) {
+      setFixError(e instanceof Error ? e.message : 'Could not reconcile this proposal.');
+    } finally { setBusy(false); }
+  }
 
   if (lines === null) return <div style={{ padding: '14px 18px', color: DIM, fontSize: 12.5 }}>Loading breakdown…</div>;
 
@@ -112,12 +142,44 @@ export default function ProposalLines({ proposalId, headerAmount }: { proposalId
       {!reconciles && (
         <div style={{ margin: '10px 14px 2px', display: 'flex', gap: 9, alignItems: 'flex-start', padding: '10px 12px', borderRadius: 9, background: `${ORANGE}14`, border: `1px solid ${ORANGE}38` }}>
           <Warning size={15} weight="duotone" color={ORANGE} style={{ flexShrink: 0, marginTop: 1 }} />
-          <div style={{ fontSize: 11.5, color: DIM, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 11.5, color: DIM, lineHeight: 1.5, minWidth: 0, flex: 1 }}>
             <span style={{ color: TEXT, fontWeight: 700 }}>
               The stated amount and the lines differ by {money0(Math.abs(difference))}.
             </span>{' '}
             This proposal states {money0(headerAmount)} while its lines add to {money0(lineTotal)}
             {difference > 0 ? ' — the extra is not itemised anywhere.' : ' — the lines total more than the proposal states.'}
+
+            {/* Reporting a mismatch and doing nothing about it is only half the
+                job. The remedy offered depends on the sign: a positive gap is
+                real money that belongs on a line, and the contract price stays
+                put because that is the number the client agreed to. A negative
+                gap has nothing to add — the header is what is wrong. */}
+            {remedy === 'add-line' ? (
+              <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder={suggestedLabel}
+                  style={{ flex: '1 1 210px', minWidth: 0, padding: '5px 9px', background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 6, color: TEXT, fontSize: 11.5, outline: 'none' }}
+                />
+                <button onClick={() => fix('add-line')} disabled={busy}
+                  style={{ padding: '5px 11px', background: `${GOLD}22`, border: `1px solid ${GOLD}66`, borderRadius: 6, color: '#FBBF24', fontSize: 11.5, fontWeight: 700, cursor: busy ? 'wait' : 'pointer', whiteSpace: 'nowrap', opacity: busy ? .5 : 1 }}>
+                  {busy ? 'Adding…' : `Add ${money0(difference)} as a line`}
+                </button>
+                <button onClick={() => fix('sync-header')} disabled={busy}
+                  style={{ padding: '5px 11px', background: 'transparent', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 6, color: DIM, fontSize: 11.5, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', whiteSpace: 'nowrap', opacity: busy ? .5 : 1 }}>
+                  Or drop the total to {money0(lineTotal)}
+                </button>
+              </div>
+            ) : (
+              <div style={{ marginTop: 8 }}>
+                <button onClick={() => fix('sync-header')} disabled={busy}
+                  style={{ padding: '5px 11px', background: `${GOLD}22`, border: `1px solid ${GOLD}66`, borderRadius: 6, color: '#FBBF24', fontSize: 11.5, fontWeight: 700, cursor: busy ? 'wait' : 'pointer', opacity: busy ? .5 : 1 }}>
+                  {busy ? 'Updating…' : `Set the total to ${money0(lineTotal)}`}
+                </button>
+              </div>
+            )}
+            {fixError && <div style={{ marginTop: 6, color: ORANGE }}>{fixError}</div>}
           </div>
         </div>
       )}

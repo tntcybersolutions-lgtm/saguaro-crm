@@ -36,7 +36,7 @@ import { getUser } from './lib/supabase-server';
 const CNAME_TARGET  = process.env.WHITE_LABEL_CNAME_TARGET ?? 'tenants.saguarocrm.com';
 const APP_URL       = process.env.NEXT_PUBLIC_APP_URL      ?? 'https://app.saguarocrm.com';
 const SANDBOX_URL   = process.env.NEXT_PUBLIC_SANDBOX_URL  ?? 'https://sandbox.saguarocrm.com';
-const FROM          = process.env.EMAIL_FROM               ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
+const FROM          = process.env.EMAIL_FROM               ?? 'Saguaro Control Systems — Construction Management & Project Controls <noreply@mail.saguarocrm.com>';
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL            ?? 'support@saguarocrm.com';
 
 function resend(): Resend | null {

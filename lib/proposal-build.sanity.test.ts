@@ -14,6 +14,7 @@
  */
 import {
   buildProposal, applyUplift, lineCost, realisedMarginPct, exclusionsText,
+  reconcile, UNALLOCATED_LINE_LABEL,
   type EstimateSource,
 } from './proposal-build';
 
@@ -175,6 +176,50 @@ check('a line with no division is bucketed, not dropped',
 check('csi_code supplies the division when csi_division is empty',
   buildProposal([{ csi_code: '09 91 23', description: 'Paint', quantity: 1, unit_material_cost: 5 }]).lines[0].description === '09 — Finishes',
   'derived from the code');
+
+/* ── reconciliation: the live mismatches ─────────────────────────────────── */
+
+/* PROP-2026-001 exactly as the database holds it. */
+const p001 = [
+  { description: 'DDC Controllers and BACnet Integration', total_price: 136800 },
+  { description: 'VAV Box Controls with Actuators', total_price: 400000 },
+  { description: 'Building Automation Software License', total_price: 185000 },
+  { description: 'Installation Labor', total_price: 1450000 },
+  { description: 'Commissioning and Testing', total_price: 280000 },
+  { description: 'Extended 5-Year Warranty', total_price: 95000, is_optional: true },
+];
+const r1 = reconcile(2850000, p001);
+check('the live $2.85M proposal is measured against its BASE lines',
+  r1.baseTotal === 2451800, `${r1.baseTotal} — the optional warranty is not part of what is being bought`);
+check('the optional line is reported separately', r1.optionalTotal === 95000, `${r1.optionalTotal}`);
+check('the unallocated money is named exactly',
+  r1.difference === 398200 && !r1.reconciles, `${r1.difference}`);
+check('a positive gap is closed by adding a line, not by moving the header',
+  r1.remedy === 'add-line', `${r1.remedy} — the contract price is the number the client agreed to`);
+
+const r2 = reconcile(425000, [
+  { total_price: 56000 }, { total_price: 44400 }, { total_price: 36000 },
+  { total_price: 225000 }, { total_price: 12000 },
+]);
+check('the second live proposal reports its own gap',
+  r2.difference === 51600 && r2.remedy === 'add-line', `${r2.difference}`);
+
+check('adding the difference as a line makes it reconcile',
+  reconcile(2850000, [...p001, { description: UNALLOCATED_LINE_LABEL, total_price: r1.difference }]).reconciles,
+  'header and base lines now agree');
+
+check('lines totalling MORE than the header need the header moved',
+  reconcile(100, [{ total_price: 150 }]).remedy === 'sync-header',
+  'adding another positive line would only widen the gap');
+check('an exact match reconciles',
+  reconcile(1000, [{ total_price: 600 }, { total_price: 400 }]).reconciles, 'no remedy needed');
+check('a rounding cent is not a discrepancy',
+  reconcile(1000, [{ total_price: 999.999 }]).reconciles, 'under a cent');
+check('a proposal with no lines is not reported as mismatched',
+  reconcile(50000, []).reconciles, 'nothing to disagree with yet');
+check('optional scope never counts toward reconciliation',
+  reconcile(1000, [{ total_price: 1000 }, { total_price: 400, is_optional: true }]).reconciles,
+  'the client has not agreed to buy the optional part');
 
 console.log(failures === 0 ? '\nALL PROPOSAL ASSERTIONS HELD' : `\n${failures} ASSERTION(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

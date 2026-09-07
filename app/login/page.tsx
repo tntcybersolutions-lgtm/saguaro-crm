@@ -98,8 +98,8 @@ export default function LoginPage(){
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
       {/* Top nav */}
       <nav style={{padding:'0 24px',height:56,display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:`1px solid ${BORDER}`}}>
-        <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}} aria-label="Saguaro Control Systems — home">
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:36,width:'auto',objectFit:'contain',borderRadius:4}} />
+        <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:10}} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{height:36,width:'auto',objectFit:'contain',borderRadius:4}} />
           <span style={{display:'flex',flexDirection:'column',lineHeight:1.15}}>
             <span style={{fontWeight:900,fontSize:14,letterSpacing:1,background:`linear-gradient(90deg,${GOLD},#FBBF24)`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>SAGUARO</span>
             <span style={{fontSize:10,color:DIM,letterSpacing:.5,fontWeight:600}}>Control Systems</span>
@@ -114,7 +114,7 @@ export default function LoginPage(){
           {/* Header */}
           <div style={{textAlign:'center',marginBottom:28}}>
             <div style={{display:'flex',justifyContent:'center',marginBottom:16}}>
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{height:56,width:'auto',objectFit:'contain',borderRadius:6}} />
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{height:56,width:'auto',objectFit:'contain',borderRadius:6}} />
             </div>
             <h1 style={{fontSize:22,fontWeight:700,letterSpacing:'-0.02em',margin:'0 0 6px',color:TEXT}}>Welcome back</h1>
             <p style={{color:DIM,fontSize:14,margin:0}}>Sign in to your Saguaro account</p>

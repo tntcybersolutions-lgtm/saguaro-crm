@@ -1,3 +1,4 @@
+import { PLATFORM_NAME } from '@/lib/brand';
 import React from 'react';
 import Script from 'next/script';
 import type { Metadata } from 'next';
@@ -28,8 +29,8 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://saguarocontrol.net'),
 
   title: {
-    default: 'Saguaro Control Systems — Construction Management & Project Controls',
-    template: '%s | Saguaro Control Systems',
+    default: PLATFORM_NAME,
+    template: `%s | ${PLATFORM_NAME}`,
   },
 
   description: 'The construction management platform built for General Contractors. AI blueprint takeoff, AIA pay applications, lien waivers, bid intelligence, and certified payroll — all in one platform.',
@@ -45,13 +46,13 @@ export const metadata: Metadata = {
     'construction project management',
     'multi-site franchise rollouts',
     'project controls',
-    'Saguaro Control Systems',
+    PLATFORM_NAME,
   ],
 
-  authors: [{ name: 'Saguaro Control Systems', url: 'https://saguarocontrol.net' }],
+  authors: [{ name: PLATFORM_NAME, url: 'https://saguarocontrol.net' }],
 
-  creator: 'Saguaro Control Systems',
-  publisher: 'Saguaro Control Systems',
+  creator: PLATFORM_NAME,
+  publisher: PLATFORM_NAME,
 
   icons: {
     icon: [
@@ -72,15 +73,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: 'https://saguarocontrol.net',
-    siteName: 'Saguaro Control Systems',
-    title: 'Saguaro Control Systems — AI-Powered Construction Management',
+    siteName: PLATFORM_NAME,
+    title: PLATFORM_NAME,
     description: 'AI blueprint takeoff, AIA pay applications, lien waivers, bid intelligence. Built for General Contractors.',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Saguaro Control Systems — AI-Powered Construction Management',
+        alt: PLATFORM_NAME,
         type: 'image/jpeg',
       },
     ],
@@ -97,7 +98,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@saguarocrm',
     creator: '@saguarocrm',
-    title: 'Saguaro Control Systems — AI-Powered Construction Management',
+    title: PLATFORM_NAME,
     description: 'AI blueprint takeoff, AIA pay applications, lien waivers, bid intelligence. Built for General Contractors.',
     images: ['/og-image.jpg'],
   },
@@ -206,7 +207,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "SoftwareApplication",
-              "name": "Saguaro Control Systems",
+              "name": PLATFORM_NAME,
               "url": "https://saguarocontrol.net",
               "logo": "https://saguarocontrol.net/logo-full.jpg",
               "image": "https://saguarocontrol.net/og-image.jpg",
@@ -231,7 +232,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               },
               "publisher": {
                 "@type": "Organization",
-                "name": "Saguaro Control Systems",
+                "name": PLATFORM_NAME,
                 "url": "https://saguarocontrol.net",
                 "logo": "https://saguarocontrol.net/logo-full.jpg",
                 "address": {

@@ -36,7 +36,7 @@ const ROWS: {
   { feature: 'AI Autopilot / Automation', saguaro: 'Included', procore: 'Limited', saguaroWin: true, note: 'Saguaro automates RFI routing, CO triggers, insurance alerts, and more' },
   { feature: 'Mobile Field App', saguaro: 'Free native iOS', procore: 'Native (extra cost)', saguaroWin: true, note: 'Native iOS app — free on TestFlight, App Store release coming soon (Android coming soon)' },
   { feature: 'Offline Mode', saguaro: 'Full offline', procore: 'Limited', saguaroWin: true, note: 'Saguaro works without signal — syncs when back online' },
-  { feature: 'Field App Included Free', saguaro: 'Yes', procore: 'No — paid add-on', saguaroWin: true, note: 'Saguaro Control Systems is free for your whole crew — Procore charges for field access' },
+  { feature: 'Field App Included Free', saguaro: 'Yes', procore: 'No — paid add-on', saguaroWin: true, note: 'Saguaro Control Systems — Construction Management & Project Controls is free for your whole crew — Procore charges for field access' },
   { feature: 'AI Field Assistant (Sage)', saguaro: 'Included', procore: 'Not available', saguaroWin: true, note: 'Sage answers field questions, drafts RFIs, and surfaces project data' },
   { feature: 'Bid Intelligence Scoring', saguaro: 'Included', procore: 'Not available', saguaroWin: true },
   { feature: 'Owner + Sub Portals', saguaro: 'Included', procore: 'Included', saguaroWin: 'neutral' },

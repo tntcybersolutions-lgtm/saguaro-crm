@@ -463,7 +463,7 @@ export default function QuickBooksPage() {
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                     <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>Entity</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>Saguaro Control Systems</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>Saguaro Control Systems — Construction Management & Project Controls</th>
                     <th style={{ padding: '10px 12px', textAlign: 'center', color: DIM, fontWeight: 600 }}>{'⇄'}</th>
                     <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>QuickBooks Field</th>
                   </tr>

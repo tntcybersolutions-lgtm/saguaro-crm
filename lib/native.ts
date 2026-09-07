@@ -529,7 +529,7 @@ export async function biometricAuth(reason = 'Verify your identity'): Promise<bo
       reason,
       cancelTitle: 'Cancel',
       iosFallbackTitle: 'Use Passcode',
-      androidTitle: 'Saguaro Control Systems',
+      androidTitle: 'Saguaro Control Systems — Construction Management & Project Controls',
       androidSubtitle: reason,
     });
     return true;

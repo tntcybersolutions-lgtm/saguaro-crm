@@ -54,7 +54,7 @@ export default function OwnerUpdatesPage() {
 
       const lines: string[] = [];
       lines.push(`OWNER PROGRESS UPDATE — ${p.name || 'Project'}`);
-      lines.push(`Week ending ${wk} · Prepared by Saguaro Control Systems`);
+      lines.push(`Week ending ${wk} · Prepared by Saguaro Control Systems — Construction Management & Project Controls`);
       lines.push('');
       lines.push(`STATUS: ${SEV_WORD[h.status as Severity].toUpperCase()}${p.city ? ` · ${p.city}, ${p.state}` : ''}`);
       lines.push(`Overall completion: ${h.percentComplete != null ? Math.round(h.percentComplete) + '%' : '—'}`);

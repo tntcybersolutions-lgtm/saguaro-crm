@@ -100,7 +100,7 @@ export default function BrandMark({
   if (!href) return <span style={box}>{inner}</span>;
 
   return (
-    <Link href={href} aria-label="Saguaro Control Systems" style={box}>
+    <Link href={href} aria-label="Saguaro Control Systems — Construction Management & Project Controls" style={box}>
       {inner}
     </Link>
   );

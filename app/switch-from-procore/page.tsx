@@ -251,7 +251,7 @@ export default function SwitchFromProcorePage() {
               {
                 icon: '📱',
                 title: 'Field Access Is a Paid Add-On',
-                body: 'Procore charges extra for field access on top of per-seat pricing — plus IT approval and device management. Saguaro Control Systems is a free native iOS app, included for your whole crew.',
+                body: 'Procore charges extra for field access on top of per-seat pricing — plus IT approval and device management. Saguaro Control Systems — Construction Management & Project Controls is a free native iOS app, included for your whole crew.',
               },
               {
                 icon: '📄',
@@ -743,7 +743,7 @@ export default function SwitchFromProcorePage() {
             ))}
           </div>
           <p style={{ color: '#8094B0', fontSize: '0.82rem' }}>
-            &copy; {new Date().getFullYear()} Saguaro Construction Software. All rights reserved.
+            &copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.
           </p>
         </div>
       </footer>

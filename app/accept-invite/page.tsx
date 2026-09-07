@@ -138,8 +138,8 @@ export default function AcceptInvitePage() {
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', flexDirection: 'column' }}>
       {/* Top nav */}
       <nav style={{ padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER}` }}>
-        <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }} aria-label="Saguaro Control Systems — home">
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
+        <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
             <span style={{ fontWeight: 900, fontSize: 14, letterSpacing: 1, background: `linear-gradient(90deg,${GOLD},#FBBF24)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
             <span style={{ fontSize: 10, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
@@ -222,7 +222,7 @@ export default function AcceptInvitePage() {
                   Join {invite.company}
                 </h1>
                 <p style={{ color: DIM, fontSize: 14, margin: 0 }}>
-                  <strong style={{ color: TEXT }}>{invite.inviterName}</strong> invited you to collaborate on Saguaro Control Systems.
+                  <strong style={{ color: TEXT }}>{invite.inviterName}</strong> invited you to collaborate on Saguaro Control Systems — Construction Management & Project Controls.
                 </p>
               </div>
 
@@ -289,7 +289,7 @@ export default function AcceptInvitePage() {
           <div style={{ marginTop: 20, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
             <ShieldCheck size={13} weight="duotone" color="rgba(203,213,225,0.6)" />
             <span style={{ fontSize: 10, color: 'rgba(203,213,225,0.6)', fontWeight: 600, letterSpacing: .5, textTransform: 'uppercase' }}>
-              Secure invitation · Saguaro Control Systems
+              Secure invitation · Saguaro Control Systems — Construction Management & Project Controls
             </span>
           </div>
         </div>

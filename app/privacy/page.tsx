@@ -20,7 +20,7 @@ export default function PrivacyPage(){
           {h:'Third-Party Services',b:'We use: Supabase (database), Stripe (payments), Resend (email delivery), Anthropic (AI features), PostHog (product analytics), Google Analytics (web analytics), Vercel (hosting). Each has their own privacy policy.'},
           {h:'Children',b:"Our Service is not directed at children under 13. We do not knowingly collect data from children."},
           {h:'Changes to This Policy',b:'We will notify users of material changes via email and in-app notice 30 days before changes take effect.'},
-          {h:'Contact',b:'Privacy questions: privacy@saguarocontrol.net · Saguaro Control Systems · Scottsdale, AZ 85251'},
+          {h:'Contact',b:'Privacy questions: privacy@saguarocontrol.net · Saguaro Control Systems — Construction Management & Project Controls · Scottsdale, AZ 85251'},
         ].map(s=>(
           <div key={s.h} style={{marginBottom:28}}>
             <h2 style={{fontSize:18,fontWeight:700,marginBottom:8,color:TEXT}}>{s.h}</h2>

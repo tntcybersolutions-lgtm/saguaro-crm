@@ -9,7 +9,7 @@ import { STARTING_PRICE_MO, STARTING_PRICE_FLAT } from '@/lib/plans';
 
 export const metadata: Metadata = {
   title: 'Saguaro vs Every Construction Software — Full Comparisons',
-  description: 'See how Saguaro Control Systems compares to Procore, Buildertrend, CoConstruct, Fieldwire, Autodesk Build, Contractor Foreman, Jobber, JobNimbus, and more.',
+  description: 'See how Saguaro Control Systems — Construction Management & Project Controls compares to Procore, Buildertrend, CoConstruct, Fieldwire, Autodesk Build, Contractor Foreman, Jobber, JobNimbus, and more.',
   openGraph: {
     title: 'Saguaro vs Every Construction Software',
     description: 'Full feature and price comparisons against every major competitor.',
@@ -231,7 +231,7 @@ export default function ComparePage() {
         {/* FOOTER */}
         <footer style={{ padding: '40px 32px', textAlign: 'center', borderTop: `1px solid ${BORDER}` }}>
           <p style={{ fontSize: 13, color: DIM, margin: 0 }}>
-            &copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.
+            &copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.
             {' '}&middot;{' '}
             <Link href="/privacy" style={{ color: DIM, textDecoration: 'none' }}>Privacy</Link>
             {' '}&middot;{' '}

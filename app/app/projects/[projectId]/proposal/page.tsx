@@ -378,7 +378,7 @@ export default function ProposalPage() {
                     {open && (
                       <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                         <td colSpan={7} style={{ padding: 0 }}>
-                          <ProposalLines proposalId={p.id} headerAmount={Number(p.amount) || 0} />
+                          <ProposalLines proposalId={p.id} headerAmount={Number(p.amount) || 0} onChanged={fetchProposals} />
                         </td>
                       </tr>
                     )}

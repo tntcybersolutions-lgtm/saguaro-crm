@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Switch from Procore — Free Migration | Saguaro Control Systems',
+  title: 'Switch from Procore — Free Migration | Saguaro Control Systems — Construction Management & Project Controls',
   description: 'Switch from Procore to Saguaro in 1 business day. Free data migration, no implementation consultant, flat pricing starting at $499/mo. AI features Procore doesn\'t have.',
   keywords: ['procore alternative', 'switch from procore', 'procore competitor', 'construction software alternative', 'procore migration'],
   openGraph: {

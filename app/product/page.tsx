@@ -7,7 +7,7 @@ import { moduleAccent } from '@/lib/module-identity';
 export const metadata: Metadata = {
   title: 'Product — Every Module, One Platform',
   description:
-    'The full Saguaro Control Systems module lineup: Takeoff Studio, Bid Jackets, Signal Studio, Daily Logs, Crews, T&M Tickets, Saguaro Radio, pay applications, invoicing — every module included, no add-on pricing.',
+    'The full Saguaro Control Systems — Construction Management & Project Controls module lineup: Takeoff Studio, Bid Jackets, Signal Studio, Daily Logs, Crews, T&M Tickets, Saguaro Radio, pay applications, invoicing — every module included, no add-on pricing.',
 };
 
 /*
@@ -232,7 +232,7 @@ export default function ProductPage() {
       {/* ── FOOTER ── */}
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.12)', padding: '40px 32px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 20 }}>
-          <span style={{ fontSize: 13, color: 'rgba(203,213,225,0.4)' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.</span>
+          <span style={{ fontSize: 13, color: 'rgba(203,213,225,0.4)' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.</span>
           <div className="prodFootLinks">
             <Link href="/pricing" style={{ fontSize: 13, color: 'rgba(203,213,225,0.5)', textDecoration: 'none' }}>Pricing</Link>
             <Link href="/get-the-app" style={{ fontSize: 13, color: 'rgba(203,213,225,0.5)', textDecoration: 'none' }}>The App</Link>

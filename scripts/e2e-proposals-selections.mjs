@@ -281,11 +281,18 @@ let proposalId;
   check('a generated proposal reconciles with its own lines',
     lines.body.reconciles === true, `header ${m(lines.body.headerAmount)} vs lines ${m(lines.body.lineTotal)}`);
 
-  // A hand-entered proposal from before this feature existed.
+  /* A hand-entered proposal from before this feature existed. It stated
+     $2,850,000 against $2,451,800 of lines; the $398,200 gap was general
+     conditions, overhead and profit that had been itemised nowhere. Reconciled
+     by naming that money, NOT by moving the contract price. */
   const legacy = await api('/api/proposals/22222222-2222-2222-2222-222222222201/lines');
-  check('a legacy proposal reports its mismatch instead of hiding it',
-    legacy.body.reconciles === false && Math.abs(legacy.body.difference) > 1,
-    `differs by ${m(Math.abs(legacy.body.difference))}`);
+  check('the once-mismatched legacy proposal now reconciles',
+    legacy.body.reconciles === true, `header ${m(legacy.body.headerAmount)} = lines ${m(legacy.body.lineTotal)}`);
+  check('and it kept its contract price',
+    legacy.body.headerAmount === 2850000, `${m(legacy.body.headerAmount)} — the number the client agreed to`);
+  check('the money it was missing is on a named line',
+    legacy.body.lines.some((l) => /General Conditions/.test(l.description) && Number(l.total_price) === 398200),
+    `${legacy.body.lines.length} lines, last: ${legacy.body.lines.at(-1)?.description}`);
 
   const put = await api(`/api/proposals/${proposalId}/lines`, {
     method: 'PUT',

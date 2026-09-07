@@ -85,7 +85,7 @@ export async function resolveBrandingValues(opts: {
   tenantId?: string | null;
   projectId?: string | null;
 }): Promise<BrandingValues> {
-  const fallback: BrandingValues = { companyName: 'Saguaro Control Systems', logoUrl: '', accentHex: '' };
+  const fallback: BrandingValues = { companyName: 'Saguaro Control Systems — Construction Management & Project Controls', logoUrl: '', accentHex: '' };
   try {
     const { createServerClient } = await import('../supabase-server');
     const db = createServerClient() as unknown as { from: (t: string) => any }; // eslint-disable-line @typescript-eslint/no-explicit-any

@@ -79,7 +79,7 @@ const CATEGORIES: Cat[] = [
   {
     key: 'field-app',
     title: 'Field App',
-    desc: 'Saguaro Control Systems for iOS & Android — works offline, syncs when you get signal.',
+    desc: 'Saguaro Control Systems — Construction Management & Project Controls for iOS & Android — works offline, syncs when you get signal.',
     icon: <Icon d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z|M11 18h2" />,
   },
   {
@@ -107,7 +107,7 @@ const ARTICLES: Article[] = [
   { cat: 'getting-started', title: 'Create your company account in 5 minutes', body: 'Sign up at saguarocontrol.net, name your company, and pick your trade focus. Your first project workspace, cost-code list, and document folders are created automatically so you can start working within minutes.' },
   { cat: 'getting-started', title: 'Invite your team and assign roles', body: 'From Settings → Team, add email addresses and assign a role: Admin, PM, Field, Accounting, or Read-Only. Every plan includes unlimited users, so there is never a per-seat charge for adding your whole crew.', tags: ['add teammate', 'add a teammate', 'invite', 'users', 'permissions', 'roles'] },
   { cat: 'getting-started', title: 'Free migration from Procore, Buildertrend, or spreadsheets', body: 'Free guided migration is included on every plan. Tell us your current platform under Settings → Migration and our team imports your projects, contacts, vendors, documents, and pay-app history — most companies are fully live in one business day.', tags: ['migrate', 'migration', 'procore', 'buildertrend', 'import', 'switch platform', 'move data'] },
-  { cat: 'getting-started', title: 'Install the field app on iPhone & Android', body: 'Download Saguaro Control Systems from the App Store or Google Play, sign in with your account, and your assigned projects sync to the device. The app works offline and syncs the moment you regain signal.', tags: ['install', 'download', 'app store', 'google play', 'iphone', 'android'] },
+  { cat: 'getting-started', title: 'Install the field app on iPhone & Android', body: 'Download Saguaro Control Systems — Construction Management & Project Controls from the App Store or Google Play, sign in with your account, and your assigned projects sync to the device. The app works offline and syncs the moment you regain signal.', tags: ['install', 'download', 'app store', 'google play', 'iphone', 'android'] },
   { cat: 'getting-started', title: 'Set up approval chains for pay apps and change orders', body: 'Under Settings → Approvals, define who reviews and signs off on pay applications, change orders, and POs. You can require multiple approvers and set dollar thresholds that route larger items to ownership.' },
   { cat: 'getting-started', title: 'Import your cost codes and CSI divisions', body: 'Upload your existing cost-code list as a CSV, or start from the built-in CSI MasterFormat divisions. Codes flow into budgets, takeoffs, commitments, and job-cost reports so everything reconciles.' },
   { cat: 'getting-started', title: 'Connect QuickBooks Online', body: 'Link QuickBooks Online under Settings → Integrations to sync customers, vendors, invoices, and bills. Job costs and pay-app billings post automatically, eliminating double entry for your accountant.', tags: ['quickbooks', 'qbo', 'accounting', 'sync'] },
@@ -157,10 +157,10 @@ const ARTICLES: Article[] = [
   { cat: 'trades', title: 'Create a bid package and invite subs by trade', body: 'Assemble a bid package with plans, specs, and a scope of work, then invite subs by trade. Track who viewed, downloaded, and bid, and level the responses side by side.', tags: ['bid package', 'bidding', 'invite subs', 'leveling', 'scope'] },
 
   // ---- Field App ----
-  { cat: 'field-app', title: 'Download & log in to Saguaro Control Systems', body: 'Install Saguaro Control Systems from the App Store or Google Play and sign in with your Saguaro account — Face ID gets you in fast. Your assigned projects sync automatically.', tags: ['download', 'login', 'field app', 'install'] },
+  { cat: 'field-app', title: 'Download & log in to Saguaro Control Systems — Construction Management & Project Controls', body: 'Install Saguaro Control Systems — Construction Management & Project Controls from the App Store or Google Play and sign in with your Saguaro account — Face ID gets you in fast. Your assigned projects sync automatically.', tags: ['download', 'login', 'field app', 'install'] },
   { cat: 'field-app', title: 'Capture punch-list items with photos', body: 'Walk the site, snap a photo, drop a punch item with a location and assignee, and it syncs to the office. Subs see their list and mark items done from their own device.', tags: ['punch list', 'photos', 'field'] },
   { cat: 'field-app', title: 'Log time & track crews on site', body: 'Clock crews in and out, allocate hours to cost codes, and capture daily manpower. Time flows into job costing and certified payroll without re-keying.', tags: ['time', 'timesheet', 'crew', 'labor'] },
-  { cat: 'field-app', title: 'Work offline — automatic sync on reconnect', body: 'Saguaro Control Systems is offline-first. Daily logs, photos, punch items, and time entries queue locally with no signal and sync the moment you reconnect — nothing is lost in a dead zone.', tags: ['offline', 'sync', 'no signal'] },
+  { cat: 'field-app', title: 'Work offline — automatic sync on reconnect', body: 'Saguaro Control Systems — Construction Management & Project Controls is offline-first. Daily logs, photos, punch items, and time entries queue locally with no signal and sync the moment you reconnect — nothing is lost in a dead zone.', tags: ['offline', 'sync', 'no signal'] },
   { cat: 'field-app', title: 'Push notifications for RFIs & approvals', body: 'Get a push the instant an RFI is answered, a pay app needs your signature, or a change order is approved, so the field and office never wait on each other.', tags: ['notifications', 'push', 'alerts'] },
   { cat: 'field-app', title: 'Scan blueprints and mark up in the field', body: 'Open the current plan set on your phone or tablet, zoom to a detail, and pin photos, RFIs, or notes to a location on the sheet.', tags: ['blueprints', 'markup', 'plans', 'scan'] },
 
@@ -213,7 +213,7 @@ const FAQS = [
   },
   {
     q: 'Does the field app work without cell signal?',
-    a: 'Yes. Saguaro Control Systems is offline-first. Log daily reports, punch-list items, photos, and time entries with no connection — everything queues locally and syncs automatically the moment you regain signal. No data is lost on a dead-zone job site.',
+    a: 'Yes. Saguaro Control Systems — Construction Management & Project Controls is offline-first. Log daily reports, punch-list items, photos, and time entries with no connection — everything queues locally and syncs automatically the moment you regain signal. No data is lost on a dead-zone job site.',
   },
   {
     q: 'How do I invite my team and set permissions?',
@@ -274,8 +274,8 @@ export default function HelpCenterPage() {
         display: 'flex', alignItems: 'center', padding: '0 32px', gap: 0,
       }}>
         <style>{`@media (max-width: 768px){ .hc-mnav-links{ display:none !important } }`}</style>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, marginRight: 40 }} aria-label="Saguaro Control Systems — home">
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, marginRight: 40 }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 36, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
         </Link>
         <div className="hc-mnav-links" style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
           {NAV_LINKS.map(link => (
@@ -307,7 +307,7 @@ export default function HelpCenterPage() {
             </span>
           </h1>
           <p style={{ fontSize: 'clamp(15px, 1.6vw, 17px)', color: C.dim, maxWidth: 580, margin: '0 auto 32px', lineHeight: 1.6 }}>
-            {ARTICLES.length} guides and answers for everything in Saguaro Control Systems — from AI takeoffs and trade cost codes to pay apps, the field app, and billing.
+            {ARTICLES.length} guides and answers for everything in Saguaro Control Systems — Construction Management & Project Controls — from AI takeoffs and trade cost codes to pay apps, the field app, and billing.
           </p>
 
           {/* Search box */}
@@ -538,8 +538,8 @@ export default function HelpCenterPage() {
         {/* Footer */}
         <footer style={{ borderTop: `1px solid ${C.border}`, padding: '48px 32px', background: C.raised }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 32 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
@@ -551,7 +551,7 @@ export default function HelpCenterPage() {
                 <a key={link.label} href={link.href} style={{ fontSize: 13, color: C.dim, textDecoration: 'none', fontWeight: 500 }}>{link.label}</a>
               ))}
             </div>
-            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems</div>
+            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls</div>
           </div>
         </footer>
 

@@ -32,7 +32,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { supabaseAdmin } from './supabase/admin';
 
-const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
+const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro Control Systems — Construction Management & Project Controls <noreply@mail.saguarocrm.com>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
 
 function resend(): Resend | null {

@@ -196,7 +196,7 @@ export default function W9Portal() {
           </button>
 
           <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: DIM }}>
-            🔒 256-bit encrypted · Your information is never sold or shared · Powered by Saguaro Control Systems
+            🔒 256-bit encrypted · Your information is never sold or shared · Powered by Saguaro Control Systems — Construction Management & Project Controls
           </div>
         </form>
       </div>

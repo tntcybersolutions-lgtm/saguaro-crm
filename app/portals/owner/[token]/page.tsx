@@ -190,7 +190,7 @@ export default function OwnerApprovalPortal() {
               </button>
             </div>
             <div style={{ textAlign:'center',marginTop:14,fontSize:11,color:DIM }}>
-              Your approval constitutes authorization for the contractor to invoice for the amount shown. · Powered by Saguaro Control Systems
+              Your approval constitutes authorization for the contractor to invoice for the amount shown. · Powered by Saguaro Control Systems — Construction Management & Project Controls
             </div>
           </div>
         </div>

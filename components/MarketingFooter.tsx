@@ -150,11 +150,11 @@ export default function MarketingFooter() {
         ))}
       </div>
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.12)', paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' as const, gap: 16 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-          <img src="/logo-horizontal.png" alt="Saguaro Control Systems" height={30} style={{ height: 30, width: 'auto', display: 'block' }} />
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+          <img src="/logo-horizontal.png" alt="Saguaro Control Systems — Construction Management & Project Controls" height={30} style={{ height: 30, width: 'auto', display: 'block' }} />
         </Link>
         <SocialRow size={18} gap={16} />
-        <span style={{ fontSize: 12, color: DIM }}>&copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved. &middot; <span style={{ color: GOLD, fontWeight: 600 }}>Control Every Project. Deliver Every Promise.</span></span>
+        <span style={{ fontSize: 12, color: DIM }}>&copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. All rights reserved. &middot; <span style={{ color: GOLD, fontWeight: 600 }}>Control Every Project. Deliver Every Promise.</span></span>
       </div>
       <style>{`
         @media (max-width: 768px) { .mf-grid { grid-template-columns: repeat(2, 1fr) !important; } }

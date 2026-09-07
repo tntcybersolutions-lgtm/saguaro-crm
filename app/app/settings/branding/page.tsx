@@ -255,7 +255,7 @@ export default function BrandingPage() {
                 />
                 <span>
                   <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: TEXT }}>
-                    Show “Powered by Saguaro”
+                    Show “Powered by Saguaro Control Systems — Construction Management & Project Controls”
                   </span>
                   <span style={{ display: 'block', fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.55 }}>
                     A small line in the footer linking to saguarocontrol.net. Turn it off and

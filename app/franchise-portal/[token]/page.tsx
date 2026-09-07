@@ -28,7 +28,7 @@ export default function FranchisePortalPage() {
   }, [token]);
 
   if (state === 'loading') return <Shell><div style={{ padding: 60, textAlign: 'center', color: C.dim }}>Loading…</div></Shell>;
-  if (state === 'notfound') return <Shell><Center title="Portal not available" body="This owner link is no longer active. Please contact your Saguaro Control Systems coordinator for an updated link." /></Shell>;
+  if (state === 'notfound') return <Shell><Center title="Portal not available" body="This owner link is no longer active. Please contact your Saguaro Control Systems — Construction Management & Project Controls coordinator for an updated link." /></Shell>;
   if (state === 'error') return <Shell><Center title="Something went wrong" body="Please try again in a moment." /></Shell>;
 
   const p = data.project; const st = STATUS[(p.status as keyof typeof STATUS)] || STATUS.yellow;
@@ -90,7 +90,7 @@ export default function FranchisePortalPage() {
       )}
 
       <div style={{ textAlign: 'center', marginTop: 30, fontSize: 12, color: C.faint, lineHeight: 1.7 }}>
-        Prepared by <b style={{ color: C.dim }}>Saguaro Control Systems</b><br />
+        Prepared by <b style={{ color: C.dim }}>Saguaro Control Systems — Construction Management & Project Controls</b><br />
         Control Every Project. Deliver Every Promise.
       </div>
     </Shell>

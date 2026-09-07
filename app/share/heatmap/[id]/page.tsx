@@ -184,7 +184,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div style={{ background: `linear-gradient(100deg,${NAVY},#161b22)`, padding: '18px 26px', display: 'flex', alignItems: 'center', gap: 14 }}>
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M12 9c0-2 -1.6-3.5 -3.5-3.5S5 7 5 9v3c0 1.4 1.1 2.5 2.5 2.5S10 13.4 10 12M12 12c0-2 1.6-3.5 3.5-3.5S19 10 19 12v2c0 1.4-1.1 2.5-2.5 2.5S14 15.4 14 14" /></svg>
         <div>
-          <div style={{ color: GOLD, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.4, fontWeight: 700 }}>Saguaro Control Systems</div>
+          <div style={{ color: GOLD, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.4, fontWeight: 700 }}>Saguaro Control Systems — Construction Management & Project Controls</div>
           <div style={{ fontSize: 18, fontWeight: 800 }}>Coverage Design</div>
         </div>
       </div>

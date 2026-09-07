@@ -57,7 +57,7 @@ const STEPS = [
   },
   {
     title: 'Run the field',
-    lead: 'Your crews carry the Saguaro Control Systems app on iPhone or Android. Daily logs, jobsite photos, punch lists, and safety inspections are captured on site — and it all works offline when signal drops.',
+    lead: 'Your crews carry the Saguaro Control Systems — Construction Management & Project Controls app on iPhone or Android. Daily logs, jobsite photos, punch lists, and safety inspections are captured on site — and it all works offline when signal drops.',
     points: [
       'Daily logs, photos, and weather captured from the jobsite',
       'Punch lists and safety / toolbox-talk forms with sign-off',
@@ -106,7 +106,7 @@ const FAQS = [
     a: 'Most teams are live the same day. Sign up, run the 5-minute company setup wizard, and invite your team. If you are migrating from another platform, our team moves your data over in 1 business day — you keep working in the meantime.',
   },
   {
-    q: 'Does the Saguaro Control Systems app really work offline?',
+    q: 'Does the Saguaro Control Systems — Construction Management & Project Controls app really work offline?',
     a: 'Yes. Daily logs, photos, punch items, and safety forms are all captured on-device. When the crew is in a basement, a remote site, or a dead zone, everything is stored locally and syncs automatically the moment a connection returns.',
   },
   {
@@ -152,7 +152,7 @@ export default function HowItWorksPage() {
             in <span style={SHINE}>one platform</span>.
           </h1>
           <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', color: C.dim, maxWidth: 620, margin: '0 auto 36px', lineHeight: 1.65 }}>
-            Saguaro Control Systems runs the whole job — AI takeoff, bidding, the field app, pay apps, owner and sub portals, and closeout — so your team works in one system instead of a dozen disconnected tools.
+            Saguaro Control Systems — Construction Management & Project Controls runs the whole job — AI takeoff, bidding, the field app, pay apps, owner and sub portals, and closeout — so your team works in one system instead of a dozen disconnected tools.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
@@ -283,8 +283,8 @@ export default function HowItWorksPage() {
         {/* Footer */}
         <footer style={{ borderTop: `1px solid ${C.hairline}`, padding: '48px 32px', background: C.raised }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 32 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
@@ -295,7 +295,7 @@ export default function HowItWorksPage() {
                 <a key={link.label} href={link.href} style={{ fontSize: 13, color: C.dim, textDecoration: 'none', fontWeight: 500 }}>{link.label}</a>
               ))}
             </div>
-            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems</div>
+            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls</div>
           </div>
         </footer>
 

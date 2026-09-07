@@ -144,7 +144,7 @@ export default function CityLandingPage({ city }: { city: City }) {
     '@graph': [
       {
         '@type': 'SoftwareApplication',
-        name: 'Saguaro Control Systems',
+        name: 'Saguaro Control Systems — Construction Management & Project Controls',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web, iOS, Android',
         description: `Construction management software for general contractors in ${city.name}, ${city.state}. AI blueprint takeoff, lien waivers, certified payroll, field app.`,
@@ -171,7 +171,7 @@ export default function CityLandingPage({ city }: { city: City }) {
       },
       {
         '@type': 'LocalBusiness',
-        name: `Saguaro Control Systems — ${city.name} Construction Software`,
+        name: `Saguaro Control Systems — Construction Management & Project Controls — ${city.name} Construction Software`,
         description: `Construction management software serving general contractors in ${city.name}, ${city.state}.`,
         url: `https://saguarocontrol.net/local/${city.slug}`,
         areaServed: {
@@ -214,8 +214,8 @@ export default function CityLandingPage({ city }: { city: City }) {
           display: 'flex', alignItems: 'center',
         }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 24px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '34px', width: 'auto', objectFit: 'contain', borderRadius: '4px' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: '34px', width: 'auto', objectFit: 'contain', borderRadius: '4px' }} />
               <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
                 <span style={{ fontWeight: 600, fontSize: '14px', letterSpacing: '0.1em', color: TEXT }}>SAGUARO</span>
                 <span style={{ fontSize: '7px', color: '#CBD5E1', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
@@ -390,7 +390,7 @@ export default function CityLandingPage({ city }: { city: City }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: '#1c1c1e', padding: '14px 20px' }}>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Feature</span>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1', letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>Manual / Excel</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: TEXT, letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>Saguaro Control Systems</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: TEXT, letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>Saguaro Control Systems — Construction Management & Project Controls</span>
               </div>
 
               {COMPARISON_ROWS(city).map((row, i) => (
@@ -473,7 +473,7 @@ export default function CityLandingPage({ city }: { city: City }) {
               ))}
             </nav>
             <p style={{ margin: 0, fontSize: '11px', color: '#8094B0', textAlign: 'center' }}>
-              &copy; {new Date().getFullYear()} Saguaro Control Systems. Construction management software for {city.name}, {city.state} general contractors.
+              &copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. Construction management software for {city.name}, {city.state} general contractors.
             </p>
           </div>
         </footer>

@@ -11,9 +11,9 @@ import { TRIAL_DAYS } from '@/lib/plans';
 const TESTFLIGHT_URL = 'https://testflight.apple.com/join/jg7jdtwx';
 
 export const metadata: Metadata = {
-  title: 'Get Saguaro Control Systems — Native iOS App | Now in TestFlight Beta',
+  title: 'Get Saguaro Control Systems — Construction Management & Project Controls — Native iOS App | Now in TestFlight Beta',
   description:
-    'Saguaro Control Systems is a native iPhone & iPad app — now in open beta on TestFlight. GPS clock-in, daily logs, photos, RFIs, punch lists, offline mode, and an AI field assistant. Free during the beta.',
+    'Saguaro Control Systems — Construction Management & Project Controls is a native iPhone & iPad app — now in open beta on TestFlight. GPS clock-in, daily logs, photos, RFIs, punch lists, offline mode, and an AI field assistant. Free during the beta.',
   keywords: [
     'construction field app',
     'iOS construction app',
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     'construction mobile app',
   ],
   openGraph: {
-    title: 'Saguaro Control Systems — Native iOS App, Now in TestFlight Beta',
+    title: 'Saguaro Control Systems — Construction Management & Project Controls — Native iOS App, Now in TestFlight Beta',
     description:
       'Native iPhone & iPad field app for construction crews. Works offline. Join the TestFlight beta free.',
   },
@@ -685,7 +685,7 @@ export default function GetTheAppPage() {
                 <PhoneFrame src="/marketing/phone-project.webp" alt="Project overview on iPhone — contract value, quick add, progress" width={268} />
               </div>
               <div className="dev-slot-laptop">
-                <LaptopFrame src="/marketing/web-login.webp" alt="Signing in to Saguaro Control Systems on the web" width={536} height={336} />
+                <LaptopFrame src="/marketing/web-login.webp" alt="Signing in to Saguaro Control Systems — Construction Management & Project Controls on the web" width={536} height={336} />
               </div>
             </div>
           </div>
@@ -771,7 +771,7 @@ export default function GetTheAppPage() {
           <div className="section-wrap">
             <div className="section-header">
               <h2 className="section-h2">Install on iPhone or iPad via TestFlight</h2>
-              <p className="section-sub">Saguaro Control Systems is in open beta on TestFlight. Two minutes and it&apos;s on your phone.</p>
+              <p className="section-sub">Saguaro Control Systems — Construction Management & Project Controls is in open beta on TestFlight. Two minutes and it&apos;s on your phone.</p>
             </div>
 
             <div className="platform-grid">
@@ -791,7 +791,7 @@ export default function GetTheAppPage() {
                 <ol className="steps-list">
                   <li className="step-item"><div className="step-num">1</div><span className="step-text">Install Apple&apos;s free <strong>TestFlight</strong> app from the App Store</span></li>
                   <li className="step-item"><div className="step-num">2</div><span className="step-text">Open <strong>testflight.apple.com/join/jg7jdtwx</strong> on your iPhone</span></li>
-                  <li className="step-item"><div className="step-num">3</div><span className="step-text">Tap <strong>&quot;Install&quot;</strong> in TestFlight — Saguaro Control Systems lands on your home screen</span></li>
+                  <li className="step-item"><div className="step-num">3</div><span className="step-text">Tap <strong>&quot;Install&quot;</strong> in TestFlight — Saguaro Control Systems — Construction Management & Project Controls lands on your home screen</span></li>
                   <li className="step-item"><div className="step-num">4</div><span className="step-text">Open it, sign in, and you&apos;re on the jobsite</span></li>
                 </ol>
                 <div className="platform-note">iOS 15+ · iPhone &amp; iPad · Free during the beta</div>
@@ -809,7 +809,7 @@ export default function GetTheAppPage() {
                   </div>
                   <div className="platform-name">Join the beta now</div>
                 </div>
-                <p className="feat-desc" style={{ marginBottom: 20 }}>Saguaro Control Systems is in open beta on TestFlight. Tap below on your iPhone or iPad to get in — it&apos;s free while we&apos;re in beta.</p>
+                <p className="feat-desc" style={{ marginBottom: 20 }}>Saguaro Control Systems — Construction Management & Project Controls is in open beta on TestFlight. Tap below on your iPhone or iPad to get in — it&apos;s free while we&apos;re in beta.</p>
                 <a href={TESTFLIGHT_URL} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: 'inline-block' }}>Join the iOS Beta →</a>
                 <div className="platform-note" style={{ marginTop: 16 }}>Public TestFlight link · No charge</div>
               </div>
@@ -818,7 +818,7 @@ export default function GetTheAppPage() {
           </div>
         </section>
 
-        {/* (Removed the PWA-vs-App-Store comparison — Saguaro Control Systems is now a native iOS app on TestFlight.) */}
+        {/* (Removed the PWA-vs-App-Store comparison — Saguaro Control Systems — Construction Management & Project Controls is now a native iOS app on TestFlight.) */}
 
         {/* ── TESTIMONIALS ── */}
         <div style={{ background: 'var(--raised)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
@@ -869,7 +869,7 @@ export default function GetTheAppPage() {
               <div className="footer-logo">
                 <img src="/logo-full.jpg" alt="Saguaro" height={32} style={{ }} />
               </div>
-              <span className="footer-copy">© {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.</span>
+              <span className="footer-copy">© {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.</span>
             </div>
             <div className="footer-links">
               <Link href="/product" className="footer-link">Product</Link>

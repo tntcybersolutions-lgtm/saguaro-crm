@@ -48,7 +48,7 @@ function resend(): Resend | null {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
+const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro Control Systems — Construction Management & Project Controls <noreply@mail.saguarocrm.com>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -773,7 +773,7 @@ async function sendWelcomeEmail(
     html: `
       <div style="font-family:-apple-system,sans-serif;max-width:560px;margin:0 auto;color:#2d3748">
         <div style="background:#1b3a5c;padding:24px 32px;border-radius:8px 8px 0 0">
-          <h1 style="color:#fff;margin:0;font-size:22px">Welcome to Saguaro CRM</h1>
+          <h1 style="color:#fff;margin:0;font-size:22px">Welcome to Saguaro Control Systems — Construction Management & Project Controls</h1>
           <p style="color:#a8c4e0;margin:4px 0 0;font-size:13px">${planName} Plan</p>
         </div>
         <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:28px 32px;border-radius:0 0 8px 8px">
@@ -824,7 +824,7 @@ async function sendPaymentFailedEmail(
   await r.emails.send({
     from:    FROM,
     to:      email,
-    subject: `Action Required: Payment of ${amount} failed — Saguaro CRM`,
+    subject: `Action Required: Payment of ${amount} failed — Saguaro Control Systems — Construction Management & Project Controls`,
     html: `
       <p>We were unable to process your payment of <strong>${amount}</strong>.</p>
       <p>Your account remains active for now. Please update your payment method to avoid interruption.</p>

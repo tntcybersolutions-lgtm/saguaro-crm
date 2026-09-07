@@ -15,6 +15,7 @@
 
 import React from 'react';
 import { useWhiteLabel } from './WhiteLabelProvider';
+import { PLATFORM_NAME, PLATFORM_URL } from '@/lib/brand';
 
 export default function PoweredBy({ style }: { style?: React.CSSProperties }) {
   const wl = useWhiteLabel();
@@ -33,15 +34,15 @@ export default function PoweredBy({ style }: { style?: React.CSSProperties }) {
         ...style,
       }}
     >
-      <span>
+      <span style={{ textAlign: 'center' }}>
         Powered by{' '}
         <a
-          href="https://saguarocontrol.net/"
+          href={PLATFORM_URL}
           target="_blank"
           rel="noopener noreferrer"
           style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2 }}
         >
-          Saguaro
+          {PLATFORM_NAME}
         </a>
       </span>
     </div>

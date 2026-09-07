@@ -88,7 +88,7 @@ export default function WelcomePage() {
                 step: '3',
                 icon: '📱',
                 title: 'Install on your phone',
-                desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone or iPad. Android coming soon.',
+                desc: 'Download Saguaro Control Systems — Construction Management & Project Controls free from Apple TestFlight on your iPhone or iPad. Android coming soon.',
                 href: '/get-the-app',
                 cta: 'See Install Guide →',
                 primary: false,

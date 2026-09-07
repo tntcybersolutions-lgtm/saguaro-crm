@@ -186,8 +186,8 @@ export default function ContactPage() {
         backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         display: 'flex', alignItems: 'center', padding: '0 32px', gap: 0,
       }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, marginRight: 40 }} aria-label="Saguaro Control Systems — home">
-          <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0, marginRight: 40 }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+          <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 36, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
         </Link>
         <div className="contact-mnav-links" style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
           {NAV_LINKS.map(link => (
@@ -373,7 +373,7 @@ export default function ContactPage() {
 
               <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '24px 26px' }}>
                 <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Headquarters</div>
-                <div style={{ fontSize: 14, color: C.text, fontWeight: 600, marginBottom: 4 }}>Saguaro Control Systems</div>
+                <div style={{ fontSize: 14, color: C.text, fontWeight: 600, marginBottom: 4 }}>Saguaro Control Systems — Construction Management & Project Controls</div>
                 <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.6 }}>Phoenix, Arizona · Remote-first team<br />Serving general contractors across all 50 states</div>
               </div>
             </div>
@@ -431,8 +431,8 @@ export default function ContactPage() {
         {/* Footer */}
         <footer style={{ borderTop: `1px solid ${C.hairline}`, padding: '48px 32px', background: C.raised }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 32 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
@@ -444,7 +444,7 @@ export default function ContactPage() {
                 <a key={link.label} href={link.href} style={{ fontSize: 13, color: C.dim, textDecoration: 'none', fontWeight: 500 }}>{link.label}</a>
               ))}
             </div>
-            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems</div>
+            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls</div>
           </div>
         </footer>
 

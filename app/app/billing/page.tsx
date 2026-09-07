@@ -625,7 +625,7 @@ export default function BillingPage() {
         <SectionCard flat
           icon={<DeviceMobile size={17} weight="duotone" color={GOLD} />}
           title="Get the app for iPhone & iPad"
-          subtitle="Saguaro Control Systems App"
+          subtitle="Saguaro Control Systems — Construction Management & Project Controls App"
           style={{ marginBottom: 28 }}
           action={
             <Link href="/get-the-app" style={{ ...goldButtonStyle, whiteSpace: 'nowrap' }} className="pmBtn">

@@ -1,6 +1,11 @@
 import { Resend } from 'resend';
+import { platformFrom } from '../brand';
 
-const FROM = process.env.EMAIL_FROM || 'Saguaro Control Systems <noreply@saguarocontrol.net>';
+/* platformFrom quotes the display name. The platform name contains an em dash
+   and an ampersand, and RFC 5322 requires a display name carrying either to be
+   a quoted-string — unquoted, some servers reject the message and others mangle
+   the sender. */
+const FROM = process.env.EMAIL_FROM || platformFrom('noreply@saguarocontrol.net');
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -15,7 +20,7 @@ function baseLayout(body: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Saguaro Control Systems</title>
+  <title>Saguaro Control Systems — Construction Management & Project Controls</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,Helvetica,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 0;">
@@ -39,7 +44,7 @@ function baseLayout(body: string): string {
           <tr>
             <td style="background:#f4f4f5;padding:16px 32px;border-top:1px solid #e5e7eb;">
               <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
-                &copy; ${new Date().getFullYear()} Saguaro Control Systems &mdash; All rights reserved.<br/>
+                &copy; ${new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls &mdash; All rights reserved.<br/>
                 This email was sent automatically. Please do not reply directly to this message.
               </p>
             </td>
@@ -176,7 +181,7 @@ export async function sendW9Request(
       ${para('A W-9 is required before we can process any payments to your company. Please complete the secure form at the link below — it only takes a few minutes.')}
       ${detailTable(`
         ${detail('Project', projectName)}
-        ${detail('Requesting Party', 'Saguaro Control Systems')}
+        ${detail('Requesting Party', 'Saguaro Control Systems — Construction Management & Project Controls')}
       `)}
       ${btn('Complete W-9 Form', portalUrl)}
       ${para('<small style="color:#9ca3af;">This link is secure and unique to your account. Your information is encrypted and stored safely.</small>')}
@@ -338,7 +343,7 @@ export function payAppSubmittedEmail(data: {
       ${detail('Amount Due', formatCurrency(data.amount))}
     `)}
     ${btn('Review &amp; Download', data.downloadUrl)}
-    ${para('<small style="color:#9ca3af;">This is an automated notification from Saguaro Control Systems.</small>')}
+    ${para('<small style="color:#9ca3af;">This is an automated notification from Saguaro Control Systems — Construction Management & Project Controls.</small>')}
   `);
 }
 
@@ -358,7 +363,7 @@ export function lienWaiverRequestEmail(data: {
       ${detail('Amount', formatCurrency(data.amount))}
     `)}
     ${btn('Sign Lien Waiver', data.portalUrl)}
-    ${para('<small style="color:#9ca3af;">Saguaro Control Systems &mdash; automated lien waiver request.</small>')}
+    ${para('<small style="color:#9ca3af;">Saguaro Control Systems — Construction Management & Project Controls &mdash; automated lien waiver request.</small>')}
   `);
 }
 
@@ -385,7 +390,7 @@ export function welcomeEmail(data: {
   loginUrl: string;
 }): string {
   return baseLayout(`
-    ${heading(`Welcome to Saguaro Control Systems, ${data.userName}!`)}
+    ${heading(`Welcome to Saguaro Control Systems — Construction Management & Project Controls, ${data.userName}!`)}
     ${para(`Your account for <strong>${data.companyName}</strong> is ready.`)}
     ${para('Here&rsquo;s what you can do right now:')}
     <ul style="color:#374151;font-size:14px;line-height:2.2;margin:16px 0;">

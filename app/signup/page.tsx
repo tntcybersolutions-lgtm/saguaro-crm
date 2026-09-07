@@ -43,7 +43,7 @@ const HOW_IT_WORKS = [
   {
     step: '3',
     title: 'Install on your phone (optional)',
-    desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone. Android coming soon.',
+    desc: 'Download Saguaro Control Systems — Construction Management & Project Controls free from Apple TestFlight on your iPhone. Android coming soon.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>

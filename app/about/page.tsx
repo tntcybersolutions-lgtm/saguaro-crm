@@ -73,7 +73,7 @@ const PLATFORM = [
   { name: 'Project Controls', desc: 'Long-lead tracking, a portfolio risk register, milestone-variance against baseline, and live budget/schedule KPIs.' },
   { name: 'Multi-Site Program Management', desc: 'Standardized templates, procurement, and reporting so every location runs the same proven process.' },
   { name: 'Owner & Stakeholder Portals', desc: 'A single, transparent source of truth for owners, design teams, contractors, landlords, and franchise partners.' },
-  { name: 'Field Execution', desc: 'The Saguaro Control Systems app keeps the office and the crew in sync — daily logs, RFIs, photos, and inspections from any site.' },
+  { name: 'Field Execution', desc: 'The Saguaro Control Systems — Construction Management & Project Controls app keeps the office and the crew in sync — daily logs, RFIs, photos, and inspections from any site.' },
   { name: 'Compliance & Closeout', desc: 'Documented from lease execution through grand opening: pay apps, lien waivers, insurance, and closeout in one system.' },
 ];
 
@@ -107,7 +107,7 @@ export default function AboutPage() {
 
         {/* Hero */}
         <section style={{ textAlign: 'center', padding: '120px 24px 72px', background: `radial-gradient(ellipse 900px 500px at 50% 0%, rgba(245, 158, 11,0.05) 0%, transparent 70%)` }}>
-          <Eyebrow>About Saguaro Control Systems</Eyebrow>
+          <Eyebrow>About Saguaro Control Systems — Construction Management & Project Controls</Eyebrow>
           <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 auto 20px', letterSpacing: '-0.02em', maxWidth: 820, color: C.text }}>
             We build the systems that make construction <span style={SHINE}>predictable</span>.
           </h1>
@@ -310,8 +310,8 @@ export default function AboutPage() {
         {/* Footer */}
         <footer style={{ borderTop: `1px solid ${C.border}`, padding: '48px 32px', background: C.raised }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 32 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
@@ -323,7 +323,7 @@ export default function AboutPage() {
               ))}
             </div>
             <div style={{ fontSize: 12, color: C.dim, textAlign: 'right' }}>
-              &copy; {new Date().getFullYear()} Saguaro Control Systems<div style={{ fontSize: 11, marginTop: 2 }}>{TAGLINE}</div>
+              &copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls<div style={{ fontSize: 11, marginTop: 2 }}>{TAGLINE}</div>
             </div>
           </div>
         </footer>

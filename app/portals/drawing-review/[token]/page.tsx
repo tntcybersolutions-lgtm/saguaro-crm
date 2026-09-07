@@ -1391,7 +1391,7 @@ export default function DrawingReviewPortalPage() {
 
       {/* ── Footer ── */}
       <footer style={{ textAlign: 'center', padding: '4px 16px 12px', flexShrink: 0 }}>
-        <div style={{ fontSize: 11, color: DIM }}>Powered by <strong style={{ color: GOLD }}>Saguaro Control Systems</strong></div>
+        <div style={{ fontSize: 11, color: DIM }}>Powered by <strong style={{ color: GOLD }}>Saguaro Control Systems — Construction Management & Project Controls</strong></div>
       </footer>
 
       {/* ── honest failure / status toast ── */}

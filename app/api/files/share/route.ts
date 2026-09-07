@@ -1,3 +1,4 @@
+import { platformFrom } from '@/lib/brand';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
@@ -54,7 +55,8 @@ export async function POST(req: NextRequest) {
       if (!to) return NextResponse.json({ error: 'Recipient email required' }, { status: 400 });
       const { Resend } = await import('resend');
       const key = process.env.RESEND_API_KEY;
-      const from = process.env.EMAIL_FROM || 'Saguaro Control Systems <noreply@saguarocrm.com>';
+      // Quoted display name — the platform name has an em dash and an ampersand.
+      const from = process.env.EMAIL_FROM || platformFrom('noreply@saguarocrm.com');
       const kind = (f as any).kind;
       const size = (f as any).file_size || 0;
       const attachments: any[] = [];

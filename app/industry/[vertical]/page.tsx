@@ -12,7 +12,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { vertical } = await params;
   const data = INDUSTRIES.find(i => i.slug === vertical);
-  if (!data) return { title: 'Saguaro Control Systems' };
+  if (!data) return { title: 'Saguaro Control Systems — Construction Management & Project Controls' };
   return {
     title: data.metaTitle,
     description: data.metaDescription,

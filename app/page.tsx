@@ -120,7 +120,7 @@ export default function LandingPage() {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             {/* Logo lockup — full horizontal badge + wordmark artwork */}
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
               <BrandMark size="md" href={null} />
             </Link>
 

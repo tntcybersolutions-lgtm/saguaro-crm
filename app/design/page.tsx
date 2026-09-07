@@ -1052,7 +1052,7 @@ export default function DesignStudioPage() {
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: GOLD, fontWeight: 700, fontSize: 14, letterSpacing: '0.14em' }}>SAGUARO</span>
-            <span style={{ fontSize: 13, color: '#666' }}>&copy; 2026 Saguaro Control Systems. All rights reserved.</span>
+            <span style={{ fontSize: 13, color: '#666' }}>&copy; 2026 Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.</span>
           </div>
         </footer>
       </div>

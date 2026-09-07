@@ -20,7 +20,7 @@ import {
 import type { Icon as IconType } from '@phosphor-icons/react';
 
 export const metadata: Metadata = {
-  title: 'AI Blueprint Takeoff — Saguaro Control Systems',
+  title: 'AI Blueprint Takeoff — Saguaro Control Systems — Construction Management & Project Controls',
   description:
     'Upload a PDF plan set and Saguaro reads every sheet, measures quantities by trade, and builds a priced estimate — no scale wheel, no manual counting. Every number traces back to the page it came from.',
 };

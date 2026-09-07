@@ -292,8 +292,8 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
       <aside className="fld-sidebar">
         <div className="fld-sb-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icons/icon-96x96.png" alt="Saguaro Control Systems" width={28} height={28} style={{ borderRadius: 7, border: '1px solid rgba(245,158,11,.25)' }} />
-          <b>Saguaro Control Systems</b>
+          <img src="/icons/icon-96x96.png" alt="Saguaro Control Systems — Construction Management & Project Controls" width={28} height={28} style={{ borderRadius: 7, border: '1px solid rgba(245,158,11,.25)' }} />
+          <b>Saguaro Control Systems — Construction Management & Project Controls</b>
         </div>
 
         {/* Project switcher */}
@@ -390,8 +390,8 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><line x1={3} y1={6} x2={21} y2={6}/><line x1={3} y1={12} x2={21} y2={12}/><line x1={3} y1={18} x2={21} y2={18}/></svg>
             </button>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/icon-96x96.png" alt="Saguaro Control Systems" width={26} height={26} style={{ borderRadius: 6, border: '1px solid rgba(245, 158, 11,.2)' }} />
-            <span style={{ fontWeight: 800, fontSize: 12, color: GOLD, letterSpacing: 0.1, lineHeight: 1.1, maxWidth: 128 }}>Saguaro Control Systems</span>
+            <img src="/icons/icon-96x96.png" alt="Saguaro Control Systems — Construction Management & Project Controls" width={26} height={26} style={{ borderRadius: 6, border: '1px solid rgba(245, 158, 11,.2)' }} />
+            <span style={{ fontWeight: 800, fontSize: 12, color: GOLD, letterSpacing: 0.1, lineHeight: 1.1, maxWidth: 128 }}>Saguaro Control Systems — Construction Management & Project Controls</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <button onClick={() => { router.push('/field/sage'); hapticLight().catch(() => {}); }} aria-label="Ask Sage AI"
@@ -456,7 +456,7 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
               <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/icons/icon-96x96.png" alt="" width={30} height={30} style={{ borderRadius: 7 }} />
-                <span style={{ fontWeight: 800, fontSize: 15, color: GOLD, letterSpacing: 0.2 }}>Saguaro Control Systems</span>
+                <span style={{ fontWeight: 800, fontSize: 15, color: GOLD, letterSpacing: 0.2 }}>Saguaro Control Systems — Construction Management & Project Controls</span>
               </div>
               <button onClick={() => setShowMenu(false)} aria-label="Close menu" style={{ background: 'none', border: 'none', fontSize: 26, color: DIM, cursor: 'pointer', lineHeight: 1, padding: 0, display: 'inline-flex', alignItems: 'center' }}><X size={24} weight="bold" color={DIM} /></button>
             </div>
@@ -514,8 +514,8 @@ export default function FieldLayout({ children }: { children: React.ReactNode })
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 24px 0' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/icon-192x192.png" alt="Saguaro Control Systems" width={72} height={72} style={{ borderRadius: 18, border: '2px solid rgba(245, 158, 11,.45)', boxShadow: '0 4px 24px rgba(245, 158, 11,.28)' }} />
-              <h2 style={{ margin: '12px 0 4px', fontSize: 22, fontWeight: 900, color: TEXT, letterSpacing: -0.5, textAlign: 'center' }}>Install Saguaro Control Systems</h2>
+              <img src="/icons/icon-192x192.png" alt="Saguaro Control Systems — Construction Management & Project Controls" width={72} height={72} style={{ borderRadius: 18, border: '2px solid rgba(245, 158, 11,.45)', boxShadow: '0 4px 24px rgba(245, 158, 11,.28)' }} />
+              <h2 style={{ margin: '12px 0 4px', fontSize: 22, fontWeight: 900, color: TEXT, letterSpacing: -0.5, textAlign: 'center' }}>Install Saguaro Control Systems — Construction Management & Project Controls</h2>
               <p style={{ margin: 0, fontSize: 14, color: DIM, textAlign: 'center', lineHeight: 1.4 }}>
                 Your crew&apos;s field app — home screen access,<br />instant launch, works without signal.
               </p>

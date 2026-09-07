@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         notes: inv.notes,
         issuedAt: inv.created_at,
       },
-      from: tenant?.name || 'Saguaro Control Systems',
+      from: tenant?.name || 'Saguaro Control Systems — Construction Management & Project Controls',
       projectName,
       pdfUrl,
     });

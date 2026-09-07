@@ -2545,7 +2545,7 @@ export default function ClientPortalPage() {
               <span style={{ fontSize: 18 }}>🌵</span>
               <div>
                 <div style={{ fontSize: 12, color: DIM }}>
-                  Powered by <span style={{ color: GOLD, fontWeight: 700 }}>Saguaro Control Systems</span>
+                  Powered by <span style={{ color: GOLD, fontWeight: 700 }}>Saguaro Control Systems — Construction Management & Project Controls</span>
                 </div>
                 <div style={{ fontSize: 10, color: `${DIM}60`, marginTop: 2 }}>
                   Secure client portal · All data encrypted in transit

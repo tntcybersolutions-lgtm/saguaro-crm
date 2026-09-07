@@ -118,7 +118,7 @@ export async function generateExecReportPdf(input: ExecReportInput): Promise<Uin
   const resolved = await resolveBrandingValues({ tenantId: input.tenantId });
   const ov = input.brandingOverride ?? {};
   const values = {
-    companyName: (resolved.companyName !== 'Saguaro Control Systems' && resolved.companyName)
+    companyName: (resolved.companyName !== 'Saguaro Control Systems — Construction Management & Project Controls' && resolved.companyName)
       ? resolved.companyName
       : (ov.companyName || resolved.companyName),
     logoUrl: resolved.logoUrl || ov.logoUrl || '',

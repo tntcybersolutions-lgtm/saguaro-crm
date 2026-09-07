@@ -168,7 +168,7 @@ export async function buildXlsx(
   companyName?: string,
 ): Promise<Buffer> {
   const wb = new ExcelJS.Workbook();
-  wb.creator = companyName || 'Saguaro Control Systems';
+  wb.creator = companyName || 'Saguaro Control Systems — Construction Management & Project Controls';
   wb.created = new Date();
   const ws = wb.addWorksheet('Report', {
     views: [{ state: 'frozen', ySplit: 3 }],   // title + spacer + header stay pinned
@@ -333,14 +333,14 @@ export async function buildDocx(
   });
 
   const doc = new Document({
-    creator: companyName || 'Saguaro Control Systems',
+    creator: companyName || 'Saguaro Control Systems — Construction Management & Project Controls',
     title,
     sections: [{
       properties: { page: { size: { orientation: PageOrientation.LANDSCAPE } } },
       children: [
         new Paragraph({
           children: [new TextRun({
-            text: companyName || 'Saguaro Control Systems',
+            text: companyName || 'Saguaro Control Systems — Construction Management & Project Controls',
             bold: true, size: 28, color: DARK,
           })],
         }),

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'How to Get Started — Saguaro Control Systems',
+  title: 'How to Get Started — Saguaro Control Systems — Construction Management & Project Controls',
   description: 'Step-by-step guide to setting up Saguaro: sign up, log in, invite your team, install on your phone, and run your first AI takeoff.',
 };
 
@@ -196,7 +196,7 @@ export default function HowToGetStartedPage() {
         <div className="section">
           <div className="section-label">Step 3 (Recommended)</div>
           <h2>Get the Field App on Your Phone</h2>
-          <p className="sub">Saguaro Control Systems is a native iOS app — free on Apple TestFlight while we finish the public App Store release. Your crew gets GPS clock-in, daily logs, photos, and RFIs, fully offline-capable. (Android coming soon.)</p>
+          <p className="sub">Saguaro Control Systems — Construction Management & Project Controls is a native iOS app — free on Apple TestFlight while we finish the public App Store release. Your crew gets GPS clock-in, daily logs, photos, and RFIs, fully offline-capable. (Android coming soon.)</p>
           <div className="device-grid">
             <div className="device-card">
               <div className="icon">🍎</div>
@@ -205,7 +205,7 @@ export default function HowToGetStartedPage() {
                 <li>Go to <strong>saguarocontrol.net/get-the-app</strong></li>
                 <li>Tap <strong>Join the iOS Beta</strong></li>
                 <li>Install Apple&apos;s free <strong>TestFlight</strong> app</li>
-                <li>Tap <strong>Install</strong> on Saguaro Control Systems</li>
+                <li>Tap <strong>Install</strong> on Saguaro Control Systems — Construction Management & Project Controls</li>
                 <li>Open the app and sign in</li>
               </ol>
             </div>

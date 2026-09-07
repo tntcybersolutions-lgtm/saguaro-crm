@@ -14,7 +14,7 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { competitor } = await params;
   const data = COMPETITORS[competitor];
-  if (!data) return { title: 'Comparison | Saguaro Control Systems' };
+  if (!data) return { title: 'Comparison | Saguaro Control Systems — Construction Management & Project Controls' };
   return {
     title: data.metaTitle,
     description: data.metaDescription,

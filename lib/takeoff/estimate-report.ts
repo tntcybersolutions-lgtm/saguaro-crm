@@ -130,7 +130,7 @@ const MARK = `<svg viewBox="0 0 24 24" fill="none" stroke="#D4A017" stroke-width
 export function buildEstimateReportHtml(args: BuildEstimateReportArgs): string {
   const { project, conditions, result, opts } = args;
   const company: EstimateReportCompany = {
-    name: 'Saguaro Control Systems',
+    name: 'Saguaro Control Systems — Construction Management & Project Controls',
     tagline: 'Control Every Project. Deliver Every Promise.',
     ...(args.company || {}),
   };

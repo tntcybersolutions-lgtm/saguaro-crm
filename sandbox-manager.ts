@@ -650,7 +650,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<voi
   }
 
   await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>',
+    from: process.env.EMAIL_FROM ?? 'Saguaro Control Systems — Construction Management & Project Controls <noreply@mail.saguarocrm.com>',
     to,
     subject,
     html,
@@ -676,13 +676,13 @@ body{margin:0;padding:0;background:#f4f5f7;font-family:-apple-system,BlinkMacSys
 .f{padding:16px 32px;background:#f4f5f7;text-align:center;font-size:12px;color:#718096;}
 </style></head><body>
 <div class="w">
-<div class="h"><h1>Saguaro CRM</h1></div>
+<div class="h"><h1>Saguaro Control Systems — Construction Management & Project Controls</h1></div>
 <div class="b">
 <h2 style="color:#1b3a5c;margin:0 0 16px">${opts.title}</h2>
 ${opts.body}
 <p><a class="btn" href="${opts.ctaUrl}">${opts.cta}</a>${opts.secondary ? `<a class="btn sec" href="${opts.secondaryUrl}">${opts.secondary}</a>` : ''}</p>
 </div>
-<div class="f"><p>Saguaro CRM · <a href="${SANDBOX_URL}/unsubscribe" style="color:#1b3a5c">Unsubscribe</a></p></div>
+<div class="f"><p>Saguaro Control Systems — Construction Management & Project Controls · <a href="${SANDBOX_URL}/unsubscribe" style="color:#1b3a5c">Unsubscribe</a></p></div>
 </div></body></html>`;
 }
 

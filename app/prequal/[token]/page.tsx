@@ -195,7 +195,7 @@ export default function PrequalPortal() {
             </button>
 
             <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: DIM }}>
-              🔒 Your information is transmitted securely · Powered by Saguaro Control Systems
+              🔒 Your information is transmitted securely · Powered by Saguaro Control Systems — Construction Management & Project Controls
             </div>
           </form>
         )}

@@ -64,10 +64,10 @@ export default function IndustryLandingPage({ industry }: Props) {
           maxWidth: '1200px', margin: '0 auto', padding: '0 24px',
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
             <img
               src="/logo-full.jpg"
-              alt="Saguaro Control Systems"
+              alt="Saguaro Control Systems — Construction Management & Project Controls"
               style={{ height: '36px', width: 'auto', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }}
             />
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
@@ -392,7 +392,7 @@ export default function IndustryLandingPage({ industry }: Props) {
           <Link href="/terms" style={{ color: DIM, fontSize: '13px', textDecoration: 'none' }}>Terms</Link>
         </div>
         <p style={{ color: '#475569', fontSize: '12px', margin: 0 }}>
-          &copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.
+          &copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.
         </p>
       </footer>
 

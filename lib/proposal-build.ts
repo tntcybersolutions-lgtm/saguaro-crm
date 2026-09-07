@@ -229,6 +229,58 @@ export function buildProposal(rows: EstimateSource[], opts: BuildOptions = {}): 
   };
 }
 
+/* ── reconciliation ────────────────────────────────────────────────────────
+ *
+ * A proposal's header amount and its line breakdown are entered independently,
+ * and on live data they disagreed by $398,200 on one and $51,600 on another —
+ * invisible for as long as nothing read the lines.
+ *
+ * The gap is almost never an error in either number. An estimator itemises
+ * direct costs and then prices the job; the difference is the general
+ * conditions, overhead and profit that were never written down. So the fix is
+ * not to overwrite one figure with the other — it is to make the missing money
+ * explicit, and only the person who priced the job can say which it is.
+ */
+
+export interface Reconciliation {
+  /** Sum of the non-optional lines — what the client is being asked to buy. */
+  baseTotal: number;
+  optionalTotal: number;
+  headerAmount: number;
+  /** header − base. Positive: money the lines do not account for. */
+  difference: number;
+  reconciles: boolean;
+  /** What can be done about it, given the sign of the difference. */
+  remedy: 'none' | 'add-line' | 'sync-header';
+}
+
+export function reconcile(
+  headerAmount: unknown,
+  lines: { total_price?: unknown; is_optional?: unknown }[],
+): Reconciliation {
+  const base = round2(lines.filter((l) => !l.is_optional).reduce((s, l) => s + num(l.total_price), 0));
+  const optional = round2(lines.filter((l) => l.is_optional).reduce((s, l) => s + num(l.total_price), 0));
+  const header = round2(num(headerAmount));
+  const difference = round2(header - base);
+  /* A hundredth of a dollar is rounding, not a discrepancy. */
+  const reconciles = lines.length === 0 || Math.abs(difference) < 0.01;
+
+  return {
+    baseTotal: base,
+    optionalTotal: optional,
+    headerAmount: header,
+    difference,
+    reconciles,
+    /* Only a POSITIVE gap can be written as a line. When the lines already
+       total more than the proposal states, adding another line makes it worse —
+       the header is the figure that has to move. */
+    remedy: reconciles ? 'none' : difference > 0 ? 'add-line' : 'sync-header',
+  };
+}
+
+/** Default wording for the line that closes a positive gap. */
+export const UNALLOCATED_LINE_LABEL = 'General Conditions, Overhead & Profit';
+
 /** Exclusions as the paragraph the proposals table stores. */
 export function exclusionsText(exclusions: string[]): string {
   if (exclusions.length === 0) return '';

@@ -39,9 +39,9 @@ function getResendClient(): Resend | null {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM = process.env.EMAIL_FROM ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
+const FROM = process.env.EMAIL_FROM ?? 'Saguaro Control Systems — Construction Management & Project Controls <noreply@mail.saguarocrm.com>';
 const REPLY_TO = process.env.EMAIL_REPLY_TO ?? undefined;
-const COMPANY = process.env.COMPANY_NAME ?? 'Saguaro CRM';
+const COMPANY = process.env.COMPANY_NAME ?? 'Saguaro Control Systems — Construction Management & Project Controls';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
 
 // ─────────────────────────────────────────────────────────────────────────────

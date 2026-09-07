@@ -344,7 +344,7 @@ export default function RadioGuestPage() {
 
       {/* ── Footer ── */}
       <footer style={{ textAlign: 'center', padding: '10px 16px 18px' }}>
-        <div style={{ fontSize: 11, color: DIM }}>Powered by <strong style={{ color: GOLD }}>Saguaro Control Systems</strong></div>
+        <div style={{ fontSize: 11, color: DIM }}>Powered by <strong style={{ color: GOLD }}>Saguaro Control Systems — Construction Management & Project Controls</strong></div>
       </footer>
 
       {/* ── Toast ── */}

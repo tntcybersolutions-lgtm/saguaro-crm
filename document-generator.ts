@@ -131,7 +131,7 @@ function documentShell(title: string, content: string, metadata?: {
     <div class="doc-meta">
       ${metadata?.documentNumber ? `<p class="doc-number">${metadata.documentNumber}</p>` : ''}
       ${metadata?.date ? `<p>Date: ${metadata.date}</p>` : ''}
-      <p>Saguaro CRM — AI Generated</p>
+      <p>Saguaro Control Systems — Construction Management & Project Controls — AI Generated</p>
     </div>
   </div>
   ${content}
@@ -553,7 +553,7 @@ export async function generateBidDocumentPackage(opts: {
 
     <h3>2. Bid Submission</h3>
     <p>Sealed bids will be received until <strong>${dueDate} at 5:00 PM local time</strong>. Bids submitted after this time will not be accepted.</p>
-    ${field('Submit bids to', 'project manager via Saguaro CRM portal')}
+    ${field('Submit bids to', 'project manager via Saguaro Control Systems — Construction Management & Project Controls portal')}
     ${field('Bid Portal URL', `${APP_URL}/bid-portal`)}
 
     <h3>3. Bid Requirements</h3>
@@ -577,7 +577,7 @@ export async function generateBidDocumentPackage(opts: {
     ${jacket?.scope_of_work ? `<p>${(jacket.scope_of_work as string).replace(/\n/g,'</p><p>')}</p>` : '<p>See attached Scope of Work.</p>'}
 
     <h3>7. Questions</h3>
-    <p>Questions regarding the bid documents must be submitted in writing via the Saguaro CRM portal at least 5 business days prior to the bid due date. Verbal questions will not be accepted. All responses will be issued as addenda to all registered bidders.</p>
+    <p>Questions regarding the bid documents must be submitted in writing via the Saguaro Control Systems — Construction Management & Project Controls portal at least 5 business days prior to the bid due date. Verbal questions will not be accepted. All responses will be issued as addenda to all registered bidders.</p>
 
     <h3>8. Rejection of Bids</h3>
     <p>The Owner reserves the right to reject any and all bids, to waive informalities in bidding, and to accept the bid that, in the Owner's judgment, is in the Owner's best interest.</p>

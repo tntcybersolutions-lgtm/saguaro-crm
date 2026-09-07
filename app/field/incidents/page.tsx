@@ -157,7 +157,7 @@ ${inc.corrective_actions.length > 0 ? `<div class="section"><h2>Corrective Actio
 <table><tr><th>Description</th><th>Assigned To</th><th>Due Date</th><th>Status</th></tr>
 ${inc.corrective_actions.map(ca => `<tr><td>${ca.description}</td><td>${ca.assigned_to}</td><td>${ca.due_date}</td><td>${ca.status}</td></tr>`).join('')}</table></div>` : ''}
 ${inc.gps_lat && inc.gps_lng ? `<p style="font-size:12px;color:#666;">GPS: ${inc.gps_lat.toFixed(6)}, ${inc.gps_lng.toFixed(6)}</p>` : ''}
-<div class="footer"><p>OSHA Incident Report — Saguaro Construction Management</p></div>
+<div class="footer"><p>OSHA Incident Report — Saguaro Control Systems — Construction Management & Project Controls</p></div>
 </body></html>`);
   w.document.close();
   w.print();
@@ -183,7 +183,7 @@ th{background:#f0f0f0;}
 ${recordable.map(i => `<tr><td>${i.incident_number}</td><td>${i.injured_person}</td><td>—</td><td>${i.incident_date}</td><td>${i.location}</td><td>${i.description.slice(0, 60)}</td><td>${i.severity === 'fatal' ? 'X' : ''}</td><td>${i.days_away || ''}</td><td>${i.days_restricted || ''}</td><td>${i.treatment === 'medical' ? 'X' : ''}</td><td>${i.injury_type}</td></tr>`).join('')}
 </table>
 <p style="margin-top:20px;">Total recordable cases: ${recordable.length} | Days away: ${recordable.reduce((s, i) => s + (i.days_away || 0), 0)} | Days restricted: ${recordable.reduce((s, i) => s + (i.days_restricted || 0), 0)}</p>
-<div style="margin-top:30px;font-size:10px;color:#666;">Generated ${new Date().toLocaleString()} — Saguaro Construction Management</div>
+<div style="margin-top:30px;font-size:10px;color:#666;">Generated ${new Date().toLocaleString()} — Saguaro Control Systems — Construction Management & Project Controls</div>
 </body></html>`);
   w.document.close();
   w.print();

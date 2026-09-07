@@ -32,7 +32,7 @@ function resend(): Resend | null {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
+const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro Control Systems — Construction Management & Project Controls <noreply@mail.saguarocrm.com>';
 const SALES   = process.env.SALES_EMAIL  ?? 'sales@saguarocrm.com';
 const SUPPORT = process.env.SUPPORT_EMAIL ?? 'support@saguarocrm.com';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
@@ -265,7 +265,7 @@ export async function contactHandler(request: NextRequest) {
       r.emails.send({
         from: FROM,
         to:   email,
-        subject: `We received your message — Saguaro CRM`,
+        subject: `We received your message — Saguaro Control Systems — Construction Management & Project Controls`,
         html: `
           <p>Hi ${firstName || 'there'},</p>
           <p>Thanks for reaching out! We'll get back to you within 1 business day.</p>

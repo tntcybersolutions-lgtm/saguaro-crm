@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { INDUSTRIES } from '@/lib/industries';
 
 export const metadata: Metadata = {
-  title: 'Construction Software by Industry | Saguaro Control Systems',
+  title: 'Construction Software by Industry | Saguaro Control Systems — Construction Management & Project Controls',
   description: 'Purpose-built for every type of contractor: general contractors, residential remodelers, commercial GCs, roofing contractors, specialty subcontractors.',
 };
 
@@ -182,7 +182,7 @@ export default function IndustryIndexPage() {
         {/* FOOTER */}
         <footer style={{ padding: '40px 32px', textAlign: 'center', borderTop: `1px solid ${HAIRLINE}` }}>
           <p style={{ fontSize: 13, color: DIM, margin: 0 }}>
-            &copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.
+            &copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.
             {' '}&middot;{' '}
             <Link href="/privacy" style={{ color: DIM, textDecoration: 'none' }}>Privacy</Link>
             {' '}&middot;{' '}

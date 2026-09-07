@@ -446,7 +446,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 .net .lbl{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#666;font-weight:700}
 .net .amt{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;color:${net >= 0 ? '#0a7d3c' : '#b42318'}}
 .net .was{font-size:12px;color:#666;text-align:right;margin-top:2px}.foot{margin-top:26px;font-size:11px;color:#999;border-top:1px solid #eee;padding-top:12px}</style></head>
-<body><div class="sub"><span class="brand">Saguaro Control Systems</span> · Control Every Project. Deliver Every Promise.</div>
+<body><div class="sub"><span class="brand">Saguaro Control Systems — Construction Management & Project Controls</span> · Control Every Project. Deliver Every Promise.</div>
 <h1>Change Order</h1>
 <div class="meta"><div><b>Project:</b> ${escapeHtml(name || proj?.name || 'Measured Takeoff')}</div><div><b>Date:</b> ${today}</div>
 <div><b>Baseline revision:</b> ${escapeHtml(priorName)}</div><div><b>Line changes:</b> ${changed.length}</div></div>
@@ -719,7 +719,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
       conditions,
       result: r,
       opts,
-      company: { name: 'Saguaro Control Systems', tagline: 'Control Every Project. Deliver Every Promise.' },
+      company: { name: 'Saguaro Control Systems — Construction Management & Project Controls', tagline: 'Control Every Project. Deliver Every Promise.' },
       accuracyClass: aaceClass,
       ...(allowancesTxt.trim() ? { allowances: lines(allowancesTxt) } : {}),
       ...(exclusionsTxt.trim() ? { exclusions: lines(exclusionsTxt) } : {}),

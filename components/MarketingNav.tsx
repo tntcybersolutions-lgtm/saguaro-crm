@@ -43,7 +43,7 @@ export default function MarketingNav() {
           maxWidth: '1200px', margin: '0 auto', padding: '0 48px',
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <Link href="/" aria-label="Saguaro Control Systems — home" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <Link href="/" aria-label="Saguaro Control Systems — Construction Management & Project Controls — home" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
             <BrandMark size="md" href={null} />
           </Link>
 

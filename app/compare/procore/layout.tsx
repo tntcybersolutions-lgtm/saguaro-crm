@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             "@context": "https://schema.org",
             "@type": "WebPage",
             "name": "Saguaro vs Procore Comparison",
-            "description": "Detailed comparison of Saguaro Control Systems vs Procore construction management software",
+            "description": "Detailed comparison of Saguaro Control Systems — Construction Management & Project Controls vs Procore construction management software",
             "url": "https://saguarocontrol.net/compare/procore",
             "mainEntity": {
               "@type": "ItemList",

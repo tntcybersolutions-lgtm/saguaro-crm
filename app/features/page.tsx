@@ -104,9 +104,9 @@ const FEATURES: Feature[] = [
   },
   {
     eyebrow: 'Field',
-    title: 'Daily Logs & Field App (Saguaro Control Systems)',
+    title: 'Daily Logs & Field App (Saguaro Control Systems — Construction Management & Project Controls)',
     description:
-      'Saguaro Control Systems puts the jobsite in your crew\'s pocket. Supers log manpower, weather, deliveries, and progress photos in seconds — with GPS stamps that confirm they were on site. The app works fully offline in the field and syncs the moment a signal comes back, so a dead zone never means a lost log.',
+      'Saguaro Control Systems — Construction Management & Project Controls puts the jobsite in your crew\'s pocket. Supers log manpower, weather, deliveries, and progress photos in seconds — with GPS stamps that confirm they were on site. The app works fully offline in the field and syncs the moment a signal comes back, so a dead zone never means a lost log.',
     bullets: [
       'One-tap daily logs with weather, manpower, and photo attachments',
       'GPS-stamped entries and time-clock for accurate field records',
@@ -319,8 +319,8 @@ export default function FeaturesPage() {
         {/* Footer */}
         <footer style={{ borderTop: `1px solid ${C.border}`, padding: '48px 32px', background: C.raised }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 32 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 30, width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
               {[
@@ -331,7 +331,7 @@ export default function FeaturesPage() {
                 <Link key={link.label} href={link.href} style={{ fontSize: 13, color: C.dim, textDecoration: 'none', fontWeight: 500 }}>{link.label}</Link>
               ))}
             </div>
-            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems</div>
+            <div style={{ fontSize: 12, color: C.dim, whiteSpace: 'nowrap' }}>&copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls</div>
           </div>
         </footer>
 

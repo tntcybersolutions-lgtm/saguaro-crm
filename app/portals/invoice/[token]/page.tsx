@@ -117,7 +117,7 @@ export default function PublicInvoicePage() {
         )}
 
         <div style={{ textAlign: 'center', marginTop: 18, fontSize: 11, color: DIM }}>
-          Powered by Saguaro Control Systems
+          Powered by Saguaro Control Systems — Construction Management & Project Controls
         </div>
       </div>
     </div>

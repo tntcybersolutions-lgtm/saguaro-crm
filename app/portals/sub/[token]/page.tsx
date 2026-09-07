@@ -1467,7 +1467,7 @@ export default function SubPortal(){
 
       {/* Footer */}
       <footer style={{textAlign:'center',padding:'24px 20px',borderTop:`1px solid ${BORDER}`,marginTop:40}}>
-        <div style={{fontSize:12,color:DIM}}>Powered by <strong style={{color:GOLD}}>Saguaro Control Systems</strong> &middot; Construction Management Platform</div>
+        <div style={{fontSize:12,color:DIM}}>Powered by <strong style={{color:GOLD}}>Saguaro Control Systems — Construction Management & Project Controls</strong> &middot; Construction Management Platform</div>
         <div style={{fontSize:10,color:BORDER,marginTop:4}}>&copy; {new Date().getFullYear()} Saguaro. All rights reserved.</div>
       </footer>
 

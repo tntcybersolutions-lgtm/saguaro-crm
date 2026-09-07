@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     // Server-resolved tenant branding is authoritative; the client-passed
     // values only fill gaps (e.g. tenant record has no company_name yet).
     const branding = await resolveBrandingValues({ tenantId: user.tenantId });
-    const brandName = (branding.companyName !== 'Saguaro Control Systems' && branding.companyName)
+    const brandName = (branding.companyName !== 'Saguaro Control Systems — Construction Management & Project Controls' && branding.companyName)
       ? branding.companyName
       : (companyName || branding.companyName);
 

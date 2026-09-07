@@ -402,7 +402,7 @@ export default function PublicSigningPage() {
 
         {/* Footer */}
         <p style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: TEXT_DIM }}>
-          Powered by Saguaro
+          Powered by Saguaro Control Systems — Construction Management & Project Controls
         </p>
       </div>
     </div>

@@ -61,7 +61,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const result = computeTakeoff(conditions, opts);
 
   // Company name from the owning tenant (best-effort — never fatal).
-  let companyName = 'Saguaro Control Systems';
+  let companyName = 'Saguaro Control Systems — Construction Management & Project Controls';
   try {
     const { data: tenant } = await supabase.from('tenants').select('name').eq('id', data.tenant_id).single();
     if (tenant?.name) companyName = tenant.name;

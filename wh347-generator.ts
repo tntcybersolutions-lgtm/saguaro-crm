@@ -28,7 +28,7 @@ import { getProjectContext } from './project-context';
 import { PDFGenerator, renderHTMLtoPDF, storePDF } from './pdf-generator';
 
 const client  = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro CRM <noreply@mail.saguarocrm.com>';
+const FROM    = process.env.EMAIL_FROM    ?? 'Saguaro Control Systems — Construction Management & Project Controls <noreply@mail.saguarocrm.com>';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.saguarocrm.com';
 
 function resend(): Resend | null {

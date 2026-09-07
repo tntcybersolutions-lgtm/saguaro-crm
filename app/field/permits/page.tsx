@@ -110,7 +110,7 @@ const exportPDF = (title: string, content: string) => {
       .meta{color:#666;font-size:13px;}
       .footer{margin-top:32px;padding-top:12px;border-top:1px solid #ddd;font-size:11px;color:#999;}
     </style></head><body>${content}
-    <div class="footer">Saguaro Control Systems &mdash; Permit Report &mdash; Generated ${new Date().toLocaleString()}</div>
+    <div class="footer">Saguaro Control Systems — Construction Management & Project Controls &mdash; Permit Report &mdash; Generated ${new Date().toLocaleString()}</div>
     </body></html>`);
   pw.document.close();
   pw.focus();

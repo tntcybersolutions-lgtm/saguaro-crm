@@ -348,8 +348,8 @@ export default function ROICalculatorPage() {
           padding: '0 24px',
         }}>
           <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 58 }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-              <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+              <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Link href="/login" className="nav-btn-outline">Log In</Link>
@@ -877,8 +877,8 @@ export default function ROICalculatorPage() {
         }}>
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20, marginBottom: 28 }}>
-              <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
-                <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 30 }} />
+              <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }} aria-label="Saguaro Control Systems — Construction Management & Project Controls — home">
+                <img src="/logo-full.jpg" alt="Saguaro Control Systems — Construction Management & Project Controls" style={{ height: 30 }} />
               </Link>
               <div className="footer-links" style={{ display: 'flex', gap: 28, flexWrap: 'wrap' }}>
                 {[
@@ -899,7 +899,7 @@ export default function ROICalculatorPage() {
             </div>
             <div style={{ borderTop: `1px solid ${HAIRLINE}`, paddingTop: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
               <p style={{ margin: 0, color: '#8094B0', fontSize: 13 }}>
-                &copy; {new Date().getFullYear()} Saguaro Control Systems. All rights reserved.
+                &copy; {new Date().getFullYear()} Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.
               </p>
               <div style={{ display: 'flex', gap: 20 }}>
                 {[['Privacy Policy', '/privacy'], ['Terms of Service', '/terms']].map(([label, href]) => (

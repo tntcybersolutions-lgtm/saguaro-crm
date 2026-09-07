@@ -66,7 +66,7 @@ export const PLANS: Plan[] = [
       'Pay Applications G702/G703',
       'Lien Waivers — all 50 states',
       'Basic RFI & Change Orders',
-      'Mobile Field App (Saguaro Control Systems)',
+      'Mobile Field App (Saguaro Control Systems — Construction Management & Project Controls)',
       'Free migration from any platform',
       'Email support (48hr response)',
     ],
