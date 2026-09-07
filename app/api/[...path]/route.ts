@@ -2,6 +2,7 @@
 // Big catch-all dispatcher for all remaining API routes.
 // Lives at app/api/[...path]/route.ts — lib files are 3 levels up (../../../).
 
+import { PLATFORM_NAME, platformCopyright } from '@/lib/brand';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../supabase/admin';
 import { getProjectContext } from '../../../project-context';
@@ -219,13 +220,30 @@ export async function GET(
   if (seg0 === 'marketing' && !seg1) {
     try {
       const filePath = join(process.cwd(), 'public', 'marketing.html');
-      const html = await readFile(filePath, 'utf-8');
+      const raw = await readFile(filePath, 'utf-8');
+      /* The page is static HTML, so it cannot work out the year itself — its
+         footer read "© 2025" while being served in 2026. Substituting here
+         rather than in client JS keeps the year correct in the HTML the
+         browser and any crawler actually receive, with no flash of a missing
+         value and no dependence on scripts running. */
+      /* split/join rather than replaceAll — this project's tsconfig target
+         predates ES2021, so replaceAll does not typecheck here. */
+      const fill = (s: string, token: string, value: string) => s.split(token).join(value);
+      let html = fill(raw, '{{COPYRIGHT}}', platformCopyright());
+      html = fill(html, '{{PLATFORM_NAME}}', PLATFORM_NAME);
+      html = fill(html, '{{YEAR}}', String(new Date().getFullYear()));
       return new Response(html, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300, stale-while-revalidate=60' },
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          /* Five minutes. The only substituted value that ever changes is the
+             year, so a stale copy can only be wrong for a few minutes once, on
+             New Year's Day. */
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+        },
       });
     } catch {
       return new Response(
-        `<!DOCTYPE html><html><head><title>Saguaro Control Systems — Construction Management & Project Controls</title></head><body style="background:#0a0a0a;color:#e8edf8;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px"><div style="font-size:48px">🌵</div><h1 style="color:#D4A017;margin:0">Saguaro Control Systems — Construction Management & Project Controls</h1><a href="/sandbox" style="background:#D4A017;color:#0a0a0a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:800">Start Free Sandbox</a><a href="/login" style="color:#8fa3c0;text-decoration:none">Sign In</a></body></html>`,
+        `<!DOCTYPE html><html><head><title>${PLATFORM_NAME}</title></head><body style="background:#0a0a0a;color:#e8edf8;font-family:system-ui;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px"><div style="font-size:48px">🌵</div><h1 style="color:#D4A017;margin:0">${PLATFORM_NAME}</h1><a href="/sandbox" style="background:#D4A017;color:#0a0a0a;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:800">Start Free Sandbox</a><a href="/login" style="color:#8fa3c0;text-decoration:none">Sign In</a><div style="color:#5b6b82;font-size:12px">${platformCopyright()}</div></body></html>`,
         { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
       );
     }

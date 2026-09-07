@@ -1,5 +1,6 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { platformCopyright } from '@/lib/brand';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 
@@ -1052,7 +1053,7 @@ export default function DesignStudioPage() {
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: GOLD, fontWeight: 700, fontSize: 14, letterSpacing: '0.14em' }}>SAGUARO</span>
-            <span style={{ fontSize: 13, color: '#666' }}>&copy; 2026 Saguaro Control Systems — Construction Management & Project Controls. All rights reserved.</span>
+            <span style={{ fontSize: 13, color: '#666' }}>{platformCopyright()}. All rights reserved.</span>
           </div>
         </footer>
       </div>
