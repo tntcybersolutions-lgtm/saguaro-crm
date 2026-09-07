@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
+import { normaliseSelection, selectionTotals, groupByCategory, selectionFlags, type SelectionRow } from '@/lib/selections';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,5 +34,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     return apiError('projects/projectId/selections', error, 'Failed to load selections');
   }
 
-  return NextResponse.json({ selections: data ?? [] });
+  /* Normalised for the same reason as /api/selections/list: the write path maps
+     item → item_name and cost → selected_amount, so a reader handed the raw row
+     sees neither, and `variance` is a stored column nothing recomputes — it read
+     0 on every live row, including one $2,500 over its allowance. */
+  const rows = (data ?? []) as SelectionRow[];
+  const now = Date.now();
+  return NextResponse.json({
+    selections: rows.map((r) => normaliseSelection(r, now)),
+    totals: selectionTotals(rows, now),
+    categories: groupByCategory(rows),
+    flags: selectionFlags(rows, now),
+  });
 }

@@ -12,6 +12,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import SelectionOptions from '@/components/selections/SelectionOptions';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='#F59E0B';
@@ -85,6 +86,11 @@ export default function SelectionsPage(){
   const [saving,setSaving]=useState(false);
   const [deleting,setDeleting]=useState(false);
   const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
+  // Derived money and per-item warnings, computed server-side so the screen,
+  // the client portal and any export agree on one set of numbers.
+  const [totals,setTotals]=useState<any>(null);
+  const [flags,setFlags]=useState<any[]>([]);
+  const [recomputing,setRecomputing]=useState(false);
   const [search,setSearch]=useState('');
   const [filterCat,setFilterCat]=useState('all');
   const [filterStatus,setFilterStatus]=useState('all');
@@ -104,16 +110,22 @@ export default function SelectionsPage(){
       const r=await fetch(`/api/selections/list?projectId=${projectId}`,{headers:h});
       if (!r.ok) throw new Error('Failed to load data');
       const d=await r.json();
-      // The DB uses item_name / selected_amount; this page reads item / cost.
-      // Alias them so a saved selection's name + cost render on reload (the rest
-      // — manufacturer/model/color/finish/link/owner_approved — are real columns).
+      // The API now normalises: item/cost aliases plus derived variance, status,
+      // and lead-time risk, all computed from the row rather than read from the
+      // stored `variance` column (which said 0 on every live row, including one
+      // $2,500 over its allowance).
+      //
+      // cost stays NULL for an undecided selection. Collapsing it to 0 is what
+      // let an untouched allowance read as a decision made at no cost.
       setItems((d.selections||[]).map((s:any)=>({
         ...s,
         item: s.item ?? s.item_name ?? '',
-        cost: Number(s.cost ?? s.selected_amount ?? 0),
+        cost: s.cost ?? (s.selected_amount==null?null:Number(s.selected_amount)),
         allowance: Number(s.allowance ?? 0),
       })));
-    }catch{setItems([]);setLoadError('Failed to load. Please try again.');}
+      setTotals(d.totals ?? null);
+      setFlags(d.flags ?? []);
+    }catch{setItems([]);setTotals(null);setFlags([]);setLoadError('Failed to load. Please try again.');}
     finally{setLoading(false);}
   },[projectId]);
 
@@ -210,11 +222,41 @@ export default function SelectionsPage(){
     return ms&&mc&&mst;
   });
 
-  const totalCost=items.reduce((s:number,i:any)=>s+(Number(i.cost)||0),0);
-  const totalAllowance=items.reduce((s:number,i:any)=>s+(Number(i.allowance)||0),0);
-  const pendingCount=items.filter((i:any)=>i.status==='pending').length;
-  const approvedCount=items.filter((i:any)=>i.owner_approved).length;
-  const overage=totalCost-totalAllowance;
+  /* Money comes from the server totals. The old arithmetic here was
+     `sum(cost) − sum(allowance)` across every row, which counts allowances
+     nobody has decided yet: on live data that reported $7,700 UNDER allowance
+     while the decided selections were $300 over and $8,000 was still
+     outstanding. An allowance with no pick against it is not an underrun, it is
+     an open question. */
+  const totalCost=Number(totals?.selectedTotal ?? 0);
+  const totalAllowance=Number(totals?.allowanceTotal ?? 0);
+  const outstanding=Number(totals?.allowanceOutstanding ?? 0);
+  const pendingCount=Number(totals?.pending ?? items.filter((i:any)=>i.status==='pending').length);
+  const approvedCount=Number(totals?.approved ?? items.filter((i:any)=>i.owner_approved).length);
+  // Positive varianceTotal is money returned to the owner; negative is an overage.
+  const netVariance=Number(totals?.varianceTotal ?? 0);
+  const overage=-netVariance;
+  const overCount=Number(totals?.overCount ?? 0);
+  const lateCount=Number(totals?.late ?? 0);
+  const leadRisk=Number(totals?.leadTimeRisk ?? 0);
+  // Allowance actually decided so far — the only honest denominator for the bar.
+  const decidedAllowance=Math.max(0,totalAllowance-outstanding);
+
+  /* Bring the stored `variance` column back in line with the arithmetic, for
+     the readers that still select it directly. Recomputed from source, so
+     pressing it twice changes nothing the second time. */
+  async function recomputeVariance(){
+    setRecomputing(true);
+    try{
+      const h=await getAuthHeaders();
+      const r=await fetch('/api/selections/recompute',{method:'POST',headers:{...h,'Content-Type':'application/json'},body:JSON.stringify({projectId})});
+      const d=await r.json();
+      if(!r.ok) throw new Error(d?.error||'failed');
+      showToast(d.updated?`Variance corrected on ${d.updated} selection${d.updated===1?'':'s'}.`:'Stored variance already matched.');
+      load();
+    }catch{showToast('Could not recompute variance','error');}
+    finally{setRecomputing(false);}
+  }
 
   // Group by category for display
   const grouped: Record<string,any[]>={};
@@ -261,23 +303,88 @@ export default function SelectionsPage(){
               label="Owner Approved" value={String(approvedCount)} accent={GREEN} delay={0.10}/>
             <StatCard icon={<Scales size={19} weight="duotone" color={overage>0?RED:GREEN}/>}
               label={overage>0?'Over Allowance':'Under Allowance'}
-              value={overage>=0?`+${fmt(overage)}`:fmt(overage)} accent={overage>0?RED:GREEN} delay={0.14}/>
+              value={overage>0?`+${fmt(overage)}`:fmt(Math.abs(overage))}
+              accent={overage>0?RED:GREEN}
+              sub={overage>0
+                ? `${overCount} selection${overCount===1?'':'s'} over${outstanding>0?` · ${fmt(outstanding)} still undecided`:''}`
+                : outstanding>0?`returned to owner · ${fmt(outstanding)} still undecided`:'returned to owner'}
+              delay={0.14}/>
           </div>
+
+          {/* What needs a decision — each one a number somebody can act on. */}
+          {flags.length>0&&(
+            <div style={{marginBottom:20}}>
+              <SectionCard flat
+                title="Needs Attention"
+                icon={<WarningCircle size={17} weight="duotone" color={flags.some((f:any)=>f.severity==='critical')?RED:ORANGE}/>}
+                action={<span style={{fontSize:12,color:DIM}}>
+                  {flags.filter((f:any)=>f.severity==='critical').length} critical · {flags.filter((f:any)=>f.severity==='watch').length} watch
+                </span>}
+              >
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {flags.slice(0,8).map((f:any,idx:number)=>{
+                    const c=f.severity==='critical'?RED:ORANGE;
+                    return(
+                      <div key={`${f.id||idx}-${idx}`}
+                        onClick={()=>{const it=items.find((i:any)=>i.id===f.id); if(it) viewItem(it);}}
+                        style={{display:'flex',gap:10,alignItems:'flex-start',padding:'9px 12px',borderRadius:8,
+                          background:`${c}14`,border:`1px solid ${c}33`,cursor:f.id?'pointer':'default'}}>
+                        <span style={{width:6,height:6,borderRadius:99,background:c,marginTop:6,flexShrink:0}}/>
+                        <div style={{minWidth:0}}>
+                          <div style={{fontSize:13,fontWeight:700,color:TEXT}}>
+                            {f.item}<span style={{fontWeight:400,color:DIM,fontSize:11.5}}> · {f.category}</span>
+                          </div>
+                          <div style={{fontSize:12,color:DIM,marginTop:2,lineHeight:1.45}}>{f.message}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {flags.length>8&&(
+                    <div style={{fontSize:11.5,color:DIM,paddingLeft:2}}>+{flags.length-8} more</div>
+                  )}
+                </div>
+              </SectionCard>
+            </div>
+          )}
+
+          {/* Decisions still open — the schedule risk, not the money risk. */}
+          {(lateCount>0||leadRisk>0)&&(
+            <div style={{marginBottom:20,display:'flex',gap:10,flexWrap:'wrap'}}>
+              {lateCount>0&&<Pill label={`${lateCount} decision${lateCount===1?'':'s'} overdue`} color={RED}/>}
+              {leadRisk>0&&<Pill label={`${leadRisk} at lead-time risk`} color={ORANGE}/>}
+            </div>
+          )}
 
           {/* Budget bar */}
           {totalAllowance>0&&(
             <div style={{marginBottom:20}}>
               <SectionCard flat
-                title="Budget vs Allowance"
+                title="Selected vs Allowance"
                 icon={<ChartBar size={17} weight="duotone" color={GOLD}/>}
-                action={<span style={{fontSize:13,fontWeight:800,color:overage>0?RED:GREEN}}>
-                  {fmt(totalCost)} / {fmt(totalAllowance)}
+                action={<span style={{display:'flex',alignItems:'center',gap:10}}>
+                  <span style={{fontSize:13,fontWeight:800,color:overage>0?RED:GREEN}}>
+                    {fmt(totalCost)} / {fmt(decidedAllowance)}
+                  </span>
+                  <button onClick={recomputeVariance} disabled={recomputing}
+                    style={{...ghostButtonStyle,padding:'4px 10px',fontSize:11.5,opacity:recomputing?0.6:1}} className="pmBtn">
+                    {recomputing?'Recomputing…':'Recompute variance'}
+                  </button>
                 </span>}
               >
+                {/* The bar measures decided money against the allowance for those
+                    same decisions. Dividing by the FULL allowance would make a
+                    project look under budget purely for having open questions. */}
                 <div style={{background:'rgba(255,255,255,0.12)',borderRadius:4,height:8,overflow:'hidden'}}>
                   <div style={{height:'100%',borderRadius:4,
                     background:overage>0?`linear-gradient(90deg,${RED},#f87171)`:`linear-gradient(90deg,${GREEN},#3dd68c)`,
-                    width:`${Math.min(100,totalAllowance>0?(totalCost/totalAllowance*100):0)}%`,transition:'width .4s'}}/>
+                    width:`${Math.min(100,decidedAllowance>0?(totalCost/decidedAllowance*100):0)}%`,transition:'width .4s'}}/>
+                </div>
+                <div style={{marginTop:8,fontSize:11.5,color:DIM,lineHeight:1.5}}>
+                  {decidedAllowance>0
+                    ? <>{fmt(totalCost)} chosen against {fmt(decidedAllowance)} of allowance on {items.length-pendingCount} decided item{items.length-pendingCount===1?'':'s'}
+                        {overage>0?<> — <span style={{color:RED,fontWeight:700}}>{fmt(overage)} over</span></>:overage<0?<> — <span style={{color:GREEN,fontWeight:700}}>{fmt(Math.abs(overage))} returned</span></>:' — exactly on allowance'}.</>
+                    : <>Nothing decided yet.</>}
+                  {outstanding>0&&<> {fmt(outstanding)} of allowance is still undecided and is not counted either way.</>}
                 </div>
               </SectionCard>
             </div>
@@ -372,9 +479,23 @@ export default function SelectionsPage(){
                               {item.selected_by&&<span>by {item.selected_by}</span>}
                             </div>
                           </div>
+                          {/* Price, allowance, and the difference between them.
+                              The difference is the whole reason a selections log
+                              exists, and it was the one number the card never
+                              showed. Null variance (nothing picked) prints the
+                              open allowance instead of a misleading $0. */}
                           <div style={{textAlign:'right',flexShrink:0}}>
-                            {item.cost>0&&<div style={{fontWeight:800,fontSize:14,color:TEXT}}>{fmt(item.cost)}</div>}
+                            {item.cost!=null&&<div style={{fontWeight:800,fontSize:14,color:TEXT}}>{fmt(item.cost)}</div>}
                             {item.allowance>0&&<div style={{fontSize:11,color:DIM}}>Allow: {fmt(item.allowance)}</div>}
+                            {item.variance!=null
+                              ? <div style={{fontSize:11.5,fontWeight:800,marginTop:2,color:item.variance<0?RED:GREEN}}>
+                                  {item.variance<0?`${fmt(Math.abs(item.variance))} over`:item.variance>0?`${fmt(item.variance)} under`:'on allowance'}
+                                </div>
+                              : item.allowance>0
+                                ? <div style={{fontSize:11.5,fontWeight:700,marginTop:2,color:ORANGE}}>not yet selected</div>
+                                : null}
+                            {item.misses_lead_time&&<div style={{fontSize:10.5,fontWeight:700,marginTop:2,color:ORANGE}}>lead time at risk</div>}
+                            {item.is_late&&<div style={{fontSize:10.5,fontWeight:700,marginTop:2,color:RED}}>decision overdue</div>}
                           </div>
                         </div>
                       </div>
@@ -589,17 +710,50 @@ export default function SelectionsPage(){
                   ))}
                 </div>
 
-                {selected.cost>0&&selected.allowance>0&&(
-                  <div style={{background:selected.cost>selected.allowance?'rgba(192,48,48,.07)':'rgba(26,138,74,.07)',
-                    border:`1px solid ${selected.cost>selected.allowance?RED:GREEN}33`,borderRadius:8,padding:'10px 14px'}}>
+                {/* Budget impact reads from the derived variance rather than
+                    recomputing it a third way. It also shows for an item with
+                    an allowance and no pick, which is the case the old
+                    `cost>0 && allowance>0` guard hid entirely. */}
+                {selected.allowance>0&&(
+                  <div style={{background:selected.variance!=null&&selected.variance<0?'rgba(192,48,48,.07)':selected.variance!=null?'rgba(26,138,74,.07)':'rgba(184,92,42,.07)',
+                    border:`1px solid ${selected.variance!=null&&selected.variance<0?RED:selected.variance!=null?GREEN:ORANGE}33`,borderRadius:8,padding:'10px 14px'}}>
                     <div style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>
                       Budget Impact
                     </div>
-                    <div style={{fontSize:14,fontWeight:800,color:selected.cost>selected.allowance?RED:GREEN}}>
-                      {fmt(selected.cost-selected.allowance)} vs allowance
+                    <div style={{fontSize:14,fontWeight:800,color:selected.variance!=null&&selected.variance<0?RED:selected.variance!=null?GREEN:ORANGE}}>
+                      {selected.variance==null
+                        ? `${fmt(selected.allowance)} allowance, nothing chosen yet`
+                        : selected.variance<0
+                          ? `${fmt(Math.abs(selected.variance))} over the ${fmt(selected.allowance)} allowance`
+                          : selected.variance>0
+                            ? `${fmt(selected.variance)} under the ${fmt(selected.allowance)} allowance`
+                            : `exactly the ${fmt(selected.allowance)} allowance`}
                     </div>
                   </div>
                 )}
+
+                {/* The choices presented to the client, each priced against the
+                    allowance. Choosing one writes its price onto the selection,
+                    which is what makes the variance above move. */}
+                <SelectionOptions
+                  selectionId={selected.id}
+                  allowance={Number(selected.allowance)||0}
+                  onPicked={async (amount,name)=>{
+                    try{
+                      const h=await getAuthHeaders();
+                      const r=await fetch(`/api/selections/${selected.id}`,{
+                        method:'PUT',headers:{...h,'Content-Type':'application/json'},
+                        body:JSON.stringify({cost:amount,status:'selected',
+                          notes:[selected.notes,`Chose: ${name}`].filter(Boolean).join('\n')}),
+                      });
+                      if(!r.ok) throw new Error('failed');
+                      const d=await r.json();
+                      showToast(`${name} selected at ${fmt(amount)}.`);
+                      setSelected({...selected,...d.selection,item:d.selection?.item_name??selected.item,cost:amount});
+                      load();
+                    }catch{showToast('Could not record that choice','error');}
+                  }}
+                />
 
                 {selected.link&&(
                   <a href={selected.link} target="_blank" rel="noopener noreferrer"

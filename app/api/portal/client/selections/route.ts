@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+import {
+  normaliseSelection, selectionTotals, priceOptions, optionCost, variance,
+  type SelectionRow, type SelectionOption,
+} from '@/lib/selections';
 
 async function getPortalSession(req: NextRequest) {
   const token =
@@ -48,9 +52,34 @@ export async function GET(req: NextRequest) {
     const { data: selections, error } = await query;
     if (error) throw error;
 
+    const all = (selections || []) as SelectionRow[];
+
+    /* The options the client is actually choosing between. Loaded in one query
+       for every selection on the page rather than per row, and priced against
+       each item's allowance so the client reads "adds $2,500" instead of a bare
+       number they have to reconcile against a figure on another screen. */
+    const ids = all.map((s: any) => s.id).filter(Boolean);
+    let optionsBySelection: Record<string, any[]> = {};
+    if (ids.length) {
+      const { data: opts } = await db
+        .from('selection_options').select('*')
+        .in('selection_id', ids)
+        .order('sort_order', { ascending: true });
+      for (const o of opts ?? []) {
+        const k = String(o.selection_id);
+        (optionsBySelection[k] ||= []).push(o);
+      }
+    }
+
+    const now = Date.now();
+    const enriched = all.map((s: any) => ({
+      ...normaliseSelection(s, now),
+      options: priceOptions(s, optionsBySelection[String(s.id)] ?? []),
+    }));
+
     // Group by category
     const grouped: Record<string, any[]> = {};
-    for (const sel of selections || []) {
+    for (const sel of enriched) {
       const cat = sel.category || 'General';
       if (!grouped[cat]) {
         grouped[cat] = [];
@@ -58,18 +87,23 @@ export async function GET(req: NextRequest) {
       grouped[cat].push(sel);
     }
 
-    // Summary
-    const all = selections || [];
+    const totals = selectionTotals(all, now);
     const summary = {
       total: all.length,
-      pending: all.filter((s: any) => s.status === 'pending').length,
-      selected: all.filter((s: any) => s.status === 'selected').length,
+      pending: totals.pending,
+      selected: totals.selected,
       ordered: all.filter((s: any) => s.status === 'ordered').length,
       installed: all.filter((s: any) => s.status === 'installed').length,
+      allowanceTotal: totals.allowanceTotal,
+      selectedTotal: totals.selectedTotal,
+      /* Negative is money the client owes above their allowances. This is the
+         number a client most wants and the portal never showed. */
+      varianceTotal: totals.varianceTotal,
+      allowanceOutstanding: totals.allowanceOutstanding,
     };
 
     return NextResponse.json({
-      selections: all,
+      selections: enriched,
       grouped,
       categories: Object.keys(grouped),
       summary,
@@ -88,11 +122,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { selection_id, chosen_option, notes } = body;
+    const { selection_id, option_id, chosen_option, notes } = body;
 
-    if (!selection_id || !chosen_option) {
+    if (!selection_id || (!option_id && !chosen_option)) {
       return NextResponse.json(
-        { error: 'selection_id and chosen_option are required' },
+        { error: 'selection_id and either option_id or chosen_option are required' },
         { status: 400 }
       );
     }
@@ -102,7 +136,7 @@ export async function POST(req: NextRequest) {
     // Verify the selection belongs to this project
     const { data: existing, error: fetchError } = await db
       .from('selections')
-      .select('id, status')
+      .select('*')
       .eq('id', selection_id)
       .eq('project_id', session.project_id)
       .eq('tenant_id', session.tenant_id)
@@ -119,29 +153,63 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Live selections columns relevant here: status, selected_by, selected_at,
-    // notes, selected_amount. There is no chosen_option or client_notes column;
-    // the chosen option and any client note are combined into notes.
-    const combinedNotes = [
-      chosen_option ? `Chosen: ${chosen_option}` : null,
-      notes || null,
+    /* The price of what was chosen.
+     *
+     * This is the whole point of a selections log and it was the one thing a
+     * client pick did not record: the chosen option's name was folded into a
+     * text field and `selected_amount` was left null, so the allowance never
+     * moved, the variance never computed, and a client choosing $6,600 of
+     * upgrade registered as a decision worth nothing.
+     *
+     * The amount is taken from the option row, never from the request body — a
+     * portal token holder must not be able to name their own price. */
+    let chosenName = chosen_option ? String(chosen_option) : '';
+    let amount: number | null = null;
+
+    if (option_id) {
+      const { data: opt } = await db
+        .from('selection_options').select('*')
+        .eq('id', option_id)
+        .eq('selection_id', selection_id)
+        .maybeSingle();
+      if (!opt) return NextResponse.json({ error: 'That option is not available for this selection' }, { status: 404 });
+      chosenName = String(opt.name ?? chosenName);
+      amount = optionCost(opt as SelectionOption);
+    }
+
+    /* The builder's own notes are kept. The previous version overwrote `notes`
+       outright, so a client picking an option erased whatever the estimator had
+       written on that line. */
+    const clientNote = [
+      chosenName ? `Client chose: ${chosenName}` : null,
+      notes ? String(notes) : null,
     ].filter(Boolean).join(' — ');
+    const combinedNotes = [existing.notes || null, clientNote || null].filter(Boolean).join('\n');
+
+    const update: Record<string, unknown> = {
+      status: 'selected',
+      selected_by: session.client_name || session.client_email,
+      selected_at: new Date().toISOString(),
+      notes: combinedNotes || null,
+    };
+    if (amount != null) {
+      update.selected_amount = amount;
+      // Keep the stored column honest at the moment it changes.
+      update.variance = variance({ ...existing, selected_amount: amount } as SelectionRow);
+    }
 
     const { data: updated, error: updateError } = await db
       .from('selections')
-      .update({
-        status: 'selected',
-        selected_by: session.client_name || session.client_email,
-        selected_at: new Date().toISOString(),
-        notes: combinedNotes || null,
-      })
+      .update(update)
       .eq('id', selection_id)
+      // Re-scoped on the write, not only on the read above.
+      .eq('tenant_id', session.tenant_id)
       .select()
       .single();
 
     if (updateError) throw updateError;
 
-    return NextResponse.json({ selection: updated });
+    return NextResponse.json({ selection: normaliseSelection(updated as SelectionRow) });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

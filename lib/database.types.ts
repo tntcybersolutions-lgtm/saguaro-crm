@@ -25805,7 +25805,7 @@ export type Database = {
       }
       selection_options: {
         Row: {
-          category_id: string
+          category_id: string | null
           color: string | null
           created_at: string
           description: string | null
@@ -25817,13 +25817,14 @@ export type Database = {
           model_number: string | null
           name: string
           quantity: number | null
+          selection_id: string | null
           sort_order: number | null
           spec_url: string | null
           total_cost: number | null
           unit_cost: number | null
         }
         Insert: {
-          category_id: string
+          category_id?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -25835,13 +25836,14 @@ export type Database = {
           model_number?: string | null
           name: string
           quantity?: number | null
+          selection_id?: string | null
           sort_order?: number | null
           spec_url?: string | null
           total_cost?: number | null
           unit_cost?: number | null
         }
         Update: {
-          category_id?: string
+          category_id?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -25853,12 +25855,20 @@ export type Database = {
           model_number?: string | null
           name?: string
           quantity?: number | null
+          selection_id?: string | null
           sort_order?: number | null
           spec_url?: string | null
           total_cost?: number | null
           unit_cost?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "selection_options_selection_id_fkey"
+            columns: ["selection_id"]
+            isOneToOne: false
+            referencedRelation: "selections"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "selection_options_category_id_fkey"
             columns: ["category_id"]

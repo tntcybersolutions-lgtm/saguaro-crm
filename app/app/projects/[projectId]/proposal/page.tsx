@@ -4,10 +4,12 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { FileText, FilePlus, ClockCounterClockwise, SealCheck, Plus } from '@phosphor-icons/react';
+import { FileText, FilePlus, ClockCounterClockwise, SealCheck, Plus, MagicWand, CaretRight, CaretDown } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
+import BuildFromEstimate from '@/components/proposals/BuildFromEstimate';
+import ProposalLines from '@/components/proposals/ProposalLines';
 
 const GOLD='#F59E0B', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
@@ -76,6 +78,9 @@ export default function ProposalPage() {
   const [projectName, setProjectName] = useState('');
   // Win/Loss capture: after flipping accept/decline we open the universal outcome modal.
   const [outcomeModal, setOutcomeModal] = useState<{ proposalId: string; defaultOutcome: 'won' | 'lost'; ourAmount: number } | null>(null);
+  // Estimate → proposal, and the line breakdown that was never readable.
+  const [showBuild, setShowBuild] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
   // Project intelligence — the proposal screen walks in knowing the contract money.
   const { ctx } = useProjectContext(projectId);
   const [auto, setAuto] = useState<{ amt?: boolean }>({});
@@ -209,9 +214,16 @@ export default function ProposalPage() {
         accent="Contract Amounts"
         subtitle="Version your project proposals, track contract amounts, and capture win/loss outcomes."
         actions={
-          <button onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openCreate(); } }} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> New Version
-          </button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {/* The estimate already holds the priced scope. Retyping it into a
+                proposal is where the two numbers drift apart. */}
+            <button onClick={() => setShowBuild(true)} style={goldButtonStyle} className="pmBtn">
+              <MagicWand size={15} weight="bold" /> Build from Estimate
+            </button>
+            <button onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openCreate(); } }} style={ghostButtonStyle} className="pmBtn">
+              <Plus size={15} weight="bold" /> New Version
+            </button>
+          </div>
         }
       />
 
@@ -321,7 +333,7 @@ export default function ProposalPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                  {['Version','Created','Amount','Status','Notes','Actions'].map(h => (
+                  {['','Version','Created','Amount','Status','Notes','Actions'].map(h => (
                     <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid rgba(255,255,255,0.08)', whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
@@ -331,8 +343,22 @@ export default function ProposalPage() {
                   const sc = STATUS_MAP[p.status.replace(' ', '_')] || STATUS_MAP[p.status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
                   const s = p.status.toLowerCase();
                   const outcomeSet = s === 'accepted' || s === 'declined' || s === 'rejected';
+                  const open = expanded === p.id;
                   return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: p.status === 'Accepted' ? 'rgba(61,214,140,.06)' : 'transparent' }}>
+                    <React.Fragment key={p.id}>
+                    <tr style={{ borderBottom: open ? 'none' : '1px solid rgba(255,255,255,0.06)', background: p.status === 'Accepted' ? 'rgba(61,214,140,.06)' : 'transparent' }}>
+                      {/* Expands the priced breakdown. A proposal that can state
+                          an amount but not show what is in it is the gap this
+                          closes. */}
+                      <td style={{ padding: '10px 4px 10px 12px', width: 28 }}>
+                        <button
+                          onClick={() => setExpanded(open ? null : p.id)}
+                          aria-label={open ? 'Hide breakdown' : 'Show breakdown'}
+                          style={{ background: 'none', border: 'none', color: open ? GOLD : DIM, cursor: 'pointer', padding: 2, display: 'flex' }}
+                        >
+                          {open ? <CaretDown size={14} weight="bold" /> : <CaretRight size={14} weight="bold" />}
+                        </button>
+                      </td>
                       <td style={{ padding: '10px 16px', color: GOLD, fontWeight: 700 }}>{p.version}</td>
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.created_date}</td>
                       <td style={{ padding: '10px 16px', color: TEXT, fontWeight: 800, fontSize: 14 }}>${p.amount?.toLocaleString()}</td>
@@ -349,6 +375,14 @@ export default function ProposalPage() {
                         </label>
                       </td>
                     </tr>
+                    {open && (
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                        <td colSpan={7} style={{ padding: 0 }}>
+                          <ProposalLines proposalId={p.id} headerAmount={Number(p.amount) || 0} />
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>
@@ -369,6 +403,18 @@ export default function ProposalPage() {
           onRecorded={() => fetchProposals()}
         />
       )}
+      <BuildFromEstimate
+        projectId={projectId}
+        open={showBuild}
+        onClose={() => setShowBuild(false)}
+        onCreated={(id) => {
+          setSuccessMsg('Proposal built from the estimate — expand it to review every line before sending.');
+          setTimeout(() => setSuccessMsg(''), 6000);
+          setExpanded(id);
+          fetchProposals();
+        }}
+      />
+
     <UnsavedGuardModal guard={guard} />
     </PremiumSurface>
   );
