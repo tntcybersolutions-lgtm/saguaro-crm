@@ -154,6 +154,7 @@ export default function BudgetIntelligence({ lines }: { lines: BudgetLine[] }) {
                               {f.method === 'at-rate' ? 'at current rate'
                                 : f.method === 'committed' ? 'committed'
                                 : f.method === 'no-progress' ? 'floor — no progress entered'
+                                : f.method === 'no-cost' ? 'floor — no cost booked yet'
                                 : 'at budget'}
                             </div>
                           </td>

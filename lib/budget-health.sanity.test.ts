@@ -176,6 +176,20 @@ check('a line running below plan is flagged with its exposure',
   check('a line WITH progress stays forecastable',
     forecastLine({ revised_budget: 478_000, actual: 360_000, percent_complete: 60 }).forecastable === true,
     'the refusal is about missing data, not about bad news');
+
+  /* The mirror image, which is just as wrong and easier to miss. The live steel
+     line: 36% progress booked, not a dollar invoiced. AC + (BAC − EV) says the
+     36% was free and will stay free. */
+  const g = forecastLine({ revised_budget: 620_000, actual: 0, committed: 0, percent_complete: 36 });
+  check('progress with NO cost booked is not forecastable either',
+    g.forecastable === false && g.method === 'no-cost',
+    'cost has not caught up with the field yet');
+  check('and the floor is the budget, not the discounted figure',
+    g.recommended === 620_000,
+    `${g.recommended} — the formula would have said ${g.eacAtBudget}, as if 36% of the work were free`);
+  check('a line with progress AND a commitment still forecasts',
+    forecastLine({ revised_budget: 620_000, actual: 0, committed: 590_000, percent_complete: 36 }).forecastable === true,
+    'a signed contract is cost that is known, even before it is invoiced');
 }
 
 check('an empty budget is handled',

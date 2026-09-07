@@ -104,7 +104,7 @@ export interface Forecast {
   spread: number;
   /** Revised budget minus the recommended forecast. Negative is an overrun. */
   variance: number;
-  method: 'at-budget' | 'at-rate' | 'committed' | 'no-progress';
+  method: 'at-budget' | 'at-rate' | 'committed' | 'no-progress' | 'no-cost';
   /**
    * False when money has been spent and progress is still zero. There is no
    * defensible cost at completion for such a line, and the floor reported in
@@ -149,10 +149,18 @@ export function forecastLine(line: BudgetLine): Forecast {
      budgeted, whichever is larger — is reported instead, clearly labelled. */
   const progressMissing = ac > 0 && pct <= 0;
 
+  /* And the mirror image, which is just as wrong and much easier to miss.
+     With progress booked and no cost against it, AC + (BAC − EV) says the work
+     done so far was free and will stay free — it forecast $396,800 against a
+     $620,000 steel budget that had 36% progress and not a dollar invoiced. Cost
+     simply has not caught up with the field yet, and no forecast is possible
+     until it does. */
+  const costMissing = pct > 0 && ac <= 0 && committed <= 0;
+
   let method: Forecast['method'];
   let recommended: number;
-  if (progressMissing) {
-    method = 'no-progress';
+  if (progressMissing || costMissing) {
+    method = progressMissing ? 'no-progress' : 'no-cost';
     recommended = Math.max(bac, ac + committed);
   } else if (pct >= 0.2 && eacAtRate != null) {
     method = 'at-rate';
@@ -173,7 +181,7 @@ export function forecastLine(line: BudgetLine): Forecast {
     spread: round2(Math.max(...readings) - Math.min(...readings)),
     variance: round2(bac - recommended),
     method,
-    forecastable: !progressMissing,
+    forecastable: !progressMissing && !costMissing,
   };
 }
 
@@ -224,7 +232,16 @@ const codeOf = (l: BudgetLine) => String(l.cost_code ?? l.description ?? '?');
  * blocker because every number derived from it is wrong; a stale variance
  * column is a note because nothing important reads it any more.
  */
-export function assessBudget(lines: BudgetLine[]): BudgetHealth {
+export interface ApprovedChangeOrder {
+  co_number?: unknown;
+  title?: string | null;
+  amount?: unknown;
+}
+
+export function assessBudget(
+  lines: BudgetLine[],
+  opts: { approvedChangeOrders?: ApprovedChangeOrder[] } = {},
+): BudgetHealth {
   const findings: BudgetFinding[] = [];
   const withForecast = lines.map((l) => ({ ...l, forecast: forecastLine(l) }));
 
@@ -252,6 +269,34 @@ export function assessBudget(lines: BudgetLine[]): BudgetHealth {
       detail: 'Original plus approved changes should equal the revised budget. Where it does not, money has moved into the budget without a change order behind it, and nobody can say whose approval it had.',
       amount: gap, count: unfooted.length, codes: unfooted.map(codeOf),
     });
+  }
+
+  /* ── approved change orders that never reached the budget ─────────────── */
+
+  const cos = opts.approvedChangeOrders ?? [];
+  if (cos.length) {
+    const coTotal = round2(cos.reduce((s, c) => s + num(c.amount), 0));
+    const missing = round2(coTotal - approvedChanges);
+    if (missing > 0.01) {
+      const inBudget = new Set<number>();
+      /* Match each change order to a budget line by its exact amount. It is a
+         crude join, but on a real budget the amounts are distinctive and it
+         names the specific orders that never landed — far more useful than a
+         single unexplained total. */
+      const orphans = cos.filter((c) => {
+        const amt = num(c.amount);
+        const hit = lines.findIndex((l, i) => !inBudget.has(i) && Math.abs(fChanges(l) - amt) < 0.01 && amt > 0);
+        if (hit >= 0) { inBudget.add(hit); return false; }
+        return true;
+      });
+      findings.push({
+        id: 'co-not-in-budget', severity: 'blocker',
+        title: `${money(missing)} of approved change orders is not in the budget`,
+        detail: `${cos.length} change orders totalling ${money(coTotal)} have been approved, and only ${money(approvedChanges)} appears against a budget line. The rest is scope that has been agreed and is being built with no money allocated to it — it will surface as an overrun on whichever line absorbs it.`,
+        amount: missing, count: orphans.length,
+        codes: orphans.map((c) => `CO-${String(c.co_number ?? '?')} ${String(c.title ?? '').slice(0, 48)} — ${money(num(c.amount))}`),
+      });
+    }
   }
 
   /* ── spend with nothing behind it ─────────────────────────────────────── */
