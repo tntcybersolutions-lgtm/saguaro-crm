@@ -80,6 +80,30 @@ const fProjected = (l: BudgetLine) => field(l, 'projected', 'forecast_cost', 'es
 const fPct = (l: BudgetLine) => field(l, 'percent_complete', 'pct_complete');
 const fVariance = (l: BudgetLine) => field(l, 'variance');
 
+/**
+ * Cost carried in from before the line joined the document ledger.
+ *
+ * NULL and 0 mean different things here, so this cannot go through `field`.
+ * NULL means the line has never been through a rollup and nothing is known
+ * about where its cost came from. 0 means it HAS been adopted and every dollar
+ * on it is explained by a purchase order or a bill.
+ */
+const carried = (l: BudgetLine, ...names: string[]): number | null => {
+  for (const n of names) {
+    const v = l[n];
+    if (v === undefined || v === null || v === '') continue;
+    const x = Number(v);
+    if (Number.isFinite(x)) return x;
+  }
+  return null;
+};
+const fCarriedActual = (l: BudgetLine) => carried(l, 'carried_actual');
+const fCarriedCommitted = (l: BudgetLine) => carried(l, 'carried_committed');
+
+/** Spend and commitment the document ledger itself accounts for. */
+const ledgerActual = (l: BudgetLine) => Math.max(0, round2(fActual(l) - (fCarriedActual(l) ?? 0)));
+const ledgerCommitted = (l: BudgetLine) => Math.max(0, round2(fCommitted(l) - (fCarriedCommitted(l) ?? 0)));
+
 /* ── forecast ────────────────────────────────────────────────────────────── */
 
 export interface Forecast {
@@ -301,14 +325,43 @@ export function assessBudget(
 
   /* ── spend with nothing behind it ─────────────────────────────────────── */
 
-  const uncommittedSpend = lines.filter((l) => fActual(l) > 0 && fActual(l) > fCommitted(l) + 0.01);
+  /* Spend beyond commitment, measured against the LEDGER rather than the raw
+     column. A line adopted into the document ledger carries the balance no
+     purchase order or bill explains in `carried_actual` — an explicit opening
+     balance, not uncontrolled spend. Judging the raw actual against the raw
+     committed calls those two situations by the same name, and this engine did
+     exactly that: it reported $422,000 as spend nobody controlled when every
+     dollar of it was already recorded as carried in from before the ledger
+     existed. Uncontrolled spend is a blocker; an opening balance is a fact. */
+  const uncommittedSpend = lines.filter((l) => ledgerActual(l) > ledgerCommitted(l) + 0.01);
   if (uncommittedSpend.length) {
-    const amount = round2(uncommittedSpend.reduce((s, l) => s + (fActual(l) - fCommitted(l)), 0));
+    const amount = round2(uncommittedSpend.reduce((s, l) => s + (ledgerActual(l) - ledgerCommitted(l)), 0));
     findings.push({
       id: 'uncommitted-spend', severity: 'blocker',
       title: `${money(amount)} spent beyond what was ever committed`,
-      detail: 'Cost has gone out the door on these lines without a subcontract or purchase order covering it. Either the commitments were never entered, or the spend was never controlled — and the two look identical in a report until somebody asks.',
+      detail: 'Bills have been booked against these lines with no subcontract or purchase order covering them. Either the commitments were never entered, or the spend was never controlled — and the two look identical in a report until somebody asks.',
       amount, count: uncommittedSpend.length, codes: uncommittedSpend.map(codeOf),
+    });
+  }
+
+  const carriedLines = lines.filter((l) => (fCarriedActual(l) ?? 0) > 0.01);
+  if (carriedLines.length) {
+    const amount = round2(carriedLines.reduce((s, l) => s + (fCarriedActual(l) ?? 0), 0));
+    findings.push({
+      id: 'carried-balance', severity: 'note',
+      title: `${money(amount)} of opening balance carried in from before the cost ledger`,
+      detail: 'This cost predates the purchase orders and bills on this project — entered directly on the budget when the job was set up, or migrated from whatever came before. It is accounted for and it does not drift: new documents add to it rather than replacing it. Worth knowing only because no invoice can be produced to explain it.',
+      amount, count: carriedLines.length, codes: carriedLines.map(codeOf),
+    });
+  }
+
+  const neverAdopted = lines.filter((l) => fCarriedActual(l) === null && (fActual(l) > 0 || fCommitted(l) > 0));
+  if (neverAdopted.length) {
+    findings.push({
+      id: 'not-adopted', severity: 'warn',
+      title: `${neverAdopted.length} line${neverAdopted.length === 1 ? ' has' : 's have'} cost that has never been reconciled to a document`,
+      detail: 'These lines carry money but have never been through a cost rollup, so nothing knows whether it came from a bill or was typed in. Run the recompute to find out — it captures whatever no document explains rather than destroying it.',
+      count: neverAdopted.length, codes: neverAdopted.map(codeOf),
     });
   }
 

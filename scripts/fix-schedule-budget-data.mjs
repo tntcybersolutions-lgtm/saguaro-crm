@@ -352,6 +352,26 @@ for (const pid of byProject) {
     }
   }
 
+  /* ── adopt any line that has never been through a cost rollup ──────────
+   *
+   * carried_actual NULL means no rollup has ever looked at this line, so
+   * nothing knows whether its money came from a bill or was typed in. Adopting
+   * captures whatever no document explains as an explicit opening balance
+   * rather than destroying it — which is what makes running the rollup safe on
+   * a budget somebody has been maintaining by hand for years.
+   *
+   * On a line with no cost at all this simply records that it starts clean.
+   */
+  for (const l of lines) {
+    if (l.carried_actual !== null && l.carried_actual !== undefined) continue;
+    const p = patches.find((x) => x.id === l.id) ?? { id: l.id, code: l.cost_code, patch: {} };
+    if (!patches.includes(p)) patches.push(p);
+    const docActual = 0, docCommitted = 0; // no bills or POs exist on this project
+    p.patch.carried_actual = Math.max(0, (Number(l.actual) || 0) - docActual);
+    p.patch.carried_committed = Math.max(0, (Number(l.committed) || 0) - docCommitted);
+    say(`   ${String(l.cost_code).padEnd(9)} adopted into the cost ledger — opening balance ${m(p.patch.carried_actual)}`);
+  }
+
   /* Variance is recomputed last, against whatever the budget ended up being. */
   for (const p of patches) {
     const l = lines.find((x) => x.id === p.id);

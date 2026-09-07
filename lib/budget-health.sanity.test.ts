@@ -23,6 +23,7 @@ const check = (name: string, cond: boolean, detail: string) => {
   if (!cond) failures++;
 };
 const find = (h: ReturnType<typeof assessBudget>, id: string) => h.findings.find((f) => f.id === id);
+const money0 = (n: number) => '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
 
 /* ── the live rows, exactly as the database holds them ───────────────────── */
 
@@ -145,8 +146,11 @@ check('a line running below plan is flagged with its exposure',
 
 {
   const good: BudgetLine[] = [
-    { cost_code: '03-300', original_budget: 400_000, approved_changes: 20_000, revised_budget: 420_000, committed: 415_000, actual: 210_000, projected: 420_000, variance: 0, percent_complete: 50 },
-    { cost_code: '05-120', original_budget: 600_000, approved_changes: 0, revised_budget: 600_000, committed: 590_000, actual: 300_000, projected: 600_000, variance: 0, percent_complete: 50 },
+    /* carried_actual 0 means adopted into the document ledger with every dollar
+       explained by a purchase order or a bill — which is what a budget that is
+       genuinely being run properly looks like. */
+    { cost_code: '03-300', original_budget: 400_000, approved_changes: 20_000, revised_budget: 420_000, committed: 415_000, actual: 210_000, projected: 420_000, variance: 0, percent_complete: 50, carried_actual: 0, carried_committed: 0 },
+    { cost_code: '05-120', original_budget: 600_000, approved_changes: 0, revised_budget: 600_000, committed: 590_000, actual: 300_000, projected: 600_000, variance: 0, percent_complete: 50, carried_actual: 0, carried_committed: 0 },
   ];
   const h = assessBudget(good);
   check('a budget that foots, is committed and is progressing has no blockers',
@@ -190,6 +194,49 @@ check('a line running below plan is flagged with its exposure',
   check('a line with progress AND a commitment still forecasts',
     forecastLine({ revised_budget: 620_000, actual: 0, committed: 590_000, percent_complete: 36 }).forecastable === true,
     'a signed contract is cost that is known, even before it is invoiced');
+}
+
+/* ── an opening balance is not uncontrolled spend ────────────────────────── */
+
+{
+  /* The live shape. $422,000 of cost with nothing committed — but every dollar
+     of it recorded in carried_actual, meaning the line was adopted into the
+     document ledger and this balance predates it. The engine called that
+     "spend beyond what was ever committed", which is the same words it uses
+     for money genuinely going out with no contract behind it. */
+  const adopted = assessBudget([
+    { cost_code: '01-000', original_budget: 175_000, approved_changes: 0, revised_budget: 175_000, committed: 0, actual: 62_000, carried_actual: 62_000, carried_committed: 0, percent_complete: 44.6 },
+    { cost_code: '03-300', original_budget: 450_000, approved_changes: 70_500, revised_budget: 520_500, committed: 0, actual: 360_000, carried_actual: 360_000, carried_committed: 0, percent_complete: 91 },
+  ]);
+  check('a fully carried balance is NOT reported as uncommitted spend',
+    !find(adopted, 'uncommitted-spend'),
+    'an opening balance and uncontrolled spend are different facts');
+  check('it is reported as an opening balance instead, as a note',
+    find(adopted, 'carried-balance')?.severity === 'note' && find(adopted, 'carried-balance')?.amount === 422_000,
+    `${money0(find(adopted, 'carried-balance')?.amount ?? 0)} carried`);
+  check('and that alone does not block the budget',
+    adopted.blockers === 0, `${adopted.blockers} blockers`);
+
+  /* Real uncontrolled spend still blocks: a bill booked past the ledger's own
+     commitments, over and above whatever was carried. */
+  const uncontrolled = assessBudget([
+    { cost_code: 'X', revised_budget: 100_000, committed: 10_000, actual: 60_000, carried_actual: 20_000, carried_committed: 0, percent_complete: 50 },
+  ]);
+  check('spend past the LEDGER commitments still blocks',
+    find(uncontrolled, 'uncommitted-spend')?.severity === 'blocker' &&
+    find(uncontrolled, 'uncommitted-spend')?.amount === 30_000,
+    `${money0(find(uncontrolled, 'uncommitted-spend')?.amount ?? 0)} — 40,000 of ledger spend against 10,000 committed`);
+
+  /* Never adopted at all is a third thing again: nobody knows where the money
+     came from, because no rollup has ever looked. */
+  const virgin = assessBudget([
+    { cost_code: 'Y', revised_budget: 100_000, committed: 0, actual: 50_000, percent_complete: 50 },
+  ]);
+  check('a line that has never been rolled up is flagged as unreconciled',
+    find(virgin, 'not-adopted')?.severity === 'warn',
+    'null carried_actual means no rollup has ever looked at it');
+  check('and its spend is still treated as uncommitted until it is',
+    !!find(virgin, 'uncommitted-spend'), 'unknown provenance is not the same as explained');
 }
 
 check('an empty budget is handled',
