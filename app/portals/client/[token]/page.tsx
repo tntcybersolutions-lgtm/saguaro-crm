@@ -34,7 +34,7 @@ const fmtTime = (d: string | null | undefined) => {
 const pct = (v: number, t: number) => (t > 0 ? Math.round((v / t) * 100) : 0);
 
 /* ── Inline Types ─────────────────────────────────────────────────── */
-type TabId = 'dashboard' | 'approvals' | 'financials' | 'messages' | 'documents' | 'warranty' | 'ai';
+type TabId = 'dashboard' | 'approvals' | 'selections' | 'financials' | 'messages' | 'documents' | 'warranty' | 'ai';
 
 type ProjectInfo = {
   id: string;
@@ -177,6 +177,7 @@ type DashboardData = {
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊' },
   { id: 'approvals', label: 'Approvals', icon: '✅' },
+  { id: 'selections', label: 'Selections', icon: '🎨' },
   { id: 'financials', label: 'Financials', icon: '💰' },
   { id: 'messages', label: 'Messages', icon: '💬' },
   { id: 'documents', label: 'Documents', icon: '📁' },
@@ -210,6 +211,12 @@ export default function ClientPortalPage() {
   const [approvalNotes, setApprovalNotes] = useState<Record<string, string>>({});
   const [processingApproval, setProcessingApproval] = useState<string | null>(null);
   const [signatureData, setSignatureData] = useState<string | null>(null);
+
+  /* ── Selections state ─────────────────────────────────────────── */
+  const [selLoading, setSelLoading] = useState(false);
+  const [selections, setSelections] = useState<any[]>([]);
+  const [selSummary, setSelSummary] = useState<any>(null);
+  const [pickingId, setPickingId] = useState<string | null>(null);
 
   /* ── Financials state ─────────────────────────────────────────── */
   const [finLoading, setFinLoading] = useState(false);
@@ -358,6 +365,14 @@ export default function ClientPortalPage() {
         })
         .catch(() => showToast('Failed to load approvals', 'error'))
         .finally(() => setApprovalsLoading(false));
+    }
+    if (activeTab === 'selections' && selections.length === 0 && !selLoading) {
+      setSelLoading(true);
+      fetch(`/api/portal/client/selections?token=${token}`, { headers: { 'x-portal-token': token } })
+        .then((r) => r.json())
+        .then((d) => { setSelections(d.selections || []); setSelSummary(d.summary || null); })
+        .catch(() => showToast('Failed to load selections', 'error'))
+        .finally(() => setSelLoading(false));
     }
     if (activeTab === 'financials' && invoices.length === 0 && !finLoading) {
       setFinLoading(true);
@@ -1324,6 +1339,185 @@ export default function ClientPortalPage() {
   /* ══════════════════════════════════════════════════════════════════
      TAB: FINANCIALS
      ══════════════════════════════════════════════════════════════════ */
+  /**
+   * The client's own selections screen.
+   *
+   * This is the half of a selections log that faces the person paying for the
+   * choices, and the portal had no such screen at all — the endpoint existed and
+   * nothing called it, so a client could never see an allowance or make a pick.
+   *
+   * Every option is priced against its allowance, so the choice reads "adds
+   * $6,600" rather than "$21,600" beside a number on a different screen.
+   */
+  const pickOption = async (selectionId: string, optionId: string, optionName: string) => {
+    setPickingId(optionId);
+    try {
+      const res = await fetch('/api/portal/client/selections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-portal-token': token },
+        body: JSON.stringify({ selection_id: selectionId, option_id: optionId }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d?.error || 'Could not record your choice');
+      showToast(`${optionName} selected.`, 'success');
+      // Reload so the running totals at the top move with the choice.
+      const r = await fetch(`/api/portal/client/selections?token=${token}`, { headers: { 'x-portal-token': token } });
+      const fresh = await r.json();
+      setSelections(fresh.selections || []);
+      setSelSummary(fresh.summary || null);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : 'Could not record your choice', 'error');
+    } finally {
+      setPickingId(null);
+    }
+  };
+
+  const renderSelections = () => {
+    if (selLoading) return <LoadingBlock />;
+    if (selections.length === 0) {
+      return <EmptyState icon="🎨" title="No Selections Yet" subtitle="Your builder hasn't published any finishes or fixtures to choose from." />;
+    }
+
+    const over = Number(selSummary?.varianceTotal ?? 0) < 0;
+    const outstanding = Number(selSummary?.allowanceOutstanding ?? 0);
+
+    const byCategory: Record<string, any[]> = {};
+    for (const s of selections) (byCategory[s.category || 'General'] ||= []).push(s);
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        {/* Where the money stands. Decided and undecided are kept apart: an
+            allowance nobody has spent is an open question, not a saving. */}
+        <div style={{ ...cardStyle }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+            <div style={{ flex: '1 1 160px' }}>
+              <div style={{ fontSize: 12, color: DIM, textTransform: 'uppercase', letterSpacing: .5, fontWeight: 700 }}>Your allowances</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: TEXT, marginTop: 4 }}>{fmt(Number(selSummary?.allowanceTotal) || 0)}</div>
+            </div>
+            <div style={{ flex: '1 1 160px' }}>
+              <div style={{ fontSize: 12, color: DIM, textTransform: 'uppercase', letterSpacing: .5, fontWeight: 700 }}>Chosen so far</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: TEXT, marginTop: 4 }}>{fmt(Number(selSummary?.selectedTotal) || 0)}</div>
+            </div>
+            <div style={{ flex: '1 1 200px' }}>
+              <div style={{ fontSize: 12, color: DIM, textTransform: 'uppercase', letterSpacing: .5, fontWeight: 700 }}>
+                {over ? 'Above your allowances' : 'Back to you'}
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: over ? RED : GREEN, marginTop: 4 }}>
+                {fmt(Math.abs(Number(selSummary?.varianceTotal) || 0))}
+              </div>
+              <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>
+                {over ? 'this would be added to your contract' : 'on the choices made so far'}
+              </div>
+            </div>
+            {outstanding > 0 && (
+              <div style={{ flex: '1 1 180px' }}>
+                <div style={{ fontSize: 12, color: DIM, textTransform: 'uppercase', letterSpacing: .5, fontWeight: 700 }}>Still to decide</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: GOLD, marginTop: 4 }}>{fmt(outstanding)}</div>
+                <div style={{ fontSize: 12, color: DIM, marginTop: 3 }}>
+                  {selSummary?.pending} item{selSummary?.pending === 1 ? '' : 's'} waiting on you
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {Object.entries(byCategory).map(([cat, rows]) => (
+          <div key={cat}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 16 }}>{cat}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {rows.map((s: any) => {
+                const decided = s.variance != null;
+                return (
+                  <div key={s.id} style={{ ...cardStyle }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: TEXT }}>{s.item || s.item_name}</div>
+                        <div style={{ fontSize: 13, color: DIM, marginTop: 4 }}>
+                          {Number(s.allowance) > 0 ? `${fmt(Number(s.allowance))} allowance` : 'No allowance set'}
+                          {s.due_date && <> · decide by {fmtDate(s.due_date)}</>}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        {decided ? (
+                          <>
+                            <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>{fmt(Number(s.cost) || 0)}</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: s.variance < 0 ? RED : GREEN, marginTop: 2 }}>
+                              {s.variance < 0 ? `${fmt(Math.abs(s.variance))} above allowance` : s.variance > 0 ? `${fmt(s.variance)} under allowance` : 'exactly your allowance'}
+                            </div>
+                          </>
+                        ) : (
+                          <span style={badgeStyle(GOLD)}>awaiting your choice</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {s.options && s.options.length > 0 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))', gap: 12, marginTop: 16 }}>
+                        {s.options.map((o: any) => {
+                          const upcharge = o.varianceIfChosen != null && o.varianceIfChosen < 0;
+                          return (
+                            <div key={o.id} style={{
+                              border: `1px solid ${o.isChosen ? GREEN : 'rgba(255,255,255,0.12)'}`,
+                              background: o.isChosen ? 'rgba(34,197,94,.08)' : 'rgba(255,255,255,0.02)',
+                              borderRadius: 10, padding: 12, display: 'flex', flexDirection: 'column', gap: 8,
+                            }}>
+                              {o.image_url && (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img src={o.image_url} alt={o.name} style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 7 }} />
+                              )}
+                              <div>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>
+                                  {o.name}{o.is_recommended && <span style={{ color: GOLD, marginLeft: 6 }}>★</span>}
+                                </div>
+                                {o.manufacturer && <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{o.manufacturer}</div>}
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 17, fontWeight: 800, color: TEXT }}>{fmt(o.cost)}</div>
+                                <div style={{ fontSize: 12.5, fontWeight: 700, color: upcharge ? RED : GREEN, marginTop: 2 }}>{o.effect}</div>
+                              </div>
+                              {o.spec_url && (
+                                <a href={o.spec_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: GOLD, textDecoration: 'none' }}>
+                                  View spec sheet →
+                                </a>
+                              )}
+                              {o.isChosen ? (
+                                <div style={{ padding: '8px 0', textAlign: 'center', fontSize: 13, fontWeight: 700, color: GREEN }}>✓ Your choice</div>
+                              ) : (
+                                <button
+                                  onClick={() => pickOption(s.id, o.id, o.name)}
+                                  disabled={pickingId !== null || decided}
+                                  title={decided ? 'This selection has already been decided — contact your builder to change it.' : undefined}
+                                  style={{
+                                    padding: '9px 0', borderRadius: 7, border: `1px solid ${GOLD}66`,
+                                    background: 'rgba(245,158,11,.14)', color: '#FBBF24', fontSize: 13, fontWeight: 700,
+                                    cursor: pickingId !== null || decided ? 'not-allowed' : 'pointer',
+                                    opacity: pickingId !== null || decided ? .45 : 1,
+                                  }}
+                                >
+                                  {pickingId === o.id ? 'Saving…' : 'Choose this'}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 13, color: DIM, marginTop: 12 }}>
+                        {decided
+                          ? 'Recorded by your builder.'
+                          : 'Your builder has not published options for this item yet.'}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderFinancials = () => {
     if (finLoading) return <LoadingBlock />;
 
@@ -1982,6 +2176,7 @@ export default function ClientPortalPage() {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
       case 'approvals': return renderApprovals();
+      case 'selections': return renderSelections();
       case 'financials': return renderFinancials();
       case 'messages': return renderMessages();
       case 'documents': return renderDocuments();
