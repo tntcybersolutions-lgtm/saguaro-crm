@@ -39,6 +39,28 @@ const PHASE_ORDER = [
   'closeout', 'punch',
 ];
 
+/**
+ * Below this, a gap between two tasks is date-entry rounding rather than a
+ * decision anybody made, and carrying it as a lag adds noise a scheduler then
+ * has to argue with.
+ */
+const MIN_LAG_DAYS = 3;
+
+/**
+ * The longest gap worth calling a lag.
+ *
+ * Real construction lags top out around here: concrete cure to 28 calendar
+ * days, submittal review a fortnight, most of the rest shorter. Beyond it the
+ * gap is almost never waiting — it is a predecessor nobody entered. A link
+ * carrying a lag longer than the predecessor's own duration is a placeholder
+ * wearing a relationship's clothes, and DCMA counts it against you either way.
+ */
+const MAX_LAG_DAYS = 20;
+
+/** Calendar days to working days, close enough for choosing a relationship. */
+const workDaysApprox = (calendarDays: number): number =>
+  Math.max(0, Math.round((calendarDays * 5) / 7));
+
 const phaseRank = (p: unknown): number => {
   const s = String(p ?? '').toLowerCase().trim();
   if (!s) return 999;
@@ -134,19 +156,64 @@ export function suggestLogic(tasks: CpmTask[]): LogicPlan {
     const tId = String(task.id), pId = String(pred.id);
     if (tId === pId || wouldCycle(tId, pId)) return false;
 
-    /* If the successor was planned to start before the predecessor finishes,
-       that is a real overlap. Proposing finish-to-start would shove it months
-       later the moment somebody accepts — so it becomes start-to-start with the
-       lag the dates actually describe. */
+    /* Refuse a link that runs backwards against the dates.
+     *
+     * WBS numbering and the planned dates can disagree — on live data 3.3 was
+     * planned to start on 10 September and 4.1 on 1 August, so the numbering
+     * says one order and the calendar says the other. Proposing it anyway gave
+     * a start-to-start with the lag clamped to zero, which dragged 4.1 five
+     * weeks later and pushed the project finish out with it.
+     *
+     * The rule this file claims to follow is that a proposal never contradicts
+     * the dates. So the link is skipped and a later rule — phase order, or plain
+     * date sequence — gets the chance to link the task where the calendar
+     * actually puts it. */
+    if (start(task) < start(pred)) return false;
+
+    /* Choosing the relationship type and lag.
+     *
+     * The dates on a schedule that never had logic were not produced BY logic —
+     * they were typed. So the gaps and overlaps between them are part real
+     * intent and part noise, and encoding all of it produces a schedule where
+     * every link is start-to-start with a large lag. That passes for logic and
+     * is not: the lag is doing all the work, so nothing moves when reality does,
+     * which is the exact failure the links were added to cure. DCMA flags it,
+     * and DCMA is right to.
+     *
+     * So overlaps and gaps are only modelled when they are big enough to be
+     * deliberate. A two-day overlap between a six-week task and its successor is
+     * noise; a six-week overlap is phasing somebody chose.
+     */
+    const predDuration = Math.max(1, workDaysApprox(finish(pred) - start(pred) + 1));
+    const overlapDays = workDaysApprox(finish(pred) - start(task) + 1);
+    const gapDays = workDaysApprox(start(task) - finish(pred) - 1);
+
     let type: RelType = 'FS';
     let lag = 0;
-    const gapFromFinish = start(task) - finish(pred);
-    if (gapFromFinish < 1) {
-      type = 'SS';
-      lag = Math.max(0, Math.round((start(task) - start(pred)) * 5 / 7));
-    } else if (gapFromFinish > 1) {
-      /* A real planned gap is carried as a lag rather than quietly dropped. */
-      lag = Math.round((gapFromFinish - 1) * 5 / 7);
+
+    if (overlapDays > 0) {
+      /* A material overlap — a sixth of the predecessor or more, and at least
+         a working week — is real phasing and is modelled as start-to-start.
+         Anything smaller is treated as the tasks simply running back to back. */
+      const material = overlapDays >= Math.max(5, predDuration * 0.15);
+      if (material) {
+        type = 'SS';
+        lag = Math.max(0, workDaysApprox(start(task) - start(pred)));
+      }
+    } else if (gapDays >= MIN_LAG_DAYS) {
+      /* A real planned gap — concrete cure, submittal review — is carried.
+         Anything under a few days is rounding in somebody's date entry. */
+      lag = gapDays;
+
+      /* But a gap this long is not a lag, it is a missing predecessor.
+       *
+       * Live data produced "Electrical Rough-in follows Site Mobilization,
+       * +115 days" — a link carrying eight times more waiting than working.
+       * Nothing about mobilising a site releases electrical rough-in five
+       * months later; something in between does, and this link was hiding it.
+       * Refusing it lets a nearer rule find the real driver, and if none does,
+       * the task is left honestly open for the health check to report. */
+      if (lag > Math.max(MAX_LAG_DAYS, predDuration)) return false;
     }
 
     suggestions.push({
@@ -187,28 +254,48 @@ export function suggestLogic(tasks: CpmTask[]): LogicPlan {
 
   /* ── 2. Phase sequence, for anything WBS did not cover ────────────────── */
 
-  const remaining = tasks.filter((t) => (links.get(String(t.id))?.size ?? 0) === 0);
-  const phased = remaining.filter((t) => phaseRank(t.phase) < 998);
+  /* Two different populations, and conflating them was a bug.
+   *
+   * Only an UNLINKED task needs a proposal — that is `needsPhase`. But the
+   * task a phase should hang off is the real last-finishing task of the phase
+   * before it, linked or not — that is `allByPhase`. The first version built
+   * both from the unlinked leftovers, so by the time MEP was reached the only
+   * remaining Sitework task was Site Mobilization, and MEP was hung off it
+   * across a five-month gap while Earthwork, Utilities and the entire
+   * structure — the work that actually releases rough-in — sat one lookup
+   * away. */
+  const allByPhase = new Map<number, CpmTask[]>();
+  for (const t of tasks) {
+    const r = phaseRank(t.phase);
+    if (r >= 998) continue;
+    const a = allByPhase.get(r) ?? []; a.push(t); allByPhase.set(r, a);
+  }
 
-  if (phased.length > 1) {
+  const needsPhase = tasks.filter(
+    (t) => (links.get(String(t.id))?.size ?? 0) === 0 && phaseRank(t.phase) < 998,
+  );
+
+  if (needsPhase.length > 0) {
     const byPhase = new Map<number, CpmTask[]>();
-    for (const t of phased) {
+    for (const t of needsPhase) {
       const r = phaseRank(t.phase);
       const a = byPhase.get(r) ?? []; a.push(t); byPhase.set(r, a);
     }
-    const ranks = [...byPhase.keys()].sort((a, b) => a - b);
+    const allRanks = [...allByPhase.keys()].sort((a, b) => a - b);
 
-    for (let r = 0; r < ranks.length; r++) {
-      const group = byPhase.get(ranks[r])!.sort((a, b) => start(a) - start(b));
+    for (const rank of [...byPhase.keys()].sort((a, b) => a - b)) {
+      const group = byPhase.get(rank)!.sort((a, b) => start(a) - start(b));
       /* Chain within the phase by planned start. */
       for (let i = 1; i < group.length; i++) {
         propose(group[i], group[i - 1], `Both in the ${String(group[i].phase)} phase, and ${nameOf(group[i - 1])} was planned first`, 'medium');
       }
-      /* And hang the phase off the one before it. */
-      if (r > 0 && group.length) {
-        const prevGroup = byPhase.get(ranks[r - 1])!.sort((a, b) => finish(a) - finish(b));
+      /* And hang the phase off the one that finishes last in the phase before
+         it — walking back past any phase that has no tasks at all. */
+      const prevRanks = allRanks.filter((x) => x < rank).reverse();
+      for (const pr of prevRanks) {
+        const prevGroup = [...allByPhase.get(pr)!].sort((a, b) => finish(a) - finish(b));
         const last = prevGroup[prevGroup.length - 1];
-        propose(group[0], last, `${String(last.phase)} comes before ${String(group[0].phase)} in the construction sequence`, 'medium');
+        if (last && propose(group[0], last, `${String(last.phase)} comes before ${String(group[0].phase)} in the construction sequence`, 'medium')) break;
       }
     }
   }
@@ -225,6 +312,53 @@ export function suggestLogic(tasks: CpmTask[]): LogicPlan {
       `Planned to start after ${nameOf(stillBare[i - 1])}, and nothing else says how they relate`,
       'low',
     );
+  }
+
+  /* ── 4. Close the branches that drive nothing ─────────────────────────── */
+
+  /* Every rule above hands a task a PREDECESSOR. None of them ever asks
+   * whether a task has a SUCCESSOR, and a schedule built only forwards
+   * dead-ends: the live demo grew a nine-task chain from Site Mobilization
+   * through Building Envelope Seal that drove nothing at all. Each task read
+   * as linked, so nothing complained, and the whole branch carried five weeks
+   * of float purely because no work downstream was waiting on it. Delay the
+   * envelope and the project finish would not have moved.
+   *
+   * So: anything that finishes before the project does and drives nothing gets
+   * tied to the next work that could plausibly be waiting on it — the earliest
+   * task starting at or after it that does not close a loop. */
+
+  const lastFinish = tasks.length ? Math.max(...tasks.map(finish)) : 0;
+  const succCount = new Map<string, number>();
+  for (const [tId, preds] of links) {
+    if (!succCount.has(tId)) succCount.set(tId, 0);
+    for (const p of preds) succCount.set(p, (succCount.get(p) ?? 0) + 1);
+  }
+
+  const deadEnds = tasks
+    .filter((t) => (succCount.get(String(t.id)) ?? 0) === 0 && finish(t) < lastFinish)
+    .sort((a, b) => finish(a) - finish(b));
+
+  const byStart = [...tasks].sort((a, b) => start(a) - start(b) || finish(a) - finish(b));
+
+  for (const t of deadEnds) {
+    /* Still a dead end? An earlier iteration may already have closed it. */
+    if ((succCount.get(String(t.id)) ?? 0) > 0) continue;
+
+    /* Work that starts after this FINISHES is a genuine successor and is tried
+     * first. Work that merely starts later is a fallback: on live data the
+     * plain start-order rule tied HVAC rough-in to the roof deck four days
+     * behind it, which reads backwards — the deck releases the HVAC, not the
+     * reverse. Preferring a true successor found commissioning instead, which
+     * is the work that actually cannot begin until the rough-in is done. */
+    const genuine = byStart.filter((c) => start(c) >= finish(t));
+    for (const cand of [...genuine, ...byStart]) {
+      if (String(cand.id) === String(t.id)) continue;
+      if (start(cand) < start(t)) continue;
+      if (!propose(cand, t, `${nameOf(t)} finishes with nothing waiting on it, and ${nameOf(cand)} is the next work that could be`, 'low')) continue;
+      succCount.set(String(t.id), (succCount.get(String(t.id)) ?? 0) + 1);
+      break;
+    }
   }
 
   const stillOpen = tasks

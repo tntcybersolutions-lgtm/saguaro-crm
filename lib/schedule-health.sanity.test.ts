@@ -86,6 +86,82 @@ const find = (h: ReturnType<typeof assessSchedule>, id: string) => h.checks.find
     find(h, 'leads').threshold === 'DCMA: 0 permitted', 'arguing with an owner is easier citing their own standard');
 }
 
+/* ── a fully linked task can still be a dead end ─────────────────────────── */
+
+{
+  /* The live failure this check was written for. Two chains grow from the same
+     start; the B branch stops mid-project and drives nothing. Every task has a
+     predecessor, so the open-ends check — which only catches the fully
+     isolated — reported nothing at all, and the branch sat on float it had not
+     earned. Delay B2 by a month and the project finish would not move. */
+  const h = assessSchedule([
+    { id: 'A1', name: 'A1', duration: 10, start_date: '2026-09-07', predecessors: [] },
+    { id: 'A2', name: 'A2', duration: 60, predecessors: [{ id: 'A1' }] },
+    { id: 'B1', name: 'B1', duration: 5, predecessors: [{ id: 'A1' }] },
+    { id: 'B2', name: 'B2', duration: 5, predecessors: [{ id: 'B1' }] },
+  ], { dataDate: '2026-09-07' });
+
+  check('the old open-ends check sees nothing wrong',
+    find(h, 'open-ends').passed && h.totals.openEnds === 0,
+    'every task has a predecessor, so nothing is isolated');
+  check('but the dead-end check catches the branch that drives nothing',
+    !find(h, 'dead-ends').passed && find(h, 'dead-ends').count === 1,
+    'B2 finishes mid-project with no successor — it cannot push the finish, so it collects float it has not earned');
+  check('and the project finish itself is not counted against it',
+    !find(h, 'dead-ends').taskIds?.includes('A2'), 'the last task to finish is allowed to drive nothing');
+}
+
+{
+  /* The mirror: a task pinned to a typed date, driven by nothing, starting
+     months after the job began. */
+  const h = assessSchedule([
+    { id: 'A', name: 'A', duration: 10, start_date: '2026-09-07', predecessors: [] },
+    { id: 'B', name: 'B', duration: 10, predecessors: [{ id: 'A' }] },
+    { id: 'C', name: 'C', duration: 10, start_date: '2026-11-02', predecessors: [] },
+    { id: 'D', name: 'D', duration: 10, predecessors: [{ id: 'B' }, { id: 'C' }] },
+  ], { dataDate: '2026-09-07' });
+  check('a task driven by nothing is flagged even though it drives something',
+    !find(h, 'orphan-starts').passed && find(h, 'orphan-starts').count === 1,
+    'C is pinned to a date somebody typed; when the work in front of it slips, it will not move');
+  check('the genuine project start is exempt',
+    !find(h, 'orphan-starts').taskIds?.includes('A'), 'something has to start the job');
+}
+
+{
+  const h = assessSchedule([
+    { id: 'A', name: 'A', duration: 5, start_date: '2026-09-07', predecessors: [] },
+    { id: 'B', name: 'B', duration: 5, predecessors: [{ id: 'A' }] },
+    { id: 'C', name: 'C', duration: 5, predecessors: [{ id: 'B' }] },
+  ], { dataDate: '2026-09-07' });
+  check('a clean chain trips neither new check',
+    find(h, 'dead-ends').passed && find(h, 'orphan-starts').passed,
+    'one start, one finish, nothing dangling in between');
+}
+
+/* ── the lag and lead checks count RELATIONSHIPS, not tasks ──────────────── */
+
+{
+  /* One task with three predecessors, two of them lagged. The threshold is
+     stated as a share of relationships, so it has to be measured that way —
+     counting the one TASK against a task count would report 50% where the
+     truth is 67% of relationships, against a threshold that describes neither. */
+  const h = assessSchedule([
+    { id: 'a', name: 'A', duration: 5, start_date: '2026-09-07', predecessors: [] },
+    { id: 'b', name: 'B', duration: 5, start_date: '2026-09-07', predecessors: [] },
+    { id: 'c', name: 'C', duration: 5, start_date: '2026-09-07', predecessors: [] },
+    { id: 'd', name: 'D', duration: 5, predecessors: [
+      { id: 'a', lag: 4 }, { id: 'b', lag: 2 }, { id: 'c' },
+    ] },
+  ], { dataDate: '2026-09-07' });
+  const lags = find(h, 'lags');
+  check('lagged RELATIONSHIPS are counted, not tasks carrying one',
+    lags.count === 2, `${lags.count} of 3 relationships — one task, two lags`);
+  check('and the percentage is of relationships',
+    lags.pct === 66.7, `${lags.pct}% against a threshold stated in relationships`);
+  check('the title says both numbers so nobody has to guess the denominator',
+    /2 of 3 relationships/.test(lags.title), lags.title);
+}
+
 {
   const h = assessSchedule([
     { id: 'A', name: 'A', duration: 5, start_date: '2026-09-07', predecessors: [] },

@@ -31,18 +31,20 @@ console.log('\n=== SCHEDULE (live tasks) ===\n');
 const { data: tasks, error: tErr } = await db.from('schedule_tasks').select('*');
 if (tErr) { console.error(tErr.message); process.exit(1); }
 
-const sh = assessSchedule(tasks ?? []);
-console.log(`  ${sh.totals.tasks} tasks · ${sh.totals.complete} complete · ${sh.totals.inProgress} in progress`);
-console.log(`  logic: ${sh.totals.withLogic} of ${sh.totals.tasks} linked, ${sh.totals.openEnds} dangling`);
-console.log(`  critical: ${sh.totals.critical}   near-critical: ${sh.totals.nearCritical}`);
-console.log(`  finish: ${sh.network.projectFinish} (${sh.network.durationDays} working days)`);
-console.log(`  SCORE ${sh.score}   ${sh.blockers} blockers, ${sh.warnings} warnings\n`);
-
-for (const c of sh.failed) {
-  console.log(`  [${c.severity}] ${c.title}`);
-  if (c.threshold) console.log(`           ${c.threshold}`);
+/* Per project, because that is how the screen assesses it. Judging three
+   unrelated schedules as one invents duplicate names across projects and a
+   critical path that spans jobs sharing no logic. */
+for (const pid of [...new Set((tasks ?? []).map((t) => t.project_id))]) {
+  const mine = tasks.filter((t) => t.project_id === pid);
+  const sh = assessSchedule(mine);
+  console.log(`  ── ${pid}`);
+  console.log(`     ${sh.totals.tasks} tasks · ${sh.totals.complete} complete · ${sh.totals.inProgress} in progress`);
+  console.log(`     logic: ${sh.totals.withLogic}/${sh.totals.tasks} linked, ${sh.totals.openEnds} dangling · critical ${sh.totals.critical} · near ${sh.totals.nearCritical}`);
+  console.log(`     finish ${sh.network.projectFinish} (${sh.network.durationDays} working days)`);
+  console.log(`     SCORE ${sh.score}   ${sh.blockers} blockers, ${sh.warnings} warnings, ${sh.checks.filter((c) => c.passed).length}/${sh.checks.length} checks passed`);
+  for (const c of sh.failed) console.log(`       [${c.severity}] ${c.title}${c.threshold ? `   (${c.threshold})` : ''}`);
+  console.log();
 }
-console.log(`\n  passed: ${sh.checks.filter((c) => c.passed).length} of ${sh.checks.length} checks`);
 
 /* ── budget ──────────────────────────────────────────────────────────────── */
 

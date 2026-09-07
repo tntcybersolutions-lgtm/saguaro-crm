@@ -71,6 +71,101 @@ const check = (name: string, cond: boolean, detail: string) => {
     s.type === 'FS' && s.lag > 0, `${s.type} +${s.lag}d — concrete cure, not a hole in the logic`);
 }
 
+/* ── a link that runs backwards against the dates is refused ─────────────── */
+
+{
+  /* The live shape: WBS numbering and the calendar disagree. 3.3 was planned to
+     start on 10 September and 4.1 on 1 August. Following the numbering blindly
+     produced a start-to-start with the lag clamped to zero, which dragged 4.1
+     five weeks later and pushed the project finish out with it. */
+  const tasks: CpmTask[] = [
+    { id: 'a', name: 'Envelope seal', wbs: '3.3', phase: 'Envelope', start_date: '2026-09-10', end_date: '2026-11-05', predecessors: [] },
+    { id: 'b', name: 'Plumbing rough', wbs: '4.1', phase: 'MEP', start_date: '2026-08-03', end_date: '2026-10-15', predecessors: [] },
+  ];
+  const plan = suggestLogic(tasks);
+  check('a predecessor that starts AFTER its successor is refused',
+    !plan.suggestions.some((s) => s.predecessorId === 'a' && s.taskId === 'b'),
+    'WBS says one order, the calendar says the other — the calendar wins');
+  check('and the link is made the way the dates run instead',
+    plan.suggestions.some((s) => s.predecessorId === 'b' && s.taskId === 'a'),
+    'b starts first, so b drives a');
+
+  const net = computeCpm(applyLogic(tasks, plan.suggestions));
+  check('so neither task is dragged later than it was planned',
+    net.byId.b.esDate === '2026-08-03', `${net.byId.b.esDate} — unchanged`);
+}
+
+/* ── a gap too long to be a lag is refused ───────────────────────────────── */
+
+{
+  /* The live shape: the phase rule hung Electrical Rough-in off Site
+     Mobilization across five months and called the wait a lag. A link carrying
+     eight times more waiting than working is a missing predecessor wearing a
+     relationship's clothes. */
+  const tasks: CpmTask[] = [
+    { id: 'a', name: 'Site Mobilization', wbs: '1.1', start_date: '2026-02-01', end_date: '2026-02-20', predecessors: [] },
+    { id: 'b', name: 'Electrical Rough-in', wbs: '1.2', start_date: '2026-08-01', end_date: '2026-11-01', predecessors: [] },
+  ];
+  const plan = suggestLogic(tasks);
+  check('a gap far longer than the predecessor is not carried as a lag',
+    plan.suggestions.length === 0,
+    '115 days of waiting against 14 days of work is a predecessor nobody entered');
+  check('and the task is left honestly open rather than falsely linked',
+    plan.stillOpen.includes('b'), 'the health check can report an open end; it cannot report a lie');
+}
+
+{
+  /* A cure period is a real lag and must survive the ceiling. */
+  const tasks: CpmTask[] = [
+    { id: 'a', name: 'Slab pour', wbs: '1.1', start_date: '2026-04-01', end_date: '2026-04-24', predecessors: [] },
+    { id: 'b', name: 'Set steel', wbs: '1.2', start_date: '2026-05-11', end_date: '2026-06-05', predecessors: [] },
+  ];
+  const s = suggestLogic(tasks).suggestions[0];
+  check('a genuine cure period is still carried',
+    s && s.type === 'FS' && s.lag >= 10 && s.lag <= 20, `FS +${s?.lag}d — under the ceiling, so it survives`);
+}
+
+/* ── a phase hangs off the real end of the phase before it ───────────────── */
+
+{
+  /* The predecessor for a phase boundary is the last-finishing task of the
+     previous phase, LINKED OR NOT. Building that lookup from the unlinked
+     leftovers meant that by the time MEP was reached the only Sitework task
+     left was the mobilisation, and MEP was hung off it across the whole job. */
+  const tasks: CpmTask[] = [
+    { id: 'm', name: 'Mobilise', phase: 'Sitework', wbs: '1.1', start_date: '2026-02-02', end_date: '2026-02-20', predecessors: [] },
+    { id: 'e', name: 'Earthwork', phase: 'Sitework', wbs: '1.2', start_date: '2026-02-23', end_date: '2026-04-10', predecessors: [] },
+    { id: 'p', name: 'Plumbing rough', phase: 'MEP', start_date: '2026-04-13', end_date: '2026-06-05', predecessors: [] },
+  ];
+  const plan = suggestLogic(tasks);
+  const mep = plan.suggestions.find((s) => s.taskId === 'p');
+  check('the phase boundary uses the last task of the previous phase',
+    mep?.predecessorId === 'e', `${mep?.predecessorName} — not the mobilisation five weeks earlier`);
+}
+
+/* ── branches that drive nothing get closed ──────────────────────────────── */
+
+{
+  /* The live failure. Two chains grow forwards from the same start; one of
+     them ends mid-project and drives nothing, so it collects float it has not
+     earned and cannot push the finish no matter how late it runs. */
+  const tasks: CpmTask[] = [
+    { id: 'a', name: 'Mobilise', phase: 'Sitework', wbs: '1.1', start_date: '2026-02-02', end_date: '2026-02-20', predecessors: [] },
+    { id: 'b', name: 'Envelope', phase: 'Envelope', wbs: '3.1', start_date: '2026-03-02', end_date: '2026-04-24', predecessors: [] },
+    { id: 'c', name: 'Rough-in', phase: 'MEP', wbs: '4.1', start_date: '2026-05-04', end_date: '2026-06-26', predecessors: [] },
+    { id: 'd', name: 'Closeout', phase: 'Closeout', wbs: '6.1', start_date: '2026-07-01', end_date: '2026-07-31', predecessors: [] },
+  ];
+  const applied = applyLogic(tasks, suggestLogic(tasks).suggestions);
+  const net = computeCpm(applied);
+
+  const drivesNothing = net.tasks.filter((r) => r.successors.length === 0);
+  check('only the project finish drives nothing',
+    drivesNothing.length === 1 && drivesNothing[0].id === 'd',
+    `${drivesNothing.map((r) => r.id).join(', ')} — every other branch is tied into the network`);
+  check('and no branch is left holding phantom float',
+    net.tasks.every((r) => r.totalFloat < 44), `max float ${Math.max(...net.tasks.map((r) => r.totalFloat))} working days`);
+}
+
 /* ── loops are impossible by construction ────────────────────────────────── */
 
 {

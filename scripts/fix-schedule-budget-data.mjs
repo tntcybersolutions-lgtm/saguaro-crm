@@ -37,6 +37,9 @@ const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABA
 });
 
 const WRITE = process.argv.includes('--write');
+/* Rebuild relationships from scratch. Destroys hand-entered logic, so it is
+   opt-in and never part of the ordinary repair. */
+const RELOGIC = process.argv.includes('--relogic');
 const { suggestLogic, applyLogic, durationFromDates, findDuplicates } = await import('../lib/schedule-logic.ts');
 const { assessSchedule } = await import('../lib/schedule-health.ts');
 const { assessBudget, forecastLine } = await import('../lib/budget-health.ts');
@@ -105,10 +108,28 @@ for (const pid of projects) {
   }
 
   /* 4. logic */
-  const refreshed = live.map((t) => {
+  let refreshed = live.map((t) => {
     const u = updates.find((x) => x.id === t.id);
     return u ? { ...t, ...u.patch } : t;
   });
+
+  /* --relogic rebuilds relationships from scratch.
+   *
+   * Needed when the rules that generate them change — the first pass encoded
+   * every accidental date gap as a lag and every accidental overlap as
+   * start-to-start, which produced links that reproduced the dates and moved
+   * for nothing. This DISCARDS existing logic, including anything entered by
+   * hand, so it is behind a flag and never part of the ordinary repair. */
+  if (RELOGIC) {
+    say(`   --relogic: discarding ${refreshed.filter((t) => parseDependencies(t.predecessors).length).length} existing relationships and rebuilding`);
+    if (WRITE) {
+      for (const t of refreshed) {
+        const { error } = await db.from('schedule_tasks').update({ predecessors: [] }).eq('id', t.id);
+        if (error) { console.error('   clear failed:', error.message); process.exit(1); }
+      }
+    }
+    refreshed = refreshed.map((t) => ({ ...t, predecessors: [] }));
+  }
   const plan = suggestLogic(refreshed);
   if (plan.suggestions.length) {
     say(`   logic: proposing ${plan.suggestions.length} relationships`);

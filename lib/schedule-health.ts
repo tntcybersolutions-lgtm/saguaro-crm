@@ -112,37 +112,95 @@ export function assessSchedule(
     });
   }
 
-  /* ── 2. Leads. Negative lag hides real sequence ───────────────────────── */
+  /* A task can be fully linked and still be a dead end.
+   *
+   * The check above only catches a task with NEITHER a predecessor NOR a
+   * successor. DCMA counts a task missing EITHER, and the difference is not
+   * academic. On this platform's own demo project a nine-task chain ran
+   * 1.1 Site Mobilization through 3.3 Building Envelope Seal and then simply
+   * stopped, driving nothing. Every task in it was "linked", the schedule
+   * reported zero dangling, and the whole branch sat on five weeks of float
+   * that existed only because nothing downstream was waiting on it. Delay any
+   * of those nine and the project finish would not have moved a day — which is
+   * precisely the failure logic is supposed to prevent.
+   *
+   * The last task to finish is allowed to drive nothing; it is the finish. The
+   * first to start is allowed to be driven by nothing. Everything else owes
+   * the network a link in both directions. */
+  const openEndIds = new Set(openEnds.map((t) => String(t.id)));
+  if (n > 0 && withLogic > 0) {
+    const efs = network.tasks.map((r) => r.ef);
+    const ess = network.tasks.map((r) => r.es);
+    const lastFinish = Math.max(...efs);
+    const firstStart = Math.min(...ess);
 
-  const leads = tasks.filter((t) => parseDependencies(t.predecessors).some((d) => (d.lag ?? 0) < 0));
-  add({
-    id: 'leads', severity: 'warn',
-    title: `${leads.length} relationship${leads.length === 1 ? ' uses' : 's use'} a negative lag`,
-    detail: 'A lead makes a successor start before its predecessor finishes. It usually means the real sequence has not been modelled — break the predecessor into two tasks instead.',
-    count: leads.length, pct: pctOf(leads.length, n), threshold: 'DCMA: 0 permitted',
-    taskIds: leads.slice(0, 20).map((t) => String(t.id)),
-  });
+    const deadEnds = tasks.filter((t) => {
+      const r = network.byId[String(t.id)];
+      return r && r.successors.length === 0 && r.ef < lastFinish && !openEndIds.has(String(t.id));
+    });
+    add({
+      id: 'dead-ends', severity: 'warn',
+      title: `${deadEnds.length} task${deadEnds.length === 1 ? ' drives' : 's drive'} nothing downstream`,
+      detail: 'A task with no successor cannot push the project finish, so it collects float it has not earned and slips without anyone hearing about it. Only the last task to finish is allowed to drive nothing.',
+      count: deadEnds.length, pct: pctOf(deadEnds.length, n),
+      threshold: 'DCMA: 0 permitted besides the project finish',
+      taskIds: deadEnds.slice(0, 40).map((t) => String(t.id)),
+    });
 
-  /* ── 3. Lags. Excessive lag substitutes for missing work ──────────────── */
+    const orphanStarts = tasks.filter((t) => {
+      const r = network.byId[String(t.id)];
+      return r && r.predecessors.length === 0 && r.es > firstStart && !openEndIds.has(String(t.id));
+    });
+    add({
+      id: 'orphan-starts', severity: 'warn',
+      title: `${orphanStarts.length} task${orphanStarts.length === 1 ? ' is' : 's are'} driven by nothing`,
+      detail: 'A task with no predecessor is pinned to the date somebody typed. When the work in front of it slips, this one does not move, and the schedule quietly stops describing the job.',
+      count: orphanStarts.length, pct: pctOf(orphanStarts.length, n),
+      threshold: 'DCMA: 0 permitted besides the project start',
+      taskIds: orphanStarts.slice(0, 40).map((t) => String(t.id)),
+    });
+  }
 
-  const lagged = tasks.filter((t) => parseDependencies(t.predecessors).some((d) => (d.lag ?? 0) > 0));
-  add({
-    id: 'lags', severity: 'note',
-    title: `${lagged.length} relationship${lagged.length === 1 ? ' carries' : 's carry'} a positive lag`,
-    detail: 'A lag is unmodelled time. A few are fine — concrete cure, submittal review. Many usually means work that should be its own task.',
-    count: lagged.length, pct: pctOf(lagged.length, n), threshold: 'DCMA: under 5% of relationships',
-    passed: pctOf(lagged.length, n) <= 5,
-  });
-
-  /* ── 4. Relationship types. FS should dominate ────────────────────────── */
-
-  let totalRels = 0, fsRels = 0;
+  /* Relationship-level counts. These checks are stated as a share OF
+     RELATIONSHIPS, so they have to be counted that way — the first version
+     counted TASKS carrying a lag and divided by the TASK count, which is a
+     different number against a threshold that does not describe it. */
+  let totalRels = 0, fsRels = 0, lagRels = 0, leadRels = 0;
+  const leadTaskIds: string[] = [];
+  const lagTaskIds: string[] = [];
   for (const t of tasks) {
     for (const d of parseDependencies(t.predecessors)) {
       totalRels++;
       if ((d.type ?? 'FS') === 'FS') fsRels++;
+      const lag = d.lag ?? 0;
+      if (lag < 0) { leadRels++; if (!leadTaskIds.includes(String(t.id))) leadTaskIds.push(String(t.id)); }
+      if (lag > 0) { lagRels++; if (!lagTaskIds.includes(String(t.id))) lagTaskIds.push(String(t.id)); }
     }
   }
+  const relPct = (x: number) => (totalRels > 0 ? Math.round((x / totalRels) * 1000) / 10 : 0);
+
+  /* ── 2. Leads. Negative lag hides real sequence ───────────────────────── */
+
+  add({
+    id: 'leads', severity: 'warn',
+    title: `${leadRels} relationship${leadRels === 1 ? ' uses' : 's use'} a negative lag`,
+    detail: 'A lead makes a successor start before its predecessor finishes. It usually means the real sequence has not been modelled — break the predecessor into two tasks instead.',
+    count: leadRels, pct: relPct(leadRels), threshold: 'DCMA: 0 permitted',
+    taskIds: leadTaskIds.slice(0, 20),
+  });
+
+  /* ── 3. Lags. Excessive lag substitutes for missing work ──────────────── */
+
+  add({
+    id: 'lags', severity: 'note',
+    title: `${lagRels} of ${totalRels} relationship${totalRels === 1 ? '' : 's'} carr${lagRels === 1 ? 'ies' : 'y'} a positive lag${totalRels ? ` (${relPct(lagRels)}%)` : ''}`,
+    detail: 'A lag is unmodelled time. A few are fine — concrete cure, submittal review. Many usually means work that should be its own task, and a lag doing the sequencing means nothing moves when reality does.',
+    count: lagRels, pct: relPct(lagRels), threshold: 'DCMA: under 5% of relationships',
+    passed: totalRels === 0 || relPct(lagRels) <= 5,
+  });
+
+  /* ── 4. Relationship types. FS should dominate ────────────────────────── */
+
   const fsPct = totalRels > 0 ? pctOf(fsRels, totalRels) : 0;
   add({
     id: 'rel-types', severity: 'note',
