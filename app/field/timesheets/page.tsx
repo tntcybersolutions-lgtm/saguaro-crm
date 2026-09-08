@@ -650,7 +650,7 @@ function TimesheetsInner() {
             borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px',
           }} />
           Loading timesheets...
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { to { transform: rotate(360deg); } }` }} />
         </div>
       )}
 
@@ -1231,13 +1231,13 @@ function TimesheetsInner() {
       )}
 
       {/* ── Print styles ── */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           body { background: #fff !important; color: #000 !important; }
           div { border-color: #ccc !important; }
           button, input[type="checkbox"] { display: none !important; }
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

@@ -90,7 +90,7 @@ h1.pmH1{font-size:clamp(28px,4.4vw,46px)!important;font-weight:900!important;lin
 `;
 
 export function PremiumFX() {
-  return <style>{PREMIUM_FX}</style>;
+  return <style dangerouslySetInnerHTML={{ __html: PREMIUM_FX }} />;
 }
 
 // ─── Aurora backdrop ─────────────────────────────────────────────────────────

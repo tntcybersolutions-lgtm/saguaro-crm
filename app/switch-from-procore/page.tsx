@@ -27,7 +27,7 @@ export default function SwitchFromProcorePage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: ${DARK}; color: ${TEXT}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 0 40px; height: 68px; }
@@ -122,7 +122,7 @@ export default function SwitchFromProcorePage() {
         .calc-input-field:focus { border-color: ${GOLD}; }
         .comparison-table tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
         .comparison-table tr:hover td { background: rgba(255,255,255,0.05); }
-      `}</style>
+      ` }} />
 
       {/* ─── STICKY NAV ─── */}
       <nav style={{

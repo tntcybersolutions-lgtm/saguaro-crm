@@ -465,7 +465,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
         </div>
       </footer>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 768px) {
           .ccp-desktop { display: none !important; }
           .ccp-mobile { display: flex !important; }
@@ -481,7 +481,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
             border-top: 1px solid ${BORDER};
           }
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

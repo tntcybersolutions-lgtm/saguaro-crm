@@ -372,11 +372,11 @@ export function ConfiguredDashboard({ layout }: { layout: SavedLayout }) {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .${cls}{display:grid;gap:16px;grid-template-columns:repeat(${columns},minmax(0,1fr));}
         @media (max-width:1024px){.${cls}{grid-template-columns:repeat(2,minmax(0,1fr));}}
         @media (max-width:640px){.${cls}{grid-template-columns:1fr;}.${cls}>*{grid-column:span 1 !important;}}
-      `}</style>
+      ` }} />
       <div className={cls}>
         {layout.widgets.map(w => {
           const meta = WIDGET_BY_ID[w.catalogId];

@@ -1011,7 +1011,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(3,5,8,0.96)', zIndex: 60, display: 'flex', flexDirection: 'column', fontFamily: 'system-ui,Segoe UI,sans-serif' }}>
-      <style>{'@keyframes spin{to{transform:rotate(360deg)}}'}</style>
+      <style dangerouslySetInnerHTML={{ __html: '@keyframes spin{to{transform:rotate(360deg)}}' }} />
       {/* top bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderBottom: `1px solid ${LINE}`, background: PANEL }}>
         <button onClick={onClose} style={{ ...miniBtn, width: 'auto', padding: '0 12px', gap: 7 }}><G g="close" s={16} />Close</button>

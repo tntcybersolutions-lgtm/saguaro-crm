@@ -290,7 +290,7 @@ export default function DesignStudioPage() {
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         padding: '0 24px', height: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <style>{`@media (max-width: 768px){ .dstudio-nav-links{ display:none !important } }`}</style>
+        <style dangerouslySetInnerHTML={{ __html: `@media (max-width: 768px){ .dstudio-nav-links{ display:none !important } }` }} />
         <Link href="/" style={{ color: GOLD, fontWeight: 700, fontSize: 14, letterSpacing: '0.14em', textDecoration: 'none' }}>SAGUARO</Link>
         <div className="dstudio-nav-links" style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
           {['How It Works', 'Examples', 'Pricing', 'Compare'].map(link => (
@@ -1059,7 +1059,7 @@ export default function DesignStudioPage() {
       </div>
 
       {/* ── Global Keyframe Animations ── */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1069,7 +1069,7 @@ export default function DesignStudioPage() {
         ::-webkit-scrollbar { height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-      `}</style>
+      ` }} />
     </div>
   );
 }
