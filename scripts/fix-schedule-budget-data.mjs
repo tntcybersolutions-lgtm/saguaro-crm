@@ -52,6 +52,12 @@ const REBASELINE = process.argv.includes('--rebaseline');
    projects on this instance are seeded sample jobs of which only one is
    labelled a demo — scoping the blast radius is cheaper than being sorry. */
 const ONLY = (process.argv.find((a) => a.startsWith('--project=')) ?? '').split('=')[1] || null;
+/* Takt window, in working days. The library defaults to 20 — a month of work,
+   the long end of the one-to-four-week range takt planning uses. A smaller job
+   wants a smaller window: at 20 a nine-task medical plaza has exactly one task
+   long enough to split, which buys nothing, while at 12 five of them come apart
+   into the same zones and the trades start flowing. */
+const TARGET = Number((process.argv.find((a) => a.startsWith('--target=')) ?? '').split('=')[1]) || undefined;
 const { suggestLogic, applyLogic, durationFromDates, findDuplicates } = await import('../lib/schedule-logic.ts');
 const { suggestSplits, applySplits } = await import('../lib/schedule-split.ts');
 const { assessSchedule } = await import('../lib/schedule-health.ts');
@@ -64,8 +70,18 @@ const CSI_NAMES = Object.fromEntries(
   Object.entries(CSI_DIVISIONS).map(([k, v]) => [k, v?.name ?? `Division ${k}`]),
 );
 
-/* The date the schedule is being assessed as of. */
-const DATA_DATE = '2026-09-07';
+/**
+ * The date the schedule is assessed as of.
+ *
+ * Defaults to today, and must. A hardcoded literal here rots by a day every
+ * day: unstarted work is rescheduled forward from the data date, so a stale one
+ * silently disagrees with every reader that uses the real clock — which is how
+ * a repair that reported "0 tasks rescheduled" sat next to a live assessment
+ * claiming 32 had moved. They were a day apart. Override with --data-date= to
+ * assess against a past cutoff.
+ */
+const DATA_DATE = (process.argv.find((a) => a.startsWith('--data-date=')) ?? '').split('=')[1]
+  || new Date().toISOString().slice(0, 10);
 
 const m = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
 const say = (s = '') => console.log(s);
@@ -129,6 +145,33 @@ for (const pid of projects) {
     return u ? { ...t, ...u.patch } : t;
   });
 
+  /* Snapshot before anything destructive.
+   *
+   * --split deletes and recreates rows; --rebaseline overwrites dates. Both
+   * destroy the only record of what the schedule used to say, and
+   * schedule_baselines has existed since the table was created holding zero
+   * rows, so neither has ever been reversible. Earlier in this session a bug in
+   * the split step wiped progress off 52 rows with nothing to restore from --
+   * this is that lesson, written down. */
+  if (WRITE && (SPLIT || REBASELINE) && refreshed.length) {
+    const snap = await db.from('schedule_baselines').insert({
+      tenant_id: refreshed[0]?.tenant_id ?? null,
+      project_id: pid,
+      name: `Before ${[SPLIT && 'split', REBASELINE && 'rebaseline'].filter(Boolean).join(' + ')} ${new Date().toISOString().slice(0, 10)}`,
+      snapshot: refreshed.map((t) => ({
+        id: t.id, name: t.name, wbs: t.wbs, phase: t.phase, trade: t.trade,
+        start_date: t.start_date, end_date: t.end_date, duration: t.duration,
+        pct_complete: t.pct_complete, status: t.status,
+        predecessors: parseDependencies(t.predecessors),
+        area: t.area, area_index: t.area_index, parent_task_id: t.parent_task_id,
+        es: t.es, ef: t.ef, ls: t.ls, lf: t.lf,
+        total_float: t.total_float, is_critical: t.is_critical,
+      })),
+    });
+    if (snap.error) { console.error('   baseline snapshot failed:', snap.error.message); process.exit(1); }
+    say(`   baseline saved — ${refreshed.length} rows, restorable from schedule_baselines`);
+  }
+
   /* --split breaks whole-building activities into areas.
    *
    * The live shape: eight tasks over 44 working days, each covering the whole
@@ -143,6 +186,7 @@ for (const pid of projects) {
   if (SPLIT) {
     const proposal = suggestSplits(refreshed, {
       idFor: () => randomUUID(),
+      targetDays: TARGET,
     });
     if (proposal.plans.length) {
       const pieces = proposal.plans.reduce((a, p) => a + p.pieces.length, 0);
@@ -273,28 +317,6 @@ for (const pid of projects) {
       if (plan.moves.length > 3) say(`     … and ${plan.moves.length - 3} more`);
 
       if (WRITE) {
-        /* Snapshot before moving anything.
-         *
-         * schedule_baselines has existed since the table was created and holds
-         * zero rows — so a rebaseline has never been reversible, and earlier in
-         * this session a bug in the split step wiped progress off 52 rows with
-         * nothing to restore from. Dates that get overwritten here are the only
-         * record of what the plan used to say. */
-        const snap = await db.from('schedule_baselines').insert({
-          tenant_id: refreshed[0]?.tenant_id ?? null,
-          project_id: pid,
-          name: `Before rebaseline ${new Date().toISOString().slice(0, 10)}`,
-          snapshot: refreshed.map((t) => ({
-            id: t.id, name: t.name, start_date: t.start_date, end_date: t.end_date,
-            duration: t.duration, pct_complete: t.pct_complete, status: t.status,
-            predecessors: parseDependencies(t.predecessors),
-            es: t.es, ef: t.ef, ls: t.ls, lf: t.lf,
-            total_float: t.total_float, is_critical: t.is_critical,
-          })),
-        });
-        if (snap.error) { console.error('   baseline snapshot failed:', snap.error.message); process.exit(1); }
-        say(`     baseline saved — ${refreshed.length} rows, restorable from schedule_baselines`);
-
         const frozen = new Set(plan.frozen);
         for (const t of refreshed) {
           const n = plan.network.byId[String(t.id)];
@@ -314,7 +336,11 @@ for (const pid of projects) {
           if (error) { console.error('   rebaseline failed:', error.message); process.exit(1); }
         }
       }
-      changes += refreshed.length;
+      /* Count what actually moves, not every row visited. Filling float and
+         criticality on a row whose dates are already correct is not a change,
+         and reporting it as one makes the tally useless for spotting a run that
+         did nothing. */
+      changes += plan.moves.length;
     } else if (from && to && to < from) {
       say(`   the logic finishes ${to}, ${Math.round((Date.parse(from) - Date.parse(to)) / 86400000)} calendar days before the stored dates say — re-run with --rebaseline to adopt it`);
     }
