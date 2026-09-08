@@ -65,6 +65,10 @@ interface LineItem {
   labor_hours: number;
   labor_cost: number;
   material_cost: number;
+  /* Returned by the line-items route alongside material and labour. Leaving
+     these off the type is how they got left out of the sell price. */
+  equipment_cost: number;
+  sub_cost: number;
   crew_size: number;
   duration: number;
   division: string;
@@ -127,6 +131,8 @@ const emptyLineItem: Omit<LineItem, 'id' | 'takeoff_project_id'> = {
   labor_hours: 0,
   labor_cost: 0,
   material_cost: 0,
+  equipment_cost: 0,
+  sub_cost: 0,
   crew_size: 1,
   duration: 0,
   division: '',
@@ -240,13 +246,23 @@ function EstimatePage() {
 
   // Computed totals — memoized so they recompute only when the line items change,
   // not on every keystroke in an inline-edit cell (which sets unrelated editValue state).
-  const { totalMaterial, totalLabor, totalExtended, totalLaborHrs } = useMemo(() => ({
+  const { totalMaterial, totalLabor, totalEquipment, totalSub, totalExtended, totalLaborHrs } = useMemo(() => ({
     totalMaterial: lineItems.reduce((s, i) => s + num(i.material_cost), 0),
     totalLabor: lineItems.reduce((s, i) => s + num(i.labor_cost), 0),
+    totalEquipment: lineItems.reduce((s, i) => s + num(i.equipment_cost), 0),
+    totalSub: lineItems.reduce((s, i) => s + num(i.sub_cost), 0),
     totalExtended: lineItems.reduce((s, i) => s + num(i.extended_cost), 0),
     totalLaborHrs: lineItems.reduce((s, i) => s + num(i.labor_hours), 0),
   }), [lineItems]);
-  const grandTotal = totalMaterial + totalLabor;
+
+  /* Every cost on the line, not just two of them.
+   *
+   * This was material + labour, which quietly left equipment and subcontract
+   * cost out of the number the markup is applied to. On a job where the subs
+   * carry most of the scope — which is most commercial work — that does not
+   * shade the price, it prices the job at a fraction of its cost and calls the
+   * result a margin. */
+  const grandTotal = totalMaterial + totalLabor + totalEquipment + totalSub;
   const markupMultiplier = 1 + num(overhead) / 100 + num(profit) / 100 + num(contingency) / 100;
   const sellPrice = grandTotal * markupMultiplier;
   const grossMargin = sellPrice > 0 ? ((sellPrice - grandTotal) / sellPrice) * 100 : 0;

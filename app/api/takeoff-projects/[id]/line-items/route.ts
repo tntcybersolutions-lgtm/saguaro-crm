@@ -32,9 +32,38 @@ export async function GET(
     const { data, error } = await query;
     if (error) throw error;
 
-    return NextResponse.json({ lineItems: data || [] });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    /* Mirror the alias map the POST applies, or nothing reads back.
+     *
+     * The write path translates the generic names the estimate screen uses
+     * (`material_cost`, `labor_cost`, `equipment_cost`) into the real columns
+     * (`total_material`, `total_labor`, `total_equipment`). This read returned
+     * `select('*')` — the REAL names — so the screen looked for
+     * `i.material_cost`, found undefined, and every total on it summed to zero.
+     * The data was there the whole time; the translation only ran one way.
+     *
+     * Both names are returned rather than renamed, so anything already reading
+     * the real column keeps working. */
+    const lineItems = (data ?? []).map((r: Record<string, unknown>) => ({
+      ...r,
+      unit_cost: r.unit_material_cost ?? null,
+      material_cost: r.total_material ?? null,
+      labor_cost: r.total_labor ?? null,
+      equipment_cost: r.total_equipment ?? null,
+      sub_cost: r.total_sub ?? null,
+      /* What the line is worth in total. The screen had no column for this and
+         was adding material and labour by hand, which silently dropped
+         equipment and subcontract cost out of the sell price. */
+      extended_cost:
+        Number(r.total_material ?? 0) + Number(r.total_labor ?? 0) +
+        Number(r.total_equipment ?? 0) + Number(r.total_sub ?? 0),
+    }));
+
+    return NextResponse.json({ lineItems });
+  } catch (e) {
+    /* A bare `catch {}` returning a flat 500 was hiding the reason entirely --
+       the house pattern logs the real error server-side against a correlation
+       id and returns a message safe to show. */
+    return apiError('takeoff-projects/line-items', e);
   }
 }
 
@@ -59,14 +88,39 @@ export async function POST(
     const directFields = [
       'csi_code', 'csi_division', 'csi_description', 'category',
       'quantity', 'unit', 'notes', 'sort_order',
+      /* The writable cost columns. There was no path to labour, equipment or
+         subcontract cost at all through this route — only material, via the
+         `unit_cost` alias below. */
+      'waste_factor_pct',
+      'unit_material_cost', 'unit_labor_cost', 'unit_equipment_cost', 'unit_sub_cost',
     ];
-    // Generic cost aliases -> real column names (per codebase export-route convention:
-    // unit_cost==unit_material_cost, material_cost==total_material, etc.)
+
+    /* The totals are GENERATED columns, and writing them is why this route
+     * returned 500 on every single insert it has ever handled.
+     *
+     *   total_material = quantity * (1 + waste_factor_pct/100) * unit_material_cost
+     *
+     * Postgres computes all four and refuses a value: "cannot insert a
+     * non-DEFAULT value into column total_material". The old alias map pointed
+     * material_cost/labor_cost/equipment_cost straight at them, so no line item
+     * could ever be created — which is why takeoff_projects carries three rows
+     * and not one line between them.
+     *
+     * Only unit costs are written now, and the database derives the rest. */
     const costAliasMap: Record<string, string> = {
       unit_cost: 'unit_material_cost',
-      material_cost: 'total_material',
-      labor_cost: 'total_labor',
-      equipment_cost: 'total_equipment',
+    };
+
+    /* Callers that send a line TOTAL rather than a unit rate — the estimate
+     * screen sends material_cost as quantity x unit_cost — are converted back
+     * to the unit rate the column actually holds, so an existing client keeps
+     * working without being rewritten. Skipped when the caller already gave the
+     * unit rate, and when there is no quantity to divide by. */
+    const totalToUnit: Record<string, string> = {
+      material_cost: 'unit_material_cost',
+      labor_cost: 'unit_labor_cost',
+      equipment_cost: 'unit_equipment_cost',
+      sub_cost: 'unit_sub_cost',
     };
     const record: Record<string, any> = {
       description,
@@ -81,6 +135,16 @@ export async function POST(
     }
     for (const [alias, col] of Object.entries(costAliasMap)) {
       if (body[alias] !== undefined) record[col] = body[alias];
+    }
+
+    const qty = Number(body.quantity);
+    const waste = Number(body.waste_factor_pct);
+    const adjusted = Number.isFinite(qty) ? qty * (1 + (Number.isFinite(waste) ? waste : 0) / 100) : 0;
+    for (const [alias, col] of Object.entries(totalToUnit)) {
+      if (body[alias] === undefined || record[col] !== undefined) continue;
+      const total = Number(body[alias]);
+      if (!Number.isFinite(total) || adjusted <= 0) continue;
+      record[col] = total / adjusted;
     }
 
     // Fields with no dedicated column are folded into the metadata jsonb.
@@ -103,8 +167,11 @@ export async function POST(
     if (error) throw error;
 
     return NextResponse.json({ lineItem: data }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    /* A bare `catch {}` returning a flat 500 was hiding the reason entirely --
+       the house pattern logs the real error server-side against a correlation
+       id and returns a message safe to show. */
+    return apiError('takeoff-projects/line-items', e);
   }
 }
 
