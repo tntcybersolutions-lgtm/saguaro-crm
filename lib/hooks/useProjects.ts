@@ -1,8 +1,26 @@
 'use client';
 import useSWR, { mutate } from 'swr';
 
+/**
+ * Send the bearer token, not just the cookie.
+ *
+ * There are two ways to prove who you are to this API — the httpOnly cookie the
+ * server set at login, and the `Authorization: Bearer` header taken from the
+ * browser session. Most of the app sends the header. This hook sent neither and
+ * leaned entirely on the cookie, so the two could disagree, and when they did
+ * the failure was silent and specific: the page body loaded its data fine while
+ * the header read "Choose a job", because the breadcrumb was asking as a
+ * different identity than the screen was.
+ *
+ * That gap is not hypothetical — `ensureBrowserSession()` exists in
+ * lib/supabase-browser because the browser client routinely starts signed out
+ * while the cookie is live, and the reverse happens when a cookie expires
+ * under a session that is still good. Sending both means whichever one the
+ * server prefers, it resolves to the same person.
+ */
 const fetcher = async (url: string) => {
-  const r = await fetch(url);
+  const { getAuthHeaders } = await import('@/lib/supabase-browser');
+  const r = await fetch(url, { headers: await getAuthHeaders(), credentials: 'include' });
   if (!r.ok) throw new Error(`Request failed (${r.status})`);
   return r.json();
 };

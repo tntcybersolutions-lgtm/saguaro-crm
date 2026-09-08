@@ -74,7 +74,14 @@ export default function HeaderProjectPicker() {
     if (!currentId) return;
     if (list.some((p) => p.id === currentId)) return;
     let cancelled = false;
-    fetch(`/api/projects/${currentId}?fields=id,name`)
+    /* Same reasoning as the fetcher in useProjects: send the bearer token as
+       well as the cookie, so the crumb resolves as the same identity the page
+       body is using. Asking as somebody else returns 404 and the crumb silently
+       falls back to "Choose a job" — the one crumb whose whole purpose is
+       telling you where you are. */
+    import('@/lib/supabase-browser')
+      .then(({ getAuthHeaders }) => getAuthHeaders())
+      .then((headers) => fetch(`/api/projects/${currentId}?fields=id,name`, { headers, credentials: 'include' }))
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (cancelled || !d) return;
