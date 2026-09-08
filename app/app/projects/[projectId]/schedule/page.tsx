@@ -19,13 +19,20 @@ import Suggest from '@/components/ui/Suggest';
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='#F59E0B';
 
-const STATUSES=['not_started','in_progress','completed','delayed','on_hold'];
+/* The database stores 'complete'. This page alone spelled it 'completed', so
+   every finished task read as unfinished here: "Tasks Complete 0/54" against 24
+   that were done, no green bars on the Gantt, and the status filter matching
+   nothing. `isComplete` accepts both spellings on the way in, because rows
+   written by the old code are still out there, and everything written from here
+   now uses the spelling the rest of the platform already agreed on. */
+const isComplete=(s:unknown)=>{const v=String(s??'').toLowerCase();return v==='complete'||v==='completed';};
+const STATUSES=['not_started','in_progress','complete','delayed','on_hold'];
 const STATUS_LABELS:Record<string,string>={
   not_started:'Not Started',in_progress:'In Progress',
-  completed:'Completed',delayed:'Delayed',on_hold:'On Hold',
+  complete:'Complete',completed:'Complete',delayed:'Delayed',on_hold:'On Hold',
 };
 const STATUS_COLORS:Record<string,string>={
-  not_started:DIM,in_progress:GOLD,completed:GREEN,delayed:RED,on_hold:ORANGE,
+  not_started:DIM,in_progress:GOLD,complete:GREEN,completed:GREEN,delayed:RED,on_hold:ORANGE,
 };
 const PHASES=['Pre-Construction','Foundation','Framing','MEP Rough','Insulation',
   'Drywall','Finishes','MEP Trim','Punch List','Closeout','Other'];
@@ -128,7 +135,7 @@ function GanttChart({tasks}:{tasks:any[]}){
         const left=pct(task.start_date);
         const width=Math.max(.5,pct(task.end_date)-left);
         const color=STATUS_COLORS[task.status]||DIM;
-        const isDone=task.status==='completed';
+        const isDone=isComplete(task.status);
         return(
           <div key={task.id} style={{display:'flex',alignItems:'center',
             minHeight:36,borderBottom:`1px solid rgba(255,255,255,0.08)`,minWidth:700}}>
@@ -358,7 +365,7 @@ export default function SchedulePage(){
   }
 
   async function updatePct(task:any,pct:number){
-    const newStatus=pct===100?'completed':pct>0?'in_progress':'not_started';
+    const newStatus=pct===100?'complete':pct>0?'in_progress':'not_started';
     const prevPct=task.pct_complete??0,prevStatus=task.status;
     // Optimistic patch (house pattern: budget saveEdit) — the bar and the open
     // panel move instantly; rollback + toast if the server disagrees.
@@ -395,7 +402,7 @@ export default function SchedulePage(){
   const daysLeft=projectEnd?Math.max(0,daysBetween(today,projectEnd)):0;
   const avgPct=tasks.length?Math.round(tasks.reduce((s:number,t:any)=>s+(t.pct_complete??0),0)/tasks.length):0;
   const delayedCount=tasks.filter((t:any)=>t.status==='delayed').length;
-  const completedCount=tasks.filter((t:any)=>t.status==='completed').length;
+  const completedCount=tasks.filter((t:any)=>isComplete(t.status)).length;
 
   return(
     <div style={{display:'flex',height:'100%',minHeight:0,position:'relative'}}>
