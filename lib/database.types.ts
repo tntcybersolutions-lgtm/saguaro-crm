@@ -25663,6 +25663,9 @@ export type Database = {
       }
       schedule_tasks: {
         Row: {
+          area: string | null
+          area_index: number | null
+          parent_task_id: string | null
           created_at: string | null
           duration: number | null
           ef: number | null
@@ -25687,6 +25690,9 @@ export type Database = {
           wbs: string | null
         }
         Insert: {
+          area?: string | null
+          area_index?: number | null
+          parent_task_id?: string | null
           created_at?: string | null
           duration?: number | null
           ef?: number | null
@@ -25711,6 +25717,9 @@ export type Database = {
           wbs?: string | null
         }
         Update: {
+          area?: string | null
+          area_index?: number | null
+          parent_task_id?: string | null
           created_at?: string | null
           duration?: number | null
           ef?: number | null

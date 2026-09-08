@@ -27,6 +27,7 @@
  */
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
 
 for (const line of readFileSync('.env.local', 'utf8').split(/\r?\n/)) {
   const m = /^([A-Z0-9_]+)=(.*)$/.exec(line.trim());
@@ -40,10 +41,22 @@ const WRITE = process.argv.includes('--write');
 /* Rebuild relationships from scratch. Destroys hand-entered logic, so it is
    opt-in and never part of the ordinary repair. */
 const RELOGIC = process.argv.includes('--relogic');
+/* Break whole-building activities into areas that sequence finish-to-start.
+   Replaces rows rather than editing them, so it is opt-in like --relogic. */
+const SPLIT = process.argv.includes('--split');
+/* Adopt the dates the logic actually implies, and fill the es/ef/ls/lf columns
+   that have been on this table since it was created with nothing computing
+   them. Moves real dates, so it is opt-in. */
+const REBASELINE = process.argv.includes('--rebaseline');
+/* Limit to one project. --split deletes and recreates rows, and three of the
+   projects on this instance are seeded sample jobs of which only one is
+   labelled a demo — scoping the blast radius is cheaper than being sorry. */
+const ONLY = (process.argv.find((a) => a.startsWith('--project=')) ?? '').split('=')[1] || null;
 const { suggestLogic, applyLogic, durationFromDates, findDuplicates } = await import('../lib/schedule-logic.ts');
+const { suggestSplits, applySplits } = await import('../lib/schedule-split.ts');
 const { assessSchedule } = await import('../lib/schedule-health.ts');
 const { assessBudget, forecastLine } = await import('../lib/budget-health.ts');
-const { parseDependencies } = await import('../lib/schedule-cpm.ts');
+const { parseDependencies, computeCpm } = await import('../lib/schedule-cpm.ts');
 const { CSI_DIVISIONS } = await import('../lib/construction-intelligence.ts');
 
 /** Canonical MasterFormat names, so a new line is named the way the rest are. */
@@ -60,7 +73,7 @@ say(`\n${WRITE ? '=== APPLYING ===' : '=== DRY RUN — nothing will be written =
 /* ── schedule ────────────────────────────────────────────────────────────── */
 
 const { data: allTasks } = await db.from('schedule_tasks').select('*');
-const projects = [...new Set(allTasks.map((t) => t.project_id))];
+const projects = [...new Set(allTasks.map((t) => t.project_id))].filter((p) => !ONLY || p === ONLY);
 
 for (const pid of projects) {
   const tasks = allTasks.filter((t) => t.project_id === pid);
@@ -113,6 +126,75 @@ for (const pid of projects) {
     return u ? { ...t, ...u.patch } : t;
   });
 
+  /* --split breaks whole-building activities into areas.
+   *
+   * The live shape: eight tasks over 44 working days, each covering the whole
+   * job. Because they cover the whole job they necessarily overlap, so the only
+   * logic writable between them is start-to-start with a large lag — 87.5% of
+   * relationships lagged against a DCMA threshold of 5%, and 19%
+   * finish-to-start against a threshold of 90%. Those are not three findings,
+   * they are one, and no amount of editing relationships will clear it.
+   *
+   * This replaces rows: the pieces are the real work, and leaving the parent
+   * would count 55 days of steel twice. Behind a flag for that reason. */
+  if (SPLIT) {
+    const proposal = suggestSplits(refreshed, {
+      idFor: () => randomUUID(),
+    });
+    if (proposal.plans.length) {
+      const pieces = proposal.plans.reduce((a, p) => a + p.pieces.length, 0);
+      say(`   --split: ${proposal.plans.length} whole-job tasks → ${pieces} areas`);
+      for (const p of proposal.plans.slice(0, 3)) {
+        say(`     ${p.taskName.slice(0, 30).padEnd(31)} ${p.originalDuration}d → ${p.pieces.map((x) => x.duration).join(' + ')}`);
+      }
+      if (proposal.plans.length > 3) say(`     … and ${proposal.plans.length - 3} more`);
+      say(`     ${proposal.newRelationships} finish-to-start links inside the tasks, ${proposal.taktLinks} takt links between trades`);
+
+      const splitTasks = applySplits(refreshed, proposal.plans);
+      const parentIds = new Set(proposal.plans.map((p) => p.taskId));
+
+      if (WRITE) {
+        /* Insert the pieces before deleting what they came from, so a failure
+           halfway leaves the work present twice rather than absent. */
+        for (const t of splitTasks) {
+          if (!t.parent_task_id) continue;
+          const { error } = await db.from('schedule_tasks').insert({
+            id: t.id, tenant_id: t.tenant_id, project_id: t.project_id,
+            name: t.name, start_date: t.start_date, end_date: t.end_date,
+            duration: t.duration, wbs: t.wbs, phase: t.phase ?? null,
+            /* From the piece, NOT hardcoded. An earlier version wrote
+               `status: 'not_started', pct_complete: null` here and wiped the
+               progress off 52 rows the moment it ran — the library allocates
+               progress across the pieces precisely so it survives a split, and
+               this line threw the answer away. */
+            trade: t.trade ?? null, status: t.status ?? 'not_started',
+            pct_complete: t.pct_complete ?? null,
+            predecessors: parseDependencies(t.predecessors),
+            area: t.area, area_index: t.area_index, parent_task_id: t.parent_task_id,
+          });
+          if (error) { console.error('   split insert failed:', error.message); process.exit(1); }
+        }
+        /* Rewire whatever pointed at a task that is now gone. */
+        for (const t of splitTasks) {
+          if (t.parent_task_id || parentIds.has(String(t.id))) continue;
+          const { error } = await db.from('schedule_tasks')
+            .update({ predecessors: parseDependencies(t.predecessors) }).eq('id', t.id);
+          if (error) { console.error('   split rewire failed:', error.message); process.exit(1); }
+        }
+        for (const id of parentIds) {
+          const { error } = await db.from('schedule_tasks').delete().eq('id', id);
+          if (error) { console.error('   split delete failed:', error.message); process.exit(1); }
+        }
+      }
+
+      const b = assessSchedule(refreshed, { dataDate: '2026-09-07' });
+      const a = assessSchedule(splitTasks, { dataDate: '2026-09-07' });
+      say(`     score ${b.score} → ${a.score}   over 44 days ${b.checks.find((c) => c.id === 'high-duration')?.count ?? 0} → ${a.checks.find((c) => c.id === 'high-duration')?.count ?? 0}   finish-to-start ${b.checks.find((c) => c.id === 'rel-types')?.pct ?? 0}% → ${a.checks.find((c) => c.id === 'rel-types')?.pct ?? 0}%`);
+      changes += pieces + parentIds.size;
+      refreshed = splitTasks;
+    }
+  }
+
   /* --relogic rebuilds relationships from scratch.
    *
    * Needed when the rules that generate them change — the first pass encoded
@@ -152,6 +234,48 @@ for (const pid of projects) {
     const before = assessSchedule(refreshed, { dataDate: '2026-09-07' });
     const after = assessSchedule(applied, { dataDate: '2026-09-07' });
     say(`   score ${before.score} → ${after.score}   critical path ${after.network.criticalPath.length} tasks   open ends ${before.totals.openEnds} → ${after.totals.openEnds}`);
+    refreshed = applied;
+  }
+
+  /* --rebaseline adopts the dates the logic implies.
+   *
+   * After splitting into areas the stored dates are stale by construction:
+   * every piece inherited a slice of a span that was drawn back when the task
+   * covered the whole building, and the takt links now say the work can happen
+   * earlier than that. The gap shows up as float — on the demo project, seven
+   * weeks of it — which reads as a modelling defect and is really an
+   * opportunity nobody had a way to see.
+   *
+   * Whether to take it is a decision about the job, not a data repair, so this
+   * moves nothing unless asked. It also fills es/ef/ls/lf/total_float and
+   * is_critical, which have been columns on this table since it was created
+   * with nothing ever computing them. */
+  {
+    const net = computeCpm(refreshed);
+    const finish = net.projectFinish;
+    const stored = refreshed
+      .map((t) => t.end_date).filter(Boolean).sort().pop() ?? null;
+
+    if (REBASELINE) {
+      say(`   --rebaseline: adopting the logic's dates — finish ${stored} → ${finish}`);
+      if (WRITE) {
+        for (const t of refreshed) {
+          const n = net.byId[String(t.id)];
+          if (!n) continue;
+          const { error } = await db.from('schedule_tasks').update({
+            start_date: n.esDate, end_date: n.efDate,
+            /* es/ef/ls/lf are numeric day indices, not dates — the ISO strings
+               go in start_date/end_date above. */
+            es: n.es, ef: n.ef, ls: n.ls, lf: n.lf,
+            total_float: n.totalFloat, is_critical: n.isCritical,
+          }).eq('id', t.id);
+          if (error) { console.error('   rebaseline failed:', error.message); process.exit(1); }
+        }
+      }
+      changes += refreshed.length;
+    } else if (finish && stored && finish < stored) {
+      say(`   the logic finishes ${finish}, ${Math.round((Date.parse(stored) - Date.parse(finish)) / 86400000)} calendar days before the stored dates say — re-run with --rebaseline to adopt it`);
+    }
   }
   say();
 }
@@ -159,7 +283,7 @@ for (const pid of projects) {
 /* ── budget ──────────────────────────────────────────────────────────────── */
 
 const { data: budgetLines } = await db.from('budget_lines').select('*').order('cost_code');
-const byProject = [...new Set(budgetLines.map((l) => l.project_id))];
+const byProject = [...new Set(budgetLines.map((l) => l.project_id))].filter((p) => !ONLY || p === ONLY);
 
 for (const pid of byProject) {
   const lines = budgetLines.filter((l) => l.project_id === pid);

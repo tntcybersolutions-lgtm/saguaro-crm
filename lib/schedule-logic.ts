@@ -352,12 +352,43 @@ export function suggestLogic(tasks: CpmTask[]): LogicPlan {
      * reverse. Preferring a true successor found commissioning instead, which
      * is the work that actually cannot begin until the rough-in is done. */
     const genuine = byStart.filter((c) => start(c) >= finish(t));
+    let closed = false;
     for (const cand of [...genuine, ...byStart]) {
       if (String(cand.id) === String(t.id)) continue;
       if (start(cand) < start(t)) continue;
       if (!propose(cand, t, `${nameOf(t)} finishes with nothing waiting on it, and ${nameOf(cand)} is the next work that could be`, 'low')) continue;
       succCount.set(String(t.id), (succCount.get(String(t.id)) ?? 0) + 1);
+      closed = true;
       break;
+    }
+    if (closed) continue;
+
+    /* Nothing starts after this, but something may still finish after it.
+     *
+     * The live shape after splitting into areas: the last zone of Exterior
+     * Improvements runs to 20 December while Commissioning runs the whole of
+     * December. No work starts later, so every rule above declines — and the
+     * zone drives nothing, collecting seven weeks of float it has not earned.
+     *
+     * The relationship is finish-to-finish, and this is the case it exists for:
+     * commissioning may begin over the top of the exterior work, but it cannot
+     * COMPLETE until that work does. It constrains nothing's start, so it
+     * cannot drag a date; it only stops the branch floating free. */
+    const overlapping = [...tasks]
+      .filter((c) => String(c.id) !== String(t.id) && finish(c) > finish(t) && start(c) <= finish(t))
+      .sort((a, b) => finish(a) - finish(b))[0];
+
+    if (overlapping && !wouldCycle(String(overlapping.id), String(t.id))) {
+      const lag = workDaysApprox(finish(overlapping) - finish(t));
+      suggestions.push({
+        taskId: String(overlapping.id), taskName: nameOf(overlapping),
+        predecessorId: String(t.id), predecessorName: nameOf(t),
+        type: 'FF', lag,
+        reason: `Nothing starts after ${nameOf(t)}, but ${nameOf(overlapping)} runs over the top of it and cannot finish until it does. Finish-to-finish, so it constrains no start and can drag no date.`,
+        confidence: 'low',
+      });
+      links.get(String(overlapping.id))!.add(String(t.id));
+      succCount.set(String(t.id), 1);
     }
   }
 

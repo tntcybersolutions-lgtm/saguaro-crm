@@ -6,8 +6,9 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import { SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
-import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks, Path } from '@phosphor-icons/react';
+import { WarningCircle, CalendarBlank, X, Plus, TrendUp, CheckCircle, Clock, ListChecks, Path, SquaresFour } from '@phosphor-icons/react';
 import ScheduleIntelligence from '@/components/schedule/ScheduleIntelligence';
+import AreaSplitPlanner from '@/components/schedule/AreaSplitPlanner';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, AutoChip, goldButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import { moduleAccent } from '@/lib/module-identity';
@@ -463,6 +464,24 @@ export default function SchedulePage(){
               style={{marginBottom:24}}
             >
               <ScheduleIntelligence tasks={tasks} />
+            </SectionCard>
+          )}
+
+          {/* Where a whole-building activity is too coarse to carry logic.
+              "Structural Steel Erection, 55 working days" overlaps every other
+              whole-building task by construction, so the only relationship
+              writable between them is start-to-start with a large lag -- and no
+              amount of editing relationships fixes a task list too coarse to
+              hold them. Splitting into areas is the cure, and the takt links it
+              creates are the part neither Procore nor Buildern will give you. */}
+          {!loading&&!loadError&&tasks.length>0&&(
+            <SectionCard
+              title="Areas & Takt Planning"
+              subtitle="Break whole-building activities into places a crew can walk, so they sequence finish-to-start and the trades flow one area behind each other"
+              icon={<SquaresFour size={17} weight="duotone" color="#F59E0B" />}
+              style={{marginBottom:24}}
+            >
+              <AreaSplitPlanner projectId={projectId} onApplied={()=>{void revalidate();}} />
             </SectionCard>
           )}
 
