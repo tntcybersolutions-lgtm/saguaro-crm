@@ -18,8 +18,8 @@
  */
 
 import {
-  computeCpm, toDayIndex, parseDependencies, workDaysBetween, FIVE_DAY,
-  type CpmTask, type CpmNetwork, type Calendar,
+  computeCpm, rescheduleFromDataDate, toDayIndex, parseDependencies, workDaysBetween, FIVE_DAY,
+  type CpmTask, type CpmNetwork, type Calendar, type ReschedulePlan,
 } from './schedule-cpm';
 
 export type CheckSeverity = 'blocker' | 'warn' | 'note';
@@ -45,7 +45,24 @@ export interface ScheduleHealth {
   warnings: number;
   /** 0-100. How much of the assessment the schedule passes, weighted. */
   score: number;
+  /**
+   * The logic network, ignoring progress. What the plan says, structurally —
+   * the right thing to check loops, dangling references and open ends against,
+   * because none of those care what has been built yet.
+   */
   network: CpmNetwork;
+  /**
+   * The same schedule with progress honoured: work that has started pinned at
+   * its actuals, everything else rescheduled from the data date.
+   *
+   * This is the one that answers "when does this finish". The logic network
+   * answers "how long would this plan take if it all ran again from the
+   * beginning", which stops being the question the moment a shovel goes in the
+   * ground. On the demo project the two disagreed by ten weeks — the logic
+   * network read 6 November because it was free to schedule September's work
+   * back in February, while the honest forecast was 3 February.
+   */
+  forecast: ReschedulePlan;
   totals: {
     tasks: number;
     complete: number;
@@ -72,16 +89,31 @@ export function assessSchedule(
   opts: { calendar?: Calendar; dataDate?: string | null; baselineFinish?: string | null } = {},
 ): ScheduleHealth {
   const cal = opts.calendar ?? FIVE_DAY;
-  const network = computeCpm(tasks, { calendar: cal });
   const n = tasks.length;
   const checks: ScheduleCheck[] = [];
   const dataDate = toDayIndex(opts.dataDate ?? null) ?? Math.floor(Date.now() / 86_400_000);
+
+  /* Two passes, because two different questions are being asked.
+   *
+   * `network` ignores progress and answers "what does this plan say" — the
+   * right basis for loops, dangling references and open ends, none of which
+   * care what has been built.
+   *
+   * `forecast` honours progress and answers "when does this finish". Float and
+   * the critical path belong to it, because float measured on the logic network
+   * is float against a plan that is free to reschedule September's work back
+   * into February. On the demo project that gap was ten weeks wide, and the
+   * flattering half was the one on screen. */
+  const network = computeCpm(tasks, { calendar: cal });
+  const forecast = rescheduleFromDataDate(tasks, { calendar: cal, dataDate: opts.dataDate });
+  const dated = forecast.network;
 
   const pct = (t: CpmTask) => {
     const v = Number(t.pct_complete);
     return Number.isFinite(v) ? v : 0;
   };
   const idsOf = (pred: (t: CpmTask) => boolean) => tasks.filter(pred).map((t) => String(t.id));
+  const taskById = new Map(tasks.map((t) => [String(t.id), t]));
 
   const add = (c: Omit<ScheduleCheck, 'passed'> & { passed?: boolean }) =>
     checks.push({ ...c, passed: c.passed ?? ((c.count ?? 0) === 0) });
@@ -225,7 +257,15 @@ export function assessSchedule(
 
   /* ── 6. High float. Usually a symptom of missing logic ────────────────── */
 
-  const highFloat = network.tasks.filter((t) => t.totalFloat > 44);
+  /* Float belongs to work that has not happened yet.
+   *
+   * Measured on the forecast, a task finished in March against a project
+   * finishing next February carries eleven months of "float" — which is not a
+   * modelling gap, it is the arithmetic of already being done. Counting those
+   * took this finding from 3 tasks to 23 the moment the assessment started
+   * honouring progress, and every one of the 20 was noise. */
+  const remaining = (id: string) => pct(taskById.get(id) ?? { id }) < 100;
+  const highFloat = dated.tasks.filter((t) => t.totalFloat > 44 && remaining(t.id));
   add({
     id: 'high-float', severity: 'warn',
     title: `${highFloat.length} task${highFloat.length === 1 ? ' has' : 's have'} more than 44 days of float`,
@@ -238,7 +278,8 @@ export function assessSchedule(
 
   /* ── 7. Negative float. Already late ──────────────────────────────────── */
 
-  const negFloat = network.tasks.filter((t) => t.totalFloat < 0);
+  /* Same reasoning: work that is finished cannot be running late. */
+  const negFloat = dated.tasks.filter((t) => t.totalFloat < 0 && remaining(t.id));
   const worst = negFloat.length ? Math.min(...negFloat.map((t) => t.totalFloat)) : 0;
   add({
     id: 'negative-float', severity: 'blocker',
@@ -358,7 +399,7 @@ export function assessSchedule(
 
   /* ── 13. Critical path test ───────────────────────────────────────────── */
 
-  const critical = network.tasks.filter((t) => t.isCritical);
+  const critical = dated.tasks.filter((t) => t.isCritical);
   add({
     id: 'critical-path', severity: 'blocker',
     title: critical.length === 0
@@ -366,10 +407,10 @@ export function assessSchedule(
       : `${critical.length} task${critical.length === 1 ? '' : 's'} on the critical path`,
     detail: critical.length === 0
       ? 'Without a continuous chain of zero-float work there is no answer to "what makes the project late", which is the only question a schedule exists to answer.'
-      : `A continuous chain of ${network.criticalPath.length} tasks drives the finish date.`,
+      : `A continuous chain of ${dated.criticalPath.length} tasks drives the finish date.`,
     count: critical.length === 0 ? 1 : 0,
     passed: critical.length > 0,
-    taskIds: network.criticalPath.slice(0, 40),
+    taskIds: dated.criticalPath.slice(0, 40),
   });
 
   /* ── scoring ──────────────────────────────────────────────────────────── */
@@ -386,14 +427,14 @@ export function assessSchedule(
   if (n === 0) score = 100;
 
   return {
-    checks, failed, blockers, warnings, score, network,
+    checks, failed, blockers, warnings, score, network, forecast,
     totals: {
       tasks: n,
       complete: tasks.filter((t) => pct(t) >= 100).length,
       inProgress: tasks.filter((t) => pct(t) > 0 && pct(t) < 100).length,
       notStarted: tasks.filter((t) => pct(t) <= 0).length,
       critical: critical.length,
-      nearCritical: network.tasks.filter((t) => t.isNearCritical).length,
+      nearCritical: dated.tasks.filter((t) => t.isNearCritical).length,
       withLogic,
       openEnds: openEnds.length,
     },

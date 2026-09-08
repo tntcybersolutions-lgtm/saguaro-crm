@@ -507,3 +507,99 @@ export function computeCpm(
     danglingRefs,
   };
 }
+
+/* ── rescheduling against a data date ────────────────────────────────────── */
+
+export interface RescheduleMove {
+  id: string;
+  name: string;
+  from: { start: string | null; end: string | null };
+  to: { start: string | null; end: string | null };
+  /** Calendar days the task moved. Negative means it pulled earlier. */
+  shift: number;
+}
+
+export interface ReschedulePlan {
+  network: CpmNetwork;
+  /** Work that has started. Its dates are actuals and were not touched. */
+  frozen: string[];
+  /** Work that has not started, and where the logic now puts it. */
+  moves: RescheduleMove[];
+  projectFinish: { from: string | null; to: string | null };
+}
+
+/**
+ * Reschedule the remaining work, leaving what already happened alone.
+ *
+ * The plain critical path pass ignores progress entirely — it is a pure
+ * function of logic and durations, which is correct for asking "how long does
+ * this plan take" and catastrophic for asking "so when does everything happen
+ * now". Run it over a live schedule and write the answer back and it will
+ * cheerfully move a task that finished in April, because the logic says it
+ * could have started in February. That is not a reschedule, it is rewriting
+ * history, and the dates it overwrites are the only record of what actually
+ * occurred.
+ *
+ * The rule every scheduling tool settles on, and the one used here:
+ *
+ *   Work that has started is finished with being planned. Its dates are
+ *   actuals. Its predecessors no longer constrain it — whatever the logic
+ *   thinks, it already began — so they are stripped for the pass and the task
+ *   is pinned where it happened. It still drives its successors, from its real
+ *   finish rather than a theoretical one.
+ *
+ *   Work that has not started reschedules freely, but never earlier than the
+ *   data date. A schedule that opens by claiming next month's work should have
+ *   begun in February is worse than the one it replaced.
+ *
+ * What comes back is a plan, not a write. Nothing here touches a database.
+ */
+export function rescheduleFromDataDate(
+  tasks: CpmTask[],
+  opts: { dataDate?: string | null; calendar?: Calendar } = {},
+): ReschedulePlan {
+  const cal = opts.calendar ?? FIVE_DAY;
+  const dataDate = toDayIndex(opts.dataDate ?? null) ?? Math.floor(Date.now() / 86_400_000);
+  const dataDateIso = fromDayIndex(nextWorkDay(dataDate, cal));
+
+  const started = (t: CpmTask) => {
+    const p = Number(t.pct_complete);
+    return Number.isFinite(p) && p > 0 && t.start_date != null;
+  };
+
+  const overridden: CpmTask[] = tasks.map((t) =>
+    started(t)
+      ? { ...t, predecessors: [], constraint_start: t.start_date }
+      : { ...t, constraint_start: dataDateIso },
+  );
+
+  const network = computeCpm(overridden, { calendar: cal });
+
+  const before = tasks.map((t) => t.end_date).filter(Boolean).sort();
+  const frozen: string[] = [];
+  const moves: RescheduleMove[] = [];
+
+  for (const t of tasks) {
+    const id = String(t.id);
+    if (started(t)) { frozen.push(id); continue; }
+
+    const n = network.byId[id];
+    if (!n) continue;
+    if (n.esDate === t.start_date && n.efDate === t.end_date) continue;
+
+    const a = toDayIndex(t.start_date), b = toDayIndex(n.esDate);
+    moves.push({
+      id, name: String(t.name ?? id),
+      from: { start: t.start_date ?? null, end: t.end_date ?? null },
+      to: { start: n.esDate, end: n.efDate },
+      shift: a != null && b != null ? b - a : 0,
+    });
+  }
+
+  return {
+    network,
+    frozen,
+    moves,
+    projectFinish: { from: before[before.length - 1] ?? null, to: network.projectFinish },
+  };
+}

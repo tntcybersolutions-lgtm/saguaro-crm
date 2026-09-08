@@ -32,7 +32,15 @@ export default function ScheduleIntelligence({
     () => assessSchedule(tasks, { calendar: makeCalendar([1, 2, 3, 4, 5], holidays), dataDate }),
     [tasks, holidays, dataDate],
   );
-  const { network, totals } = health;
+  const { network, forecast, totals } = health;
+  /* The forecast, not the plan-if-it-all-ran-again. Float and the finish date
+     belong to the pass that honours what has actually been built — the logic
+     network is free to schedule September's work back into February, and on
+     live data the two disagreed by ten weeks. */
+  const dated = forecast.network;
+  const slipped = forecast.projectFinish.from && forecast.projectFinish.to
+    ? Math.round((Date.parse(forecast.projectFinish.to) - Date.parse(forecast.projectFinish.from)) / 86400000)
+    : 0;
 
   const failed: PanelFinding[] = health.failed.map((c) => ({
     id: c.id, severity: c.severity, title: c.title, detail: c.detail, threshold: c.threshold, count: c.count,
@@ -44,18 +52,18 @@ export default function ScheduleIntelligence({
   /* The path itself, in order, with each task's duration — the answer to "what
      makes this project late", which is the only question a schedule exists to
      answer. */
-  const path = network.criticalPath.map((id) => ({
+  const path = dated.criticalPath.map((id) => ({
     id,
     task: tasks.find((t) => String(t.id) === id),
-    node: network.byId[id],
+    node: dated.byId[id],
   })).filter((p) => p.task && p.node);
 
-  const nearCritical = network.tasks
+  const nearCritical = dated.tasks
     .filter((t) => t.isNearCritical)
     .sort((a, b) => a.totalFloat - b.totalFloat)
     .slice(0, 8);
 
-  const negative = network.tasks.filter((t) => t.totalFloat < 0).sort((a, b) => a.totalFloat - b.totalFloat);
+  const negative = dated.tasks.filter((t) => t.totalFloat < 0).sort((a, b) => a.totalFloat - b.totalFloat);
 
   const stat = (label: string, value: React.ReactNode, sub?: string, color?: string) => (
     <div style={{ flex: '1 1 130px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 10, padding: '10px 13px' }}>
@@ -69,7 +77,11 @@ export default function ScheduleIntelligence({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        {stat('Finish', fmtDate(network.projectFinish), `${network.durationDays} working days`)}
+        {stat('Forecast finish', fmtDate(forecast.projectFinish.to),
+          slipped > 0 ? `${slipped} days later than planned`
+            : slipped < 0 ? `${Math.abs(slipped)} days ahead of plan`
+              : `${dated.durationDays} working days`,
+          slipped > 0 ? RED : slipped < 0 ? GREEN : undefined)}
         {stat('Critical path', totals.critical, totals.critical ? `${path.length} in sequence` : 'none found', totals.critical ? RED : DIM)}
         {stat('Near critical', totals.nearCritical, 'within 5 days of the path', totals.nearCritical ? AMBER : DIM)}
         {stat('Behind', negative.length, negative.length ? `worst ${Math.abs(negative[0].totalFloat)} days late` : 'nothing late', negative.length ? RED : GREEN)}

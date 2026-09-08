@@ -56,13 +56,16 @@ const { suggestLogic, applyLogic, durationFromDates, findDuplicates } = await im
 const { suggestSplits, applySplits } = await import('../lib/schedule-split.ts');
 const { assessSchedule } = await import('../lib/schedule-health.ts');
 const { assessBudget, forecastLine } = await import('../lib/budget-health.ts');
-const { parseDependencies, computeCpm } = await import('../lib/schedule-cpm.ts');
+const { parseDependencies, computeCpm, rescheduleFromDataDate } = await import('../lib/schedule-cpm.ts');
 const { CSI_DIVISIONS } = await import('../lib/construction-intelligence.ts');
 
 /** Canonical MasterFormat names, so a new line is named the way the rest are. */
 const CSI_NAMES = Object.fromEntries(
   Object.entries(CSI_DIVISIONS).map(([k, v]) => [k, v?.name ?? `Division ${k}`]),
 );
+
+/* The date the schedule is being assessed as of. */
+const DATA_DATE = '2026-09-07';
 
 const m = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('en-US');
 const say = (s = '') => console.log(s);
@@ -251,30 +254,47 @@ for (const pid of projects) {
    * is_critical, which have been columns on this table since it was created
    * with nothing ever computing them. */
   {
-    const net = computeCpm(refreshed);
-    const finish = net.projectFinish;
-    const stored = refreshed
-      .map((t) => t.end_date).filter(Boolean).sort().pop() ?? null;
+    /* Progress-aware, and it has to be. The plain critical path pass ignores
+       pct_complete entirely, so writing its answer back would move a task that
+       FINISHED in March because the logic says it could have started in
+       February. Work that has started keeps its dates — they are actuals, and
+       the only record of what occurred. Only the remaining plan reschedules,
+       and never to before the data date. */
+    const plan = rescheduleFromDataDate(refreshed, { dataDate: DATA_DATE });
+    const { from, to } = plan.projectFinish;
 
     if (REBASELINE) {
-      say(`   --rebaseline: adopting the logic's dates — finish ${stored} → ${finish}`);
+      const pulled = from && to ? Math.round((Date.parse(from) - Date.parse(to)) / 86400000) : 0;
+      say(`   --rebaseline: finish ${from} → ${to}${pulled ? ` (${pulled > 0 ? 'in' : 'out'} ${Math.abs(pulled)} days)` : ''}`);
+      say(`     ${plan.frozen.length} started tasks left at their actuals · ${plan.moves.length} unstarted tasks rescheduled`);
+      for (const mv of plan.moves.slice(0, 3)) {
+        say(`     ${mv.name.slice(0, 34).padEnd(35)} ${mv.from.start} → ${mv.to.start}  ${mv.shift > 0 ? '+' : ''}${mv.shift}d`);
+      }
+      if (plan.moves.length > 3) say(`     … and ${plan.moves.length - 3} more`);
+
       if (WRITE) {
+        const frozen = new Set(plan.frozen);
         for (const t of refreshed) {
-          const n = net.byId[String(t.id)];
+          const n = plan.network.byId[String(t.id)];
           if (!n) continue;
-          const { error } = await db.from('schedule_tasks').update({
-            start_date: n.esDate, end_date: n.efDate,
-            /* es/ef/ls/lf are numeric day indices, not dates — the ISO strings
-               go in start_date/end_date above. */
+          /* Every task gets its computed float and criticality — those columns
+             have been on this table since it was created with nothing ever
+             filling them. Only unstarted work gets its DATES rewritten. */
+          const patch = {
             es: n.es, ef: n.ef, ls: n.ls, lf: n.lf,
             total_float: n.totalFloat, is_critical: n.isCritical,
-          }).eq('id', t.id);
+          };
+          if (!frozen.has(String(t.id))) {
+            patch.start_date = n.esDate;
+            patch.end_date = n.efDate;
+          }
+          const { error } = await db.from('schedule_tasks').update(patch).eq('id', t.id);
           if (error) { console.error('   rebaseline failed:', error.message); process.exit(1); }
         }
       }
       changes += refreshed.length;
-    } else if (finish && stored && finish < stored) {
-      say(`   the logic finishes ${finish}, ${Math.round((Date.parse(stored) - Date.parse(finish)) / 86400000)} calendar days before the stored dates say — re-run with --rebaseline to adopt it`);
+    } else if (from && to && to < from) {
+      say(`   the logic finishes ${to}, ${Math.round((Date.parse(from) - Date.parse(to)) / 86400000)} calendar days before the stored dates say — re-run with --rebaseline to adopt it`);
     }
   }
   say();

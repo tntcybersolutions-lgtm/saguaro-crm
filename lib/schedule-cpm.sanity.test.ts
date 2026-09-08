@@ -17,7 +17,7 @@
  */
 import {
   computeCpm, toDayIndex, fromDayIndex, addWorkDays, workDaysBetween, shiftWorkDays,
-  isWorkDay, makeCalendar, FIVE_DAY, SEVEN_DAY, parseDependencies,
+  isWorkDay, makeCalendar, FIVE_DAY, SEVEN_DAY, parseDependencies, rescheduleFromDataDate,
   type CpmTask,
 } from './schedule-cpm';
 
@@ -261,6 +261,54 @@ check('a task with no duration derives one from its dates',
   '5 working days');
 check('a task with neither duration nor dates gets one day',
   computeCpm([{ id: 'A', predecessors: [] }]).byId.A.duration === 1, '1');
+
+/* ── rescheduling against a data date ────────────────────────────────────── */
+
+{
+  /* The failure this exists to prevent. The plain pass ignores progress, so
+     writing its answer back moves a task that FINISHED in March because the
+     logic says it could have started in February. */
+  const live: CpmTask[] = [
+    { id: 'done', name: 'Earthwork', duration: 20, start_date: '2026-03-02', end_date: '2026-03-27', pct_complete: 100, predecessors: [] },
+    { id: 'wip', name: 'Foundations', duration: 20, start_date: '2026-08-03', end_date: '2026-08-28', pct_complete: 40, predecessors: [{ id: 'done' }] },
+    { id: 'next', name: 'Steel', duration: 20, start_date: '2026-11-02', end_date: '2026-11-27', pct_complete: 0, predecessors: [{ id: 'wip' }] },
+  ];
+  const plan = rescheduleFromDataDate(live, { dataDate: '2026-09-07' });
+
+  check('work that has started is left exactly where it happened',
+    plan.frozen.length === 2 && plan.frozen.includes('done') && plan.frozen.includes('wip'),
+    'its dates are actuals — the only record of what occurred');
+  check('and no move is proposed for it',
+    !plan.moves.some((m) => m.id === 'done' || m.id === 'wip'), 'nothing to move');
+  check('a completed task keeps its real finish for its successors',
+    plan.network.byId.done.efDate === '2026-03-27',
+    `${plan.network.byId.done.efDate} — not wherever the logic thinks it could have gone`);
+
+  const next = plan.moves.find((m) => m.id === 'next');
+  check('unstarted work reschedules against the logic AND the data date',
+    !!next && next.to.start === '2026-09-07',
+    `${next?.from.start} → ${next?.to.start} — the foundations finish on 28 August, so the logic says the 31st, but the 31st has already gone`);
+  check('and it pulls earlier rather than later here',
+    !!next && next.shift < 0, `${next?.shift} days — eight weeks of the plan were never real`);
+}
+
+{
+  /* The other half. Unstarted work must never be scheduled into the past — a
+     plan that opens by saying next month's work should have begun in February
+     is worse than the one it replaced. */
+  const plan = rescheduleFromDataDate([
+    { id: 'a', name: 'Never started', duration: 10, start_date: '2026-02-02', end_date: '2026-02-13', pct_complete: 0, predecessors: [] },
+  ], { dataDate: '2026-09-07' });
+
+  const m = plan.moves[0];
+  check('unstarted work is never rescheduled before the data date',
+    m.to.start === '2026-09-07', `${m.from.start} → ${m.to.start} — it did not happen in February, so it cannot be planned there`);
+  check('and the size of the move is stated rather than hidden',
+    m.shift > 200, `${m.shift} calendar days`);
+}
+
+check('an empty schedule reschedules to nothing',
+  rescheduleFromDataDate([], { dataDate: '2026-09-07' }).moves.length === 0, 'no crash');
 
 console.log(failures === 0 ? '\nALL CPM ASSERTIONS HELD' : `\n${failures} ASSERTION(S) FAILED`);
 process.exit(failures === 0 ? 0 : 1);

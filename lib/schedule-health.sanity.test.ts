@@ -233,6 +233,49 @@ const find = (h: ReturnType<typeof assessSchedule>, id: string) => h.checks.find
     !find(h, 'high-float').passed, `${find(h, 'high-float').count} task with two months of slack`);
 }
 
+/* ── the assessment reports a FORECAST, not a plan re-run from scratch ───── */
+
+{
+  /* The gap that mattered on live data. The logic pass ignores progress, so it
+     is free to schedule September's work back into February and report a finish
+     ten weeks earlier than anything that can actually happen. The assessment
+     has to answer "when does this finish", which is the forecast. */
+  const live: CpmTask[] = [
+    { id: 'a', name: 'Earthwork', duration: 20, start_date: '2026-03-02', end_date: '2026-03-27', pct_complete: 100, predecessors: [] },
+    { id: 'b', name: 'Foundations', duration: 20, start_date: '2026-08-03', end_date: '2026-08-28', pct_complete: 40, predecessors: [{ id: 'a' }] },
+    { id: 'c', name: 'Steel', duration: 40, predecessors: [{ id: 'b' }], pct_complete: 0 },
+  ];
+  const h = assessSchedule(live, { dataDate: '2026-09-07' });
+
+  check('the forecast is later than the plan re-run from scratch',
+    !!h.forecast.projectFinish.to && !!h.network.projectFinish &&
+    h.forecast.projectFinish.to > h.network.projectFinish,
+    `plan ${h.network.projectFinish} · forecast ${h.forecast.projectFinish.to} — the plan is free to rebuild March in February`);
+  check('work that has started is held at its actuals',
+    h.forecast.frozen.length === 2, `${h.forecast.frozen.length} of 3 tasks are history, not plan`);
+  check('and the remaining work is what moved',
+    h.forecast.moves.length === 1 && h.forecast.moves[0].id === 'c', 'only the steel is still schedulable');
+}
+
+{
+  /* Float belongs to work that has not happened. A task finished in March
+     against a project finishing next February carries eleven months of "float",
+     which is the arithmetic of being done rather than a modelling gap. Counting
+     those took this finding from 3 tasks to 23 on live data. */
+  const h = assessSchedule([
+    { id: 'old', name: 'Long finished', duration: 5, start_date: '2026-02-02', end_date: '2026-02-06', pct_complete: 100, predecessors: [] },
+    { id: 'a', name: 'A', duration: 120, start_date: '2026-09-07', predecessors: [{ id: 'old' }], pct_complete: 0 },
+    { id: 'b', name: 'B', duration: 3, start_date: '2026-09-07', predecessors: [{ id: 'old' }], pct_complete: 0 },
+    { id: 'end', name: 'End', duration: 1, predecessors: [{ id: 'a' }, { id: 'b' }], pct_complete: 0 },
+  ], { dataDate: '2026-09-07' });
+
+  const hf = find(h, 'high-float');
+  check('a finished task is not counted as carrying float',
+    !hf.taskIds?.includes('old'), 'being done is not slack');
+  check('but unstarted work with real slack still is',
+    hf.taskIds?.includes('b') === true, 'B has four months of genuine freedom against A');
+}
+
 /* ── plumbing ────────────────────────────────────────────────────────────── */
 
 check('an empty schedule scores 100 and does not crash',

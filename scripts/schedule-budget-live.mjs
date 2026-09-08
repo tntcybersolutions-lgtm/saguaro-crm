@@ -40,7 +40,7 @@ for (const pid of [...new Set((tasks ?? []).map((t) => t.project_id))]) {
   console.log(`  ── ${pid}`);
   console.log(`     ${sh.totals.tasks} tasks · ${sh.totals.complete} complete · ${sh.totals.inProgress} in progress`);
   console.log(`     logic: ${sh.totals.withLogic}/${sh.totals.tasks} linked, ${sh.totals.openEnds} dangling · critical ${sh.totals.critical} · near ${sh.totals.nearCritical}`);
-  console.log(`     finish ${sh.network.projectFinish} (${sh.network.durationDays} working days)`);
+  console.log(`     plan ${sh.network.projectFinish} · FORECAST ${sh.forecast.projectFinish.to} (${sh.forecast.frozen.length} started tasks at actuals, ${sh.forecast.moves.length} rescheduled)`);
   console.log(`     SCORE ${sh.score}   ${sh.blockers} blockers, ${sh.warnings} warnings, ${sh.checks.filter((c) => c.passed).length}/${sh.checks.length} checks passed`);
   for (const c of sh.failed) console.log(`       [${c.severity}] ${c.title}${c.threshold ? `   (${c.threshold})` : ''}`);
   console.log();
