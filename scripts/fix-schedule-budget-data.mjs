@@ -273,6 +273,28 @@ for (const pid of projects) {
       if (plan.moves.length > 3) say(`     … and ${plan.moves.length - 3} more`);
 
       if (WRITE) {
+        /* Snapshot before moving anything.
+         *
+         * schedule_baselines has existed since the table was created and holds
+         * zero rows — so a rebaseline has never been reversible, and earlier in
+         * this session a bug in the split step wiped progress off 52 rows with
+         * nothing to restore from. Dates that get overwritten here are the only
+         * record of what the plan used to say. */
+        const snap = await db.from('schedule_baselines').insert({
+          tenant_id: refreshed[0]?.tenant_id ?? null,
+          project_id: pid,
+          name: `Before rebaseline ${new Date().toISOString().slice(0, 10)}`,
+          snapshot: refreshed.map((t) => ({
+            id: t.id, name: t.name, start_date: t.start_date, end_date: t.end_date,
+            duration: t.duration, pct_complete: t.pct_complete, status: t.status,
+            predecessors: parseDependencies(t.predecessors),
+            es: t.es, ef: t.ef, ls: t.ls, lf: t.lf,
+            total_float: t.total_float, is_critical: t.is_critical,
+          })),
+        });
+        if (snap.error) { console.error('   baseline snapshot failed:', snap.error.message); process.exit(1); }
+        say(`     baseline saved — ${refreshed.length} rows, restorable from schedule_baselines`);
+
         const frozen = new Set(plan.frozen);
         for (const t of refreshed) {
           const n = plan.network.byId[String(t.id)];

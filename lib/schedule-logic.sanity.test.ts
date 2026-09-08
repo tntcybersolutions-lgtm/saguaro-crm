@@ -12,7 +12,7 @@
  *   it never closes a loop, so whatever comes out is always schedulable.
  */
 import { suggestLogic, applyLogic, durationFromDates, findDuplicates } from './schedule-logic';
-import { computeCpm, parseDependencies, type CpmTask } from './schedule-cpm';
+import { computeCpm, parseDependencies, addWorkDays, toDayIndex, fromDayIndex, FIVE_DAY, type CpmTask } from './schedule-cpm';
 import { assessSchedule } from './schedule-health';
 
 let failures = 0;
@@ -200,8 +200,24 @@ const check = (name: string, cond: boolean, detail: string) => {
 /* ── duration from dates ─────────────────────────────────────────────────── */
 
 check('a five-calendar-day span is five working days',
-  durationFromDates({ id: 'x', start_date: '2026-02-02', end_date: '2026-02-06' }) === 4,
-  `${durationFromDates({ id: 'x', start_date: '2026-02-02', end_date: '2026-02-06' })}`);
+  durationFromDates({ id: 'x', start_date: '2026-02-02', end_date: '2026-02-06' }) === 5,
+  `${durationFromDates({ id: 'x', start_date: '2026-02-02', end_date: '2026-02-06' })} — Monday to Friday, counted against the calendar rather than estimated at five sevenths of the span`);
+
+/* The reason exactness matters. Rebaselining writes dates from the critical
+   path pass, which counts working days exactly. If this recomputed the duration
+   column approximately from those dates, the next pass would use a number one
+   day out and the project would slide every time the repair ran. */
+{
+  const round = (start: string, days: number) => {
+    const end = fromDayIndex(addWorkDays(toDayIndex(start)!, days, FIVE_DAY));
+    return durationFromDates({ id: 'x', start_date: start, end_date: end });
+  };
+  check('a duration survives a round trip through dates and back',
+    [1, 5, 9, 20, 33, 64].every((d) => round('2026-09-07', d) === d),
+    [1, 5, 9, 20, 33, 64].map((d) => `${d}→${round('2026-09-07', d)}`).join(' '));
+  check('and it survives starting on a weekend',
+    round('2026-03-01', 33) === 33, `${round('2026-03-01', 33)} — 1 March 2026 is a Sunday`);
+}
 check('a six-week span is about 30 working days',
   durationFromDates({ id: 'x', start_date: '2026-03-01', end_date: '2026-04-15' }) === 33,
   `${durationFromDates({ id: 'x', start_date: '2026-03-01', end_date: '2026-04-15' })} — not the "1" the live data claims`);

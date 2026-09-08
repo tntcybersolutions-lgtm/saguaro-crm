@@ -29,7 +29,10 @@
  * accepted, so the result is always schedulable.
  */
 
-import { toDayIndex, parseDependencies, type CpmTask, type Dependency, type RelType } from './schedule-cpm';
+import {
+  toDayIndex, parseDependencies, workDaysBetween, FIVE_DAY,
+  type CpmTask, type Dependency, type RelType, type Calendar,
+} from './schedule-cpm';
 
 /** Canonical construction sequence, for schedules that carry a phase. */
 const PHASE_ORDER = [
@@ -431,12 +434,20 @@ export function applyLogic(tasks: CpmTask[], suggestions: LogicSuggestion[]): Cp
  * Live data carries `duration: 1` against six-week date spans on 40 of 42
  * tasks — the two disagree and any calculation reading the wrong one is wrong.
  * The dates are the thing people actually maintained, so they win.
+ *
+ * Counted against the real calendar rather than estimated from it. The first
+ * version approximated — calendar days times five sevenths, rounded — which is
+ * close but not equal: a Monday-to-Friday task came out at four days instead of
+ * five. That mattered more than it looks. Rebaselining writes dates from the
+ * critical path pass, which counts working days exactly; this then recomputed
+ * the duration column approximately from those dates; the next pass used the
+ * approximation. Every round trip slid the project a day, and a repair that
+ * moves the schedule each time it runs is not a repair.
  */
-export function durationFromDates(t: CpmTask, workDaysPerWeek = 5): number | null {
+export function durationFromDates(t: CpmTask, cal: Calendar = FIVE_DAY): number | null {
   const a = toDayIndex(t.start_date), b = toDayIndex(t.end_date);
   if (a == null || b == null || b < a) return null;
-  const calendarDays = b - a + 1;
-  return Math.max(1, Math.round((calendarDays * workDaysPerWeek) / 7));
+  return Math.max(1, workDaysBetween(a, b, cal));
 }
 
 /** Exact duplicates — same name, same dates — as an import that ran twice. */
