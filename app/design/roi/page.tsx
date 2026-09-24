@@ -211,7 +211,7 @@ export default function ROICalculatorPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: BG, color: TEXT }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
@@ -307,7 +307,7 @@ export default function ROICalculatorPage() {
             top: 0 !important;
           }
         }
-      `}</style>
+      ` }} />
 
       {/* ─── Hero Section ─── */}
       <section style={{

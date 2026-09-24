@@ -1231,13 +1231,13 @@ function TimesheetsInner() {
       )}
 
       {/* ── Print styles ── */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           body { background: #fff !important; color: #000 !important; }
           div { border-color: #ccc !important; }
           button, input[type="checkbox"] { display: none !important; }
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

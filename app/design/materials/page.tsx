@@ -373,13 +373,13 @@ export default function MaterialsPage() {
         </div>
       </div>
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 768px) {
           div[style*="grid-template-columns: 1fr 340px"] {
             grid-template-columns: 1fr !important;
           }
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

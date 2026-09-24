@@ -1058,7 +1058,7 @@ export default function DesignStudioPage() {
       </div>
 
       {/* ── Global Keyframe Animations ── */}
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1068,7 +1068,7 @@ export default function DesignStudioPage() {
         ::-webkit-scrollbar { height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-      `}</style>
+      ` }} />
     </div>
   );
 }

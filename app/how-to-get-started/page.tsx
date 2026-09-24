@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function HowToGetStartedPage() {
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
           --dark: #0a0a0a; --gold: #F59E0B; --text: #FFFFFF;
@@ -113,7 +113,7 @@ export default function HowToGetStartedPage() {
           .container { padding: 40px 16px; }
           .nav { padding: 0 16px; }
         }
-      `}</style>
+      ` }} />
 
       {/* Nav */}
       <nav className="nav">

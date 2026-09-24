@@ -264,7 +264,7 @@ export default function SaguaroDatePicker({ value, onChange, style, placeholder 
             userSelect: 'none',
           }}
         >
-          <style>{POP_CSS}</style>
+          <style dangerouslySetInnerHTML={{ __html: POP_CSS }} />
 
           {/* Header: « ‹ [Month ▾ select] [Year ▾ roller] › » */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 8 }}>

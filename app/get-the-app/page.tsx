@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 export default function GetTheAppPage() {
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
@@ -614,7 +614,7 @@ export default function GetTheAppPage() {
           .hero-h1 { font-size: 34px; }
           .devices { display: none; }
         }
-      `}</style>
+      ` }} />
 
       <div className="mkt-page page">
         <PremiumFX />

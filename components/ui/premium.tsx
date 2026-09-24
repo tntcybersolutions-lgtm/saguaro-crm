@@ -90,7 +90,30 @@ h1.pmH1{font-size:clamp(28px,4.4vw,46px)!important;font-weight:900!important;lin
 `;
 
 export function PremiumFX() {
-  return <style>{PREMIUM_FX}</style>;
+  /* dangerouslySetInnerHTML, not a text child — and it is the SAFE option here.
+   *
+   * As `<style>{PREMIUM_FX}</style>` this CSS was a text child, so the server
+   * HTML-escaped it on the way out:
+   *
+   *     .pmSortTh[aria-sort="ascending"]      (what we wrote)
+   *     .pmSortTh[aria-sort=&quot;ascending&quot;]   (what shipped)
+   *
+   * A browser does not decode entities inside <style> — its content is raw
+   * text — so those selectors were invalid and the browser dropped them. The
+   * sorted-column highlight on every premium DataTable was dead in the
+   * server-rendered HTML. The `->` and apostrophes in the comments above
+   * escaped the same way.
+   *
+   * Then hydration made it worse. The client renders the UNESCAPED text, the
+   * two text nodes differ, and React throws #425 (text content did not match)
+   * followed by #422 (Suspense boundary hydration failed) and throws away the
+   * server HTML for that subtree — on every single page that mounts this, which
+   * is every page under /app.
+   *
+   * __html is not a risk: PREMIUM_FX is a module constant in this file. No
+   * request data reaches it, so there is nothing to inject.
+   */
+  return <style dangerouslySetInnerHTML={{ __html: PREMIUM_FX }} />;
 }
 
 // ─── Aurora backdrop ─────────────────────────────────────────────────────────

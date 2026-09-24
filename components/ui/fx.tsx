@@ -114,7 +114,7 @@ h2.sgSectionTitle{font-size:clamp(15px,1.6vw,18px)!important;font-weight:800!imp
  * Duplicate instances are harmless (identical CSS).
  */
 export function UiFx() {
-  return <style>{UI_FX_CSS}</style>;
+  return <style dangerouslySetInnerHTML={{ __html: UI_FX_CSS }} />;
 }
 
 /* ── Aurora backdrop ───────────────────────────────────────────────────
