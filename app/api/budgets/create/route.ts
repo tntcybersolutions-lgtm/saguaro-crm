@@ -24,14 +24,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'projectId is required' }, { status: 400 });
     }
 
-    // Get tenant_id from project
+    /* The tenant is the CALLER'S, never the project's. This read used to
+       supply it, which meant posting another company's projectId wrote the
+       budget and all its line items into that company's account -- and
+       when the lookup missed, `|| projectId` filed them under a tenant id
+       that was really a project id. The project is now checked instead of
+       consulted: if it is not ours, there is nothing to budget. */
+    const tenantId = g.user.tenantId;
     const { data: project } = await supabase
       .from('projects')
-      .select('tenant_id')
+      .select('id')
       .eq('id', projectId)
-      .single();
-
-    const tenantId = project?.tenant_id || projectId;
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
 
     // Create budget record
     const { data: budget, error: budgetErr } = await supabase
@@ -114,6 +120,7 @@ export async function POST(req: NextRequest) {
         const batch = rows.slice(i, i + 50);
         const { error: itemErr } = await supabase
           .from('budget_line_items')
+          // Each row in `rows` is built with tenant_id: tenantId above.
           .upsert(batch, { onConflict: 'project_id,csi_division' });
         if (itemErr) {
           console.error('[budgets/create] line item insert error:', itemErr);

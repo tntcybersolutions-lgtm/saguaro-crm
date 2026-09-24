@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     const { data: badgeDef, error: defError } = await db
       .from('badges')
       .select('id, badge_name, points')
+      .eq('tenant_id', user.tenantId)
       .eq('id', badge_id)
       .single();
 

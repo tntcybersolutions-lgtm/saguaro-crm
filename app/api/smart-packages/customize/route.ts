@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     const { data: pkg, error: pkgErr } = await db
       .from('smart_packages')
       .select('*')
+      .or(`tenant_id.is.null,tenant_id.eq.${user.tenantId}`)
       .eq('tier', tier)
       .eq('is_active', true)
       .single();

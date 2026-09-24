@@ -27,7 +27,7 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     const empIds = [...new Set(rows.map((r) => r.employee_id).filter(Boolean))];
     const names: Record<string, string> = {};
     if (empIds.length) {
-      const { data: emps } = await supabase.from('employees').select('*').in('id', empIds);
+      const { data: emps } = await supabase.from('employees').select('*').eq('tenant_id', user.tenantId).in('id', empIds);
       for (const e of (emps ?? []) as any[]) {
         names[e.id] = e.name || [e.first_name, e.last_name].filter(Boolean).join(' ') || e.email || '';
       }

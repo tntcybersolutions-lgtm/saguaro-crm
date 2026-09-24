@@ -74,6 +74,7 @@ export async function POST(req: NextRequest) {
     const { data: question } = await db
       .from('discovery_questions')
       .select('options')
+      .or(`tenant_id.is.null,tenant_id.eq.${user.tenantId}`)
       .eq('question_key', question_key)
       .single();
 

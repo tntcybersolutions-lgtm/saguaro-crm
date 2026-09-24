@@ -275,30 +275,60 @@ function idFromScopedRead(src, chainStart, chain) {
 }
 
 /**
- * An insert whose payload is a variable.
+ * A FILTER OR PAYLOAD PASSED AS A VARIABLE.
  *
  *     const vlanRows = plan.vlans.map(v => ({ tenant_id: user.tenantId, … }));
  *     await db.from('network_vlans').insert(vlanRows);
  *
- * The chain shows `.insert(vlanRows)` and nothing else — the tenant_id is in
- * the row builder above it. Reading only the chain would accuse every bulk
- * insert in the codebase, so the nearest place the variable was built gets
- * read too. Returns null when the payload is an inline object (the chain
- * already told us), true/false otherwise.
+ *     const base = { tenant_id: user.tenantId, project_id: … };
+ *     await db.from('warranty_claims').insert({ ...base, claim_number });
+ *
+ *     const row = toDb(body, user.tenantId);      // builder sets row.tenant_id
+ *     const scope = `tenant_id.is.null,tenant_id.eq.${t}`;
+ *     await db.from('catalog_items').or(scope);
+ *
+ * In every one of these the chain shows only a variable name and the tenant
+ * lives where the value was built. Reading the chain alone accuses every bulk
+ * insert, every spread, and every shared filter string in the codebase, so the
+ * nearest place the variable was built is read too.
+ *
+ * `tenantId` counts as well as `tenant_id`, because a builder is handed the id
+ * (`toDb(body, user.tenantId)`) rather than the column name. Returns null when
+ * the payload is written inline with no variable — the chain already answered.
  */
-function insertPayloadHasTenant(src, chainStart, chain) {
-  /* .match(t) hides the column name entirely: franchise/op-kpis builds
-     `const t = { tenant_id: user.tenantId }` once and passes it to seven
-     queries. Same lookup as an insert payload. */
-  const m = chain.match(/\.(?:insert|upsert|match)\s*\(\s*([A-Za-z_$][\w$]*)/);
+function payloadVarHasTenant(src, chainStart, chain) {
+  const m =
+    chain.match(/\.(?:insert|upsert|match|or)\s*\(\s*([A-Za-z_$][\w$]*)/) ||
+    chain.match(/\.(?:insert|upsert)\s*\(\s*\{\s*\.\.\.\s*([A-Za-z_$][\w$]*)/);
   if (!m) return null;
-  const v = m[1].replace(/[$]/g, '\\$');
+  const v = m[1];
   const before = src.slice(Math.max(0, chainStart - 4000), chainStart);
-  const re = new RegExp(`(?:const|let|var)\\s+${v}\\b|\\b${v}\\s*=[^=]|\\b${v}\\.push\\s*\\(`, 'g');
+  const re = new RegExp('(?:const|let|var)\\s+' + v + '\\b|\\b' + v + '\\s*=[^=]|\\b' + v + '\\.push\\s*\\(', 'g');
   let last = -1, hit;
   while ((hit = re.exec(before)) !== null) last = hit.index;
   if (last < 0) return false;                    // built somewhere we cannot see
-  return /tenant_id/.test(before.slice(last, last + 1400));
+  const window = before.slice(last, last + 1400);
+  if (/tenant_id|tenantId/.test(window)) return true;
+
+  /* One level of aliasing. budgets/create does
+       const rows  = [...].map(d => ({ project_id, tenant_id: tenantId, … }));
+       const batch = rows.slice(i, i + 50);
+       upsert(batch)
+     and the tenant is on `rows`, one name back. Following further would start
+     guessing, so it stops at one. */
+  const alias = window.match(/=\s*([A-Za-z_$][\w$]*)\s*\.(?:slice|map|filter|concat)\s*\(/);
+  if (!alias) return false;
+  const a = alias[1];
+  /* Plain string search. A regex built inside a JS string loses its escapes to
+     the string layer before RegExp sees it — `\s` becomes `s` and `\b` becomes
+     a backspace character — which is how this check silently matched nothing
+     twice already. */
+  const lastA = Math.max(
+    before.lastIndexOf('const ' + a),
+    before.lastIndexOf('let ' + a),
+  );
+  if (lastA < 0) return false;
+  return /tenant_id|tenantId/.test(before.slice(lastA, lastA + 1400));
 }
 
 /* A STORAGE BUCKET IS NOT A TABLE. `.from(BUCKET).upload(...)` reads as a
@@ -466,7 +496,7 @@ for (const f of files) {
     if (chainIsScoped(chain)) continue;
     if (!QUERY_VERB.test(chain)) { handles.push(table || '(dynamic)'); continue; }
     if (builderIsScopedLater(src, endIndex, varName)) continue;
-    const payload = insertPayloadHasTenant(src, startIndex, chain);
+    const payload = payloadVarHasTenant(src, startIndex, chain);
     if (payload === true) continue;
     if (idFromScopedRead(src, startIndex, chain)) continue;
     if (table && NO_TENANT_COLUMN.has(table)) noColumn.push(table);

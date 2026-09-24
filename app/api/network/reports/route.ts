@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false });
 
+    // Already scoped by .eq('tenant_id', user.tenantId) on the builder above.
     if (networkProjectId) query = query.eq('network_project_id', networkProjectId);
 
     const { data, error } = await query;
@@ -41,6 +42,7 @@ export async function GET(req: NextRequest) {
  */
 async function buildReportData(
   db: any,
+  tenantId: string,
   networkProjectId: string,
   reportType: string
 ): Promise<{ title: string; data: any }> {
@@ -49,13 +51,13 @@ async function buildReportData(
       const { data: vlans } = await db
         .from('network_vlans')
         .select('*')
-        .eq('network_project_id', networkProjectId)
+        .eq('tenant_id', tenantId).eq('network_project_id', networkProjectId)
         .order('vlan_id', { ascending: true });
 
       const { data: devices } = await db
         .from('network_devices')
         .select('hostname, device_type, ip_address, mac_address, vlan_id, location')
-        .eq('network_project_id', networkProjectId)
+        .eq('tenant_id', tenantId).eq('network_project_id', networkProjectId)
         .order('ip_address', { ascending: true });
 
       return {
@@ -68,7 +70,7 @@ async function buildReportData(
       const { data: cables } = await db
         .from('cable_runs')
         .select('*')
-        .eq('network_project_id', networkProjectId)
+        .eq('tenant_id', tenantId).eq('network_project_id', networkProjectId)
         .order('cable_label', { ascending: true });
 
       const totalCables = cables?.length || 0;
@@ -89,7 +91,7 @@ async function buildReportData(
       const { data: devices } = await db
         .from('network_devices')
         .select('*')
-        .eq('network_project_id', networkProjectId)
+        .eq('tenant_id', tenantId).eq('network_project_id', networkProjectId)
         .order('hostname', { ascending: true });
 
       const deviceIds = (devices || []).map((d: any) => d.id);
@@ -98,7 +100,7 @@ async function buildReportData(
         const { data: portData } = await db
           .from('network_ports')
           .select('*')
-          .in('device_id', deviceIds)
+          .eq('tenant_id', tenantId).in('device_id', deviceIds)
           .order('port_number', { ascending: true });
         ports = portData || [];
       }
@@ -124,11 +126,11 @@ async function buildReportData(
 
     case 'executive_summary': {
       const [vlansRes, devicesRes, cablesRes, firewallRes, wifiRes] = await Promise.all([
-        db.from('network_vlans').select('*').eq('network_project_id', networkProjectId),
-        db.from('network_devices').select('*').eq('network_project_id', networkProjectId),
-        db.from('cable_runs').select('*').eq('network_project_id', networkProjectId),
-        db.from('firewall_rules').select('*').eq('network_project_id', networkProjectId),
-        db.from('wifi_networks').select('*').eq('network_project_id', networkProjectId),
+        db.from('network_vlans').select('*').eq('tenant_id', tenantId).eq('network_project_id', networkProjectId),
+        db.from('network_devices').select('*').eq('tenant_id', tenantId).eq('network_project_id', networkProjectId),
+        db.from('cable_runs').select('*').eq('tenant_id', tenantId).eq('network_project_id', networkProjectId),
+        db.from('firewall_rules').select('*').eq('tenant_id', tenantId).eq('network_project_id', networkProjectId),
+        db.from('wifi_networks').select('*').eq('tenant_id', tenantId).eq('network_project_id', networkProjectId),
       ]);
 
       const devices = devicesRes.data || [];
@@ -206,7 +208,7 @@ export async function POST(req: NextRequest) {
     if (!project) return badRequest('Network project not found');
 
     // Build the report data
-    const { title, data: reportData } = await buildReportData(db, network_project_id, report_type);
+    const { title, data: reportData } = await buildReportData(db, user.tenantId, network_project_id, report_type);
 
     // Save to network_reports
     const { data: saved, error: saveErr } = await db

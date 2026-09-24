@@ -29,11 +29,13 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
 /** Next claim number for this project: WC-0001, WC-0002, ... */
 async function nextClaimNumber(
   supabase: ReturnType<typeof createServerClient>,
+  tenantId: string,
   projectId: string,
 ): Promise<string> {
   const { data } = await supabase
     .from('warranty_claims')
     .select('claim_number')
+    .eq('tenant_id', tenantId)
     .eq('project_id', projectId)
     .not('claim_number', 'is', null)
     .order('claim_number', { ascending: false })
@@ -80,7 +82,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     // concurrent creates can't both claim WC-0007. Retry the loser of a race.
     let lastError: unknown = null;
     for (let attempt = 0; attempt < 3; attempt++) {
-      const claim_number = await nextClaimNumber(supabase, params.projectId);
+      const claim_number = await nextClaimNumber(supabase, user.tenantId, params.projectId);
       const { data, error } = await supabase
         .from('warranty_claims')
         .insert({ ...base, claim_number } as never)

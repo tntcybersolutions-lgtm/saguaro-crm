@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await db
       .from('network_ports')
       .select('*')
+      .eq('tenant_id', user.tenantId)
       .eq('device_id', deviceId)
       .order('port_number', { ascending: true });
 

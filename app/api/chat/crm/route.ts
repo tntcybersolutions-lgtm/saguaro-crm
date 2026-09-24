@@ -2262,6 +2262,7 @@ export async function POST(req: NextRequest) {
         .limit(10),
       db.from('pay_applications')
         .select('id, project_id, app_number, status, net_payment_due, period_to, submitted_at')
+        .eq('tenant_id', user.tenantId)
         .order('created_at', { ascending: false })
         .limit(10),
       db.from('rfis')

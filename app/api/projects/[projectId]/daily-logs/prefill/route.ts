@@ -92,6 +92,7 @@ export async function GET(
       const { data: members } = await db
         .from('crew_members')
         .select('crew_id, trade')
+        .eq('tenant_id', user.tenantId)
         .in('crew_id', active.map((c) => c.id))
         .is('deleted_at', null);
       const groups: Record<string, { trade: string; count: number; crews: Set<string> }> = {};
