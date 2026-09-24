@@ -99,6 +99,10 @@ interface CatalogItem {
   skuHint: string | null;
   /** Real product image when one has been attached — null renders the honest monogram chip. */
   imageUrl: string | null;
+  /** Server-computed per row: shared catalog rows are platform-admin only, your
+   *  own catalog rows need Projects/Full. Gates the camera button so it never
+   *  appears on a row the write would refuse. */
+  canEditImage?: boolean;
   prices: Offer[];
 }
 interface CatalogData {
@@ -108,8 +112,6 @@ interface CatalogData {
   asOfMax: string | null;
   /** False until a real vendor inventory feed is connected — today, always false. */
   hasLiveStockFeed?: boolean;
-  /** True when the caller holds Projects/Full — server-computed, drives the Add-photo affordance. */
-  canManageImages?: boolean;
 }
 
 type SortMode = 'name' | 'price' | 'category';
@@ -786,7 +788,7 @@ export default function CatalogPage() {
                                   {it.description}{it.description && it.skuHint ? ' · ' : ''}{it.skuHint ? `SKU ${it.skuHint}` : ''}
                                 </div>
                               )}
-                              {data?.canManageImages && (
+                              {it.canEditImage && (
                                 <button
                                   onClick={() => { setImgMenu(imgMenu === it.id ? null : it.id); setImgErr(''); setImgUrlDraft(''); }}
                                   className="pmBtn catImgBtn"

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission, hasPermission } from '@/lib/permissions';
+import { isPlatformAdmin } from '@/lib/platform-admin';
+import { signStoredUrl } from '@/lib/storage-signing';
 import { hasLiveStock } from './stock';
 
 /** GET ?vertical=&q= — Materials Catalog price-comparison snapshot.
@@ -62,9 +64,9 @@ export async function GET(req: NextRequest) {
       }
       return iq;
     };
-    let { data: items, error: itemsErr } = await buildItemsQ('id, vertical, category, name, description, unit, sku_hint, image_url');
+    let { data: items, error: itemsErr } = await buildItemsQ('id, tenant_id, vertical, category, name, description, unit, sku_hint, image_url');
     if (itemsErr) {
-      ({ data: items, error: itemsErr } = await buildItemsQ('id, vertical, category, name, description, unit, sku_hint'));
+      ({ data: items, error: itemsErr } = await buildItemsQ('id, tenant_id, vertical, category, name, description, unit, sku_hint'));
     }
     if (itemsErr) throw itemsErr;
 
@@ -125,6 +127,32 @@ export async function GET(req: NextRequest) {
       byItem.set(r.item_id, list);
     }
 
+    /* WHO MAY EDIT THIS ROW'S PHOTO — computed per row, not once for the page.
+       A global row (tenant_id IS NULL) is the shared catalog every tenant
+       reads, so only a platform admin may touch it; a tenant's own row belongs
+       to that tenant. This is the same rule /api/catalog/image enforces on the
+       write, so the camera button appears exactly where it will work rather
+       than on every row and 403-ing on most of them. */
+    const platformAdmin = isPlatformAdmin(g.user.email);
+    const fullOnProjects = hasPermission(g.perms, 'Projects', 'Full');
+    const mayEdit = (row: { tenant_id?: string | null }) =>
+      row.tenant_id == null ? platformAdmin : fullOnProjects && row.tenant_id === g.user.tenantId;
+
+    /* image_url holds a bucket PATH for uploaded photos and a foreign http(s)
+       URL for pasted manufacturer images. signStoredUrl signs the first and
+       passes the second through untouched, so one column serves both. Only
+       rows that actually carry an image are signed — the shared catalog is 223
+       rows and none of them should cost a storage round-trip for a null. */
+    const signedById = new Map<string, string>();
+    await Promise.all(
+      ((items as any[]) || [])
+        .filter((it) => typeof it.image_url === 'string' && it.image_url)
+        .map(async (it) => {
+          const url = await signStoredUrl('project-files', it.image_url as string);
+          if (url) signedById.set(it.id, url);
+        })
+    );
+
     const outItems = ((items as any[]) || []).map((it) => {
       const prices = (byItem.get(it.id) || []).sort((a, b) => a.price - b.price);
       // BEST PRICE = the cheapest quote. A stock preference may ONLY break the
@@ -140,7 +168,8 @@ export async function GET(req: NextRequest) {
         description: it.description,
         unit: it.unit,
         skuHint: it.sku_hint,
-        imageUrl: it.image_url || null,
+        imageUrl: signedById.get(it.id) || null,
+        canEditImage: mayEdit(it),
         prices,
       };
     });
@@ -160,9 +189,10 @@ export async function GET(req: NextRequest) {
       // False until a real vendor inventory feed is connected — the page says
       // so out loud instead of implying stock it cannot source.
       hasLiveStockFeed: anyLiveStock,
-      // Drives the Add-photo affordance client-side; the image route enforces
-      // the same Projects/Full gate server-side regardless.
-      canManageImages: hasPermission(g.perms, 'Projects', 'Full'),
+      /* The page-wide canManageImages flag is gone. It was a bare Projects/Full
+         check that put the camera button on all 223 shared rows for every
+         tenant admin, and the write behind it is now platform-admin only — a
+         page-wide answer to a per-row question. item.canEditImage replaces it. */
     });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

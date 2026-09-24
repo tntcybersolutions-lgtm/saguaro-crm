@@ -82,7 +82,8 @@ const SAGE_CHAT_TOOLS: Anthropic.Tool[] = [
 async function executeSageChatTool(
   name: string,
   input: Record<string, unknown>,
-  req: NextRequest
+  req: NextRequest,
+  tenantId: string
 ): Promise<string> {
   try {
     switch (name) {
@@ -112,16 +113,25 @@ async function executeSageChatTool(
       case 'search_catalog': {
         const raw = String(input.query ?? '').trim();
         if (!raw) return JSON.stringify({ error: 'query is required' });
-        // Catalog tables are a shared reference dataset (no tenant scoping) and
-        // newer than the generated Database types — same `as any` idiom as
-        // /api/catalog. Strip PostgREST or-filter metacharacters before
-        // interpolating, exactly like that route.
+        /* Catalog tables are newer than the generated Database types — same
+           `as any` idiom as /api/catalog. Strip PostgREST or-filter
+           metacharacters before interpolating, exactly like that route.
+
+           SCOPED "GLOBAL OR MINE", matching /api/catalog. Every catalog row
+           today is shared reference data (tenant_id IS NULL) so this changes
+           nothing yet, but the column exists because per-tenant entries are
+           coming — and an unscoped search here would let a user ask Sage a
+           question and get another contractor's item list and pricing back in
+           plain English. A tool the model can call needs the same tenant
+           filter as the screen it stands in for. */
         const db = createServerClient() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        const scope = `tenant_id.is.null,tenant_id.eq.${tenantId}`;
         const safe = raw.replace(/[%_,()."\\]/g, ' ').trim();
         if (!safe) return JSON.stringify({ items: [], note: 'Query contained no searchable characters.' });
         const { data: items, error: itemsErr } = await db
           .from('catalog_items')
           .select('id, vertical, category, name, description, unit, sku_hint')
+          .or(scope)
           .or(`name.ilike.%${safe}%,description.ilike.%${safe}%,sku_hint.ilike.%${safe}%`)
           .order('name', { ascending: true })
           .limit(8);
@@ -138,6 +148,7 @@ async function executeSageChatTool(
         const { data: priceRows, error: priceErr } = await db
           .from('catalog_vendor_prices')
           .select('item_id, price, unit, stock_status, source, as_of, catalog_vendors(name)')
+          .or(scope)
           .in('item_id', ids);
         if (priceErr) throw priceErr;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -333,7 +344,7 @@ to a few tool calls per reply.`.trim(),
               toolResults.push({
                 type: 'tool_result',
                 tool_use_id: tu.id,
-                content: await executeSageChatTool(tu.name, tu.input as Record<string, unknown>, req),
+                content: await executeSageChatTool(tu.name, tu.input as Record<string, unknown>, req, user.tenantId),
               });
             }
             currentMessages = [
@@ -359,8 +370,12 @@ to a few tool calls per reply.`.trim(),
                 projectName: body.projectName,
               }
             );
-          } catch {
-            // best-effort save
+          } catch (err) {
+            /* Best-effort, but never silent. The user-message save 20 lines up
+               logs; this one swallowed, so a chat history that stopped
+               recording Sage's half of the conversation left nothing behind to
+               find it by. The stream still finishes — that part was right. */
+            console.error('[sage/chat] saveMessageWithIntelligence (assistant) failed, continuing:', err);
           }
 
           const chips = buildSuggestionChips(intelligence, body.pageContext ?? 'default');

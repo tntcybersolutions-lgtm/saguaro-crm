@@ -86,6 +86,23 @@ const PUBLIC_BY_DESIGN = [
   /^smart-packages\/customize-public$/,
 ];
 
+/* NOT public, but legitimately NOT tenant-scoped. These sit behind a session
+   AND a stronger gate than tenancy, over a table that has no tenant to scope
+   to. Listed here with the evidence instead of left in the failing count,
+   because a permanent "known 3" trains everyone to ignore the number.
+
+   platform/integrations, platform/integrations/[app]
+     Platform-owner screens for the OAuth app registrations Saguaro itself
+     holds (Microsoft, Dropbox, Google) — one row per provider for the whole
+     product, not per customer. Gated by isPlatformAdmin(user.email) against
+     PLATFORM_ADMIN_EMAILS, which is a narrower gate than any tenant check.
+     VERIFIED on production 24 Sep 2026: platform_integrations has columns
+     app, client_id, secret_enc, enabled, updated_by, updated_at, created_at —
+     there is no tenant_id column to filter on. */
+const TENANT_EXEMPT = [
+  /^platform\/integrations(\/|$)/,
+];
+
 /** Block and line comments out, so prose about a rule is never counted as the
  *  rule being followed — or broken. String contents are left alone: a table
  *  name or an .eq('tenant_id', …) literal is code and must still count. */
@@ -157,9 +174,14 @@ for (const f of files) {
      return another tenant's rows — it returns a subset of one tenant's. It is
      the right scope for per-user data: dashboard layouts, a person's own
      notifications, presence. Counting it as unscoped flagged correct routes. */
+  /* A ROUTE MAY HOLD THE TENANT ID IN A LOCAL. onboarding/company does
+     `const tenantId = user.tenantId` and then `.eq('id', tenantId)` — correctly
+     scoped, and graded NO TENANT FILTER because the pattern insisted on the
+     `user.` prefix at the call site. Tenth false alarm from this instrument;
+     like the other nine, it accused code that was already right. */
   const tenantCount =
     (src.match(/tenant_id/g) || []).length +
-    (src.match(/\.eq\s*\(\s*['"]id['"]\s*,\s*(user|auth)\.tenantId/g) || []).length +
+    (src.match(/\.eq\s*\(\s*['"]id['"]\s*,\s*((user|auth)\.)?tenantId/g) || []).length +
     (src.match(/\.eq\s*\(\s*['"]user_id['"]\s*,\s*(user|auth|g\.user)\.id/g) || []).length;
 
   /* An empty catch is a bug per §3, and `catch {` with nothing but whitespace or
@@ -176,10 +198,12 @@ for (const f of files) {
      its own comment says it does not do. */
   const bodyTenant = /body[ 	]*\.[ 	]*tenant_id|body\[['"]tenant_id['"]\]/.test(src);
 
+  const tenantExempt = TENANT_EXEMPT.some((re) => re.test(rel));
+
   const problems = [];
   if (!isPublic && !hasAuth && touchesDb) problems.push('NO AUTH');
-  if (!isPublic && touchesDb && tenantCount === 0) problems.push('NO TENANT FILTER');
-  if (!isPublic && touchesDb && tenantCount > 0 && tenantCount < fromCount) {
+  if (!isPublic && !tenantExempt && touchesDb && tenantCount === 0) problems.push('NO TENANT FILTER');
+  if (!isPublic && !tenantExempt && touchesDb && tenantCount > 0 && tenantCount < fromCount) {
     problems.push(`PARTIAL TENANT (${tenantCount}/${fromCount})`);
   }
   if (emptyCatch) problems.push('EMPTY CATCH');
