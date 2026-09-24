@@ -104,10 +104,10 @@ export async function GET(req: NextRequest) {
     // Last message + unread count per channel (small N — fine per channel).
     const enriched = await Promise.all(list.map(async (c) => {
       const mine = memMap.get(c.id) as any;
-      let unreadQ = db.from('radio_messages').select('id', { count: 'exact', head: true }).eq('channel_id', c.id);
+      let unreadQ = db.from('radio_messages').select('id', { count: 'exact', head: true }).eq('tenant_id', t).eq('channel_id', c.id);
       if (mine?.last_read_at) unreadQ = unreadQ.gt('created_at', mine.last_read_at);
       const [{ data: last }, { count: unread }] = await Promise.all([
-        db.from('radio_messages').select('kind, body, sender_name, created_at, audio_duration_secs').eq('channel_id', c.id).order('created_at', { ascending: false }).limit(1),
+        db.from('radio_messages').select('kind, body, sender_name, created_at, audio_duration_secs').eq('tenant_id', t).eq('channel_id', c.id).order('created_at', { ascending: false }).limit(1),
         unreadQ,
       ]);
       const chMembers = allMembers.filter((m) => m.channel_id === c.id);
@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
         const { data: pt } = await db.from('project_team').select('name, email').eq('tenant_id', t).eq('user_id', body.addUserId).limit(1);
         if (pt && pt.length) displayName = (pt[0] as any).name || (pt[0] as any).email || null;
         if (!displayName) {
-          const { data: prof } = await db.from('profiles').select('full_name, email').eq('id', body.addUserId).maybeSingle();
+          const { data: prof } = await db.from('profiles').select('full_name, email').eq('tenant_id', t).eq('id', body.addUserId).maybeSingle();
           displayName = (prof as any)?.full_name || (prof as any)?.email || null;
         }
         await must(db.from('radio_members').insert({

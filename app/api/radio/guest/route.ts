@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       if (!gl) return NextResponse.json({ error: 'Link expired or revoked' }, { status: 401 });
       const ch = gl.radio_channels;
       const after = req.nextUrl.searchParams.get('after');
-      let q = db.from('radio_messages').select('*').eq('channel_id', ch.id);
+      let q = db.from('radio_messages').select('*').eq('tenant_id', ch.tenant_id).eq('channel_id', ch.id);
       if (after) q = q.gt('created_at', after);
       const { data } = await q.order('created_at', { ascending: after ? true : false }).limit(100);
       const rows = ((data || []) as any[]);

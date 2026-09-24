@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const db = createServerClient() as any;
     const { data: mem } = await db.from('radio_members').select('id').eq('tenant_id', t).eq('channel_id', channelId).eq('user_id', g.user.id).limit(1);
     if (!mem || !mem.length) return NextResponse.json({ error: 'Not a member of this channel' }, { status: 403 });
-    const { data: ch } = await db.from('radio_channels').select('project_id, name').eq('id', channelId).single();
+    const { data: ch } = await db.from('radio_channels').select('project_id, name').eq('tenant_id', t).eq('id', channelId).single();
 
     const path = `${t}/radio/${channelId}/${Date.now()}_${safeName}`;
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
           .or(`channel_a.eq.${channelId},channel_b.eq.${channelId}`);
         for (const p of (patches || []) as any[]) {
           const other = p.channel_a === channelId ? p.channel_b : p.channel_a;
-          const { data: och } = await db.from('radio_channels').select('project_id').eq('id', other).single();
+          const { data: och } = await db.from('radio_channels').select('project_id').eq('tenant_id', t).eq('id', other).single();
           await must(db.from('radio_messages').insert({
             tenant_id: t, channel_id: other, project_id: (och as any)?.project_id ?? null,
             sender_user_id: g.user.id, sender_name: g.user.email || 'Team member',
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     })();
 
     // Radio push — members hear about traffic immediately.
-    const { data: members } = await db.from('radio_members').select('user_id, monitoring').eq('channel_id', channelId).not('user_id', 'is', null);
+    const { data: members } = await db.from('radio_members').select('user_id, monitoring').eq('tenant_id', t).eq('channel_id', channelId).not('user_id', 'is', null);
     Promise.all(((members || []) as any[])
       .filter((m) => m.user_id && m.user_id !== g.user.id && m.monitoring !== false)
       .map((m) => createNotification(t, m.user_id, 'radio_voice', `PTT — ${(ch as any)?.name || 'Radio'}`, `${g.user.email || 'Team member'} · ${durationSecs ? Math.round(durationSecs) + 's' : 'voice'}`, `/app/radio?channel=${channelId}`, (ch as any)?.project_id ?? undefined))

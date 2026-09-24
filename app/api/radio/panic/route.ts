@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
         : (typeof prev.lat === 'number' ? [{ lat: prev.lat, lng: prev.lng, at: (orig as any).created_at }] : []);
       trail.push({ lat: loc.lat, lng: loc.lng, at: new Date().toISOString() });
       const location = { lat: loc.lat, lng: loc.lng, trail: trail.slice(-200) };
-      const { error: updErr } = await db.from('radio_messages').update({ location } as never).eq('id', body.panicId);
+      const { error: updErr } = await db.from('radio_messages').update({ location } as never).eq('tenant_id', t).eq('id', body.panicId);
       if (updErr) throw updErr;
       return NextResponse.json({ ok: true, points: location.trail.length });
     }
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       const already = (orig as any).panic_resolved_at ?? null;
       const resolvedAt = already || new Date().toISOString();
       if (!already) {
-        const { error: updErr } = await db.from('radio_messages').update({ panic_resolved_at: resolvedAt } as never).eq('id', body.panicId);
+        const { error: updErr } = await db.from('radio_messages').update({ panic_resolved_at: resolvedAt } as never).eq('tenant_id', t).eq('id', body.panicId);
         if (updErr) throw updErr;
         await must(db.from('radio_messages').insert({
           tenant_id: t, channel_id: (orig as any).channel_id, project_id: (orig as any).project_id,
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       channelId = ((ch || [])[0] as any)?.id ?? null;
     }
     if (!channelId) return NextResponse.json({ error: 'channelId or projectId required' }, { status: 400 });
-    const { data: chRow } = await db.from('radio_channels').select('project_id, name').eq('id', channelId).single();
+    const { data: chRow } = await db.from('radio_channels').select('project_id, name').eq('tenant_id', t).eq('id', channelId).single();
     projectId = projectId ?? ((chRow as any)?.project_id ?? null);
 
     const loc = body.location && typeof body.location.lat === 'number' ? { lat: body.location.lat, lng: body.location.lng } : null;
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     } as never).select().single();
     if (error) throw error;
 
-    const { data: members } = await db.from('radio_members').select('user_id, display_name').eq('channel_id', channelId);
+    const { data: members } = await db.from('radio_members').select('user_id, display_name').eq('tenant_id', t).eq('channel_id', channelId);
     const userIds = ((members || []) as any[]).map((m) => m.user_id).filter(Boolean).filter((id) => id !== g.user.id);
 
     // 1) In-app + push, to every member.
@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     try {
       const key = process.env.RESEND_API_KEY;
       if (key && userIds.length) {
-        const { data: users } = await db.from('users').select('id, email').in('id', userIds);
+        const { data: users } = await db.from('users').select('id, email').eq('tenant_id', t).in('id', userIds);
         const emails = ((users || []) as any[]).map((u) => u.email).filter(Boolean);
         if (emails.length) {
           await fetch('https://api.resend.com/emails', {

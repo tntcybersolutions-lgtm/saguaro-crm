@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     let logId: string;
     if (existing) {
       const merged = existing.work_performed ? `${existing.work_performed}\n${entry}` : entry;
-      const { error } = await db.from('daily_logs').update({ work_performed: merged } as never).eq('id', existing.id);
+      const { error } = await db.from('daily_logs').update({ work_performed: merged } as never).eq('tenant_id', t).eq('id', existing.id);
       if (error) throw error;
       logId = existing.id;
     } else {

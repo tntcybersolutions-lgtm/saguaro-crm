@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     // Alert dispatchers (channel role) or, failing that, every channel member.
     if (b.channelId) {
-      const { data: members } = await db.from('radio_members').select('user_id, role').eq('channel_id', b.channelId).not('user_id', 'is', null);
+      const { data: members } = await db.from('radio_members').select('user_id, role').eq('tenant_id', t).eq('channel_id', b.channelId).not('user_id', 'is', null);
       const all = ((members || []) as any[]).filter((m) => m.user_id && m.user_id !== g.user.id);
       const dispatchers = all.filter((m) => m.role === 'dispatcher');
       const targets = (dispatchers.length ? dispatchers : all).map((m) => m.user_id);

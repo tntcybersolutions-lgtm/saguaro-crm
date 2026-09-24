@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       const sent: any[] = [];
       for (const cid of body.channelIds.slice(0, 8)) {
         if (!(await membership(db, t, g.user.id, cid))) continue;
-        const { data: chb } = await db.from('radio_channels').select('project_id').eq('id', cid).single();
+        const { data: chb } = await db.from('radio_channels').select('project_id').eq('tenant_id', t).eq('id', cid).single();
         const { data: bm } = await db.from('radio_messages').insert({
           tenant_id: t, channel_id: cid, project_id: (chb as any)?.project_id ?? null,
           sender_user_id: g.user.id, sender_name: g.user.email || 'Team member',
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
     }
     if (!(await membership(db, t, g.user.id, channelId))) return NextResponse.json({ error: 'Not a member of this channel' }, { status: 403 });
 
-    const { data: ch } = await db.from('radio_channels').select('project_id, name').eq('id', channelId).single();
+    const { data: ch } = await db.from('radio_channels').select('project_id, name').eq('tenant_id', t).eq('id', channelId).single();
     const { data: msg, error } = await db.from('radio_messages').insert({
       tenant_id: t, channel_id: channelId, project_id: (ch as any)?.project_id ?? null,
       sender_user_id: g.user.id, sender_name: g.user.email || 'Team member', kind, body: text,
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
           .or(`channel_a.eq.${channelId},channel_b.eq.${channelId}`);
         for (const p of (patches || []) as any[]) {
           const other = p.channel_a === channelId ? p.channel_b : p.channel_a;
-          const { data: och } = await db.from('radio_channels').select('project_id').eq('id', other).single();
+          const { data: och } = await db.from('radio_channels').select('project_id').eq('tenant_id', t).eq('id', other).single();
           const { data: pm } = await db.from('radio_messages').insert({
             tenant_id: t, channel_id: other, project_id: (och as any)?.project_id ?? null,
             sender_user_id: g.user.id, sender_name: g.user.email || 'Team member',
@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
     })();
 
     if (kind === 'alert') {
-      const { data: members } = await db.from('radio_members').select('user_id').eq('channel_id', channelId).not('user_id', 'is', null);
+      const { data: members } = await db.from('radio_members').select('user_id').eq('tenant_id', t).eq('channel_id', channelId).not('user_id', 'is', null);
       await Promise.all(((members || []) as any[])
         .filter((m) => m.user_id && m.user_id !== g.user.id)
         .map((m) => createNotification(t, m.user_id, 'radio_alert', `ALERT — ${(ch as any)?.name || 'Radio'}`, text, `/app/radio?channel=${channelId}`, (ch as any)?.project_id ?? undefined)));

@@ -76,7 +76,13 @@ export async function POST(req: NextRequest) {
     const projectId = body.projectId ?? body.project_id;
     if (!projectId) return NextResponse.json({ error: 'projectId required' }, { status: 400 });
 
-    const { data: project } = await db.from('projects').select('*').eq('id', projectId).single();
+    /* projectId is caller-supplied and db is the service role, so without the
+       tenant filter this read any project by id — and its contract amount and
+       retainage then seeded the pay application. Every other query in this
+       route was already tenant-scoped; this one was not. */
+    const { data: project } = await db.from('projects').select('*')
+      .eq('id', projectId).eq('tenant_id', user.tenantId).maybeSingle();
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     const p = project as any;
 
     // Get next application number

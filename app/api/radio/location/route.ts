@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       battery_level: Number.isFinite(Number(b.battery)) ? Math.round(Number(b.battery)) : null,
       trade: b.trade ?? null, status: 'on_site', updated_at: new Date().toISOString(),
     };
-    if (existing?.length) await must(db.from('crew_locations').update(row as never).eq('id', existing[0].id), 'crew_locations update');
+    if (existing?.length) await must(db.from('crew_locations').update(row as never).eq('tenant_id', t).eq('id', existing[0].id), 'crew_locations update');
     else await must(db.from('crew_locations').insert(row as never), 'crew_locations insert');
 
     // History ping (heatmap fuel) — thin append.
@@ -104,7 +104,8 @@ export async function GET(req: NextRequest) {
     if (ids.length) {
       const { data: ppl } = await db.from('crew_location_pings')
         .select('user_id, display_name').in('user_id', ids)
-        .eq('project_id', projectId).order('created_at', { ascending: false }).limit(200);
+        .eq('tenant_id', t).eq('project_id', projectId)
+        .order('created_at', { ascending: false }).limit(200);
       for (const p of (ppl || []) as any[]) if (p.user_id && !names.has(p.user_id)) names.set(p.user_id, p.display_name);
     }
     return NextResponse.json({

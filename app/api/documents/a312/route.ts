@@ -10,7 +10,9 @@ export async function POST(req: NextRequest) {
     const user = await getUser(req);
     const body = await req.json();
     const db = createServerClient();
-    const { data: project } = await db.from('projects').select('*').eq('id', body.projectId).single();
+    const { data: project } = await db.from('projects').select('*')
+      .eq('id', body.projectId).eq('tenant_id', g.user.tenantId).single();
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     const p = project as any;
 
     const pdfBytes = await generateA312({
@@ -26,7 +28,7 @@ export async function POST(req: NextRequest) {
       bondType: body.bondType || 'both',
     });
 
-    const pdfUrl = await saveDocument(body.projectId, 'a312-bond', pdfBytes, body, user?.id || p?.tenant_id);
+    const pdfUrl = await saveDocument(body.projectId, 'a312-bond', pdfBytes, body, g.user.tenantId);
     return NextResponse.json({ pdfUrl, success: true });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

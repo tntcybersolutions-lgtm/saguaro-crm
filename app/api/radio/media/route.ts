@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     const db = createServerClient() as any;
     const { data: mem } = await db.from('radio_members').select('id').eq('tenant_id', t).eq('channel_id', channelId).eq('user_id', g.user.id).limit(1);
     if (!mem || !mem.length) return NextResponse.json({ error: 'Not a member of this channel' }, { status: 403 });
-    const { data: ch } = await db.from('radio_channels').select('project_id, name').eq('id', channelId).single();
+    const { data: ch } = await db.from('radio_channels').select('project_id, name').eq('tenant_id', t).eq('id', channelId).single();
 
     const path = `${t}/radio/${channelId}/${Date.now()}_${safeName}`;
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     } as never).select().single();
     if (error) throw error;
 
-    const { data: members } = await db.from('radio_members').select('user_id, monitoring').eq('channel_id', channelId).not('user_id', 'is', null);
+    const { data: members } = await db.from('radio_members').select('user_id, monitoring').eq('tenant_id', t).eq('channel_id', channelId).not('user_id', 'is', null);
     Promise.all(((members || []) as any[])
       .filter((m) => m.user_id && m.user_id !== g.user.id && m.monitoring !== false)
       .map((m) => createNotification(t, m.user_id, 'radio_media', `Shared to ${(ch as any)?.name || 'Radio'}`, caption || safeName, `/app/radio?channel=${channelId}`, (ch as any)?.project_id ?? undefined))

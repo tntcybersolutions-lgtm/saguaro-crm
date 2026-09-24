@@ -84,7 +84,7 @@ async function loadMessage(db: Db, tenantId: string, messageId: string): Promise
   let channelName: string | null = null;
   const channelId = (data as RadioMessageRow).channel_id;
   if (channelId) {
-    const { data: ch } = await db.from('radio_channels').select('name').eq('id', channelId).maybeSingle();
+    const { data: ch } = await db.from('radio_channels').select('name').eq('tenant_id', tenantId).eq('id', channelId).maybeSingle();
     channelName = (ch as { name?: string } | null)?.name ?? null;
   }
   return { msg: data as RadioMessageRow, channelName };

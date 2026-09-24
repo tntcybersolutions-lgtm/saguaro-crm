@@ -11,7 +11,9 @@ export async function POST(req: NextRequest) {
     const user = await getUser(req);
     const body = await req.json();
     const db = createServerClient();
-    const { data: project } = await db.from('projects').select('*').eq('id', body.projectId).single();
+    const { data: project } = await db.from('projects').select('*')
+      .eq('id', body.projectId).eq('tenant_id', g.user.tenantId).single();
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     const p = project as any;
 
     const pdfBytes = await generateWH347({
@@ -23,7 +25,7 @@ export async function POST(req: NextRequest) {
       employees: body.employees || [],
     });
 
-    const pdfUrl = await saveDocument(body.projectId, 'wh347', pdfBytes, body, user?.id || p?.tenant_id);
+    const pdfUrl = await saveDocument(body.projectId, 'wh347', pdfBytes, body, g.user.tenantId);
 
     // Save certified payroll record
     await must(db.from('certified_payroll').insert({
