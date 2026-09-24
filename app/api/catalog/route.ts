@@ -23,9 +23,23 @@ export async function GET(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'View');
   if (!g.ok) return g.res;
   try {
-    // Catalog tables are a shared reference dataset (no tenant scoping) and
-    // newer than the generated Database types — hence the `as any` idiom used
-    // by other routes that touch post-typegen tables.
+    /* Catalog tables are a shared reference dataset and newer than the
+       generated Database types — hence the `as any` idiom used by other routes
+       that touch post-typegen tables.
+
+       VERIFIED, NOT ASSUMED (24 Sep 2026): catalog_items is 223 rows and
+       catalog_vendor_prices 667, and tenant_id is NULL on every one of them.
+       So "shared reference dataset" is true today and this route is not
+       leaking anything.
+
+       The scoping below is a GUARD for tomorrow. The tenant_id column exists,
+       which means per-tenant catalog entries are clearly intended at some
+       point — and on that day an unscoped read would hand one contractor
+       another's item list and vendor pricing, which is commercially sensitive.
+       Pinning to `IS NULL` alone would instead hide those future rows from
+       their own owner, so the filter is "global OR mine": it serves the shared
+       catalog exactly as now, admits a tenant's own entries when they arrive,
+       and can never return a third party's. */
     const db = g.db as any;
     const vertical = req.nextUrl.searchParams.get('vertical');
     const q = (req.nextUrl.searchParams.get('q') || '').trim();
@@ -37,6 +51,7 @@ export async function GET(req: NextRequest) {
       let iq = db
         .from('catalog_items')
         .select(cols)
+        .or(`tenant_id.is.null,tenant_id.eq.${g.user.tenantId}`)
         .order('category', { ascending: true })
         .order('name', { ascending: true });
       if (vertical) iq = iq.eq('vertical', vertical);
@@ -60,6 +75,7 @@ export async function GET(req: NextRequest) {
       const { data, error: priceErr } = await db
         .from('catalog_vendor_prices')
         .select('item_id, price, unit, qty_in_stock, stock_status, lead_time_days, source, as_of, catalog_vendors(name, kind, website)')
+        .or(`tenant_id.is.null,tenant_id.eq.${g.user.tenantId}`)
         .in('item_id', ids);
       if (priceErr) throw priceErr;
       priceRows = (data as any[]) || [];
@@ -69,7 +85,7 @@ export async function GET(req: NextRequest) {
     // so the tabs never collapse while searching).
     const [vendorRes, vertRes] = await Promise.all([
       db.from('catalog_vendors').select('id, name, kind, verticals, website, is_national').order('name', { ascending: true }),
-      db.from('catalog_items').select('vertical'),
+      db.from('catalog_items').select('vertical').or(`tenant_id.is.null,tenant_id.eq.${g.user.tenantId}`),
     ]);
     const verticals: string[] = Array.from(
       new Set((((vertRes.data as any[]) || []).map((r) => r.vertical) as string[]).filter(Boolean))

@@ -191,6 +191,45 @@ export async function requirePermission(
   }
 
   const db = opts?.db ?? createServerClient();
+
+  /* ⚠️ PERMISSION IS NOT ISOLATION.
+   *
+   * `projectId` arrives from the request — a query string or a URL segment —
+   * and getEffectivePermissions() below uses it only to decide WHICH role
+   * grants apply. It never asked whose project it was. A GLOBAL grant
+   * (project_id IS NULL) always applies, and a user with no assignments at all
+   * falls to memberDefault(), which is View on every operational category.
+   *
+   * So any signed-in user could pass ANOTHER TENANT'S project id, clear this
+   * gate, and have the route read that job. /api/photos did exactly that and
+   * handed back signed URLs to another company's site photos. Measured on
+   * production 24 Sep 2026: one role assignment exists across the whole
+   * platform, so effectively every user was on memberDefault().
+   *
+   * The guard answers "may this person do this?". It could not answer "is this
+   * row theirs?" — only a tenant filter does that, and it belongs HERE rather
+   * than in each of the 25 routes that pass a projectId, because one of them
+   * will always be forgotten.
+   *
+   * 404, not 403: a project in another tenant should be indistinguishable from
+   * one that does not exist, or the response confirms which ids are real.
+   */
+  if (opts?.projectId) {
+    const { data: owned, error } = await db
+      .from('projects')
+      .select('id')
+      .eq('id', opts.projectId)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+
+    if (error || !owned) {
+      return {
+        ok: false,
+        res: NextResponse.json({ error: 'Project not found' }, { status: 404 }),
+      };
+    }
+  }
+
   const perms = await getEffectivePermissions(db, user.id, user.tenantId, opts?.projectId);
 
   if (!hasPermission(perms, category, minLevel)) {
