@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
     const scheduleImpact = scheduleImpactDays != null ? Number(scheduleImpactDays) || 0 : 0;
 
     const db = g.db;
-    const { data: last } = await db.from('change_orders').select('co_number').eq('project_id', projectId).order('co_number', { ascending: false }).limit(1).maybeSingle();
+    const { data: last } = await db.from('change_orders').select('co_number')
+      .eq('tenant_id', user.tenantId).eq('project_id', projectId).order('co_number', { ascending: false }).limit(1).maybeSingle();
     const coNumber = ((last as any)?.co_number || 0) + 1;
 
     const { data: co, error } = await db.from('change_orders').insert({

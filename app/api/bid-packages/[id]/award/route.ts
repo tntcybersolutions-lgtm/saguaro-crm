@@ -22,9 +22,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const subId = (subRow as { sub_id?: string | null } | null)?.sub_id;
         if (subId) {
           const issues: string[] = [];
-          const { data: subRec } = await db.from('subcontractors').select('w9_on_file').eq('id', subId).maybeSingle();
+          const { data: subRec } = await db.from('subcontractors').select('w9_on_file').eq('tenant_id', user.tenantId).eq('id', subId).maybeSingle();
           if (subRec && (subRec as { w9_on_file?: boolean | null }).w9_on_file !== true) issues.push('W-9 not on file');
-          const { data: certs } = await db.from('insurance_certificates').select('expiry_date, status').eq('sub_id', subId);
+          const { data: certs } = await db.from('insurance_certificates').select('expiry_date, status').eq('tenant_id', user.tenantId).eq('sub_id', subId);
           if (certs && certs.length > 0) {
             const valid = (certs as { expiry_date: string | null; status: string | null }[]).some(
               (c) => c.status !== 'expired' && (!c.expiry_date || new Date(c.expiry_date).getTime() > Date.now()));

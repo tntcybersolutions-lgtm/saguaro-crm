@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       const { data: profiles } = await db
         .from('profiles')
         .select('id, full_name, email')
-        .in('id', lookupIds);
+        .eq('tenant_id', user.tenantId).in('id', lookupIds);
       for (const p of profiles ?? []) {
         userMap.set(p.id, { name: p.full_name ?? p.email ?? 'Unknown', email: p.email ?? '' });
       }

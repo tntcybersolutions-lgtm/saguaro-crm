@@ -53,6 +53,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       const { data: prime } = await db
         .from('contracts')
         .select('id, paid_amount, invoiced_amount')
+        .eq('tenant_id', user.tenantId)
         .eq('project_id', (pa as { project_id: string }).project_id)
         .eq('contract_type', 'prime')
         .limit(1)
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const p = prime as unknown as { id: string; paid_amount: number | null };
         await must(db.from('contracts')
           .update({ paid_amount: (p.paid_amount || 0) + paDue } as never)
+          .eq('tenant_id', user.tenantId)
           .eq('id', p.id), 'contracts write');
       }
     }

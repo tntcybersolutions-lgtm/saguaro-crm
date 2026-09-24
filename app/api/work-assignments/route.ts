@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
       const { data: prof } = await db
         .from('profiles')
         .select('full_name, preferred_name, first_name, email')
-        .eq('id', b.assigneeUserId)
+        .eq('tenant_id', t).eq('id', b.assigneeUserId)
         .maybeSingle();
       assigneeName =
         prof?.full_name || prof?.preferred_name || prof?.first_name ||

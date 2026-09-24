@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       const { data: profs } = await db
         .from('profiles')
         .select('id, full_name')
-        .in('id', userIds);
+        .eq('tenant_id', user.tenantId).in('id', userIds);
       for (const p of profs || []) names[p.id] = p.full_name!;
     }
 

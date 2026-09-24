@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       };
       try {
         if (ex) {
-          const { error } = await db.from('tenant_entitlements').update(row as never).eq('id', ex.id);
+          const { error } = await db.from('tenant_entitlements').update(row as never).eq('tenant_id', g.user.tenantId).eq('id', ex.id);
           persisted = !error;
         } else {
           const { error } = await db.from('tenant_entitlements').insert(row as never);

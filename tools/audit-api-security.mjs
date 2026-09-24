@@ -304,7 +304,29 @@ function insertPayloadHasTenant(src, chainStart, chain) {
    `(?<!storage)` lookbehind below only catches the literal `storage.from(`
    spelling; routes that hold the client in a local miss it. The methods are
    unambiguous, so the chain says what it is. */
-const STORAGE_METHOD = /\.(upload|download|createSignedUrls?|getPublicUrl|remove|move|copy|createBucket)\s*\(/;
+/* A BARE HANDLE IS NOT A QUERY.
+
+     function table(db) { return db.from('saved_reports'); }
+     ...
+     table(db).select('*').eq('tenant_id', user.tenantId)
+
+   The helper returns the table handle and every call site scopes it. The
+   handle itself carries no filter and never could -- grading it UNSCOPED
+   accuses four routes (reports/saved, reports/saved/[id],
+   notifications/push-token, notifications/push-subscribe) that write and read
+   tenant_id on the very next line. The call sites are invisible to this rule
+   because they contain no .from(), so these are reported as HANDLE: read the
+   call sites, do not assume either answer. */
+/* READ ON 24 SEP 2026, every call site tenant-scoped:
+     reports/saved, reports/saved/[id]      table(db).…eq('tenant_id', user.tenantId)
+     notifications/push-token, push-subscribe  upsert writes tenant_id: user.tenantId
+     projects/[projectId]/folders           ownsProject() + .eq('tenant_id', …)
+     takeoff/[id]/analyze                   sheetsTable().…eq('tenant_id', user.tenantId)
+   They stay listed rather than exempted: the rule genuinely cannot see a
+   call site, and a silent pass would be a claim this tool has not earned. */
+const QUERY_VERB = /\.(select|insert|update|upsert|delete|rpc)\s*\(/;
+
+const STORAGE_METHOD = /\.(upload|download|createSignedUploadUrl|createSignedUrls?|getPublicUrl|remove|move|copy|createBucket)\s*\(/;
 
 /**
  * Follow a query builder that is scoped on a LATER line.
@@ -331,7 +353,12 @@ function builderIsScopedLater(src, chainEndIndex, varName) {
 /** The `const`/`let` name a .from() chain is being assigned to, if any. */
 function assignedVarBefore(src, fromIndex) {
   const before = src.slice(Math.max(0, fromIndex - 120), fromIndex);
-  const m = before.match(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*[^=;]{0,60}$/);
+  /* `[^=;]` excluded the `=` in an arrow type, so a handle built as
+     `const tbl = (db as unknown as { from: (t: string) => any }).from('x')`
+     was never recognised — and the scoping that happens on `tbl` a line
+     later was invisible. reports/saved, push-token and push-subscribe
+     were all reported unscoped while writing tenant_id on the next line. */
+  const m = before.match(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=[^;]{0,140}$/);
   return m ? m[1] : null;
 }
 
@@ -430,9 +457,11 @@ for (const f of files) {
   const noColumn = [];
   const evidence = [];
   const projectGated = [];
+  const handles = [];
   const owned = verifiedParents(src);
   for (const { table, chain, varName, startIndex, endIndex } of chains) {
     if (chainIsScoped(chain)) continue;
+    if (!QUERY_VERB.test(chain)) { handles.push(table || '(dynamic)'); continue; }
     if (builderIsScopedLater(src, endIndex, varName)) continue;
     const payload = insertPayloadHasTenant(src, startIndex, chain);
     if (payload === true) continue;
@@ -493,6 +522,9 @@ for (const f of files) {
   if (emptyCatch) problems.push('EMPTY CATCH');
   if (catchReturnsOk) problems.push('CATCH RETURNS OK');
   if (bodyTenant) problems.push('TENANT FROM BODY');
+  if (!isPublic && !tenantExempt && handles.length) {
+    problems.push(`HANDLE: ${Array.from(new Set(handles)).sort().join(', ')}`);
+  }
   if (!isPublic && !tenantExempt && projectGated.length) {
     const names = Array.from(new Set(projectGated)).sort();
     problems.push(`PARENT-GATED: ${names.join(', ')}`);
@@ -510,7 +542,8 @@ console.log(`\nSAGUARO API SECURITY AUDIT — ${rows.length} routes under app/ap
 const byProblem = {};
 for (const r of fails) for (const p of r.problems) {
   const key = p.startsWith('UNSCOPED') ? 'UNSCOPED TABLE'
-    : p.startsWith('PARENT-GATED') ? 'PARENT-GATED' : p.split(' (')[0];
+    : p.startsWith('PARENT-GATED') ? 'PARENT-GATED'
+    : p.startsWith('HANDLE') ? 'HANDLE (read call sites)' : p.split(' (')[0];
   byProblem[key] = (byProblem[key] || 0) + 1;
 }
 

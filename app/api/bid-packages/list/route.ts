@@ -25,8 +25,8 @@ export async function GET(req: NextRequest) {
     const ids = rows.map((p: any) => p.id).filter(Boolean);
     if (ids.length) {
       const [{ data: invites }, { data: submissions }] = await Promise.all([
-        db.from('bid_package_invites').select('bid_package_id').in('bid_package_id', ids),
-        db.from('bid_submissions').select('*').in('bid_package_id', ids),
+        db.from('bid_package_invites').select('bid_package_id').eq('tenant_id', user.tenantId).in('bid_package_id', ids),
+        db.from('bid_submissions').select('*').eq('tenant_id', user.tenantId).in('bid_package_id', ids),
       ]);
       const invitedBy: Record<string, number> = {};
       for (const inv of (invites || []) as any[]) {
