@@ -232,73 +232,8 @@ export async function GET(
   }
 
   // GET /api/dashboard/stats
-  if (seg0 === 'dashboard' && seg1 === 'stats') {
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const [{ count: activeProjects }, { count: openBids }, { count: pendingPayApps }, { data: contractData }] = await Promise.all([
-        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-        supabase.from('bids').select('id', { count: 'exact', head: true }).in('status', ['draft', 'submitted', 'under_review']),
-        supabase.from('pay_applications').select('id', { count: 'exact', head: true }).eq('status', 'submitted'),
-        supabase.from('projects').select('contract_amount').eq('status', 'active'),
-      ]);
-      const totalContractValue = (contractData ?? []).reduce((sum: number, p: { contract_amount: number }) => sum + (p.contract_amount ?? 0), 0);
-      const startOfMonth = new Date(); startOfMonth.setDate(1); startOfMonth.setHours(0, 0, 0, 0);
-      const { data: revenueRows } = await supabase.from('pay_applications').select('current_payment_due').eq('status', 'approved').gte('submitted_at', startOfMonth.toISOString());
-      const monthlyRevenue = (revenueRows ?? []).reduce((sum: number, r: { current_payment_due: number }) => sum + (r.current_payment_due ?? 0), 0);
-      return NextResponse.json({ activeProjects: activeProjects ?? 0, openBids: openBids ?? 0, pendingPayApps: pendingPayApps ?? 0, totalContractValue, monthlyRevenue });
-    } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] dashboard/stats error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
-  }
 
   // GET /api/dashboard/today
-  if (seg0 === 'dashboard' && seg1 === 'today') {
-    const items: ActionItem[] = [];
-    try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseKey) throw new Error('Supabase not configured');
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const { data: payApps } = await supabase.from('pay_applications').select('id, application_number, status, project_id, projects(name)').eq('status', 'submitted').limit(5);
-      if (payApps && payApps.length > 0) {
-        for (const pa of payApps) {
-          const projectName = (pa.projects as { name?: string } | null)?.name ?? 'Unknown Project';
-          items.push({ type: 'pay-app', title: `Pay App #${pa.application_number} Pending`, subtitle: `${projectName} — awaiting approval`, urgency: 'high', actionUrl: `/app/projects/${pa.project_id}/pay-apps`, actionLabel: 'Review' });
-        }
-      }
-      const thirtyDaysOut = new Date(); thirtyDaysOut.setDate(thirtyDaysOut.getDate() + 30);
-      const { data: cois } = await supabase.from('insurance_certificates').select('id, sub_name, expiry_date, project_id').lte('expiry_date', thirtyDaysOut.toISOString().split('T')[0]).gte('expiry_date', new Date().toISOString().split('T')[0]).limit(5);
-      if (cois && cois.length > 0) {
-        for (const coi of cois) {
-          const expiry = new Date(coi.expiry_date);
-          const daysLeft = Math.ceil((expiry.getTime() - Date.now()) / 86_400_000);
-          items.push({ type: 'insurance', title: 'COI Expiring Soon', subtitle: `${coi.sub_name} — expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`, urgency: daysLeft <= 7 ? 'high' : 'medium', actionUrl: `/app/projects/${coi.project_id}/insurance`, actionLabel: 'Request Renewal' });
-        }
-      }
-      const { data: notifications } = await supabase.from('notifications').select('id, type, title, message, project_id, priority').eq('read', false).order('created_at', { ascending: false }).limit(5);
-      if (notifications && notifications.length > 0) {
-        for (const n of notifications) {
-          const nType = n.type as ActionItem['type'];
-          if (!['pay-app', 'insurance', 'rfi', 'compliance'].includes(nType)) continue;
-          /* notifications.priority, not .urgency — the column is priority and
-             the select above was asking for one that does not exist, so this
-             read was always undefined and every action item came out 'medium'. */
-          items.push({ type: nType, title: n.title ?? 'Notification', subtitle: n.message ?? '', urgency: (n.priority as ActionItem['urgency']) ?? 'medium', actionUrl: `/app/projects/${n.project_id ?? 'unknown'}`, actionLabel: 'View' });
-        }
-      }
-      items.sort((a, b) => (URGENCY_ORDER[a.urgency] ?? 2) - (URGENCY_ORDER[b.urgency] ?? 2));
-      return NextResponse.json({ items });
-    } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] dashboard/today error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
-  }
 
   // GET /api/bids/history
   if (seg0 === 'bids' && seg1 === 'history') {
@@ -530,35 +465,6 @@ export async function POST(
   if (seg0 === 'auth' && seg1 === 'login') return loginHandler(req);
 
   // POST /api/auth/signup
-  if (seg0 === 'auth' && seg1 === 'signup') {
-    const body = await req.json().catch(() => null);
-    if (!body) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400, headers: corsHeaders() });
-    const email    = String(body.email    ?? '').toLowerCase().trim();
-    const password = String(body.password ?? '').trim();
-    const company  = String(body.company  ?? '').trim();
-    const phone    = String(body.phone    ?? '').trim();
-    const role     = String(body.role     ?? 'General Contractor').trim();
-    const state    = String(body.state    ?? '').trim();
-    const size     = String(body.size     ?? '').trim();
-    if (!email || !email.includes('@')) return NextResponse.json({ error: 'Valid email is required' }, { status: 400, headers: corsHeaders() });
-    if (!password || password.length < 8) return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400, headers: corsHeaders() });
-    if (!company) return NextResponse.json({ error: 'Company name is required' }, { status: 400, headers: corsHeaders() });
-    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { company_name: company, phone, role, state, company_size: size } });
-    if (authErr || !authData.user) {
-      const msg = authErr?.message ?? 'Signup failed';
-      if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) return NextResponse.json({ error: 'An account with this email already exists. Please log in.' }, { status: 409, headers: corsHeaders() });
-      return NextResponse.json({ error: 'Internal server error' }, { status: 400, headers: corsHeaders() });
-    }
-    const tenantId = authData.user.id;
-    const { error: tenantErr } = await supabaseAdmin.from('tenants').insert({ id: tenantId, company_name: company, phone: phone || null, role, state: state || null, company_size: size || null, plan: 'trial', trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), created_at: new Date().toISOString() });
-    // Signup answers success straight after this. A rejected insert used to
-    // vanish (supabase-js returns { error }), leaving an auth user with no tenant
-    // — an account that exists and can never load a project.
-    if (tenantErr) { console.error('[signup/tenant]', tenantErr); throw tenantErr; }
-    const { data: sessionData, error: sessionErr } = await supabaseAdmin.auth.signInWithPassword({ email, password });
-    if (sessionErr || !sessionData.session) return NextResponse.json({ success: true, message: 'Account created! Please log in.', redirectUrl: `${APP_URL}/login` }, { headers: corsHeaders() });
-    return NextResponse.json({ success: true, message: 'Account created successfully!', accessToken: sessionData.session.access_token, refreshToken: sessionData.session.refresh_token, expiresAt: sessionData.session.expires_at, userId: authData.user.id, redirectUrl: `${APP_URL}/onboarding/step-1` }, { headers: corsHeaders() });
-  }
 
   // POST /api/bid-packages/create
   if (seg0 === 'bid-packages' && seg1 === 'create') {
@@ -584,66 +490,8 @@ export async function POST(
   }
 
   // POST /api/bid-packages/suggest-subs
-  if (seg0 === 'bid-packages' && seg1 === 'suggest-subs') {
-    let trade = ''; let projectId = '';
-    try { const body = await req.json(); trade = body.trade || ''; projectId = body.projectId || ''; } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }); }
-    try {
-      const tradeKeyword = trade.replace(/^Division \d+ — /, '').toLowerCase();
-      const { data, error } = await supabaseAdmin.from('sub_performance').select('id, sub_name, trade, email, win_rate, last_project_date, avg_rating').ilike('trade', `%${tradeKeyword}%`).order('win_rate', { ascending: false }).limit(10);
-      if (error) throw error;
-      /* sub_performance calls them sub_name / avg_rating, and has no
-         last_project at all — only last_project_date. The select was asking
-         for three columns that do not exist, so name, lastProject and rating
-         came back undefined on every suggested subcontractor. */
-      const subs = (data || []).map((row: { id: string; sub_name: string; trade: string; email: string; win_rate: number; last_project_date: string; avg_rating: number }) => ({ id: row.id, name: row.sub_name, trade: row.trade, email: row.email, winRate: row.win_rate, lastProjectDate: row.last_project_date, rating: row.avg_rating }));
-      return NextResponse.json({ subs });
-    } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] suggest-subs error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
-  }
 
   // POST /api/bid-packages/:id/invite-subs
-  if (seg0 === 'bid-packages' && seg1 && seg2 === 'invite-subs') {
-    const bidPackageId = seg1;
-    try {
-      if (!bidPackageId) return NextResponse.json({ error: 'Bid package ID is required.' }, { status: 400 });
-      const body = await req.json();
-      const { tradeRequired, projectType, projectValue, sendInvites = false } = body;
-      if (!tradeRequired) return NextResponse.json({ error: 'tradeRequired is required.' }, { status: 400 });
-      const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
-      const token = req.headers.get('authorization')?.replace('Bearer ', '');
-      let tenantId: string | null = null;
-      if (token) { const { data: { user } } = await supabase.auth.getUser(token); tenantId = user?.id ?? null; }
-      let suggestions: SubSuggestion[] = [];
-      let source = 'none';
-      if (!tenantId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      const { data: perfData, error: perfError } = await supabase.from('sub_performance').select('*').eq('tenant_id', tenantId).ilike('trade', `%${tradeRequired}%`).order('win_rate', { ascending: false }).limit(5);
-      if (!perfError && perfData?.length) {
-        suggestions = perfData.map((sub: Record<string, unknown>) => ({ id: sub.id as string, name: sub.sub_name as string, trade: sub.trade as string, winRate: sub.win_rate as number | null, lastProjectDate: sub.last_project_date as string | null, email: sub.email as string | null, phone: sub.phone as string | null, suggestedReason: buildSuggestedReason(sub) }));
-        source = 'sub_performance';
-      } else {
-        const { data: subData, error: subError } = await supabase.from('subcontractors').select('id, company_name, trade, email, phone, rating').eq('tenant_id', tenantId).ilike('trade', `%${tradeRequired}%`).limit(5);
-        if (!subError && subData?.length) {
-          suggestions = subData.map((sub: Record<string, unknown>) => ({ id: sub.id as string, name: sub.name as string, trade: sub.trade as string, winRate: null, lastProjectDate: null, email: sub.email as string | null, phone: sub.phone as string | null, suggestedReason: 'Matching sub in your database' }));
-          source = 'subcontractors';
-        }
-      }
-      let invitesSent = 0;
-      if (sendInvites && tenantId) {
-        const now = new Date().toISOString();
-        const inviteRows = suggestions.map((sub) => ({ tenant_id: tenantId, bid_package_id: bidPackageId, sub_id: sub.id.startsWith('demo-') ? null : sub.id, sub_name: sub.name, sub_email: sub.email, trade: sub.trade, status: 'invited', invited_at: now }));
-        const { error: insertError } = await supabase.from('bid_package_invites').upsert(inviteRows, { onConflict: 'bid_package_id,sub_email' });
-        if (!insertError) invitesSent = inviteRows.length;
-      }
-      return NextResponse.json({ bidPackageId, tradeRequired, projectType: projectType ?? null, projectValue: projectValue ?? null, suggestions, totalSuggested: suggestions.length, invitesSent: sendInvites ? invitesSent : 0, source });
-    } catch (err: unknown) {
-      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-    }
-  }
 
   // POST /api/bids/score
   if (seg0 === 'bids' && seg1 === 'score') {
@@ -809,22 +657,6 @@ export async function POST(
   // path can record a completed run for work that never executed.
 
   // POST /api/rfis/create
-  if (seg0 === 'rfis' && seg1 === 'create') {
-    const body = await req.json().catch(() => ({}));
-    const { projectId, title, priority, assignedTo, responseDue, drawingRef, specSection, description } = body;
-    if (!projectId || !title) return NextResponse.json({ error: 'projectId and title required' }, { status: 400 });
-    try {
-      const { count } = await supabaseAdmin.from('rfis').select('*', { count: 'exact', head: true }).eq('project_id', projectId);
-      const number = `RFI-${String((count || 0) + 1).padStart(3, '0')}`;
-      const { data, error } = await supabaseAdmin.from('rfis').insert({ project_id: projectId, number, title, description: description || '', status: 'open', priority: priority || 'normal', assigned_to: assignedTo || null, response_due_date: responseDue || null, drawing_reference: drawingRef || null, spec_section: specSection || null }).select().single();
-      if (error) throw error;
-      return NextResponse.json({ success: true, rfi: data });
-    } catch (err: unknown) {
-      const msg = 'Internal server error';
-      console.error('[api/catch-all] rfis/create error:', msg);
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-    }
-  }
 
   // POST /api/team/invite is served by the REAL handler at
   // app/api/team/invite/route.ts (static segment beats this catch-all), which

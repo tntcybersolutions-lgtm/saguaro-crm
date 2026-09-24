@@ -8,10 +8,21 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const supabase = createServerClient();
-    const { data, error } = await supabase.from('lead_activities').select('*').eq('lead_id', params.id).order('created_at', { ascending: false });
+    /* params.id is a lead id off the URL and this client is the service role,
+       so with no tenant filter any signed-in user could read any company's
+       lead activity log — every call note, every follow-up, by id. */
+    const { data, error } = await supabase.from('lead_activities').select('*')
+      .eq('tenant_id', user.tenantId)
+      .eq('lead_id', params.id)
+      .order('created_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ activities: data ?? [] });
-  } catch { return NextResponse.json({ activities: [] }); }
+  } catch (e: unknown) {
+    /* This returned { activities: [] } with a 200, so a failed read looked
+       exactly like a lead with no activity. */
+    console.error('[leads/activities] read failed:', e);
+    return NextResponse.json({ error: 'Could not load the activity log' }, { status: 500 });
+  }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {

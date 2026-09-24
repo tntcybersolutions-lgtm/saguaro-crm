@@ -287,7 +287,10 @@ function idFromScopedRead(src, chainStart, chain) {
  * already told us), true/false otherwise.
  */
 function insertPayloadHasTenant(src, chainStart, chain) {
-  const m = chain.match(/\.(?:insert|upsert)\s*\(\s*([A-Za-z_$][\w$]*)/);
+  /* .match(t) hides the column name entirely: franchise/op-kpis builds
+     `const t = { tenant_id: user.tenantId }` once and passes it to seven
+     queries. Same lookup as an insert payload. */
+  const m = chain.match(/\.(?:insert|upsert|match)\s*\(\s*([A-Za-z_$][\w$]*)/);
   if (!m) return null;
   const v = m[1].replace(/[$]/g, '\\$');
   const before = src.slice(Math.max(0, chainStart - 4000), chainStart);
