@@ -341,7 +341,16 @@ function assignedVarBefore(src, fromIndex) {
 function stripComments(s) {
   const noBlock = s.replace(/\/\*[\s\S]*?\*\//g, '');
   return noBlock
-    .split('\n')
+    /* SPLIT ON CRLF TOO. Every file in this repo has Windows line endings, so
+       splitting on '\n' alone left a '\r' at the end of every line — and `$`
+       without the m flag will not match before a carriage return. The replace
+       matched nothing. This function has been returning its input unchanged
+       since the day it was written, which means the "count code, not prose"
+       fix it exists to provide was never actually in effect: a comment
+       mentioning tenant_id has been scoring as a tenant filter this whole
+       time, and a comment sitting mid-chain has been truncating the chain.
+       It got the number wrong in BOTH directions. */
+    .split(/\r?\n/)
     .map((line) => line.replace(/(^|[^:"'`\\])\/\/.*$/, '$1'))
     .join('\n');
 }
