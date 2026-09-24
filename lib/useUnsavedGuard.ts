@@ -278,6 +278,28 @@ export function useUnsavedGuard<T = unknown>(opts: UnsavedGuardOptions<T>): Unsa
     restoredRef.current = true;
     const stored = readDraft<T>(draftKey);
     if (stored === null) return;
+
+    /* NEVER OVERWRITE WHAT THE USER HAS ALREADY TYPED.
+     *
+     * This restored unconditionally and announced it afterwards with a toast,
+     * so a form the user had already started filling could be silently
+     * replaced by an older draft — and the field would then hold text the
+     * user never typed, at a caret position they did not choose. A project
+     * called
+     *
+     *   ZZ TEST - Upload Verification (dele⟨ZZ TEST 2 - Speed Check (delete me)⟩te me)
+     *
+     * reached production that way: the second name landed at offset 35 of the
+     * first instead of replacing it.
+     *
+     * If the form is already dirty the user's own input wins. The draft is
+     * left on disk rather than dropped, so nothing is lost either way — it is
+     * simply not forced over live typing. */
+    if (dirtyRef.current) {
+      showToast('You have unsaved changes here, so an older draft was left alone.', 'info');
+      return;
+    }
+
     try {
       restoreDraft(stored);
       showToast('Draft restored — your unsaved work was recovered.', 'info');
