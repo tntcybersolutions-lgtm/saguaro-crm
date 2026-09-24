@@ -117,8 +117,23 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PATCH - Sign a document (record signature)
+/**
+ * PATCH - Sign a document (record signature)
+ *
+ * THIS HANDLER HAD NO AUTH. GET and POST in this same file both call
+ * getUser(); PATCH did not, and it takes requestId straight from the body.
+ * Anyone who knew or guessed a signature-request id could record a signature
+ * against it and flip the document to 'signed' -- on a legal document, from
+ * the open internet, with no session. The file "had auth". The handler that
+ * mattered did not, which is exactly what a file-wide check cannot see.
+ *
+ * External signers are served by the token-validated /api/documents/sign
+ * routes, where the link IS the credential. This one is internal, so it takes
+ * a session and every query is scoped to that session's tenant.
+ */
 export async function PATCH(req: NextRequest) {
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const supabase = createServerClient();
     const body = await req.json();
@@ -132,6 +147,7 @@ export async function PATCH(req: NextRequest) {
     const { data: sigReq } = await supabase
       .from('document_signature_requests')
       .select('*')
+      .eq('tenant_id', user.tenantId)
       .eq('id', requestId)
       .single();
 
@@ -144,6 +160,7 @@ export async function PATCH(req: NextRequest) {
     const { data: parentSig } = await supabase
       .from('document_signatures')
       .select('doc_type, doc_title')
+      .eq('tenant_id', user.tenantId)
       .eq('id', sigReq.signature_id)
       .single();
 
@@ -182,6 +199,7 @@ export async function PATCH(req: NextRequest) {
     await must(supabase
       .from('document_signature_requests')
       .update({ status: 'signed', completed_at: new Date().toISOString() })
+      .eq('tenant_id', user.tenantId)
       .eq('id', requestId), 'document_signature_requests write');
 
     return NextResponse.json({ success: true, data: sig });

@@ -159,7 +159,7 @@ export async function GET(
         // 4. Setup Anthropic
         if (!process.env.ANTHROPIC_API_KEY) {
           send('error', { message: 'AI service not configured. Add ANTHROPIC_API_KEY.' });
-          await tryWrite(supabase.from('drone_jobs').update({ status: 'failed' }).eq('id', jobId), 'drone_jobs update');
+          await tryWrite(supabase.from('drone_jobs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', jobId), 'drone_jobs update');
           return done();
         }
 
@@ -334,7 +334,7 @@ export async function GET(
         console.error('[drone/analyze]', err);
         send('error', { message });
         try {
-          await tryWrite(supabase.from('drone_jobs').update({ status: 'failed' }).eq('id', jobId), 'drone_jobs update');
+          await tryWrite(supabase.from('drone_jobs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', jobId), 'drone_jobs update');
         } catch { /* non-fatal */ }
         done();
       }

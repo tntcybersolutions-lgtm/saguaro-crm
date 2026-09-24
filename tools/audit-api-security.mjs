@@ -87,6 +87,21 @@ const PUBLIC_BY_DESIGN = [
   /^prequalification\/portal\//, /^storage\/oauth\//,
   /^customers\/geo$/, /^design\/(styles|reimagine)$/,
   /^smart-packages\/customize-public$/,
+
+  /* team/accept-invite — READ IN FULL, 24 Sep 2026.
+     GET ?token= is public on purpose: the invite link IS the credential, and
+     the route's own header says so. Every query hangs off the invite row that
+     token names — the inviting company, the inviter's display name, the
+     project being shared — so it can only ever return that one invite's
+     tenant.
+
+     Adding a tenant filter here would BREAK it. The whole point of POST is
+     that the accepting user is moving INTO the invite's tenant: their
+     profiles.tenant_id is different by definition until the moment it is
+     rewritten. Scoping those writes to the caller's current tenant would make
+     every invite impossible to accept. Correct code, and a reminder that a
+     tenant filter is not always the answer. */
+  /^team\/accept-invite$/,
 ];
 
 /* NOT public, but legitimately NOT tenant-scoped. These sit behind a session
@@ -301,34 +316,49 @@ function payloadVarHasTenant(src, chainStart, chain) {
     chain.match(/\.(?:insert|upsert|match|or)\s*\(\s*([A-Za-z_$][\w$]*)/) ||
     chain.match(/\.(?:insert|upsert)\s*\(\s*\{\s*\.\.\.\s*([A-Za-z_$][\w$]*)/);
   if (!m) return null;
-  const v = m[1];
-  const before = src.slice(Math.max(0, chainStart - 4000), chainStart);
-  const re = new RegExp('(?:const|let|var)\\s+' + v + '\\b|\\b' + v + '\\s*=[^=]|\\b' + v + '\\.push\\s*\\(', 'g');
-  let last = -1, hit;
-  while ((hit = re.exec(before)) !== null) last = hit.index;
-  if (last < 0) return false;                    // built somewhere we cannot see
-  const window = before.slice(last, last + 1400);
-  if (/tenant_id|tenantId/.test(window)) return true;
 
-  /* One level of aliasing. budgets/create does
-       const rows  = [...].map(d => ({ project_id, tenant_id: tenantId, … }));
-       const batch = rows.slice(i, i + 50);
-       upsert(batch)
-     and the tenant is on `rows`, one name back. Following further would start
-     guessing, so it stops at one. */
-  const alias = window.match(/=\s*([A-Za-z_$][\w$]*)\s*\.(?:slice|map|filter|concat)\s*\(/);
-  if (!alias) return false;
-  const a = alias[1];
-  /* Plain string search. A regex built inside a JS string loses its escapes to
-     the string layer before RegExp sees it — `\s` becomes `s` and `\b` becomes
-     a backspace character — which is how this check silently matched nothing
-     twice already. */
-  const lastA = Math.max(
-    before.lastIndexOf('const ' + a),
-    before.lastIndexOf('let ' + a),
-  );
-  if (lastA < 0) return false;
-  return /tenant_id|tenantId/.test(before.slice(lastA, lastA + 1400));
+  const before = src.slice(Math.max(0, chainStart - 12000), chainStart);
+
+  /* FOLLOW THE VALUE, NOT JUST THE NAME.
+     takeoff/[id]/analyze builds the rows, slices them, then picks one of two
+     slices:
+       const items   = […].map(i => ({ takeoff_id, tenant_id: user.tenantId, … }));
+       const batch   = items.slice(i, i + BATCH);
+       const payload = costKeyUnsupported ? stripCostKey(batch) : batch;
+       insert(payload)
+     The tenant is on `items`, two names back and through a ternary. Stopping
+     at one hop reported a correct bulk insert as unscoped; following forever
+     would start guessing. Three hops, then it gives up and flags — the safe
+     direction for this tool. */
+  let name = m[1];
+  const seen = new Set();
+  for (let hop = 0; hop < 3; hop++) {
+    if (seen.has(name)) return false;
+    seen.add(name);
+
+    /* Plain string search. A regex built inside a JS string loses its escapes
+       to the string layer before RegExp sees it — `\s` becomes `s`, `\b`
+       becomes a backspace byte — which is how two earlier versions of this
+       check silently matched nothing while reporting a healthy number. */
+    const at = Math.max(
+      before.lastIndexOf('const ' + name),
+      before.lastIndexOf('let ' + name),
+      before.lastIndexOf('var ' + name),
+    );
+    if (at < 0) return false;                  // built somewhere we cannot see
+
+    const window = before.slice(at, at + 1600);
+    if (/tenant_id|tenantId/.test(window)) return true;
+
+    /* The next name to follow: the first identifier on the right of the `=`
+       that is not a built-in or a literal. Covers `rows.slice(…)`,
+       `stripCostKey(batch)` and `cond ? f(batch) : batch`. */
+    const rhs = window.slice(window.indexOf('=') + 1);
+    const next = rhs.match(/\b([A-Za-z_$][\w$]*)\s*(?:\.\s*(?:slice|map|filter|concat)\s*\(|\)|,|;|$)/);
+    if (!next) return false;
+    name = next[1];
+  }
+  return false;
 }
 
 /* A STORAGE BUCKET IS NOT A TABLE. `.from(BUCKET).upload(...)` reads as a
@@ -415,6 +445,48 @@ function stripComments(s) {
     .join('\n');
 }
 
+/**
+ * AUTH IS PER HANDLER, NOT PER FILE.
+ *
+ * This checked whether the word getUser appeared anywhere in route.ts. In
+ * app/api/signatures/route.ts it appears twice — in GET and in POST — while
+ * PATCH, which records a signature on a legal document and marks it signed,
+ * had no guard of any kind and took the request id straight from the body.
+ * The file "had auth". The handler that mattered did not.
+ *
+ * Each exported handler is now sliced out and checked on its own.
+ */
+/* `require<Something>(` covers requireAuth, requirePermission, requireApiKey
+   and the route-local helpers — platform/integrations wraps getUser plus
+   isPlatformAdmin in its own requireAdmin(), and naming the guards one at a
+   time meant three correct handlers were reported unguarded. */
+const AUTH_CALL = /getUser\s*\(|require[A-Z]\w*\s*\(|authenticateApiKey\s*\(|CRON_SECRET|authHeader/;
+const HANDLER_RE = /export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s*\(/g;
+
+/**
+ * Returns the names of exported handlers that touch the database with no auth
+ * call of their own. A handler that delegates to a shared helper counts as
+ * guarded only if that helper name appears inside it — same rule as before,
+ * applied to a smaller slice.
+ */
+function unguardedHandlers(src) {
+  const marks = [];
+  for (const m of src.matchAll(HANDLER_RE)) marks.push({ name: m[1], start: m.index });
+  if (marks.length === 0) return [];
+
+  const out = [];
+  for (let i = 0; i < marks.length; i++) {
+    const start = marks[i].start;
+    const end = i + 1 < marks.length ? marks[i + 1].start : src.length;
+    const body = src.slice(start, end);
+    /* Only handlers that actually reach the database. A handler that just
+       returns a constant has nothing to guard. */
+    if (!/(?<!Buffer|Array|Object)(?<!storage)\.from\s*\(\s*['"`]/.test(body)) continue;
+    if (!AUTH_CALL.test(body)) out.push(marks[i].name);
+  }
+  return out;
+}
+
 function walk(dir, out = []) {
   for (const e of readdirSync(dir)) {
     const p = join(dir, e);
@@ -424,12 +496,12 @@ function walk(dir, out = []) {
   return out;
 }
 
-const files = walk(API);
-const rows = [];
-
-for (const f of files) {
-  const rel = relative(API, f).replace(/\\/g, '/').replace(/\/route\.tsx?$/, '');
-  const raw = readFileSync(f, 'utf8');
+/**
+ * Grade one route's source. Split out of the file loop so the rules can be
+ * exercised against sources that are KNOWN good and KNOWN bad by --selftest,
+ * without writing a fixture into app/api — the directory this tool walks.
+ */
+function gradeRoute(raw, rel = '') {
 
   /* COUNT CODE, NOT PROSE. The first version counted the literal string
      "tenant_id" anywhere in the file — including the doc comment explaining the
@@ -546,6 +618,8 @@ for (const f of files) {
 
   const problems = [];
   if (!isPublic && !hasAuth && touchesDb) problems.push('NO AUTH');
+  const unguarded = isPublic ? [] : unguardedHandlers(src);
+  if (unguarded.length && hasAuth) problems.push(`UNGUARDED HANDLER: ${unguarded.join(', ')}`);
   if (!isPublic && !tenantExempt && unscoped.length) {
     /* Named, not counted. "PARTIAL TENANT (3/4)" told you a number and left you
        to find which query it meant; the table name is the whole job. */
@@ -563,8 +637,130 @@ for (const f of files) {
     problems.push(`PARENT-GATED: ${names.join(', ')}`);
   }
 
-  rows.push({ rel, isPublic, problems, fromCount, evidence, noColumn: Array.from(new Set(noColumn)).sort() });
+  return { rel, isPublic, problems, fromCount, evidence, noColumn: Array.from(new Set(noColumn)).sort() };
 }
+
+/* ── SELF-TEST ──────────────────────────────────────────────────────────────
+   node tools/audit-api-security.mjs --selftest
+
+   This instrument was wrong sixteen times in one session, and every single
+   time it accused code that was already correct. Twice it was worse than
+   that: a rule built its pattern inside a JS string, lost the escapes to the
+   string layer, matched nothing at all, and went on reporting a healthy
+   number. Silence read exactly like a pass.
+
+   So the rules are exercised against sources that are KNOWN to be violations
+   and KNOWN to be clean, and the run fails if any of them is graded wrong. A
+   zero from this tool should mean something.
+
+   The fixtures are strings, never files. Writing a fake route into app/api to
+   test a scanner that walks app/api is how a test fixture comes back later
+   looking like a finding — or gets left behind by a crash and read as one.   */
+const FIXTURES = [
+  // [name, source, mustFlag, mustNotFlag]
+  ['unscoped select', `
+    export async function GET(req) { const u = await getUser(req);
+      const { data } = await db.from('invoices').select('*').eq('project_id', id); }`,
+    'UNSCOPED', null],
+
+  ['unscoped insert of a literal array', `
+    export async function POST(req) { const u = await getUser(req);
+      const rows = [{ project_id: 'x' }]; await db.from('projects').insert(rows); }`,
+    'UNSCOPED', null],
+
+  ['handler with no guard', `
+    export async function GET(req) { const u = await getUser(req);
+      await db.from('rfis').select('*').eq('tenant_id', u.tenantId); }
+    export async function DELETE(req) { await db.from('rfis').delete().eq('id', '1'); }`,
+    'UNGUARDED', null],
+
+  ['tenant_id named in a comment is not a filter', `
+    export async function GET(req) { const u = await getUser(req);
+      // every query here is scoped by tenant_id
+      const { data } = await db.from('bids').select('*'); }`,
+    'UNSCOPED', null],
+
+  // ── these must NOT be flagged ────────────────────────────────────────────
+  ['plain scoped select', `
+    export async function GET(req) { const u = await getUser(req);
+      await db.from('invoices').select('*').eq('tenant_id', u.tenantId); }`,
+    null, 'UNSCOPED'],
+
+  ['builder scoped on a later line', `
+    export async function GET(req) { const u = await getUser(req);
+      let q = db.from('invoices').select('*');
+      if (x) q = q.eq('tenant_id', u.tenantId);
+      const { data } = await q; }`,
+    null, 'UNSCOPED'],
+
+  ['insert payload built with the tenant', `
+    export async function POST(req) { const u = await getUser(req);
+      const rows = items.map(i => ({ tenant_id: u.tenantId, name: i.n }));
+      await db.from('projects').insert(rows); }`,
+    null, 'UNSCOPED'],
+
+  ['payload two aliases deep', `
+    export async function POST(req) { const u = await getUser(req);
+      const items = src.map(i => ({ tenant_id: u.tenantId, n: i }));
+      const batch = items.slice(0, 50);
+      const payload = strip ? clean(batch) : batch;
+      await db.from('takeoff_materials').insert(payload); }`,
+    null, 'UNSCOPED'],
+
+  ['select-then-write by a proven id', `
+    export async function POST(req) { const u = await getUser(req);
+      const { data: existing } = await db.from('integrations').select('id')
+        .eq('provider', 'qb').eq('tenant_id', u.tenantId).maybeSingle();
+      await db.from('integrations').update(row).eq('id', existing.id); }`,
+    null, 'UNSCOPED'],
+
+  ['child of a proven parent is PARENT-GATED, not UNSCOPED', `
+    export async function GET(req) { const u = await getUser(req);
+      await db.from('projects').select('id').eq('id', p).eq('tenant_id', u.tenantId).maybeSingle();
+      await db.from('bills').select('*').eq('project_id', p); }`,
+    'PARENT-GATED', 'UNSCOPED'],
+
+  ['a storage bucket is not a table', `
+    export async function POST(req) { const u = await getUser(req);
+      await db.from('files').select('id').eq('tenant_id', u.tenantId);
+      await client.storage.from(BUCKET).upload(path, bytes); }`,
+    null, 'UNSCOPED'],
+
+  ['a table with no tenant_id column is not a violation', `
+    export async function GET(req) { const u = await getUser(req);
+      await db.from('subscription_plans').select('*'); }`,
+    null, 'UNSCOPED'],
+];
+
+function selfTest(grade) {
+  let failed = 0;
+  for (const [name, source, mustFlag, mustNotFlag] of FIXTURES) {
+    const problems = grade(source).join(' · ');
+    const missing = mustFlag && !problems.includes(mustFlag);
+    const spurious = mustNotFlag && problems.includes(mustNotFlag);
+    if (missing || spurious) {
+      failed++;
+      console.log(`  FAIL  ${name}`);
+      console.log(`        expected ${missing ? `to flag ${mustFlag}` : `NOT to flag ${mustNotFlag}`}`);
+      console.log(`        got: ${problems || '(nothing)'}`);
+    } else {
+      console.log(`  ok    ${name}`);
+    }
+  }
+  console.log(`\n  ${FIXTURES.length - failed}/${FIXTURES.length} rule checks passed\n`);
+  return failed;
+}
+
+
+if (process.argv.includes('--selftest')) {
+  console.log(`
+AUDIT SELF-TEST — the rules, against sources known good and known bad
+`);
+  process.exit(selfTest((source) => gradeRoute(source).problems) ? 1 : 0);
+}
+
+const files = walk(API);
+const rows = files.map((f) => gradeRoute(readFileSync(f, 'utf8'), relative(API, f).replace(/\\/g, '/').replace(/\/route\.tsx?$/, '')));
 
 const fails = rows.filter((r) => r.problems.length);
 const pub = rows.filter((r) => r.isPublic);
@@ -576,7 +772,8 @@ const byProblem = {};
 for (const r of fails) for (const p of r.problems) {
   const key = p.startsWith('UNSCOPED') ? 'UNSCOPED TABLE'
     : p.startsWith('PARENT-GATED') ? 'PARENT-GATED'
-    : p.startsWith('HANDLE') ? 'HANDLE (read call sites)' : p.split(' (')[0];
+    : p.startsWith('HANDLE') ? 'HANDLE (read call sites)'
+    : p.startsWith('UNGUARDED') ? 'UNGUARDED HANDLER' : p.split(' (')[0];
   byProblem[key] = (byProblem[key] || 0) + 1;
 }
 

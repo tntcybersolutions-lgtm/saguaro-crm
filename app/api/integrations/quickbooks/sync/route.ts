@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     // Ensure a live access token (refresh when expired). Honest failure if the
     // stored authorization can no longer be refreshed.
-    const tokenResult = await ensureAccessToken(db, integration);
+    const tokenResult = await ensureAccessToken(db, user.tenantId, integration);
     if ('error' in tokenResult) {
       return NextResponse.json(
         { error: tokenResult.error, configured: true, connected: false },
@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
         settings: { ...existingSettings, sync_history: syncHistory } as unknown as Json,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', integration.id), 'integrations write');
+      .eq('tenant_id', user.tenantId).eq('id', integration.id), 'integrations write');
 
     // Overall success = at least one entity succeeded and none hard-errored.
     const values = Object.values(syncResults);
@@ -165,6 +165,9 @@ export async function POST(req: NextRequest) {
 /* ------------------------------------------------------------------ */
 async function ensureAccessToken(
   db: ReturnType<typeof createServerClient>,
+  /* The helper had no tenant of its own, so the token write it makes reached
+     the row by id alone. The id is the caller's, but the write did not say so. */
+  tenantId: string,
   integration: { id: string; access_token: string | null; refresh_token: string | null; token_expires_at: string | null },
 ): Promise<{ accessToken: string } | { error: string; status: number }> {
   const now = Date.now();
@@ -212,7 +215,7 @@ async function ensureAccessToken(
       token_expires_at: tokenExpiresAt,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', integration.id), 'integrations write');
+    .eq('tenant_id', tenantId).eq('id', integration.id), 'integrations write');
 
   return { accessToken };
 }

@@ -40,6 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       return NextResponse.json({ link: existing });
     }
     const record = {
+      tenant_id: user.tenantId,
       photo_id,
       entity_type,
       entity_id,

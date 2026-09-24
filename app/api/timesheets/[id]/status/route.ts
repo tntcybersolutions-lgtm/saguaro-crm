@@ -61,6 +61,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           const { data: dup } = await db
             .from('cost_entries')
             .select('id')
+            .eq('tenant_id', user.tenantId)
             .eq('notes', tag)
             .limit(1)
             .maybeSingle();
@@ -94,7 +95,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
               if (bLine) {
                 await must(db.from('budget_lines')
                   .update({ actual: ((bLine as { actual: number | null }).actual || 0) + laborCost })
-                  .eq('id', (bLine as { id: string }).id), 'budget_lines write');
+                  .eq('tenant_id', user.tenantId)
+          .eq('id', (bLine as { id: string }).id), 'budget_lines write');
               }
             }
           }

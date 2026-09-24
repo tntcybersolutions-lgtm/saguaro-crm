@@ -51,9 +51,22 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
   try {
     const supabase = createServerClient();
     // Record read receipt
+    /* The correspondence has to be ours before we write a receipt against
+       its id, and the receipt has to carry a tenant. Neither was true:
+       any id would do, and the row landed with tenant_id NULL. */
+    const { data: parent } = await supabase
+      .from('correspondence')
+      .select('id')
+      .eq('id', params.id)
+      .eq('project_id', params.projectId)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (!parent) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
     const { error } = await supabase
       .from('correspondence_read_receipts')
       .upsert({
+        tenant_id: user.tenantId,
         correspondence_id: params.id,
         recipient_email: user.email,
         read_at: new Date().toISOString(),

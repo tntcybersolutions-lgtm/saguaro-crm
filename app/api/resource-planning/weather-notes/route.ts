@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
     const { data: found } = await existing.limit(1).maybeSingle();
 
     if (found?.id) {
-      await must(db.from('resource_forecast').update({ notes }).eq('id', found.id), 'resource_forecast update');
+      await must(db.from('resource_forecast').update({ notes }).eq('tenant_id', g.user.tenantId).eq('id', found.id), 'resource_forecast update');
     } else {
       await must(db.from('resource_forecast').insert({
         tenant_id: user.tenantId,

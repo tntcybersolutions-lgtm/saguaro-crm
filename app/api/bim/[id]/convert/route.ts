@@ -227,7 +227,7 @@ export async function POST(
 
         if (dlErr || !blob) {
           send('error', { message: 'Could not download model file from storage.' });
-          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', modelId), 'bim_models update');
           return done();
         }
 
@@ -292,7 +292,7 @@ export async function POST(
         // 4. Setup Anthropic (only needed for real text analysis)
         if (!process.env.ANTHROPIC_API_KEY) {
           send('error', { message: 'AI service not configured. Add ANTHROPIC_API_KEY.' });
-          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', modelId), 'bim_models update');
           return done();
         }
 
@@ -300,7 +300,7 @@ export async function POST(
         const { text: modelText, truncated } = buildModelExcerpt(bytes);
         if (!modelText.trim()) {
           send('error', { message: 'Model file appears to be empty or unreadable.' });
-          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', modelId), 'bim_models update');
           return done();
         }
 
@@ -357,7 +357,7 @@ export async function POST(
         if (!parsed || !parsed.elements || !Array.isArray(parsed.elements)) {
           console.error('[bim/convert] parse failed, raw:', accumulated.slice(0, 500));
           send('error', { message: 'AI returned unexpected format. Please try again.' });
-          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', modelId), 'bim_models update');
           return done();
         }
 
@@ -427,7 +427,7 @@ export async function POST(
         console.error('[bim/convert]', err);
         send('error', { message });
         try {
-          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('id', modelId), 'bim_models update');
+          await tryWrite(supabase.from('bim_models').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', modelId), 'bim_models update');
         } catch { /* non-fatal */ }
         done();
       }

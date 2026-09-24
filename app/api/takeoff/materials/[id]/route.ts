@@ -43,6 +43,7 @@ async function getScopedMaterial(supabase: Supa, tenantId: string, materialId: s
   const { data: material } = await supabase
     .from('takeoff_materials')
     .select('*')
+    .eq('tenant_id', tenantId)
     .eq('id', materialId)
     .maybeSingle();
   if (!material) return null;
@@ -53,10 +54,11 @@ async function getScopedMaterial(supabase: Supa, tenantId: string, materialId: s
 
 /** Recompute + persist the takeoff's totals from its current rows. */
 /** Next sort_order at the end of the sheet. */
-async function appendPosition(supabase: Supa, takeoffId: string): Promise<number> {
+async function appendPosition(supabase: Supa, tenantId: string, takeoffId: string): Promise<number> {
   const { data: last } = await supabase
     .from('takeoff_materials')
     .select('sort_order')
+    .eq('tenant_id', tenantId)
     .eq('takeoff_id', takeoffId)
     .order('sort_order', { ascending: false })
     .limit(1)
@@ -64,10 +66,11 @@ async function appendPosition(supabase: Supa, takeoffId: string): Promise<number
   return (Number(last?.sort_order) || 0) + 1;
 }
 
-async function recomputeTotals(supabase: Supa, takeoffId: string, contingencyPctRaw: unknown) {
+async function recomputeTotals(supabase: Supa, tenantId: string, takeoffId: string, contingencyPctRaw: unknown) {
   const { data: rows, error } = await supabase
     .from('takeoff_materials')
     .select('total_cost, labor_hours')
+    .eq('tenant_id', tenantId)
     .eq('takeoff_id', takeoffId);
   if (error) throw error;
 
@@ -79,6 +82,7 @@ async function recomputeTotals(supabase: Supa, takeoffId: string, contingencyPct
   const { error: updErr } = await supabase
     .from('takeoffs')
     .update({ material_cost: materialCost, labor_cost: laborCost, total_cost: totalCost })
+    .eq('tenant_id', tenantId)
     .eq('id', takeoffId);
   if (updErr) throw updErr;
 
@@ -154,10 +158,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         sortOrder = at + 1;
       } else {
         afterMissing = true;
-        sortOrder = await appendPosition(supabase, takeoffId);
+        sortOrder = await appendPosition(supabase, user.tenantId, takeoffId);
       }
     } else {
-      sortOrder = await appendPosition(supabase, takeoffId);
+      sortOrder = await appendPosition(supabase, user.tenantId, takeoffId);
     }
 
     const row = {
@@ -182,7 +186,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .single();
     if (insErr) throw insErr;
 
-    const totals = await recomputeTotals(supabase, takeoffId, takeoff.contingency_pct);
+    const totals = await recomputeTotals(supabase, user.tenantId, takeoffId, takeoff.contingency_pct);
     return ok({ material: inserted, totals, afterMissing }, 201);
   } catch (err) {
     return serverError(err);
@@ -240,12 +244,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { data: updated, error: updErr } = await supabase
       .from('takeoff_materials')
       .update(patch)
+      .eq('tenant_id', user.tenantId)
       .eq('id', id)
       .select('*')
       .single();
     if (updErr) throw updErr;
 
-    const totals = await recomputeTotals(supabase, material.takeoff_id, takeoff.contingency_pct);
+    const totals = await recomputeTotals(supabase, user.tenantId, material.takeoff_id, takeoff.contingency_pct);
     return ok({ material: updated, totals });
   } catch (err) {
     return serverError(err);
@@ -267,10 +272,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const { error: delErr } = await supabase
       .from('takeoff_materials')
       .delete()
+      .eq('tenant_id', user.tenantId)
       .eq('id', id);
     if (delErr) throw delErr;
 
-    const totals = await recomputeTotals(supabase, material.takeoff_id, takeoff.contingency_pct);
+    const totals = await recomputeTotals(supabase, user.tenantId, material.takeoff_id, takeoff.contingency_pct);
     return ok({ deleted: id, totals });
   } catch (err) {
     return serverError(err);

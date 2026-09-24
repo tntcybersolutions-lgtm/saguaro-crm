@@ -104,7 +104,8 @@ export async function GET(
         const { data: materialsData } = await supabase
           .from('takeoff_materials')
           .select('*')
-          .eq('takeoff_id', takeoffId)
+          .eq('tenant_id', user.tenantId)
+      .eq('takeoff_id', takeoffId)
           .order('sort_order', { ascending: true });
 
         let materials = (materialsData || []) as RawMaterial[];
@@ -114,7 +115,8 @@ export async function GET(
           const { data: liData } = await supabase
             .from('takeoff_line_items')
             .select('*')
-            .eq('takeoff_id', takeoffId)
+            .eq('tenant_id', user.tenantId)
+      .eq('takeoff_id', takeoffId)
             .order('sort_order', { ascending: true });
           materials = ((liData || []) as any[]).map((li) => {
             const um = Number(li.unit_material_cost) || 0, ul = Number(li.unit_labor_cost) || 0, qty = Number(li.quantity) || 0;
@@ -416,6 +418,7 @@ Rules:
               await must(supabase
                 .from('bid_packages')
                 .update({ jacket_pdf_url: pdfUrl })
+                .eq('tenant_id', tenantId)
                 .eq('id', pkg.id), 'bid_packages write');
 
               jacketsGenerated++;

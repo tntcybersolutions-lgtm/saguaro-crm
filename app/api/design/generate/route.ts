@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     await must(db
       .from('design_sessions')
       .update({ status: 'processing' })
-      .eq('id', design_session_id), 'design_sessions write');
+      .eq('tenant_id', user.tenantId).eq('id', design_session_id), 'design_sessions write');
 
     const startTime = Date.now();
 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       await tryWrite(db.from('design_sessions').update({
         status: 'error',
         error_message: 'Failed to download original photo',
-      }).eq('id', design_session_id), 'design_sessions update');
+      }).eq('tenant_id', user.tenantId).eq('id', design_session_id), 'design_sessions update');
       return new Response('Failed to download photo', { status: 500 });
     }
 
@@ -184,7 +184,7 @@ Return ONLY valid JSON, no markdown wrapping.`;
             features_detected: parsed.features_detected || [],
             status: 'completed',
             processing_time_ms: processingTime,
-          }).eq('id', design_session_id), 'design_sessions update');
+          }).eq('tenant_id', user.tenantId).eq('id', design_session_id), 'design_sessions update');
 
           send('progress', { step: 'complete', message: 'Design analysis complete!' });
           send('result', {
@@ -200,7 +200,7 @@ Return ONLY valid JSON, no markdown wrapping.`;
             status: 'error',
             error_message: errorMessage,
             processing_time_ms: Date.now() - startTime,
-          }).eq('id', design_session_id), 'design_sessions update');
+          }).eq('tenant_id', user.tenantId).eq('id', design_session_id), 'design_sessions update');
 
           send('error', { message: errorMessage });
         } finally {

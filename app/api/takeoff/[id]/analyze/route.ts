@@ -389,7 +389,7 @@ export async function GET(
         send('progress', { step: 1, message: 'Loading blueprint...', pct: 5 });
 
         const { data: takeoff, error: takeoffErr } = await supabase
-          .from('takeoffs').select('*').eq('id', takeoffId).single();
+          .from('takeoffs').select('*').eq('tenant_id', user.tenantId).eq('id', takeoffId).single();
 
         if (takeoffErr || !takeoff) {
           send('error', { message: 'Takeoff not found.' });
@@ -397,19 +397,19 @@ export async function GET(
         }
 
         if (!takeoff.storage_path && !takeoff.file_url) {
-          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
+          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
           send('error', { message: 'No blueprint uploaded. Please upload a file first.' });
           return done();
         }
 
         // ── 2. Mark as analyzing ─────────────────────────────────────────
         // Guard: if already analyzing (concurrent double-click), abort
-        const { data: current } = await supabase.from('takeoffs').select('status').eq('id', takeoffId).single();
+        const { data: current } = await supabase.from('takeoffs').select('status').eq('tenant_id', user.tenantId).eq('id', takeoffId).single();
         if (current?.status === 'analyzing') {
           send('error', { message: 'Analysis already in progress for this takeoff.' });
           return done();
         }
-        await must(supabase.from('takeoffs').update({ status: 'analyzing' }).eq('id', takeoffId), 'takeoffs update');
+        await must(supabase.from('takeoffs').update({ status: 'analyzing' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
         send('progress', { step: 2, message: 'Connecting to AI...', pct: 10 });
 
         // ── 3. Fetch file from storage (with heartbeat — can take 5-15s) ─
@@ -775,13 +775,13 @@ export async function GET(
             send('error', {
               message: 'This drawing set is too large to read in one pass. Split it by discipline and upload again.',
             });
-            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
           stopHeartbeat();
           if (processed.error) {
             send('error', { message: processed.error });
-            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
           send('progress', { step: 4, message: 'AI is reading your blueprint...', pct: 25 });
@@ -793,12 +793,12 @@ export async function GET(
           if (!parsed) {
             console.error('[analyze] No JSON parsed. Raw:', raw.slice(0, 500));
             send('error', { message: 'AI returned an unexpected format. Please try again.' });
-            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
           if ('error' in parsed && typeof (parsed as any).error === 'string') {
             send('error', { message: (parsed as any).error });
-            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
           mergeMeta(parsed);
@@ -971,13 +971,13 @@ export async function GET(
             items = salvaged;
           } else {
             send('error', { message: 'AI returned items but could not extract usable data. Try a higher-resolution blueprint or a clearer PDF.' });
-            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
+            await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
             return done();
           }
         }
         if (items.length === 0) {
           send('error', { message: 'No materials extracted from this blueprint. Try a clearer image or a PDF with visible dimensions.' });
-          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
+          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
           return done();
         }
 
@@ -995,7 +995,7 @@ export async function GET(
         // Delete then insert materials. The resolved cost_key rides along so completed AI
         // takeoffs also feed the learning loop — but that column is NEW: on a pre-migration
         // DB the insert would fail, so we transparently retry the batch without cost_key.
-        const { error: delErr } = await supabase.from('takeoff_materials').delete().eq('takeoff_id', takeoffId);
+        const { error: delErr } = await supabase.from('takeoff_materials').delete().eq('tenant_id', user.tenantId).eq('takeoff_id', takeoffId);
         if (delErr) console.warn('[analyze] delete materials warning:', delErr.message);
         const stripCostKey = (batch: any[]) => batch.map((r) => { const c = { ...r }; delete c.cost_key; return c; });
         let costKeyUnsupported = false;
@@ -1071,7 +1071,7 @@ export async function GET(
           pages_processed:       analyzedSheetCount,
           extraction_notes:      truncationNote,
           ai_model_used:         MODEL,
-        }).eq('id', takeoffId);
+        }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
 
         if (updateErr) console.error('[analyze] update takeoff error:', updateErr);
 
@@ -1080,7 +1080,7 @@ export async function GET(
         try {
           // analyze_elapsed_ms added by this task's migration — cast until types regenerate.
           const { error: elapsedErr } = await (supabase as any).from('takeoffs')
-            .update({ analyze_elapsed_ms: elapsedMs }).eq('id', takeoffId);
+            .update({ analyze_elapsed_ms: elapsedMs }).eq('tenant_id', user.tenantId).eq('id', takeoffId);
           if (elapsedErr) console.warn('[analyze] analyze_elapsed_ms not persisted (run migration):', elapsedErr.message);
         } catch (e) {
           console.warn('[analyze] analyze_elapsed_ms skipped (non-fatal):', e instanceof Error ? e.message : e);
@@ -1157,7 +1157,7 @@ export async function GET(
         console.error('[takeoff/analyze]', err);
         send('error', { message });
         try {
-          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('id', takeoffId), 'takeoffs update');
+          await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
         } catch { /* non-fatal */ }
         done();
       }

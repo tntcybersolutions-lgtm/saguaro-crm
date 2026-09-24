@@ -99,6 +99,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ she
       const result = await db
         .from('drawing_markups')
         .update({ data: body.markup_data, updated_by: user.id, updated_at: new Date().toISOString() })
+        .eq('tenant_id', user.tenantId)
         .eq('id', existing.id)
         .select()
         .single()
