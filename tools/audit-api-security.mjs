@@ -27,6 +27,9 @@ import { join, relative } from 'node:path';
 const ROOT = process.cwd();
 const API = join(ROOT, 'app/api');
 const SHOW_ALL = process.argv.includes('--all');
+/* --chains prints the offending query for every UNSCOPED finding, so a route
+   can be judged without opening it. */
+const SHOW_CHAINS = process.argv.includes('--chains');
 
 /* Deliberately public: validated by a token in the URL or a shared secret, not
    by a user session. Matched on the route path. Keep this list SHORT and
@@ -103,6 +106,179 @@ const TENANT_EXEMPT = [
   /^platform\/integrations(\/|$)/,
 ];
 
+/* ── THE SCHEMA, NOT A GUESS ────────────────────────────────────────────────
+   Every public BASE TABLE that has NO tenant_id column, queried from the
+   production database on 24 Sep 2026:
+
+     SELECT t.table_name FROM information_schema.tables t
+     WHERE t.table_schema='public' AND t.table_type='BASE TABLE'
+       AND NOT EXISTS (SELECT 1 FROM information_schema.columns c
+                       WHERE c.table_schema='public'
+                         AND c.table_name=t.table_name
+                         AND c.column_name='tenant_id')
+     ORDER BY 1;
+
+   This is the difference between an audit and a vibe. "PARTIAL TENANT (3/4)"
+   counted the string tenant_id against the number of .from() calls, so a route
+   that correctly joined pay_application_lines — a table with no tenant_id to
+   filter on — was graded as if it had forgotten one. 105 routes carried that
+   grade and most of them were right.
+
+   Re-run the query above when the schema changes. A table missing from this
+   list is treated as tenant-scoped, which fails toward flagging, not toward
+   silence — the safe direction for an instrument that has been wrong ten
+   times already. */
+const NO_TENANT_COLUMN = new Set([
+  'admin_access_log', 'ai_pricing', 'climate_recommendations', 'daily_log_crew',
+  'daily_log_photos', 'daily_log_weather', 'design_comparison_variants',
+  'design_contractor_leads', 'design_room_package_items', 'design_saved_gallery',
+  'design_style_presets', 'design_style_swipes', 'documents', 'email_verifications',
+  'network_site_templates', 'password_resets', 'pay_application_lines', 'plans',
+  'platform_admins', 'platform_integrations', 'portal_sub_bid_line_items',
+  'portal_sub_bid_responses', 'portal_sub_pay_app_line_items',
+  'prevailing_wage_rates', 'proposal_lines', 'referrals', 'roi_configs',
+  'selection_options', 'storage_pricing', 'subscription_plans', 'support_plans',
+  'support_ticket_messages', 'takeoff_blueprints', 'takeoff_cost_items',
+  'takeoff_trials', 'tenants', 'user_pricing_tiers', 'webhook_deliveries',
+]);
+
+/* `tenants` is keyed by `id`, so scoping it reads .eq('id', user.tenantId) and
+   the literal column name never appears. It is in the set above for that
+   reason — the per-chain check below still recognizes the id form. */
+
+/**
+ * Walk forward from a `.from(` to the end of ITS query chain.
+ *
+ * Counting occurrences file-wide cannot tell which .from() the tenant filter
+ * belongs to: a route with four queries and four tenant_id mentions scores 4/4
+ * even if all four sit on one query and the other three are wide open. The
+ * chain is what has to be scoped, so the chain is what gets read.
+ *
+ * Stops at the first `;` or `,` outside any bracket, or when the enclosing
+ * call closes — the three ways a Supabase chain ends in this codebase
+ * (statement, Promise.all element, helper argument).
+ */
+function chainAfter(src, startIndex) {
+  let depth = 0;
+  for (let i = startIndex; i < src.length && i < startIndex + 1500; i++) {
+    const ch = src[i];
+    if (ch === '(' || ch === '[' || ch === '{') depth++;
+    else if (ch === ')' || ch === ']' || ch === '}') {
+      depth--;
+      if (depth < 0) return src.slice(startIndex, i);
+    } else if (depth === 0 && (ch === ';' || ch === ',')) {
+      return src.slice(startIndex, i);
+    }
+  }
+  return src.slice(startIndex, startIndex + 1500);
+}
+
+/** Is THIS chain scoped to the caller's tenant (or narrower)? */
+function chainIsScoped(chain) {
+  return (
+    /tenant_id/.test(chain) ||                                            // .eq/.or/.in/.match/.insert
+    /\.eq\s*\(\s*['"]id['"]\s*,\s*((user|auth|g\.user)\.)?tenantId/.test(chain) ||  // the tenants table
+    /\.eq\s*\(\s*['"]user_id['"]\s*,\s*(user|auth|g\.user)\.id/.test(chain) ||     // narrower than tenant
+    /* profiles.id IS the auth user id, so `.eq('id', user.id)` is the single
+       tightest scope there is — one row, the caller's own. audit-trail/log was
+       flagged for reading its own user's display name. */
+    /\.eq\s*\(\s*['"]id['"]\s*,\s*(user|auth|g\.user)\.id\b/.test(chain)
+  );
+}
+
+/**
+ * Did this route prove the PROJECT belongs to the caller before reading its
+ * children?
+ *
+ *     .from('projects').select('id').eq('id', projectId).eq('tenant_id', user.tenantId)
+ *     ...
+ *     .from('bills').select('*').eq('project_id', projectId)      // no tenant filter
+ *
+ * The bills query has no tenant filter and does not need one to be correct
+ * TODAY: the job was already proven to be the caller's, and a bill hangs off
+ * the job. Calling that a live cross-tenant hole would be false, and a report
+ * that cries wolf on twenty correct routes buries the ones that are not.
+ *
+ * It is still worth fixing — the child query is one refactor away from being
+ * wrong, and nothing in it says it depends on a check fifteen lines up — so
+ * these are reported as PROJECT-GATED: real work, different urgency.
+ *
+ * Three spellings count as proof: the inline projects+tenant_id check, an
+ * ownsProject()-style helper, and requirePermission(..., { projectId }), which
+ * has verified tenant ownership centrally since the fix in lib/permissions.ts.
+ */
+function routeVerifiesProject(src) {
+  return (
+    /\.from\s*\(\s*['"]projects['"]\s*\)[\s\S]{0,400}?tenant_id/.test(src) ||
+    /requirePermission\s*\([^;]{0,200}?projectId/.test(src) ||
+    /\bownsProject\s*\(/.test(src)
+  );
+}
+
+/** Is this chain narrowed to one project (whose ownership was proven above)? */
+const PROJECT_FILTERED = /\.eq\s*\(\s*['"]project_id['"]/;
+
+/**
+ * An insert whose payload is a variable.
+ *
+ *     const vlanRows = plan.vlans.map(v => ({ tenant_id: user.tenantId, … }));
+ *     await db.from('network_vlans').insert(vlanRows);
+ *
+ * The chain shows `.insert(vlanRows)` and nothing else — the tenant_id is in
+ * the row builder above it. Reading only the chain would accuse every bulk
+ * insert in the codebase, so the nearest place the variable was built gets
+ * read too. Returns null when the payload is an inline object (the chain
+ * already told us), true/false otherwise.
+ */
+function insertPayloadHasTenant(src, chainStart, chain) {
+  const m = chain.match(/\.(?:insert|upsert)\s*\(\s*([A-Za-z_$][\w$]*)/);
+  if (!m) return null;
+  const v = m[1].replace(/[$]/g, '\\$');
+  const before = src.slice(Math.max(0, chainStart - 4000), chainStart);
+  const re = new RegExp(`(?:const|let|var)\\s+${v}\\b|\\b${v}\\s*=[^=]|\\b${v}\\.push\\s*\\(`, 'g');
+  let last = -1, hit;
+  while ((hit = re.exec(before)) !== null) last = hit.index;
+  if (last < 0) return false;                    // built somewhere we cannot see
+  return /tenant_id/.test(before.slice(last, last + 1400));
+}
+
+/* A STORAGE BUCKET IS NOT A TABLE. `.from(BUCKET).upload(...)` reads as a
+   .from() call with a variable name, and a bucket has no tenant_id to filter
+   on — the tenant lives in the object PATH, which is a different rule. The
+   `(?<!storage)` lookbehind below only catches the literal `storage.from(`
+   spelling; routes that hold the client in a local miss it. The methods are
+   unambiguous, so the chain says what it is. */
+const STORAGE_METHOD = /\.(upload|download|createSignedUrls?|getPublicUrl|remove|move|copy|createBucket)\s*\(/;
+
+/**
+ * Follow a query builder that is scoped on a LATER line.
+ *
+ *     let q = db.from('catalog_items').update({...}).eq('id', item.id);
+ *     q = item.tenant_id == null ? q.is('tenant_id', null) : q.eq('tenant_id', …);
+ *
+ * The chain ends at the semicolon, so the tenant filter is out of reach of the
+ * chain reader and the query gets called unscoped when it is not. Conditional
+ * filters are how half this codebase builds a query, so a rule that cannot see
+ * them is a rule that flags correct code — the failure this instrument keeps
+ * repeating. Given the assigned variable, the rest of the function is checked
+ * for a tenant scope applied to it.
+ */
+function builderIsScopedLater(src, chainEndIndex, varName) {
+  if (!varName) return false;
+  const rest = src.slice(chainEndIndex, chainEndIndex + 3000);
+  const v = varName.replace(/[$]/g, '\\$');
+  return new RegExp(
+    `\\b${v}\\s*(?:=[^;\\n]*)?\\.(?:eq|or|in|is|match|filter|not)\\s*\\([^)]*tenant_id`
+  ).test(rest) || new RegExp(`\\b${v}\\b[^;\\n]{0,200}tenant_id`).test(rest);
+}
+
+/** The `const`/`let` name a .from() chain is being assigned to, if any. */
+function assignedVarBefore(src, fromIndex) {
+  const before = src.slice(Math.max(0, fromIndex - 120), fromIndex);
+  const m = before.match(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*[^=;]{0,60}$/);
+  return m ? m[1] : null;
+}
+
 /** Block and line comments out, so prose about a rule is never counted as the
  *  rule being followed — or broken. String contents are left alone: a table
  *  name or an .eq('tenant_id', …) literal is code and must still count. */
@@ -160,10 +336,50 @@ for (const f of files) {
 
      Storage paths DO still need a tenant prefix, but that is a different rule
      with a different fix, so it is not counted here as a missing SQL filter. */
-  const DB_FROM = /(?<!Buffer|Array|Object)(?<!storage)\.from\s*\(\s*['"`]/g;
-  const fromMatches = src.match(DB_FROM) || [];
-  const touchesDb = fromMatches.length > 0;
-  const fromCount = fromMatches.length;
+  /* Table name captured, and the match index kept, so each chain can be read
+     on its own rather than the file being scored in aggregate. An unquoted
+     .from(table) — export-pdf resolves its table from a whitelist — has no
+     name to look up, so it is never exempted; the chain must scope itself. */
+  const DB_FROM = /(?<!Buffer|Array|Object)(?<!storage)\.from\s*\(\s*(?:['"`]([A-Za-z0-9_]+)['"`]|([A-Za-z_$][\w$]*))\s*\)/g;
+  const chains = [];
+  for (const m of src.matchAll(DB_FROM)) {
+    const chain = chainAfter(src, m.index);
+    if (STORAGE_METHOD.test(chain)) continue;   // a bucket, not a table
+    chains.push({
+      table: m[1] ?? null,
+      chain,
+      varName: assignedVarBefore(src, m.index),
+      startIndex: m.index,
+      endIndex: m.index + chain.length,
+    });
+  }
+  const touchesDb = chains.length > 0;
+  const fromCount = chains.length;
+
+  /* A table with no tenant_id column cannot carry a tenant filter. Those are
+     scoped by a parent id (pay_application_lines by pay_application_id) or are
+     global reference data (subscription_plans) — a different rule, not this
+     one, and a rule no regex settles. They are reported separately so they
+     stay visible instead of being silently forgiven. */
+  const unscoped = [];
+  const noColumn = [];
+  const evidence = [];
+  const projectGated = [];
+  const verifiesProject = routeVerifiesProject(src);
+  for (const { table, chain, varName, startIndex, endIndex } of chains) {
+    if (chainIsScoped(chain)) continue;
+    if (builderIsScopedLater(src, endIndex, varName)) continue;
+    const payload = insertPayloadHasTenant(src, startIndex, chain);
+    if (payload === true) continue;
+    if (table && NO_TENANT_COLUMN.has(table)) noColumn.push(table);
+    else if (verifiesProject && PROJECT_FILTERED.test(chain)) projectGated.push(table || '(dynamic)');
+    else {
+      unscoped.push(table || '(dynamic)');
+      /* The chain itself, collapsed to one line. A finding you have to go
+         hunting for is a finding that gets skipped. */
+      evidence.push(chain.replace(/\s+/g, ' ').trim().slice(0, 190));
+    }
+  }
   /* THE `tenants` TABLE IS KEYED BY `id`, NOT `tenant_id`.
      branding, branding/tenant and onboarding/complete all do
      `.from('tenants').eq('id', user.tenantId)` — correctly scoped — and were
@@ -202,15 +418,21 @@ for (const f of files) {
 
   const problems = [];
   if (!isPublic && !hasAuth && touchesDb) problems.push('NO AUTH');
-  if (!isPublic && !tenantExempt && touchesDb && tenantCount === 0) problems.push('NO TENANT FILTER');
-  if (!isPublic && !tenantExempt && touchesDb && tenantCount > 0 && tenantCount < fromCount) {
-    problems.push(`PARTIAL TENANT (${tenantCount}/${fromCount})`);
+  if (!isPublic && !tenantExempt && unscoped.length) {
+    /* Named, not counted. "PARTIAL TENANT (3/4)" told you a number and left you
+       to find which query it meant; the table name is the whole job. */
+    const names = Array.from(new Set(unscoped)).sort();
+    problems.push(`UNSCOPED: ${names.join(', ')}`);
   }
   if (emptyCatch) problems.push('EMPTY CATCH');
   if (catchReturnsOk) problems.push('CATCH RETURNS OK');
   if (bodyTenant) problems.push('TENANT FROM BODY');
+  if (!isPublic && !tenantExempt && projectGated.length) {
+    const names = Array.from(new Set(projectGated)).sort();
+    problems.push(`PROJECT-GATED: ${names.join(', ')}`);
+  }
 
-  rows.push({ rel, isPublic, problems, fromCount, tenantCount });
+  rows.push({ rel, isPublic, problems, fromCount, evidence, noColumn: Array.from(new Set(noColumn)).sort() });
 }
 
 const fails = rows.filter((r) => r.problems.length);
@@ -220,12 +442,23 @@ const clean = rows.filter((r) => !r.problems.length && !r.isPublic);
 console.log(`\nSAGUARO API SECURITY AUDIT — ${rows.length} routes under app/api\n`);
 
 const byProblem = {};
-for (const r of fails) for (const p of r.problems) byProblem[p.split(' (')[0]] = (byProblem[p.split(' (')[0]] || 0) + 1;
+for (const r of fails) for (const p of r.problems) {
+  const key = p.startsWith('UNSCOPED') ? 'UNSCOPED TABLE'
+    : p.startsWith('PROJECT-GATED') ? 'PROJECT-GATED' : p.split(' (')[0];
+  byProblem[key] = (byProblem[key] || 0) + 1;
+}
+
+/* Routes reading a table that HAS no tenant_id. Not a failure of this rule —
+   they are scoped by a parent id or are global reference data — but listed so
+   the second rule (is the parent itself tenant-checked?) has a work list
+   instead of being forgotten because the first rule went quiet. */
+const parentScoped = rows.filter((r) => !r.isPublic && r.noColumn.length);
 
 if (fails.length) {
   console.log('  FAILING ROUTES\n');
   for (const r of fails.sort((a, b) => a.rel.localeCompare(b.rel))) {
     console.log(`    ${r.rel.padEnd(52)} ${r.problems.join(' · ')}`);
+    if (SHOW_CHAINS) for (const e of r.evidence) console.log(`        ↳ ${e}`);
   }
 }
 
@@ -236,9 +469,17 @@ if (SHOW_ALL) {
   for (const r of clean.sort((a, b) => a.rel.localeCompare(b.rel))) console.log(`    ${r.rel}`);
 }
 
+if (SHOW_ALL && parentScoped.length) {
+  console.log('\n  PARENT-SCOPED / GLOBAL (table has no tenant_id column — verify the parent)\n');
+  for (const r of parentScoped.sort((a, b) => a.rel.localeCompare(b.rel))) {
+    console.log(`    ${r.rel.padEnd(52)} ${r.noColumn.join(', ')}`);
+  }
+}
+
 console.log('\n  ── totals ─────────────────────────────');
 console.log(`  clean               ${clean.length}`);
 console.log(`  public by design    ${pub.length}`);
+console.log(`  parent-scoped       ${parentScoped.length}  (no tenant_id column; --all to list)`);
 console.log(`  FAILING             ${fails.length}`);
 for (const [k, v] of Object.entries(byProblem).sort((a, b) => b[1] - a[1])) {
   console.log(`      ${k.padEnd(18)} ${v}`);

@@ -86,7 +86,12 @@ export async function GET(req: NextRequest) {
     // Vendor roster + distinct verticals (independent of the current filter,
     // so the tabs never collapse while searching).
     const [vendorRes, vertRes] = await Promise.all([
-      db.from('catalog_vendors').select('id, name, kind, verticals, website, is_national').order('name', { ascending: true }),
+      /* The vendor roster needed the same scope as the items and the prices.
+         It was missed on the first pass — two of three catalog tables scoped
+         is not "the catalog is scoped". */
+      db.from('catalog_vendors').select('id, name, kind, verticals, website, is_national')
+        .or(`tenant_id.is.null,tenant_id.eq.${g.user.tenantId}`)
+        .order('name', { ascending: true }),
       db.from('catalog_items').select('vertical').or(`tenant_id.is.null,tenant_id.eq.${g.user.tenantId}`),
     ]);
     const verticals: string[] = Array.from(
