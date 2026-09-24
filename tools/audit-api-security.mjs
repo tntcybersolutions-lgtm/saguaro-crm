@@ -187,36 +187,92 @@ function chainIsScoped(chain) {
 }
 
 /**
- * Did this route prove the PROJECT belongs to the caller before reading its
- * children?
+ * Which tables did this route prove it owns?
  *
- *     .from('projects').select('id').eq('id', projectId).eq('tenant_id', user.tenantId)
+ *     .from('takeoffs').select('id').eq('id', takeoffId).eq('tenant_id', user.tenantId)
  *     ...
- *     .from('bills').select('*').eq('project_id', projectId)      // no tenant filter
+ *     .from('takeoff_materials').select('*').eq('takeoff_id', takeoffId)   // no tenant filter
  *
- * The bills query has no tenant filter and does not need one to be correct
- * TODAY: the job was already proven to be the caller's, and a bill hangs off
- * the job. Calling that a live cross-tenant hole would be false, and a report
- * that cries wolf on twenty correct routes buries the ones that are not.
+ * The materials query has no tenant filter and does not need one to be correct
+ * TODAY: the takeoff was already proven to be the caller's, and a material
+ * hangs off the takeoff. Calling that a live cross-tenant hole would be false,
+ * and a report that cries wolf on correct routes buries the ones that are not.
  *
  * It is still worth fixing — the child query is one refactor away from being
- * wrong, and nothing in it says it depends on a check fifteen lines up — so
- * these are reported as PROJECT-GATED: real work, different urgency.
+ * wrong, and nothing in it says it depends on a check twenty lines up — so
+ * these are reported as PARENT-GATED: real work, different urgency.
  *
- * Three spellings count as proof: the inline projects+tenant_id check, an
- * ownsProject()-style helper, and requirePermission(..., { projectId }), which
- * has verified tenant ownership centrally since the fix in lib/permissions.ts.
+ * Originally this only knew about `projects`, which meant the entire takeoff
+ * module — where the parent is `takeoffs` and the check lives in a
+ * getScopedTakeoff() helper — was reported as live holes. Parentage is not a
+ * projects-only idea, so it is no longer hardcoded to one table.
  */
-function routeVerifiesProject(src) {
-  return (
-    /\.from\s*\(\s*['"]projects['"]\s*\)[\s\S]{0,400}?tenant_id/.test(src) ||
-    /requirePermission\s*\([^;]{0,200}?projectId/.test(src) ||
-    /\bownsProject\s*\(/.test(src)
-  );
+function verifiedParents(src) {
+  const owned = new Set();
+  for (const m of src.matchAll(/\.from\s*\(\s*['"`]([A-Za-z0-9_]+)['"`]\s*\)/g)) {
+    const chain = chainAfter(src, m.index);
+    if (/tenant_id/.test(chain)) owned.add(m[1]);
+  }
+  /* requirePermission(..., { projectId }) has verified project ownership
+     centrally since the fix in lib/permissions.ts. */
+  if (/requirePermission\s*\([^;]{0,200}?projectId/.test(src)) owned.add('projects');
+  return owned;
 }
 
-/** Is this chain narrowed to one project (whose ownership was proven above)? */
-const PROJECT_FILTERED = /\.eq\s*\(\s*['"]project_id['"]/;
+/**
+ * Is this chain narrowed to one row of a parent whose ownership was proven?
+ * `.eq('takeoff_id', …)` points at `takeoffs`; `.eq('project_id', …)` at
+ * `projects`. Both the plural and singular spellings are accepted because this
+ * codebase uses both (`punch_list`, `projects`).
+ */
+function parentGatedBy(chain, owned) {
+  for (const m of chain.matchAll(/\.eq\s*\(\s*['"]([a-z0-9_]+)_id['"]/g)) {
+    const base = m[1];
+    if (owned.has(`${base}s`)) return `${base}s`;
+    if (owned.has(base)) return base;
+  }
+  return null;
+}
+
+/**
+ * SELECT-THEN-WRITE: an id that came from a tenant-scoped read.
+ *
+ *     const { data: existing } = await db.from('integrations')
+ *       .select('id').eq('provider','quickbooks').eq('tenant_id', user.tenantId).maybeSingle();
+ *     if (existing) await db.from('integrations').update(row).eq('id', existing.id);
+ *
+ * The update names no tenant, and does not have to: the id it writes to was
+ * just proven to be the caller's. This is how this codebase does a tenant-safe
+ * upsert, deliberately, instead of a global onConflict — the comment on the
+ * quickbooks route says so out loud. Flagging it would condemn the correct
+ * pattern and push people toward the wrong one.
+ *
+ * Proof is required, never assumed: the binding read must ITSELF be
+ * tenant-scoped. An id from an unscoped read buys nothing and is still
+ * reported.
+ */
+function idFromScopedRead(src, chainStart, chain) {
+  const m = chain.match(/\.eq\s*\(\s*['"]id['"]\s*,\s*\(?\s*([A-Za-z_$][\w$]*)\s*(?:as\b|\)|\.)/);
+  if (!m) return false;
+  const v = m[1];
+  /* Straight off the request is exactly what this rule must never excuse. */
+  if (/^(user|auth|params|body|req|input|searchParams)$/.test(v)) return false;
+
+  const before = src.slice(Math.max(0, chainStart - 4000), chainStart);
+  /* Plain string search, deliberately. Building this pattern dynamically meant
+     writing a regex inside a JS string, and every escape in it was eaten by
+     the string layer before RegExp saw it — the check matched nothing, silently,
+     and passed zero routes for two runs while reporting a healthy-looking
+     number. These are the only four spellings this codebase uses to bind a row. */
+  const last = Math.max(
+    before.lastIndexOf('data: ' + v),
+    before.lastIndexOf('data:' + v),
+    before.lastIndexOf('const ' + v),
+    before.lastIndexOf('let ' + v),
+  );
+  if (last < 0) return false;
+  return /tenant_id/.test(before.slice(last, last + 500));
+}
 
 /**
  * An insert whose payload is a variable.
@@ -365,14 +421,15 @@ for (const f of files) {
   const noColumn = [];
   const evidence = [];
   const projectGated = [];
-  const verifiesProject = routeVerifiesProject(src);
+  const owned = verifiedParents(src);
   for (const { table, chain, varName, startIndex, endIndex } of chains) {
     if (chainIsScoped(chain)) continue;
     if (builderIsScopedLater(src, endIndex, varName)) continue;
     const payload = insertPayloadHasTenant(src, startIndex, chain);
     if (payload === true) continue;
+    if (idFromScopedRead(src, startIndex, chain)) continue;
     if (table && NO_TENANT_COLUMN.has(table)) noColumn.push(table);
-    else if (verifiesProject && PROJECT_FILTERED.test(chain)) projectGated.push(table || '(dynamic)');
+    else if (parentGatedBy(chain, owned)) projectGated.push(table || '(dynamic)');
     else {
       unscoped.push(table || '(dynamic)');
       /* The chain itself, collapsed to one line. A finding you have to go
@@ -429,7 +486,7 @@ for (const f of files) {
   if (bodyTenant) problems.push('TENANT FROM BODY');
   if (!isPublic && !tenantExempt && projectGated.length) {
     const names = Array.from(new Set(projectGated)).sort();
-    problems.push(`PROJECT-GATED: ${names.join(', ')}`);
+    problems.push(`PARENT-GATED: ${names.join(', ')}`);
   }
 
   rows.push({ rel, isPublic, problems, fromCount, evidence, noColumn: Array.from(new Set(noColumn)).sort() });
@@ -444,7 +501,7 @@ console.log(`\nSAGUARO API SECURITY AUDIT — ${rows.length} routes under app/ap
 const byProblem = {};
 for (const r of fails) for (const p of r.problems) {
   const key = p.startsWith('UNSCOPED') ? 'UNSCOPED TABLE'
-    : p.startsWith('PROJECT-GATED') ? 'PROJECT-GATED' : p.split(' (')[0];
+    : p.startsWith('PARENT-GATED') ? 'PARENT-GATED' : p.split(' (')[0];
   byProblem[key] = (byProblem[key] || 0) + 1;
 }
 
