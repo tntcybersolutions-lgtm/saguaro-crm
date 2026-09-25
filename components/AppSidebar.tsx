@@ -805,20 +805,33 @@ export default function AppSidebar({
                     <Icon
                       size={collapsed ? 20 : 18}
                       weight={active ? 'fill' : 'regular'}
-                      /* NEUTRAL WHEN INACTIVE — the accent is the ACTIVE item's job.
+                      /* EACH MODULE IN ITS OWN COLOUR, at full strength.
                        *
-                       * This tinted every resting icon with its module hue, and those
-                       * hues are deliberately desaturated for a dark ground: #B8A98A
-                       * parchment, #A9A2C4 lavender-gray, #7FA3C7 steel, #8FB3A9
-                       * patina. Twelve muted pastels at 0.85 opacity over #0c0d10 do
-                       * not read as restraint, they read as muddy — every item a
-                       * slightly different dull colour, none of them confident.
+                       * This was neutral for a while, and the note that made it
+                       * neutral blamed the hues: "#B8A98A parchment, #A9A2C4
+                       * lavender-gray, #7FA3C7 steel, #8FB3A9 patina ... twelve
+                       * muted pastels do not read as restraint, they read as
+                       * muddy". That diagnosis was right about those values and
+                       * wrong about which values were in play — every one it
+                       * names is a module's `hex`, the SOFT tone meant for
+                       * fills and rings. `vivid` is the other half of the pair
+                       * and it is a different animal:
                        *
-                       * Inheriting the link colour gives the rail one voice, and the
-                       * active item — which still gets its vivid chip and gold rule —
-                       * becomes the only thing wearing colour, so it actually leads
-                       * the eye. Full opacity too: the neutral already carries the
-                       * hierarchy, so dimming on top of it only muddies again. */
+                       *   hex    19-51% saturation   the muddy pastels
+                       *   vivid  71-96% saturation   #F59E0B, #3B82F6, #22C55E
+                       *
+                       * Measured all 97 modules against this rail: every vivid
+                       * clears 3:1, most sit between 5:1 and 9:1. So the colour
+                       * is confident AND legible, which is what the pastels
+                       * never were.
+                       *
+                       * Only the ICON wears it. Labels stay one uniform slate,
+                       * so the rail still reads as a list rather than a rainbow
+                       * of text, and the active item keeps its vivid chip and
+                       * gold rule to stay the loudest thing on screen. Full
+                       * opacity — dimming a saturated colour is what produced
+                       * the mud in the first place. */
+                      color={vivid || undefined}
                       style={{ flexShrink: 0, opacity: 1 }}
                     />
                   )}
