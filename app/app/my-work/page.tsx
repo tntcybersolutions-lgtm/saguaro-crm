@@ -41,7 +41,7 @@ const MODULE_GROUPS = [
   { key: 'rfis',    accent: 'rfis',   label: 'RFIs',         icon: ChatCenteredText, fallback: 'RFI',          href: (pid: string) => `/app/projects/${pid}/rfis` },
   { key: 'punch',   accent: 'punch',  label: 'Punch List',   icon: Hammer,           fallback: 'Punch item',   href: (pid: string) => `/app/projects/${pid}/punch-list` },
   { key: 'issues',  accent: 'safety', label: 'Field Issues', icon: Warning,          fallback: 'Field issue',  href: (pid: string) => `/app/projects/${pid}/safety` },
-  { key: 'tm',      accent: 'tm',     label: 'T&M Awaiting Approval', icon: Receipt, fallback: 'T&M ticket',   href: (_pid: string) => `/field/tm-tickets` },
+  { key: 'tm',      accent: 'tm',     label: 'T&M Awaiting Approval', icon: Receipt, fallback: 'T&M ticket',   href: (pid: string) => `/app/projects/${pid}/tm-tickets` },
   { key: 'assists', accent: 'team',   label: 'Assists — Ball in Your Court', icon: Handshake, fallback: 'Assist', href: (pid: string) => `/app/projects/${pid}/rfis` },
 ] as const;
 

@@ -12,7 +12,7 @@ import { buildEstimateReportHtml } from '@/lib/takeoff/estimate-report';
 import { BUILDING_TEMPLATES, conditionsForTemplate, templateById } from '@/lib/takeoff/templates';
 import { estimateConfidence } from '@/lib/takeoff/confidence';
 import { calibrationSanity } from '@/lib/takeoff/measure';
-import { scopedFieldIcon } from '@/app/field/field-icons';
+import { scopedFieldIcon } from '@/lib/field-icons';
 import { Buildings, Warehouse, Storefront, ForkKnife, Tooth, HouseLine, Hammer, FileDashed, Question, Ruler, FilePdf, Receipt, CheckCircle, ArrowRight, ArrowLeft, Stack, PencilSimpleLine, FileCsv, Cube, Table, WarningCircle, MagicWand, Polygon, FileArrowUp, ClipboardText, ArrowSquareOut, XCircle, SealCheck, Sparkle, GitDiff, Note, Package, Path, Lightning, CircleNotch, TrendUp, TrendDown, Printer, X as IconX, type Icon } from '@phosphor-icons/react';
 import dynamic from 'next/dynamic';
 import type { TracerCondition, PersistedSheet } from './PlanTracer';

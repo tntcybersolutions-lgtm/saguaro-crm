@@ -699,7 +699,7 @@ export default function DrawingsPage(){
 
                 {selected.url&&(
                   <button type="button"
-                    onClick={()=>openPdf({url:selected.url!,title:`${selected.number||''} ${selected.title||'Drawing'}`.trim(),editHref:`/field/drawings?projectId=${projectId}`})}
+                    onClick={()=>openPdf({url:selected.url!,title:`${selected.number||''} ${selected.title||'Drawing'}`.trim()})}
                     style={{display:'block',padding:'12px 14px',
                       background:'rgba(245,158,11,.1)',
                       border:'1px solid rgba(245,158,11,.3)',borderRadius:10,

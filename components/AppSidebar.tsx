@@ -18,7 +18,6 @@ import {
   Star,
   ChartBar,
   Brain,
-  DeviceMobile,
   SquaresFour,
   CreditCard,
   ShieldCheck,
@@ -355,7 +354,6 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Documents',   href: '/app/documents',  icon: FileText, accentKey: 'documents', core: true },
       { label: 'Daily Logs',  href: '/app/daily-logs', icon: ClipboardText, accentKey: 'daily' },
       { label: 'Schedule',    href: '/app/schedule',   icon: CalendarBlank, accentKey: 'schedule', core: true },
-      { label: 'Field App',   href: '/field',          icon: DeviceMobile },
       { label: 'Saguaro Radio', href: '/app/radio',    icon: Broadcast, accentKey: 'radio' },
     ],
   },
@@ -442,7 +440,6 @@ export default function AppSidebar({
     // Command Center index highlights only on its own page, not its sub-routes
     // (Rollout, KPIs, Long-Lead, …), which each own their nav item.
     if (href === '/app/command-center') return pathname === '/app/command-center';
-    if (href === '/field') return pathname.startsWith('/field');
     return pathname.startsWith(href);
   }
 

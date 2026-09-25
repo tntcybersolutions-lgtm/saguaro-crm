@@ -957,7 +957,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       }), punchColor);
 
       setPunchModal(null);
-      showToast(`Punch created — "${title}"`, `/field/punch-list?projectId=${projectId}`, 'Open punch list');
+      showToast(`Punch created — "${title}"`, `/app/projects/${projectId}/punch-list`, 'Open punch list');
     } catch (e) {
       console.error('[DrawingViewer] punch trio failed:', e);
       setPunchModal((m) => (m ? { ...m, saving: false } : m));
@@ -2040,7 +2040,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: TEXT }}>{selectedPin.title}</p>
           {(selectedPin.note || selectedPin.notes) && <p style={{ margin: 0, fontSize: 13, color: DIM, lineHeight: 1.4 }}>{selectedPin.note || selectedPin.notes}</p>}
           {(selectedPin.entity_type === 'punch_item' || selectedPin.entity_type === 'punch') && (
-            <button onClick={() => router.push(`/field/punch-list?projectId=${projectId}`)} style={{ marginTop: 10, background: ACCENT_12, border: `1px solid ${ACCENT_25}`, borderRadius: 8, padding: '7px 12px', color: ACCENT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={() => router.push(`/app/projects/${projectId}/punch-list`)} style={{ marginTop: 10, background: ACCENT_12, border: `1px solid ${ACCENT_25}`, borderRadius: 8, padding: '7px 12px', color: ACCENT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
               Open in punch list &rsaquo;
             </button>
           )}
