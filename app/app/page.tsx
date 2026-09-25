@@ -520,13 +520,13 @@ export default function DashboardPage() {
           </SectionCard>
         ) : (
         <>
-        /* ORDER: what needs me, then where the work is, then the numbers.
-           These four blocks used to run KPI cards, charts, priority actions,
-           project list — so the one block that answers "what do I have to do
-           today" sat fifth, under six stat cards and three charts. A GC
-           logging in got Total Contract Value and Win Rate by Trade before
-           anything actionable. Same discipline as the catalog: the decision
-           first, the context after it. */
+        {/* ORDER: what needs me, then where the work is, then the numbers.
+             These four blocks used to run KPI cards, charts, priority actions,
+             project list — so the one block that answers "what do I have to do
+             today" sat fifth, under six stat cards and three charts. A GC
+             logging in got Total Contract Value and Win Rate by Trade before
+             anything actionable. Same discipline as the catalog: the decision
+             first, the context after it. */}
         {/* Today's Priority Actions */}
         <SectionCard
           icon={<Lightning size={17} weight="duotone" color={GOLD} />}
