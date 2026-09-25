@@ -443,12 +443,15 @@ export default function DashboardPage() {
           subtitle={portfolioEmpty
             ? 'Start with a project. Everything else builds on it.'
             : "Here's what needs your attention today."}
-          actions={<>
-            <Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Project</Link>
+          actions={
+          /* Secondary actions left, the primary one last — the order every
+             other tool a GC has open uses, so the eye stops hunting. */
+          <>
             {!portfolioEmpty && <>
-            <button onClick={() => setShowScoreModal(true)} style={goldOutlineButtonStyle} className="pmBtn"><Sparkle size={15} weight="fill" /> Score a Bid</button>
             <Link href="/app/dashboard-config" title="Customize dashboard" style={ghostButtonStyle} className="pmBtn"><SlidersHorizontal size={15} weight="bold" /> Customize</Link>
+            <button onClick={() => setShowScoreModal(true)} style={goldOutlineButtonStyle} className="pmBtn"><Sparkle size={15} weight="fill" /> Score a Bid</button>
             </>}
+            <Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Project</Link>
           </>}
         />
 

@@ -215,6 +215,11 @@ function BidLevelingBoard() {
         subtitle="Normalize sub bids to one scope, then award on price and coverage."
         actions={
           <>
+            {/* Export is a secondary action, so it comes BEFORE the primary
+                rather than stranded to the right of it. */}
+            {bidders.length > 0 && (
+              <button onClick={exportPdf} style={ghostButtonStyle} className="pmBtn"><FilePdf size={15} weight="bold" /> Export bid tab</button>
+            )}
             {/* Package mode only: these push the levelled figures back onto the
                 real submissions. In scratchpad mode they are simply absent —
                 there is nothing to save to. */}
@@ -230,9 +235,6 @@ function BidLevelingBoard() {
                   {pkgComplete ? 'Levelling complete' : 'Save &amp; mark complete'}
                 </button>
               </>
-            )}
-            {bidders.length > 0 && (
-              <button onClick={exportPdf} style={ghostButtonStyle} className="pmBtn"><FilePdf size={15} weight="bold" /> Export bid tab</button>
             )}
           </>
         }

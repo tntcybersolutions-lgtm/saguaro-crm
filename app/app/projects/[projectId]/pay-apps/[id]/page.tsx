@@ -387,6 +387,12 @@ export default function PayAppDetailPage() {
           accent={`#${payApp.application_number}`}
           subtitle={`${payApp.projects?.name || 'Project'} · Period ${fmtDate(payApp.period_from)} – ${fmtDate(payApp.period_to)}`}
           actions={<>
+            {/* Downloading the G702/G703 is a secondary action, so it leads
+                the row rather than sitting to the right of the workflow
+                button that advances the application. */}
+            <button onClick={downloadPDF} disabled={downloading} style={ghostButtonStyle} className="pmBtn">
+              {downloading ? '…' : <><FileText size={15} weight="bold" /> G702/G703 PDF</>}
+            </button>
             {isDraft && !editMode && (
               <button onClick={() => setEditMode(true)} style={goldOutlineButtonStyle} className="pmBtn">
                 <PencilSimple size={15} weight="bold" /> Edit SOV
@@ -410,9 +416,6 @@ export default function PayAppDetailPage() {
                 {actioning ? '…' : <>{meta.nextLabel} <ArrowRight size={14} weight="bold" /></>}
               </button>
             )}
-            <button onClick={downloadPDF} disabled={downloading} style={ghostButtonStyle} className="pmBtn">
-              {downloading ? '…' : <><FileText size={15} weight="bold" /> G702/G703 PDF</>}
-            </button>
           </>}
         />
 

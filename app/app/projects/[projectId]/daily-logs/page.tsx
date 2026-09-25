@@ -454,19 +454,22 @@ export default function DailyLogsPage(){
             accent="Logs"
             subtitle="Headcount from the clocks, weather from NWS."
             actions={
+              /* Primary last. Auto-fill is the action this screen exists for,
+                 so it sits on the right where the eye lands, not buried at
+                 the head of the row ahead of two fallbacks. */
               <>
-                <button onClick={openAutoFill} disabled={prefilling}
-                  style={{...goldButtonStyle,padding:'13px 24px',fontSize:14.5,opacity:prefilling?.7:1}}
-                  className="pmBtn">
-                  <Sparkle size={17} weight="fill"/> {prefilling?'Assembling draft…':'Auto-fill Today'}
+                <button onClick={openCreate} style={ghostButtonStyle} className="pmBtn">
+                  <Plus size={14} weight="bold"/> Blank Log
                 </button>
                 {logs.length>0&&(
                   <button onClick={copyYesterday} style={ghostButtonStyle} className="pmBtn">
                     <CopySimple size={14} weight="bold"/> Copy Yesterday
                   </button>
                 )}
-                <button onClick={openCreate} style={ghostButtonStyle} className="pmBtn">
-                  <Plus size={14} weight="bold"/> Blank Log
+                <button onClick={openAutoFill} disabled={prefilling}
+                  style={{...goldButtonStyle,padding:'13px 24px',fontSize:14.5,opacity:prefilling?.7:1}}
+                  className="pmBtn">
+                  <Sparkle size={17} weight="fill"/> {prefilling?'Assembling draft…':'Auto-fill Today'}
                 </button>
               </>
             }
