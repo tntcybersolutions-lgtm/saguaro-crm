@@ -212,7 +212,7 @@ function BidLevelingBoard() {
         eyebrowIcon={<Scales size={13} weight="fill" color={BIDS.hex} />}
         title={pkgName ? `${pkgName} —` : 'Bid'}
         accent="Leveling"
-        subtitle="Normalize every sub bid to the same scope, compare against your budget, and award on price + coverage — not just the lowest number."
+        subtitle="Normalize sub bids to one scope, then award on price and coverage."
         actions={
           <>
             {/* Package mode only: these push the levelled figures back onto the

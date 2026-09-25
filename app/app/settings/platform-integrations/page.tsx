@@ -93,7 +93,7 @@ export default function PlatformIntegrationsPage() {
         eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
         title="Platform"
         accent="Integrations"
-        subtitle="Configure each cloud provider's app once. After that, every tenant gets one-click connect — they just sign in with their own account, no keys."
+        subtitle="Configure each provider once. Tenants then connect in one click."
       />
 
       {/* Live figures — provider states come straight from the API. */}

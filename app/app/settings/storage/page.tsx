@@ -134,7 +134,7 @@ function StorageSettings() {
         eyebrowIcon={<CloudArrowUp size={13} weight="fill" color={GOLD} />}
         title="External"
         accent="Storage"
-        subtitle="Connect your company's cloud in one click — your team signs in with the account they already use, no keys to manage. Browse it, import into projects, and export back out."
+        subtitle="Connect your company cloud. Your team signs in with their own account."
       />
 
       {/* Live figures — connections and providers come straight from the API. */}

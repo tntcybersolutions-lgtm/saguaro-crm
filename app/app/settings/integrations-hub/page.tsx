@@ -286,7 +286,7 @@ export default function IntegrationsHubPage() {
       {/* API Keys */}
       <SectionCard
         title="API Keys"
-        subtitle="Personal keys for the Saguaro REST API — the full key is shown once at creation and can never be retrieved again."
+        subtitle="REST API keys. The full key is shown once and never again."
         icon={<Key size={17} color={GOLD} weight="duotone" />}
         style={{ marginBottom: 24 }}
       >

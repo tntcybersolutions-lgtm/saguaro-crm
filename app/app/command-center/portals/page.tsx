@@ -50,7 +50,7 @@ export default function PortalsPage() {
           eyebrowIcon={<LinkSimple size={13} weight="fill" />}
           title="Franchisee"
           accent="Portals"
-          subtitle="A private, read-only link for each Owner/Franchisee to watch their location come together — no login, always current."
+          subtitle="A private read-only link per owner. No login required."
         />
 
         {!loading && (

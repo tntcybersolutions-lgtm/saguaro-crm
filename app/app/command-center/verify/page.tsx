@@ -72,7 +72,7 @@ export default function VerifyHubPage() {
           eyebrowIcon={<Camera size={13} weight="fill" />}
           title="Remote Verification"
           accent="Hub"
-          subtitle="Sign off on site milestones from anywhere — photos, drone, 360°, Matterport, live video, or a physical on-site visit when one is required."
+          subtitle="Sign off on site milestones from anywhere."
           actions={
             <>
               <GhostButton onClick={() => setWalkthrough(true)} icon={<VideoCamera size={15} weight="bold" />}>Start Live Walkthrough</GhostButton>

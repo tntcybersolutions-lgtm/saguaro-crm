@@ -366,7 +366,7 @@ export default function NewProjectPage() {
         eyebrowIcon={<Plus size={13} weight="fill" color={GOLD} />}
         title="Create"
         accent="New Project"
-        subtitle="Saguaro seeds the numbering, defaults and downstream automation — you only type what the system can't already know."
+        subtitle="Type only what the system can't already know."
       />
 
       {/* Portfolio snapshot — what the system already knows before you type */}

@@ -173,7 +173,7 @@ export default function MessagesPage() {
         eyebrowIcon={<ChatCircleText size={13} weight="fill" color={GOLD} />}
         title="Project"
         accent="Messages"
-        subtitle="The project's running record — decisions, weather calls, and daily coordination, timestamped for everyone on the job."
+        subtitle="The project's running record, timestamped."
       />
 
       {/* Thread intelligence strip */}

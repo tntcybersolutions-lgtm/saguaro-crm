@@ -151,7 +151,7 @@ export default function AutopilotPage() {
         eyebrowIcon={<Sparkle size={13} weight="fill" color={GOLD} />}
         title="Project"
         accent="Autopilot"
-        subtitle="Deterministic checks against this project's live data — overdue RFIs, expiring insurance, pending lien waivers, and stale change orders. Re-scans automatically every 6 hours."
+        subtitle="Deterministic checks on live project data. Re-scans every 6 hours."
         actions={scanButton}
       />
 

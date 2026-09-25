@@ -182,7 +182,7 @@ export default function NetworkDashboard() {
           eyebrowIcon={<Globe size={13} weight="fill" color={GOLD} />}
           title="Low-Voltage &"
           accent="IT Network"
-          subtitle="Design, document, and test this building's network — device inventory, VLAN segmentation, cable certification, WiFi coverage, and closeout-ready reports."
+          subtitle="Design, document, and certify this building's network."
         />
         {ctx && (
           <div style={{ maxWidth: 1020 }}>

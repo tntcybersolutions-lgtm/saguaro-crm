@@ -212,7 +212,7 @@ function IntelligenceChat() {
         eyebrowIcon={<Brain size={13} weight="fill" color={GOLD} />}
         title="Saguaro"
         accent="Intelligence"
-        subtitle="Your AI construction expert with full context on this project — ask about budget, RFIs, change orders, subs, schedule, lien law, and best practices."
+        subtitle="Ask about this project — grounded in its own records."
       />
 
       {/* What the AI already knows - live numbers from the project snapshot */}

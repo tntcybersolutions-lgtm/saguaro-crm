@@ -62,7 +62,7 @@ export default function LongLeadPage() {
         eyebrowIcon={<Package size={13} weight="fill" color={C.gold} />}
         title="Long-Lead"
         accent="Tracker"
-        subtitle="Every long-lead item across all sites, ordered by drop-dead order date. Protect the schedule — order the red ones now."
+        subtitle="Long-lead items across all sites, by drop-dead order date."
         actions={adding
           ? <GhostButton onClick={() => setAdding(false)}>Close</GhostButton>
           : <GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add Item</GoldButton>}

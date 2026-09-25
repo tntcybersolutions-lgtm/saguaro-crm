@@ -80,7 +80,7 @@ export default function OacPage() {
         eyebrowIcon={<Users size={13} weight="fill" color={C.gold} />}
         title="OAC"
         accent="Workflow"
-        subtitle="Owner · Architect · Contractor meetings and the action items they generate — every site, one accountable list."
+        subtitle="OAC meetings and their action items, every site."
         actions={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setLogging(true)}>Log Meeting</GoldButton>}
       />
 

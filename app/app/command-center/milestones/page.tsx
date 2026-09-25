@@ -57,7 +57,7 @@ export default function MilestonesPage() {
         eyebrowIcon={<FlagCheckered size={13} weight="fill" color={C.gold} />}
         title="Milestone"
         accent="Variance"
-        subtitle="Schedule slippage across all sites, measured against each milestone's baseline. Worst slips first — recover the red ones."
+        subtitle="Slippage against each baseline, worst first."
       />
 
       {/* Schedule pulse — slip mix against baseline, worst-first */}

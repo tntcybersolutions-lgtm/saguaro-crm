@@ -217,7 +217,7 @@ export default function WifiManagerPage() {
         eyebrowIcon={<WifiHigh size={13} weight="fill" color={GOLD} />}
         title="WiFi"
         accent="Manager"
-        subtitle="SSID configuration, access-point inventory, and a hand-off to Signal Studio for real coverage design."
+        subtitle="SSIDs, access points, and hand-off to Signal Studio."
         actions={
           <button onClick={() => setShowSsidForm(!showSsidForm)} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> Add SSID

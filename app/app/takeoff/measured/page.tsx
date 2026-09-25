@@ -763,7 +763,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           eyebrowIcon={<Ruler size={13} weight="fill" color={GOLD} />}
           title="Measured"
           accent="Takeoff"
-          subtitle="Add conditions → the shared engine explodes each into a full priced bill and rolls up live. Same numbers as the phone."
+          subtitle="Add conditions; each explodes into a priced bill and rolls up live."
           actions={<>
             <button onClick={openWizard} title="First-takeoff guide" style={ghostButtonStyle} className="pmBtn"><Question size={16} weight="bold" color={GOLD} />Guide</button>
             <a href="/app/takeoff/rates" style={{ ...ghostButtonStyle, color: tenantRateCount ? GREEN : 'rgba(255,255,255,0.82)' }} className="pmBtn"><Ic name="costBook" s={18} k="hdr" />Cost catalog{tenantRateCount ? ` · ${tenantRateCount} your rates` : ''}</a>
@@ -1095,7 +1095,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* ── PRICED REVISION COMPARE — pick a prior saved takeoff, diff it against the current one, price the delta ── */}
-        <SectionCard icon={<GitDiff size={20} weight="duotone" color="#A78BFA" />} title="Compare to a prior revision" subtitle="Pick a prior saved takeoff as the baseline — the engine prices exactly what changed (added, revised, credited) against the current conditions. The auditable, priced delta competitors leave to a spreadsheet." accent="#A78BFA" style={{ marginTop: 14 }}>
+        <SectionCard icon={<GitDiff size={20} weight="duotone" color="#A78BFA" />} title="Compare to a prior revision" subtitle="Price only what changed against a saved baseline." accent="#A78BFA" style={{ marginTop: 14 }}>
 
           {!projectId ? (
             <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>Open from a project to compare against its prior takeoffs.</div>
@@ -1178,7 +1178,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* SPEC-AWARE CROSS-CHECK — your counted quantities vs the scheduled quantities on file (the edge nobody has) */}
-        <SectionCard icon={<ClipboardText size={20} weight="duotone" color="#FBBF24" />} title="Check against schedules" subtitle="Cross-check your counted quantities against the door / fixture / window schedules on file (submittals, RFIs, specs). Catches the count that doesn't match the drawings before it costs you." accent="#FBBF24" style={{ marginTop: 14 }} action={
+        <SectionCard icon={<ClipboardText size={20} weight="duotone" color="#FBBF24" />} title="Check against schedules" subtitle="Cross-check counted quantities against the schedules on file." accent="#FBBF24" style={{ marginTop: 14 }} action={
           <button onClick={runSpecCheck} disabled={specBusy || !projectId || !specItems.length} title={!projectId ? 'Open from a project to cross-check' : !specItems.length ? 'Add a counted condition first' : ''}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: '#0a0a0a', background: 'linear-gradient(135deg,#7DD3FC,#FBBF24)', flexShrink: 0 }}>
               {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #0a0a0a', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="#0a0a0a" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
@@ -1237,7 +1237,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* markup — full defensible stack */}
-        <SectionCard title="Markup & basis of estimate" subtitle="The full defensible stack — overhead, profit, contingency, tax, burden, general conditions, bond, region index & AACE class" icon={<Receipt size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 14 }}>
+        <SectionCard title="Markup & basis of estimate" subtitle="Overhead, profit, contingency, tax, burden, bond, and region index." icon={<Receipt size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 14 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[['OH %', oh, setOh], ['Profit %', pr, setPr], ['Cont %', cont, setCont], ['Tax %', taxP, setTaxP], ['Burden %', burdenP, setBurdenP], ['Gen Cond %', gcP, setGcP], ['Bond %', bondP, setBondP], ['Bldg SF', bsf, setBsf]].map(([lbl, val, set]: any) => (
             <label key={lbl} style={{ flex: 1, minWidth: 84 }}><span style={{ fontSize: 12, color: DIM }}>{lbl}</span><input value={val} onChange={(e) => set(e.target.value)} style={{ ...inp, marginTop: 4 }} /></label>

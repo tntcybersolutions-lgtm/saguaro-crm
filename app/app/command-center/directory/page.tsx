@@ -54,7 +54,7 @@ export default function DirectoryPage() {
         eyebrowIcon={<Users size={13} weight="fill" color={C.gold} />}
         title="Stakeholder"
         accent="Directory"
-        subtitle="The team behind every location — Owner, GC, Architect, City, Full-Swing, IT/AV, Signage. One roster, every site."
+        subtitle="One roster, every site."
         actions={adding
           ? <GhostButton onClick={() => setAdding(false)}>Close</GhostButton>
           : <GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add Stakeholder</GoldButton>}

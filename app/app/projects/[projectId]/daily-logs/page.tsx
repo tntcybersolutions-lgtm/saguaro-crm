@@ -452,7 +452,7 @@ export default function DailyLogsPage(){
             eyebrowIcon={<ClipboardText size={13} weight="fill" color={moduleAccent('daily').hex}/>}
             title="Daily"
             accent="Logs"
-            subtitle="Field reports that fill themselves — headcount from the clocks, manpower from your crews, weather from NWS"
+            subtitle="Headcount from the clocks, weather from NWS."
             actions={
               <>
                 <button onClick={openAutoFill} disabled={prefilling}

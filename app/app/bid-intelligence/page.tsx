@@ -155,7 +155,7 @@ export default function IntelligencePage() {
       {scoring && (
         <SectionCard
           title="Score a new bid opportunity"
-          subtitle="Claude reads your recorded win history and prices the fit — honest output, straight from the model"
+          subtitle="Priced against your recorded win history."
           icon={<Sparkle size={17} weight="duotone" color={BIDS.hex} />}
           accent={BIDS.hex}
           style={{ marginBottom: 24 }}

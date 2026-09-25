@@ -34,7 +34,7 @@ export default function FinancialsPage() {
         eyebrowIcon={<Bank size={13} weight="fill" color={C.gold} />}
         title="Financial"
         accent="Controls"
-        subtitle="Every dollar accounted for: retainage held, lien releases on file, and TI-reimbursement readiness per location."
+        subtitle="Retainage, lien releases, and TI readiness per location."
       />
 
       {/* Money pulse — dense strip from the live financial rollup */}

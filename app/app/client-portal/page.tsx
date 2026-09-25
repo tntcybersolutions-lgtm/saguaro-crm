@@ -1156,7 +1156,7 @@ export default function ClientPortalPage() {
         eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
         title="Client"
         accent="Portal"
-        subtitle="Owners and stakeholders get a live, permission-gated window into their projects — budget, schedule, photos, RFIs, documents. Manage who sees what, message them directly, and audit every view from here."
+        subtitle="A permission-gated window for owners. You control what they see."
       />
 
       {/* Portal intelligence strip — what the system already knows */}

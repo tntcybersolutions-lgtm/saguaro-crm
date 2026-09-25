@@ -247,7 +247,7 @@ export default function LienDeadlinePage() {
         eyebrowIcon={<Gavel size={13} weight="fill" color={GOLD} />}
         title="Lien Deadline"
         accent="Tracker"
-        subtitle="Track preliminary notices, mechanic's liens, stop notices, and bond claims — with AZ statutory deadlines auto-calculated."
+        subtitle="Notices, liens, and bond claims. AZ statutory deadlines auto-calculated."
         actions={
           <button
             onClick={() => setShowAdd(!showAdd)}

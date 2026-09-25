@@ -42,7 +42,7 @@ export default function QCPage() {
           eyebrowIcon={<MagnifyingGlass size={13} weight="fill" />}
           title="Quality Control"
           accent="by Trade"
-          subtitle="QC before inspections — the same 14-trade checklist on every site, so nothing reaches the inspector unchecked."
+          subtitle="The same 14-trade checklist on every site, before inspection."
           actions={
             <select value={activeSite} onChange={(e) => setSite(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: '#1c1c1e', color: C.text, fontWeight: 600 }}>
               {(projects as any[]).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}

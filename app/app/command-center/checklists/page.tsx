@@ -59,7 +59,7 @@ export default function ChecklistsPage() {
         eyebrowIcon={<ListChecks size={13} weight="fill" color={C.gold} />}
         title="Phase"
         accent="Checklists"
-        subtitle="The same Phase 1–4 operating playbook on every site — nothing gets skipped, no matter the city or contractor."
+        subtitle="The same Phase 1–4 playbook on every site."
         actions={
           <select value={activeSite} onChange={(e) => setSite(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: '#1c1c1e', color: C.text, fontWeight: 600 }}>
             {(projects as any[]).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}

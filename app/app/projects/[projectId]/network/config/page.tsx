@@ -169,7 +169,7 @@ export default function ConfigGeneratorPage() {
         eyebrowIcon={<Gear size={13} weight="fill" color={GOLD} />}
         title="Config"
         accent="Generator"
-        subtitle="Build device-ready configuration from vetted manufacturer templates, then apply it straight to your gear."
+        subtitle="Device-ready config from manufacturer templates."
       />
 
       {/* Generator intelligence — live counts from the data already fetched */}

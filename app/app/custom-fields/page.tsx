@@ -1056,7 +1056,7 @@ export default function CustomFieldsPage() {
         eyebrowIcon={<Clipboard size={13} weight="fill" color={GOLD} />}
         title="Custom"
         accent="Fields"
-        subtitle="Extend any module with your own fields — they appear on every matching record, carry your validation rules, and flow into exports."
+        subtitle="Add your own fields to any module. They flow into exports."
         actions={<>
           <button
             style={{ ...ghostButtonStyle, opacity: loadingSummary ? 0.6 : 1 }}

@@ -250,7 +250,7 @@ export default function PortalsPage() {
         eyebrowIcon={<ShareNetwork size={13} weight="fill" color={GOLD} />}
         title="Portal Access"
         accent="Manager"
-        subtitle="Grant and manage portal access for clients and subcontractors. Each person gets a unique secure link."
+        subtitle="Portal access for clients and subs. Each gets a unique link."
         actions={<>
           <button data-tour="invite-client" onClick={() => openInvite('client')} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> Invite Client

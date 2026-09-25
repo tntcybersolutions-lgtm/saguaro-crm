@@ -502,7 +502,7 @@ export default function TakeoffPage() {
           eyebrowIcon={<Ruler size={13} weight="fill" color={GOLD} />}
           title="Takeoff"
           accent="Studio"
-          subtitle="AI blueprint analysis, measured takeoff, assemblies and cost rates — every estimating tool in one place."
+          subtitle="Blueprint analysis, measured takeoff, assemblies, and rates."
           note="no spreadsheet"
           actions={
             <>

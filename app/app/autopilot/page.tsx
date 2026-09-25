@@ -160,7 +160,7 @@ export default function AutopilotPage() {
         eyebrowIcon={<Robot size={13} weight="fill" color="#F59E0B" />}
         title="Autopilot"
         accent="Dashboard"
-        subtitle="Auto-scans every 6 hours (and on demand) — overdue RFIs & invoices, expiring insurance, pending lien waivers, stale change orders, budget overruns & scope-creep velocity."
+        subtitle="Scans every 6 hours, and on demand."
         actions={
           <button data-tour="run-scan"
             onClick={runScan}

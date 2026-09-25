@@ -3373,7 +3373,7 @@ export default function RadioDispatchPage() {
           </>
         }
         accent="Radio"
-        subtitle="Push-to-talk across the field. Key down, talk, release — the clip lands on every member's radio in about a second, with transcripts in English and Spanish, alerts, tones, and a panic fan-out."
+        subtitle="Push-to-talk for the crew, with English and Spanish transcripts."
         actions={
           <>
             {/* Assistance queue toggle — badge counts the live queue */}

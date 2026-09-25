@@ -35,7 +35,7 @@ export default function DailyLogsPage() {
         eyebrowIcon={<Clipboard size={13} weight="fill" color={C.gold} />}
         title="Daily Superintendent"
         accent="Reports"
-        subtitle="Every site reports by 4 PM — photos, manpower, weather, progress, problems. You know the day without a phone call."
+        subtitle="Every site reports by 4 PM."
         actions={submitting
           ? <GhostButton onClick={() => setSubmitting(false)}>Close</GhostButton>
           : <GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setSubmitting(true)}>Submit Report</GoldButton>}

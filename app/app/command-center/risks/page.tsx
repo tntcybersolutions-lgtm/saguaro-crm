@@ -57,7 +57,7 @@ export default function RisksPage() {
         eyebrowIcon={<ShieldWarning size={13} weight="fill" color={C.gold} />}
         title="Risk"
         accent="Register"
-        subtitle="Every risk across all sites, ranked by exposure. Attack the red ones first — likelihood times impact tells you where to spend attention."
+        subtitle="Every risk across all sites, ranked by exposure."
         actions={
           <button onClick={() => setAdding((v) => !v)} className="pmBtn" style={adding ? ghostButtonStyle : goldButtonStyle}>
             {adding ? 'Close' : <><Plus size={15} weight="bold" /> Add Risk</>}

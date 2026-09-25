@@ -498,7 +498,7 @@ export default function ReportBuilderPage() {
           eyebrowIcon={<ChartBar size={13} weight="fill" color={GOLD} />}
           title="Custom Report"
           accent="Builder"
-          subtitle="Build an ad-hoc report over your live project data — pick a source, choose columns, filter, group, sort, then run, export or save."
+          subtitle="Build a report over live project data, then run or export."
           actions={
             <a href="/app/reports" style={ghostButtonStyle} className="pmBtn">
               <ChartBar size={15} weight="bold" /> Report Library
@@ -837,7 +837,7 @@ export default function ReportBuilderPage() {
       <div className="rb-noprint" id="schedules" style={{ marginTop: 20 }}>
         <SectionCard
           title="Scheduled Deliveries"
-          subtitle="Recurring email reports — each schedule below runs automatically and emails recipients a summary with the full CSV attached"
+          subtitle="Scheduled reports, emailed with the full CSV attached."
           icon={<Clock size={16} weight="duotone" color={GOLD} />}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

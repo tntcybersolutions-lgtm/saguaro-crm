@@ -62,7 +62,7 @@ export default function AskDocsPage() {
           eyebrowIcon={<Sparkle size={13} weight="fill" color={GOLD} />}
           title="Ask your"
           accent="Project Docs"
-          subtitle="Plain-English answers grounded in this project's real records — RFIs, submittals, daily logs, change orders, safety — with every source cited."
+          subtitle="Answers from this project's records, with every source cited."
           style={{ marginBottom: 16 }}
           actions={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

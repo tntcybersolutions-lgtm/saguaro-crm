@@ -69,7 +69,7 @@ export default function CertifiedPayrollPage() {
         eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
         title="Certified"
         accent="Payroll"
-        subtitle="WH-347 certified payroll for Davis-Bacon work, tracked per project. Select a project to open its payroll records."
+        subtitle="WH-347 certified payroll for Davis-Bacon work, per project."
       />
 
       {/* Org-wide compliance rollup — real filed totals, Number-coerced */}

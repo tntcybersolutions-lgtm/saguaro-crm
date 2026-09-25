@@ -60,7 +60,7 @@ export default function BudgetPage() {
         eyebrowIcon={<CurrencyDollar size={13} weight="fill" color={C.gold} />}
         title="Budget &"
         accent="Change Orders"
-        subtitle="Where the money is across every site — original vs revised vs forecast, and every change order routed to approval. No surprises."
+        subtitle="Original, revised, and forecast across every site."
         actions={tab === 'cos' ? (
           adding
             ? <GhostButton onClick={() => setAdding(false)}>Close</GhostButton>

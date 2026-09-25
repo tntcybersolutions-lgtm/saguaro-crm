@@ -155,7 +155,7 @@ export default function CostControlPage() {
         eyebrowIcon={<ChartLineUp size={13} weight="fill" color={GOLD} />}
         title="Cost"
         accent="Control"
-        subtitle="Committed pulls live from purchase orders, actual from approved invoices — projected final cost + variance per code, so you see if the job's making or losing money before it's too late."
+        subtitle="Committed, actual, and projected final cost per code."
       />
 
       {/* controls */}

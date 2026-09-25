@@ -100,7 +100,7 @@ export default function OwnerUpdatesPage() {
           eyebrowIcon={<EnvelopeSimple size={13} weight="fill" />}
           title="Weekly Owner"
           accent="Updates"
-          subtitle="An owner-ready progress update auto-drafted for every site — review, copy, and send. One voice, every location."
+          subtitle="An owner-ready update drafted for every site. Review, then send."
         />
 
         {!loading && updates.length > 0 && (

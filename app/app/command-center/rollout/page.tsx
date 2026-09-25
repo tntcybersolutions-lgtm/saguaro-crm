@@ -61,7 +61,7 @@ export default function RolloutPipelinePage() {
           eyebrowIcon={<Cactus size={13} weight="fill" />}
           title="Franchise Rollout"
           accent="Pipeline"
-          subtitle="Every location from site selection to grand opening. Move a site with the arrows; launch a new one from the standardized playbook."
+          subtitle="Every location from site selection to grand opening."
           actions={
             <GoldButton onClick={() => setLaunching(true)} icon={<Plus size={15} weight="bold" />}>Launch New Site</GoldButton>
           }

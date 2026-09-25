@@ -183,7 +183,7 @@ export default function PayAppPage() {
         eyebrowIcon={<Receipt size={13} weight="fill" color={GOLD} />}
         title="Pay"
         accent="Application"
-        subtitle="Enter this period's progress → the certificate computes live. Seed the SOV from a takeoff to skip the re-keying."
+        subtitle="Enter this period's progress; the certificate computes live."
       />
 
       {/* Setup — project, takeoff seed source & contract terms */}

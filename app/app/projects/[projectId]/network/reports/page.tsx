@@ -180,7 +180,7 @@ export default function ReportsPage() {
         eyebrowIcon={<FileText size={13} weight="fill" color={GOLD} />}
         title="Network"
         accent="Reports"
-        subtitle="Generate IP schedules, cable schedules, port maps, and full as-built documentation for this network project."
+        subtitle="IP schedules, cable schedules, port maps, and as-builts."
         actions={<>
           <select
             value={selectedFormat}

@@ -109,7 +109,7 @@ export default function PeopleAccessHub() {
         accentColor={moduleAccent('team').hex}
         title="People &"
         accent="Access"
-        subtitle="Crew & HR records and role-based access control — manage your workforce and permissions in one place."
+        subtitle="Crew records and role-based access, in one place."
       />
 
       {/* ── roster intelligence strip — what the system already knows ── */}

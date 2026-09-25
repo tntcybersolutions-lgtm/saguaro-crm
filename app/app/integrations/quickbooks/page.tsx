@@ -221,7 +221,7 @@ export default function QuickBooksPage() {
         eyebrowIcon={<Plugs size={13} weight="fill" color={GOLD} />}
         title="QuickBooks"
         accent="Online"
-        subtitle="Sync invoices, bills, customers, and vendors between Saguaro and QuickBooks Online — set up bi-directional sync to keep your accounting data in perfect harmony."
+        subtitle="Two-way sync of invoices, bills, customers, and vendors."
         actions={connected ? (
           <button
             onClick={handleSyncNow}

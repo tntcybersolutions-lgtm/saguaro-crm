@@ -54,7 +54,7 @@ export default function VendorsPage() {
           eyebrowIcon={<Truck size={13} weight="fill" />}
           title="Vendor & Install"
           accent="Schedule"
-          subtitle="Every vendor delivery and equipment install across all sites, on one timeline — coordinate Full-Swing, AV, and long-lead so nothing lands late."
+          subtitle="Every delivery and install across all sites, on one timeline."
         />
 
         {!loading && rows.length > 0 && (

@@ -70,7 +70,7 @@ export default function EscalationsPage() {
         eyebrowIcon={<Flag size={13} weight="fill" color={C.gold} />}
         title="Escalation"
         accent="Matrix"
-        subtitle="Everything escalated for attention across all sites — RFIs, submittals and action items that blew past their date. Clear the red ones first."
+        subtitle="Everything past its date across all sites."
       />
 
       {/* Escalation pulse — open vs resolved, worst-first */}

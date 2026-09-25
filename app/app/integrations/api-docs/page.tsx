@@ -226,7 +226,7 @@ export default function ApiDocsPage() {
         eyebrowIcon={<Plugs size={13} weight="fill" color={API_ACCENT} />}
         title="API"
         accent="Documentation"
-        subtitle="Build custom integrations with the Saguaro REST API — tenant-scoped sk_live_ keys, real webhook events, and honest live/coming-soon labels on every endpoint."
+        subtitle="Tenant-scoped REST keys and webhook events. Every endpoint labelled live or coming soon."
         actions={
           <Link href="/app/settings/integrations-hub" style={goldOutlineButtonStyle} className="pmBtn">
             <Key size={15} weight="bold" /> Mint an API Key
