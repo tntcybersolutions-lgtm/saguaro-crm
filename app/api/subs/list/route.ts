@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const projectId = searchParams.get('projectId');
   try {
     const user = await getUser(req);
-    if (!user) return NextResponse.json({ subs: [] });
+    /* Was a 200 with an empty list, while every sibling list API answers 401.
+       It leaks nothing, but a client cannot tell "your session expired" from
+       "this company has no subcontractors", so an expired session silently
+       shows an empty screen instead of sending you to sign in. */
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const db = createServerClient();
     // NOTE: `subcontractors` is tenant-scoped only — it has no `project_id` column,
@@ -20,7 +25,9 @@ export async function GET(req: NextRequest) {
       .order('company_name');
     if (error) throw error;
     return NextResponse.json({ subs: data || [] });
-  } catch {
-    return NextResponse.json({ subs: [], error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    /* Was a hand-rolled 500 with a hardcoded string and no correlation id, so
+       support had nothing to trace. The status was at least honest. */
+    return apiError('subs/list', e, 'Could not load subcontractors');
   }
 }

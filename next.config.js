@@ -58,6 +58,14 @@ const nextConfig = {
       // AI Design Studio retired — not an offering. Send any old/indexed links home.
       { source: '/design', destination: '/', permanent: false },
       { source: '/design/:path*', destination: '/', permanent: false },
+      /* The project index used to redirect() inside a server component, which
+         answered HTTP 200 carrying <meta http-equiv="refresh" content="1;...">
+         — a one-second blank frame on every entry into a job. Next degrades
+         redirect() to a meta refresh once the shell has flushed, and this
+         segment has a loading.tsx that always flushes first, so no amount of
+         segment config fixes it. Redirecting here happens at the edge, before
+         any React runs, and answers a real 307. */
+      { source: '/app/projects/:projectId', destination: '/app/projects/:projectId/overview', permanent: false },
     ];
   },
 };
