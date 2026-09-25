@@ -147,8 +147,25 @@ const vendorSiteHref = (website: string | null | undefined) => {
  * with the vendor and the feed's as-of date. Reference rows (all of them
  * today) get the honest muted line instead: no color, no number, no claim.
  */
-function Availability({ offer, compact = false }: { offer: Offer; compact?: boolean }) {
+function Availability({ offer, compact = false, feedConnected = false }: { offer: Offer; compact?: boolean; feedConnected?: boolean }) {
   if (!hasLiveStock(offer)) {
+    /* SAY IT ONCE, NOT NINE HUNDRED TIMES.
+     *
+     * Every row printed "Availability not tracked — verify with the vendor"
+     * under its best offer, and every vendor cell printed the short form
+     * again. At 223 items that is roughly nine hundred copies of one
+     * sentence, which is most of the text on the screen — it stopped being
+     * information and became texture.
+     *
+     * Nothing is hidden. The banner above the table states it once, and this
+     * offer's provenance popover still carries the full sentence plus which
+     * vendor and which as-of date. The claim is on screen and one hover away;
+     * it just is not stamped on every cell.
+     *
+     * The exception is a tenant that HAS connected a feed: then "no stock
+     * shown" and "not tracked for this vendor" are genuinely different
+     * states, and blank would be ambiguous, so the label stays. */
+    if (!feedConnected) return null;
     return (
       <span
         title={`${AVAILABILITY_UNTRACKED_LINE}. No inventory feed is connected for ${offer.vendor}.`}
@@ -866,7 +883,7 @@ export default function CatalogPage() {
                               <span style={{ fontSize: 10.5, color: DIM, marginLeft: 6 }}>{best.vendor}</span>
                               {/* Availability, then the real order path — no Buy button exists,
                                   because nothing here can be bought without the vendor. */}
-                              <div style={{ marginTop: 3 }}><Availability offer={best} /></div>
+                              <div style={{ marginTop: 3 }}><Availability offer={best} feedConnected={!!data?.hasLiveStockFeed} /></div>
                               <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
                                 {/* Lead time comes off the same seeded row as stock — only a real feed may show it. */}
                                 {hasLiveStock(best) && best.leadTimeDays != null && best.leadTimeDays > 0 && (
@@ -922,7 +939,7 @@ export default function CatalogPage() {
                                   {isBest && <span style={{ marginLeft: 5, fontSize: 8.5, fontWeight: 900, letterSpacing: 0.06, color: '#FBBF24' }}>BEST</span>}
                                 </div>
                                 <div style={{ marginTop: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5 }}>
-                                  <Availability offer={o} compact />
+                                  <Availability offer={o} compact feedConnected={!!data?.hasLiveStockFeed} />
                                   {hasLiveStock(o) && o.leadTimeDays != null && o.leadTimeDays > 0 && (
                                     <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' as const }}>{o.leadTimeDays}d</span>
                                   )}

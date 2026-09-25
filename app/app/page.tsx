@@ -348,13 +348,40 @@ export default function DashboardPage() {
    * firstName is null whenever the profile has no real full_name; /api/auth/me
    * refuses to fall back to the email prefix precisely so this cannot render
    * "Good evening, tntcybersolutions". No name => the greeting stays as it was. */
+  /* CACHED, BECAUSE THE NAME ARRIVED AFTER THE GREETING DID.
+   *
+   * /api/auth/me resolves after first paint, so the headline rendered "Good
+   * evening" and then grew ", Chad" a moment later — a visible jump in the
+   * largest text on the primary screen, every single load. The name was
+   * correct the whole time; it was just late.
+   *
+   * The shell already caches identity this way (sag_shell_cache), so this
+   * follows it: paint from the cache instantly, revalidate in the background,
+   * and write back only when the answer actually differs. First ever load
+   * still starts nameless — there is nothing to paint from yet, and inventing
+   * a name would be worse than waiting for one. */
+  const NAME_KEY = 'sag_first_name';
   const [firstName, setFirstName] = useState<string | null>(null);
+
   useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem(NAME_KEY);
+      if (cached) setFirstName(cached);
+    } catch { /* private mode — fall through to the fetch */ }
+
     let alive = true;
     fetch('/api/auth/me')
       .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (alive && d && typeof d.firstName === 'string') setFirstName(d.firstName); })
-      .catch(() => { /* greeting simply stays nameless */ });
+      .then(d => {
+        if (!alive) return;
+        const next = d && typeof d.firstName === 'string' ? d.firstName : null;
+        setFirstName(next);
+        try {
+          if (next) sessionStorage.setItem(NAME_KEY, next);
+          else sessionStorage.removeItem(NAME_KEY);
+        } catch { /* nothing to cache to */ }
+      })
+      .catch(() => { /* keep whatever the cache painted */ });
     return () => { alive = false; };
   }, []);
 
