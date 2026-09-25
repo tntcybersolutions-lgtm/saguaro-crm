@@ -63,6 +63,7 @@ import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { isCompanyToolVisible, hiddenCompanyToolCount, type CompanySignals } from '@/lib/company-tools';
+import { normalisePhase, stepNumber, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
 import useSWR from 'swr';
 import BrandMark from '@/components/BrandMark';
 
@@ -346,7 +347,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Pre-Construction',
     items: [
-      { label: 'Bids & Estimates', href: '/app/bids',         icon: CurrencyDollar, core: true, accentKey: 'bids' },
+      { label: 'Bid Board',        href: '/app/bids',         icon: CurrencyDollar, core: true, accentKey: 'bids' },
       { label: 'Takeoff Studio',   href: '/app/takeoff',      icon: Blueprint, accentKey: 'takeoff', core: true },
       { label: 'Catalog',          href: '/app/catalog',      icon: Package, accentKey: 'catalog' },
       { label: 'Signal Studio',    href: '/app/signal-studio', icon: WifiHigh, accentKey: 'signal' },
@@ -527,6 +528,12 @@ export default function AppSidebar({
     { dedupingInterval: 300_000, revalidateOnFocus: false, keepPreviousData: true },
   );
   const companySignals = companyData?.signals ?? null;
+
+  /* Which phase this job is in, so the rail can number its steps in the same
+     order the journey rail on the overview teaches. Both read
+     lib/project-phase, so the menu and the guidance cannot drift apart —
+     which is exactly how users ended up asking where to start. */
+  const projectPhase = normalisePhase((projectCtx as any)?.project?.phase);
   const [showAllTools, setShowAllTools] = useState(false);
   const toolSignals = (projectCtx ?? null) as ToolSignals | null;
 
@@ -654,6 +661,43 @@ export default function AppSidebar({
             : undefined,
         }}
       >
+        {/* WHICH PHASE, AND THE MOVE OUT OF IT.
+            Winning a bid is the moment the product should stop showing
+            takeoff-and-proposal and start showing budget-and-pay-apps. That
+            move needs somewhere to live, and it belongs next to the phase it
+            changes rather than buried in project settings. */}
+        {inProject && !collapsed && (
+          <div style={{ padding: '0 16px 12px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{
+              fontSize: 9.5, fontWeight: 900, letterSpacing: 0.9, textTransform: 'uppercase',
+              padding: '2px 8px', borderRadius: 999,
+              background: projectPhase === 'building' ? 'rgba(34,197,94,0.14)' : 'rgba(245,158,11,0.14)',
+              border: `1px solid ${projectPhase === 'building' ? 'rgba(34,197,94,0.32)' : 'rgba(245,158,11,0.3)'}`,
+              color: projectPhase === 'building' ? '#4ADE80' : '#FBBF24',
+            }}>{PHASE_LABEL[projectPhase]}</span>
+            <button
+              type="button"
+              onClick={async () => {
+                const next = projectPhase === 'building' ? 'bidding' : 'building';
+                try {
+                  const r = await fetch(`/api/projects/${projectId}/phase`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phase: next }),
+                  });
+                  if (r.ok) window.location.reload();
+                } catch { /* leave the rail as it is; the pill still reads true */ }
+              }}
+              style={{
+                background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+                fontSize: 10.5, fontWeight: 700, color: colors.textMuted, textDecoration: 'underline',
+                textUnderlineOffset: 2,
+              }}
+            >
+              {projectPhase === 'building' ? 'Back to bidding' : 'We won it'}
+            </button>
+          </div>
+        )}
         {renderSections.map((section: any, sIdx: number) => {
           const visibleItems = section.items;
           /* Open when the user says so. Otherwise: open everything when there
@@ -665,7 +709,8 @@ export default function AppSidebar({
             ? true
             : stored !== undefined
               ? stored
-              : totalVisible <= OPEN_ALL_BELOW || showAllTools || holdsCurrentPage || sIdx === 0;
+              : totalVisible <= OPEN_ALL_BELOW || showAllTools || holdsCurrentPage || sIdx === 0
+                || (inProject && LEADING_SECTIONS[projectPhase].includes(String(section.title).toUpperCase()));
 
           return (
           <div key={section.title} style={{ marginBottom: sIdx === renderSections.length - 1 ? 4 : 14 }}>
@@ -835,7 +880,32 @@ export default function AppSidebar({
                       style={{ flexShrink: 0, opacity: 1 }}
                     />
                   )}
-                  {!collapsed && <span>{item.label}</span>}
+                  {!collapsed && (
+                    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 7, minWidth: 0 }}>
+                      {/* STEP NUMBER — only inside a project, only for items that
+                          are in this phase's sequence. The same numbering the
+                          journey rail prints on the overview, from the same
+                          source, so "step 3" means one thing in this product.
+                          Anything outside the sequence stays unnumbered rather
+                          than being given a misleading position. */}
+                      {inProject && (() => {
+                        const base = `/app/projects/${projectId}`;
+                        const rel = item.href.startsWith(base) ? item.href.slice(base.length) : item.href;
+                        const num = stepNumber(rel, projectPhase);
+                        return num === null ? null : (
+                          <span style={{
+                            flexShrink: 0, fontVariantNumeric: 'tabular-nums',
+                            fontSize: 9.5, fontWeight: 900, lineHeight: '15px',
+                            width: 15, height: 15, borderRadius: 4, textAlign: 'center',
+                            background: active ? 'rgba(0,0,0,0.22)' : 'rgba(245,158,11,0.16)',
+                            border: `1px solid ${active ? 'rgba(0,0,0,0.28)' : 'rgba(245,158,11,0.3)'}`,
+                            color: active ? colors.dark : '#FBBF24',
+                          }}>{num}</span>
+                        );
+                      })()}
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+                    </span>
+                  )}
                   {!collapsed && item.badge && (
                     <span
                       style={{

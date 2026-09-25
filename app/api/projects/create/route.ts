@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { normalisePhase } from '@/lib/project-phase';
 import type { Database } from '@/lib/database.types';
 import { onProjectCreated } from '@/lib/triggers';
 import { templateByKey } from '@/lib/project-templates';
@@ -21,6 +22,10 @@ export async function POST(req: NextRequest) {
 
     const projectType = body.projectType ?? body.project_type ?? template?.projectType ?? 'commercial';
     const status = body.status ?? 'active';
+    /* Are we chasing this job or building it? One answer at creation decides
+       which journey the overview teaches and which nav sections lead. See
+       lib/project-phase — projects.phase existed and was read by nothing. */
+    const phase = normalisePhase(body.phase);
     // Numeric contract — the projects LIST/dashboard read `contract_value`, so
     // that column MUST be populated; mirror to the contract_amount/original_*
     // columns the web detail + financial views read.
@@ -36,6 +41,7 @@ export async function POST(req: NextRequest) {
       state_jurisdiction: body.stateJurisdiction || 'AZ',
       project_type: projectType,
       status,
+      phase,
       percent_complete: 0,
       contract_value: contractValue,
       contract_amount: contractValue,

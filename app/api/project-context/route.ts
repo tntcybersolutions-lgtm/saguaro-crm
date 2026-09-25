@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     projectQ, contractsQ, cosQ, payAppsQ, budgetQ, subsQ, packagesQ,
     invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ,
   ] = await Promise.all([
-    safe(db.from('projects').select('id, name, status, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
+    safe(db.from('projects').select('id, name, status, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, phase, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('change_orders').select('id, co_number, title, status, cost_impact, amount').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('pay_applications').select('id, app_number, period_from, period_to, status, current_payment_due, total_completed_stored, retainage_percent, contract_sum').eq('project_id', projectId).eq('tenant_id', t).order('app_number', { ascending: false }).limit(12)),
@@ -107,6 +107,11 @@ export async function GET(req: NextRequest) {
       projectNumber: p.project_number, ownerName: p.owner_name, ownerEmail: p.owner_email,
       architectName: p.architect_name, startDate: p.start_date, endDate: p.end_date,
       percentComplete: N(p.percent_complete), setupStep: p.setup_step, setupComplete: p.setup_complete,
+      /* Chasing it or building it — drives which journey the overview
+         teaches and which nav sections lead. Without this the client falls
+         back to 'bidding' for every project, which is how a phase feature
+         ships looking like it works and is wrong on every won job. */
+      phase: p.phase,
     },
     money: {
       originalContract,

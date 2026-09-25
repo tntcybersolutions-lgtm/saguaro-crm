@@ -17,6 +17,8 @@
  * Mirrors the mobile GettingStartedRail exactly.
  */
 import React, { useState, useEffect } from 'react';
+import { normalisePhase, stepsForPhase } from '@/lib/project-phase';
+import { isClosedStatus } from '@/lib/project-lifecycle';
 import Link from 'next/link';
 import { Compass, CaretDown, CaretUp, Check, ArrowRight } from '@phosphor-icons/react';
 import { SectionCard, goldButtonStyle } from '@/components/ui/premium';
@@ -88,26 +90,45 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   const money = ctx?.money;
   const pLink = (suffix: string) => (activeId ? `/app/projects/${activeId}/${suffix}` : undefined);
 
-  // MONEY rule: DB numerics can round-trip as strings — Number(x)||0 before math.
+  /* TWO JOURNEYS, NOT ONE.
+   *
+   * This list used to be a single nine-step run from "create your project"
+   * to "get paid" — and its THIRD step was "Set contract & budget: confirm
+   * the contract sum". A GC chasing a bid has no contract to confirm, so
+   * the product's own guidance walked them into a step that could not apply
+   * to them. That is what "where do we start" was really about.
+   *
+   * The sequence now comes from lib/project-phase, which the NAVIGATION
+   * also reads, so the numbered steps in the rail and the numbered items in
+   * the menu are the same list and cannot drift apart again.
+   *
+   * MONEY rule: DB numerics can round-trip as strings — Number(x)||0 before math. */
+  const phase = normalisePhase(ctx?.project?.phase);
+  const done: Record<string, boolean> = {
+    takeoff:       Boolean(ctx?.takeoff?.completed),
+    estimate:      (Number(ctx?.takeoff?.totalCost) || 0) > 0 || (ctx?.budget?.lineCount || 0) > 0,
+    'bid-packages': (ctx?.bidPackages || []).length > 0,
+    leveling:      (ctx?.bidPackages || []).some((p: any) => p?.leveling_complete || p?.awarded_to),
+    proposal:      (Number(money?.originalContract) || 0) > 0,
+    budget:        (Number(money?.originalContract) || 0) > 0 || (ctx?.budget?.lineCount || 0) > 0,
+    subs:          (ctx?.subs || []).length > 0,
+    schedule:      (ctx?.counts?.scheduleTasks || 0) > 0,
+    'daily-logs':  ctx?.recent?.lastDailyLogDate != null,
+    'pay-apps':    (money?.payAppCount || 0) > 0,
+    closeout:      isClosedStatus(ctx?.project?.status),
+  };
+
   const steps: JourneyStep[] = [
+    /* "Create your project" leads both journeys — without one there is
+       nowhere for any other step to happen. */
     { title: 'Create your project', desc: 'Name, address, owner — everything else builds on this.',
       done: projects.length > 0, href: '/app/projects/new' },
-    { title: 'Price the drawings', desc: 'Drop the plan set. Saguaro measures every trade and prices it — then writes your budget and bid packages from it.',
-      done: Boolean(ctx?.takeoff?.completed), href: pLink('takeoff') },
-    { title: 'Set contract & budget', desc: 'Confirm the contract sum. The budget lines come from the takeoff — every module reads from them.',
-      done: (Number(money?.originalContract) || 0) > 0 || (ctx?.budget?.lineCount || 0) > 0, href: pLink('budget') },
-    { title: 'Send bid packages', desc: 'Scoped packages go out to your sub network for pricing.',
-      done: (ctx?.bidPackages || []).length > 0, href: pLink('bid-packages') },
-    { title: 'Award & onboard subs', desc: 'Award the winners — contracts, insurance, and W-9s collect automatically.',
-      done: (ctx?.subs || []).length > 0, href: pLink('subs') },
-    { title: 'Build the schedule', desc: 'Sequence the work — the critical path drives field priorities.',
-      done: (ctx?.counts?.scheduleTasks || 0) > 0, href: pLink('schedule') },
-    { title: 'Run the field', desc: 'Daily logs capture crews, weather, and progress from the job site.',
-      done: ctx?.recent?.lastDailyLogDate != null, href: pLink('daily-logs') },
-    { title: 'Bill the owner', desc: 'The G702/G703 pay application builds itself from live project data.',
-      done: (money?.payAppCount || 0) > 0, href: pLink('pay-apps/new') },
-    { title: 'Get paid', desc: 'Lien waivers auto-generate and gate payment until signed.',
-      done: (Number(money?.paidToDate) || 0) > 0, href: pLink('pay-apps') },
+    ...stepsForPhase(phase).map((st) => ({
+      title: st.title,
+      desc: st.desc,
+      done: !!done[st.key],
+      href: pLink(st.href.startsWith('/') ? st.href.slice(1) : st.href),
+    })),
   ];
   const doneCount = steps.filter(s => s.done).length;
   const next = steps.find(s => !s.done);

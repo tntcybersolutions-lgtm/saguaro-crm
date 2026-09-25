@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
+import { PHASE_CHOICES, type ProjectPhase } from '@/lib/project-phase';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import SaguaroDatePicker from '../../../../components/SaguaroDatePicker';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
@@ -99,6 +100,12 @@ export default function NewProjectPage() {
       return stillValid ? prev : '';
     });
   }
+  /* Chasing this job or building it? The single question that decides which
+     journey the overview teaches and which nav sections lead. Defaults to
+     bidding: it is the earlier state, and showing bid tools to somebody
+     mid-construction is a smaller error than hiding them from somebody who
+     is about to bid. See lib/project-phase. */
+  const [phase, setPhase] = useState<ProjectPhase>('bidding');
   const [description, setDescription] = useState('');
   // Location
   const [address, setAddress] = useState('');
@@ -310,6 +317,7 @@ export default function NewProjectPage() {
           stateJurisdiction, ownerName:owner, ownerEmail, architectName:arch, architectEmail:archEmail,
           description, contractType, retainagePct:Number(retainage)||10, template:templateKey,
           prevailingWage:prevailingWage!=='No', publicProject:!publicProject.includes('Private'),
+          phase,
         })
       });
       const d = await r.json();
@@ -480,6 +488,37 @@ export default function NewProjectPage() {
                     </div>
                   </FIELD>
                 )}
+                  {/* WHERE IS THIS JOB? — the first thing asked, because the
+                      answer decides everything the product shows next. Users
+                      kept asking "where do we start", and the reason was that
+                      the journey rail taught one order (which assumed you had
+                      already won) while the nav taught another. One question
+                      resolves it. See lib/project-phase. */}
+                  <FIELD label="Where is this job?" hint="Decides which steps the project shows you first. You can switch it the day you win.">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
+                      {PHASE_CHOICES.map((c) => {
+                        const on = phase === c.value;
+                        return (
+                          <button
+                            key={c.value}
+                            type="button"
+                            onClick={() => setPhase(c.value)}
+                            aria-pressed={on}
+                            style={{
+                              textAlign: 'left', padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
+                              background: on ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${on ? 'rgba(245,158,11,0.55)' : 'rgba(255,255,255,0.12)'}`,
+                              boxShadow: on ? '0 0 14px rgba(245,158,11,0.12)' : 'none',
+                              transition: 'background .15s, border-color .15s',
+                            }}
+                          >
+                            <div style={{ fontSize: 13.5, fontWeight: 800, color: on ? '#FBBF24' : '#FFFFFF', marginBottom: 3 }}>{c.title}</div>
+                            <div style={{ fontSize: 11.5, color: '#CBD5E1', lineHeight: 1.45 }}>{c.detail}</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </FIELD>
                   <FIELD label="Project Name"><input data-tour="project-name" value={name} onChange={e=>setName(e.target.value)} required placeholder="e.g. Riverdale Medical Pavilion" style={INPUT_STYLE}/></FIELD>
                 {/* Number, building type, category and description are all seeded or
                     optional. Two fields is the promise; these are here when wanted. */}
