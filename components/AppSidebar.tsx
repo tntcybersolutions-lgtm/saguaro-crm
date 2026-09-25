@@ -494,6 +494,10 @@ export default function AppSidebar({
    * over both.
    */
   const OPEN_ALL_BELOW = 16;
+  /* "All tools" is an explicit request to see everything, so it opens
+     everything. Leaving the collapse default in charge there produced a rail
+     that answered a click labelled "All tools" with one link and ten shut
+     headers — technically all the tools, visibly none of them. */
   /* ── PER-PROJECT TOOL VISIBILITY ─────────────────────────────────────
    *
    * lib/project-tools already decides which of the 49 project modules a job
@@ -640,7 +644,7 @@ export default function AppSidebar({
             ? true
             : stored !== undefined
               ? stored
-              : totalVisible <= OPEN_ALL_BELOW || holdsCurrentPage || sIdx === 0;
+              : totalVisible <= OPEN_ALL_BELOW || showAllTools || holdsCurrentPage || sIdx === 0;
 
           return (
           <div key={section.title} style={{ marginBottom: sIdx === renderSections.length - 1 ? 4 : 14 }}>
