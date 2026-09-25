@@ -112,7 +112,12 @@ export const stepsForPhase = (phase: ProjectPhase): PhaseStep[] =>
  */
 export const LEADING_SECTIONS: Record<ProjectPhase, string[]> = {
   bidding:  ['PROJECT', 'PRECONSTRUCTION'],
-  building: ['PROJECT', 'FINANCIAL', 'EXECUTION', 'FIELD', 'COMMUNICATION', 'CLOSEOUT'],
+  /* Budget first (step 1), then EXECUTION where Subcontractors and Schedule
+     live (2 and 3), then FIELD (4), then back to FINANCIAL for pay apps... —
+     except a section can only appear once. FINANCIAL holds both step 1 and
+     step 5, so it leads: a GC sets the contract before anything else, and
+     billing is where they return to it. */
+  building: ['PROJECT', 'FINANCIAL', 'EXECUTION', 'FIELD', 'CLOSEOUT', 'COMMUNICATION'],
 };
 
 /**

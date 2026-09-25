@@ -50,6 +50,7 @@ const NAV_SECTIONS = [
       { label: 'Schedule',              href: '/schedule',          icon: CalendarBlank, badge: null, accent: 'schedule' },
       { label: 'Selections & Allowances', href: '/selections',      icon: Palette, badge: null },
       { label: 'Contracts',             href: '/contracts',         icon: Clipboard, badge: null, accent: 'contracts' },
+      { label: 'Subcontractors',        href: '/subs',              icon: Users, badge: null, accent: 'subs' },
       { label: 'PO & Subcontracts',     href: '/purchase-orders',   icon: NotePencil, badge: null },
     ],
   },

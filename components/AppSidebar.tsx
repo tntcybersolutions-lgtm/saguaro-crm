@@ -611,7 +611,30 @@ export default function AppSidebar({
         return { ...section, items };
       })
       // A section whose every item is hidden takes its header with it.
-      .filter((section: any) => section.items.length > 0);
+      .filter((section: any) => section.items.length > 0)
+      /* SECTIONS IN THE ORDER THE WORK HAPPENS.
+       *
+       * Rendering them in file order put EXECUTION above FINANCIAL, so a
+       * project in the building phase showed its numbered steps as
+       * 3 Schedule, 1 Budget, 5 Pay Applications, 4 Daily Logs, 6 Closeout,
+       * top to bottom. Every number was correct and the column still read
+       * as broken: a list numbered 3, 1, 5, 4 is not a sequence, it is a
+       * jumble with digits on it.
+       *
+       * The phase's leading sections now come first, in the phase's own
+       * order, so the numbers ascend down the rail. Everything else keeps
+       * its existing relative position after them, so the order is still
+       * fixed and learnable — just fixed to how the job runs rather than to
+       * the order someone happened to type the array in. */
+      .sort((a: any, b: any) => {
+        if (!inProject) return 0;
+        const lead = LEADING_SECTIONS[projectPhase];
+        const rank = (t: string) => {
+          const k = lead.indexOf(String(t).toUpperCase());
+          return k === -1 ? lead.length : k;
+        };
+        return rank(a.title) - rank(b.title);
+      });
   }, [inProject, projectSections, features, projectId, toolSignals, activeProjectHref, showAllTools, companySignals, pathname]);
 
   const totalVisible = renderSections.reduce((n: number, s2: any) => n + s2.items.length, 0);
