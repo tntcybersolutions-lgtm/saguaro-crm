@@ -684,11 +684,18 @@ export default function AppSidebar({
                   padding: '0 16px 6px 20px',
                   background: 'transparent',
                   border: 'none',
-                  fontSize: '10px',
+                  /* Was textFaint (#5B677A) at 10px — dark slate on near-black,
+                     uppercase and tracked out. When a section is collapsed these
+                     headers are the ONLY nav text on screen, and at that size and
+                     colour they read as disabled rather than as structure.
+                     Gold at 78% keeps them clearly subordinate to the item
+                     labels while actually being readable, and ties the rail to
+                     the brand instead of to a grey that means nothing. */
+                  fontSize: '10.5px',
                   fontWeight: font.weight.bold,
-                  color: colors.textFaint,
+                  color: 'rgba(245,158,11,0.78)',
                   textTransform: 'uppercase',
-                  letterSpacing: 1.4,
+                  letterSpacing: 1.3,
                   userSelect: 'none',
                   cursor: 'pointer',
                   textAlign: 'left',
@@ -699,11 +706,18 @@ export default function AppSidebar({
                   {/* A closed section says how much is inside, so nothing feels
                       lost — you can see there are eleven tools in there. */}
                   {!isOpen && (
-                    <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.75 }}>{visibleItems.length}</span>
+                    <span style={{
+                      fontVariantNumeric: 'tabular-nums',
+                      background: 'rgba(245,158,11,0.14)',
+                      border: '1px solid rgba(245,158,11,0.28)',
+                      color: '#FBBF24',
+                      borderRadius: 999, padding: '1px 6px', fontSize: 9.5, lineHeight: 1.5,
+                    }}>{visibleItems.length}</span>
                   )}
                   <CaretDown
                     size={10}
                     weight="bold"
+                    color="rgba(245,158,11,0.6)"
                     style={{ transform: isOpen ? 'none' : 'rotate(-90deg)', transition: 'transform .15s' }}
                   />
                 </span>
@@ -735,7 +749,7 @@ export default function AppSidebar({
                     borderRadius: radius.lg,
                     fontSize: font.size.md,
                     fontWeight: active ? font.weight.semibold : font.weight.medium,
-                    color: active ? colors.gold : colors.textMuted,
+                    color: active ? colors.gold : '#DCE5F0',
                     background: active
                       ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-12))'
                       : 'transparent',
@@ -852,12 +866,18 @@ export default function AppSidebar({
                 width: '100%', minHeight: 40, display: 'flex', alignItems: 'center',
                 justifyContent: 'space-between', gap: 8, padding: '0 10px',
                 background: 'transparent', border: `1px dashed ${colors.borderDim}`,
-                borderRadius: 8, color: colors.textFaint, fontSize: 11.5,
+                borderRadius: 8, color: colors.textMuted, fontSize: 11.5,
                 fontWeight: font.weight.semibold, cursor: 'pointer',
               }}
             >
               <span>{showAllTools ? 'Show fewer tools' : 'All tools'}</span>
-              {!showAllTools && <span style={{ opacity: 0.75, fontVariantNumeric: 'tabular-nums' }}>+{hiddenTools}</span>}
+              {!showAllTools && (
+                <span style={{
+                  fontVariantNumeric: 'tabular-nums', color: '#FBBF24', fontWeight: font.weight.bold,
+                  background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.28)',
+                  borderRadius: 999, padding: '1px 7px', fontSize: 10.5,
+                }}>+{hiddenTools}</span>
+              )}
             </button>
           </div>
         )}
@@ -886,7 +906,7 @@ export default function AppSidebar({
                 borderRadius: radius.lg,
                 fontSize: font.size.md,
                 fontWeight: active ? font.weight.semibold : font.weight.medium,
-                color: active ? colors.gold : colors.textMuted,
+                color: active ? colors.gold : '#DCE5F0',
                 background: active ? colors.goldDim : 'transparent',
                 textDecoration: 'none',
                 transition: 'background .15s ease, color .15s ease',
