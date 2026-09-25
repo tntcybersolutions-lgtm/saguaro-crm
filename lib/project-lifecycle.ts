@@ -37,8 +37,16 @@ export const CLOSED_STATUS = 'completed';
 /** What `Reopen` writes. Matches the projects.status column default. */
 export const ACTIVE_STATUS = 'active';
 
+/** Finished, as opposed to merely stopped. A cancelled or lost job is closed
+ *  but it is not complete, and a "Complete" count that includes it is lying
+ *  about how much work got delivered. */
+export const DONE_PROJECT_STATUSES = ['completed', 'complete', 'closed'] as const;
+
 export const isClosedStatus = (s: unknown): boolean =>
   CLOSED_PROJECT_STATUSES.includes(String(s || '').toLowerCase() as typeof CLOSED_PROJECT_STATUSES[number]);
+
+export const isDoneStatus = (s: unknown): boolean =>
+  DONE_PROJECT_STATUSES.includes(String(s || '').toLowerCase() as typeof DONE_PROJECT_STATUSES[number]);
 
 /** Punch items still needing work. */
 const PUNCH_DONE = ['completed', 'voided'];

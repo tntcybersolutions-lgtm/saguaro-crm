@@ -7,6 +7,12 @@ import { FolderOpen, MagnifyingGlass, Plus, ArrowRight, Sparkle, WarningCircle }
 import { colors } from '../../../lib/design-tokens';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldButtonStyle } from '@/components/ui/premium';
 import { accentForProject, projectMonogram } from '@/lib/project-identity';
+// One vocabulary for "this job is over", shared with the close API — see
+// lib/project-lifecycle.ts. This list previously hardcoded 'complete' and
+// 'closed' and did not know about 'completed', which is what the Close
+// Project button writes: a job you had just closed was counted nowhere and
+// could not be found by any filter option on this screen.
+import { isClosedStatus, isDoneStatus } from '@/lib/project-lifecycle';
 
 // Reconciled to the design-token ramp (no more bluish slab literals).
 const GOLD=colors.gold,DIM=colors.textMuted,TEXT=colors.text;
@@ -16,7 +22,7 @@ function statusStyle(s:string):{bg:string,c:string}{
   if(s==='active')    return {bg:'rgba(34,197,94,.14)',c:colors.green};
   if(s==='bidding')   return {bg:'rgba(245, 158, 11,.16)',c:GOLD};
   if(s==='planning'||s==='preconstruction'||s==='precon')  return {bg:'rgba(203,166,90,.14)',c:'#CBA65A'};
-  if(s==='closed'||s==='complete') return {bg:'rgba(255,255,255,.06)',c:colors.textDim};
+  if(isClosedStatus(s)) return {bg:'rgba(255,255,255,.06)',c:colors.textDim};
   return {bg:'rgba(255,255,255,.06)',c:colors.textDim};
 }
 
@@ -50,7 +56,12 @@ export default function ProjectsPage() {
   const setViewPersist = (v:'cards'|'table')=>{ setView(v); try{ localStorage.setItem('sag_projects_view',v); }catch{} };
 
   const filtered = projects.filter(p=>{
-    const matchStatus = statusFilter==='all'||p.status===statusFilter;
+    // 'complete' is a bucket, not a literal — it has to catch every spelling
+    // the app writes, or closing a job hides it from its own filter.
+    const matchStatus = statusFilter==='all'
+      ? true
+      : statusFilter==='complete' ? isDoneStatus(p.status)
+      : p.status===statusFilter;
     const matchSearch = !search||p.name?.toLowerCase().includes(search.toLowerCase())||p.address?.toLowerCase().includes(search.toLowerCase());
     return matchStatus&&matchSearch;
   }).sort((a,b)=>{
@@ -106,8 +117,7 @@ export default function ProjectsPage() {
             <option value="active">Active</option>
             <option value="planning">Planning</option>
             <option value="bidding">Bidding</option>
-            <option value="complete">Complete</option>
-            <option value="closed">Closed</option>
+            <option value="complete">Complete / Closed</option>
           </select>
           </>}
           <Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold"/> New Project</Link>
@@ -118,7 +128,7 @@ export default function ProjectsPage() {
       {!error && needsControls && (()=>{
         const active = projects.filter((p:any)=>p.status==='active').length;
         const bidding = projects.filter((p:any)=>p.status==='bidding').length;
-        const complete = projects.filter((p:any)=>p.status==='complete'||p.status==='closed').length;
+        const complete = projects.filter((p:any)=>isDoneStatus(p.status)).length;
         const totalContract = projects.reduce((s:number,p:any)=>s+(Number(p.contract_amount)||0),0);
         return (
           <StatStrip items={[

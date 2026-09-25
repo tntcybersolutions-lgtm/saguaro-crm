@@ -85,6 +85,22 @@ const NAV_SECTIONS = [
       { label: 'Drawings',        href: '/drawings',          icon: Ruler, badge: null, accent: 'drawings' },
       { label: 'Permits',         href: '/permits',           icon: Bank,  badge: null, accent: 'permits' },
       { label: 'Specifications',  href: '/specs',             icon: BookOpen, badge: null, accent: 'specs' },
+    ],
+  },
+  {
+    /* Closeout is a PHASE, not a document type. It sat fifth under
+       DOCUMENTS, which meant a GC finishing a job had to already know it
+       lived there. The rest of this nav reads as the lifecycle —
+       precon, execution, financial, field — so the last phase gets the
+       last section.
+
+       Punch List deliberately stays under FIELD rather than being
+       duplicated here: punch items are written all through execution, and
+       two nav entries pointing at one page just makes "which one is
+       highlighted" a question. The closeout screen links straight to the
+       punch list, and to every other open item, from its readiness gate. */
+    label: 'CLOSEOUT',
+    items: [
       { label: 'Closeout',        href: '/closeout',          icon: CheckCircle, badge: null },
     ],
   },
