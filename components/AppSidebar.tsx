@@ -62,6 +62,8 @@ import { Pill } from './ui/premium';
 import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
+import { isCompanyToolVisible, hiddenCompanyToolCount, type CompanySignals } from '@/lib/company-tools';
+import useSWR from 'swr';
 import BrandMark from '@/components/BrandMark';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
@@ -515,6 +517,16 @@ export default function AppSidebar({
    * additional request.
    */
   const { ctx: projectCtx } = useProjectContext(projectId || null);
+
+  /* Company-scope signals. "Has this company ever used Fleet" does not change
+     between two clicks, so this is cached for five minutes on one key for the
+     whole tenant — it costs one request per session, not one per navigation. */
+  const { data: companyData } = useSWR<{ signals: CompanySignals }>(
+    inProject ? null : '/api/company-tools',
+    (u: string) => fetch(u).then((r) => (r.ok ? r.json() : null)),
+    { dedupingInterval: 300_000, revalidateOnFocus: false, keepPreviousData: true },
+  );
+  const companySignals = companyData?.signals ?? null;
   const [showAllTools, setShowAllTools] = useState(false);
   const toolSignals = (projectCtx ?? null) as ToolSignals | null;
 
@@ -529,10 +541,16 @@ export default function AppSidebar({
   }, [pathname, projectId]);
 
   const hiddenTools = React.useMemo(() => {
-    if (!inProject) return 0;
-    const all = PROJECT_NAV_SECTIONS.flatMap((s) => s.items.map((i) => i.href));
-    return hiddenToolCount(all, toolSignals, activeProjectHref);
-  }, [inProject, toolSignals, activeProjectHref]);
+    if (inProject) {
+      const all = PROJECT_NAV_SECTIONS.flatMap((s) => s.items.map((i) => i.href));
+      return hiddenToolCount(all, toolSignals, activeProjectHref);
+    }
+    /* Company scope counts only what this tenant is ENTITLED to — offering
+       "+19" for a Franchise Rollout they cannot buy would be a lie. */
+    const all = NAV_SECTIONS.flatMap((sec) =>
+      sec.items.filter((i) => !i.gate || features[i.gate] === true).map((i) => i.href));
+    return hiddenCompanyToolCount(all, companySignals, pathname);
+  }, [inProject, toolSignals, activeProjectHref, companySignals, pathname, features]);
 
   const scopeKey = inProject ? 'project' : 'company';
   const [openSections, setOpenSections] = useState<Record<string, boolean> | null>(null);
@@ -571,12 +589,15 @@ export default function AppSidebar({
               const rel = item.href.startsWith(base) ? item.href.slice(base.length) : item.href;
               return isToolVisible(rel, toolSignals, activeProjectHref, showAllTools);
             })
-          : entitled;
+          /* Company scope gets the same discipline one level up: core tools,
+             tools this tenant has records in, and the page you are on. */
+          : entitled.filter((item: any) =>
+              isCompanyToolVisible(item.href, companySignals, pathname, showAllTools));
         return { ...section, items };
       })
       // A section whose every item is hidden takes its header with it.
       .filter((section: any) => section.items.length > 0);
-  }, [inProject, projectSections, features, projectId, toolSignals, activeProjectHref, showAllTools]);
+  }, [inProject, projectSections, features, projectId, toolSignals, activeProjectHref, showAllTools, companySignals, pathname]);
 
   const totalVisible = renderSections.reduce((n: number, s2: any) => n + s2.items.length, 0);
 
@@ -821,7 +842,7 @@ export default function AppSidebar({
             changed as you navigated. This hides only project modules with no
             work in them, never the page you are on, it says how many, and
             one click brings every one of them back. */}
-        {inProject && !collapsed && hiddenTools > 0 && (
+        {!collapsed && hiddenTools > 0 && (
           <div style={{ padding: '2px 12px 12px' }}>
             <button
               type="button"
