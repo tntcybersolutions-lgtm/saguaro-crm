@@ -199,7 +199,7 @@ export default function DeviceInventoryPage() {
         eyebrowIcon={<HardDrives size={13} weight="fill" color="#F59E0B" />}
         title="Device"
         accent="Inventory"
-        subtitle="Every router, switch, access point, and endpoint tracked on this project's network."
+        subtitle="Routers, switches, access points, and endpoints."
         actions={
           <button
             onClick={() => { setShowForm(!showForm); setSelectedDevice(null); }}

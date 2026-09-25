@@ -139,7 +139,7 @@ export default function CommandCenterPage() {
         eyebrowIcon={<SquaresFour size={13} weight="fill" color={C.gold} />}
         title="Command"
         accent="Center"
-        subtitle="Every project, one screen. Worst-first — handle red and yellow before anything else."
+        subtitle="Every project, one screen. Worst first."
         actions={<div style={{ fontSize: 12, color: C.dim }}>{summary.total} active {summary.total === 1 ? 'project' : 'projects'}</div>}
       />
 

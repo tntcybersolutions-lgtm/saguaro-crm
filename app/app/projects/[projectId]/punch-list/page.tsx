@@ -309,7 +309,7 @@ export default function PunchListPage(){
           accentColor={moduleAccent('punch').hex}
           title="Punch"
           accent="List"
-          subtitle="Deficiencies, corrections & closeout items — track every fix through to completion."
+          subtitle="Deficiencies and closeout items, tracked to completion."
           actions={
             <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
               <Plus size={15} weight="bold"/> Add Item

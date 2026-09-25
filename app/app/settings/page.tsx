@@ -365,7 +365,7 @@ export default function SettingsPage() {
       <div id="branding" style={{ marginBottom: 24, scrollMarginTop: 72 }}>
         <SectionCard
           title="Company Branding"
-          subtitle="Your logo and name appear in the app sidebar and on every exported report (PDF and Excel)."
+          subtitle="Shown in the sidebar and on every exported report."
           icon={<Palette size={18} weight="duotone" color={GOLD} />}
         >
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 22 }}>

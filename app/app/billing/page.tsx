@@ -511,7 +511,7 @@ export default function BillingPage() {
         <SectionCard
           icon={<PuzzlePiece size={17} weight="duotone" color={GOLD} />}
           title="Plan & Add-ons"
-          subtitle="Optional capabilities for your whole company — nothing is billed without confirmation"
+          subtitle="Company-wide add-ons. Nothing is billed without confirmation."
           style={{ marginBottom: 28 }}
         >
           {/* Current plan summary + Change plan via the Stripe billing portal */}

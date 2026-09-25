@@ -226,7 +226,7 @@ export default function ApiDocsPage() {
         eyebrowIcon={<Plugs size={13} weight="fill" color={API_ACCENT} />}
         title="API"
         accent="Documentation"
-        subtitle="Tenant-scoped REST keys and webhook events. Every endpoint labelled live or coming soon."
+        subtitle="Tenant-scoped keys. Every endpoint labelled live or coming soon."
         actions={
           <Link href="/app/settings/integrations-hub" style={goldOutlineButtonStyle} className="pmBtn">
             <Key size={15} weight="bold" /> Mint an API Key
@@ -422,7 +422,7 @@ export default function ApiDocsPage() {
         <div>
           <SectionCard
             title="Webhook Events"
-            subtitle="Every event below actually fires from the dispatcher — subscribe and it delivers"
+            subtitle="Every event below fires from the dispatcher."
             icon={<WebhooksLogo size={17} weight="duotone" color={API_ACCENT} />}
             accent={API_ACCENT}
             style={{ marginBottom: 24 }}

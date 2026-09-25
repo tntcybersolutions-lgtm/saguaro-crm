@@ -198,7 +198,7 @@ export default function FirewallRulesPage() {
         eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
         title="Firewall"
         accent="Rules"
-        subtitle="Define, order, and toggle the packet-filtering policy for this project's network."
+        subtitle="Define, order, and toggle the packet-filtering policy."
         actions={
           <button onClick={() => setShowForm(!showForm)} style={showForm ? ghostButtonStyle : goldButtonStyle} className="pmBtn">
             {showForm ? <><X size={15} weight="bold" /> Cancel</> : <><Plus size={15} weight="bold" /> Add Rule</>}

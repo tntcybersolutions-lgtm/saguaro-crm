@@ -113,7 +113,7 @@ export default function FilesPage() {
           eyebrowIcon={<Folder size={13} weight="fill" color="#F59E0B" />}
           title="Files &"
           accent="Media"
-          subtitle="Upload, preview, edit, and share any file — photos, video, PDFs, drawings, documents."
+          subtitle="Upload, preview, edit, and share any file."
           actions={
             <button onClick={() => setShowImport(true)} style={ghostButtonStyle} className="pmBtn">
               <CloudArrowDown size={15} weight="bold" /> Import from cloud

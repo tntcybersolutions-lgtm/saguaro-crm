@@ -160,7 +160,7 @@ export default function FleetPage() {
           eyebrowIcon={<Truck size={13} weight="fill" color="#F59E0B" />}
           title="Fleet"
           accent="Registry"
-          subtitle="Vehicles & equipment — maintenance, documents, warnings, and last-known location."
+          subtitle="Maintenance, documents, and last-known location."
           actions={<>
             <button onClick={openIntegrate} style={ghostButtonStyle} className="pmBtn"><Broadcast size={15} weight="fill" color={GOLD} />GPS integration</button>
             {assets.length > 0 && <button onClick={exportReport} style={ghostButtonStyle} className="pmBtn"><FilePdf size={15} />Report</button>}

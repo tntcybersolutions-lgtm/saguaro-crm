@@ -111,7 +111,7 @@ export default function PlatformIntegrationsPage() {
 
       <SectionCard
         title="Provider OAuth Apps"
-        subtitle="Each row is one provider console app — set it up once and it goes live platform-wide."
+        subtitle="One provider per row. Set up once, live platform-wide."
         icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}
       >
         {apps === null ? (

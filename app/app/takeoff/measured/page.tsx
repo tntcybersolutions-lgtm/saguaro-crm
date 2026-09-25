@@ -820,7 +820,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* AI plan-reading — two crisp entry points */}
-        <SectionCard title="AI plan reading" subtitle="Let AI read the drawings — extract conditions, count symbols, or compare revisions" icon={<Sparkle size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 16 }}>
+        <SectionCard title="AI plan reading" subtitle="Extract conditions, count symbols, or compare revisions." icon={<Sparkle size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 12 }}>
           <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(245,158,11,0.55)`, background: 'linear-gradient(180deg,rgba(245,158,11,0.10),rgba(245,158,11,0.03))', borderRadius: 14, padding: '15px 16px', cursor: reading ? 'wait' : 'pointer' }}>
             <Ic name="drawings" s={34} k="hero1" />

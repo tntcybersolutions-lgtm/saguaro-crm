@@ -436,7 +436,7 @@ export default function PrequalificationPage() {
         eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}
         title="Subcontractor"
         accent="Prequalification"
-        subtitle="Manage prequal forms, review submissions, and track subcontractor qualifications"
+        subtitle="Forms, submissions, and sub qualifications."
         actions={<>
           <button style={goldOutlineButtonStyle} className="pmBtn" onClick={() => setShowInviteModal(true)}><Envelope size={15} weight="fill" /> Send Prequal Form</button>
           <button style={goldButtonStyle} className="pmBtn" onClick={() => { setEditTemplate(null); setShowTemplateBuilder(true); }}><Plus size={15} weight="bold" /> New Template</button>

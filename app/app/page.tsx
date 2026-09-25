@@ -475,7 +475,7 @@ export default function DashboardPage() {
              something before a project exists. */
           <SectionCard
             title="Start here"
-            subtitle="Four things worth doing first — every one of them works before you have a single project."
+            subtitle="All four work before you have a project."
             icon={<Lightning size={16} weight="fill" color={GOLD} />}
             style={{ marginBottom: 28 }}
           >

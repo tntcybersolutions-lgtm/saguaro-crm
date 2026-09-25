@@ -564,7 +564,7 @@ export default function NotificationSettingsPage() {
         eyebrowIcon={<Bell size={13} weight="fill" color="#F59E0B" />}
         title="Notification"
         accent="Preferences"
-        subtitle="Configure how and when you receive notifications for each module and event type."
+        subtitle="How and when each event reaches you."
         actions={<>
           <button
             className="pmBtn"
@@ -739,7 +739,7 @@ export default function NotificationSettingsPage() {
       {/* Quiet Hours */}
       <SectionCard
         title="Quiet Hours"
-        subtitle="Notifications received during quiet hours will be queued and delivered when quiet hours end."
+        subtitle="Queued during quiet hours, delivered when they end."
         icon={<Moon size={17} weight="duotone" color={GOLD} />}
         action={
           <Toggle
