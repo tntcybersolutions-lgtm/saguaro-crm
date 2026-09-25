@@ -4,6 +4,25 @@ import { useParams } from 'next/navigation';
 import { openPdf } from '@/components/PdfViewer';
 import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intelligence';
 import Link from 'next/link';
+import {
+  ChartBar, CheckCircle, CurrencyDollar, ChatCircle, FolderOpen, Wrench, Robot,
+  Lock, CalendarBlank, Money, ClipboardText, Sun, CloudRain, Camera, Receipt,
+  CreditCard, Paperclip, MagnifyingGlass, Ruler, FileText, ListChecks,
+  DownloadSimple, PaperPlaneTilt, List, X, ArrowUp, Check, Checks, XCircle,
+  Cactus, Buildings, Target, EnvelopeSimple, Sparkle, Hammer, Files, Certificate,
+  Signature,
+} from '@phosphor-icons/react';
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
+
+/** A Phosphor icon component, stored rather than rendered so each call site
+ *  picks its own size and weight. */
+type IconCmp = PhosphorIcon;
+
+/** Weather glyph from the CONDITION TEXT rather than the provider's own
+ *  `icon` field, which is an opaque string we do not control and which used
+ *  to be rendered raw next to an emoji fallback. */
+const weatherIcon = (conditions: string): IconCmp =>
+  /rain|shower|drizzle|storm|snow/i.test(conditions || '') ? CloudRain : Sun;
 
 /* ── Palette ──────────────────────────────────────────────────────── */
 const GOLD = '#F59E0B';
@@ -174,14 +193,14 @@ type DashboardData = {
 };
 
 /* ── Tab Config ───────────────────────────────────────────────────── */
-const TABS: { id: TabId; label: string; icon: string }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-  { id: 'approvals', label: 'Approvals', icon: '✅' },
-  { id: 'financials', label: 'Financials', icon: '💰' },
-  { id: 'messages', label: 'Messages', icon: '💬' },
-  { id: 'documents', label: 'Documents', icon: '📁' },
-  { id: 'warranty', label: 'Warranty & Punch', icon: '🔧' },
-  { id: 'ai', label: 'AI Summary', icon: '🤖' },
+const TABS: { id: TabId; label: string; icon: IconCmp }[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: ChartBar },
+  { id: 'approvals', label: 'Approvals', icon: CheckCircle },
+  { id: 'financials', label: 'Financials', icon: CurrencyDollar },
+  { id: 'messages', label: 'Messages', icon: ChatCircle },
+  { id: 'documents', label: 'Documents', icon: FolderOpen },
+  { id: 'warranty', label: 'Warranty & Punch', icon: Wrench },
+  { id: 'ai', label: 'AI Summary', icon: Robot },
 ];
 
 const DOC_CATEGORIES = ['All', 'Contracts', 'Drawings', 'Specs', 'Submittals', 'Permits', 'Lien Waivers', 'Reports', 'Photos', 'Other'];
@@ -945,7 +964,7 @@ export default function ClientPortalPage() {
     return (
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ textAlign: 'center', maxWidth: 420, padding: 32 }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>🔒</div>
+          <div style={{ marginBottom: 16 }}><Lock size={52} weight="duotone" color={GOLD} /></div>
           <div style={{ fontSize: 22, fontWeight: 800, color: TEXT, marginBottom: 8 }}>Portal Unavailable</div>
           <div style={{ color: DIM, fontSize: 14, lineHeight: 1.6 }}>
             {dashError || 'This portal link is invalid or has expired. Please contact your contractor for a new link.'}
@@ -965,9 +984,9 @@ export default function ClientPortalPage() {
     </div>
   );
 
-  const EmptyState = ({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) => (
+  const EmptyState = ({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) => (
     <div style={{ textAlign: 'center', padding: 64 }}>
-      <div style={{ fontSize: 48, marginBottom: 12 }}>{icon}</div>
+      <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'center' }}>{icon}</div>
       <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 6 }}>{title}</div>
       <div style={{ color: DIM, fontSize: 14 }}>{subtitle}</div>
     </div>
@@ -1059,14 +1078,14 @@ export default function ClientPortalPage() {
       {/* Quick Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
         {[
-          { label: 'Days Remaining', value: daysRemaining.toString(), icon: '📅', color: BLUE },
-          { label: 'Total Budget', value: fmt(project.total_budget), icon: '💵', color: GREEN },
-          { label: 'Payments Made', value: fmt(project.payments_made), icon: '✅', color: PURPLE },
-          { label: 'Open Items', value: project.open_items.toString(), icon: '📋', color: AMBER },
+          { label: 'Days Remaining', value: daysRemaining.toString(), icon: CalendarBlank, color: BLUE },
+          { label: 'Total Budget', value: fmt(project.total_budget), icon: Money, color: GREEN },
+          { label: 'Payments Made', value: fmt(project.payments_made), icon: CheckCircle, color: PURPLE },
+          { label: 'Open Items', value: project.open_items.toString(), icon: ClipboardText, color: AMBER },
         ].map((stat) => (
           <div key={stat.label} style={{ ...cardStyle, padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 22 }}>{stat.icon}</span>
+              <stat.icon size={22} weight="duotone" color={stat.color} />
               <span style={{ fontSize: 10, fontWeight: 700, color: stat.color, textTransform: 'uppercase', letterSpacing: 0.5 }}>{stat.label}</span>
             </div>
             <div style={{ fontSize: 24, fontWeight: 800, color: TEXT }}>{stat.value}</div>
@@ -1103,7 +1122,7 @@ export default function ClientPortalPage() {
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 12 }}>Job Site Weather</div>
             {weather ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ fontSize: 48 }}>{weather.icon || '☀️'}</div>
+                <div>{React.createElement(weatherIcon(weather.conditions), { size: 44, weight: 'duotone', color: GOLD })}</div>
                 <div>
                   <div style={{ fontSize: 32, fontWeight: 800, color: TEXT }}>{weather.temp}°F</div>
                   <div style={{ fontSize: 14, color: DIM }}>{weather.conditions}</div>
@@ -1179,7 +1198,7 @@ export default function ClientPortalPage() {
       <div style={{ ...cardStyle }}>
         <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Latest Photos</div>
         {photos.length === 0 ? (
-          <EmptyState icon="📷" title="No Photos Yet" subtitle="Project photos will appear here as they are uploaded." />
+          <EmptyState icon={<Camera size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Photos Yet" subtitle="Project photos will appear here as they are uploaded." />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12 }}>
             {photos.map((photo) => (
@@ -1218,7 +1237,7 @@ export default function ClientPortalPage() {
         <div>
           <div style={{ fontSize: 20, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Pending Approvals</div>
           {approvals.filter((a) => a.status === 'pending').length === 0 ? (
-            <EmptyState icon="✅" title="All Caught Up" subtitle="No pending approvals at this time." />
+            <EmptyState icon={<CheckCircle size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="All Caught Up" subtitle="No pending approvals at this time." />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {approvals
@@ -1254,14 +1273,14 @@ export default function ClientPortalPage() {
                         disabled={processingApproval === item.id}
                         onClick={() => handleApproval(item.id, 'approved')}
                       >
-                        {processingApproval === item.id ? 'Processing...' : '✓ Approve'}
+                        {processingApproval === item.id ? 'Processing...' : <><Check size={14} weight="bold" /> Approve</>}
                       </button>
                       <button
                         style={{ ...btnDanger, opacity: processingApproval === item.id ? 0.6 : 1 }}
                         disabled={processingApproval === item.id}
                         onClick={() => handleApproval(item.id, 'rejected')}
                       >
-                        {processingApproval === item.id ? 'Processing...' : '✗ Reject'}
+                        {processingApproval === item.id ? 'Processing...' : <><X size={14} weight="bold" /> Reject</>}
                       </button>
                     </div>
                   </div>
@@ -1290,7 +1309,7 @@ export default function ClientPortalPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button style={btnOutline} onClick={clearSignature}>Clear Signature</button>
-            {signatureData && <span style={{ fontSize: 12, color: GREEN }}>✓ Signature captured</span>}
+            {signatureData && <span style={{ fontSize: 12, color: GREEN, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={12} weight="bold" /> Signature captured</span>}
           </div>
         </div>
 
@@ -1304,7 +1323,7 @@ export default function ClientPortalPage() {
               {approvalHistory.map((h) => (
                 <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${BORDER}` }}>
                   <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${statusColor(h.action)}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: 16 }}>{h.action === 'approved' ? '✓' : '✗'}</span>
+                    {h.action === 'approved' ? <Check size={15} weight="bold" color={GREEN} /> : <X size={15} weight="bold" color={RED} />}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{h.item_title}</div>
@@ -1359,7 +1378,7 @@ export default function ClientPortalPage() {
         <div style={{ ...cardStyle }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Invoice History</div>
           {invoices.length === 0 ? (
-            <EmptyState icon="🧾" title="No Invoices" subtitle="Invoices will appear here as they are generated." />
+            <EmptyState icon={<Receipt size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Invoices" subtitle="Invoices will appear here as they are generated." />
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
@@ -1390,7 +1409,7 @@ export default function ClientPortalPage() {
         <div style={{ ...cardStyle }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Budget Breakdown</div>
           {budgetLines.length === 0 ? (
-            <EmptyState icon="📊" title="No Budget Data" subtitle="Budget line items will appear here." />
+            <EmptyState icon={<ChartBar size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Budget Data" subtitle="Budget line items will appear here." />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {/* Header row */}
@@ -1452,7 +1471,7 @@ export default function ClientPortalPage() {
               disabled={paymentProcessing}
               onClick={makePayment}
             >
-              {paymentProcessing ? 'Processing...' : '💳 Submit Payment'}
+              {paymentProcessing ? 'Processing...' : <><CreditCard size={15} weight="bold" /> Submit Payment</>}
             </button>
           </div>
         </div>
@@ -1461,7 +1480,7 @@ export default function ClientPortalPage() {
         <div style={{ ...cardStyle }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Payment History</div>
           {payments.length === 0 ? (
-            <EmptyState icon="💳" title="No Payments" subtitle="Payment history will appear here." />
+            <EmptyState icon={<CreditCard size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Payments" subtitle="Payment history will appear here." />
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
@@ -1503,7 +1522,7 @@ export default function ClientPortalPage() {
         {/* Message list */}
         <div style={{ ...cardStyle, flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: 20, marginBottom: 16 }}>
           {messages.length === 0 ? (
-            <EmptyState icon="💬" title="No Messages" subtitle="Start a conversation with your project team." />
+            <EmptyState icon={<ChatCircle size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Messages" subtitle="Start a conversation with your project team." />
           ) : (
             messages.map((msg) => (
               <div
@@ -1526,17 +1545,17 @@ export default function ClientPortalPage() {
                   <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.5 }}>{msg.text}</div>
                   {msg.attachment && (
                     <div style={{ marginTop: 8, padding: '6px 10px', background: `${BG}80`, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 14 }}>📎</span>
+                      <Paperclip size={13} weight="bold" color={DIM} />
                       <span style={{ fontSize: 12, color: BLUE }}>{msg.attachment.name}</span>
                     </div>
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, justifyContent: 'flex-end' }}>
                     <span style={{ fontSize: 10, color: DIM }}>{fmtTime(msg.timestamp)}</span>
                     {msg.sender_type === 'client' && msg.read && (
-                      <span style={{ fontSize: 10, color: BLUE }}>✓✓</span>
+                      <Checks size={12} weight="bold" color={BLUE} />
                     )}
                     {msg.sender_type === 'client' && !msg.read && (
-                      <span style={{ fontSize: 10, color: DIM }}>✓</span>
+                      <Check size={12} weight="bold" color={DIM} />
                     )}
                   </div>
                 </div>
@@ -1574,7 +1593,7 @@ export default function ClientPortalPage() {
             onClick={() => showToast('File attachments aren’t available from the client portal yet. Please email your contractor to share files.', 'error')}
             title="Attach file"
           >
-            📎
+            <Paperclip size={16} weight="bold" />
           </button>
           <div style={{ flex: 1, position: 'relative' }}>
             <textarea
@@ -1595,7 +1614,7 @@ export default function ClientPortalPage() {
             disabled={sendingMsg || !newMessage.trim()}
             onClick={sendMessage}
           >
-            {sendingMsg ? '...' : 'Send ➤'}
+            {sendingMsg ? '...' : <><PaperPlaneTilt size={14} weight="fill" /> Send</>}
           </button>
         </div>
       </div>
@@ -1618,7 +1637,7 @@ export default function ClientPortalPage() {
             <input
               type="text"
               style={inputStyle}
-              placeholder="🔍 Search documents..."
+              placeholder="Search documents…"
               value={docSearch}
               onChange={(e) => setDocSearch(e.target.value)}
             />
@@ -1650,7 +1669,7 @@ export default function ClientPortalPage() {
 
         {/* Documents grid */}
         {filteredDocs.length === 0 ? (
-          <EmptyState icon="📁" title="No Documents Found" subtitle={docSearch ? 'Try a different search term.' : 'Documents will appear here as they are shared.'} />
+          <EmptyState icon={<FolderOpen size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Documents Found" subtitle={docSearch ? 'Try a different search term.' : 'Documents will appear here as they are shared.'} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
             {filteredDocs.map((doc) => (
@@ -1660,7 +1679,7 @@ export default function ClientPortalPage() {
                     width: 44, height: 44, borderRadius: 8, background: `${BLUE}20`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
                   }}>
-                    {doc.category === 'Drawings' ? '📐' : doc.category === 'Contracts' ? '📄' : doc.category === 'Specs' ? '📋' : doc.category === 'Submittals' ? '📑' : doc.category === 'Permits' ? '🏛️' : doc.category === 'Lien Waivers' ? '📝' : doc.category === 'Photos' ? '📷' : '📁'}
+                    {doc.category === 'Drawings' ? <Ruler size={18} weight="duotone" color={GOLD} /> : doc.category === 'Contracts' ? <FileText size={18} weight="duotone" color={GOLD} /> : doc.category === 'Specs' ? <ClipboardText size={18} weight="duotone" color={GOLD} /> : doc.category === 'Submittals' ? <Files size={18} weight="duotone" color={GOLD} /> : doc.category === 'Permits' ? <Certificate size={18} weight="duotone" color={GOLD} /> : doc.category === 'Lien Waivers' ? <Signature size={18} weight="duotone" color={GOLD} /> : doc.category === 'Photos' ? <Camera size={18} weight="duotone" color={GOLD} /> : <FolderOpen size={18} weight="duotone" color={GOLD} />}
                   </div>
                   <div style={{ flex: 1, overflow: 'hidden' }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.title}</div>
@@ -1684,7 +1703,7 @@ export default function ClientPortalPage() {
                     }
                   }}
                 >
-                  ⬇ Download
+                  <DownloadSimple size={13} weight="bold" /> Download
                 </button>
               </div>
             ))}
@@ -1753,7 +1772,7 @@ export default function ClientPortalPage() {
               style={{ ...btnOutline, padding: '10px 16px' }}
               onClick={() => showToast('Photo uploads aren’t available from the client portal yet. Please email photos to your contractor and they’ll attach them to this claim.', 'error')}
             >
-              📷 Attach Photos
+              <Camera size={14} weight="bold" /> Attach Photos
             </button>
             <button
               style={{ ...btnPrimary, opacity: submittingClaim ? 0.6 : 1 }}
@@ -1769,7 +1788,7 @@ export default function ClientPortalPage() {
         <div>
           <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Warranty Claims</div>
           {warrantyClaims.length === 0 ? (
-            <EmptyState icon="🔧" title="No Warranty Claims" subtitle="Submit a warranty claim above if you encounter any issues." />
+            <EmptyState icon={<Wrench size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Warranty Claims" subtitle="Submit a warranty claim above if you encounter any issues." />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {warrantyClaims.map((claim) => (
@@ -1803,7 +1822,7 @@ export default function ClientPortalPage() {
                               border: isCurrent ? `3px solid ${TEXT}` : 'none',
                               transition: 'all .3s',
                             }}>
-                              {isActive && <span style={{ color: '#fff', fontSize: 10, fontWeight: 800 }}>✓</span>}
+                              {isActive && <Check size={11} weight="bold" color="#fff" />}
                             </div>
                             <div style={{ fontSize: 9, color: isActive ? TEXT : DIM, textTransform: 'capitalize', whiteSpace: 'nowrap', fontWeight: isCurrent ? 700 : 400 }}>
                               {step.replace('_', ' ')}
@@ -1837,7 +1856,7 @@ export default function ClientPortalPage() {
         <div>
           <div style={{ fontSize: 18, fontWeight: 700, color: TEXT, marginBottom: 16 }}>Punch List Items</div>
           {punchItems.length === 0 ? (
-            <EmptyState icon="📋" title="No Punch List Items" subtitle="Punch list items will appear here during project closeout." />
+            <EmptyState icon={<ClipboardText size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Punch List Items" subtitle="Punch list items will appear here during project closeout." />
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {punchItems.map((item) => (
@@ -1848,7 +1867,7 @@ export default function ClientPortalPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <span style={{ fontSize: 16 }}>
-                      {item.status === 'signed_off' ? '✓' : item.status === 'completed' ? '🔍' : '🔨'}
+                      {item.status === 'signed_off' ? <Check size={14} weight="bold" color={GREEN} /> : item.status === 'completed' ? <MagnifyingGlass size={14} weight="bold" color={BLUE} /> : <Hammer size={14} weight="bold" color={AMBER} />}
                     </span>
                   </div>
                   <div style={{ flex: 1 }}>
@@ -1861,7 +1880,7 @@ export default function ClientPortalPage() {
                       style={{ ...btnSuccess, padding: '8px 16px', fontSize: 12 }}
                       onClick={() => handlePunchSignOff(item.id)}
                     >
-                      ✓ Sign Off
+                      <Check size={13} weight="bold" /> Sign Off
                     </button>
                   )}
                   {item.photo && (
@@ -1902,13 +1921,13 @@ export default function ClientPortalPage() {
                 Generating...
               </>
             ) : (
-              <>🤖 Generate Summary</>
+              <><Sparkle size={15} weight="fill" /> Generate Summary</>
             )}
           </button>
         </div>
 
         {aiSummaries.length === 0 ? (
-          <EmptyState icon="🤖" title="No Summaries Yet" subtitle="Click 'Generate Summary' to create your first AI project summary." />
+          <EmptyState icon={<Robot size={44} weight="duotone" color="rgba(255,255,255,0.35)" />} title="No Summaries Yet" subtitle="Click 'Generate Summary' to create your first AI project summary." />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {aiSummaries.map((summary) => (
@@ -1926,7 +1945,7 @@ export default function ClientPortalPage() {
                     disabled={emailSending}
                     onClick={() => emailSummary(summary.id)}
                   >
-                    {emailSending ? 'Sending...' : '📧 Send to Email'}
+                    {emailSending ? 'Sending...' : <><EnvelopeSimple size={15} weight="bold" /> Send to Email</>}
                   </button>
                 </div>
 
@@ -1934,7 +1953,7 @@ export default function ClientPortalPage() {
                   {/* Work Completed */}
                   <div style={{ background: BG, borderRadius: 10, padding: 16, border: `1px solid ${BORDER}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ fontSize: 18 }}>🏗️</span>
+                      <Buildings size={17} weight="duotone" color={GREEN} />
                       <span style={{ fontSize: 13, fontWeight: 700, color: GREEN }}>Work Completed</span>
                     </div>
                     <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{summary.work_completed}</div>
@@ -1943,7 +1962,7 @@ export default function ClientPortalPage() {
                   {/* Upcoming Milestones */}
                   <div style={{ background: BG, borderRadius: 10, padding: 16, border: `1px solid ${BORDER}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ fontSize: 18 }}>🎯</span>
+                      <Target size={17} weight="duotone" color={BLUE} />
                       <span style={{ fontSize: 13, fontWeight: 700, color: BLUE }}>Upcoming Milestones</span>
                     </div>
                     <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{summary.upcoming_milestones}</div>
@@ -1952,7 +1971,7 @@ export default function ClientPortalPage() {
                   {/* Budget Status */}
                   <div style={{ background: BG, borderRadius: 10, padding: 16, border: `1px solid ${BORDER}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ fontSize: 18 }}>💰</span>
+                      <CurrencyDollar size={17} weight="duotone" color={GOLD} />
                       <span style={{ fontSize: 13, fontWeight: 700, color: GOLD }}>Budget Status</span>
                     </div>
                     <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{summary.budget_status}</div>
@@ -1961,7 +1980,7 @@ export default function ClientPortalPage() {
                   {/* Weather Delays */}
                   <div style={{ background: BG, borderRadius: 10, padding: 16, border: `1px solid ${BORDER}` }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                      <span style={{ fontSize: 18 }}>🌧️</span>
+                      <CloudRain size={17} weight="duotone" color={AMBER} />
                       <span style={{ fontSize: 13, fontWeight: 700, color: AMBER }}>Weather Delays</span>
                     </div>
                     <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.7 }}>{summary.weather_delays}</div>
@@ -2021,7 +2040,7 @@ export default function ClientPortalPage() {
         <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           {/* Logo area */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 28 }}>🌵</span>
+            <Cactus size={26} weight="fill" color={GOLD} />
             <div>
               <div style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1.5, lineHeight: 1 }}>SAGUARO</div>
               <div style={{ fontSize: 9, color: DIM, letterSpacing: 2, textTransform: 'uppercase' }}>Client Portal</div>
@@ -2050,7 +2069,7 @@ export default function ClientPortalPage() {
             }}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
-            {mobileMenuOpen ? '✕' : '☰'}
+            {mobileMenuOpen ? <X size={20} weight="bold" /> : <List size={20} weight="bold" />}
           </button>
         </div>
       </header>
@@ -2085,7 +2104,7 @@ export default function ClientPortalPage() {
                 transition: 'all .2s',
               }}
             >
-              <span style={{ fontSize: 15 }}>{tab.icon}</span>
+              <tab.icon size={16} weight={activeTab === tab.id ? 'fill' : 'duotone'} />
               {tab.label}
               {/* Notification badges */}
               {tab.id === 'messages' && unreadMessages > 0 && (
@@ -2138,7 +2157,7 @@ export default function ClientPortalPage() {
                   gap: 12,
                 }}
               >
-                <span style={{ fontSize: 20 }}>{tab.icon}</span>
+                <tab.icon size={19} weight={activeTab === tab.id ? 'fill' : 'duotone'} />
                 {tab.label}
               </button>
             ))}
@@ -2231,7 +2250,7 @@ export default function ClientPortalPage() {
           animation: 'slideUp .3s ease',
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <span>{toast.type === 'success' ? '✓' : '✗'}</span>
+          {toast.type === 'success' ? <CheckCircle size={16} weight="fill" /> : <XCircle size={16} weight="fill" />}
           {toast.msg}
         </div>
       )}
@@ -2265,7 +2284,7 @@ export default function ClientPortalPage() {
           onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
           onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         >
-          ↑
+          <ArrowUp size={18} weight="bold" />
         </button>
       )}
 
@@ -2286,9 +2305,9 @@ export default function ClientPortalPage() {
           boxShadow: '0 4px 20px rgba(0,0,0,.4)',
         }}>
           {[
-            { label: 'Dashboard', tab: 'dashboard' as TabId, icon: '📊' },
-            { label: 'Messages', tab: 'messages' as TabId, icon: '💬' },
-            { label: 'Approvals', tab: 'approvals' as TabId, icon: '✅' },
+            { label: 'Dashboard', tab: 'dashboard' as TabId, icon: ChartBar },
+            { label: 'Messages', tab: 'messages' as TabId, icon: ChatCircle },
+            { label: 'Approvals', tab: 'approvals' as TabId, icon: CheckCircle },
           ].map((qa) => (
             <button
               key={qa.tab}
@@ -2308,7 +2327,7 @@ export default function ClientPortalPage() {
               }}
               title={qa.label}
             >
-              {qa.icon}
+              <qa.icon size={19} weight="duotone" color={activeTab === qa.tab ? GOLD : DIM} />
             </button>
           ))}
         </div>
@@ -2347,7 +2366,7 @@ export default function ClientPortalPage() {
           {/* Footer links & branding */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, paddingTop: 12, borderTop: `1px solid ${BORDER}44` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 18 }}>🌵</span>
+              <Cactus size={17} weight="fill" color={GOLD} />
               <div>
                 <div style={{ fontSize: 12, color: DIM }}>
                   Powered by <span style={{ color: GOLD, fontWeight: 700 }}>Saguaro Control Systems</span>
