@@ -421,23 +421,20 @@ export default function CatalogPage() {
     }
   });
 
+  /** Feeds the one-line card subtitle. The best-vs-highest spread used to be
+   *  computed here for a "Best-Price Savings" stat card; the card is gone and
+   *  nothing else read it, so the arithmetic went with it. */
   const stats = useMemo(() => {
     const vendorsQuoting = new Set<string>();
-    let priced = 0, spreadSum = 0, spreadN = 0;
+    let priced = 0;
     for (const it of scoped) {
       if (it.prices.length > 0) priced++;
       for (const p of it.prices) vendorsQuoting.add(p.vendor);
-      if (it.prices.length >= 2) {
-        const lo = Number(it.prices[0].price) || 0;
-        const hi = Number(it.prices[it.prices.length - 1].price) || 0;
-        if (hi > 0) { spreadSum += ((hi - lo) / hi) * 100; spreadN++; }
-      }
     }
     return {
       items: scoped.length,
       vendors: vendorsQuoting.size,
       coverage: scoped.length > 0 ? Math.round((priced / scoped.length) * 100) : 0,
-      avgSavings: spreadN > 0 ? Math.round(spreadSum / spreadN) : 0,
     };
   }, [scoped]);
 
