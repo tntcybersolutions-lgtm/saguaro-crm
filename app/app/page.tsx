@@ -520,6 +520,193 @@ export default function DashboardPage() {
           </SectionCard>
         ) : (
         <>
+        /* ORDER: what needs me, then where the work is, then the numbers.
+           These four blocks used to run KPI cards, charts, priority actions,
+           project list — so the one block that answers "what do I have to do
+           today" sat fifth, under six stat cards and three charts. A GC
+           logging in got Total Contract Value and Win Rate by Trade before
+           anything actionable. Same discipline as the catalog: the decision
+           first, the context after it. */
+        {/* Today's Priority Actions */}
+        <SectionCard
+          icon={<Lightning size={17} weight="duotone" color={GOLD} />}
+          title="Today's Priority Actions"
+          subtitle="Items requiring your attention"
+          flush
+          style={{ marginBottom: 24 }}
+          action={!todayLoading && !todayError && todayItems.filter((i: TodayItem) => i.urgency === 'high').length > 0 ? (
+            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', color: RED, border: '1px solid rgba(255,59,48,0.3)' }}>
+              {todayItems.filter((i: TodayItem) => i.urgency === 'high').length} urgent
+            </span>
+          ) : undefined}
+        >
+          {todayLoading && <><SkeletonRow /><SkeletonRow /><SkeletonRow /></>}
+          {!todayLoading && todayError && (
+            <div style={{ padding: 8 }}>
+              <PremiumEmpty
+                tone="error"
+                icon={<WarningCircle size={30} weight="duotone" color={RED} />}
+                title="Couldn't load today's actions"
+                description="We couldn't reach the priority-actions feed. Try again to reload your tasks."
+                action={<button onClick={() => revalidateToday()} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
+                compact
+              />
+            </div>
+          )}
+          {!todayLoading && !todayError && todayItems.length === 0 && (
+            <div style={{ padding: '6px 8px' }}>
+              <PremiumEmpty
+                icon={<CheckCircle size={30} weight="duotone" color={GREEN} />}
+                title="All caught up"
+                description="No urgent items need your attention right now."
+                compact
+              />
+            </div>
+          )}
+          {!todayLoading && !todayError && todayItems.map((item: TodayItem, i: number) => (
+            <TodayActionCard key={i} item={item} />
+          ))}
+        </SectionCard>
+
+        {/* Main 2-col grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
+
+          {/* Active Projects */}
+          <SectionCard
+            flush
+            icon={<Buildings size={17} weight="duotone" color={GOLD} />}
+            title="Active Projects"
+            action={<Link href="/app/projects" style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>All Projects <ArrowRight size={13} weight="bold" /></Link>}
+          >
+            <div style={{ padding: 16 }}>
+              {projectsLoading && <><SkeletonRow /><SkeletonRow /></>}
+              {!projectsLoading && projectsError && (
+                <PremiumEmpty
+                  tone="error"
+                  icon={<WarningCircle size={30} weight="duotone" color={RED} />}
+                  title="Couldn't load projects"
+                  description="We couldn't reach your project list. This doesn't mean you have none — try again."
+                  action={<button onClick={() => revalidateProjects()} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
+                  compact
+                />
+              )}
+              {!projectsLoading && !projectsError && projects.length === 0 && (
+                <PremiumEmpty
+                  icon={<Buildings size={30} weight="duotone" color={GOLD} />}
+                  title="No active projects yet"
+                  description="Create your first project to start tracking your construction work."
+                  action={<Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create your first project</Link>}
+                  compact
+                />
+              )}
+              {!projectsLoading && !projectsError && projects.slice(0, 3).map(proj => (
+                <Link key={proj.id} href={`/app/projects/${proj.id}`} style={{ display: 'block', textDecoration: 'none', marginBottom: 10 }}>
+                  <div className="lift" style={{ padding: '14px 16px', background: RAISED_ALT, borderRadius: 10, border: `1px solid ${BORDER_SUBTLE}`, cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(245, 158, 11,0.5)')}
+                    onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER_SUBTLE)}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
+                        <div style={{ fontSize: 12, color: DIM }}>{proj.address}</div>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(52,199,89,0.14)', color: GREEN, border: '1px solid rgba(52,199,89,0.3)', height: 'fit-content', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {proj.status}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
+                      <span style={{ color: DIM }}>Contract: <strong style={{ color: TEXT }}>{formatCurrency(proj.contract_amount)}</strong></span>
+                      {proj.project_number && <span style={{ color: DIM }}>#{proj.project_number}</span>}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </SectionCard>
+
+          {/* Open RFIs */}
+          <SectionCard
+            flush
+            icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}
+            title="Open RFIs"
+            action={<Link href="/app/projects" style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>View Projects <ArrowRight size={13} weight="bold" /></Link>}
+          >
+            {rfisLoading && <><SkeletonRow /><SkeletonRow /></>}
+            {!rfisLoading && rfisError && (
+              <div style={{ padding: 8 }}>
+                <PremiumEmpty
+                  tone="error"
+                  icon={<WarningCircle size={30} weight="duotone" color={RED} />}
+                  title="Couldn't load RFIs"
+                  description="We couldn't reach the RFI feed. Try again to reload open requests for information."
+                  action={<button onClick={() => revalidateRFIs()} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
+                  compact
+                />
+              </div>
+            )}
+            {!rfisLoading && !rfisError && openRFIs.length === 0 && (
+              <div style={{ padding: '6px 8px' }}>
+                <PremiumEmpty
+                  icon={<ClipboardText size={30} weight="duotone" color={GOLD} />}
+                  title="No open RFIs"
+                  description="Add projects to track requests for information here."
+                  compact
+                />
+              </div>
+            )}
+            {!rfisLoading && !rfisError && openRFIs.length > 0 && (
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ background: RAISED_ALT }}>
+                      {['RFI #', 'Subject', 'Status', 'Due'].map(h => (
+                        <th key={h} style={{ padding: '9px 16px', textAlign: 'left', fontWeight: 700, color: DIM, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {openRFIs.slice(0, 8).map(rfi => {
+                      const overdue = rfi.due_date && new Date(rfi.due_date) < new Date();
+                      return (
+                        /* Clickable, because a row that shows you a
+                           problem and cannot take you to it is a report, not a
+                           dashboard — you read "RFI-020 overdue" and then go
+                           hunting for it. Procore makes every displayed record
+                           its own link; so do we. */
+                        <tr
+                          key={rfi.id}
+                          onClick={() => { if (rfi.project_id) window.location.href = `/app/projects/${rfi.project_id}/rfis`; }}
+                          title={rfi.project_id ? 'Open this RFI' : undefined}
+                          style={{
+                            borderBottom: `1px solid ${BORDER_SUBTLE}`,
+                            cursor: rfi.project_id ? 'pointer' : 'default',
+                            transition: 'background .12s ease',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          <td style={{ padding: '10px 16px', color: DIM }}>{rfi.rfi_number}</td>
+                          <td style={{ padding: '10px 16px', color: TEXT, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rfi.subject}</td>
+                          <td style={{ padding: '10px 16px' }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,149,0,0.14)', color: ORANGE, border: `1px solid rgba(255,149,0,0.3)`, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              {rfi.status}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px 16px', color: overdue ? RED : DIM, fontWeight: overdue ? 700 : 400 }}>
+                            {rfi.due_date ? new Date(rfi.due_date).toLocaleDateString() : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </SectionCard>
+        </div>
+        </>
+        )}
+
         {/* KPI Row — every metric is drillable */}
         {statsError && !statsLoading ? (
           <div style={{ marginBottom: 28 }}>
@@ -702,186 +889,6 @@ export default function DashboardPage() {
               )}
             </SectionCard>
           </div>
-        )}
-
-        {/* Today's Priority Actions */}
-        <SectionCard
-          icon={<Lightning size={17} weight="duotone" color={GOLD} />}
-          title="Today's Priority Actions"
-          subtitle="Items requiring your attention"
-          flush
-          style={{ marginBottom: 24 }}
-          action={!todayLoading && !todayError && todayItems.filter((i: TodayItem) => i.urgency === 'high').length > 0 ? (
-            <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', color: RED, border: '1px solid rgba(255,59,48,0.3)' }}>
-              {todayItems.filter((i: TodayItem) => i.urgency === 'high').length} urgent
-            </span>
-          ) : undefined}
-        >
-          {todayLoading && <><SkeletonRow /><SkeletonRow /><SkeletonRow /></>}
-          {!todayLoading && todayError && (
-            <div style={{ padding: 8 }}>
-              <PremiumEmpty
-                tone="error"
-                icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-                title="Couldn't load today's actions"
-                description="We couldn't reach the priority-actions feed. Try again to reload your tasks."
-                action={<button onClick={() => revalidateToday()} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-                compact
-              />
-            </div>
-          )}
-          {!todayLoading && !todayError && todayItems.length === 0 && (
-            <div style={{ padding: '6px 8px' }}>
-              <PremiumEmpty
-                icon={<CheckCircle size={30} weight="duotone" color={GREEN} />}
-                title="All caught up"
-                description="No urgent items need your attention right now."
-                compact
-              />
-            </div>
-          )}
-          {!todayLoading && !todayError && todayItems.map((item: TodayItem, i: number) => (
-            <TodayActionCard key={i} item={item} />
-          ))}
-        </SectionCard>
-
-        {/* Main 2-col grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
-
-          {/* Active Projects */}
-          <SectionCard
-            flush
-            icon={<Buildings size={17} weight="duotone" color={GOLD} />}
-            title="Active Projects"
-            action={<Link href="/app/projects" style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>All Projects <ArrowRight size={13} weight="bold" /></Link>}
-          >
-            <div style={{ padding: 16 }}>
-              {projectsLoading && <><SkeletonRow /><SkeletonRow /></>}
-              {!projectsLoading && projectsError && (
-                <PremiumEmpty
-                  tone="error"
-                  icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-                  title="Couldn't load projects"
-                  description="We couldn't reach your project list. This doesn't mean you have none — try again."
-                  action={<button onClick={() => revalidateProjects()} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-                  compact
-                />
-              )}
-              {!projectsLoading && !projectsError && projects.length === 0 && (
-                <PremiumEmpty
-                  icon={<Buildings size={30} weight="duotone" color={GOLD} />}
-                  title="No active projects yet"
-                  description="Create your first project to start tracking your construction work."
-                  action={<Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create your first project</Link>}
-                  compact
-                />
-              )}
-              {!projectsLoading && !projectsError && projects.slice(0, 3).map(proj => (
-                <Link key={proj.id} href={`/app/projects/${proj.id}`} style={{ display: 'block', textDecoration: 'none', marginBottom: 10 }}>
-                  <div className="lift" style={{ padding: '14px 16px', background: RAISED_ALT, borderRadius: 10, border: `1px solid ${BORDER_SUBTLE}`, cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(245, 158, 11,0.5)')}
-                    onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER_SUBTLE)}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <div>
-                        <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
-                        <div style={{ fontSize: 12, color: DIM }}>{proj.address}</div>
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(52,199,89,0.14)', color: GREEN, border: '1px solid rgba(52,199,89,0.3)', height: 'fit-content', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {proj.status}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
-                      <span style={{ color: DIM }}>Contract: <strong style={{ color: TEXT }}>{formatCurrency(proj.contract_amount)}</strong></span>
-                      {proj.project_number && <span style={{ color: DIM }}>#{proj.project_number}</span>}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </SectionCard>
-
-          {/* Open RFIs */}
-          <SectionCard
-            flush
-            icon={<ClipboardText size={17} weight="duotone" color={GOLD} />}
-            title="Open RFIs"
-            action={<Link href="/app/projects" style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>View Projects <ArrowRight size={13} weight="bold" /></Link>}
-          >
-            {rfisLoading && <><SkeletonRow /><SkeletonRow /></>}
-            {!rfisLoading && rfisError && (
-              <div style={{ padding: 8 }}>
-                <PremiumEmpty
-                  tone="error"
-                  icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-                  title="Couldn't load RFIs"
-                  description="We couldn't reach the RFI feed. Try again to reload open requests for information."
-                  action={<button onClick={() => revalidateRFIs()} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-                  compact
-                />
-              </div>
-            )}
-            {!rfisLoading && !rfisError && openRFIs.length === 0 && (
-              <div style={{ padding: '6px 8px' }}>
-                <PremiumEmpty
-                  icon={<ClipboardText size={30} weight="duotone" color={GOLD} />}
-                  title="No open RFIs"
-                  description="Add projects to track requests for information here."
-                  compact
-                />
-              </div>
-            )}
-            {!rfisLoading && !rfisError && openRFIs.length > 0 && (
-              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                  <thead>
-                    <tr style={{ background: RAISED_ALT }}>
-                      {['RFI #', 'Subject', 'Status', 'Due'].map(h => (
-                        <th key={h} style={{ padding: '9px 16px', textAlign: 'left', fontWeight: 700, color: DIM, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {openRFIs.slice(0, 8).map(rfi => {
-                      const overdue = rfi.due_date && new Date(rfi.due_date) < new Date();
-                      return (
-                        /* Clickable, because a row that shows you a
-                           problem and cannot take you to it is a report, not a
-                           dashboard — you read "RFI-020 overdue" and then go
-                           hunting for it. Procore makes every displayed record
-                           its own link; so do we. */
-                        <tr
-                          key={rfi.id}
-                          onClick={() => { if (rfi.project_id) window.location.href = `/app/projects/${rfi.project_id}/rfis`; }}
-                          title={rfi.project_id ? 'Open this RFI' : undefined}
-                          style={{
-                            borderBottom: `1px solid ${BORDER_SUBTLE}`,
-                            cursor: rfi.project_id ? 'pointer' : 'default',
-                            transition: 'background .12s ease',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                        >
-                          <td style={{ padding: '10px 16px', color: DIM }}>{rfi.rfi_number}</td>
-                          <td style={{ padding: '10px 16px', color: TEXT, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rfi.subject}</td>
-                          <td style={{ padding: '10px 16px' }}>
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,149,0,0.14)', color: ORANGE, border: `1px solid rgba(255,149,0,0.3)`, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              {rfi.status}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 16px', color: overdue ? RED : DIM, fontWeight: overdue ? 700 : 400 }}>
-                            {rfi.due_date ? new Date(rfi.due_date).toLocaleDateString() : '—'}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </SectionCard>
-        </div>
-        </>
         )}
       </PremiumSurface>
 
