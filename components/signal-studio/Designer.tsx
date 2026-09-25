@@ -2103,21 +2103,13 @@ export default function Designer({ projectId }: { projectId: string | null }) {
             <div style={{ flex: '1 1 300px', minWidth: 280 }}>
               <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.6, color: GOLD, textTransform: 'uppercase', marginBottom: 12 }}>Signal Studio — Wi-Fi, camera &amp; cabling design</div>
               <h2 style={{ fontSize: 'clamp(24px,3.2vw,38px)', fontWeight: 900, lineHeight: 1.06, margin: '0 0 14px', color: '#fff', letterSpacing: -1 }}>Design the whole low-voltage system.</h2>
-              <p style={{ color: DIM, fontSize: 14.5, lineHeight: 1.55, margin: '0 0 16px', maxWidth: 470 }}>Drop a blueprint and lay out Wi-Fi, cameras, access control, cabling and sensors — with auto-placed devices, dead-zone detection, a bill of materials, and a client-ready report, in minutes.</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '9px 18px', margin: '0 0 20px', maxWidth: 490 }}>
-                {[
-                  'Wi-Fi coverage & dead zones',
-                  'Security cameras — DORI zones',
-                  'Access control & door locks',
-                  'Structured cabling — Cat6/6A/fiber',
-                  'Motion, smoke & life-safety sensors',
-                  'Auto BOM, power & cost report',
-                ].map((f) => (
-                  <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, color: DIM }}>
-                    <CheckCircle size={15} weight="fill" color={GOLD} style={{ flexShrink: 0 }} /> {f}
-                  </div>
-                ))}
-              </div>
+              <p style={{ color: DIM, fontSize: 14.5, lineHeight: 1.55, margin: '0 0 18px', maxWidth: 470 }}>Drop a blueprint. Devices place themselves, dead zones surface, and the bill of materials writes itself.</p>
+              {/* The six-bullet feature grid that sat here was marketing copy
+                  shown to somebody who has already bought the product and
+                  clicked into it. It pushed "Upload blueprint" — the only
+                  action on this screen that does anything — about 140px down.
+                  Same discipline as the catalog: say what the screen is for,
+                  then let them use it. */}
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                 <label className="hm-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}>
                   <UploadSimple size={15} weight="bold" /> {busy || (dragOver ? 'Drop to load' : 'Upload blueprint')}
@@ -2137,7 +2129,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
             </div>
           </div>
           <div style={{ marginTop: 22, textAlign: 'left' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1.6, marginBottom: 12, textAlign: 'center' }}>Or start from a template — instant coverage map</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1.6, marginBottom: 12, textAlign: 'center' }}>Or open a finished example to see how one is put together</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {TEMPLATES.map((t) => (
                 <button key={t.id} className="hm-tmpl" onClick={() => buildTemplate(t)}>
