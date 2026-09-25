@@ -761,7 +761,7 @@ export function AccessManager() {
         <div>
           <h1 style={{ color: GOLD, fontSize: 26, margin: 0 }}>Roles & Permissions</h1>
           <p style={{ color: DIM, fontSize: 13, margin: '4px 0 0' }}>
-            Manage access levels across {CATEGORIES.length} categories -- {roles.length} roles configured
+            Manage access levels across {CATEGORIES.length} categories — {roles.length} roles configured
           </p>
         </div>
         <button onClick={openCreateRole} style={{ ...btn(GOLD, '#241500'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px rgba(245,158,11,0.28)' }}>+ New Role</button>
@@ -988,7 +988,7 @@ export function AccessManager() {
                     </div>
                     <p style={{ color: DIM, fontSize: 13, margin: 0 }}>{selectedRole.description}</p>
                     <p style={{ color: DIM, fontSize: 11, margin: '6px 0 0' }}>
-                      Created {fmtDate(selectedRole.createdAt)} -- Last updated {fmtDate(selectedRole.updatedAt)}
+                      Created {fmtDate(selectedRole.createdAt)} — Last updated {fmtDate(selectedRole.updatedAt)}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>

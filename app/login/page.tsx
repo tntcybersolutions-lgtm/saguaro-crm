@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { CheckCircle, WarningCircle, Eye, EyeSlash, Check, Lock } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444';
 
@@ -124,12 +125,12 @@ export default function LoginPage(){
           <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:'var(--radius-lg)',padding:'32px 28px',boxShadow:'var(--shadow-lg)'}}>
             {info&&(
               <div style={{background:'rgba(34,197,94,.1)',border:'1px solid rgba(34,197,94,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:'#22c55e',display:'flex',alignItems:'flex-start',gap:8}}>
-                <span>✅</span><span>{info}</span>
+                <CheckCircle size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{info}</span>
               </div>
             )}
             {error&&(
               <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
-                <span>⚠️</span><span>{error}</span>
+                <WarningCircle size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{error}</span>
               </div>
             )}
 
@@ -186,7 +187,7 @@ export default function LoginPage(){
                     onMouseLeave={e=>(e.currentTarget.style.color=DIM)}
                     aria-label={showPwd ? 'Hide password' : 'Show password'}
                   >
-                    {showPwd ? '🙈' : '👁'}
+                    {showPwd ? <EyeSlash size={17} weight="regular" /> : <Eye size={17} weight="regular" />}
                   </button>
                 </div>
               </div>
@@ -203,7 +204,7 @@ export default function LoginPage(){
                     transition:'all .15s',cursor:'pointer',flexShrink:0,
                   }}
                 >
-                  {remember && <span style={{color:'#1C1C1E',fontSize:11,fontWeight:900,lineHeight:1}}>✓</span>}
+                  {remember && <Check size={11} weight="bold" color="#1C1C1E" />}
                 </div>
                 <span style={{fontSize:12,color:DIM,fontWeight:500}}>Remember me on this device</span>
               </label>
@@ -244,7 +245,7 @@ export default function LoginPage(){
           <div style={{marginTop:20,textAlign:'center',display:'flex',justifyContent:'center',gap:20,flexWrap:'wrap'}}>
             {['256-bit SSL','SOC 2','99.9% Uptime'].map(badge => (
               <span key={badge} style={{fontSize:10,color:'rgba(203,213,225,0.6)',fontWeight:600,letterSpacing:.5,textTransform:'uppercase'}}>
-                🔒 {badge}
+                <Lock size={10} weight="fill" style={{verticalAlign:-1,marginRight:4}} />{badge}
               </span>
             ))}
           </div>

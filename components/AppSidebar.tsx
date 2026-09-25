@@ -502,6 +502,7 @@ export default function AppSidebar({
       {/* ── Navigation Sections ─────────────────────────────────────── */}
       <nav
         ref={navRef}
+        className="sidebarNav"
         style={{
           flex: 1,
           overflowY: 'auto',
@@ -634,7 +635,21 @@ export default function AppSidebar({
                     <Icon
                       size={collapsed ? 20 : 18}
                       weight={active ? 'fill' : 'regular'}
-                      style={{ flexShrink: 0, opacity: active ? 1 : 0.85, color: active ? undefined : vivid || undefined }}
+                      /* NEUTRAL WHEN INACTIVE — the accent is the ACTIVE item's job.
+                       *
+                       * This tinted every resting icon with its module hue, and those
+                       * hues are deliberately desaturated for a dark ground: #B8A98A
+                       * parchment, #A9A2C4 lavender-gray, #7FA3C7 steel, #8FB3A9
+                       * patina. Twelve muted pastels at 0.85 opacity over #0c0d10 do
+                       * not read as restraint, they read as muddy — every item a
+                       * slightly different dull colour, none of them confident.
+                       *
+                       * Inheriting the link colour gives the rail one voice, and the
+                       * active item — which still gets its vivid chip and gold rule —
+                       * becomes the only thing wearing colour, so it actually leads
+                       * the eye. Full opacity too: the neutral already carries the
+                       * hierarchy, so dimming on top of it only muddies again. */
+                      style={{ flexShrink: 0, opacity: 1 }}
                     />
                   )}
                   {!collapsed && <span>{item.label}</span>}
@@ -720,7 +735,10 @@ export default function AppSidebar({
                   }}
                 />
               )}
-              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} style={{ flexShrink: 0, opacity: active ? 1 : 0.85 }} />
+              {/* Same rule as the main rail: the resting icon inherits the link
+                  colour and stays at full opacity. Dimming a neutral only muddies
+                  it — the weight change from regular to fill already marks active. */}
+              <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} style={{ flexShrink: 0, opacity: 1 }} />
               {!collapsed && <span>{item.label}</span>}
             </Link>
           );

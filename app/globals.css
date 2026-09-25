@@ -808,3 +808,17 @@ input:-webkit-autofill:focus {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Sidebar rail scrollbar ──────────────────────────────────────────────
+   The rail scrolls and had no way of saying so. Measured on production at
+   1920x794: a 533px nav holding 945px of items, with "Saguaro Radio" sliced
+   through at the fold and six more destinations below it. The global thumb is
+   rgba(255,255,255,0.14), which disappears against the rail's own gradient, so
+   seven of twenty-two destinations were effectively invisible.
+   Gold at 32% reads on this surface without shouting, and the track stays
+   transparent so the rail keeps its material. */
+.sidebarNav { scrollbar-width: thin; scrollbar-color: rgba(245,158,11,0.32) transparent; }
+.sidebarNav::-webkit-scrollbar { width: 6px; }
+.sidebarNav::-webkit-scrollbar-track { background: transparent; }
+.sidebarNav::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.32); border-radius: 999px; }
+.sidebarNav::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.58); }

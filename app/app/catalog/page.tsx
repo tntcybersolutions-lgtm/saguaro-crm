@@ -287,6 +287,10 @@ export default function CatalogPage() {
   const [data, setData] = useState<CatalogData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  /* Sixteen vendor chips on by default put a wall of buttons between the
+     header and the first product. They are useful when you want them and
+     noise the rest of the time, so they fold behind a count. */
+  const [showVendorSites, setShowVendorSites] = useState(false);
   const [vertical, setVertical] = useState('all');
   const [q, setQ] = useState('');
   const [sort, setSort] = useState<SortMode>('name');
@@ -562,7 +566,7 @@ export default function CatalogPage() {
         accentColor={moduleAccent('catalog').hex}
         title="Materials"
         accent="Catalog"
-        subtitle="Compare big-box, wholesale, and supply-house pricing — select products and issue vendor-grouped purchase orders in one flow."
+        subtitle="Compare vendor pricing, then issue purchase orders grouped by vendor."
         actions={
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative' }}>
@@ -661,27 +665,42 @@ export default function CatalogPage() {
 
       <SectionCard
         title={vertical === 'all' ? 'Price Comparison — All Verticals' : `Price Comparison — ${titleCase(vertical)}`}
-        subtitle={`Reference pricing · as of ${fmtDate(data?.asOfMax)} · availability not tracked — vendor feeds connect here when accounts are linked`}
+        subtitle={`Reference pricing · as of ${fmtDate(data?.asOfMax)}`}
         icon={<Package size={17} weight="duotone" color={GOLD} />}
         flush
       >
-        {/* ── Honest availability + ordering explainer. Sits with the pricing
-             provenance so a seeded snapshot is never read as live, orderable
-             inventory, and so the real path to act is on screen. ── */}
-        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '11px 16px', borderBottom: `1px solid ${BORDER}`, background: 'rgba(245,158,11,0.05)' }}>
-          <Info size={14} weight="bold" color={AMBER} style={{ flex: 'none', marginTop: 2 }} />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 11.5, color: TEXT, fontWeight: 700, lineHeight: 1.45 }}>
-              {data?.hasLiveStockFeed
-                ? 'Stock shows only on rows backed by a connected vendor feed — every other row is availability-not-tracked.'
-                : 'No vendor inventory feed is connected, so availability is not tracked and no stock is shown.'}
-            </div>
-            <div style={{ fontSize: 11, color: DIM, lineHeight: 1.5, marginTop: 2 }}>
-              Prices are reference snapshots captured {fmtDate(data?.asOfMax)}, not live quotes. {ORDER_PATH_SENTENCE}
-            </div>
-            {vendorLinks.length > 0 && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const, alignItems: 'center', marginTop: 8 }}>
-                <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 0.6, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' as const }}>Vendor sites</span>
+        {/* ── One line, not three.
+             This said the same thing three times over: the card subtitle above
+             already carries "Reference pricing · as of … · availability not
+             tracked", then a bold line repeated it, then a paragraph repeated
+             it again with ORDER_PATH_SENTENCE — which every row's provenance
+             popover also shows. Eighty words of caveat and sixteen vendor
+             buttons stood between the header and the first product.
+             The honesty is not negotiable, so it stays — as one sentence. The
+             long version lives behind "How pricing works" in the header, where
+             someone who wants it can go and get it. ── */}
+        <div style={{ display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap' as const, padding: '9px 16px', borderBottom: `1px solid ${BORDER}`, background: 'rgba(245,158,11,0.05)' }}>
+          <Info size={13} weight="bold" color={AMBER} style={{ flex: 'none' }} />
+          <span style={{ fontSize: 11.5, color: DIM, lineHeight: 1.45, minWidth: 0 }}>
+            {data?.hasLiveStockFeed
+              ? 'Stock shows only on rows backed by a connected vendor feed.'
+              : 'Reference prices, not live quotes — confirm with the vendor before ordering.'}
+          </span>
+          {vendorLinks.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowVendorSites((v) => !v)}
+              className="pmBtn"
+              style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 800, color: DIM, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
+            >
+              {showVendorSites ? 'Hide vendor sites' : `${vendorLinks.length} vendor sites`}
+            </button>
+          )}
+        </div>
+        <div>
+          <div>
+            {showVendorSites && vendorLinks.length > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const, alignItems: 'center', padding: '10px 16px', borderBottom: `1px solid ${BORDER}` }}>
                 {vendorLinks.map((v) => (
                   <a
                     key={v.name}

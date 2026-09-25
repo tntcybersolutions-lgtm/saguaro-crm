@@ -990,7 +990,7 @@ export default function CustomFieldsPage() {
         flash(`Imported ${count} field${count !== 1 ? 's' : ''} successfully`);
         await loadFields();
       } catch {
-        flash('Failed to import -- invalid or malformed JSON file', 'err');
+        flash('Failed to import — invalid or malformed JSON file', 'err');
       }
     };
     el.click();
