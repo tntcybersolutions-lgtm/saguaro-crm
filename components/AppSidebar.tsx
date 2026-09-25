@@ -481,10 +481,19 @@ export default function AppSidebar({
    * YOUR choice, remembered. A collapsed section is one click from open and
    * it is exactly where it was yesterday.
    *
-   * Defaults are chosen so a first-time user is not met with a wall:
-   * the section containing the page you are on is open, plus the first
-   * section. Everything else starts closed.
+   * The DEFAULT adapts to how much there actually is, because collapsing is
+   * only a fix for too much. Measured on a real project: the tool filter
+   * already cuts 50 links to 13, and defaulting those 13 to closed left a GC
+   * looking at a rail containing the single word "Overview" under nine shut
+   * headers. Two reductions stacked is not twice as good, it is a dead end.
+   *
+   * So: if what is left is small enough to read at a glance, open all of it.
+   * Only when the list is genuinely long — company scope's 40, or project
+   * scope with "All tools" on — fall back to opening the first section plus
+   * whichever one holds the page you are on. A stored preference always wins
+   * over both.
    */
+  const OPEN_ALL_BELOW = 16;
   /* ── PER-PROJECT TOOL VISIBILITY ─────────────────────────────────────
    *
    * lib/project-tools already decides which of the 49 project modules a job
@@ -544,6 +553,29 @@ export default function AppSidebar({
   /* showAll, its stored preference and the hidden-item count are gone with the
      filtering they served. The rail shows everything this tenant has, in one
      order, on every screen — there is nothing left to reveal. */
+  /* Filtered sections, computed once — the render below reads these, and the
+     open/closed default needs the TOTAL to decide whether collapsing is even
+     warranted. */
+  const renderSections = React.useMemo(() => {
+    const src: any[] = inProject ? projectSections : NAV_SECTIONS;
+    const base = `/app/projects/${projectId}`;
+    return src
+      .map((section: any) => {
+        const entitled = section.items.filter((item: any) => !item.gate || features[item.gate] === true);
+        const items = inProject
+          ? entitled.filter((item: any) => {
+              const rel = item.href.startsWith(base) ? item.href.slice(base.length) : item.href;
+              return isToolVisible(rel, toolSignals, activeProjectHref, showAllTools);
+            })
+          : entitled;
+        return { ...section, items };
+      })
+      // A section whose every item is hidden takes its header with it.
+      .filter((section: any) => section.items.length > 0);
+  }, [inProject, projectSections, features, projectId, toolSignals, activeProjectHref, showAllTools]);
+
+  const totalVisible = renderSections.reduce((n: number, s2: any) => n + s2.items.length, 0);
+
   const width = collapsed ? sidebarTokens.widthCollapsed : sidebarTokens.width;
 
   function isActive(href: string) {
@@ -597,44 +629,21 @@ export default function AppSidebar({
             : undefined,
         }}
       >
-        {(inProject ? projectSections : NAV_SECTIONS).map((section: any, sIdx: number) => {
-          /**
-           * Everything the tenant is entitled to, always, in the same order.
-           *
-           * This used to be filtered to `showAll || item.core || isActive(href)`,
-           * which meant the rail CHANGED SHAPE as you navigated: non-core items
-           * appeared only while you were standing on them, so an item sat in a
-           * different place depending on where you came from. Muscle memory
-           * cannot form against a menu that moves, and every competitor's does
-           * not move. Entitlement still hides what a plan does not include —
-           * that is a stable difference between tenants, not a moving target
-           * within one.
-           */
-          const entitled = section.items.filter((item: any) => !item.gate || features[item.gate] === true);
-          /* Inside a project, also apply the tool filter — core tools, tools
-             with work in them, and the page you are on. Company scope is not
-             filtered: those 40 are the tenant's whole product. */
-          const visibleItems = inProject
-            ? entitled.filter((item: any) => {
-                const base = `/app/projects/${projectId}`;
-                const rel = item.href.startsWith(base) ? item.href.slice(base.length) : item.href;
-                return isToolVisible(rel, toolSignals, activeProjectHref, showAllTools);
-              })
-            : entitled;
-          // Hide an entire section (title + divider) when the tenant sees none of its items.
-          if (visibleItems.length === 0) return null;
-          /* Open when the user says so; before their preference has loaded,
-             or where they have expressed none, open the section holding the
-             current page plus the first one. A rail collapsed to icons has
-             no section headers to click, so it always shows everything. */
+        {renderSections.map((section: any, sIdx: number) => {
+          const visibleItems = section.items;
+          /* Open when the user says so. Otherwise: open everything when there
+             is little enough to read at a glance, and only fall back to
+             "first section + the one you are in" when the list is long. */
           const holdsCurrentPage = visibleItems.some((item: any) => isActive(item.href));
           const stored = openSections?.[section.title];
           const isOpen = collapsed
             ? true
-            : stored !== undefined ? stored : (holdsCurrentPage || sIdx === 0);
+            : stored !== undefined
+              ? stored
+              : totalVisible <= OPEN_ALL_BELOW || holdsCurrentPage || sIdx === 0;
 
           return (
-          <div key={section.title} style={{ marginBottom: sIdx === NAV_SECTIONS.length - 1 ? 4 : 14 }}>
+          <div key={section.title} style={{ marginBottom: sIdx === renderSections.length - 1 ? 4 : 14 }}>
             {/* Section Title — a real button, so it is keyboard reachable and
                 announces its expanded state to a screen reader. */}
             {!collapsed && (
