@@ -435,7 +435,60 @@ export default function DashboardPage() {
 
         {hasCustomLayout && savedLayout ? (
           <ConfiguredDashboard layout={savedLayout} />
-        ) : portfolioEmpty ? null : (
+        ) : portfolioEmpty ? (
+          /* A FRESH ACCOUNT IS NOT A BLANK SCREEN.
+             This branch rendered null, so a new tenant landed on a header, one
+             button, and roughly two thirds of the viewport in flat black — and
+             if the journey rail was collapsed from a previous session there was
+             nothing on the page at all. The intent was restraint; the result
+             read as unfinished.
+             Four real destinations instead, each one a route that works with
+             zero data behind it. The catalog in particular is 223 priced items
+             on day one, which is the fastest way to see the product do
+             something before a project exists. */
+          <SectionCard
+            title="Start here"
+            subtitle="Four things worth doing first — every one of them works before you have a single project."
+            icon={<Lightning size={16} weight="fill" color={GOLD} />}
+            style={{ marginBottom: 28 }}
+          >
+            <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+              {[
+                { href: '/app/projects/new', Icon: Buildings,     title: 'Create your first project',
+                  desc: 'Everything — budget, schedule, bids, billing — hangs off a job.' },
+                { href: '/app/takeoff',      Icon: ClipboardText, title: 'Price a set of drawings',
+                  desc: 'Upload a plan and walk out with a measured, priced takeoff.' },
+                { href: '/app/catalog',      Icon: Receipt,       title: 'Compare material pricing',
+                  desc: '223 items across 16 vendors, with the cheapest quote marked.' },
+                { href: '/app/people',       Icon: ShieldCheck,   title: 'Invite your team',
+                  desc: 'Add your PM and super, and set what each role may touch.' },
+              ].map(({ href, Icon, title, desc }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className="pmHover"
+                  style={{
+                    display: 'flex', gap: 12, alignItems: 'flex-start', textDecoration: 'none',
+                    padding: 16, borderRadius: 12, border: `1px solid ${BORDER}`,
+                    background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
+                  }}
+                >
+                  <span style={{
+                    flexShrink: 0, width: 34, height: 34, borderRadius: 9,
+                    display: 'grid', placeItems: 'center',
+                    background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.28)',
+                  }}>
+                    <Icon size={17} weight="duotone" color={GOLD} />
+                  </span>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: 'block', color: TEXT, fontWeight: 700, fontSize: 13.5, lineHeight: 1.3 }}>{title}</span>
+                    <span style={{ display: 'block', color: DIM, fontSize: 12, marginTop: 3, lineHeight: 1.45 }}>{desc}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </SectionCard>
+        ) : (
         <>
         {/* KPI Row — every metric is drillable */}
         {statsError && !statsLoading ? (

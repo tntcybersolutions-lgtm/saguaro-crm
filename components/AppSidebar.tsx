@@ -394,6 +394,39 @@ export default function AppSidebar({
   const pathname = usePathname();
 
   /**
+   * THE RAIL SCROLLS AND SAID NOTHING ABOUT IT.
+   *
+   * Measured on production at a 1920x794 window: the <nav> was 533px tall
+   * holding 945px of items — 412px hidden. "Saguaro Radio" was sliced through
+   * the middle at the fold, and Invoicing, Billing, Reports, Autopilot,
+   * Compliance and Portals were below it. Seven of twenty-two destinations,
+   * with no scrollbar, no fade, no arrow. You see "Documents", then a hairline,
+   * then Settings pinned at the bottom, and you conclude that is the whole
+   * product. The half-cut row reads as a rendering glitch rather than an
+   * invitation to scroll.
+   *
+   * So the rail now says so: a fade over the bottom edge whenever there is
+   * more below, and it clears the moment you reach the end. Measured live
+   * rather than assumed, because the cut-off point depends on window height.
+   */
+  const navRef = React.useRef<HTMLElement>(null);
+  const [moreBelow, setMoreBelow] = useState(false);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const measure = () => {
+      // 2px of slack: sub-pixel layout should not leave the fade stuck on.
+      setMoreBelow(el.scrollHeight - el.clientHeight - el.scrollTop > 2);
+    };
+    measure();
+    el.addEventListener('scroll', measure, { passive: true });
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => { el.removeEventListener('scroll', measure); ro.disconnect(); };
+  }, [collapsed, pathname]);
+
+  /**
    * One rail, two contexts — the whole point of this change.
    *
    * The app used to render the company rail AND a second project rail side by
@@ -467,7 +500,24 @@ export default function AppSidebar({
       <BrandLockup collapsed={collapsed} />
 
       {/* ── Navigation Sections ─────────────────────────────────────── */}
-      <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '10px 0' }}>
+      <nav
+        ref={navRef}
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '10px 0',
+          /* Fades the last ~40px so a clipped row reads as "there is more",
+             not as a glitch. Cleared at the end of the list so the final item
+             is never dimmed. WebkitMaskImage too — Safari still wants it. */
+          maskImage: moreBelow
+            ? 'linear-gradient(to bottom, #000 calc(100% - 40px), transparent)'
+            : undefined,
+          WebkitMaskImage: moreBelow
+            ? 'linear-gradient(to bottom, #000 calc(100% - 40px), transparent)'
+            : undefined,
+        }}
+      >
         {(inProject ? projectSections : NAV_SECTIONS).map((section: any, sIdx: number) => {
           /**
            * Everything the tenant is entitled to, always, in the same order.
