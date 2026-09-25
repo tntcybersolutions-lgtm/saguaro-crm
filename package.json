@@ -36,7 +36,10 @@
     "engine:sync": "node scripts/sync-heatmap-engine.mjs --sync",
     "engine:test": "npx -y tsx lib/heatmap/sanity.test.ts",
     "prebuild": "node scripts/sync-heatmap-engine.mjs --check && node scripts/sync-takeoff-engine.mjs --check && npm run check:style-escapes",
-    "check:style-escapes": "node tools/check-style-escapes.mjs --selftest && node tools/check-style-escapes.mjs"
+    "check:style-escapes": "node tools/check-style-escapes.mjs --selftest && node tools/check-style-escapes.mjs",
+    "e2e:sweep": "node tools/e2e-app-sweep.mjs",
+    "e2e:nav": "node tools/e2e-nav-check.mjs",
+    "e2e": "npm run e2e:nav && npm run e2e:sweep"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.54.0",
