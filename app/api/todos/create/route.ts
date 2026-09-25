@@ -23,6 +23,15 @@ export async function POST(req: NextRequest) {
   const body: Record<string, unknown> = await req.json().catch(() => ({}));
   const projectId = (body.project_id || body.projectId || null) as string | null;
 
+  /* This route DOES verify a foreign project id — requirePermission 404s on
+     one. The hole was that with projectId null the ownership check has
+     nothing to check, so it passed, and the row was written with
+     project_id = null: a 200, and a to-do that appears on no project screen
+     ever again. Check the field before the guard that depends on it. */
+  if (!projectId) {
+    return NextResponse.json({ error: 'project_id is required' }, { status: 400 });
+  }
+
   const g = await requirePermission(req, 'Projects', 'Edit', { projectId });
   if (!g.ok) return g.res;
 

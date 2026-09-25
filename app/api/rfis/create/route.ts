@@ -11,6 +11,13 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* empty body */ }
+    /* A record with no project is invisible: every project screen filters on
+       project_id, so this wrote a row the user was told had saved and could
+       never see again. 400 naming the field, like the nineteen other create
+       endpoints in this codebase already do. */
+    if (!(body.projectId || body.project_id)) {
+      return NextResponse.json({ error: 'project_id is required' }, { status: 400 });
+    }
 
   try {
     const db = createServerClient();

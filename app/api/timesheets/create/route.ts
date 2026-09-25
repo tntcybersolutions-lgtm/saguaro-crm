@@ -49,7 +49,10 @@ export async function POST(req: NextRequest) {
       if (!matchId) {
         const { data: newEmp, error: empErr } = await supabase
           .from('employees')
-          .insert({ tenant_id: user.tenantId, first_name: first, last_name: last || '(crew)', full_name: employeeName, trade: tradeIn })
+          /* employees.full_name is GENERATED ALWAYS AS (first_name || ' ' || last_name).
+             Postgres rejects any write to it outright, so passing it here made
+             every timesheet entry that named a NEW crew member fail with a 500. */
+          .insert({ tenant_id: user.tenantId, first_name: first, last_name: last || '(crew)', trade: tradeIn })
           .select('id').single();
         if (empErr) throw empErr;
         matchId = newEmp.id;
@@ -109,9 +112,12 @@ export async function POST(req: NextRequest) {
     const overtimeHours = body.overtime_hours ?? body.overtimeHours ?? body.ot_hrs;
     if (regularHours != null)  row.regular_hours  = Number(regularHours)  || 0;
     if (overtimeHours != null) row.overtime_hours = Number(overtimeHours) || 0;
-    if (regularHours != null || overtimeHours != null) {
-      row.total_hours = (Number(regularHours) || 0) + (Number(overtimeHours) || 0);
-    }
+    /* NOT total_hours. time_entries.total_hours is
+       GENERATED ALWAYS AS (regular_hours + overtime_hours + doubletime_hours),
+       so Postgres computes it and rejects any write to it. Setting it here is
+       why EVERY save from the web timesheet form returned 500 — the form
+       always sends hours, so it always hit this line. The column still comes
+       out correct; it just has to be left alone. */
     if (tradeIn != null) row.trade = tradeIn;
 
     const { data, error } = await supabase

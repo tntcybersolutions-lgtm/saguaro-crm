@@ -30,7 +30,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       db.from('project_team').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId),
       db.from('budget_lines').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('cost_code', { ascending: true }),
       db.from('punch_list').select('id, status').eq('project_id', projectId).eq('tenant_id', user.tenantId),
-      db.from('schedule_phases').select('*').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('start_date', { ascending: true }),
+      /* schedule_TASKS, not schedule_PHASES. The overview's Schedule card
+         gates on this array being non-empty, and phases are written by
+         almost nothing, so a project with a full seven-task schedule showed
+         no Schedule card at all while /schedule listed all seven. Mapped
+         below to the field names the card reads. */
+      db.from('schedule_tasks').select('id, name, status, start_date, end_date, pct_complete, is_critical').eq('project_id', projectId).eq('tenant_id', user.tenantId).order('start_date', { ascending: true }),
       db.from('autopilot_alerts').select('id, alert_type, severity, body, status, created_at').eq('project_id', projectId).eq('tenant_id', user.tenantId).eq('status', 'active').order('created_at', { ascending: false }).limit(10),
     ]);
 
@@ -77,7 +82,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
 
     return NextResponse.json({
       project: { ...p, contractSumToDate, totalBilledToDate },
-      subs: subs || [],
+      /* This is a CONTRACTS query — see the Promise.all above, which binds
+         db.from('contracts') to a variable called `subs`. The overview's
+         Subcontractors card reads sub.name and sub.contract_amount, and a
+         contracts row carries party_name and amount, so every row painted a
+         blank name, a "?" avatar and "$0" on a job with two executed
+         subcontracts worth $1.965M. Mapped to what the card reads rather than
+         changing the card, because this same query also feeds the committed
+         figures beside it. */
+      subs: (subs || []).map((c: any) => ({
+        id: c.id,
+        name: c.party_name || c.party_company || c.vendor_name || c.counterparty_name || c.title,
+        trade: c.trade,
+        contract_amount: c.amount ?? c.contract_amount ?? c.original_amount ?? 0,
+        status: c.status,
+      })),
       payApps: apps,
       changeOrders: cos,
       rfis: rfis || [],
@@ -85,7 +104,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       budgetLines: lines,
       budgetHealth,
       punchSummary,
-      schedulePhases: schedulePhases || [],
+      /* The card reads planned_end / actual_end / forecast_end. A task has
+         end_date and a percent, so a finished task reports its end as actual
+         and an unfinished one reports it as forecast — which is what those
+         two fields mean. */
+      schedulePhases: (schedulePhases || []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        status: t.status,
+        planned_end: t.end_date,
+        actual_end: t.status === 'complete' ? t.end_date : null,
+        forecast_end: t.status === 'complete' ? null : t.end_date,
+      })),
       alerts: (alerts || []).map((a: any) => ({ ...a, title: a.alert_type, message: a.body })),
     });
   } catch {
