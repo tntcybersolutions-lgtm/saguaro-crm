@@ -8,6 +8,13 @@ export async function POST(req: NextRequest) {
   let body: Record<string, unknown> = {};
   try {
     body = await req.json().catch(() => ({}));
+    /* Was a 500 on a missing field — the database's rejection surfacing as an
+       "Internal server error", which tells a user nothing and tells support
+       nothing either. 400 naming the field, like the nineteen other create
+       endpoints in this codebase. */
+    if (!(body.project_id || body.projectId) || !(body.permit_type || body.permitType)) {
+      return NextResponse.json({ error: 'project_id and permit_type are required is required' }, { status: 400 });
+    }
     const db = createServerClient();
 
     // The page POSTs { projectId, status, inspector, permit_type, number,

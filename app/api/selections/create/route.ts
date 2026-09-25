@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { assertProjectInTenant } from '@/lib/assert-project';
 import type { Database } from '@/lib/database.types';
 
 export async function POST(req: NextRequest) {
@@ -11,6 +12,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'projectId and item are required' }, { status: 400 });
     }
     const db = createServerClient();
+    /* This project must belong to the caller's tenant. Without the check a
+       project id from ANOTHER tenant satisfies the foreign key, and the row
+       is written — stamped with the caller's tenant, pointing at a customer's
+       job they cannot see. See lib/assert-project. */
+    const notOurs = await assertProjectInTenant(db, user.tenantId, body.projectId);
+    if (notOurs) return notOurs;
 
     // The page sends a richer model than the legacy schema: item->item_name,
     // cost->selected_amount. Product attributes (manufacturer/model/color/finish/

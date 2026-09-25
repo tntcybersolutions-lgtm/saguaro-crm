@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 
@@ -18,6 +19,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'name is required' }, { status: 400 });
     }
     const db = createServerClient();
+    /* This project must belong to the caller's tenant. Without the check a
+       project id from ANOTHER tenant satisfies the foreign key, and the row
+       is written — stamped with the caller's tenant, pointing at a customer's
+       job they cannot see. See lib/assert-project. */
+    const notOurs = await assertProjectInTenant(db, user.tenantId, projectId);
+    if (notOurs) return notOurs;
     const { data: pkg, error } = await db.from('bid_packages').insert({
       tenant_id: user.tenantId,
       created_by: user.id,

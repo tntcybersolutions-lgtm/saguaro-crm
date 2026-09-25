@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { assertProjectInTenant } from '@/lib/assert-project';
 import type { Database } from '@/lib/database.types';
 
 export async function POST(req: NextRequest) {
@@ -20,6 +21,18 @@ export async function POST(req: NextRequest) {
     const scheduleImpact = scheduleImpactDays != null ? Number(scheduleImpactDays) || 0 : 0;
 
     const db = g.db;
+
+    /* This project must belong to the caller's tenant. Without the check a
+
+       project id from ANOTHER tenant satisfies the foreign key, and the row
+
+       is written — stamped with the caller's tenant, pointing at a customer's
+
+       job they cannot see. See lib/assert-project. */
+
+    const notOurs = await assertProjectInTenant(db, user.tenantId, projectId as string);
+
+    if (notOurs) return notOurs;
     const { data: last } = await db.from('change_orders').select('co_number')
       .eq('tenant_id', user.tenantId).eq('project_id', projectId).order('co_number', { ascending: false }).limit(1).maybeSingle();
     const coNumber = ((last as any)?.co_number || 0) + 1;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser, createServerClient } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import type { Database } from '@/lib/database.types';
 
 /**
@@ -18,6 +19,14 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, any> = {};
   try { body = await req.json(); } catch { /* empty body */ }
+
+  /* Was a 500 on a missing field — the database's rejection surfacing as an
+       "Internal server error", which tells a user nothing and tells support
+       nothing either. 400 naming the field, like the nineteen other create
+     endpoints in this codebase. */
+  if (!(body.project_id || body.projectId)) {
+    return NextResponse.json({ error: 'project_id is required' }, { status: 400 });
+  }
 
   try {
     const supabase = createServerClient();
@@ -129,11 +138,12 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, entry: data });
   } catch (err: unknown) {
-    const msg = 'Internal server error';
-    console.error('[timesheets/create] error:', msg);
-    return NextResponse.json(
-      { error: `[timesheets/create] Database error: ${msg}` },
-      { status: 500 }
-    );
+    /* This used to log a CONSTANT: console.error(..., 'Internal server error').
+       Every failure for the life of this route wrote that same string and threw
+       the real cause away — which is a large part of why the GENERATED-column
+       bug above went unnoticed while the whole screen could not save. apiError
+       logs the actual error with a correlation id and returns a line written
+       for a GC rather than a database's words. */
+    return apiError('timesheets/create', err, 'Could not save the time entry');
   }
 }
