@@ -53,6 +53,7 @@ import {
   Broadcast,
   Briefcase,
   CaretDown,
+  Check,
 } from '@phosphor-icons/react';
 import { colors, font, radius, shadow, sidebar as sidebarTokens, z } from '../lib/design-tokens';
 import { useWhiteLabel } from './WhiteLabelProvider';
@@ -63,7 +64,8 @@ import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { isCompanyToolVisible, hiddenCompanyToolCount, type CompanySignals } from '@/lib/company-tools';
-import { normalisePhase, stepNumber, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
+import { normalisePhase, stepsForPhase, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
+import { isClosedStatus } from '@/lib/project-lifecycle';
 import useSWR from 'swr';
 import BrandMark from '@/components/BrandMark';
 
@@ -534,6 +536,26 @@ export default function AppSidebar({
      lib/project-phase, so the menu and the guidance cannot drift apart —
      which is exactly how users ended up asking where to start. */
   const projectPhase = normalisePhase((projectCtx as any)?.project?.phase);
+  const phaseSteps = stepsForPhase(projectPhase);
+
+  /* Which steps are already behind you. Same signals the journey rail on the
+     overview uses, so a tick in the menu and a tick on the page agree. */
+  const phaseDone: Record<string, boolean> = React.useMemo(() => {
+    const c = projectCtx as any;
+    const money = c?.money;
+    return {
+      takeoff:        Boolean(c?.takeoff?.completed),
+      estimate:       (Number(c?.takeoff?.totalCost) || 0) > 0 || (c?.budget?.lineCount || 0) > 0,
+      'bid-packages': (c?.bidPackages || []).length > 0,
+      proposal:       (Number(money?.originalContract) || 0) > 0,
+      budget:         (Number(money?.originalContract) || 0) > 0 || (c?.budget?.lineCount || 0) > 0,
+      subs:           (c?.subs || []).length > 0,
+      schedule:       (c?.counts?.scheduleTasks || 0) > 0,
+      'daily-logs':   c?.recent?.lastDailyLogDate != null,
+      'pay-apps':     (money?.payAppCount || 0) > 0,
+      closeout:       isClosedStatus(c?.project?.status),
+    };
+  }, [projectCtx]);
   const [showAllTools, setShowAllTools] = useState(false);
   const toolSignals = (projectCtx ?? null) as ToolSignals | null;
 
@@ -601,7 +623,10 @@ export default function AppSidebar({
                  filtered away. A sequence with holes in it is worse than no
                  sequence: it tells a GC there is a step 2 and then refuses to
                  show it. You cannot teach an order and hide half of it. */
-              if (stepNumber(rel, projectPhase) !== null) return true;
+              /* A step in this phase is never hidden by the work filter — the
+                 block above names it, so the toolbox must be able to show
+                 it too rather than pointing at something absent. */
+              if (phaseSteps.some((st) => st.href === rel)) return true;
               return isToolVisible(rel, toolSignals, activeProjectHref, showAllTools);
             })
           /* Company scope gets the same discipline one level up: core tools,
@@ -727,6 +752,55 @@ export default function AppSidebar({
             >
               {projectPhase === 'building' ? 'Back to bidding' : 'We won it'}
             </button>
+          </div>
+        )}
+        {/* THE SEQUENCE, AS A SEQUENCE.
+            Numbering the taxonomy items did not work and could not have:
+            steps cross sections, so FINANCIAL holds step 1 (Budget) and
+            step 5 (Pay Applications), and no amount of reordering sections
+            makes 1, 5, 3, 2, 4, 6 read as a list. Numbers that descend look
+            broken however correct each one is.
+
+            So the order lives in its own block, where it can actually be an
+            order, and the sections below go back to being what they are —
+            a toolbox, grouped, unnumbered, in one fixed place. This is the
+            thing users were asking for: the menu in the order they would
+            actually approach the work. */}
+        {inProject && !collapsed && (
+          <div style={{ padding: '0 10px 14px' }}>
+            {phaseSteps.map((st, i) => {
+              const href = `/app/projects/${projectId}${st.href}`;
+              const on = isActive(href);
+              const isDone = !!phaseDone[st.key];
+              return (
+                <Link
+                  key={st.key}
+                  href={href}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 9,
+                    padding: '7px 10px', margin: '2px 0', borderRadius: 8,
+                    textDecoration: 'none', fontSize: font.size.md,
+                    fontWeight: on ? font.weight.semibold : font.weight.medium,
+                    color: on ? colors.gold : isDone ? colors.textMuted : '#DCE5F0',
+                    background: on ? colors.goldDim : 'transparent',
+                  }}
+                  onMouseEnter={(e) => { if (!on) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
+                  onMouseLeave={(e) => { if (!on) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <span style={{
+                    flexShrink: 0, width: 18, height: 18, borderRadius: 5,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
+                    background: isDone ? 'rgba(34,197,94,0.16)' : on ? 'rgba(0,0,0,0.22)' : 'rgba(245,158,11,0.16)',
+                    border: `1px solid ${isDone ? 'rgba(34,197,94,0.34)' : on ? 'rgba(0,0,0,0.28)' : 'rgba(245,158,11,0.3)'}`,
+                    color: isDone ? '#4ADE80' : on ? colors.dark : '#FBBF24',
+                  }}>
+                    {isDone ? <Check size={10} weight="bold" /> : i + 1}
+                  </span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.title}</span>
+                </Link>
+              );
+            })}
           </div>
         )}
         {renderSections.map((section: any, sIdx: number) => {
@@ -913,27 +987,7 @@ export default function AppSidebar({
                   )}
                   {!collapsed && (
                     <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 7, minWidth: 0 }}>
-                      {/* STEP NUMBER — only inside a project, only for items that
-                          are in this phase's sequence. The same numbering the
-                          journey rail prints on the overview, from the same
-                          source, so "step 3" means one thing in this product.
-                          Anything outside the sequence stays unnumbered rather
-                          than being given a misleading position. */}
-                      {inProject && (() => {
-                        const base = `/app/projects/${projectId}`;
-                        const rel = item.href.startsWith(base) ? item.href.slice(base.length) : item.href;
-                        const num = stepNumber(rel, projectPhase);
-                        return num === null ? null : (
-                          <span style={{
-                            flexShrink: 0, fontVariantNumeric: 'tabular-nums',
-                            fontSize: 9.5, fontWeight: 900, lineHeight: '15px',
-                            width: 15, height: 15, borderRadius: 4, textAlign: 'center',
-                            background: active ? 'rgba(0,0,0,0.22)' : 'rgba(245,158,11,0.16)',
-                            border: `1px solid ${active ? 'rgba(0,0,0,0.28)' : 'rgba(245,158,11,0.3)'}`,
-                            color: active ? colors.dark : '#FBBF24',
-                          }}>{num}</span>
-                        );
-                      })()}
+
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
                     </span>
                   )}
