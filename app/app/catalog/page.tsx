@@ -406,12 +406,15 @@ export default function CatalogPage() {
   // unpriced items sink to the bottom via null.
   const { sort: colSort, cycleSort } = usePersistedSort('catalog-grid');
   const sortedItems = useSortedRows(filtered, colSort, (it, key) => {
-    if (key.startsWith('vendor:')) {
-      const offer = it.prices.find((p) => p.vendor === key.slice(7));
-      return offer ? Number(offer.price) || 0 : null;
-    }
+    // Stale-key guard: the per-vendor columns are gone, but a browser that
+    // sorted by one still has `vendor:<name>` in localStorage under
+    // 'sag_sort_catalog-grid'. Returning null for every row leaves the
+    // toolbar ordering intact instead of shuffling on a key nothing renders;
+    // it clears itself the first time any header is clicked.
+    if (key.startsWith('vendor:')) return null;
     switch (key) {
       case 'item': return it.name;
+      case 'quotes': return new Set(it.prices.map((p) => p.vendor)).size;
       case 'unit': return it.unit;
       case 'best': {
         const n = Number(it.prices.find((p) => p.bestPrice)?.price ?? it.prices[0]?.price);
@@ -734,23 +737,38 @@ export default function CatalogPage() {
           />
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 12, minWidth: 780 + vendorCols.length * 130 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' as const, fontSize: 12, minWidth: 1040 }}>
               <thead>
                 <tr>
                   <SortableTh label="Add to Order" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 132 }} />
-                  <SortableTh label="Item" sortKey="item" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 220 }} />
-                  <SortableTh label="Unit" sortKey="unit" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 60 }} />
-                  <SortableTh label="Best Offer" sortKey="best" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 150 }} />
-                  {vendorCols.map((v) => (
-                    <SortableTh key={v} label={v} sortKey={`vendor:${v}`} sort={colSort} onSort={cycleSort} align="right" style={{ padding: '9px 12px', minWidth: 130 }} />
-                  ))}
+                  <SortableTh label="Item" sortKey="item" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 260 }} />
+                  <SortableTh label="Unit" sortKey="unit" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 58 }} />
+                  <SortableTh label="Best Price" sortKey="best" sort={colSort} onSort={cycleSort} align="right" style={{ padding: '9px 12px', minWidth: 132 }} />
+                  <SortableTh label="Other Quotes" sortKey="quotes" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 300 }} />
+                  <SortableTh label="Verify" sort={colSort} onSort={cycleSort} style={{ padding: '9px 12px', minWidth: 148 }} />
                 </tr>
               </thead>
               <tbody>
                 {sortedItems.map((it, idx) => {
                   const best = it.prices.find((p) => p.bestPrice);
+                  // One quote per vendor (the API already orders cheapest
+                  // first), then every quote that is not the best one,
+                  // cheapest first — what the matrix columns used to hold.
                   const byVendor = new Map<string, Offer>();
                   for (const p of it.prices) if (!byVendor.has(p.vendor)) byVendor.set(p.vendor, p);
+                  const others = Array.from(byVendor.values())
+                    .filter((o) => o !== best)
+                    .sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
+                  // How far above the best price the dearest quote sits. Null
+                  // when there is nothing to compare, so it prints nothing
+                  // rather than a meaningless 0%.
+                  const overPct = (() => {
+                    if (!best || others.length === 0) return null;
+                    const lo = Number(best.price) || 0;
+                    const hi = Number(others[others.length - 1].price) || 0;
+                    if (lo <= 0 || hi <= lo) return null;
+                    return Math.round(((hi - lo) / lo) * 100);
+                  })();
                   const prevCat = idx > 0 ? sortedItems[idx - 1].category : null;
                   const showCat = sort === 'category' && !colSort && ((it.category || '') !== (prevCat || '') || idx === 0);
                   const qty = cart[it.id] || 0;
@@ -758,7 +776,7 @@ export default function CatalogPage() {
                     <React.Fragment key={it.id}>
                       {showCat && it.category && (
                         <tr>
-                          <td colSpan={4 + vendorCols.length} style={{ padding: '10px 12px 5px', fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' as const, letterSpacing: 1.5, borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
+                          <td colSpan={6} style={{ padding: '10px 12px 5px', fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' as const, letterSpacing: 1.5, borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
                             {titleCase(it.category)}
                           </td>
                         </tr>
@@ -854,83 +872,117 @@ export default function CatalogPage() {
                           </div>
                         </td>
                         <td style={{ padding: '9px 12px', color: DIM, whiteSpace: 'nowrap' as const }}>{it.unit || '—'}</td>
-                        <td style={{ padding: '9px 12px', whiteSpace: 'nowrap' as const }}>
+                        {/* BEST PRICE — the number, who quoted it, nothing else. */}
+                        <td style={{ padding: '9px 12px', textAlign: 'right' as const, whiteSpace: 'nowrap' as const, verticalAlign: 'middle' }}>
                           {best ? (
-                            <div>
-                              <span className="catProv" tabIndex={0}>
-                                <span style={{ fontWeight: 800, color: GOLD, fontSize: 13.5, fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(best.price)}</span>
-                                <RefChip />
-                                <ProvPop offer={best} item={it} />
-                              </span>
-                              <span style={{ fontSize: 10.5, color: DIM, marginLeft: 6 }}>{best.vendor}</span>
-                              {/* Availability, then the real order path — no Buy button exists,
-                                  because nothing here can be bought without the vendor. */}
-                              <div style={{ marginTop: 3 }}><Availability offer={best} feedConnected={!!data?.hasLiveStockFeed} /></div>
-                              <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' as const }}>
-                                {/* Lead time comes off the same seeded row as stock — only a real feed may show it. */}
-                                {hasLiveStock(best) && best.leadTimeDays != null && best.leadTimeDays > 0 && (
-                                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                                    <Truck size={10} color="rgba(255,255,255,0.45)" />{best.leadTimeDays}d lead
+                            <span className="catProv" tabIndex={0}>
+                              <ProvPop offer={best} item={it} />
+                              <div style={{ fontWeight: 800, color: '#FBBF24', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
+                                {fmtMoney(best.price)}<RefChip />
+                              </div>
+                              <div style={{ fontSize: 10.5, color: DIM, marginTop: 1 }}>{best.vendor}</div>
+                              <Availability offer={best} compact feedConnected={!!data?.hasLiveStockFeed} />
+                              {/* Lead time comes off the same seeded row as stock — only a real feed may show it. */}
+                              {hasLiveStock(best) && best.leadTimeDays != null && best.leadTimeDays > 0 && (
+                                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 1 }}>
+                                  <Truck size={10} color="rgba(255,255,255,0.45)" />{best.leadTimeDays}d lead
+                                </div>
+                              )}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11.5 }}>No quotes yet</span>
+                          )}
+                        </td>
+
+                        {/* ── OTHER QUOTES ──────────────────────────────────
+                             This replaced a sixteen-column vendor matrix.
+                             Sixteen columns to carry three numbers a row: the
+                             grid measured 2,860px wide (about 1,240px of it
+                             scrolled off the right edge, so twelve vendors were
+                             invisible), and of its 3,568 cells, 2,901 — 81% —
+                             held nothing but an em-dash. A price comparison
+                             screen where four fifths of the pixels say "no
+                             price" is not comparing anything.
+
+                             Every quote that existed in the matrix is still
+                             here, cheapest first, each with the same
+                             provenance popover. What is gone is the space
+                             reserved for the quotes that do not exist.
+
+                             The tradeoff, stated plainly: you can no longer
+                             sort the whole catalog by one named vendor's
+                             price. At 18.7% fill that sort put a handful of
+                             priced rows above a couple hundred dashes, in a
+                             column you had to scroll sideways to read. ── */}
+                        <td style={{ padding: '9px 12px', verticalAlign: 'middle' }}>
+                          {others.length === 0 ? (
+                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                              {best ? 'Only quote on file' : '—'}
+                            </span>
+                          ) : (
+                            <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5, alignItems: 'center' }}>
+                              {others.map((o, i) => (
+                                <span key={`${o.vendor}-${i}`} className="catProv" tabIndex={0}>
+                                  <ProvPop offer={o} item={it} />
+                                  <span style={{
+                                    display: 'inline-flex', alignItems: 'baseline', gap: 6,
+                                    padding: '3px 8px', borderRadius: 7,
+                                    border: `1px solid ${BORDER}`, background: 'rgba(255,255,255,0.03)',
+                                    whiteSpace: 'nowrap' as const,
+                                  }}>
+                                    <span style={{ fontSize: 10.5, color: DIM }}>{o.vendor}</span>
+                                    <span style={{ fontSize: 12, fontWeight: 700, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(o.price)}</span>
+                                    {/* Only a live feed may say anything about stock. */}
+                                    {hasLiveStock(o) && <Availability offer={o} compact feedConnected={!!data?.hasLiveStockFeed} />}
                                   </span>
-                                )}
+                                </span>
+                              ))}
+                              {/* What the spread actually costs you, per item —
+                                  the one number the old "avg savings" card was
+                                  trying to be, but per row and actionable. */}
+                              {best && overPct != null && (
+                                <span
+                                  style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' as const, marginLeft: 2 }}
+                                  title={`Highest quote on file is ${overPct}% above ${best.vendor}'s ${fmtMoney(best.price)}`}
+                                >
+                                  +{overPct}% high
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* VERIFY — the real order path. No Buy button exists,
+                            because nothing here can be bought without the vendor. */}
+                        <td style={{ padding: '9px 12px', verticalAlign: 'middle' }}>
+                          {best && (
+                            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 4, alignItems: 'flex-start' }}>
+                              <a
+                                href={checkAvailabilityUrl(it, best.vendor)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="pmBtn"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: AMBER, textDecoration: 'none', border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.10)', borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
+                                title={`Search today's price and availability for this SKU at ${best.vendor}`}
+                              >
+                                <MagnifyingGlassPlus size={10} weight="bold" /> Check availability
+                              </a>
+                              {vendorSiteHref(best.vendorWebsite) && (
                                 <a
-                                  href={checkAvailabilityUrl(it, best.vendor)}
+                                  href={vendorSiteHref(best.vendorWebsite) as string}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="pmBtn"
-                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: AMBER, textDecoration: 'none', border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.10)', borderRadius: 6, padding: '2px 7px', whiteSpace: 'nowrap' as const }}
-                                  title={`Search today's price and availability for this SKU at ${best.vendor}`}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
+                                  title={`Open ${best.vendor}'s website`}
                                 >
-                                  <MagnifyingGlassPlus size={10} weight="bold" /> Check availability
+                                  <Globe size={10} weight="bold" /> {best.vendor}
+                                  <ArrowSquareOut size={9} weight="bold" />
                                 </a>
-                                {vendorSiteHref(best.vendorWebsite) && (
-                                  <a
-                                    href={vendorSiteHref(best.vendorWebsite) as string}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="pmBtn"
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '2px 7px', whiteSpace: 'nowrap' as const }}
-                                    title={`Open ${best.vendor}'s website`}
-                                  >
-                                    <Globe size={10} weight="bold" /> {best.vendor}
-                                    <ArrowSquareOut size={9} weight="bold" />
-                                  </a>
-                                )}
-                              </div>
+                              )}
                             </div>
-                          ) : (
-                            <span style={{ color: 'rgba(255,255,255,0.35)' }}>No quotes yet</span>
                           )}
                         </td>
-                        {vendorCols.map((v) => {
-                          const o = byVendor.get(v);
-                          if (!o) return <td key={v} style={{ padding: '9px 12px', textAlign: 'right' as const, color: 'rgba(255,255,255,0.25)' }}>—</td>;
-                          const isBest = !!o.bestPrice;
-                          return (
-                            <td key={v} style={{ padding: '6px 8px', textAlign: 'right' as const, verticalAlign: 'top' }}>
-                              <span className="catProv" tabIndex={0}>
-                              <ProvPop offer={o} item={it} />
-                              <div style={{
-                                display: 'inline-block', textAlign: 'right', padding: '4px 8px', borderRadius: 8,
-                                background: isBest ? 'linear-gradient(160deg, rgba(245,158,11,0.16), rgba(245,158,11,0.06))' : 'transparent',
-                                border: isBest ? '1px solid rgba(245,158,11,0.45)' : '1px solid transparent',
-                                boxShadow: isBest ? '0 0 14px rgba(245,158,11,0.14), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none',
-                              }}>
-                                <div style={{ fontWeight: isBest ? 800 : 600, color: isBest ? '#FBBF24' : TEXT, fontSize: 12.5, whiteSpace: 'nowrap' as const, fontVariantNumeric: 'tabular-nums' }}>
-                                  {fmtMoney(o.price)}
-                                  {isBest && <span style={{ marginLeft: 5, fontSize: 8.5, fontWeight: 900, letterSpacing: 0.06, color: '#FBBF24' }}>BEST</span>}
-                                </div>
-                                <div style={{ marginTop: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 5 }}>
-                                  <Availability offer={o} compact feedConnected={!!data?.hasLiveStockFeed} />
-                                  {hasLiveStock(o) && o.leadTimeDays != null && o.leadTimeDays > 0 && (
-                                    <span style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' as const }}>{o.leadTimeDays}d</span>
-                                  )}
-                                </div>
-                              </div>
-                              </span>
-                            </td>
-                          );
-                        })}
                       </tr>
                     </React.Fragment>
                   );
