@@ -12,7 +12,7 @@
  * above it, so it works under the /app topbar without field-shell CSS coupling.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowClockwise, ArrowCounterClockwise, ArrowsClockwise, ArrowUpRight, CheckCircle, Cursor, DownloadSimple, Lightning, LineSegments, Minus, Plus, Ruler, Sparkle, Trash, UploadSimple } from '@phosphor-icons/react';
+import { ArrowClockwise, ArrowCounterClockwise, ArrowsClockwise, ArrowUpRight, Check, CheckCircle, Cursor, DownloadSimple, Lightning, LineSegments, Minus, Plus, Ruler, Sparkle, Trash, UploadSimple } from '@phosphor-icons/react';
 import type { Pt } from '@/lib/heatmap/geometry';
 import { angleDeg, dist } from '@/lib/heatmap/geometry';
 import { summarizeCables, recommendCabling, runLengthFt } from '@/lib/heatmap/cabling-spec';
@@ -687,7 +687,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       setSavedId(null); setSaveProj(''); setSaveName(name);
       setTool(scale ? 'select' : 'scale');
       setFieldStepPin(null); setScaleDoor(false); setPendingScale([]); setPendingWall([]);
-      const notes: string[] = [`✓ Imported ${walls.length} wall${walls.length === 1 ? '' : 's'} · scale ${scale ? 'detected' : 'manual'}.`];
+      const notes: string[] = [`Imported ${walls.length} wall${walls.length === 1 ? '' : 's'} · scale ${scale ? 'detected' : 'manual'}.`];
       if (scale) { const a = deriveFootprint(proj).areaFt2; notes.push(`Scale ≈ ${scale.pxPerFt.toFixed(1)} px/ft (${det!.source || 'from PDF'})${a > 0 ? ` — this floor reads as ~${Math.round(a).toLocaleString()} ft²` : ''}. Place devices to compute coverage.`); }
       else notes.push('Scale not found — tap two points on a known dimension with the Scale tool to calibrate before placing devices.');
       setAiNotes(notes);
@@ -1043,7 +1043,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         aps.length === 0
           ? [`Existing APs already cover ${pct}% at ${project.rssiTargetDbm} dBm — nothing to add for a ${Math.round(autoTarget * 100)}% target.`]
           : metTarget
-            ? [`Placed ${aps.length} × ${apLabel} on ${autoBand} GHz → ${pct}% coverage at ${project.rssiTargetDbm} dBm ✓ target met.${swapNote} Undo reverts.`]
+            ? [`Placed ${aps.length} × ${apLabel} on ${autoBand} GHz → ${pct}% coverage at ${project.rssiTargetDbm} dBm — target met.${swapNote} Undo reverts.`]
             : [`Placed ${aps.length} × ${apLabel} on ${autoBand} GHz → ${pct}% coverage (target ${Math.round(autoTarget * 100)}% not reached). Walls are heavy or the target dBm is aggressive — add a few by hand, pick a higher-power AP, or lower the target dBm.${swapNote} Undo reverts.`],
       );
       setBusy('');
@@ -1666,7 +1666,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       if (added.length) traced.push(`${added.length} device${added.length === 1 ? '' : 's'}`);
       if (newWalls.length) traced.push(`${newWalls.length} wall${newWalls.length === 1 ? '' : 's'}`);
       if (newBoundary) traced.push('the building outline');
-      notes.push(traced.length ? `✓ Added ${traced.join(', ')} — review & adjust.` : 'Scan ran but found nothing to place — try a clearer, higher-contrast plan export.');
+      notes.push(traced.length ? `Added ${traced.join(', ')} — review & adjust.` : 'Scan ran but found nothing to place — try a clearer, higher-contrast plan export.');
       if (!project.scale && detectedFullPxPerFt) notes.push(`Detected scale ≈ ${detectedFullPxPerFt.toFixed(1)} px/ft — coverage is now dimensioned. Fine-tune with the Scale tool if it looks off.`);
       else if (!project.scale && !detectedFullPxPerFt) notes.push('No scale bar found on the plan — set the scale with the Scale tool so coverage % and AP spacing are accurate.');
       setAiNotes([...notes, ...(Array.isArray(data.notes) ? data.notes : [])]);
@@ -1973,7 +1973,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       const d = await r.json();
       setBusy('');
       if (d.error || !d.ok) { console.error('bid package error', d.error); setAiNotes([humanError(d.error, "Couldn't create the bid package. Please try again.")]); return; }
-      setAiNotes([`✓ Bid package created — ${d.lineItems} line items, ~$${(d.budget || 0).toLocaleString()} budget. Open it in Bids → Bid Packages.`]);
+      setAiNotes([`Bid package created — ${d.lineItems} line items, ~$${(d.budget || 0).toLocaleString()} budget. Open it in Bids → Bid Packages.`]);
     } catch (e) { setBusy(''); console.error(e); setAiNotes([humanError(e, "Couldn't create the bid package. Please try again.")]); }
   };
 
@@ -2157,7 +2157,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               {FIELD_STEPS.map((st, i) => (
                 <button key={st.key} type="button" className="hm-step" data-on={fieldStep === st.key} data-done={fieldDone[st.key]}
                   onClick={() => openStep(st.key)}>
-                  <span className="hm-step-num">{fieldDone[st.key] && fieldStep !== st.key ? '✓' : i + 1}</span>{st.label}
+                  <span className="hm-step-num">{fieldDone[st.key] && fieldStep !== st.key ? <Check size={12} weight="bold" /> : i + 1}</span>{st.label}
                 </button>
               ))}
               <div style={{ flex: 1 }} />
@@ -2169,11 +2169,11 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           {fieldMode && (
             <div className="hm-fieldbar">
               {fieldStep === 'plan' && <>
-                <span className="hm-fieldmsg">Plan loaded ✓ — next, set the scale so every distance is real.</span>
+                <span className="hm-fieldmsg">Plan loaded <Check size={13} weight="bold" color="#30D158" style={{ verticalAlign: '-2px' }} /> — next, set the scale so every distance is real.</span>
                 <button className="hm-big" onClick={() => openStep('scale')}>Set the scale →</button>
               </>}
               {fieldStep === 'scale' && (project.scale ? <>
-                <span className="hm-fieldmsg">Scale set ✓ — distances on this plan are real now.</span>
+                <span className="hm-fieldmsg">Scale set <Check size={13} weight="bold" color="#30D158" style={{ verticalAlign: '-2px' }} /> — distances on this plan are real now.</span>
                 <button className="hm-big" onClick={() => openStep('devices')}>Place devices →</button>
                 <button className="hm-big" data-alt="true" onClick={() => openStep('walls')}>Trace walls</button>
                 <button className="hm-big" data-alt="true" onClick={() => { finishWall(); setTool('scale'); setScaleDoor(true); setPendingScale([]); }}>Redo scale</button>
@@ -2366,7 +2366,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                         {advice.density.apCount === 0
                           ? 'No access points yet — Auto-design places the engine-correct count for this floor.'
                           : advice.density.areaFt2 > 0
-                            ? <>{advice.density.apCount} AP{advice.density.apCount === 1 ? '' : 's'} on {advice.density.areaFt2.toLocaleString()} ft² = 1 AP / {advice.density.perApFt2?.toLocaleString() ?? '—'} ft² — cap {advice.density.capAps} (1 / 1,500 ft²){advice.density.flagged ? ' · OVER' : ' ✓'}</>
+                            ? <>{advice.density.apCount} AP{advice.density.apCount === 1 ? '' : 's'} on {advice.density.areaFt2.toLocaleString()} ft² = 1 AP / {advice.density.perApFt2?.toLocaleString() ?? '—'} ft² — cap {advice.density.capAps} (1 / 1,500 ft²){advice.density.flagged ? ' · OVER' : <Check size={12} weight="bold" color="#30D158" style={{ verticalAlign: '-1px', marginLeft: 4 }} />}</>
                             : <>{advice.density.apCount} AP{advice.density.apCount === 1 ? '' : 's'} placed — set the scale to check density against the 1 AP / 1,500 ft² cap.</>}
                       </div>
                       {advice.apRows.length > 0 && <>

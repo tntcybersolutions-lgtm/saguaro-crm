@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Timer, FileText, CurrencyDollar, HardHat, CheckCircle, Laptop, Lightbulb, ChartBar } from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
 
 const DARK = '#0a0a0a';
 const GOLD = '#F59E0B';
@@ -135,12 +137,12 @@ export default function ROICalculatorPage() {
   );
 
   const SavingsRow = ({
-    icon,
+    icon: IconCmp,
     label,
     hours,
     monthly,
   }: {
-    icon: string;
+    icon: Icon;
     label: string;
     hours?: number;
     monthly: number;
@@ -155,7 +157,7 @@ export default function ROICalculatorPage() {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 16 }}>{icon}</span>
+        <IconCmp size={16} weight="duotone" color={GOLD} />
         <div>
           <div style={{ color: TEXT, fontSize: 13, fontWeight: 500 }}>{label}</div>
           {hours !== undefined && (
@@ -585,13 +587,13 @@ export default function ROICalculatorPage() {
                 </div>
 
                 <div style={{ marginBottom: 20 }}>
-                  <SavingsRow icon="⏱" label="AI Blueprint Takeoff" hours={takeoffTimeSaved} monthly={takeoffMoneySaved} />
-                  <SavingsRow icon="📄" label="Lien Waivers" hours={lienWaiverTimeSaved} monthly={lienWaiverMoneySaved} />
-                  <SavingsRow icon="💰" label="Pay Applications" hours={payAppTimeSaved} monthly={payAppMoneySaved} />
-                  <SavingsRow icon="🏗" label="Certified Payroll" hours={certPayrollSaved} monthly={certPayrollMoneySaved} />
-                  <SavingsRow icon="✅" label="Admin & Compliance" hours={adminSaved} monthly={adminMoneySaved} />
+                  <SavingsRow icon={Timer} label="AI Blueprint Takeoff" hours={takeoffTimeSaved} monthly={takeoffMoneySaved} />
+                  <SavingsRow icon={FileText} label="Lien Waivers" hours={lienWaiverTimeSaved} monthly={lienWaiverMoneySaved} />
+                  <SavingsRow icon={CurrencyDollar} label="Pay Applications" hours={payAppTimeSaved} monthly={payAppMoneySaved} />
+                  <SavingsRow icon={HardHat} label="Certified Payroll" hours={certPayrollSaved} monthly={certPayrollMoneySaved} />
+                  <SavingsRow icon={CheckCircle} label="Admin & Compliance" hours={adminSaved} monthly={adminMoneySaved} />
                   {softwareSavings > 0 && (
-                    <SavingsRow icon="💻" label="Software Savings" monthly={softwareSavings} />
+                    <SavingsRow icon={Laptop} label="Software Savings" monthly={softwareSavings} />
                   )}
                 </div>
 
@@ -644,7 +646,7 @@ export default function ROICalculatorPage() {
                 </div>
 
                 <div style={{ marginBottom: 12, padding: '10px 14px', background: 'transparent', border: `1px solid ${HAIRLINE}`, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 14 }}>💡</span>
+                  <Lightbulb size={14} weight="duotone" color={GOLD} />
                   <span style={{ color: DIM, fontSize: 12 }}>
                     Pays for itself in <strong style={{ color: GREEN, fontWeight: 600 }}>{paybackDays} days</strong> — Saguaro is just <strong style={{ color: TEXT, fontWeight: 600 }}>${saguaroCost}/mo flat</strong>
                   </span>
@@ -691,23 +693,23 @@ export default function ROICalculatorPage() {
               className="method-grid"
               style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}
             >
-              {[
+              {([
                 {
-                  icon: '⏱',
+                  icon: Timer,
                   title: 'Time Savings',
                   desc: 'Based on surveying 200+ GC estimators on time spent per task — takeoffs, lien waivers, pay apps, and compliance paperwork. We use conservative medians, not best-case scenarios.',
                 },
                 {
-                  icon: '📊',
+                  icon: ChartBar,
                   title: 'Industry Rates',
                   desc: "Uses Bureau of Labor Statistics construction estimator rates. Your input overrides the default. We use your actual burdened cost so the numbers reflect reality for your business.",
                 },
                 {
-                  icon: '💻',
+                  icon: Laptop,
                   title: 'Software Comparison',
                   desc: "Procore pricing from public data and verified customer contracts. Saguaro is $499/mo flat — no per-seat fees, no add-ons, no surprise invoices. Your current spend overrides defaults.",
                 },
-              ].map((card) => (
+              ] as { icon: Icon; title: string; desc: string }[]).map((card) => (
                 <div
                   key={card.title}
                   style={{
@@ -717,7 +719,7 @@ export default function ROICalculatorPage() {
                     padding: '24px 4px',
                   }}
                 >
-                  <div style={{ fontSize: 24, marginBottom: 14 }}>{card.icon}</div>
+                  <div style={{ marginBottom: 14 }}><card.icon size={24} weight="duotone" color={GOLD} /></div>
                   <h3 style={{ margin: '0 0 10px', fontSize: 16, fontWeight: 600 }}>{card.title}</h3>
                   <p style={{ margin: 0, color: DIM, fontSize: 14, lineHeight: 1.65 }}>{card.desc}</p>
                 </div>

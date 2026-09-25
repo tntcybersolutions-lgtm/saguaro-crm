@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Globe, AppleLogo, AndroidLogo, Laptop, ClipboardText } from '@phosphor-icons/react/dist/ssr';
 
 export const metadata: Metadata = {
   title: 'How to Get Started — Saguaro Control Systems',
@@ -180,7 +181,7 @@ export default function HowToGetStartedPage() {
           <p className="sub">Your platform is ready the moment your account is confirmed — no setup required on your end.</p>
           <div className="card card-gold">
             <div className="step-row">
-              <div className="step-num" style={{ fontSize: 20 }}>🌐</div>
+              <div className="step-num"><Globe size={20} weight="duotone" color="var(--gold)" /></div>
               <div className="step-body">
                 <h3>Open your browser → go to saguarocontrol.net/app</h3>
                 <p>Works in Chrome, Safari, Edge, Firefox — on Windows, Mac, iPhone, iPad, Android, and Chromebook. No software install. No IT department. Just a browser.</p>
@@ -199,7 +200,7 @@ export default function HowToGetStartedPage() {
           <p className="sub">Saguaro Control Systems is a native iOS app — free on Apple TestFlight while we finish the public App Store release. Your crew gets GPS clock-in, daily logs, photos, and RFIs, fully offline-capable. (Android coming soon.)</p>
           <div className="device-grid">
             <div className="device-card">
-              <div className="icon">🍎</div>
+              <div className="icon"><AppleLogo size={22} weight="duotone" color="var(--gold)" /></div>
               <h4>iPhone / iPad</h4>
               <ol>
                 <li>Go to <strong>saguarocontrol.net/get-the-app</strong></li>
@@ -210,7 +211,7 @@ export default function HowToGetStartedPage() {
               </ol>
             </div>
             <div className="device-card">
-              <div className="icon">🤖</div>
+              <div className="icon"><AndroidLogo size={22} weight="duotone" color="var(--gold)" /></div>
               <h4>Android</h4>
               <ol>
                 <li><strong>Coming soon</strong></li>
@@ -219,7 +220,7 @@ export default function HowToGetStartedPage() {
               </ol>
             </div>
             <div className="device-card">
-              <div className="icon">💻</div>
+              <div className="icon"><Laptop size={22} weight="duotone" color="var(--gold)" /></div>
               <h4>Desktop / Browser</h4>
               <ol>
                 <li>Prefer a bigger screen?</li>
@@ -228,7 +229,7 @@ export default function HowToGetStartedPage() {
               </ol>
             </div>
             <div className="device-card">
-              <div className="icon">📋</div>
+              <div className="icon"><ClipboardText size={22} weight="duotone" color="var(--gold)" /></div>
               <h4>For Your Crew</h4>
               <ol>
                 <li>Text or email your crew the TestFlight link</li>

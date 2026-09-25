@@ -1,6 +1,15 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import type { Icon } from '@phosphor-icons/react';
+import {
+  Bank, Buildings, Cactus, CalendarBlank, CalendarCheck, CalendarDots, Car, CarProfile,
+  CastleTurret, ChatCircle, Cloud, CloudSun, Coins, Crane, CurrencyDollar, DeviceMobile,
+  Diamond, Envelope, Eye, FastForward, Fire, Flower, ForkKnife, Hammer, House, HouseLine,
+  Leaf, Lightbulb, Lightning, Lock, Money, NotePencil, PersonSimpleWalk, Phone, Plant, Plus,
+  Robot, Rocket, Ruler, Snowflake, Sparkle, Sun, SwimmingPool, Target, Thermometer, Tree,
+  TreePalm, TrendUp, Trophy, Van,
+} from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
 const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
@@ -66,109 +75,122 @@ const SAGE_RESPONSES: Record<string, Record<string, string>> = {
   },
 };
 
+/* ─── Question shape ─── */
+type QuestionOption = { value: string; label: string; icon: Icon };
+type DiscoveryQuestion = { id: string; icon: Icon; question: string; options: QuestionOption[] };
+
+/* The question set is replaced at runtime by /api/discovery/questions, whose rows
+   carry `icon` as a plain string. Render the Phosphor component when we have one;
+   otherwise fall through to the raw value exactly as this page did before. */
+function QIcon({ icon, size }: { icon: Icon | string | undefined; size: number }) {
+  if (!icon || typeof icon === 'string') return <>{icon}</>;
+  const Glyph = icon;
+  return <Glyph size={size} weight="duotone" color={GOLD} />;
+}
+
 /* ─── Fallback Questions ─── */
-const FALLBACK_QUESTIONS = [
+const FALLBACK_QUESTIONS: DiscoveryQuestion[] = [
   {
-    id: 'project_type', icon: '🏗️',
+    id: 'project_type', icon: Crane,
     question: "What type of project are you envisioning?",
     options: [
-      { value: 'new_build', label: 'New Build', icon: '🏠' },
-      { value: 'remodel', label: 'Remodel', icon: '🔨' },
-      { value: 'addition', label: 'Addition', icon: '➕' },
-      { value: 'outdoor', label: 'Outdoor Living', icon: '🌳' },
+      { value: 'new_build', label: 'New Build', icon: House },
+      { value: 'remodel', label: 'Remodel', icon: Hammer },
+      { value: 'addition', label: 'Addition', icon: Plus },
+      { value: 'outdoor', label: 'Outdoor Living', icon: Tree },
     ],
   },
   {
-    id: 'budget', icon: '💰',
+    id: 'budget', icon: Money,
     question: "What's your ideal budget range?",
     options: [
-      { value: 'under_25k', label: 'Under $25K', icon: '💵' },
-      { value: '25k_50k', label: '$25K - $50K', icon: '💰' },
-      { value: '50k_100k', label: '$50K - $100K', icon: '💎' },
-      { value: '100k_plus', label: '$100K+', icon: '🏆' },
+      { value: 'under_25k', label: 'Under $25K', icon: CurrencyDollar },
+      { value: '25k_50k', label: '$25K - $50K', icon: Coins },
+      { value: '50k_100k', label: '$50K - $100K', icon: Diamond },
+      { value: '100k_plus', label: '$100K+', icon: Trophy },
     ],
   },
   {
-    id: 'priorities', icon: '🎯',
+    id: 'priorities', icon: Target,
     question: "What matters most to you?",
     options: [
-      { value: 'energy_savings', label: 'Energy Savings', icon: '⚡' },
-      { value: 'home_value', label: 'Home Value', icon: '📈' },
-      { value: 'comfort', label: 'Comfort', icon: '☁️' },
-      { value: 'security', label: 'Security', icon: '🔒' },
-      { value: 'aesthetics', label: 'Aesthetics', icon: '✨' },
+      { value: 'energy_savings', label: 'Energy Savings', icon: Lightning },
+      { value: 'home_value', label: 'Home Value', icon: TrendUp },
+      { value: 'comfort', label: 'Comfort', icon: Cloud },
+      { value: 'security', label: 'Security', icon: Lock },
+      { value: 'aesthetics', label: 'Aesthetics', icon: Sparkle },
     ],
   },
   {
-    id: 'vehicles', icon: '🚗',
+    id: 'vehicles', icon: Car,
     question: "How many vehicles do you have?",
     options: [
-      { value: 'none', label: 'None', icon: '🚶' },
-      { value: '1_2', label: '1-2', icon: '🚗' },
-      { value: '3_4', label: '3-4', icon: '🚙' },
-      { value: '5_plus', label: '5+', icon: '🏎️' },
+      { value: 'none', label: 'None', icon: PersonSimpleWalk },
+      { value: '1_2', label: '1-2', icon: Car },
+      { value: '3_4', label: '3-4', icon: Van },
+      { value: '5_plus', label: '5+', icon: CarProfile },
     ],
   },
   {
-    id: 'outdoor_features', icon: '🏊',
+    id: 'outdoor_features', icon: SwimmingPool,
     question: "Any outdoor features you're dreaming about?",
     options: [
-      { value: 'pool', label: 'Pool / Spa', icon: '🏊' },
-      { value: 'outdoor_kitchen', label: 'Outdoor Kitchen', icon: '🍖' },
-      { value: 'fire_pit', label: 'Fire Pit', icon: '🔥' },
-      { value: 'garden', label: 'Garden', icon: '🌻' },
-      { value: 'none', label: 'Not Right Now', icon: '⏩' },
+      { value: 'pool', label: 'Pool / Spa', icon: SwimmingPool },
+      { value: 'outdoor_kitchen', label: 'Outdoor Kitchen', icon: ForkKnife },
+      { value: 'fire_pit', label: 'Fire Pit', icon: Fire },
+      { value: 'garden', label: 'Garden', icon: Flower },
+      { value: 'none', label: 'Not Right Now', icon: FastForward },
     ],
   },
   {
-    id: 'timeline', icon: '📅',
+    id: 'timeline', icon: CalendarBlank,
     question: "When are you looking to start?",
     options: [
-      { value: 'asap', label: 'ASAP', icon: '🚀' },
-      { value: '3_months', label: 'Within 3 Months', icon: '📆' },
-      { value: '6_months', label: 'Within 6 Months', icon: '🗓️' },
-      { value: 'planning', label: 'Just Planning', icon: '📝' },
+      { value: 'asap', label: 'ASAP', icon: Rocket },
+      { value: '3_months', label: 'Within 3 Months', icon: CalendarCheck },
+      { value: '6_months', label: 'Within 6 Months', icon: CalendarDots },
+      { value: 'planning', label: 'Just Planning', icon: NotePencil },
     ],
   },
   {
-    id: 'climate', icon: '🌡️',
+    id: 'climate', icon: Thermometer,
     question: "What best describes your climate?",
     options: [
-      { value: 'hot_dry', label: 'Hot & Dry', icon: '☀️' },
-      { value: 'hot_humid', label: 'Hot & Humid', icon: '🌴' },
-      { value: 'temperate', label: 'Temperate', icon: '🌤️' },
-      { value: 'cold', label: 'Cold', icon: '❄️' },
-      { value: 'mixed', label: 'Mixed Seasons', icon: '🍂' },
+      { value: 'hot_dry', label: 'Hot & Dry', icon: Sun },
+      { value: 'hot_humid', label: 'Hot & Humid', icon: TreePalm },
+      { value: 'temperate', label: 'Temperate', icon: CloudSun },
+      { value: 'cold', label: 'Cold', icon: Snowflake },
+      { value: 'mixed', label: 'Mixed Seasons', icon: Leaf },
     ],
   },
   {
-    id: 'smart_interest', icon: '🤖',
+    id: 'smart_interest', icon: Robot,
     question: "How smart-home savvy are you?",
     options: [
-      { value: 'beginner', label: "What's a smart home?", icon: '🌱' },
-      { value: 'intermediate', label: 'I have a few devices', icon: '📱' },
-      { value: 'advanced', label: 'Pretty connected already', icon: '💡' },
-      { value: 'all_in', label: 'Full automation please!', icon: '🏠' },
+      { value: 'beginner', label: "What's a smart home?", icon: Plant },
+      { value: 'intermediate', label: 'I have a few devices', icon: DeviceMobile },
+      { value: 'advanced', label: 'Pretty connected already', icon: Lightbulb },
+      { value: 'all_in', label: 'Full automation please!', icon: House },
     ],
   },
   {
-    id: 'home_size', icon: '📐',
+    id: 'home_size', icon: Ruler,
     question: "How large is your home?",
     options: [
-      { value: 'under_1500', label: 'Under 1,500 sq ft', icon: '🏡' },
-      { value: '1500_2500', label: '1,500 - 2,500 sq ft', icon: '🏘️' },
-      { value: '2500_4000', label: '2,500 - 4,000 sq ft', icon: '🏰' },
-      { value: '4000_plus', label: '4,000+ sq ft', icon: '🏛️' },
+      { value: 'under_1500', label: 'Under 1,500 sq ft', icon: HouseLine },
+      { value: '1500_2500', label: '1,500 - 2,500 sq ft', icon: Buildings },
+      { value: '2500_4000', label: '2,500 - 4,000 sq ft', icon: CastleTurret },
+      { value: '4000_plus', label: '4,000+ sq ft', icon: Bank },
     ],
   },
   {
-    id: 'contact', icon: '📞',
+    id: 'contact', icon: Phone,
     question: "Last one! How should we reach you?",
     options: [
-      { value: 'email', label: 'Email Me', icon: '📧' },
-      { value: 'call', label: 'Call Me', icon: '📱' },
-      { value: 'text', label: 'Text Me', icon: '💬' },
-      { value: 'no_contact', label: 'Just Show Results', icon: '👀' },
+      { value: 'email', label: 'Email Me', icon: Envelope },
+      { value: 'call', label: 'Call Me', icon: DeviceMobile },
+      { value: 'text', label: 'Text Me', icon: ChatCircle },
+      { value: 'no_contact', label: 'Just Show Results', icon: Eye },
     ],
   },
 ];
@@ -264,7 +286,7 @@ export default function DiscoverPage() {
         alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
         padding: 40,
       }}>
-        <div style={{ fontSize: 64, marginBottom: 24 }}>🌵</div>
+        <div style={{ fontSize: 64, marginBottom: 24 }}><Cactus size={64} weight="duotone" color={GREEN} /></div>
         <h2 style={{ fontSize: 24, fontWeight: 700, color: TEXT, marginBottom: 12 }}>
           Sage is analyzing your profile...
         </h2>
@@ -292,7 +314,7 @@ export default function DiscoverPage() {
       return (
         <div style={{ minHeight: '100vh', background: BG, color: TEXT, padding: '40px 20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ ...glass, padding: 40, maxWidth: 520, textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🌵</div>
+            <div style={{ fontSize: 48, marginBottom: 16 }}><Cactus size={48} weight="duotone" color={GREEN} /></div>
             <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 10 }}>
               We couldn&apos;t build your recommendations right now
             </h2>
@@ -329,7 +351,7 @@ export default function DiscoverPage() {
       <div style={{ minHeight: '100vh', background: BG, color: TEXT, padding: '40px 20px' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🌵</div>
+            <div style={{ fontSize: 48, marginBottom: 12 }}><Cactus size={48} weight="duotone" color={GREEN} /></div>
             <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
               Your Personalized <span style={{ color: GOLD }}>Recommendations</span>
             </h1>
@@ -450,7 +472,7 @@ export default function DiscoverPage() {
             ...glass, padding: 28, width: '100%', textAlign: 'center',
             animation: 'fadeIn .4s ease',
           }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🌵</div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}><Cactus size={40} weight="duotone" color={GREEN} /></div>
             <p style={{ fontSize: 18, lineHeight: 1.6, color: TEXT, fontStyle: 'italic' }}>
               &ldquo;{sageReply}&rdquo;
             </p>
@@ -460,7 +482,7 @@ export default function DiscoverPage() {
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 56, marginBottom: 20 }}>{q?.icon}</div>
+            <div style={{ fontSize: 56, marginBottom: 20 }}><QIcon icon={q?.icon} size={56} /></div>
             <h2 style={{
               fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: 700,
               textAlign: 'center', marginBottom: 32, lineHeight: 1.3,
@@ -481,7 +503,7 @@ export default function DiscoverPage() {
                     borderColor: answers[q.id] === opt.value ? GOLD : BORDER,
                   }}
                 >
-                  <div style={{ fontSize: 28, marginBottom: 8 }}>{opt.icon}</div>
+                  <div style={{ fontSize: 28, marginBottom: 8 }}><QIcon icon={opt.icon} size={28} /></div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{opt.label}</div>
                 </button>
               ))}

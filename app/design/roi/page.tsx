@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import type { Icon } from '@phosphor-icons/react';
+import { BatteryHigh, Drop, Lightbulb, Plug, Shower, Sun, Thermometer, ThermometerHot, Wall } from '@phosphor-icons/react';
 
 /* ─── Palette — Premium Dark Glassmorphism ─── */
 const GOLD = '#F59E0B', GREEN = '#34C759';
@@ -71,7 +73,7 @@ const STATES: Record<string, StateData> = {
 
 /* ─── Upgrade Definitions ─── */
 type Upgrade = {
-  id: string; name: string; icon: string;
+  id: string; name: string; icon: Icon;
   cost_low: number; cost_high: number;
   base_savings: number; // base annual savings before state multiplier
   multiplier_key: 'electricity' | 'gas' | 'solar' | 'water';
@@ -79,15 +81,15 @@ type Upgrade = {
 };
 
 const UPGRADES: Upgrade[] = [
-  { id: 'thermostat', name: 'Smart Thermostat', icon: '🌡️', cost_low: 200, cost_high: 500, base_savings: 180, multiplier_key: 'electricity' },
-  { id: 'lighting', name: 'Smart Lighting', icon: '💡', cost_low: 800, cost_high: 2400, base_savings: 240, multiplier_key: 'electricity' },
-  { id: 'solar', name: 'Solar Panels', icon: '☀️', cost_low: 2000, cost_high: 3000, base_savings: 300, multiplier_key: 'solar', has_slider: true, slider_label: 'System Size (kW)', slider_min: 2, slider_max: 16 },
-  { id: 'battery', name: 'Battery Wall', icon: '🔋', cost_low: 8000, cost_high: 14000, base_savings: 480, multiplier_key: 'electricity' },
-  { id: 'ev', name: 'EV Charging', icon: '🔌', cost_low: 800, cost_high: 2400, base_savings: 600, multiplier_key: 'electricity' },
-  { id: 'irrigation', name: 'Smart Irrigation', icon: '💧', cost_low: 400, cost_high: 1200, base_savings: 320, multiplier_key: 'water' },
-  { id: 'heatpump', name: 'Heat Pump', icon: '♨️', cost_low: 4000, cost_high: 8000, base_savings: 720, multiplier_key: 'gas' },
-  { id: 'insulation', name: 'Insulation Upgrade', icon: '🧱', cost_low: 2000, cost_high: 6000, base_savings: 540, multiplier_key: 'electricity' },
-  { id: 'waterheater', name: 'Smart Water Heater', icon: '🚿', cost_low: 1200, cost_high: 3000, base_savings: 360, multiplier_key: 'gas' },
+  { id: 'thermostat', name: 'Smart Thermostat', icon: Thermometer, cost_low: 200, cost_high: 500, base_savings: 180, multiplier_key: 'electricity' },
+  { id: 'lighting', name: 'Smart Lighting', icon: Lightbulb, cost_low: 800, cost_high: 2400, base_savings: 240, multiplier_key: 'electricity' },
+  { id: 'solar', name: 'Solar Panels', icon: Sun, cost_low: 2000, cost_high: 3000, base_savings: 300, multiplier_key: 'solar', has_slider: true, slider_label: 'System Size (kW)', slider_min: 2, slider_max: 16 },
+  { id: 'battery', name: 'Battery Wall', icon: BatteryHigh, cost_low: 8000, cost_high: 14000, base_savings: 480, multiplier_key: 'electricity' },
+  { id: 'ev', name: 'EV Charging', icon: Plug, cost_low: 800, cost_high: 2400, base_savings: 600, multiplier_key: 'electricity' },
+  { id: 'irrigation', name: 'Smart Irrigation', icon: Drop, cost_low: 400, cost_high: 1200, base_savings: 320, multiplier_key: 'water' },
+  { id: 'heatpump', name: 'Heat Pump', icon: ThermometerHot, cost_low: 4000, cost_high: 8000, base_savings: 720, multiplier_key: 'gas' },
+  { id: 'insulation', name: 'Insulation Upgrade', icon: Wall, cost_low: 2000, cost_high: 6000, base_savings: 540, multiplier_key: 'electricity' },
+  { id: 'waterheater', name: 'Smart Water Heater', icon: Shower, cost_low: 1200, cost_high: 3000, base_savings: 360, multiplier_key: 'gas' },
 ];
 
 /* ─── Icon colors per upgrade (replaces emojis) ─── */

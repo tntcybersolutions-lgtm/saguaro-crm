@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Money, CalendarBlank, Robot, DeviceMobile, FileText, HardHat } from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
 
 const DARK = '#0a0a0a';
 const GOLD = '#F59E0B';
@@ -232,38 +234,38 @@ export default function SwitchFromProcorePage() {
           </div>
 
           <div className="pain-grid">
-            {[
+            {([
               {
-                icon: '💸',
+                icon: Money,
                 title: 'Per-Seat Pricing That Never Stops',
                 body: 'Procore charges per user. Add 5 people to a project? That\'s $500+/mo more. We charge one flat rate for your whole company — forever.',
               },
               {
-                icon: '📅',
+                icon: CalendarBlank,
                 title: '6-Month Implementation Hell',
                 body: 'Procore\'s average implementation takes 4–6 months and requires a dedicated admin. We get you live fast — no consultants, no training contracts.',
               },
               {
-                icon: '🤖',
+                icon: Robot,
                 title: 'No Real AI Features',
                 body: 'Procore added AI branding but has no blueprint takeoff, no bid intelligence, no automated workflows. We built AI from day one — it\'s in every module.',
               },
               {
-                icon: '📱',
+                icon: DeviceMobile,
                 title: 'Field Access Is a Paid Add-On',
                 body: 'Procore charges extra for field access on top of per-seat pricing — plus IT approval and device management. Saguaro Control Systems is a free native iOS app, included for your whole crew.',
               },
               {
-                icon: '📄',
+                icon: FileText,
                 title: 'PDF Lien Waivers Still',
                 body: 'Procore still uses PDF lien waivers with manual tracking. We send, sign, and track lien waivers digitally in all 50 states — with auto-reminders.',
               },
               {
-                icon: '🏗️',
+                icon: HardHat,
                 title: 'No Certified Payroll',
                 body: 'Procore doesn\'t generate WH-347 certified payroll. We generate DOL-compliant reports automatically with live Davis-Bacon wage rates built in.',
               },
-            ].map((card) => (
+            ] as { icon: Icon; title: string; body: string }[]).map((card) => (
               <div key={card.title} className="pain-card">
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14,
@@ -273,9 +275,9 @@ export default function SwitchFromProcorePage() {
                     background: 'rgba(255,255,255,0.03)',
                     border: `1px solid rgba(255,255,255,0.08)`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.2rem', flexShrink: 0,
+                    flexShrink: 0,
                   }}>
-                    {card.icon}
+                    <card.icon size={20} weight="duotone" color={GOLD} />
                   </div>
                   <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: TEXT, lineHeight: 1.3 }}>
                     {card.title}

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import {
-  Plus, PencilSimple, Copy, Trash, Power, TreeStructure, CheckCircle, XCircle,
+  Plus, PencilSimple, Copy, Trash, Power, TreeStructure, Check, CheckCircle, XCircle,
   Clock, Users, ArrowRight, X, MagnifyingGlass, WarningCircle,
   CaretUp, CaretDown, ClipboardText, ChartBar, Gauge, ArrowClockwise, ListChecks,
 } from '@phosphor-icons/react';
@@ -833,7 +833,7 @@ export default function ApprovalWorkflowsPage() {
                   flex: 1, padding: '10px 12px', borderRadius: 6, textAlign: 'center', fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   background: wizardStep === i ? GOLD + '22' : BG, color: wizardStep === i ? GOLD : wizardStep > i ? GREEN : DIM,
                   border: `1px solid ${wizardStep === i ? GOLD : wizardStep > i ? GREEN + '50' : BORDER}`,
-                }} onClick={() => setWizardStep(i)}>{wizardStep > i ? '✓ ' : ''}{i + 1}. {label}</div>
+                }} onClick={() => setWizardStep(i)}>{wizardStep > i ? <Check size={12} weight="bold" color={GREEN} style={{ verticalAlign: '-1px', marginRight: 4 }} /> : null}{i + 1}. {label}</div>
               ))}
             </div>
 

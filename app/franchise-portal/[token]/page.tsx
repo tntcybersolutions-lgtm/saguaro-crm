@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { Check } from '@phosphor-icons/react';
 
 const C = {
   gold: '#F59E0B', green: '#34C759', yellow: '#FF9500', red: '#FF3B30', blue: '#F59E0B',
@@ -76,7 +77,7 @@ export default function FranchisePortalPage() {
       {data.milestones?.recentlyCompleted?.length > 0 && (
         <Section title="Recently Completed">
           {data.milestones.recentlyCompleted.map((m: any, i: number) => (
-            <Row key={i} left={<span>✓ {m.title}</span>} right={fmtDate(m.date)} color={C.green} />
+            <Row key={i} left={<span><Check size={13} weight="bold" style={{ verticalAlign: 'middle' }} /> {m.title}</span>} right={fmtDate(m.date)} color={C.green} />
           ))}
         </Section>
       )}
@@ -84,7 +85,7 @@ export default function FranchisePortalPage() {
       {data.verifications?.length > 0 && (
         <Section title="Verified On-Site">
           {data.verifications.map((v: any, i: number) => (
-            <Row key={i} left={<span>✓ {v.title}</span>} right={fmtDate(v.verified_at)} color={C.green} />
+            <Row key={i} left={<span><Check size={13} weight="bold" style={{ verticalAlign: 'middle' }} /> {v.title}</span>} right={fmtDate(v.verified_at)} color={C.green} />
           ))}
         </Section>
       )}

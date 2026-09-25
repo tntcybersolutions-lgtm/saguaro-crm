@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { Check, Lock, Warning } from '@phosphor-icons/react';
 
 const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#1a8a4a', RED = '#c03030', FIELD = '#1c1c1e';
 
@@ -129,7 +130,7 @@ export default function PrequalPortal() {
   if (notFound || !info) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif' }}>
       <div style={{ textAlign: 'center', color: RED, padding: 24 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠</div>
+        <div style={{ marginBottom: 16 }}><Warning size={48} weight="fill" /></div>
         <div style={{ fontSize: 20, fontWeight: 700 }}>Invalid or Expired Link</div>
         <div style={{ fontSize: 14, color: DIM, marginTop: 8 }}>This prequalification link is no longer valid. Please contact the general contractor who invited you.</div>
       </div>
@@ -139,7 +140,7 @@ export default function PrequalPortal() {
   if (submitted) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif' }}>
       <div style={{ textAlign: 'center', color: GREEN, padding: 24 }}>
-        <div style={{ fontSize: 64, marginBottom: 16 }}>✓</div>
+        <div style={{ marginBottom: 16 }}><Check size={64} weight="bold" /></div>
         <div style={{ fontSize: 24, fontWeight: 800, color: TEXT }}>Prequalification Submitted</div>
         <div style={{ fontSize: 14, color: DIM, marginTop: 12, maxWidth: 420 }}>
           Thank you{info.subName ? `, ${info.subName}` : ''}. Your prequalification has been securely submitted to <strong style={{ color: TEXT }}>{info.companyName}</strong> for review. You will be contacted regarding the outcome.
@@ -195,7 +196,7 @@ export default function PrequalPortal() {
             </button>
 
             <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: DIM }}>
-              🔒 Your information is transmitted securely · Powered by Saguaro Control Systems
+              <Lock size={12} weight="fill" style={{ verticalAlign: 'middle' }} /> Your information is transmitted securely · Powered by Saguaro Control Systems
             </div>
           </form>
         )}

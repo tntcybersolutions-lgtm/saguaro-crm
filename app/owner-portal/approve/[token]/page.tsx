@@ -1,8 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { Cactus, Check, CheckCircle, X, XCircle } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22a85e',RED='#ff7070';
 
 export default function OwnerApprovePage() {
   const params = useParams();
@@ -29,7 +30,7 @@ export default function OwnerApprovePage() {
   if (loading) return <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',color:DIM}}>Loading approval request...</div>;
 
   if (done) return <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-    <div style={{fontSize:52,marginBottom:16}}>{decision==='approved'?'✅':'❌'}</div>
+    <div style={{marginBottom:16}}>{decision==='approved'?<CheckCircle size={52} weight="fill" color={GREEN} />:<XCircle size={52} weight="fill" color={RED} />}</div>
     <div style={{fontSize:22,fontWeight:800,color:TEXT,marginBottom:8}}>{decision==='approved'?'Payment Approved':'Payment Rejected'}</div>
     <div style={{fontSize:14,color:DIM}}>The contractor has been notified.</div>
   </div>;
@@ -44,7 +45,7 @@ export default function OwnerApprovePage() {
       <div style={{maxWidth:640,margin:'0 auto'}}>
         {/* Header */}
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
-          <span style={{fontSize:24}}>🌵</span>
+          <Cactus size={24} weight="fill" color={GOLD} />
           <span style={{fontWeight:900,fontSize:18,letterSpacing:2,color:GOLD}}>SAGUARO</span>
           <span style={{fontSize:10,background:GOLD,color:'#1C1C1E',padding:'2px 8px',borderRadius:4,fontWeight:700}}>OWNER PORTAL</span>
         </div>
@@ -76,10 +77,10 @@ export default function OwnerApprovePage() {
 
             <div style={{display:'flex',gap:12}}>
               <button onClick={()=>{setDecision('approved');submit('approved');}} disabled={submitting} style={{flex:1,padding:14,background:'linear-gradient(135deg,#1a8a4a,#22a85e)',border:'none',borderRadius:8,color:'#fff',fontSize:15,fontWeight:800,cursor:'pointer',opacity:submitting?.7:1}}>
-                ✅ Approve — ${amount.toLocaleString()}
+                <Check size={16} weight="bold" /> Approve — ${amount.toLocaleString()}
               </button>
               <button onClick={()=>{setDecision('rejected');submit('rejected');}} disabled={submitting} style={{flex:1,padding:14,background:'rgba(192,48,48,.12)',border:'1px solid rgba(192,48,48,.3)',borderRadius:8,color:'#ff7070',fontSize:15,fontWeight:800,cursor:'pointer'}}>
-                ❌ Reject
+                <X size={16} weight="bold" /> Reject
               </button>
             </div>
 

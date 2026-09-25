@@ -52,6 +52,7 @@ import {
   WifiHigh,
   Broadcast,
   Briefcase,
+  CaretDown,
 } from '@phosphor-icons/react';
 import { colors, font, radius, shadow, sidebar as sidebarTokens, z } from '../lib/design-tokens';
 import { useWhiteLabel } from './WhiteLabelProvider';
@@ -59,6 +60,8 @@ import { useEntitlements } from '../lib/hooks/useEntitlements';
 import { moduleAccent } from '../lib/module-identity';
 import { Pill } from './ui/premium';
 import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import BrandMark from '@/components/BrandMark';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
@@ -463,6 +466,81 @@ export default function AppSidebar({
     }));
   }, [projectId]);
   const { features } = useEntitlements(); // fail-closed: gated items hidden until entitled
+
+  /* ── COLLAPSIBLE SECTIONS ────────────────────────────────────────────
+   *
+   * Company scope lists 25 tools; project scope lists about fifty. All of
+   * them, expanded, on every screen. That is the "too much in my face"
+   * complaint, and it is a real one: nobody uses fifty tools on a Tuesday.
+   *
+   * This is NOT the old core/showAll filtering that was removed, and the
+   * distinction matters. That system decided FOR you which items to hide,
+   * and its answer changed as you navigated, so the rail's shape moved and
+   * could never be learned. Here the section ORDER never changes, every
+   * section header is always present in the same place, and what is open is
+   * YOUR choice, remembered. A collapsed section is one click from open and
+   * it is exactly where it was yesterday.
+   *
+   * Defaults are chosen so a first-time user is not met with a wall:
+   * the section containing the page you are on is open, plus the first
+   * section. Everything else starts closed.
+   */
+  /* ── PER-PROJECT TOOL VISIBILITY ─────────────────────────────────────
+   *
+   * lib/project-tools already decides which of the 49 project modules a job
+   * should show: six core tools, plus anything with real work in it, plus
+   * whatever page you are standing on, with the rest one click behind "All
+   * tools". It was written for exactly the complaint that the rail is a wall.
+   *
+   * It was wired into the project layout's MOBILE slide-over and nowhere
+   * else, so a phone showed about eight tools and a desktop — the thing
+   * everyone actually uses — showed all forty-nine. The filter existed and
+   * the screen that needed it never called it.
+   *
+   * useProjectContext is SWR on one key per project with a 30s dedupe, and
+   * the project layout already subscribes to it, so reading it here costs no
+   * additional request.
+   */
+  const { ctx: projectCtx } = useProjectContext(projectId || null);
+  const [showAllTools, setShowAllTools] = useState(false);
+  const toolSignals = (projectCtx ?? null) as ToolSignals | null;
+
+  /** The project-relative href of the current page, so the filter can never
+   *  hide the row you are standing on. */
+  const activeProjectHref = React.useMemo(() => {
+    if (!projectId) return '';
+    const base = `/app/projects/${projectId}`;
+    const all = PROJECT_NAV_SECTIONS.flatMap((s) => s.items.map((i) => i.href));
+    const rel = pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
+    return all.find((h) => h !== '' && rel.startsWith(h)) ?? '';
+  }, [pathname, projectId]);
+
+  const hiddenTools = React.useMemo(() => {
+    if (!inProject) return 0;
+    const all = PROJECT_NAV_SECTIONS.flatMap((s) => s.items.map((i) => i.href));
+    return hiddenToolCount(all, toolSignals, activeProjectHref);
+  }, [inProject, toolSignals, activeProjectHref]);
+
+  const scopeKey = inProject ? 'project' : 'company';
+  const [openSections, setOpenSections] = useState<Record<string, boolean> | null>(null);
+
+  // Loaded after mount, not in the initializer, so server and client agree.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('sag_nav_open_' + scopeKey);
+      setOpenSections(raw ? JSON.parse(raw) : {});
+    } catch {
+      setOpenSections({});
+    }
+  }, [scopeKey]);
+
+  const toggleSection = React.useCallback((title: string, next: boolean) => {
+    setOpenSections((prev) => {
+      const merged = { ...(prev || {}), [title]: next };
+      try { window.localStorage.setItem('sag_nav_open_' + scopeKey, JSON.stringify(merged)); } catch { /* private mode */ }
+      return merged;
+    });
+  }, [scopeKey]);
   /* showAll, its stored preference and the hidden-item count are gone with the
      filtering they served. The rail shows everything this tenant has, in one
      order, on every screen — there is nothing left to reveal. */
@@ -532,33 +610,77 @@ export default function AppSidebar({
            * that is a stable difference between tenants, not a moving target
            * within one.
            */
-          const visibleItems = section.items.filter((item: any) => !item.gate || features[item.gate] === true);
+          const entitled = section.items.filter((item: any) => !item.gate || features[item.gate] === true);
+          /* Inside a project, also apply the tool filter — core tools, tools
+             with work in them, and the page you are on. Company scope is not
+             filtered: those 40 are the tenant's whole product. */
+          const visibleItems = inProject
+            ? entitled.filter((item: any) => {
+                const base = `/app/projects/${projectId}`;
+                const rel = item.href.startsWith(base) ? item.href.slice(base.length) : item.href;
+                return isToolVisible(rel, toolSignals, activeProjectHref, showAllTools);
+              })
+            : entitled;
           // Hide an entire section (title + divider) when the tenant sees none of its items.
           if (visibleItems.length === 0) return null;
+          /* Open when the user says so; before their preference has loaded,
+             or where they have expressed none, open the section holding the
+             current page plus the first one. A rail collapsed to icons has
+             no section headers to click, so it always shows everything. */
+          const holdsCurrentPage = visibleItems.some((item: any) => isActive(item.href));
+          const stored = openSections?.[section.title];
+          const isOpen = collapsed
+            ? true
+            : stored !== undefined ? stored : (holdsCurrentPage || sIdx === 0);
+
           return (
           <div key={section.title} style={{ marginBottom: sIdx === NAV_SECTIONS.length - 1 ? 4 : 14 }}>
-            {/* Section Title */}
+            {/* Section Title — a real button, so it is keyboard reachable and
+                announces its expanded state to a screen reader. */}
             {!collapsed && (
-              <div
+              <button
+                type="button"
+                onClick={() => toggleSection(section.title, !isOpen)}
+                aria-expanded={isOpen}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  width: '100%',
                   padding: '0 16px 6px 20px',
+                  background: 'transparent',
+                  border: 'none',
                   fontSize: '10px',
                   fontWeight: font.weight.bold,
                   color: colors.textFaint,
                   textTransform: 'uppercase',
                   letterSpacing: 1.4,
                   userSelect: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'left',
                 }}
               >
-                {section.title}
-              </div>
+                <span>{section.title}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  {/* A closed section says how much is inside, so nothing feels
+                      lost — you can see there are eleven tools in there. */}
+                  {!isOpen && (
+                    <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.75 }}>{visibleItems.length}</span>
+                  )}
+                  <CaretDown
+                    size={10}
+                    weight="bold"
+                    style={{ transform: isOpen ? 'none' : 'rotate(-90deg)', transition: 'transform .15s' }}
+                  />
+                </span>
+              </button>
             )}
             {collapsed && sIdx > 0 && (
               <div style={{ height: 1, background: colors.borderDim, margin: '8px 14px' }} />
             )}
 
             {/* Items */}
-            {visibleItems.map((item: any) => {
+            {isOpen && visibleItems.map((item: any) => {
               const active = isActive(item.href);
               const Icon = item.icon;
               const accent = item.accentKey ? moduleAccent(item.accentKey) : null;
@@ -676,9 +798,38 @@ export default function AppSidebar({
           </div>
           );
         })}
+        {/* ── "All tools" ────────────────────────────────────────────
+            Only inside a project, and only when the tool filter is actually
+            holding something back. Company scope has no such control because
+            it is not filtered.
+
+            This is not the old showAll toggle that was removed. That one hid
+            COMPANY items by a rule the user never set, so the rail's shape
+            changed as you navigated. This hides only project modules with no
+            work in them, never the page you are on, it says how many, and
+            one click brings every one of them back. */}
+        {inProject && !collapsed && hiddenTools > 0 && (
+          <div style={{ padding: '2px 12px 12px' }}>
+            <button
+              type="button"
+              onClick={() => setShowAllTools((v) => !v)}
+              aria-expanded={showAllTools}
+              style={{
+                width: '100%', minHeight: 40, display: 'flex', alignItems: 'center',
+                justifyContent: 'space-between', gap: 8, padding: '0 10px',
+                background: 'transparent', border: `1px dashed ${colors.borderDim}`,
+                borderRadius: 8, color: colors.textFaint, fontSize: 11.5,
+                fontWeight: font.weight.semibold, cursor: 'pointer',
+              }}
+            >
+              <span>{showAllTools ? 'Show fewer tools' : 'All tools'}</span>
+              {!showAllTools && <span style={{ opacity: 0.75, fontVariantNumeric: 'tabular-nums' }}>+{hiddenTools}</span>}
+            </button>
+          </div>
+        )}
       </nav>
 
-      {/* No reveal toggle: the rail already lists everything this tenant has. */}
+      {/* Company scope is unfiltered — it lists everything this tenant has. */}
 
       {/* ── Bottom Section (Settings + Collapse) ────────────────────── */}
       <div style={{ borderTop: `1px solid ${colors.border}`, padding: '8px 0', flexShrink: 0 }}>

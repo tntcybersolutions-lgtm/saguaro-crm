@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { Cactus, Check, Lock, Warning } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
 
@@ -68,7 +69,7 @@ export default function W9Portal() {
   if (!info) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif' }}>
       <div style={{ textAlign: 'center', color: RED }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠</div>
+        <div style={{ marginBottom: 16 }}><Warning size={48} weight="fill" /></div>
         <div style={{ fontSize: 20, fontWeight: 700 }}>Invalid or Expired Link</div>
         <div style={{ fontSize: 14, color: DIM, marginTop: 8 }}>This W-9 request link is no longer valid. Please contact your project manager.</div>
       </div>
@@ -78,7 +79,7 @@ export default function W9Portal() {
   if (submitted) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif' }}>
       <div style={{ textAlign: 'center', color: GREEN }}>
-        <div style={{ fontSize: 64, marginBottom: 16 }}>✓</div>
+        <div style={{ marginBottom: 16 }}><Check size={64} weight="bold" /></div>
         <div style={{ fontSize: 24, fontWeight: 800, color: TEXT }}>W-9 Submitted Successfully</div>
         <div style={{ fontSize: 14, color: DIM, marginTop: 12, maxWidth: 400 }}>
           Thank you, <strong style={{ color: TEXT }}>{info.vendorName}</strong>. Your W-9 information has been securely submitted for the project <strong style={{ color: TEXT }}>{info.projectName}</strong>. You will receive a confirmation email shortly.
@@ -91,7 +92,7 @@ export default function W9Portal() {
     <div style={{ minHeight: '100vh', background: DARK, fontFamily: 'system-ui,sans-serif', color: TEXT }}>
       {/* Header */}
       <div style={{ background: 'rgba(20,20,22,.96)', borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 22 }}>🌵</span>
+        <Cactus size={22} weight="fill" color={GOLD} />
         <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1 }}>SAGUARO CONTROL SYSTEMS</span>
         <span style={{ fontSize: 11, color: DIM, marginLeft: 8 }}>Secure W-9 Collection Portal</span>
       </div>
@@ -196,7 +197,7 @@ export default function W9Portal() {
           </button>
 
           <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: DIM }}>
-            🔒 256-bit encrypted · Your information is never sold or shared · Powered by Saguaro Control Systems
+            <Lock size={12} weight="fill" style={{ verticalAlign: 'middle' }} /> 256-bit encrypted · Your information is never sold or shared · Powered by Saguaro Control Systems
           </div>
         </form>
       </div>

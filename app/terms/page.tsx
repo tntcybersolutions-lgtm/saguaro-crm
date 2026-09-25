@@ -1,11 +1,12 @@
 'use client';
 import React from 'react';
+import { Cactus } from '@phosphor-icons/react';
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 export default function TermsPage(){
   return (
     <div style={{minHeight:'100vh',background:DARK,color:TEXT,fontFamily:'system-ui,sans-serif'}}>
       <nav style={{position:'fixed' as const,top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(20,20,22,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 32px',backdropFilter:'blur(12px)'}}>
-        <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}><span style={{fontSize:22}}>🌵</span><span style={{fontWeight:800,fontSize:16,letterSpacing:1,color:GOLD}}>SAGUARO</span></a>
+        <a href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}><Cactus size={22} weight="fill" color={GOLD} /><span style={{fontWeight:800,fontSize:16,letterSpacing:1,color:GOLD}}>SAGUARO</span></a>
       </nav>
       <div style={{maxWidth:780,margin:'0 auto',padding:'88px 32px 60px'}}>
         <h1 style={{fontSize:36,fontWeight:900,marginBottom:8}}>Terms of Service</h1>

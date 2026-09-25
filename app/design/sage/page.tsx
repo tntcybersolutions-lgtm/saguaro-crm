@@ -1,5 +1,7 @@
 'use client';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import type { Icon } from '@phosphor-icons/react';
+import { Cactus, CookingPot, Eye, House, Lightning, Question, Smiley, SmileyAngry, Sun, Wrench } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
 const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
@@ -12,19 +14,19 @@ const glass: React.CSSProperties = {
 };
 
 /* ─── Tone Detection ─── */
-const TONE_PATTERNS: { pattern: RegExp; tone: string; emoji: string }[] = [
-  { pattern: /\b(frustrated|annoyed|angry|upset|hate|terrible|awful|worst|ridiculous)\b/i, tone: 'frustrated', emoji: '😤' },
-  { pattern: /\b(excited|amazing|love|awesome|great|fantastic|perfect|beautiful|wonderful)\b/i, tone: 'excited', emoji: '😊' },
-  { pattern: /\b(how|what|why|when|where|can you|could you|wondering|curious|question)\b/i, tone: 'curious', emoji: '🤔' },
-  { pattern: /\b(urgent|asap|hurry|immediately|emergency|fast|quick|now)\b/i, tone: 'urgent', emoji: '⚡' },
-  { pattern: /\b(looking|browsing|exploring|checking|interested|tell me|show me)\b/i, tone: 'browsing', emoji: '👀' },
+const TONE_PATTERNS: { pattern: RegExp; tone: string; emoji: Icon }[] = [
+  { pattern: /\b(frustrated|annoyed|angry|upset|hate|terrible|awful|worst|ridiculous)\b/i, tone: 'frustrated', emoji: SmileyAngry },
+  { pattern: /\b(excited|amazing|love|awesome|great|fantastic|perfect|beautiful|wonderful)\b/i, tone: 'excited', emoji: Smiley },
+  { pattern: /\b(how|what|why|when|where|can you|could you|wondering|curious|question)\b/i, tone: 'curious', emoji: Question },
+  { pattern: /\b(urgent|asap|hurry|immediately|emergency|fast|quick|now)\b/i, tone: 'urgent', emoji: Lightning },
+  { pattern: /\b(looking|browsing|exploring|checking|interested|tell me|show me)\b/i, tone: 'browsing', emoji: Eye },
 ];
 
-function detectTone(text: string): { tone: string; emoji: string } {
+function detectTone(text: string): { tone: string; emoji: Icon } {
   for (const tp of TONE_PATTERNS) {
     if (tp.pattern.test(text)) return { tone: tp.tone, emoji: tp.emoji };
   }
-  return { tone: 'neutral', emoji: '😊' };
+  return { tone: 'neutral', emoji: Smiley };
 }
 
 /* ─── Location Detection ─── */
@@ -33,15 +35,15 @@ const STATE_PATTERN = /\b(Arizona|California|Colorado|Florida|Georgia|Texas|Neva
 
 type ChatMessage = {
   id: string; role: 'user' | 'assistant'; content: string;
-  tone?: { tone: string; emoji: string };
+  tone?: { tone: string; emoji: Icon };
   upsell?: { title: string; price: string; image?: string; link: string };
 };
 
-const SUGGESTED_PROMPTS = [
-  { text: 'What would a kitchen remodel cost?', icon: '🍳' },
-  { text: 'How much can I save with solar?', icon: '☀️' },
-  { text: 'Design my dream home', icon: '🏠' },
-  { text: 'Find me a contractor', icon: '🔧' },
+const SUGGESTED_PROMPTS: { text: string; icon: Icon }[] = [
+  { text: 'What would a kitchen remodel cost?', icon: CookingPot },
+  { text: 'How much can I save with solar?', icon: Sun },
+  { text: 'Design my dream home', icon: House },
+  { text: 'Find me a contractor', icon: Wrench },
 ];
 
 /* ─── Upsell Extraction ─── */
@@ -65,7 +67,7 @@ export default function SageChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId] = useState(() => `sage_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`);
-  const [currentTone, setCurrentTone] = useState({ tone: 'neutral', emoji: '😊' });
+  const [currentTone, setCurrentTone] = useState<{ tone: string; emoji: Icon }>({ tone: 'neutral', emoji: Smiley });
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -99,7 +101,7 @@ export default function SageChatPage() {
 
       const assistantMsg: ChatMessage = {
         id: `a_${Date.now()}`, role: 'assistant', content: responseText,
-        tone: { tone: 'neutral', emoji: '😊' }, upsell,
+        tone: { tone: 'neutral', emoji: Smiley }, upsell,
       };
       setMessages(prev => [...prev, assistantMsg]);
     } catch {
@@ -135,12 +137,12 @@ export default function SageChatPage() {
           width: 40, height: 40, borderRadius: 12, background: `${GOLD}20`,
           border: `1px solid ${GOLD}40`, display: 'flex', alignItems: 'center',
           justifyContent: 'center', fontSize: 22,
-        }}>🌵</div>
+        }}><Cactus size={22} weight="duotone" color={GREEN} /></div>
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>
             Sage
             <span style={{ fontSize: 14, marginLeft: 6 }} title={currentTone.tone}>
-              {currentTone.emoji}
+              <currentTone.emoji size={14} weight="duotone" color={GOLD} />
             </span>
           </div>
           <div style={{ fontSize: 12, color: DIM }}>
@@ -160,7 +162,7 @@ export default function SageChatPage() {
       }}>
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', paddingTop: 60 }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>🌵</div>
+            <div style={{ fontSize: 64, marginBottom: 16 }}><Cactus size={64} weight="duotone" color={GREEN} /></div>
             <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8 }}>
               Hey there! I&apos;m <span style={{ color: GOLD }}>Sage</span>.
             </h2>
@@ -177,7 +179,7 @@ export default function SageChatPage() {
                   ...glass, padding: '16px 14px', textAlign: 'left', cursor: 'pointer',
                   transition: 'border-color .2s',
                 }}>
-                  <span style={{ fontSize: 20, marginRight: 8 }}>{sp.icon}</span>
+                  <span style={{ fontSize: 20, marginRight: 8 }}><sp.icon size={20} weight="duotone" color={GOLD} /></span>
                   <span style={{ fontSize: 13, fontWeight: 600 }}>{sp.text}</span>
                 </button>
               ))}
@@ -200,7 +202,7 @@ export default function SageChatPage() {
                   width: 32, height: 32, borderRadius: 10, background: `${GOLD}20`,
                   border: `1px solid ${GOLD}30`, display: 'flex', alignItems: 'center',
                   justifyContent: 'center', fontSize: 16, flexShrink: 0,
-                }}>🌵</div>
+                }}><Cactus size={16} weight="duotone" color={GREEN} /></div>
               )}
               <div>
                 <div style={{
@@ -251,7 +253,7 @@ export default function SageChatPage() {
               width: 32, height: 32, borderRadius: 10, background: `${GOLD}20`,
               border: `1px solid ${GOLD}30`, display: 'flex', alignItems: 'center',
               justifyContent: 'center', fontSize: 16, flexShrink: 0,
-            }}>🌵</div>
+            }}><Cactus size={16} weight="duotone" color={GREEN} /></div>
             <div style={{
               ...glass, padding: '14px 20px', borderBottomLeftRadius: 4,
               display: 'flex', gap: 6,

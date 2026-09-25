@@ -1,5 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import type { Icon } from '@phosphor-icons/react';
+import { Bathtub, CookingPot, GridFour, Lightbulb, Log, Mountains, Nut, Palette } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
 const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
@@ -12,15 +14,15 @@ const glass: React.CSSProperties = {
 };
 
 /* ─── Categories & Products ─── */
-const CATEGORIES = [
-  { id: 'flooring', label: 'Flooring', icon: '🪵' },
-  { id: 'countertops', label: 'Countertops', icon: '🪨' },
-  { id: 'tile', label: 'Tile', icon: '🧱' },
-  { id: 'fixtures', label: 'Fixtures', icon: '🚰' },
-  { id: 'paint', label: 'Paint', icon: '🎨' },
-  { id: 'appliances', label: 'Appliances', icon: '🍳' },
-  { id: 'lighting', label: 'Lighting', icon: '💡' },
-  { id: 'hardware', label: 'Hardware', icon: '🔩' },
+const CATEGORIES: { id: string; label: string; icon: Icon }[] = [
+  { id: 'flooring', label: 'Flooring', icon: Log },
+  { id: 'countertops', label: 'Countertops', icon: Mountains },
+  { id: 'tile', label: 'Tile', icon: GridFour },
+  { id: 'fixtures', label: 'Fixtures', icon: Bathtub },
+  { id: 'paint', label: 'Paint', icon: Palette },
+  { id: 'appliances', label: 'Appliances', icon: CookingPot },
+  { id: 'lighting', label: 'Lighting', icon: Lightbulb },
+  { id: 'hardware', label: 'Hardware', icon: Nut },
 ];
 
 type Product = {
@@ -183,7 +185,7 @@ export default function MaterialsPage() {
               fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .2s',
               backdropFilter: 'blur(8px)',
             }}>
-              {cat.icon} {cat.label}
+              <cat.icon size={14} weight="duotone" /> {cat.label}
             </button>
           ))}
         </div>

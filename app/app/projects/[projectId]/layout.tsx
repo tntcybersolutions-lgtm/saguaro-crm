@@ -24,11 +24,23 @@ const BORDER = 'rgba(255,255,255,0.12)'; const DIM = '#CBD5E1'; const TEXT = '#F
 // the module's VIVID chip when active and a vivid-tinted glyph when inactive.
 const NAV_SECTIONS = [
   {
+    /* Overview is the project's home, not a preconstruction tool, so it sits
+       alone above the phases — the same place Procore puts Project Home. */
     label: 'PROJECT',
     items: [
       { label: 'Overview',        href: '',                   icon: SquaresFour, badge: null },
+    ],
+  },
+  {
+    /* Bid Packages moved here from EXECUTION. You send bid packages to price
+       the job, before anyone is awarded anything — filing it under Execution
+       put a preconstruction activity after contracts in a nav that otherwise
+       reads as the order work happens. */
+    label: 'PRECONSTRUCTION',
+    items: [
       { label: 'Takeoff',         href: '/takeoff',           icon: Ruler, badge: null, accent: 'takeoff' },
       { label: 'Estimate',        href: '/estimate',          icon: Calculator, badge: null, accent: 'estimates' },
+      { label: 'Bid Packages',          href: '/bid-packages',      icon: Package, badge: null, accent: 'bids' },
       { label: 'Proposal',        href: '/proposal',          icon: FileText, badge: null },
     ],
   },
@@ -36,7 +48,6 @@ const NAV_SECTIONS = [
     label: 'EXECUTION',
     items: [
       { label: 'Schedule',              href: '/schedule',          icon: CalendarBlank, badge: null, accent: 'schedule' },
-      { label: 'Bid Packages',          href: '/bid-packages',      icon: Package, badge: null, accent: 'bids' },
       { label: 'Selections & Allowances', href: '/selections',      icon: Palette, badge: null },
       { label: 'Contracts',             href: '/contracts',         icon: Clipboard, badge: null, accent: 'contracts' },
       { label: 'PO & Subcontracts',     href: '/purchase-orders',   icon: NotePencil, badge: null },

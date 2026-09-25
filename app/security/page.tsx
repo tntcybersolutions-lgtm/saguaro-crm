@@ -1,5 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
+import { LockKey, Lock, ShieldCheck, Wall, Globe, Flask, Prohibit, Package, Trash } from '@phosphor-icons/react/dist/ssr';
+import type { Icon } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
 
@@ -14,13 +16,13 @@ const NAV = (
   </nav>
 );
 
-const FEATURES = [
-  {icon:'🔐',title:'SOC 2 Type II',desc:'Audit in progress. We follow SOC 2 security, availability, and confidentiality trust principles. Expected certification Q3 2026.',color:'rgba(245, 158, 11,.15)',border:'rgba(245, 158, 11,.3)'},
-  {icon:'🔒',title:'256-bit AES Encryption',desc:'All data at rest is encrypted using AES-256, the same standard used by banks and government agencies. Your data is unreadable without your credentials.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
-  {icon:'🛡️',title:'TLS 1.3 in Transit',desc:'Every byte transferred between your browser and our servers is protected with TLS 1.3. We enforce HTTPS everywhere and reject older protocols.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
-  {icon:'🧱',title:'Row-Level Security',desc:'Powered by Supabase RLS policies. Each user can only access their own organization\'s data — enforced at the database layer, not just the application layer.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
-  {icon:'🌍',title:'GDPR Compliant',desc:'We honor data subject rights: access, correction, deletion, and export. Data processing agreements available. EU residents can request their data at any time.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
-  {icon:'🧪',title:'Penetration Testing',desc:'Annual third-party penetration tests are conducted by independent security firms. Findings are remediated within 30 days. Reports available under NDA for Enterprise customers.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
+const FEATURES: { icon: Icon; title: string; desc: string; color: string; border: string }[] = [
+  {icon:LockKey,title:'SOC 2 Type II',desc:'Audit in progress. We follow SOC 2 security, availability, and confidentiality trust principles. Expected certification Q3 2026.',color:'rgba(245, 158, 11,.15)',border:'rgba(245, 158, 11,.3)'},
+  {icon:Lock,title:'256-bit AES Encryption',desc:'All data at rest is encrypted using AES-256, the same standard used by banks and government agencies. Your data is unreadable without your credentials.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
+  {icon:ShieldCheck,title:'TLS 1.3 in Transit',desc:'Every byte transferred between your browser and our servers is protected with TLS 1.3. We enforce HTTPS everywhere and reject older protocols.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
+  {icon:Wall,title:'Row-Level Security',desc:'Powered by Supabase RLS policies. Each user can only access their own organization\'s data — enforced at the database layer, not just the application layer.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
+  {icon:Globe,title:'GDPR Compliant',desc:'We honor data subject rights: access, correction, deletion, and export. Data processing agreements available. EU residents can request their data at any time.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
+  {icon:Flask,title:'Penetration Testing',desc:'Annual third-party penetration tests are conducted by independent security firms. Findings are remediated within 30 days. Reports available under NDA for Enterprise customers.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
 ];
 
 const INFRA = [
@@ -32,10 +34,10 @@ const INFRA = [
   {label:'Database',value:'PostgreSQL 15 (Supabase managed)'},
 ];
 
-const DATA = [
-  {icon:'🚫',title:'We Never Sell Your Data',desc:'Your project data, documents, and company information are never sold to third parties — ever. Period.'},
-  {icon:'📦',title:'Data Export Anytime',desc:'Export all your data in machine-readable JSON or CSV format at any time from Settings. No hoops to jump through.'},
-  {icon:'🗑️',title:'30-Day Retention After Cancel',desc:'When you cancel, your data is preserved for 30 days. After that it is permanently deleted. You can also request immediate deletion.'},
+const DATA: { icon: Icon; title: string; desc: string }[] = [
+  {icon:Prohibit,title:'We Never Sell Your Data',desc:'Your project data, documents, and company information are never sold to third parties — ever. Period.'},
+  {icon:Package,title:'Data Export Anytime',desc:'Export all your data in machine-readable JSON or CSV format at any time from Settings. No hoops to jump through.'},
+  {icon:Trash,title:'30-Day Retention After Cancel',desc:'When you cancel, your data is preserved for 30 days. After that it is permanently deleted. You can also request immediate deletion.'},
 ];
 
 export default function SecurityPage() {
@@ -60,7 +62,7 @@ export default function SecurityPage() {
         <div className="sec-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:0}}>
           {FEATURES.map((f,i)=>(
             <div key={f.title} style={{padding:'28px',borderTop:`1px solid ${HAIRLINE}`,borderRight:i%3!==2?`1px solid ${HAIRLINE}`:'none'}}>
-              <div style={{width:44,height:44,borderRadius:12,background:'rgba(255,255,255,0.03)',border:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:14}}>{f.icon}</div>
+              <div style={{width:44,height:44,borderRadius:12,background:'rgba(255,255,255,0.03)',border:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14}}><f.icon size={20} weight="duotone" color={GOLD} /></div>
               <div style={{fontWeight:600,fontSize:15,color:TEXT,marginBottom:8}}>{f.title}</div>
               <div style={{fontSize:13,color:DIM,lineHeight:1.7}}>{f.desc}</div>
             </div>
@@ -91,7 +93,7 @@ export default function SecurityPage() {
         <div className="data-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:0}}>
           {DATA.map((d,i)=>(
             <div key={d.title} style={{padding:'0 28px',borderRight:i<2?`1px solid ${HAIRLINE}`:'none'}}>
-              <div style={{width:44,height:44,borderRadius:12,background:'rgba(255,255,255,0.03)',border:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,marginBottom:14}}>{d.icon}</div>
+              <div style={{width:44,height:44,borderRadius:12,background:'rgba(255,255,255,0.03)',border:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:14}}><d.icon size={20} weight="duotone" color={GOLD} /></div>
               <div style={{fontWeight:600,fontSize:15,color:TEXT,marginBottom:8}}>{d.title}</div>
               <div style={{fontSize:13,color:DIM,lineHeight:1.7}}>{d.desc}</div>
             </div>

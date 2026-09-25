@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js';
+import { Cactus, EnvelopeOpen, Warning } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 
@@ -36,7 +37,7 @@ export default function ForgotPasswordPage(){
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
       <nav style={{padding:'0 24px',height:56,display:'flex',alignItems:'center',borderBottom:`1px solid ${BORDER}`}}>
         <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
-          <span style={{fontSize:22}}>🌵</span>
+          <Cactus size={22} weight="fill" color={GOLD} />
           <span style={{fontWeight:900,fontSize:16,color:GOLD,letterSpacing:1}}>SAGUARO</span>
         </Link>
       </nav>
@@ -44,7 +45,7 @@ export default function ForgotPasswordPage(){
         <div style={{width:'100%',maxWidth:400}}>
           {sent ? (
             <div style={{textAlign:'center'}}>
-              <div style={{fontSize:52,marginBottom:16}}>📬</div>
+              <div style={{marginBottom:16}}><EnvelopeOpen size={52} weight="duotone" color={GOLD} /></div>
               <h1 style={{fontSize:22,fontWeight:800,color:TEXT,marginBottom:10}}>Check your email</h1>
               <p style={{color:DIM,fontSize:14,lineHeight:1.6,marginBottom:24}}>We sent a password reset link to <strong style={{color:TEXT}}>{email}</strong>.</p>
               <Link href="/login" style={{display:'block',padding:'12px',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,borderRadius:9,color:'#1C1C1E',fontWeight:800,fontSize:14,textDecoration:'none',textAlign:'center'}}>Back to Login</Link>
@@ -56,7 +57,7 @@ export default function ForgotPasswordPage(){
                 <p style={{color:DIM,fontSize:14,margin:0}}>Enter your email and we'll send a reset link</p>
               </div>
               <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:32}}>
-                {error&&<div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}>⚠️ {error}</div>}
+                {error&&<div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}><Warning size={14} weight="fill" style={{verticalAlign:'middle'}} /> {error}</div>}
                 <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div>
                     <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:6}}>Work Email</label>

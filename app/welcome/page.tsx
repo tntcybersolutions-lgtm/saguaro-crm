@@ -1,6 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Globe, Ruler, DeviceMobile, UsersThree, Laptop, AndroidLogo, DeviceTablet } from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
 
 const GOLD  = '#F59E0B';
 const DARK  = '#0a0a0a';
@@ -65,10 +67,10 @@ export default function WelcomePage() {
         <div style={{ marginBottom: 48 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 20 }}>Get the most out of your first 10 minutes:</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '32px 40px' }}>
-            {[
+            {([
               {
                 step: '1',
-                icon: '🌐',
+                icon: Globe,
                 title: 'Access your dashboard',
                 desc: 'Go to saguarocontrol.net/app in any browser — Chrome, Safari, Edge, Firefox. Log in with your email and password.',
                 href: '/app',
@@ -77,7 +79,7 @@ export default function WelcomePage() {
               },
               {
                 step: '2',
-                icon: '📐',
+                icon: Ruler,
                 title: 'Upload your first blueprint',
                 desc: 'Drop any PDF blueprint and Sage AI reads every dimension and generates a full material takeoff in under 60 seconds.',
                 href: '/app/takeoff',
@@ -86,7 +88,7 @@ export default function WelcomePage() {
               },
               {
                 step: '3',
-                icon: '📱',
+                icon: DeviceMobile,
                 title: 'Install on your phone',
                 desc: 'Download Saguaro Control Systems free from Apple TestFlight on your iPhone or iPad. Android coming soon.',
                 href: '/get-the-app',
@@ -95,17 +97,17 @@ export default function WelcomePage() {
               },
               {
                 step: '4',
-                icon: '👥',
+                icon: UsersThree,
                 title: 'Invite your team',
                 desc: 'Add unlimited PMs, supers, estimators, and field crew. Your entire company is included — no per-seat fees ever.',
                 href: '/app',
                 cta: 'Invite Team →',
                 primary: false,
               },
-            ].map((item, i) => (
+            ] as { step: string; icon: Icon; title: string; desc: string; href: string; cta: string; primary: boolean }[]).map((item, i) => (
               <div key={i} style={{ position: 'relative' }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: MUTED, letterSpacing: 1, marginBottom: 10 }}>Step {item.step}</div>
-                <div style={{ fontSize: 22, marginBottom: 12 }}>{item.icon}</div>
+                <div style={{ marginBottom: 12 }}><item.icon size={22} weight="duotone" color={GOLD} /></div>
                 <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{item.title}</div>
                 <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6, marginBottom: 16 }}>{item.desc}</div>
                 {item.primary ? (
@@ -126,14 +128,14 @@ export default function WelcomePage() {
         <div style={{ marginBottom: 40, paddingTop: 32, borderTop: `1px solid ${HAIR}` }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 20 }}>Access Saguaro on any device:</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '20px 28px' }}>
-            {[
-              { icon: '💻', device: 'Desktop / Laptop', how: 'Open your browser → saguarocontrol.net/app' },
-              { icon: '📱', device: 'iPhone / iPad', how: 'Download free on TestFlight' },
-              { icon: '🤖', device: 'Android', how: 'Coming soon' },
-              { icon: '🖥️', device: 'Tablet', how: 'Any browser → works full screen' },
-            ].map((d, i) => (
+            {([
+              { icon: Laptop, device: 'Desktop / Laptop', how: 'Open your browser → saguarocontrol.net/app' },
+              { icon: DeviceMobile, device: 'iPhone / iPad', how: 'Download free on TestFlight' },
+              { icon: AndroidLogo, device: 'Android', how: 'Coming soon' },
+              { icon: DeviceTablet, device: 'Tablet', how: 'Any browser → works full screen' },
+            ] as { icon: Icon; device: string; how: string }[]).map((d, i) => (
               <div key={i}>
-                <div style={{ fontSize: 20, marginBottom: 8 }}>{d.icon}</div>
+                <div style={{ marginBottom: 8 }}><d.icon size={20} weight="duotone" color={GOLD} /></div>
                 <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, marginBottom: 4 }}>{d.device}</div>
                 <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>{d.how}</div>
               </div>

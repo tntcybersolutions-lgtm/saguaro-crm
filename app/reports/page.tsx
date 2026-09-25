@@ -2,20 +2,22 @@
 import React, { useState } from 'react';
 import { humanError } from '@/lib/errors';
 import MarketingNav from '@/components/MarketingNav';
+import { CurrencyDollar, TrendUp, CalendarBlank, Receipt, FileLock, ShieldCheck, Warning, ClipboardText, ArrowsClockwise, HardHat, Hourglass, FilePdf, DownloadSimple } from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DIM='#CBD5E1',TEXT='#FFFFFF',HAIR='rgba(255,255,255,0.08)';
 
-const REPORTS = [
-  { icon:'💰', title:'Job Cost Report',          desc:'Budget vs actuals by cost code, variance analysis',              reportType:'job-cost' },
-  { icon:'📈', title:'Bid Win/Loss Summary',      desc:'Win rate by trade, margin analysis, competitor comparison',      reportType:'bid-win-loss' },
-  { icon:'📅', title:'Schedule Variance Report',  desc:'Critical path delays, milestone status, float analysis',        reportType:'schedule-variance' },
-  { icon:'🧾', title:'Pay Application Status',    desc:'All pay apps — billed, certified, paid, retainage held',        reportType:'pay-app-status' },
-  { icon:'🔏', title:'Lien Waiver Log',           desc:'All conditional and unconditional waivers by project and sub',  reportType:'lien-waiver-log' },
-  { icon:'🛡️', title:'Insurance Compliance',     desc:'COI status, expiry dates, deficiencies by subcontractor',      reportType:'insurance-compliance' },
-  { icon:'⚠️', title:'Autopilot Alert History',  desc:'All AI alerts — open, acknowledged, resolved by project',      reportType:'autopilot-alerts' },
-  { icon:'📋', title:'RFI Log',                   desc:'All RFIs with status, cost/schedule impact, response times',    reportType:'rfi-log' },
-  { icon:'🔄', title:'Change Order Log',          desc:'All change orders — status, cost impact, schedule impact',      reportType:'change-order-log' },
-  { icon:'🏗️', title:'Sub Compliance',           desc:'W-9, insurance, license status by subcontractor',              reportType:'sub-compliance' },
+const REPORTS: { icon: Icon; title: string; desc: string; reportType: string }[] = [
+  { icon:CurrencyDollar, title:'Job Cost Report',          desc:'Budget vs actuals by cost code, variance analysis',              reportType:'job-cost' },
+  { icon:TrendUp, title:'Bid Win/Loss Summary',      desc:'Win rate by trade, margin analysis, competitor comparison',      reportType:'bid-win-loss' },
+  { icon:CalendarBlank, title:'Schedule Variance Report',  desc:'Critical path delays, milestone status, float analysis',        reportType:'schedule-variance' },
+  { icon:Receipt, title:'Pay Application Status',    desc:'All pay apps — billed, certified, paid, retainage held',        reportType:'pay-app-status' },
+  { icon:FileLock, title:'Lien Waiver Log',           desc:'All conditional and unconditional waivers by project and sub',  reportType:'lien-waiver-log' },
+  { icon:ShieldCheck, title:'Insurance Compliance',     desc:'COI status, expiry dates, deficiencies by subcontractor',      reportType:'insurance-compliance' },
+  { icon:Warning, title:'Autopilot Alert History',  desc:'All AI alerts — open, acknowledged, resolved by project',      reportType:'autopilot-alerts' },
+  { icon:ClipboardText, title:'RFI Log',                   desc:'All RFIs with status, cost/schedule impact, response times',    reportType:'rfi-log' },
+  { icon:ArrowsClockwise, title:'Change Order Log',          desc:'All change orders — status, cost impact, schedule impact',      reportType:'change-order-log' },
+  { icon:HardHat, title:'Sub Compliance',           desc:'W-9, insurance, license status by subcontractor',              reportType:'sub-compliance' },
 ];
 
 type Toast = { msg: string; type: 'success' | 'error' } | null;
@@ -95,8 +97,8 @@ export default function ReportsPage() {
           const busy = pdfBusy || csvBusy;
           return (
             <div key={r.reportType} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 0', borderBottom: `1px solid ${HAIR}` }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${HAIR}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                {r.icon}
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${HAIR}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <r.icon size={20} weight="duotone" color={GOLD} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, color: TEXT, fontSize: 14, marginBottom: 3 }}>{r.title}</div>
@@ -108,14 +110,14 @@ export default function ReportsPage() {
                   disabled={busy}
                   style={{ padding: '7px 14px', background: GOLD, border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 12, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1, minWidth: 118 }}
                 >
-                  {pdfBusy ? '⏳ Generating...' : '📄 Download PDF'}
+                  {pdfBusy ? <><Hourglass size={13} weight="duotone" style={{ verticalAlign: -2 }} /> Generating...</> : <><FilePdf size={13} weight="duotone" style={{ verticalAlign: -2 }} /> Download PDF</>}
                 </button>
                 <button
                   onClick={() => downloadReport(r.reportType, r.title, 'csv')}
                   disabled={busy}
                   style={{ padding: '7px 12px', background: 'transparent', border: `1px solid ${HAIR}`, borderRadius: 8, color: csvBusy ? TEXT : DIM, fontSize: 12, fontWeight: 500, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1 }}
                 >
-                  {csvBusy ? '⏳...' : '⬇ CSV'}
+                  {csvBusy ? <><Hourglass size={13} weight="duotone" style={{ verticalAlign: -2 }} />...</> : <><DownloadSimple size={13} weight="duotone" style={{ verticalAlign: -2 }} /> CSV</>}
                 </button>
               </div>
             </div>

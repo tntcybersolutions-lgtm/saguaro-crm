@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ChatCircleDots, Lifebuoy, LockKey } from '@phosphor-icons/react';
+import type { Icon } from '@phosphor-icons/react';
 
 const C = {
   dark: '#0B0B0F',
@@ -29,9 +31,9 @@ const SUPPORT_EMAIL = 'support@saguarocontrol.net';
 const SALES_EMAIL = 'sales@saguarocontrol.net';
 const SECURITY_EMAIL = 'security@saguarocontrol.net';
 
-const CHANNELS = [
+const CHANNELS: { icon: Icon; title: string; desc: string; line: string; href: string; accent: string }[] = [
   {
-    icon: '💬',
+    icon: ChatCircleDots,
     title: 'Sales & Demos',
     desc: 'Want a walkthrough of AI takeoffs, Sage AI, or the field app? Talk to a real estimator who uses Saguaro every day.',
     line: SALES_EMAIL,
@@ -39,7 +41,7 @@ const CHANNELS = [
     accent: C.gold,
   },
   {
-    icon: '🛟',
+    icon: Lifebuoy,
     title: 'Customer Support',
     desc: 'Already on Saguaro? Reach our support team for help with pay apps, lien waivers, RFIs, or anything in your account.',
     line: SUPPORT_EMAIL,
@@ -47,7 +49,7 @@ const CHANNELS = [
     accent: C.green,
   },
   {
-    icon: '🔐',
+    icon: LockKey,
     title: 'Security & Compliance',
     desc: 'Vendor security reviews, SOC 2 questionnaires, DPAs, or responsible disclosure of a vulnerability.',
     line: SECURITY_EMAIL,
@@ -229,7 +231,7 @@ export default function ContactPage() {
             {CHANNELS.map((ch, i, arr) => (
               <a key={ch.title} href={ch.href} style={{ textDecoration: 'none', background: 'transparent', borderTop: `1px solid ${C.hairline}`, padding: '26px 28px 26px 4px', display: 'block', marginRight: i < arr.length - 1 ? 24 : 0 }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.hairline}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 16 }}>
-                  {ch.icon}
+                  <ch.icon size={20} weight="duotone" color={ch.accent} />
                 </div>
                 <div style={{ fontSize: 16, fontWeight: 600, color: C.text, marginBottom: 8 }}>{ch.title}</div>
                 <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.6, marginBottom: 16 }}>{ch.desc}</div>

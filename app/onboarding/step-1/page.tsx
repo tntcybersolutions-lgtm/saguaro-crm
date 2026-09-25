@@ -1,5 +1,11 @@
 'use client';
 import React, { useState } from 'react';
+import { Cactus, Confetti, Ruler, FileText, Lock, Robot, Lightbulb } from '@phosphor-icons/react';
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react';
+
+/** A Phosphor icon component, stored rather than rendered so each call site
+ *  picks its own size and weight. */
+type IconCmp = PhosphorIcon;
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 
@@ -7,6 +13,13 @@ const STEPS = [
   { num: 1, label: 'Welcome', active: true },
   { num: 2, label: 'First Project', active: false },
   { num: 3, label: 'Invite Team', active: false },
+];
+
+const FEATURES: { icon: IconCmp; title: string; desc: string }[] = [
+  { icon: Ruler, title: 'AI Blueprint Takeoff', desc: 'Upload any PDF blueprint — Claude reads every dimension and calculates all materials automatically.' },
+  { icon: FileText, title: 'AIA Pay Applications', desc: 'Generate G702/G703 PDFs in seconds. Submit to owners with one click.' },
+  { icon: Lock, title: 'Lien Waivers', desc: 'State-specific forms for all 50 states. AZ, CA, TX statutory language included.' },
+  { icon: Robot, title: 'Autopilot', desc: 'Automated RFI routing, change order tracking, and insurance expiry alerts.' },
 ];
 
 export default function OnboardingStep1() {
@@ -26,7 +39,7 @@ export default function OnboardingStep1() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <a href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 32 }}>🌵</span>
+            <Cactus size={32} weight="fill" color={GOLD} />
             <span style={{ fontWeight: 900, fontSize: 22, color: GOLD, letterSpacing: 1 }}>SAGUARO</span>
           </a>
         </div>
@@ -51,7 +64,7 @@ export default function OnboardingStep1() {
         {/* Card */}
         <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 40 }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
+            <div style={{ marginBottom: 16 }}><Confetti size={48} weight="fill" color={GOLD} /></div>
             <h1 style={{ fontSize: 28, fontWeight: 900, margin: '0 0 10px', color: TEXT }}>Welcome to Saguaro!</h1>
             <p style={{ color: DIM, fontSize: 15, margin: 0, lineHeight: 1.6 }}>
               You're all set. Your 30-day free trial starts now — no credit card required.
@@ -60,14 +73,9 @@ export default function OnboardingStep1() {
 
           {/* Feature highlights */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 32 }}>
-            {[
-              { icon: '📐', title: 'AI Blueprint Takeoff', desc: 'Upload any PDF blueprint — Claude reads every dimension and calculates all materials automatically.' },
-              { icon: '📄', title: 'AIA Pay Applications', desc: 'Generate G702/G703 PDFs in seconds. Submit to owners with one click.' },
-              { icon: '🔒', title: 'Lien Waivers', desc: 'State-specific forms for all 50 states. AZ, CA, TX statutory language included.' },
-              { icon: '🤖', title: 'Autopilot', desc: 'Automated RFI routing, change order tracking, and insurance expiry alerts.' },
-            ].map(f => (
+            {FEATURES.map(f => (
               <div key={f.title} style={{ background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '14px 16px' }}>
-                <div style={{ fontSize: 24, marginBottom: 8 }}>{f.icon}</div>
+                <div style={{ marginBottom: 8 }}><f.icon size={24} weight="duotone" color={GOLD} /></div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 4 }}>{f.title}</div>
                 <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>{f.desc}</div>
               </div>
@@ -91,7 +99,7 @@ export default function OnboardingStep1() {
           </div>
 
           <div style={{ marginTop: 24, padding: 16, background: 'rgba(245, 158, 11,.06)', border: '1px solid rgba(245, 158, 11,.2)', borderRadius: 8, fontSize: 12, color: DIM, textAlign: 'center' }}>
-            💡 <strong style={{ color: TEXT }}>Pro tip:</strong> Start with the AI Takeoff — upload any blueprint PDF and see it calculate every material automatically in under 60 seconds.
+            <Lightbulb size={14} weight="fill" color={GOLD} style={{ verticalAlign: 'middle' }} /> <strong style={{ color: TEXT }}>Pro tip:</strong> Start with the AI Takeoff — upload any blueprint PDF and see it calculate every material automatically in under 60 seconds.
           </div>
         </div>
 

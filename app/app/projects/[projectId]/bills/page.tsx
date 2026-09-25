@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
 import { toCents, toDollars, sumCents, scaleCents } from '@/lib/calc';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, FlowStrip, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { Receipt, Plus, FilePlus, CurrencyDollar, Wallet } from '@phosphor-icons/react';
+import { Receipt, Plus, FilePlus, CurrencyDollar, Wallet, PencilSimple, ChartBar, Copy, Trash, type Icon } from '@phosphor-icons/react';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
@@ -541,18 +541,18 @@ export default function BillsPage() {
                             <button onClick={(e) => { e.stopPropagation(); openBillMenu(b.id); }} style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 10, padding: '2px 4px', lineHeight: 1, opacity: 0.6 }} onMouseEnter={e => (e.currentTarget.style.opacity = '1')} onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}>&#9662;</button>
                             {menuId === b.id && (
                               <div style={{ position: 'absolute', top: 36, right: 14, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 'var(--radius-md)', padding: 6, zIndex: 100, minWidth: 150, boxShadow: 'var(--shadow-lg)' }}>
-                                {[
-                                  { label: 'Edit Amount', icon: '✏️', action: () => { setMenuId(null); setEditId(b.id); setEditVal(String(b.amount)); } },
-                                  { label: 'Adjust %', icon: '📊', action: () => { setMenuId(null); setAdjustId(b.id); } },
-                                  { label: 'Copy Amount', icon: '📋', action: () => handleCopyBill(b.id, b.amount) },
-                                ].map(item => (
+                                {([
+                                  { label: 'Edit Amount', icon: PencilSimple, action: () => { setMenuId(null); setEditId(b.id); setEditVal(String(b.amount)); } },
+                                  { label: 'Adjust %', icon: ChartBar, action: () => { setMenuId(null); setAdjustId(b.id); } },
+                                  { label: 'Copy Amount', icon: Copy, action: () => handleCopyBill(b.id, b.amount) },
+                                ] as { label: string; icon: Icon; action: () => void }[]).map(item => (
                                   <div key={item.label} onClick={(e) => { e.stopPropagation(); item.action(); }} style={{ padding: '7px 12px', fontSize: 12, color: TEXT, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                    <span style={{ fontSize: 14 }}>{item.icon}</span>{item.label}
+                                    <item.icon size={14} weight="duotone" color={DIM} />{item.label}
                                   </div>
                                 ))}
                                 <div style={{ height: 1, background: BORDER, margin: '4px 0' }} />
                                 <div onClick={(e) => { e.stopPropagation(); setMenuId(null); setDeleteId(b.id); }} style={{ padding: '7px 12px', fontSize: 12, color: RED, cursor: 'pointer', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                  <span style={{ fontSize: 14 }}>{'🗑️'}</span>Delete Bill
+                                  <Trash size={14} weight="duotone" color={RED} />Delete Bill
                                 </div>
                               </div>
                             )}

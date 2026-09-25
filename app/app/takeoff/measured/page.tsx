@@ -13,7 +13,7 @@ import { BUILDING_TEMPLATES, conditionsForTemplate, templateById } from '@/lib/t
 import { estimateConfidence } from '@/lib/takeoff/confidence';
 import { calibrationSanity } from '@/lib/takeoff/measure';
 import { scopedFieldIcon } from '@/lib/field-icons';
-import { Buildings, Warehouse, Storefront, ForkKnife, Tooth, HouseLine, Hammer, FileDashed, Question, Ruler, FilePdf, Receipt, CheckCircle, ArrowRight, ArrowLeft, Stack, PencilSimpleLine, FileCsv, Cube, Table, WarningCircle, MagicWand, Polygon, FileArrowUp, ClipboardText, ArrowSquareOut, XCircle, SealCheck, Sparkle, GitDiff, Note, Package, Path, Lightning, CircleNotch, TrendUp, TrendDown, Printer, X as IconX, type Icon } from '@phosphor-icons/react';
+import { Buildings, Warehouse, Storefront, ForkKnife, Tooth, HouseLine, Hammer, FileDashed, Question, Ruler, FilePdf, Receipt, Check, CheckCircle, ArrowRight, ArrowLeft, Stack, PencilSimpleLine, FileCsv, Cube, Table, WarningCircle, MagicWand, Polygon, FileArrowUp, ClipboardText, ArrowSquareOut, XCircle, SealCheck, Sparkle, GitDiff, Note, Package, Path, Lightning, CircleNotch, TrendUp, TrendDown, Printer, X as IconX, type Icon } from '@phosphor-icons/react';
 import dynamic from 'next/dynamic';
 import type { TracerCondition, PersistedSheet } from './PlanTracer';
 import { diffTakeoffs, type RevisionDiff, type RevisionLine } from '@/lib/takeoff/revision-diff';
@@ -1318,7 +1318,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           )}
 
           <button onClick={openTracer} style={{ marginTop: 8, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid rgba(245,158,11,0.35)`, background: 'rgba(245,158,11,0.08)', color: GOLD, borderRadius: 8, padding: '10px', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}><Ic name="penTrace" s={18} k="tracebtn" />Open Plan Tracer → zoom, snap, measure &amp; price on the drawing</button>
-          {cPts && cPts.length ? <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}>✓ Traced from plan ({cPts.length} points) — value + geometry saved</div> : null}
+          {cPts && cPts.length ? <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}><Check size={12} weight="bold" style={{ verticalAlign: '-1px', marginRight: 4 }} />Traced from plan ({cPts.length} points) — value + geometry saved</div> : null}
           <button onClick={addCond} style={{ ...btn, marginTop: 10 }}>+ Add condition manually</button>
         </SectionCard>
 

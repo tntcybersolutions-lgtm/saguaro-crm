@@ -4,6 +4,7 @@ import { SUB_TRADES, SUB_TRADES_BY_DIVISION } from '@/lib/construction-intellige
 import { TRIAL_DAYS } from '@/lib/plans';
 import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
+import { Check, Warning } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 const HAIR='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
@@ -98,7 +99,7 @@ export default function SignupPage(){
   if(success) return (
     <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',padding:24,fontFamily:"system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"}}>
       <div style={{width:'100%',maxWidth:480,textAlign:'center'}}>
-        <div style={{width:72,height:72,borderRadius:'50%',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px',fontSize:32}}>✅</div>
+        <div style={{width:72,height:72,borderRadius:'50%',background:'rgba(34,197,94,0.1)',border:'1px solid rgba(34,197,94,0.3)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px'}}><Check size={32} weight="bold" color={GREEN} /></div>
         <h1 style={{fontSize:26,fontWeight:600,color:TEXT,marginBottom:12}}>Check your email</h1>
         <p style={{color:DIM,fontSize:15,lineHeight:1.7,marginBottom:28}}>
           We sent a confirmation link to <strong style={{color:TEXT}}>{form.email}</strong>.<br/>
@@ -194,7 +195,7 @@ export default function SignupPage(){
           <div style={{background:RAISED,border:`1px solid ${HAIR}`,borderRadius:'var(--radius-lg)',padding:32,boxShadow:'var(--shadow-lg)'}}>
             {error&&(
               <div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED,display:'flex',alignItems:'flex-start',gap:8}}>
-                <span>⚠️</span><span>{error}</span>
+                <Warning size={15} weight="fill" style={{flexShrink:0,marginTop:1}} /><span>{error}</span>
               </div>
             )}
 

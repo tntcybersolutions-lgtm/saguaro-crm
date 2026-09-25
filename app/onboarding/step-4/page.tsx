@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { Cactus, Check, Confetti } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 
@@ -79,7 +80,7 @@ export default function OnboardingStep4() {
         {/* Logo */}
         <div style={{textAlign:'center',marginBottom:36}}>
           <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:28}}>🌵</span>
+            <Cactus size={28} weight="fill" color={GOLD} />
             <span style={{fontWeight:900,fontSize:20,color:GOLD,letterSpacing:1}}>SAGUARO</span>
           </a>
         </div>
@@ -96,7 +97,7 @@ export default function OnboardingStep4() {
                   color: (s.done||s.active) ? '#1C1C1E' : DIM,
                   border:`2px solid ${s.done ? GREEN : s.active ? GOLD : BORDER}`,
                 }}>
-                  {s.done ? '✓' : s.num}
+                  {s.done ? <Check size={16} weight="bold" /> : s.num}
                 </div>
                 <span style={{fontSize:11,color:s.active?TEXT:DIM,fontWeight:s.active?700:400}}>{s.label}</span>
               </div>
@@ -110,7 +111,7 @@ export default function OnboardingStep4() {
         {/* Success state */}
         {success ? (
           <div style={{background:RAISED,border:`1px solid rgba(34,197,94,.3)`,borderRadius:16,padding:40,textAlign:'center'}}>
-            <div style={{fontSize:56,marginBottom:20}}>🎉</div>
+            <div style={{marginBottom:20}}><Confetti size={56} weight="fill" color={GOLD} /></div>
             <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 12px',color:TEXT}}>You're all set!</h1>
             <p style={{color:DIM,fontSize:15,margin:'0 0 8px',lineHeight:1.6}}>
               Invites sent. Your team members will receive an email with instructions to create their account.

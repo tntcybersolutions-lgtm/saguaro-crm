@@ -4979,7 +4979,7 @@ export default function RadioDispatchPage() {
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}
                       >
-                        {done ? `✓ ${done.recordLabel}` : meta.blurb}
+                        {done ? <><Check size={11} weight="bold" color={a.hex} style={{ verticalAlign: '-1px', marginRight: 3 }} />{done.recordLabel}</> : meta.blurb}
                       </span>
                     </span>
                   </button>

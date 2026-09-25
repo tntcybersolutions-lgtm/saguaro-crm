@@ -38,11 +38,23 @@ export interface ProjectNavSection {
 
 export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
   {
+    /* Overview is the project's home, not a preconstruction tool, so it sits
+       alone above the phases — the same place Procore puts Project Home. */
     label: 'PROJECT',
     items: [
       { label: 'Overview',        href: '',                   icon: SquaresFour, badge: null },
+    ],
+  },
+  {
+    /* Bid Packages moved here from EXECUTION. You send bid packages to price
+       the job, before anyone is awarded anything — filing it under Execution
+       put a preconstruction activity after contracts in a nav that otherwise
+       reads as the order work happens. */
+    label: 'PRECONSTRUCTION',
+    items: [
       { label: 'Takeoff',         href: '/takeoff',           icon: Ruler, badge: null, accent: 'takeoff' },
       { label: 'Estimate',        href: '/estimate',          icon: Calculator, badge: null, accent: 'estimates' },
+      { label: 'Bid Packages',          href: '/bid-packages',      icon: Package, badge: null, accent: 'bids' },
       { label: 'Proposal',        href: '/proposal',          icon: FileText, badge: null },
     ],
   },
@@ -50,7 +62,6 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
     label: 'EXECUTION',
     items: [
       { label: 'Schedule',              href: '/schedule',          icon: CalendarBlank, badge: null, accent: 'schedule' },
-      { label: 'Bid Packages',          href: '/bid-packages',      icon: Package, badge: null, accent: 'bids' },
       { label: 'Selections & Allowances', href: '/selections',      icon: Palette, badge: null },
       { label: 'Contracts',             href: '/contracts',         icon: Clipboard, badge: null, accent: 'contracts' },
       { label: 'PO & Subcontracts',     href: '/purchase-orders',   icon: NotePencil, badge: null },
@@ -99,6 +110,20 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
       { label: 'Drawings',        href: '/drawings',          icon: Ruler, badge: null, accent: 'drawings' },
       { label: 'Permits',         href: '/permits',           icon: Bank,  badge: null, accent: 'permits' },
       { label: 'Specifications',  href: '/specs',             icon: BookOpen, badge: null, accent: 'specs' },
+    ],
+  },
+  {
+    /* Closeout is a PHASE, not a document type, so it gets the last section —
+       this nav otherwise reads as the job's lifecycle.
+
+       NOTE: this list and the one in app/app/projects/[projectId]/layout.tsx
+       are two copies of the same navigation — this one drives the desktop
+       rail, that one the mobile slide-over. They hold the same 49 links, but
+       this section existed in the mobile copy for a while and not here, so a
+       phone showed a CLOSEOUT section and a desktop did not. Any change to
+       one must be made to the other until they are merged. */
+    label: 'CLOSEOUT',
+    items: [
       { label: 'Closeout',        href: '/closeout',          icon: CheckCircle, badge: null },
     ],
   },

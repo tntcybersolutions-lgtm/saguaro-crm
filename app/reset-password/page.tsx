@@ -1,8 +1,9 @@
 'use client';
 import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { Cactus, CheckCircle, Warning } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444';
+const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 
 function getSupabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -36,7 +37,7 @@ export default function ResetPasswordPage(){
     <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column'}}>
       <nav style={{padding:'0 24px',height:56,display:'flex',alignItems:'center',borderBottom:`1px solid ${BORDER}`}}>
         <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
-          <span style={{fontSize:22}}>🌵</span>
+          <Cactus size={22} weight="fill" color={GOLD} />
           <span style={{fontWeight:900,fontSize:16,color:GOLD,letterSpacing:1}}>SAGUARO</span>
         </a>
       </nav>
@@ -44,7 +45,7 @@ export default function ResetPasswordPage(){
         <div style={{width:'100%',maxWidth:400}}>
           {done ? (
             <div style={{textAlign:'center'}}>
-              <div style={{fontSize:52,marginBottom:16}}>✅</div>
+              <div style={{marginBottom:16}}><CheckCircle size={52} weight="fill" color={GREEN} /></div>
               <h1 style={{fontSize:22,fontWeight:800,color:TEXT,marginBottom:10}}>Password updated</h1>
               <p style={{color:DIM,fontSize:14}}>Redirecting you to the app…</p>
             </div>
@@ -55,7 +56,7 @@ export default function ResetPasswordPage(){
                 <p style={{color:DIM,fontSize:14,margin:0}}>Choose a strong password for your account</p>
               </div>
               <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:32}}>
-                {error&&<div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}>⚠️ {error}</div>}
+                {error&&<div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}><Warning size={14} weight="fill" style={{verticalAlign:'middle'}} /> {error}</div>}
                 <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div>
                     <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:6}}>New Password</label>

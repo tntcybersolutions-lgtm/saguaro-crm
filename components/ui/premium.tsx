@@ -14,6 +14,7 @@
  */
 
 import React from 'react';
+import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/module-identity';
 import { ScribbleNote } from '@/components/Scribble';
 
@@ -713,7 +714,7 @@ export function FlowSteps({ title = 'What happens next', steps }: {
               border: s.done ? 'none' : `1px solid ${A45}`,
               boxShadow: s.done ? `inset 0 1px 0 rgba(255,255,255,0.35), 0 0 14px -2px ${A45}` : `0 0 0 3px ${A08}`,
               color: s.done ? '#241500' : GOLD_HI, fontSize: 10, fontWeight: 900,
-            }}>{s.done ? '✓' : i + 1}</div>
+            }}>{s.done ? <Check size={11} weight="bold" /> : i + 1}</div>
             <div style={{ minWidth: 0, paddingTop: 1 }}>
               <div style={{ fontSize: 12.5, fontWeight: 800, color: WHITE, lineHeight: 1.35 }}>{s.title}</div>
               {s.desc && <div style={{ fontSize: 11.5, color: MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>}

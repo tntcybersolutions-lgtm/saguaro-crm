@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import MarketingNav from '@/components/MarketingNav';
+import { Brain, Robot, Mailbox, ChartBar } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.08)',DIM='#CBD5E1',TEXT='#FFFFFF';
 
@@ -24,7 +25,7 @@ export default function BidsPage() {
           <div style={{fontSize:13,color:DIM,marginTop:4}}>AI-scored opportunities and active bid packages</div>
         </div>
         <div style={{display:'flex',gap:10}}>
-          <Link href="/app/intelligence" style={{padding:'9px 16px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,fontWeight:500,textDecoration:'none'}}>🧠 Bid Intelligence</Link>
+          <Link href="/app/intelligence" style={{padding:'9px 16px',background:'transparent',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:13,fontWeight:500,textDecoration:'none'}}><Brain size={15} weight="duotone" style={{verticalAlign:'-3px'}} /> Bid Intelligence</Link>
           <Link href="/app/intelligence" style={{padding:'9px 18px',background:GOLD,border:'none',borderRadius:8,color:DARK,fontSize:13,fontWeight:600,cursor:'pointer',textDecoration:'none'}}>+ Score Opportunity</Link>
         </div>
       </div>
@@ -40,7 +41,7 @@ export default function BidsPage() {
 
       {tab==='pipeline'&&<div>
         <div style={{background:'rgba(255,255,255,0.02)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,padding:'14px 18px',marginBottom:20,fontSize:13,color:DIM}}>
-          🤖 <strong style={{color:TEXT}}>AI Scores These Automatically</strong> — Each opportunity is scored 0–100 for fit based on your win/loss history. Focus on green (BID) first.
+          <Robot size={15} weight="duotone" style={{verticalAlign:'-3px'}} /> <strong style={{color:TEXT}}>AI Scores These Automatically</strong> — Each opportunity is scored 0–100 for fit based on your win/loss history. Focus on green (BID) first.
         </div>
         <table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>
           <thead><tr style={{background:'rgba(255,255,255,0.03)'}}>
@@ -77,7 +78,7 @@ export default function BidsPage() {
       </div>}
 
       {tab==='active'&&<div style={{textAlign:'center' as const,padding:60,color:DIM}}>
-        <div style={{fontSize:40,marginBottom:12}}>📬</div>
+        <div style={{marginBottom:12}}><Mailbox size={40} weight="duotone" color={DIM} /></div>
         <div style={{fontSize:18,fontWeight:600,color:TEXT,marginBottom:8}}>Bid Packages</div>
         {/* Was a link to demo-project-0000…0001 — a UUID that exists in no
             tenant, so the link 404'd for every real visitor. Bid packages hang
@@ -86,7 +87,7 @@ export default function BidsPage() {
       </div>}
 
       {tab==='history'&&<div style={{textAlign:'center' as const,padding:60,color:DIM}}>
-        <div style={{fontSize:40,marginBottom:12}}>📊</div>
+        <div style={{marginBottom:12}}><ChartBar size={40} weight="duotone" color={DIM} /></div>
         <div style={{fontSize:18,fontWeight:600,color:TEXT,marginBottom:8}}>Bid History</div>
         <div>Full bid history with AI post-mortems. <Link href="/app/intelligence" style={{color:GOLD}}>View Bid Intelligence →</Link></div>
       </div>}

@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { Cactus, Check, FilePdf, Warning, X } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
@@ -42,7 +43,7 @@ export default function OwnerApprovalPortal() {
   if (!data?.payApp) return (
     <div style={{ minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif' }}>
       <div style={{ textAlign:'center',color:RED }}>
-        <div style={{ fontSize:48,marginBottom:16 }}>⚠</div>
+        <div style={{ marginBottom:16 }}><Warning size={48} weight="fill" /></div>
         <div style={{ fontSize:20,fontWeight:700 }}>Invalid or Expired Link</div>
         <div style={{ fontSize:14,color:DIM,marginTop:8 }}>This pay application link is no longer valid. Please contact your contractor.</div>
       </div>
@@ -56,7 +57,7 @@ export default function OwnerApprovalPortal() {
   if (action) return (
     <div style={{ minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif' }}>
       <div style={{ textAlign:'center',color:action==='approved'?GREEN:RED }}>
-        <div style={{ fontSize:64,marginBottom:16 }}>{action==='approved'?'✓':'✗'}</div>
+        <div style={{ marginBottom:16 }}>{action==='approved'?<Check size={64} weight="bold" />:<X size={64} weight="bold" />}</div>
         <div style={{ fontSize:24,fontWeight:800,color:TEXT }}>
           Pay Application {action==='approved'?'Approved':'Rejected'}
         </div>
@@ -73,7 +74,7 @@ export default function OwnerApprovalPortal() {
   return (
     <div style={{ minHeight:'100vh',background:DARK,fontFamily:'system-ui,sans-serif',color:TEXT }}>
       <div style={{ background:'#141416',borderBottom:`1px solid ${BORDER}`,padding:'16px 24px',display:'flex',alignItems:'center',gap:12 }}>
-        <span style={{ fontSize:22 }}>🌵</span>
+        <Cactus size={22} weight="fill" color={GOLD} />
         <span style={{ fontWeight:800,fontSize:16,color:GOLD,letterSpacing:1 }}>SAGUARO CONTROL SYSTEMS</span>
         <span style={{ fontSize:11,color:DIM,marginLeft:8 }}>Owner Pay Application Review Portal</span>
       </div>
@@ -165,8 +166,8 @@ export default function OwnerApprovalPortal() {
         {(pa.g702_pdf_url||pa.g703_pdf_url) && (
           <div style={{ background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 20px',marginBottom:20,display:'flex',gap:12,flexWrap:'wrap' }}>
             <div style={{ fontSize:13,fontWeight:700,color:TEXT,marginBottom:8,width:'100%' }}>Download Official AIA Documents</div>
-            {pa.g702_pdf_url && <a href={pa.g702_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'rgba(245, 158, 11,.12)',border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}>📄 Download G702</a>}
-            {pa.g703_pdf_url && <a href={pa.g703_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'rgba(245, 158, 11,.12)',border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}>📄 Download G703</a>}
+            {pa.g702_pdf_url && <a href={pa.g702_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'rgba(245, 158, 11,.12)',border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G702</a>}
+            {pa.g703_pdf_url && <a href={pa.g703_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'rgba(245, 158, 11,.12)',border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G703</a>}
           </div>
         )}
 
@@ -182,7 +183,7 @@ export default function OwnerApprovalPortal() {
             <div style={{ display:'flex',gap:12 }}>
               <button onClick={()=>handleAction('approved')} disabled={saving}
                 style={{ flex:1,padding:'14px',background:saving?'#5B677A':`linear-gradient(135deg,${GREEN},#22a85a)`,border:'none',borderRadius:9,color:'#fff',fontWeight:800,fontSize:15,cursor:saving?'not-allowed':'pointer' }}>
-                ✓ Approve Payment — {fmt(pa.current_payment_due||0)}
+                <Check size={15} weight="bold" /> Approve Payment — {fmt(pa.current_payment_due||0)}
               </button>
               <button onClick={()=>handleAction('rejected')} disabled={saving}
                 style={{ padding:'14px 24px',background:'rgba(192,48,48,.1)',border:`1px solid rgba(192,48,48,.3)`,borderRadius:9,color:RED,fontWeight:700,fontSize:15,cursor:saving?'not-allowed':'pointer' }}>

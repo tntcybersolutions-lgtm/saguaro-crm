@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { Check } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
 const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
@@ -271,7 +272,7 @@ export default function PackagesPage() {
                         textDecoration: item.included ? 'none' : 'line-through',
                       }}>
                         <span style={{ color: item.included ? GREEN : `${DIM}40`, fontSize: 14 }}>
-                          {item.included ? '✓' : '—'}
+                          {item.included ? <Check size={14} weight="bold" color={GREEN} /> : '—'}
                         </span>
                         {item.name}
                       </div>

@@ -91,7 +91,7 @@ function StorageSettings() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
     const connected = qp.get('connected'); const error = qp.get('error');
-    if (connected) { flash(`Connected ${connected} ✓`); window.history.replaceState({}, '', '/app/settings/storage'); }
+    if (connected) { flash(`Connected ${connected}`); window.history.replaceState({}, '', '/app/settings/storage'); }
     if (error) { flash(error, false); window.history.replaceState({}, '', '/app/settings/storage'); }
   }, [qp]);
 
@@ -114,7 +114,7 @@ function StorageSettings() {
       const res = await fetch('/api/storage/connectors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider: adding, config, secret }) });
       const j = await res.json();
       if (j.error) throw new Error(j.error);
-      flash(`Connected${j.account ? ` — ${j.account}` : ''} ✓`); setAdding(null); load();
+      flash(`Connected${j.account ? ` — ${j.account}` : ''}`); setAdding(null); load();
     } catch (e: any) { console.error(e); flash(humanError(e, 'Something went wrong. Please try again.'), false); }
     setBusy(false);
   };

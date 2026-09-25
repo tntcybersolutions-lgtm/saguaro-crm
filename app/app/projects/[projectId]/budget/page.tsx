@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import {
   WarningCircle, Wallet, Scroll, ClipboardText, Handshake, Receipt,
   Hourglass, ChartLineUp, TrendUp, Plus, DownloadSimple, Package, Lightning, Stack,
+  PencilSimple, ChartBar, Copy, Trash, type Icon,
 } from '@phosphor-icons/react';
 import { Skeleton, SkeletonKPI } from '../../../../../components/ui/Skeleton';
 import { toCents, toDollars, sumCents, subCents, addCents, scaleCents } from '@/lib/calc';
@@ -635,18 +636,18 @@ export default function BudgetPage() {
                           <button onClick={() => openMenu(l.id)} style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${CIN.border}`, borderRadius: 6, color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Actions &#9662;</button>
                           {menuId === l.id && (
                             <div style={{ position: 'absolute', top: 36, right: 14, background: '#101826', border: `1px solid ${CIN.border}`, borderRadius: 10, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 16px 44px rgba(0,0,0,.6)' }}>
-                              {[
-                                { label: 'Edit Amount', icon: '✏️', action: () => { setMenuId(null); setEditingId(l.id); setEditAmount(String(l.original_budget)); } },
-                                { label: 'Adjust %', icon: '📊', action: () => { setMenuId(null); setAdjustId(l.id); } },
-                                { label: 'Copy Amount', icon: '📋', action: () => handleCopy(l.id, l.original_budget) },
-                              ].map(item => (
+                              {([
+                                { label: 'Edit Amount', icon: PencilSimple, action: () => { setMenuId(null); setEditingId(l.id); setEditAmount(String(l.original_budget)); } },
+                                { label: 'Adjust %', icon: ChartBar, action: () => { setMenuId(null); setAdjustId(l.id); } },
+                                { label: 'Copy Amount', icon: Copy, action: () => handleCopy(l.id, l.original_budget) },
+                              ] as { label: string; icon: Icon; action: () => void }[]).map(item => (
                                 <div key={item.label} onClick={item.action} style={{ padding: '8px 12px', fontSize: 12, color: TEXT, cursor: 'pointer', borderRadius: 7, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                  <span style={{ fontSize: 14 }}>{item.icon}</span>{item.label}
+                                  <item.icon size={14} weight="duotone" color={CIN.faint} />{item.label}
                                 </div>
                               ))}
                               <div style={{ height: 1, background: CIN.border, margin: '4px 0' }} />
                               <div onClick={() => { setMenuId(null); setDeleteId(l.id); }} style={{ padding: '8px 12px', fontSize: 12, color: '#ff7070', cursor: 'pointer', borderRadius: 7, display: 'flex', alignItems: 'center', gap: 8 }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,.08)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-                                <span style={{ fontSize: 14 }}>{'🗑️'}</span>Delete Line
+                                <Trash size={14} weight="duotone" color="#ff7070" />Delete Line
                               </div>
                             </div>
                           )}

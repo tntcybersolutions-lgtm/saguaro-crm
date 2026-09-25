@@ -1,12 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
+import { Cactus } from '@phosphor-icons/react/dist/ssr';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',RED='#ef4444';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(20,20,22,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 32px',gap:24,backdropFilter:'blur(12px)'}}>
     <Link href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
-      <span style={{fontSize:22}}>🌵</span>
+      <Cactus size={22} weight="fill" color={GOLD} />
       <span style={{fontWeight:800,fontSize:16,letterSpacing:1,color:GOLD}}>SAGUARO</span>
       <span style={{fontSize:10,background:GOLD,color:'#1C1C1E',padding:'1px 6px',borderRadius:4,fontWeight:700}}>PLATFORM</span>
     </Link>

@@ -5,6 +5,7 @@
  */
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Circle } from '@phosphor-icons/react';
 import { useFeature } from '@/lib/hooks/useEntitlements';
 import type { Severity } from '@/lib/franchise';
 
@@ -126,7 +127,7 @@ export function AttentionBanner({ red, yellow, noun }: { red: number; yellow: nu
   const hot = red > 0;
   return (
     <div style={{ background: hot ? 'rgba(255,59,48,0.08)' : 'rgba(255,149,0,0.08)', border: `1px solid ${hot ? 'rgba(255,59,48,0.25)' : 'rgba(255,149,0,0.25)'}`, borderRadius: 12, padding: '13px 16px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
-      <span style={{ fontSize: 18 }}>{hot ? '🔴' : '🟡'}</span>
+      <Circle size={18} weight="fill" color={hot ? C.red : C.yellow} />
       <span style={{ color: C.text }}>
         <b>{n}</b> {n === 1 ? `${noun} needs` : `${noun}s need`} attention
         {red > 0 && <> — <b style={{ color: C.red }}>{red} critical</b></>}. Handle these first.

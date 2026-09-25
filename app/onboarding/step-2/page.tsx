@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Cactus, Check } from '@phosphor-icons/react';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 
@@ -85,7 +86,7 @@ export default function OnboardingStep2() {
         {/* Logo */}
         <div style={{textAlign:'center',marginBottom:36}}>
           <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:28}}>🌵</span>
+            <Cactus size={28} weight="fill" color={GOLD} />
             <span style={{fontWeight:900,fontSize:20,color:GOLD,letterSpacing:1}}>SAGUARO</span>
           </Link>
         </div>
@@ -102,7 +103,7 @@ export default function OnboardingStep2() {
                   color: (s.done||s.active) ? '#1C1C1E' : DIM,
                   border:`2px solid ${s.done ? GREEN : s.active ? GOLD : BORDER}`,
                 }}>
-                  {s.done ? '✓' : s.num}
+                  {s.done ? <Check size={16} weight="bold" /> : s.num}
                 </div>
                 <span style={{fontSize:11,color:s.active?TEXT:DIM,fontWeight:s.active?700:400}}>{s.label}</span>
               </div>
