@@ -130,7 +130,21 @@ export async function POST(req: NextRequest) {
 
     /* The credential itself. Everything above is bookkeeping; this is the line
        that makes the account actually deleted, and it is what a reviewer tests
-       by trying to sign back in. */
+       by trying to sign back in.
+
+       THIS LINE DEPENDS ON A SCHEMA FACT. Sixteen core tables — projects,
+       daily_logs, photos, punch_list, rfis, change_orders, schedule_tasks,
+       timesheets, messages, drawings, contacts, clock_punches, deliveries,
+       equipment_log, inspections, safety_incidents — used to carry
+       `tenant_id REFERENCES auth.users(id) ON DELETE CASCADE`. Every tenant in
+       this database that owns projects uses its founding user's auth id AS the
+       tenant id, so this call would have cascade-deleted that whole company's
+       records the instant the owner deleted their own account. Silently: no
+       error, no warning, and a purge_after row pointing at data already gone.
+
+       Migration tenant_id_references_tenants_not_auth_users re-pointed all
+       sixteen at tenants(id) ON DELETE RESTRICT. If anyone ever puts that
+       cascade back, this line becomes a company-wide data loss bug again. */
     const { error: aErr } = await db.auth.admin.deleteUser(user.id);
     if (aErr) throw aErr;
 
