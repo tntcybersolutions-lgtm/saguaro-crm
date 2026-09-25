@@ -52,13 +52,29 @@ export default function OnboardingStep2() {
     if(!form.companyType){ setError('Please select your company type.'); return; }
     setError('');
     setLoading(true);
+    /* This used to `await fetch(...)` inside `try {} catch {}` and then
+       navigate UNCONDITIONALLY. Two things were wrong with that, and the
+       second is worse than the first:
+         - a thrown network error was swallowed silently
+         - a 500 does not throw at all, so the catch never even ran; the
+           company details simply vanished and the customer was marched to
+           step 3 believing they were saved
+       This is the first thing a new customer types into the product. */
     try {
-      await fetch('/api/onboarding/company',{
+      const res = await fetch('/api/onboarding/company',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify(form),
       });
-    } catch {}
+      if(!res.ok){
+        const d = await res.json().catch(()=>({}));
+        throw new Error(d.error || 'We could not save your company details.');
+      }
+    } catch (e:any) {
+      setError(e?.message || 'We could not save your company details. Please try again.');
+      setLoading(false);
+      return; // stay on this step — do not pretend it saved
+    }
     window.location.href = '/onboarding/step-3';
   }
 

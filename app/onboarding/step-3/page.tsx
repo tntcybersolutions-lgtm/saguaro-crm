@@ -52,8 +52,17 @@ export default function OnboardingStep3() {
           owner_name: form.ownerName,
         }),
       });
-      await res.json();
-    } catch {}
+      /* Same bug as step 2, and worse here: this creates the customer's
+         FIRST PROJECT. It used to discard the response and move to step 4
+         whatever happened, so a failed create left them with an onboarding
+         that claimed success and an account with no project in it. */
+      const d = await res.json().catch(()=>({}));
+      if(!res.ok) throw new Error(d.error || 'We could not create your first project.');
+    } catch (e:any) {
+      setError(e?.message || 'We could not create your first project. Please try again.');
+      setLoading(false);
+      return; // stay here rather than advancing past work that did not happen
+    }
     window.location.href = '/onboarding/step-4';
   }
 

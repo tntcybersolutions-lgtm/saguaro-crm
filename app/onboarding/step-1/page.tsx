@@ -12,7 +12,9 @@ const STEPS = [
 export default function OnboardingStep1() {
   const [loading, setLoading] = useState(false);
 
-  async function createDemoProject() {
+  // Named createDemoProject until now, which it never did — it only navigates.
+  // The button label ("Go to Dashboard") was always honest; the identifier was not.
+  async function goToDashboard() {
     setLoading(true);
     window.location.href = '/app';
   }
@@ -74,7 +76,7 @@ export default function OnboardingStep1() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <button
-              onClick={createDemoProject}
+              onClick={goToDashboard}
               disabled={loading}
               style={{ padding: '14px 0', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 10, color: '#1C1C1E', fontSize: 16, fontWeight: 800, cursor: loading ? 'wait' : 'pointer', opacity: loading ? .7 : 1 }}
             >
