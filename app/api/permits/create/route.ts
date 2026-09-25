@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
        nothing either. 400 naming the field, like the nineteen other create
        endpoints in this codebase. */
     if (!(body.project_id || body.projectId) || !(body.permit_type || body.permitType)) {
-      return NextResponse.json({ error: 'project_id and permit_type are required is required' }, { status: 400 });
+      return NextResponse.json({ error: 'project_id and permit_type are required' }, { status: 400 });
     }
     const db = createServerClient();
 
