@@ -76,8 +76,12 @@ export interface PhaseStep {
 export const BIDDING_STEPS: PhaseStep[] = [
   { key: 'takeoff',      title: 'Take off the drawings', desc: 'Drop the plan set. Every trade measured and priced from it.', href: '/takeoff' },
   { key: 'estimate',     title: 'Price it',              desc: 'The estimate builds from the takeoff, rolled up by CSI division.', href: '/estimate' },
-  { key: 'bid-packages', title: 'Send bid packages',     desc: 'Scoped packages go out to your subs for pricing.', href: '/bid-packages' },
-  { key: 'leveling',     title: 'Level the bids',        desc: 'Compare what came back on one scope — spread, gaps, coverage.', href: '/bid-packages' },
+  /* Levelling is FOLDED IN here rather than being its own step. It has no
+     standalone screen — you level a specific package, from that package —
+     so a separate step would have carried a number the navigation could
+     never show, and a sequence whose numbers do not match the menu is the
+     problem this file exists to solve. */
+  { key: 'bid-packages', title: 'Send bid packages',     desc: 'Scoped packages go out to your subs. Levelling compares what comes back — spread, gaps, coverage.', href: '/bid-packages' },
   { key: 'proposal',     title: 'Submit the proposal',   desc: 'The jacket: scope, quantities and your number in one document.', href: '/proposal' },
 ];
 

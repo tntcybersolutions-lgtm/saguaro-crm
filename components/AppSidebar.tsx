@@ -594,6 +594,14 @@ export default function AppSidebar({
         const items = inProject
           ? entitled.filter((item: any) => {
               const rel = item.href.startsWith(base) ? item.href.slice(base.length) : item.href;
+              /* A STEP IN THE CURRENT PHASE IS NEVER HIDDEN.
+                 The tool filter hides modules with no work in them, and the
+                 phase numbers the sequence — put together, they produced a
+                 rail reading "1 Takeoff, 3 Bid Packages" with 2, 4 and 5
+                 filtered away. A sequence with holes in it is worse than no
+                 sequence: it tells a GC there is a step 2 and then refuses to
+                 show it. You cannot teach an order and hide half of it. */
+              if (stepNumber(rel, projectPhase) !== null) return true;
               return isToolVisible(rel, toolSignals, activeProjectHref, showAllTools);
             })
           /* Company scope gets the same discipline one level up: core tools,

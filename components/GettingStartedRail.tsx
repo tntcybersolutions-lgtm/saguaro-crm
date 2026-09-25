@@ -119,10 +119,20 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   };
 
   const steps: JourneyStep[] = [
-    /* "Create your project" leads both journeys — without one there is
-       nowhere for any other step to happen. */
-    { title: 'Create your project', desc: 'Name, address, owner — everything else builds on this.',
-      done: projects.length > 0, href: '/app/projects/new' },
+    /* "Create your project" appears ONLY while there is not one yet.
+       Once a project exists this step is permanently ticked and, worse, it
+       pushed every following number along by one — so the rail said
+       "step 3: send bid packages" while the menu said "3 Bid Packages"
+       about a different step. Dropping it once it is done makes the two
+       lists literally the same list. */
+    ...(projects.length === 0
+      ? [{
+          title: 'Create your project',
+          desc: 'Name, address, owner — everything else builds on this.',
+          done: false,
+          href: '/app/projects/new',
+        }]
+      : []),
     ...stepsForPhase(phase).map((st) => ({
       title: st.title,
       desc: st.desc,
