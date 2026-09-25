@@ -28,9 +28,9 @@ export async function GET(req: NextRequest) {
 
   const [
     projectQ, contractsQ, cosQ, payAppsQ, budgetQ, subsQ, packagesQ,
-    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ,
+    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ,
   ] = await Promise.all([
-    safe(db.from('projects').select('id, name, status, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, open_punch_count, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
+    safe(db.from('projects').select('id, name, status, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('change_orders').select('id, co_number, title, status, cost_impact, amount').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('pay_applications').select('id, app_number, period_from, period_to, status, current_payment_due, total_completed_stored, retainage_percent, contract_sum').eq('project_id', projectId).eq('tenant_id', t).order('app_number', { ascending: false }).limit(12)),
@@ -46,6 +46,22 @@ export async function GET(req: NextRequest) {
     safe(db.from('daily_logs').select('log_date').eq('project_id', projectId).eq('tenant_id', t).order('log_date', { ascending: false }).limit(1)),
     safe(db.from('takeoffs').select('id, status, total_cost, page_count').eq('project_id', projectId).eq('tenant_id', t).order('created_at', { ascending: false }).limit(5)),
     safe(db.from('contacts').select('id').eq('project_id', projectId).eq('tenant_id', t)),
+    /* COUNT THE PUNCH LIST, DO NOT ASK THE PROJECT ROW.
+       openPunch used to read projects.open_punch_count, a denormalised
+       column that NOTHING in this codebase ever writes — no trigger, no
+       app code, nothing. It sat at 0 forever. Measured on production: a
+       project with 3 open punch items reported open_punch_count = 0.
+
+       That number drives the closeout screen's "Open Punch" card and its
+       Path to Handover, so the screen told a GC "Punch list is clear —
+       schedule the final inspection" while three items were open. On a
+       closeout screen that is not a cosmetic defect.
+
+       head:true, so this counts without pulling rows. The status list
+       matches lib/project-lifecycle.ts. */
+    safe(db.from('punch_list').select('id', { count: 'exact', head: true })
+      .eq('project_id', projectId).eq('tenant_id', t)
+      .not('status', 'in', '(completed,voided)')),
   ]);
 
   const p = (projectQ as any)?.data ?? null;
@@ -148,7 +164,7 @@ export async function GET(req: NextRequest) {
       openRfis: rfis.filter((r) => openStatuses.includes(r.status)).length,
       openSubmittals: subm.filter((s) => openStatuses.includes(s.status)).length,
       scheduleTasks: tasks.length,
-      openPunch: N(p.open_punch_count),
+      openPunch: N((punchQ as any)?.count),
     },
     schedule: {
       criticalCount: tasks.filter((tk) => tk.is_critical && tk.status !== 'complete').length,
