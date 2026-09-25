@@ -74,11 +74,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ escalations, summary });
   } catch (err: any) {
-    console.error('[ai/escalation-check] GET', err);
-    return NextResponse.json({
-      escalations: [],
-      summary: { total_open: 0, high_severity: 0, avg_days_overdue: 0 },
-    }, { status: 200 });
+    // Was a 200 carrying an empty list AND a zeroed summary — "0 open, 0 high
+    // severity, 0 days overdue" reads as a clean bill of health on an
+    // escalations screen, which is the opposite of what a failed query means.
+    // The POST handler in this same file already used apiError; the GET did not.
+    return apiError('ai/escalation-check', err, 'Could not load escalations');
   }
 }
 

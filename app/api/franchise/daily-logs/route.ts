@@ -74,8 +74,12 @@ export async function GET(req: NextRequest) {
 
     const logs = (rows || []).map((r: any) => ({ ...r, project_name: pmap[r.project_id]?.name ?? null }));
     return NextResponse.json({ logs, todayByProject, lateByProject });
-  } catch {
-    return NextResponse.json({ logs: [], todayByProject: {}, source: 'error' });
+  } catch (e) {
+    // Was a 2xx with an empty body: the screen showed "no daily logs" with
+    // total confidence while the query was actually failing. A soft fail on
+    // a read is indistinguishable from real emptiness, which is the whole
+    // problem. Real status, real log, correlation id.
+    return apiError('franchise/daily-logs', e, 'Could not load daily logs');
   }
 }
 

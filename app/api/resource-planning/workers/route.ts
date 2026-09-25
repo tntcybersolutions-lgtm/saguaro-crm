@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -36,10 +37,12 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ workers: data || [], source: 'live' });
   } catch (e) {
-    // The planner reads `source` to tell an empty crew from a failed load, so an
-    // empty array here is not a silent success — but it was silent in the log,
-    // which is how a broken filter sat unnoticed. Say what happened.
-    console.error('[resource-planning/workers] read failed:', e instanceof Error ? e.message : String(e));
-    return NextResponse.json({ workers: [], source: 'error' });
+    // The comment that used to sit here said "the planner reads `source` to
+    // tell an empty crew from a failed load". It does not. app/app/resource-
+    // planning/page.tsx contains no reference to `source` at all, and does
+    // not call this endpoint — it fetches /api/projects/all/resource-planning.
+    // So the empty array WAS a silent success, and the justification for it
+    // was a claim about code that does not exist.
+    return apiError('resource-planning/workers', e, 'Could not load workers');
   }
 }

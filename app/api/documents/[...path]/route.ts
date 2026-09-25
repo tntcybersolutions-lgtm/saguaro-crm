@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DocumentGenerator } from '../../../../document-generator';
 import { supabaseAdmin } from '../../../../supabase/admin';
 import { getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { signStoredUrl } from '@/lib/storage-signing';
 
 export async function GET(
@@ -39,9 +40,13 @@ export async function GET(
         (data || []).map(async (d: any) => ({ ...d, pdf_url: await signStoredUrl('documents', d.pdf_url) })),
       );
       return NextResponse.json({ documents });
-    } catch {
-      return NextResponse.json({ documents: [] });
-    }
+    } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no documents" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('documents/[...path]', e, 'Could not load documents');
+  }
   }
 
   return NextResponse.json({ error: 'Not found' }, { status: 404 });

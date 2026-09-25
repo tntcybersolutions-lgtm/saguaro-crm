@@ -43,8 +43,12 @@ export async function GET(req: NextRequest) {
       project_phase: pmap[r.project_id]?.phase ?? null,
     }));
     return NextResponse.json({ risks: enriched });
-  } catch {
-    return NextResponse.json({ risks: [], source: 'error' });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no risks" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('franchise/risks', e, 'Could not load risks');
   }
 }
 

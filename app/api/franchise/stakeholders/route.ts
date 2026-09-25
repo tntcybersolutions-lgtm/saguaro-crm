@@ -28,8 +28,12 @@ export async function GET(req: NextRequest) {
     }
     const stakeholders = (rows || []).map((r: any) => ({ ...r, project_name: pmap[r.project_id]?.name ?? null }));
     return NextResponse.json({ stakeholders });
-  } catch {
-    return NextResponse.json({ stakeholders: [], source: 'error' });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no stakeholders" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('franchise/stakeholders', e, 'Could not load stakeholders');
   }
 }
 

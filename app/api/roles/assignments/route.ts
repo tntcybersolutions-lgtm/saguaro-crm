@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 
 /**
@@ -78,8 +79,12 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json([]);
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no role assignments" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('roles/assignments', e, 'Could not load role assignments');
   }
 }
 

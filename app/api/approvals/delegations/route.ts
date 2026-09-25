@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
@@ -20,8 +21,12 @@ export async function GET(req: NextRequest) {
       .order('created_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ delegations: data || [], source: 'live' });
-  } catch {
-    return NextResponse.json({ delegations: [], source: 'error' }, { status: 200 });
+  } catch (e) {
+    // Was a 2xx with an empty body: the screen showed "no delegations" with
+    // total confidence while the query was actually failing. A soft fail on
+    // a read is indistinguishable from real emptiness, which is the whole
+    // problem. Real status, real log, correlation id.
+    return apiError('approvals/delegations', e, 'Could not load approval delegations');
   }
 }
 

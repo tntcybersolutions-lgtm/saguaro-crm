@@ -49,8 +49,12 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ meetings: enrichedMeetings, actions: enrichedActions });
-  } catch {
-    return NextResponse.json({ meetings: [], actions: [], source: 'error' });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no meetings" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('franchise/meetings', e, 'Could not load meetings');
   }
 }
 

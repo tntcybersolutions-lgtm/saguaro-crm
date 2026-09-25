@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,8 +54,11 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ sessions: enriched });
-  } catch (err) {
-    console.error('[portal/sub/sessions]', err);
-    return NextResponse.json({ sessions: [] });
+  } catch (e) {
+    // Logged, then answered with a 2xx and an empty body — so the server knew
+    // and the screen still showed "no sessions" as a fact. apiError() logs
+    // the same detail WITH a correlation id and returns a status the client
+    // can act on.
+    return apiError('portal/sub/sessions', e, 'Could not load portal sessions');
   }
 }

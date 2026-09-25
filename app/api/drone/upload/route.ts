@@ -83,9 +83,12 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ jobs: data || [] });
-  } catch (err: unknown) {
-    console.error('[drone/upload] GET', err);
-    return NextResponse.json({ jobs: [] }, { status: 200 });
+  } catch (e) {
+    // Logged, then answered with a 2xx and an empty body — so the server knew
+    // and the screen still showed "no jobs" as a fact. apiError() logs
+    // the same detail WITH a correlation id and returns a status the client
+    // can act on.
+    return apiError('drone/upload', e, 'Could not load drone jobs');
   }
 }
 

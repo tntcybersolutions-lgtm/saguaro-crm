@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 import { ENTITY_MAP } from '@/lib/report-entities';
 
@@ -27,8 +28,12 @@ export async function GET(req: NextRequest) {
       .order('updated_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ reports: data ?? [] });
-  } catch {
-    return NextResponse.json({ reports: [] });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no reports" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('reports/saved', e, 'Could not load reports');
   }
 }
 

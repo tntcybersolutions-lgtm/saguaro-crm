@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +27,12 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     const rows = (data || []).map((r: any) => ({ userId: r.id, status: r.status || 'pending' }));
     return NextResponse.json({ data: rows });
-  } catch {
-    return NextResponse.json({ data: [] });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no status records" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('sub-portal/status', e, 'Could not load portal status');
   }
 }
 

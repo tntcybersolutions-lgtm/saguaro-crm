@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 
 export async function GET(req: NextRequest) {
@@ -17,7 +18,13 @@ export async function GET(req: NextRequest) {
     const { data, error } = await q.order('sort_order');
     if (error) throw error;
     return NextResponse.json({ fields: data ?? [] });
-  } catch { return NextResponse.json({ fields: [] }); }
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no custom fields" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('custom-fields', e, 'Could not load custom fields');
+  }
 }
 
 export async function POST(req: NextRequest) {

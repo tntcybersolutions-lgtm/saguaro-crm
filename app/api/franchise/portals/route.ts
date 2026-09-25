@@ -32,8 +32,12 @@ export async function GET(req: NextRequest) {
       url: `/franchise-portal/${r.token}`,
     }));
     return NextResponse.json({ portals });
-  } catch {
-    return NextResponse.json({ portals: [], source: 'error' });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no portals" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('franchise/portals', e, 'Could not load portals');
   }
 }
 

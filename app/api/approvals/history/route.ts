@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { ENTITY_TYPES, ENTITY_META, normalizeRow, type EntityType } from '@/lib/approvals';
 
 export const dynamic = 'force-dynamic';
@@ -79,7 +80,11 @@ export async function GET(req: NextRequest) {
     }).sort((a, b) => (b.decidedAt || '').localeCompare(a.decidedAt || ''));
 
     return NextResponse.json({ history, source: 'live' });
-  } catch {
-    return NextResponse.json({ history: [], source: 'error' }, { status: 200 });
+  } catch (e) {
+    // Was a 2xx with an empty body: the screen showed "no history" with
+    // total confidence while the query was actually failing. A soft fail on
+    // a read is indistinguishable from real emptiness, which is the whole
+    // problem. Real status, real log, correlation id.
+    return apiError('approvals/history', e, 'Could not load approval history');
   }
 }

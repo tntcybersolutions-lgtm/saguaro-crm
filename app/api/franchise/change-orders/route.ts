@@ -31,8 +31,12 @@ export async function GET(req: NextRequest) {
     }
     const changeOrders = (rows || []).map((r: any) => ({ ...r, project_name: pmap[r.project_id]?.name ?? null }));
     return NextResponse.json({ changeOrders });
-  } catch {
-    return NextResponse.json({ changeOrders: [], source: 'error' });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no change orders" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('franchise/change-orders', e, 'Could not load change orders');
   }
 }
 

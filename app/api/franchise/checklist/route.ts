@@ -32,8 +32,12 @@ export async function GET(req: NextRequest) {
       project_name: pmap[r.project_id]?.name ?? null,
     }));
     return NextResponse.json({ items });
-  } catch {
-    return NextResponse.json({ items: [], source: 'error' });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no items" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('franchise/checklist', e, 'Could not load items');
   }
 }
 

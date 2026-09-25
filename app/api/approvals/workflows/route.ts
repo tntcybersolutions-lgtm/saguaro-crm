@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 import { metaFor } from '@/lib/approvals';
 
@@ -21,8 +22,12 @@ export async function GET(req: NextRequest) {
       .order('updated_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ workflows: data || [], source: 'live' });
-  } catch {
-    return NextResponse.json({ workflows: [], source: 'error' }, { status: 200 });
+  } catch (e) {
+    // Was a 2xx with an empty body: the screen showed "no workflows" with
+    // total confidence while the query was actually failing. A soft fail on
+    // a read is indistinguishable from real emptiness, which is the whole
+    // problem. Real status, real log, correlation id.
+    return apiError('approvals/workflows', e, 'Could not load approval workflows');
   }
 }
 

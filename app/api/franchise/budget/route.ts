@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { hasFeature } from '@/lib/entitlements-server';
 
 const n = (v: any): number => { if (v == null || v === '') return 0; const x = typeof v === 'number' ? v : parseFloat(String(v).replace(/[$,]/g, '')); return isNaN(x) ? 0 : x; };
@@ -55,7 +56,11 @@ export async function GET(req: NextRequest) {
     }).sort((a: any, b: any) => a.variance - b.variance);
 
     return NextResponse.json({ budgets });
-  } catch {
-    return NextResponse.json({ budgets: [], source: 'error' });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no budgets" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('franchise/budget', e, 'Could not load budgets');
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { recordLearning } from '@/lib/learning';
 
 export async function GET(req: NextRequest) {
@@ -141,8 +142,12 @@ export async function GET(req: NextRequest) {
     if (topPicks.length > 0) recordLearning(db, { tenantId, kind: 'sub_suggested', projectId: projectId || null, userId: user.id, meta: { trade, top: topPicks.map((t) => t.name) } });
     const topIds = new Set(topPicks.map((t) => t.id));
     return NextResponse.json({ subs: results, topPicks, others: results.filter((r) => !topIds.has(r.id)) });
-  } catch {
-    return NextResponse.json({ subs: [], error: "Internal server error" });
+  } catch (e) {
+    // A failed read must NOT render as an empty list. The screen would say
+    // "no subcontractors" with total confidence when the truth is that the query
+    // failed — and the old body carried source:'error', which no screen has
+    // ever read. Real status, real server-side log, correlation id.
+    return apiError('bid-packages/suggest-subs', e, 'Could not load subcontractors');
   }
 }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
 
 /**
@@ -35,9 +36,12 @@ export async function GET(req: NextRequest) {
       .limit(100);
     if (error) throw error;
     return NextResponse.json({ reports: data ?? [] });
-  } catch (err) {
-    console.error('[cost-control/reports/GET]', err);
-    return NextResponse.json({ reports: [] });
+  } catch (e) {
+    // Logged, then answered with a 2xx and an empty body — so the server knew
+    // and the screen still showed "no reports" as a fact. apiError() logs
+    // the same detail WITH a correlation id and returns a status the client
+    // can act on.
+    return apiError('cost-control/reports', e, 'Could not load cost reports');
   }
 }
 

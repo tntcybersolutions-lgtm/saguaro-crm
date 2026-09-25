@@ -48,9 +48,12 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ models: data || [] });
-  } catch (err: unknown) {
-    console.error('[bim/upload] GET', err);
-    return NextResponse.json({ models: [] }, { status: 200 });
+  } catch (e) {
+    // Logged, then answered with a 2xx and an empty body — so the server knew
+    // and the screen still showed "no models" as a fact. apiError() logs
+    // the same detail WITH a correlation id and returns a status the client
+    // can act on.
+    return apiError('bim/upload', e, 'Could not load BIM models');
   }
 }
 
