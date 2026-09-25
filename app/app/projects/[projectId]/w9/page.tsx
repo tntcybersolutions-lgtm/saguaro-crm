@@ -301,7 +301,7 @@ export default function W9Page() {
       {!loading && untrackedRoster.length > 0 && (
         <SectionCard
           title="On the Roster, Never Asked"
-          subtitle="These subs are on the project but have no W-9 request on record — the bid-award gate will flag them"
+          subtitle="On the project with no W-9 on record. The award gate will flag these."
           icon={<SealCheck size={17} weight="duotone" color={AMBER} />}
           style={{ marginBottom: 24 }}
         >

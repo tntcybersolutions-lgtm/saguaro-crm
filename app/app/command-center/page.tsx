@@ -169,7 +169,7 @@ export default function CommandCenterPage() {
       {/* Command modules — every rollout screen, with live counts where the data is already fetched */}
       <SectionCard flat
         title="Command Modules"
-        subtitle="Deep-dive screens for the whole rollout — badges are live counts from the same data feeds"
+        subtitle="The whole rollout. Badges are live counts."
         icon={<SquaresFour size={17} weight="duotone" color={C.gold} />}
         style={{ marginBottom: 18 }}
       >

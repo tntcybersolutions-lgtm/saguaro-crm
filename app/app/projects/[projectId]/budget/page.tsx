@@ -318,7 +318,7 @@ export default function BudgetPage() {
       eyebrowIcon={<Wallet size={12} weight="fill" color={moduleAccent('budget').hex} />}
       icon={<Wallet size={26} weight="duotone" color={moduleAccent('budget').hex} />}
       title="Project Budget"
-      subtitle="Job costing by CSI cost code — committed, actual, cost-to-complete, and forecast at completion."
+      subtitle="Committed, actual, and forecast by CSI cost code."
       note="this is where the money truth lives"
       actions={<>
         <HeroButton variant="ghost" onClick={() => setShowAddForm(v => !v)} icon={<Plus size={15} weight="bold" color={CIN.goldHi} />}>Add Line</HeroButton>

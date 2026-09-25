@@ -697,7 +697,7 @@ export default function NotificationSettingsPage() {
       {/* Frequency selector */}
       <SectionCard
         title="Delivery Frequency"
-        subtitle="How events reach you — the moment they happen, or bundled into an hourly, daily, or weekly digest."
+        subtitle="Immediately, or bundled into a digest."
         icon={<CalendarBlank size={17} weight="duotone" color={GOLD} />}
         style={{ marginBottom: 20 }}
       >

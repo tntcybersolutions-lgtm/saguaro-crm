@@ -132,7 +132,7 @@ export default function IntelligencePage() {
         eyebrowIcon={<Brain size={13} weight="fill" color={BIDS.hex} />}
         title="Bid"
         accent="Intelligence"
-        subtitle="Saguaro learns from every bid you win or lose — and sharpens your next number with it."
+        subtitle="Every win and loss sharpens the next number."
         actions={
           <button onClick={()=>setScoring(!scoring)} style={goldButtonStyle} className="pmBtn">
             {scoring ? <><X size={15} weight="bold" /> Close Scoring</> : <><Sparkle size={15} weight="bold" /> Score New Opportunity</>}

@@ -133,7 +133,7 @@ export default function BrandingPage() {
           eyebrowIcon={<Palette size={13} weight="fill" color={GOLD} />}
           title="Make it"
           accent="yours"
-          subtitle="Your logo, your colours, on every screen, every report and every email your customers receive."
+          subtitle="Your logo and colours, everywhere customers see you."
           note="pick your colour — we keep it readable"
         />
 

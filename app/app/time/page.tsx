@@ -311,7 +311,7 @@ export default function TimeClockPage() {
         accentColor={moduleAccent('time').hex}
         title="Time"
         accent="Clock"
-        subtitle="Timezone-aware, GPS-stamped, CSI-coded labor — the same deterministic engine as the phone."
+        subtitle="GPS-stamped, CSI-coded labour. Same engine as the phone."
         note="GPS stamped — no more paper"
         actions={
           <>

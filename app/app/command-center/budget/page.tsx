@@ -95,7 +95,7 @@ export default function BudgetPage() {
             <SectionCard
               icon={<CurrencyDollar size={17} weight="duotone" color={C.gold} />}
               title="No site budgets yet — seed them per project"
-              subtitle="Each site rolls up here automatically: original, committed, actual, and forecast variance."
+              subtitle="Original, committed, actual, and forecast variance per site."
             >
               <div style={{ fontSize: 12.5, color: C.dim, lineHeight: 1.6, marginBottom: 14 }}>
                 Every project has its own Budget page — seed lines there by CSI division or pull bid-package estimates in one tap.

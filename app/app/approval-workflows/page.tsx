@@ -510,7 +510,7 @@ export default function ApprovalWorkflowsPage() {
           eyebrowIcon={<ListChecks size={13} weight="fill" color={GOLD} />}
           title="Approval"
           accent="Workflows"
-          subtitle="Multi-step approval chains wired to live change orders, pay apps, purchase orders & invoices."
+          subtitle="Approval chains for change orders, pay apps, POs, and invoices."
           actions={<>
             <button style={ghostButtonStyle} className="pmBtn" onClick={loadAll}><ArrowClockwise size={15} weight="bold" />Refresh</button>
             <button style={goldButtonStyle} className="pmBtn" onClick={openCreate}><Plus size={15} weight="bold" />New Workflow</button>

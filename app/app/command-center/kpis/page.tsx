@@ -141,7 +141,7 @@ export default function KpiDashboardPage() {
         eyebrowIcon={<ChartLineUp size={13} weight="fill" color={C.gold} />}
         title="KPI"
         accent="Dashboard"
-        subtitle="The whole portfolio in numbers — one screen a remote operator can scan in ten seconds."
+        subtitle="The whole portfolio in numbers."
         actions={<div style={{ fontSize: 12, color: C.dim }}>{k.sites} {k.sites === 1 ? 'site' : 'sites'}</div>}
       />
 

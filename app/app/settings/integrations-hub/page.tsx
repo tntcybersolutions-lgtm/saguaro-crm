@@ -234,7 +234,7 @@ export default function IntegrationsHubPage() {
         eyebrowIcon={<Plugs size={13} weight="fill" color={GOLD} />}
         title="Integration"
         accent="Hub"
-        subtitle="Connect Saguaro to the tools you already use, or build your own with API keys and webhooks."
+        subtitle="Connect your tools, or build with API keys and webhooks."
         actions={
           <Link href="/app/integrations/api-docs" style={goldOutlineButtonStyle} className="pmBtn">
             <BookOpen size={15} weight="bold" /> API Docs

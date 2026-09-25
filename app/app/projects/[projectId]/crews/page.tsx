@@ -290,7 +290,7 @@ export default function CrewsPage() {
             accentColor={AC.hex}
             title="Crews"
             accent="& Rosters"
-            subtitle="Build crews once — foreman, trade, roster — and every daily log's manpower section fills itself."
+            subtitle="Build a crew once; every daily log's manpower fills itself."
             actions={
               <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
                 <Plus size={15} weight="bold" /> New Crew

@@ -241,7 +241,7 @@ export default function CommandCenterPage() {
         eyebrowIcon={<Broadcast size={13} weight="fill" color={GOLD} />}
         title="Command"
         accent="Center"
-        subtitle="Every project's health, budget, and open items — aggregated into one live portfolio view."
+        subtitle="Health, budget, and open items across the portfolio."
       />
 
       {/* Summary stats */}

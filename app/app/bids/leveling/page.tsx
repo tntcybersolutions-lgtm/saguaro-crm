@@ -372,7 +372,7 @@ function BidLevelingBoard() {
       {/* AI extract */}
       <SectionCard
         title="AI extract a bid"
-        subtitle="Paste a subcontractor's proposal — AI maps it onto your scope checklist and adds it as a bidder"
+        subtitle="Paste a proposal; it maps onto your scope checklist."
         icon={<Sparkle size={17} weight="duotone" color={BLUE} />}
         accent={BLUE}
         style={{ marginBottom: 16 }}

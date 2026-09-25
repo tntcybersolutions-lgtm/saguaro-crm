@@ -471,7 +471,7 @@ export default function DocumentsPage() {
         {activeTab === 'Library' && (
           <SectionCard
             title="Document Library"
-            subtitle="Every generated document — pay apps, invoices, waivers, bonds, payroll — with fresh signed links."
+            subtitle="Every generated document, with fresh signed links."
             flush
           >
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '14px 20px 4px' }}>

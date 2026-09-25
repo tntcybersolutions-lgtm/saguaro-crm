@@ -413,7 +413,7 @@ export default function RFIsPage() {
         accentColor={moduleAccent('rfis').hex}
         title="Requests for"
         accent="Information"
-        subtitle="Track questions, route the ball-in-court, and close out clarifications before they slow the field."
+        subtitle="Questions, ball-in-court, and close-out."
         note="get it in writing"
         actions={
           showForm ? (

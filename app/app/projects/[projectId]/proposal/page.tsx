@@ -207,7 +207,7 @@ export default function ProposalPage() {
         eyebrowIcon={<FileText size={13} weight="fill" color="#F59E0B" />}
         title="Proposals &"
         accent="Contract Amounts"
-        subtitle="Version your project proposals, track contract amounts, and capture win/loss outcomes."
+        subtitle="Versions, contract amounts, and win/loss outcomes."
         actions={
           <button onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openCreate(); } }} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> New Version

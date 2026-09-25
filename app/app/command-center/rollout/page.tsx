@@ -80,7 +80,7 @@ export default function RolloutPipelinePage() {
           <SectionCard
             icon={<Cactus size={16} weight="duotone" color={C.gold} />}
             title="Pipeline Board"
-            subtitle="Site selection to grand opening — every stage carries its playbook duration and committed value"
+            subtitle="Every stage carries its playbook duration and committed value."
             flush
           >
             <div style={{ display: 'flex', gap: 14, overflowX: 'auto', padding: 16, alignItems: 'flex-start' }}>

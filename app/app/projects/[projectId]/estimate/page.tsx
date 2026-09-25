@@ -153,7 +153,7 @@ export default function EstimatePage() {
             eyebrowIcon={<Ruler size={13} weight="fill" color="#F59E0B" />}
             title="Project"
             accent="Estimate"
-            subtitle="Cost estimate from the latest blueprint takeoff — rolled up by CSI division and tied to the budget"
+            subtitle="From the latest takeoff, rolled up by CSI division."
           />
           {ctx && (
             <StatStrip items={[
