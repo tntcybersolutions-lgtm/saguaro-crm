@@ -22,8 +22,6 @@ import {
   Storefront,
   MagnifyingGlass,
   Stack,
-  Percent,
-  CalendarBlank,
   Truck,
   Plus,
   Minus,
@@ -50,7 +48,7 @@ import {
   Globe,
   MagnifyingGlassPlus,
 } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
+import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, IconChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 import { moduleAccent } from '@/lib/module-identity';
 import {
@@ -351,6 +349,11 @@ export default function CatalogPage() {
 
   const allItems = data?.items || [];
   const verticalsSorted = useMemo(() => [...(data?.verticals || [])].sort((a, b) => a.localeCompare(b)), [data]);
+  const verticalCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const it of allItems) m.set(it.vertical, (m.get(it.vertical) || 0) + 1);
+    return m;
+  }, [allItems]);
 
   const scoped = useMemo(
     () => (vertical === 'all' ? allItems : allItems.filter((it) => it.vertical === vertical)),
@@ -560,17 +563,13 @@ export default function CatalogPage() {
     }
   }
 
-  const nationalCount = (data?.vendors || []).filter((v) => v.isNational).length;
-  const verticalCount = verticalsSorted.length;
-
   return (
     <PremiumSurface maxWidth={1600}>
       <style>{`
         .catAdd:active{transform:translateY(1px)!important;filter:brightness(.94)!important;box-shadow:0 1px 4px rgba(245,158,11,0.18),inset 0 1px 0 rgba(255,255,255,0.22)!important}
-        .catPill:active{transform:translateY(1px)!important;filter:brightness(.94)!important}
         .catStep:hover{transform:none!important;filter:none!important;background:rgba(245,158,11,0.20)!important}
         .catStep:active{background:rgba(245,158,11,0.28)!important}
-        @media (prefers-reduced-motion: reduce){.catAdd:active,.catPill:active{transform:none!important}}
+        @media (prefers-reduced-motion: reduce){.catAdd:active{transform:none!important}}
         .catProv{position:relative;display:inline-block;outline:none}
         .catProv .catProvPop{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:60;width:264px;padding:10px 12px;border-radius:9px;background:#141416;border:1px solid rgba(245,158,11,0.35);box-shadow:0 8px 24px rgba(245,158,11,0.10),inset 0 1px 0 rgba(255,255,255,0.06);text-align:left;white-space:normal;cursor:default}
         .catProv:hover .catProvPop,.catProv:focus-within .catProvPop{display:block}
@@ -590,6 +589,14 @@ export default function CatalogPage() {
               <MagnifyingGlass size={15} color="rgba(255,255,255,0.4)" style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }} />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search items, SKUs, vendors…" style={INP} />
             </div>
+            {verticalsSorted.length > 0 && (
+              <select value={vertical} onChange={(e) => setVertical(e.target.value)} style={SEL} className="pmBtn" aria-label="Filter by vertical">
+                <option value="all">All verticals ({allItems.length})</option>
+                {verticalsSorted.map((v) => (
+                  <option key={v} value={v}>{titleCase(v)} ({verticalCounts.get(v) || 0})</option>
+                ))}
+              </select>
+            )}
             <select value={sort} onChange={(e) => setSort(e.target.value as SortMode)} style={SEL} className="pmBtn">
               <option value="name">Sort: Name A–Z</option>
               <option value="price">Sort: Best Price</option>
@@ -642,47 +649,25 @@ export default function CatalogPage() {
         </div>
       )}
 
-      {/* Vertical pill tabs — alphabetical */}
-      {verticalsSorted.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 18, background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 5, border: '1px solid rgba(255,255,255,0.08)', width: 'fit-content', maxWidth: '100%' }}>
-          {['all', ...verticalsSorted].map((v) => {
-            const active = vertical === v;
-            const count = v === 'all' ? allItems.length : allItems.filter((it) => it.vertical === v).length;
-            return (
-              <button
-                key={v}
-                onClick={() => setVertical(v)}
-                className="pmBtn catPill"
-                style={{
-                  padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  fontWeight: 800, fontSize: 12, whiteSpace: 'nowrap',
-                  background: active ? `linear-gradient(180deg,#FBBF24,${GOLD} 60%,#D97706)` : 'transparent',
-                  color: active ? '#1A1206' : DIM, transition: 'all .15s',
-                  boxShadow: active ? '0 2px 10px rgba(245,158,11,0.28), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
-                }}
-              >
-                {v === 'all' ? 'All Verticals' : titleCase(v)}
-                <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 900, opacity: active ? 0.75 : 0.55 }}>{count}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {data && (
-        <StatStrip items={[
-          { label: 'Items Priced', value: String(stats.items), sub: vertical === 'all' ? `across ${verticalCount} vertical${verticalCount === 1 ? '' : 's'}` : `in ${titleCase(vertical)}`, icon: <Package size={11} color={GOLD} /> },
-          { label: 'Vendors Quoting', value: String(stats.vendors), sub: nationalCount > 0 ? `${nationalCount} national chain${nationalCount === 1 ? '' : 's'} on file` : 'regional + wholesale', icon: <Storefront size={11} color={GOLD} /> },
-          { label: 'Price Coverage', value: `${stats.coverage}%`, accent: stats.coverage >= 80 ? GREEN : undefined, sub: 'items with at least one quote', icon: <Percent size={11} color={GOLD} /> },
-          { label: 'Best-Price Savings', value: `${stats.avgSavings}%`, accent: stats.avgSavings > 0 ? GREEN : undefined, sub: 'avg best vs highest quote', icon: <Percent size={11} color={GOLD} /> },
-          { label: 'In Your Order', value: String(cartCount), accent: cartCount > 0 ? GOLD : undefined, sub: cartCount > 0 ? `${fmtMoney(cartTotal)} at best pricing` : 'select products below', icon: <ShoppingCartSimple size={11} color={GOLD} /> },
-          { label: 'Priced As Of', value: fmtDate(data.asOfMax), sub: 'reference snapshot', icon: <CalendarBlank size={11} color={GOLD} /> },
-        ]} />
-      )}
+      {/* ── The vertical filter moved into the toolbar as a dropdown, and the
+           six stat cards are gone. Thirteen gold pills and six cards were
+           ~190px of chrome between the header and the first price — on a
+           screen whose entire job is comparing prices. Nothing factual was
+           lost: items, vendors and the as-of date are in the card subtitle
+           below, coverage appears there only when it is not 100%, the cart
+           count lives in the sticky order bar it belongs to, and the
+           best-price spread was a sales figure, not a decision input. ── */}
 
       <SectionCard
-        title={vertical === 'all' ? 'Price Comparison — All Verticals' : `Price Comparison — ${titleCase(vertical)}`}
-        subtitle={`Reference pricing · as of ${fmtDate(data?.asOfMax)}`}
+        title="Price Comparison"
+        subtitle={!data ? 'Reference pricing' : [
+          `${stats.items} item${stats.items === 1 ? '' : 's'}`,
+          `${stats.vendors} vendor${stats.vendors === 1 ? '' : 's'}`,
+          // Only worth saying when it is not the whole set — 100% priced is the
+          // expected state and reads as filler.
+          ...(stats.items > 0 && stats.coverage < 100 ? [`${stats.coverage}% priced`] : []),
+          `reference pricing as of ${fmtDate(data.asOfMax)}`,
+        ].join(' · ')}
         icon={<Package size={17} weight="duotone" color={GOLD} />}
         flush
       >
