@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_requests: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          purge_after: string | null
+          purged_at: string | null
+          requested_at: string
+          scope: string
+          source: string | null
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          purge_after?: string | null
+          purged_at?: string | null
+          requested_at?: string
+          scope: string
+          source?: string | null
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          purge_after?: string | null
+          purged_at?: string | null
+          requested_at?: string
+          scope?: string
+          source?: string | null
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       action_items: {
         Row: {
           assigned_to_company: string | null
@@ -3113,6 +3152,8 @@ export type Database = {
           actual: number | null
           ai_generated: boolean | null
           approved_changes: number | null
+          carried_actual: number | null
+          carried_committed: number | null
           category: string | null
           committed: number | null
           cost_code: string | null
@@ -3135,6 +3176,8 @@ export type Database = {
           actual?: number | null
           ai_generated?: boolean | null
           approved_changes?: number | null
+          carried_actual?: number | null
+          carried_committed?: number | null
           category?: string | null
           committed?: number | null
           cost_code?: string | null
@@ -3157,6 +3200,8 @@ export type Database = {
           actual?: number | null
           ai_generated?: boolean | null
           approved_changes?: number | null
+          carried_actual?: number | null
+          carried_committed?: number | null
           category?: string | null
           committed?: number | null
           cost_code?: string | null
@@ -25663,6 +25708,8 @@ export type Database = {
       }
       schedule_tasks: {
         Row: {
+          area: string | null
+          area_index: number | null
           created_at: string | null
           duration: number | null
           ef: number | null
@@ -25674,6 +25721,7 @@ export type Database = {
           lf: number | null
           ls: number | null
           name: string
+          parent_task_id: string | null
           pct_complete: number | null
           phase: string | null
           predecessor_id: string | null
@@ -25687,6 +25735,8 @@ export type Database = {
           wbs: string | null
         }
         Insert: {
+          area?: string | null
+          area_index?: number | null
           created_at?: string | null
           duration?: number | null
           ef?: number | null
@@ -25698,6 +25748,7 @@ export type Database = {
           lf?: number | null
           ls?: number | null
           name: string
+          parent_task_id?: string | null
           pct_complete?: number | null
           phase?: string | null
           predecessor_id?: string | null
@@ -25711,6 +25762,8 @@ export type Database = {
           wbs?: string | null
         }
         Update: {
+          area?: string | null
+          area_index?: number | null
           created_at?: string | null
           duration?: number | null
           ef?: number | null
@@ -25722,6 +25775,7 @@ export type Database = {
           lf?: number | null
           ls?: number | null
           name?: string
+          parent_task_id?: string | null
           pct_complete?: number | null
           phase?: string | null
           predecessor_id?: string | null
@@ -25805,7 +25859,7 @@ export type Database = {
       }
       selection_options: {
         Row: {
-          category_id: string
+          category_id: string | null
           color: string | null
           created_at: string
           description: string | null
@@ -25817,13 +25871,14 @@ export type Database = {
           model_number: string | null
           name: string
           quantity: number | null
+          selection_id: string | null
           sort_order: number | null
           spec_url: string | null
           total_cost: number | null
           unit_cost: number | null
         }
         Insert: {
-          category_id: string
+          category_id?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -25835,13 +25890,14 @@ export type Database = {
           model_number?: string | null
           name: string
           quantity?: number | null
+          selection_id?: string | null
           sort_order?: number | null
           spec_url?: string | null
           total_cost?: number | null
           unit_cost?: number | null
         }
         Update: {
-          category_id?: string
+          category_id?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
@@ -25853,6 +25909,7 @@ export type Database = {
           model_number?: string | null
           name?: string
           quantity?: number | null
+          selection_id?: string | null
           sort_order?: number | null
           spec_url?: string | null
           total_cost?: number | null
@@ -25864,6 +25921,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "selection_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_options_selection_id_fkey"
+            columns: ["selection_id"]
+            isOneToOne: false
+            referencedRelation: "selections"
             referencedColumns: ["id"]
           },
         ]
@@ -28674,6 +28738,7 @@ export type Database = {
           ai_confidence: number | null
           ai_extracted: boolean | null
           ai_source_text: string | null
+          assembly_id: string | null
           category: string | null
           competitive_factor: number
           cost_key: string | null
@@ -28682,6 +28747,7 @@ export type Database = {
           csi_description: string | null
           csi_division: string | null
           description: string
+          formulas: Json | null
           id: string
           is_allowance: boolean | null
           is_excluded: boolean | null
@@ -28715,6 +28781,7 @@ export type Database = {
           ai_confidence?: number | null
           ai_extracted?: boolean | null
           ai_source_text?: string | null
+          assembly_id?: string | null
           category?: string | null
           competitive_factor?: number
           cost_key?: string | null
@@ -28723,6 +28790,7 @@ export type Database = {
           csi_description?: string | null
           csi_division?: string | null
           description?: string
+          formulas?: Json | null
           id?: string
           is_allowance?: boolean | null
           is_excluded?: boolean | null
@@ -28756,6 +28824,7 @@ export type Database = {
           ai_confidence?: number | null
           ai_extracted?: boolean | null
           ai_source_text?: string | null
+          assembly_id?: string | null
           category?: string | null
           competitive_factor?: number
           cost_key?: string | null
@@ -28764,6 +28833,7 @@ export type Database = {
           csi_description?: string | null
           csi_division?: string | null
           description?: string
+          formulas?: Json | null
           id?: string
           is_allowance?: boolean | null
           is_excluded?: boolean | null
@@ -29891,6 +29961,7 @@ export type Database = {
           company_name: string | null
           company_size: string | null
           created_at: string | null
+          deleted_at: string | null
           expires_at: string | null
           id: string
           logo_url: string | null
@@ -29914,6 +29985,7 @@ export type Database = {
           company_name?: string | null
           company_size?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           expires_at?: string | null
           id?: string
           logo_url?: string | null
@@ -29937,6 +30009,7 @@ export type Database = {
           company_name?: string | null
           company_size?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           expires_at?: string | null
           id?: string
           logo_url?: string | null

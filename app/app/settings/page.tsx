@@ -676,6 +676,18 @@ export default function SettingsPage() {
         >
           Sign Out
         </DangerButton>
+        {/* The privacy policy names this page, and the iOS app needs the same
+            control for App Store Guideline 5.1.1(v). Plain text under Sign Out
+            rather than a second red button — it should be findable, not easy to
+            hit by accident next to the one people press every day. */}
+        <div style={{ marginTop: 14 }}>
+          <Link
+            href="/app/settings/delete-account"
+            style={{ fontSize: 13, color: DIM, textDecoration: 'underline' }}
+          >
+            Delete account
+          </Link>
+        </div>
       </div>
 
     </PremiumSurface>
