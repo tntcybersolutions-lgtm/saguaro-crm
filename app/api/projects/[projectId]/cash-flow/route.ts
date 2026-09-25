@@ -87,8 +87,28 @@ export async function GET(
     const totalCOAmountCents = sumCents(approvedCOs.map((co: any) => toCents(co.amount || 0)));
     const adjustedContractCents = sumCents([contractAmountCents, totalCOAmountCents]);
 
-    // Total billed so far
-    const totalBilledCents = sumCents(allPayApps.map((pa: any) => toCents(pa.total_completed_stored || 0)));
+    /* Total billed so far — the LATEST application's figure, not a sum.
+       total_completed_stored is AIA G702 line 4, "Total Completed and Stored
+       to Date": already cumulative on every application, so adding them counts
+       application 1's work once for every application that followed it.
+
+       This fed remainingToBill, which feeds the monthly billing target below —
+       so on a job billed to $3.73M across six applications it computed $13.8M
+       billed, clamped remaining-to-bill to zero, and forecast that there was
+       nothing left to bill on a job 44% complete. A contractor plans payroll
+       off that number.
+
+       Ties on app_number happen in real data; break them on the larger
+       cumulative total so a stray duplicate carrying 0 can never win and zero
+       out the whole forecast. (Same rule as the mobile app's financials
+       screen, which is where this reasoning was already written down.) */
+    const latestPayApp = allPayApps.reduce<any | null>((best, a) => {
+      if (!best) return a;
+      const an = Number(a.app_number) || 0, bn = Number(best.app_number) || 0;
+      if (an !== bn) return an > bn ? a : best;
+      return (Number(a.total_completed_stored) || 0) > (Number(best.total_completed_stored) || 0) ? a : best;
+    }, null);
+    const totalBilledCents = toCents(latestPayApp?.total_completed_stored || 0);
     const remainingToBillCents = Math.max(0, subCents(adjustedContractCents, totalBilledCents));
 
     // Total retainage held
