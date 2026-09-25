@@ -70,6 +70,79 @@ export default function CloseoutPage() {
     })();
   }, [projectId]);
 
+  /* ── Actually closing the job ────────────────────────────────────────
+     This screen tracked twelve documents and then stopped. There was no
+     API and no button to set projects.status, so a finished job stayed
+     'active' forever and kept turning up in every open-projects count.
+     The columns were already on the table, unused. ── */
+  const [gate, setGate] = useState<{
+    closed: boolean;
+    blockers: { key: string; label: string; count: number; href: string }[];
+    unchecked: string[];
+    project: Record<string, any> | null;
+  } | null>(null);
+  const [closing, setClosing] = useState(false);
+  const [confirmOverride, setConfirmOverride] = useState(false);
+  const [closeErr, setCloseErr] = useState('');
+
+  const loadGate = React.useCallback(async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}/close`);
+      if (!res.ok) { setGate(null); return; }
+      setGate(await res.json());
+    } catch {
+      // Leave the panel unrendered rather than showing a gate we cannot vouch for.
+      setGate(null);
+    }
+  }, [projectId]);
+
+  useEffect(() => { loadGate(); }, [loadGate]);
+
+  async function closeProject(force: boolean) {
+    setClosing(true);
+    setCloseErr('');
+    try {
+      const res = await fetch(`/api/projects/${projectId}/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 409 && data.needsConfirmation) {
+        // Show what is open and make the override a separate, deliberate click.
+        setGate(g => (g ? { ...g, blockers: data.blockers || [], unchecked: data.unchecked || [] } : g));
+        setConfirmOverride(true);
+        return;
+      }
+      if (!res.ok) throw new Error(data.error || 'Could not close the project.');
+      setConfirmOverride(false);
+      setToast('Project closed. It no longer counts as active work.');
+      setTimeout(() => setToast(''), 4000);
+      await loadGate();
+    } catch (e: any) {
+      setCloseErr(e?.message || 'Could not close the project. Please try again.');
+    } finally {
+      setClosing(false);
+    }
+  }
+
+  async function reopenProject() {
+    setClosing(true);
+    setCloseErr('');
+    try {
+      const res = await fetch(`/api/projects/${projectId}/close`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not reopen the project.');
+      setToast('Project reopened.');
+      setTimeout(() => setToast(''), 4000);
+      await loadGate();
+    } catch (e: any) {
+      setCloseErr(e?.message || 'Could not reopen the project. Please try again.');
+    } finally {
+      setClosing(false);
+    }
+  }
+
   const completed = items.filter(i => i.status === 'complete').length;
   const total = items.length;
   const pct = Math.round((completed / total) * 100);
@@ -228,6 +301,108 @@ export default function CloseoutPage() {
           </>
         }
       />
+
+      {/* ── THE FINISH LINE ─────────────────────────────────────────────
+           First thing on the page, because it is the thing the page is
+           for. The gate warns rather than walls: real jobs close with an
+           owner-waived punch item or an RFI nobody will ever answer, and
+           blocking outright just teaches people to falsify the fields the
+           gate reads. So the open items are named, counted and linked,
+           and overriding them takes a second, separate click. ── */}
+      {gate && (
+        <SectionCard
+          title={gate.closed ? 'This project is closed' : 'Close out this project'}
+          subtitle={
+            gate.closed
+              ? `Closed ${gate.project?.closeout_date || '—'} — it no longer counts as active work.`
+              : gate.blockers.length === 0 && gate.unchecked.length === 0
+                ? 'Nothing is open. This job is ready to close.'
+                : `${gate.blockers.reduce((s, b) => s + b.count, 0)} item${gate.blockers.reduce((s, b) => s + b.count, 0) === 1 ? '' : 's'} still open across ${gate.blockers.length} area${gate.blockers.length === 1 ? '' : 's'}.`
+          }
+          icon={gate.closed
+            ? <CheckCircle size={17} weight="duotone" color={T.green} />
+            : <ListChecks size={17} weight="duotone" color="#F59E0B" />}
+        >
+          <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 280 }}>
+              {gate.closed ? (
+                <div style={{ fontSize: 12.5, color: T.muted, lineHeight: 1.6 }}>
+                  {gate.project?.substantial_completion_date && <div>Substantial completion: {gate.project.substantial_completion_date}</div>}
+                  {gate.project?.final_completion_date && <div>Final completion: {gate.project.final_completion_date}</div>}
+                  <div>Reopening puts it back on the active list and clears the closeout date.</div>
+                </div>
+              ) : gate.blockers.length === 0 && gate.unchecked.length === 0 ? (
+                <div style={{ fontSize: 12.5, color: T.muted }}>
+                  Punch list, RFIs, change orders, pay applications and lien waivers are all clear.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                  {gate.blockers.map(b => (
+                    <a
+                      key={b.key}
+                      href={`/app/projects/${projectId}/${b.href}`}
+                      className="pmBtn"
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '5px 10px', borderRadius: 8, textDecoration: 'none',
+                        border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.10)',
+                        color: '#FBBF24', fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {b.label}
+                    </a>
+                  ))}
+                  {/* A query that failed is NOT reported as "nothing open" —
+                      a closeout gate that rubber-stamps on an error is worse
+                      than no gate. */}
+                  {gate.unchecked.length > 0 && (
+                    <span style={{ fontSize: 11.5, color: '#ef4444', fontWeight: 700, alignSelf: 'center' }}>
+                      Could not check: {gate.unchecked.join(', ')}
+                    </span>
+                  )}
+                </div>
+              )}
+              {closeErr && <div style={{ marginTop: 10, fontSize: 12, color: '#ef4444' }}>{closeErr}</div>}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'stretch' }}>
+              {gate.closed ? (
+                <button
+                  onClick={reopenProject}
+                  disabled={closing}
+                  className="pmBtn"
+                  style={{ ...ghostButtonStyle, opacity: closing ? 0.5 : 1, cursor: closing ? 'not-allowed' : 'pointer' }}
+                >
+                  {closing ? 'Reopening…' : 'Reopen Project'}
+                </button>
+              ) : confirmOverride ? (
+                <>
+                  <button
+                    onClick={() => closeProject(true)}
+                    disabled={closing}
+                    className="pmBtn"
+                    style={{ ...goldButtonStyle, opacity: closing ? 0.5 : 1, cursor: closing ? 'not-allowed' : 'pointer' }}
+                  >
+                    {closing ? 'Closing…' : 'Close anyway'}
+                  </button>
+                  <button onClick={() => setConfirmOverride(false)} className="pmBtn" style={{ ...ghostButtonStyle }}>
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => closeProject(false)}
+                  disabled={closing}
+                  className="pmBtn"
+                  style={{ ...goldButtonStyle, opacity: closing ? 0.5 : 1, cursor: closing ? 'not-allowed' : 'pointer' }}
+                >
+                  {closing ? 'Closing…' : 'Close Project'}
+                </button>
+              )}
+            </div>
+          </div>
+        </SectionCard>
+      )}
 
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (

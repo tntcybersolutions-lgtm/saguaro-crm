@@ -48,9 +48,9 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
     if (error) throw error;
     return NextResponse.json({ item: data }, { status: 201 });
   } catch (e: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[projects/projectId/closeout]', e);
-    const msg = "Failed";
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Was hand-rolled: it logged without a correlation id, assigned a `msg`
+    // it never used, and returned a bare "Internal server error" that support
+    // could not tie to anything in the logs. apiError does all three properly.
+    return apiError('projects/projectId/closeout', e, 'Could not save the closeout item');
   }
 }

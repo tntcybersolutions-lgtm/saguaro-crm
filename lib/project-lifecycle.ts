@@ -1,0 +1,110 @@
+/**
+ * PROJECT LIFECYCLE — closing a job out, and what stands in the way.
+ *
+ * The closeout screen already tracked twelve documents. What it could not do
+ * was close the project: there was no API and no button, so `projects.status`
+ * sat at 'active' forever and every "open projects" count in the app kept
+ * counting jobs that finished last year. The columns to record it
+ * (closeout_date, substantial_completion_date, final_completion_date,
+ * actual_end_date, is_archived) were already on the table, unused.
+ *
+ * WHY THE GATE IS A WARNING, NOT A WALL:
+ * Real jobs close with loose ends — a punch item the owner waived, an RFI
+ * nobody will ever answer. Procore shows you what is open and lets you
+ * decide. Blocking outright teaches people to lie in the fields that feed
+ * the gate. So: the blockers are computed, named, counted and linked, and a
+ * close that ignores them has to say so explicitly (`force`), which is
+ * recorded. What is NOT negotiable is that the list is honest.
+ *
+ * STATUS VOCABULARIES are read off what the app actually writes, not
+ * invented here:
+ *   punch_list      open | in_progress | completed | voided   (page.tsx:48)
+ *   rfis            open | answered | closed                  (page.tsx:580)
+ *   change_orders   pending | approved | rejected             (page.tsx:339)
+ *   pay_applications draft|submitted|approved|certified|paid|rejected|void…
+ *   projects        active | … | completed                    (default 'active')
+ */
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+/** Project statuses that mean the job is no longer running. Mirrors
+ *  CLOSED_PROJECT in lib/suggestions.ts — keep the two in step. */
+export const CLOSED_PROJECT_STATUSES = [
+  'completed', 'complete', 'closed', 'cancelled', 'canceled', 'archived', 'lost',
+] as const;
+
+/** What `Close Project` writes. One value, so every reader agrees. */
+export const CLOSED_STATUS = 'completed';
+/** What `Reopen` writes. Matches the projects.status column default. */
+export const ACTIVE_STATUS = 'active';
+
+export const isClosedStatus = (s: unknown): boolean =>
+  CLOSED_PROJECT_STATUSES.includes(String(s || '').toLowerCase() as typeof CLOSED_PROJECT_STATUSES[number]);
+
+/** Punch items still needing work. */
+const PUNCH_DONE = ['completed', 'voided'];
+/** RFIs that no longer need an answer. */
+const RFI_DONE = ['answered', 'closed'];
+/** Pay applications that have reached a terminal state. */
+const PAY_APP_DONE = ['paid', 'rejected', 'void', 'voided', 'cancelled', 'canceled'];
+
+export interface Blocker {
+  /** Stable id so the UI can key and the API can report consistently. */
+  key: string;
+  /** Sentence fragment naming what is open, e.g. "3 open punch items". */
+  label: string;
+  count: number;
+  /** Where to go and deal with it. Relative to the project. */
+  href: string;
+}
+
+/**
+ * Everything still open on a project, as a list a human can act on.
+ *
+ * Every query is tenant-scoped — `tenant_id` comes from the authenticated
+ * session, never from a request body. Counts use `head: true` so none of
+ * these pull rows across the wire.
+ *
+ * A query that FAILS is not silently treated as "nothing open". It is
+ * reported as an unknown so the UI can say the gate could not be checked
+ * rather than implying a clean bill of health, which is how a closeout gate
+ * ends up rubber-stamping a job with forty open punch items.
+ */
+export async function closeoutBlockers(
+  db: SupabaseClient<any>,
+  tenantId: string,
+  projectId: string,
+): Promise<{ blockers: Blocker[]; unchecked: string[] }> {
+  const scope = (table: string) =>
+    db.from(table).select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId).eq('project_id', projectId);
+
+  const [punch, rfis, cos, payApps, waivers] = await Promise.all([
+    scope('punch_list').not('status', 'in', `(${PUNCH_DONE.join(',')})`),
+    scope('rfis').not('status', 'in', `(${RFI_DONE.join(',')})`),
+    scope('change_orders').eq('status', 'pending'),
+    scope('pay_applications').not('status', 'in', `(${PAY_APP_DONE.join(',')})`),
+    scope('lien_waivers').is('signed_at', null),
+  ]);
+
+  const blockers: Blocker[] = [];
+  const unchecked: string[] = [];
+  const add = (
+    res: { count: number | null; error: unknown },
+    key: string,
+    one: string,
+    many: string,
+    href: string,
+  ) => {
+    if (res.error) { unchecked.push(key); return; }
+    const n = res.count || 0;
+    if (n > 0) blockers.push({ key, count: n, label: `${n} ${n === 1 ? one : many}`, href });
+  };
+
+  add(punch, 'punch', 'open punch item', 'open punch items', 'punch-list');
+  add(rfis, 'rfis', 'unanswered RFI', 'unanswered RFIs', 'rfis');
+  add(cos, 'change_orders', 'undecided change order', 'undecided change orders', 'change-orders');
+  add(payApps, 'pay_apps', 'unfinalized pay application', 'unfinalized pay applications', 'pay-apps');
+  add(waivers, 'lien_waivers', 'unsigned lien waiver', 'unsigned lien waivers', 'lien-waivers');
+
+  return { blockers, unchecked };
+}
