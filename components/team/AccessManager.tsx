@@ -341,6 +341,24 @@ export function AccessManager() {
   const [inviteRole, setInviteRole] = useState('');
 
   /* ── pending sent invites (tenant-scoped; used by the Users tab panel) ── */
+  /* Who am I, and which id is this tenant's? Needed so the roster does not
+     offer a Remove button for the two people the server refuses to remove —
+     yourself, and the account owner (whose auth id IS the tenant id). */
+  const [meId, setMeId] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      try {
+        const headers = await getAuthHeaders();
+        const res = await fetch('/api/auth/me', { headers });
+        if (!res.ok) return;
+        const me = await res.json();
+        setMeId(me?.id ?? null);
+        setTenantId(me?.tenantId ?? null);
+      } catch { /* non-fatal — the server still refuses both cases */ }
+    })();
+  }, []);
+
   const loadInvites = useCallback(async () => {
     try {
       const headers = await getAuthHeaders();
@@ -639,6 +657,31 @@ export function AccessManager() {
     }
   };
 
+  /* Remove a person from the company account. Until now an admin could invite
+     someone and reset their password and that was the whole lifecycle — a
+     super who quit on Friday still had the projects, contracts and payroll on
+     Monday. Confirmation is typed, not a dialog button, because this ends
+     someone's access to a live job. */
+  const removeUser = async (userId: string, userName: string, email: string) => {
+    const typed = window.prompt(
+      `Remove ${userName} from this account?\n\n` +
+      `Their sign-in is deleted and they lose access immediately. The daily logs, ` +
+      `photos and records they wrote stay with the company.\n\n` +
+      `Type REMOVE to confirm.`,
+    );
+    if (typed?.trim().toUpperCase() !== 'REMOVE') return;
+    const headers = await getAuthHeaders();
+    try {
+      const res = await fetch(`/api/team/users/${userId}`, { method: 'DELETE', headers });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) { notify(body?.error || 'Could not remove that person.', 'err'); return; }
+      notify(`${userName}${email ? ` (${email})` : ''} no longer has access.`);
+      await loadData(); await loadInvites();
+    } catch {
+      notify('Could not reach the server.', 'err');
+    }
+  };
+
   /* ── filtered assignments ── */
   const filteredAssignments = useMemo(() => {
     let list = assignments;
@@ -903,6 +946,14 @@ export function AccessManager() {
                               style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Assign Role</button>
                             <button onClick={() => resetUserPassword(r.userId!, r.name)}
                               style={{ ...btn('transparent', DIM), padding: '6px 12px', marginLeft: 4 }}>Reset PW</button>
+                            {/* Destructive action last, and only for someone who
+                                is neither you nor the account owner — the server
+                                refuses both, so offering the button would only
+                                promise something it will not do. */}
+                            {r.userId !== meId && r.userId !== tenantId ? (
+                              <button onClick={() => removeUser(r.userId!, r.name, r.email ?? '')}
+                                style={{ ...btn('transparent', RED), padding: '6px 12px', marginLeft: 4 }}>Remove</button>
+                            ) : null}
                           </>
                         ) : r.status === 'invited' && r.invite ? (
                           <>
@@ -926,8 +977,10 @@ export function AccessManager() {
           <p style={{ color: DIM, fontSize: 11.5, lineHeight: 1.55, marginTop: 4 }}>
             Access is computed exactly the way the server enforces it (lib/permissions): admin/owner base roles bypass everything;
             everyone else takes the highest level per category across their role grants; a member with no grants gets the
-            View-only default with Admin locked. Account deactivation is not yet supported server-side — to revoke elevated
-            access today, remove the person&apos;s role grants above. Last-active is their real last sign-in.
+            View-only default with Admin locked. Remove deletes the person&apos;s sign-in outright, so access ends immediately;
+            the records they wrote stay with the company. The account owner cannot be removed here — that goes through account
+            deletion. To trim someone&apos;s access without removing them, take away their role grants above. Last-active is
+            their real last sign-in.
           </p>
         </div>
       )}
