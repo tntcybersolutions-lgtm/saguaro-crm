@@ -139,16 +139,25 @@ export async function markAllRead(tenantId: string, userId: string): Promise<voi
   }
 }
 
+/**
+ * Unread notifications for one person.
+ *
+ * ARGUMENT ORDER MATTERS AND NOTHING ENFORCES IT. Both parameters are strings
+ * holding UUIDs, so passing them the wrong way round typechecks perfectly —
+ * which is what /api/notifications/count did, calling this as
+ * getUnreadCount(user.id, user.id) and filtering tenant_id by a user id. The
+ * badge read zero for every user who was not their company's founder.
+ */
 export async function getUnreadCount(tenantId: string, userId: string): Promise<number> {
-  try {
-    const { count } = await supabase
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('tenant_id', tenantId)
-      .eq('is_read', false)
-      .or(`user_id.eq.${userId},user_id.is.null`);
-    return count || 0;
-  } catch {
-    return 0;
-  }
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId)
+    .eq('is_read', false)
+    .or(`user_id.eq.${userId},user_id.is.null`);
+  /* Was `catch { return 0 }`. A failing query and an empty inbox gave the same
+     answer, so the wrong-argument bug above had no way to announce itself.
+     Throw and let the caller decide what to show. */
+  if (error) throw error;
+  return count || 0;
 }

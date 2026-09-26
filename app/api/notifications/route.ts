@@ -6,8 +6,17 @@ import { getNotifications } from '@/lib/notifications';
 export async function GET(req: NextRequest) {
   try {
     const user = await getUser(req);
-    if (!user) return NextResponse.json({ notifications: [] });
-    const raw = await getNotifications(user.id, user.id, 30);
+    /* Was `return { notifications: [] }` on no user, which renders an empty
+       inbox instead of sending an expired session to sign in again. */
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    /* getNotifications is (tenantId, userId). This passed the USER id in the
+       tenant position, so the query filtered tenant_id by a user id and
+       returned nothing for anyone whose id is not also their tenant's — which
+       is everybody invited to a company, since a tenant's id here is the
+       FOUNDER's auth id. Both parameters are strings holding UUIDs, so
+       TypeScript had nothing to object to, and for the owner the two happen to
+       be equal, so whoever checked it saw it working. */
+    const raw = await getNotifications(user.tenantId, user.id, 30);
     // Map DB schema (is_read, body) to client schema (read, body)
     const notifications = raw.map((n: any) => ({
       id: n.id,
