@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase-server';
+/* THIS FILE CARRIED ITS OWN COPY OF getPortalSession, and that copy checked
+   the token and the status and stopped there. portal_client_sessions has an
+   expires_at column, so an EXPIRED client link kept working on this route —
+   a homeowner or an owner's rep who was given portal access for one phase
+   could still read the selections list long after the link was meant to die.
 
-async function getPortalSession(req: NextRequest) {
-  const token =
-    req.nextUrl.searchParams.get('token') ||
-    req.headers.get('x-portal-token');
-  if (!token) return null;
+   The same omission was found and fixed once already, in
+   app/api/portal/client/auth/route.ts, whose comment records it: "The
+   canonical lib/portal-auth validator does this; this local copy previously
+   skipped it, so expired portal tokens still worked." That fix never reached
+   here, which is what happens when an auth check is copied instead of called.
 
-  const db = createServerClient();
-  const { data: session } = await db
-    .from('portal_client_sessions')
-    .select('*')
-    .eq('token', token)
-    .eq('status', 'active')
-    .single();
-
-  return session;
-}
+   Using the canonical validator rather than repairing the copy: it checks
+   token, status AND expiry in one place, and it can also enforce a named
+   permission from the session, which a hand-rolled copy silently cannot. */
+import { getPortalSession } from '@/lib/portal-auth';
 
 /** GET — list selection items for project */
 export async function GET(req: NextRequest) {
