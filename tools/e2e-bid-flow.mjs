@@ -84,11 +84,27 @@ const invites = await step('invite subcontractors', async () => {
   return { ok: res.ok, detail: `${res.status} invited=${n} ${JSON.stringify(b).slice(0, 110)}`, value: b };
 });
 
-// 3 ── issue it
-await step('issue the package', async () => {
+/* 3 ── issue it.
+   TWO ASSERTIONS, NOT ONE. The first is that an incomplete jacket is REFUSED:
+   this package has no drawings, specs or bid form attached, and /issue is
+   supposed to say so by name rather than send a half-finished set to
+   subcontractors. A 200 here would be the bug.
+   Then force past it, because the point of this script is the rest of the
+   chain, and the route offers `force` for exactly the case where the GC knows
+   the jacket is thin and means to send it anyway. */
+await step('incomplete jacket is refused', async () => {
   const res = await fetch(`${BASE}/api/bid-packages/${pkgId}/issue`, { method: 'POST', headers: H, body: '{}' });
   const b = await j(res);
-  return { ok: res.ok, detail: `${res.status} ${JSON.stringify(b).slice(0, 130)}` };
+  const named = Array.isArray(b?.missing) && b.missing.length > 0;
+  return { ok: res.status === 409 && named, detail: `${res.status} names ${named ? b.missing.join(', ') : 'nothing'}` };
+});
+
+await step('issue the package (force)', async () => {
+  const res = await fetch(`${BASE}/api/bid-packages/${pkgId}/issue`, {
+    method: 'POST', headers: H, body: JSON.stringify({ force: true }),
+  });
+  const b = await j(res);
+  return { ok: res.ok, detail: `${res.status} ${JSON.stringify(b).slice(0, 110)}` };
 });
 
 // 4 ── the sub's side: a PUBLIC token, no session at all
