@@ -78,9 +78,16 @@ const MODULES = [
     body: { project_id: PROJECT, log_date: today, superintendent: 'Ray Ortega', crew_count: 18, weather: 'Clear', high_temp: '94', work_performed: 'SWEEP level 3 deck rebar and MEP sleeves.', notes: 'Inspection scheduled Thursday.' },
     key: 'work_performed', check: ['superintendent', 'crew_count', 'weather', 'notes'] },
 
-  { name: 'budgets', create: 'budgets/create', list: 'budgets/list?projectId=' + PROJECT,
-    body: { projectId: PROJECT, cost_code: '07-5300', description: 'SWEEP single-ply roofing', division: '07', original_budget: 412000, committed: 388000, actual: 96000 },
-    key: 'description', check: ['cost_code', 'original_budget', 'committed', 'actual'] },
+  /* budgets/create is the Takeoff screen's "Generate Budget". It writes a
+     header to `budgets` and rolls the line items up by CSI division into
+     budget_lines — so the meaningful read-back is the BUDGET SCREEN's endpoint,
+     which is where a user would look for it, not the header list. */
+  { name: 'budgets', create: 'budgets/create', list: 'projects/' + PROJECT + '/budget',
+    body: { projectId: PROJECT, name: 'SWEEP Takeoff Budget', originalTotal: 412000, revisedTotal: 412000,
+            overheadPct: 10, profitPct: 10, contingencyPct: 10,
+            lineItems: [{ costCode: '07-5300', csiDivision: '07', description: 'SWEEP single-ply roofing',
+                          category: 'material', unit: 'SF', quantity: 18400, unitCost: 22.39, originalAmount: 412000, revisedAmount: 412000 }] },
+    key: 'cost_code', check: ['original_budget'] },
 
   { name: 'todos', create: 'todos/create', list: null, noGet: 'no GET route exists under app/api/todos',
     body: { project_id: PROJECT, title: 'SWEEP confirm roof warranty registration', description: 'Manufacturer needs the completed form before closeout.', priority: 'medium', due_date: plus(10) },
@@ -95,8 +102,11 @@ const MODULES = [
     key: 'inspection_type', check: ['status', 'inspector'] },
 
   { name: 'deliveries', create: 'deliveries/create', list: 'deliveries?projectId=' + PROJECT,
-    body: { projectId: PROJECT, item: 'SWEEP RTU-3 rooftop unit', supplier: 'Arroyo Mechanical', quantity: 1, expected_date: plus(6), status: 'scheduled' },
-    key: 'item', check: ['supplier', 'status'] },
+    /* Deliveries live in punch_list with trade='delivery'; the route takes
+       title/description/poNumber, derives a title from the supplier when none
+       is given, and owns the status. Match its contract, not a guess at it. */
+    body: { projectId: PROJECT, title: 'SWEEP RTU-3 rooftop unit', description: 'Rooftop unit 3, crane pick scheduled', supplier: 'Arroyo Mechanical', poNumber: 'SWEEP-PO-8841', qtyOrdered: 1 },
+    key: 'title', check: ['description'] },
 
   { name: 'selections', create: 'selections/create', list: 'selections/list?projectId=' + PROJECT,
     body: { projectId: PROJECT, item: 'SWEEP corridor floor tile', category: 'Finishes', status: 'pending', allowance: 42000 },
@@ -122,7 +132,7 @@ const MODULES = [
     body: { project_id: PROJECT, vendor_name: 'SWEEP Verde Interiors', amount: 31400, status: 'unpaid', due_date: plus(21), description: 'Drywall progress' },
     key: 'vendor_name', check: ['amount', 'status'] },
 
-  { name: 'contracts', create: 'contracts/create', list: 'contracts?projectId=' + PROJECT,
+  { name: 'contracts', create: 'contracts/create', list: 'contracts/list?projectId=' + PROJECT,
     body: { project_id: PROJECT, title: 'SWEEP glazing subcontract', party_name: 'SWEEP Sonoran Glass', trade: 'Glazing', amount: 640000, status: 'executed', party_company: 'Sonoran Glass LLC' },
     key: 'party_name', check: ['trade', 'amount', 'status'] },
 

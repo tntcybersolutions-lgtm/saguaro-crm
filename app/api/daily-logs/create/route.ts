@@ -3,29 +3,50 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
 import { recordLearning } from '@/lib/learning';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'Edit');
   if (!g.ok) return g.res;
   const user = g.user;
-  try {
-    const body = await req.json().catch(() => ({}));
-    /* A record with no project is invisible: every project screen filters on
-       project_id, so this wrote a row the user was told had saved and could
-       never see again. 400 naming the field, like the nineteen other create
-       endpoints in this codebase already do. */
-    if (!(body.projectId || body.project_id)) {
-      return NextResponse.json({ error: 'project_id is required' }, { status: 400 });
-    }
-    const db = createServerClient();
-    /* This project must belong to the caller's tenant. Without the check a
-       project id from ANOTHER tenant satisfies the foreign key, and the row
-       is written — stamped with the caller's tenant, pointing at a customer's
-       job they cannot see. See lib/assert-project. */
-    const notOurs = await assertProjectInTenant(db, user.tenantId, (body.projectId || body.project_id));
-    if (notOurs) return notOurs;
 
-    const tenantId = user.tenantId;
+  /* PRE-FLIGHT SITS OUTSIDE THE TRY. None of it can fail in a way the catch
+     should dress up, and keeping it here is what lets the catch name the
+     project and the date when it reports a duplicate. */
+  const body = await req.json().catch(() => ({}));
+  /* A record with no project is invisible: every project screen filters on
+     project_id, so this wrote a row the user was told had saved and could
+     never see again. 400 naming the field, like the nineteen other create
+     endpoints in this codebase already do. */
+  if (!(body.projectId || body.project_id)) {
+    return NextResponse.json({ error: 'project_id is required' }, { status: 400 });
+  }
+  const projectId: string = body.projectId ?? body.project_id;
+  const db = createServerClient();
+  /* This project must belong to the caller's tenant. Without the check a
+     project id from ANOTHER tenant satisfies the foreign key, and the row
+     is written — stamped with the caller's tenant, pointing at a customer's
+     job they cannot see. See lib/assert-project. */
+  const notOurs = await assertProjectInTenant(db, user.tenantId, projectId);
+  if (notOurs) return notOurs;
+
+  const tenantId = user.tenantId;
+
+  /* THE GUARD ABOVE ACCEPTS SNAKE_CASE AND THE INSERT BELOW DID NOT.
+     `body.projectId || body.project_id` got a snake_case caller past the
+     required-field check and past the tenant check, and then every field in
+     the insert read camelCase only. The result was a 200 and a row with
+     project_id NULL, work_performed '', crew_count 0 — a daily log that
+     appears on no project screen, with the narrative that is the entire point
+     of a daily log silently discarded. Weather, superintendent and notes
+     survived only because those keys spell the same either way, which is what
+     made it look like it had worked.
+     Every field now reads both spellings, which is what the rest of the create
+     endpoints in this codebase already do. */
+  const pick = (camel: string, snake: string) => body[camel] ?? body[snake];
+  const pickedLogDate: string = pick('logDate', 'log_date') || new Date().toISOString().split('T')[0];
+
+  try {
 
     // Structured field-log data (was dropped before — only a scalar crew_count survived).
     const manpower = Array.isArray(body.manpowerByTrade ?? body.manpower_by_trade) ? (body.manpowerByTrade ?? body.manpower_by_trade) : null;
@@ -39,38 +60,25 @@ export async function POST(req: NextRequest) {
     // /api/weather brain (same source both surfaces use). Best-effort: any
     // failure just leaves the fields as the client sent them.
     let autoWx: any = null;
-    if (!body.weather && !body.temperatureHigh && body.projectId) {
+    if (!body.weather && !pick('temperatureHigh', 'high_temp')) {
       try {
         const origin = req.nextUrl.origin;
-        const wr = await fetch(`${origin}/api/weather?projectId=${body.projectId}`, {
+        const wr = await fetch(`${origin}/api/weather?projectId=${projectId}`, {
           headers: { cookie: req.headers.get('cookie') || '', authorization: req.headers.get('authorization') || '' },
           signal: AbortSignal.timeout(8000),
         });
         const wd = await wr.json();
         if (wd?.available) {
           autoWx = wd;
-          recordLearning(db, { tenantId, kind: 'weather_autofill', projectId: body.projectId, userId: user.id, meta: { conditions: wd.conditions } });
+          recordLearning(db, { tenantId, kind: 'weather_autofill', projectId, userId: user.id, meta: { conditions: wd.conditions } });
         }
       } catch { /* stay manual for the day */ }
     }
 
-    /* THE GUARD ABOVE ACCEPTS SNAKE_CASE AND THIS INSERT DID NOT.
-       `body.projectId || body.project_id` got a snake_case caller past the
-       required-field check and past the tenant check, and then every field
-       below read camelCase only. The result was a 200 and a row with
-       project_id NULL, work_performed '', crew_count 0 — a daily log that
-       appears on no project screen, with the narrative that is the entire
-       point of a daily log silently discarded. Weather, superintendent and
-       notes survived only because those keys spell the same either way, which
-       is what made it look like it had worked.
-       Every field now reads both spellings, which is what the rest of the
-       create endpoints in this codebase already do. */
-    const pick = (camel: string, snake: string) => body[camel] ?? body[snake];
-
     const { data: log, error } = await db.from('daily_logs').insert({
       tenant_id: tenantId,
-      project_id: body.projectId ?? body.project_id,
-      log_date: pick('logDate', 'log_date') || new Date().toISOString().split('T')[0],
+      project_id: projectId,
+      log_date: pickedLogDate,
       weather: body.weather || autoWx?.conditions || null,
       high_temp: pick('temperatureHigh', 'high_temp') || autoWx?.highTemp || null,
       low_temp: pick('temperatureLow', 'low_temp') || autoWx?.lowTemp || null,
@@ -105,7 +113,7 @@ export async function POST(req: NextRequest) {
     if (deliveriesIn.length > 0) {
       await db.from('deliveries').insert(deliveriesIn.map((d: any) => ({
         tenant_id: tenantId,
-        project_id: body.projectId,
+        project_id: projectId,
         item_name: d.itemName ?? d.item_name ?? '',
         vendor: d.vendor ?? null,
         quantity: d.quantity ?? null,
@@ -116,7 +124,40 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, log });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (err: unknown) {
+    /* THE CATCH USED TO BE `catch { return 'Internal server error' }` — no
+       variable, nothing logged, the exception discarded. Every failure this
+       route ever had produced the same eight words and threw away the cause,
+       which is why the one below stayed invisible.
+
+       daily_logs carries a unique index, daily_logs_project_date_tenant, on
+       (project_id, log_date, tenant_id). That is correct: a jobsite gets one
+       daily log per day. But a superintendent filing today's log when one
+       already exists is not a server error, it is a thing that happens every
+       week — somebody already wrote it, or they tapped save twice on bad
+       signal. They were told "Internal server error" and left to guess.
+
+       409 with the id of the log that already exists, so the client can offer
+       to open it instead of making them hunt. */
+    const code = (err as { code?: string })?.code;
+    const detail = String((err as { message?: string })?.message ?? '');
+    if (code === '23505' && detail.includes('daily_logs_project_date_tenant')) {
+      const { data: existing } = await db
+        .from('daily_logs')
+        .select('id, log_date')
+        .eq('project_id', projectId)
+        .eq('tenant_id', tenantId)
+        .eq('log_date', pickedLogDate)
+        .maybeSingle();
+      return NextResponse.json(
+        {
+          error: `A daily log already exists for ${pickedLogDate} on this project. Open it to add to the day instead of starting a second one.`,
+          existingLogId: existing?.id ?? null,
+          logDate: pickedLogDate,
+        },
+        { status: 409 },
+      );
+    }
+    return apiError('daily-logs/create', err, 'Could not save the daily log');
   }
 }
