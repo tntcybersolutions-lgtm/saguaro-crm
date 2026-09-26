@@ -63,10 +63,29 @@ function clamp(v: number, max: number): number {
   return v;
 }
 
-function fail(error: string) {
+/**
+ * A failed scan answered HTTP 200.
+ *
+ * The shape is deliberate — callers destructure devices/walls/boundary and an
+ * absent array would crash them — but the STATUS was not. 200 with empty
+ * arrays is indistinguishable from "the plan was read and nothing was found",
+ * so every layer above treated a dead AI call as a successful scan of an empty
+ * building. The auto-scan path in Designer.tsx has no else branch at all: it
+ * checked `res.ok && data.ok`, fell through, and drew nothing.
+ *
+ * Which is what "nobody knows how to use the heatmap" turned out to mean. The
+ * Anthropic key backing the scan is out of credit, so the call fails in under
+ * two seconds, and a user uploads a floor plan, presses scan, and watches
+ * absolutely nothing happen — no devices, no walls, no error, no clue.
+ *
+ * 502 keeps the safe shape and stops it reading as success. `error` stays a
+ * sentence written for the person holding the tablet, and the client shows it
+ * rather than inventing a friendlier one that says less.
+ */
+function fail(error: string, status = 502) {
   return Response.json(
     { ok: false, error, devices: [], walls: [], boundary: [], pxPerFt: null },
-    { status: 200 },
+    { status },
   );
 }
 
@@ -79,7 +98,12 @@ export async function POST(req: NextRequest) {
   try { body = await req.json(); } catch { return Response.json({ error: 'Invalid body' }, { status: 400 }); }
   const { image, imgW, imgH, pxPerFt, goals } = body;
   if (!image || !imgW || !imgH) return Response.json({ error: 'Missing plan image or dimensions' }, { status: 400 });
-  if (!process.env.ANTHROPIC_API_KEY) return fail("AI scan isn't configured");
+  /* 503, not 502: nothing is wrong with the request, the feature is simply
+     unavailable on this server. Worth distinguishing so support can tell a
+     configuration problem from a bad plan file. */
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return fail('The AI scan is not configured on this server. Contact support — your plan was not lost.', 503);
+  }
 
   const W = Number(imgW);
   const H = Number(imgH);
@@ -116,12 +140,21 @@ Rules: every coordinate x in 0..${W}, every y in 0..${H}. Cameras must include a
   } catch (err: any) {
     console.error('[heatmap/scan]', err);
     const status = err?.status;
-    const msg = status === 429
-      ? 'The AI scan is busy right now — please try again in a moment.'
-      : status === 401 || status === 403
-        ? "AI scan isn't configured correctly. Check the server API key."
-        : 'The AI scan could not read that plan. Try a clearer or flattened image.';
-    return fail(msg);
+    /* The billing case is its own answer. When the account behind the scan has
+       no credit the API returns 400 with "credit balance is too low", and
+       collapsing that into "could not read that plan" sent people off to
+       re-export their drawings over and over for a problem no drawing could
+       fix. That is exactly how this failure stayed invisible. */
+    const upstream = String(err?.error?.error?.message ?? err?.message ?? '');
+    const billing = /credit balance|insufficient|quota|billing/i.test(upstream);
+    const msg = billing
+      ? 'The AI scan is unavailable — the account behind it needs attention. Your plan is safe; place devices by hand or try again once it is sorted.'
+      : status === 429
+        ? 'The AI scan is busy right now — please try again in a moment.'
+        : status === 401 || status === 403
+          ? 'The AI scan is not configured correctly on this server. Contact support.'
+          : 'The AI scan could not read that plan. Try a clearer or flattened image.';
+    return fail(msg, billing || status === 401 || status === 403 ? 503 : 502);
   }
 
   const parsed = extractJson(text);

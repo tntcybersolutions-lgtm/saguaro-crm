@@ -1238,8 +1238,24 @@ export default function Designer({ projectId }: { projectId: string | null }) {
             const bpts: Pt[] = (Array.isArray(data.boundary) ? data.boundary : []).filter((p: { x: number; y: number }) => typeof p?.x === 'number' && typeof p?.y === 'number').map((p: { x: number; y: number }) => ({ x: cx(p.x), y: cy(p.y) }));
             if (bpts.length >= 3) newBoundary = bpts;
             if (typeof data.pxPerFt === 'number' && data.pxPerFt > 0) detectedFullPxPerFt = data.pxPerFt * inv;
+          } else {
+            /* THERE WAS NO ELSE HERE. A failed scan fell straight through and
+               the plan opened with no devices, no walls and no message — which
+               is indistinguishable from "the AI looked and found nothing".
+               Upload a plan, press scan, watch nothing happen, conclude the
+               tool is broken. The server writes this sentence for the person
+               holding the tablet; show theirs rather than inventing a vaguer
+               one. */
+            setAiNotes([
+              data?.error
+                || 'The AI scan could not run. Your plan is loaded — set the scale and place devices by hand, or try the scan again.',
+            ]);
           }
-        } catch { /* scan best-effort */ }
+        } catch {
+          /* Network or parse failure. Still says something: silence here is
+             what made this feature look dead. */
+          setAiNotes(['The AI scan could not be reached. Your plan is loaded — carry on by hand and try the scan again later.']);
+        }
       }
       let design = { ...project, activeType: 'wifi_ap' as DeviceTypeId, devices: project.devices };
       if (scanWalls.length) design = { ...design, walls: [...project.walls, ...scanWalls] };
@@ -1625,7 +1641,23 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         body: JSON.stringify({ image: small, imgW: sw, imgH: sh, pxPerFt: smallPxPerFt, goals: 'WiFi coverage, security cameras, motion + smoke detection, access control' }),
       });
       const data = await res.json();
-      if (!data.ok) { console.error('AI scan failed', res.status, data.error); setAiNotes([`AI scan couldn't run. ${res.status === 413 ? 'The plan is very large — try a PNG export at a smaller size.' : 'Try again in a moment.'}`]); setBusy(''); return; }
+      if (!data.ok) {
+        console.error('AI scan failed', res.status, data.error);
+        /* Was a generic "Try again in a moment." regardless of what the server
+           said. When the reason is that the account behind the scan has no
+           credit, "try again in a moment" is advice that can never work, and
+           it sent people back to re-export their drawings for a problem no
+           drawing could fix. The server's own sentence is written for a user;
+           413 is the one case worth answering locally, because only the client
+           knows the file was large. */
+        setAiNotes([
+          res.status === 413
+            ? 'The plan is very large — export it as a PNG at a smaller size and try again.'
+            : data.error || "The AI scan couldn't run. Try again in a moment.",
+        ]);
+        setBusy('');
+        return;
+      }
 
       const inv = sc > 0 ? 1 / sc : 1;            // downscaled px → full-res px
       const cx = (x: number) => Math.max(0, Math.min(project.imgW, x * inv));
