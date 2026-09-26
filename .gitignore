@@ -16,3 +16,4 @@ node_modules/
 # local build/install scratch
 *.log
 audit-*.json
+_probe.sql
