@@ -90,12 +90,37 @@ export async function POST(req: NextRequest) {
 
     // Accept both casings; honor whatever the caller chose.
     const projectId   = body.project_id   ?? body.projectId   ?? null;
-    const clockIn     = body.clock_in     ?? body.clockIn     ?? new Date().toISOString();
+
+    /* TWO DIFFERENT ACTS SHARE THIS ROUTE, and only one of them is a shift.
+       The mobile time clock punches in with { clock_in, gps_clock_in } and no
+       hours. The web timesheet form records hours already worked — a foreman
+       typing up the crew's week — and sends no clock_in at all.
+       time_entries carries a partial unique index, time_entries_one_open_shift,
+       UNIQUE (employee_id) WHERE clock_in IS NOT NULL AND clock_out IS NULL,
+       which is exactly right: nobody can be clocked in twice at once.
+       This line used to default clock_in to now() for BOTH, so every manual
+       entry was filed as an open shift. The first row for a worker saved; the
+       second violated the index and came back 500. A foreman entering Monday
+       through Friday got Monday and four failures, with nothing to explain it.
+       Only stamp a clock-in when the caller actually sent one. Hours-based
+       entries leave it null and never occupy the open-shift slot. */
+    const hoursGiven = [body.regular_hours, body.regularHours, body.regular_hrs,
+                        body.overtime_hours, body.overtimeHours, body.ot_hrs]
+      .some((v) => v != null && v !== '');
+    const explicitClockIn = body.clock_in ?? body.clockIn ?? null;
+    const clockIn     = explicitClockIn ?? (hoursGiven ? null : new Date().toISOString());
     const clockOut    = body.clock_out    ?? body.clockOut    ?? null;
     const gpsClockIn  = body.gps_clock_in ?? body.gpsClockIn  ?? null;
     const gpsClockOut = body.gps_clock_out?? body.gpsClockOut ?? null;
     const workDate    = body.work_date    ?? body.workDate    ?? new Date().toISOString().split('T')[0];
-    const status      = body.status       ?? 'active';
+    /* Same split as clock_in above. 'active' means "on the clock right now",
+       which is true of a punch-in and false of a foreman typing up hours that
+       were worked yesterday. The web timesheet screen only renders 'pending'
+       and 'approved' — it has no case for 'active' — so manual entries were
+       being written into a status that screen cannot display. Hours-based
+       entries start 'pending', which is what an approval queue expects and
+       what the table's own default already was. */
+    const status      = body.status       ?? (hoursGiven ? 'pending' : 'active');
     const notes       = body.notes        ?? body.work_description ?? body.workDescription ?? null;
     const costCodeId  = body.cost_code_id ?? body.costCodeId  ?? null;
 

@@ -50,17 +50,24 @@ export async function GET(
       { data: changeOrders },
     ] = await Promise.all([
       db.from('pay_applications')
-        .select('id, app_number, status, period_to, current_payment_due, retainage_held, total_completed_stored, created_at')
+        .select('id, app_number, status, period_to, current_payment_due, retainage_held, total_retainage, total_completed_stored, created_at')
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId)
         .order('app_number', { ascending: true }),
+      /* tenant_id alongside project_id on both of these. The project is
+         verified against the tenant above, so a foreign projectId never gets
+         this far and nothing was exposed — but relying on that means the
+         isolation of these two queries lives in a check forty lines away.
+         Every other query in this route carries the filter; these two did not. */
       db.from('invoices')
         .select('id, invoice_number, vendor_name, amount, status, due_date, description, created_at')
         .eq('project_id', projectId)
+        .eq('tenant_id', user.tenantId)
         .order('created_at', { ascending: false }),
       db.from('bills')
         .select('id, vendor_name, amount, status, due_date, description, created_at')
         .eq('project_id', projectId)
+        .eq('tenant_id', user.tenantId)
         .order('created_at', { ascending: false }),
       db.from('contracts')
         .select('id, party_company, contract_amount, status, retainage_pct, created_at')
@@ -111,8 +118,27 @@ export async function GET(
     const totalBilledCents = toCents(latestPayApp?.total_completed_stored || 0);
     const remainingToBillCents = Math.max(0, subCents(adjustedContractCents, totalBilledCents));
 
-    // Total retainage held
-    const totalRetainageHeldCents = sumCents(allPayApps.map((pa: any) => toCents(pa.retainage_held || 0)));
+    /* Total retainage held — the LATEST application's total_retainage.
+       Two bugs in one line before this:
+
+       1. It read pay_applications.retainage_held, which NO route writes.
+          pay-apps/create computes retainage and stores it as total_retainage
+          (see its G702 math: retainage = percentOf(totalCompletedStored)).
+          retainage_held is only ever written on the PROJECTS table, by
+          financial/project-report. So this sum was structurally zero for every
+          pay application the product has ever created — a GC with $373K held
+          back saw $0 in their cash-flow forecast.
+
+       2. It summed. total_retainage is derived from total_completed_stored,
+          which is cumulative, so it is cumulative too. Even once it read a
+          populated column, adding the applications together would have
+          over-counted it the same way the billed figure was over-counted.
+
+       Falls back to retainage_held for any legacy row that happens to carry
+       it, since reading a stale value beats reporting nothing. */
+    const totalRetainageHeldCents = toCents(
+      latestPayApp?.total_retainage ?? latestPayApp?.retainage_held ?? 0,
+    );
 
     // Outstanding payables
     const unpaidBills = allBills.filter((b: any) => b.status !== 'paid');
