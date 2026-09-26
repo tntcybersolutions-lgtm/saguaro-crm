@@ -49,6 +49,8 @@ interface RFI {
   answered_by: string | null;
   ball_in_court: string | null;
   assigned_to_name: string | null;
+  priority: string | null;
+  is_urgent: boolean | null;
   is_overdue: boolean;
   created_at: string;
 }
@@ -242,6 +244,9 @@ export default function RFIsPage() {
       spec_section: fSpecSection, status: 'open', submitted_by: '',
       due_date: fDueDate || null, answer: null, answered_by: null,
       ball_in_court: assignedName || null, assigned_to_name: assignedName || null,
+      /* Mirror what the POST below sends, so the optimistic row shows the
+         urgent badge immediately instead of only after the refetch. */
+      priority: fUrgent ? 'high' : 'medium', is_urgent: fUrgent,
       is_overdue: false, created_at: new Date().toISOString(),
     };
     setRfis(prev => [...prev, optimistic]);
@@ -654,6 +659,12 @@ export default function RFIsPage() {
                   </div>,
                   <div key="s" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <StatusPill module="rfis" status={displayStatus} size="sm" />
+                    {/* The urgent toggle on the create form promises the responder
+                        sees this first. Until now it wrote priority='high' and
+                        nothing ever displayed it. An open RFI is the only place
+                        it still matters — once answered, urgency is history. */}
+                    {(rfi.is_urgent || rfi.priority === 'high' || rfi.priority === 'critical')
+                      && rfi.status === 'open' && <Badge label="urgent" color="amber" />}
                     {rfi.is_overdue && rfi.status !== 'overdue' && <Badge label="overdue" color="red" />}
                   </div>,
                   <span key="bic" style={{ color: bic ? T.white : T.faint, fontWeight: bic ? 600 : 400 }}>{bic || 'Unassigned'}</span>,

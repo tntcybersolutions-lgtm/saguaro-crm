@@ -19,7 +19,13 @@ export async function GET(req: NextRequest) {
     const db = createServerClient();
     // narrow columns + a hard cap — select('*') with no limit pulled the whole tenant history and froze the client on render
     let query = db.from('rfis')
-      .select('id, rfi_number, subject, question, spec_section, status, submitted_by, due_date, answer, answered_by, ball_in_court, assigned_to_name, project_id, created_at')
+      /* priority and is_urgent are SAVED by the create form — the RFI screen's
+         urgent toggle writes priority 'high' and tells the user "priority is
+         raised and the responder sees it first". They were never selected
+         back, so nothing in any list could show it and that promise was not
+         kept anywhere the user could see. Two more narrow columns; the cap
+         below is what keeps this query cheap, not the column count. */
+      .select('id, rfi_number, subject, question, spec_section, status, priority, is_urgent, submitted_by, due_date, answer, answered_by, ball_in_court, assigned_to_name, project_id, created_at')
       .eq('tenant_id', user.tenantId)
       .order('rfi_number', { ascending: false })
       .limit(limit);

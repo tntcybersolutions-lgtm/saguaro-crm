@@ -54,19 +54,32 @@ export async function POST(req: NextRequest) {
       } catch { /* stay manual for the day */ }
     }
 
+    /* THE GUARD ABOVE ACCEPTS SNAKE_CASE AND THIS INSERT DID NOT.
+       `body.projectId || body.project_id` got a snake_case caller past the
+       required-field check and past the tenant check, and then every field
+       below read camelCase only. The result was a 200 and a row with
+       project_id NULL, work_performed '', crew_count 0 — a daily log that
+       appears on no project screen, with the narrative that is the entire
+       point of a daily log silently discarded. Weather, superintendent and
+       notes survived only because those keys spell the same either way, which
+       is what made it look like it had worked.
+       Every field now reads both spellings, which is what the rest of the
+       create endpoints in this codebase already do. */
+    const pick = (camel: string, snake: string) => body[camel] ?? body[snake];
+
     const { data: log, error } = await db.from('daily_logs').insert({
       tenant_id: tenantId,
-      project_id: body.projectId,
-      log_date: body.logDate || new Date().toISOString().split('T')[0],
+      project_id: body.projectId ?? body.project_id,
+      log_date: pick('logDate', 'log_date') || new Date().toISOString().split('T')[0],
       weather: body.weather || autoWx?.conditions || null,
-      high_temp: body.temperatureHigh || autoWx?.highTemp || null,
-      low_temp: body.temperatureLow || autoWx?.lowTemp || null,
+      high_temp: pick('temperatureHigh', 'high_temp') || autoWx?.highTemp || null,
+      low_temp: pick('temperatureLow', 'low_temp') || autoWx?.lowTemp || null,
       ...(autoWx ? { weather_source: 'nws', weather_api_data: autoWx.raw ?? null } : {}),
-      crew_count: crewFromManpower ?? body.crewCount ?? 0,
-      work_performed: body.workPerformed || '',
+      crew_count: crewFromManpower ?? pick('crewCount', 'crew_count') ?? 0,
+      work_performed: pick('workPerformed', 'work_performed') || '',
       delays: body.delays || '',
-      safety_notes: body.safetyNotes || '',
-      materials_delivered: body.materialsDelivered || '',
+      safety_notes: pick('safetyNotes', 'safety_notes') || '',
+      materials_delivered: pick('materialsDelivered', 'materials_delivered') || '',
       visitors: body.visitors || '',
       notes: body.notes || '',
       // Mobile-app text columns (app/daily.tsx writes these). Persist them so a

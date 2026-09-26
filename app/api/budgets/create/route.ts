@@ -129,10 +129,95 @@ export async function POST(req: NextRequest) {
         inserted += batch.length;
       }
 
+      /* AND INTO budget_lines, WHICH IS THE TABLE ANYTHING ACTUALLY READS.
+         This route is called from exactly one place — the Takeoff screen's
+         "Generate Budget" button. It wrote the header to `budgets` and the
+         lines to `budget_line_items`, and nothing in either the web app or the
+         field app reads budget_line_items. Every budget surface reads
+         budget_lines: the project Budget page (via projects/[id]/budget),
+         cost-control, project-context, the client portal's financials, the AI
+         forecast, and the field app's own Budget screen.
+         So a GC could do a full takeoff, press Generate Budget, get a success,
+         open the Budget page and find it empty, with the work sitting in a
+         table no screen has ever queried.
+         Half of this was already found once: app/budget.tsx in the field app
+         carries a note saying it "used to read public.budget_line_items — a
+         DIFFERENT, AI-builder table — so it showed numbers the web never
+         edited". The read side was corrected there; the write side was never
+         swept, so the takeoff kept filling the orphan.
+         budget_line_items is still written above: it is harmless, and removing
+         a table's only writer is a separate decision from making the feature
+         work. */
+      const canonical = [...byDivision.values()]
+        .sort((a, b) => a.division.localeCompare(b.division))
+        .map((d, idx) => ({
+          project_id: projectId,
+          tenant_id: tenantId,
+          cost_code: d.costCode,
+          division: d.division,
+          // NOT NULL on this table, and the only field that is.
+          description: (CSI_DIVISIONS[d.division]?.name || d.names[0] || `Division ${d.division}`).slice(0, 200),
+          category: 'material',
+          original_budget: d.total,
+          revised_budget: d.total,
+          committed: 0,
+          actual: 0,
+          projected: d.total,
+          sort_order: idx + 1,
+          notes: d.names.length > 1 ? d.names.slice(0, 6).join(' · ') : null,
+        }));
+
+      /* A read-then-write merge rather than an upsert. budget_lines has no
+         unique constraint on (project_id, cost_code) — only the primary key —
+         so onConflict would fail with 42P10, and ADDING that constraint would
+         forbid something legitimate: two lines under one cost code with
+         different scopes.
+         The merge rule is the one a GC would expect from re-running a takeoff
+         after the scope grew: a cost code already on the budget has its
+         budgeted amount revised, and committed / actual / projected — the
+         numbers someone has been maintaining by hand — are left alone. A cost
+         code that is new gets inserted. Nothing is ever deleted. */
+      const { data: existingLines, error: exErr } = await supabase
+        .from('budget_lines')
+        .select('id, cost_code')
+        .eq('project_id', projectId)
+        .eq('tenant_id', tenantId);
+      if (exErr) throw exErr;
+      const byCode = new Map((existingLines ?? []).map((l: { id: string; cost_code: string | null }) => [l.cost_code ?? '', l.id]));
+
+      const toInsert = canonical.filter((l) => !byCode.has(l.cost_code));
+      const toUpdate = canonical.filter((l) => byCode.has(l.cost_code));
+
+      for (let i = 0; i < toInsert.length; i += 50) {
+        const { error: blErr } = await supabase
+          .from('budget_lines')
+          .insert(toInsert.slice(i, i + 50) as never);
+        /* Thrown, not logged. A budget the user cannot see is the bug this
+           block exists to fix; failing quietly here would recreate it. */
+        if (blErr) {
+          console.error('[budgets/create] budget_lines insert error:', blErr);
+          throw blErr;
+        }
+      }
+      for (const l of toUpdate) {
+        const { error: upErr } = await supabase
+          .from('budget_lines')
+          .update({ original_budget: l.original_budget, revised_budget: l.revised_budget } as never)
+          .eq('id', byCode.get(l.cost_code)!)
+          .eq('tenant_id', tenantId);
+        if (upErr) {
+          console.error('[budgets/create] budget_lines update error:', upErr);
+          throw upErr;
+        }
+      }
+
       return NextResponse.json({
         success: true,
         data: budget,
         lineItemCount: inserted,
+        budgetLineCount: canonical.length,
+        budgetLinesInserted: toInsert.length,
+        budgetLinesRevised: toUpdate.length,
       });
     }
 
