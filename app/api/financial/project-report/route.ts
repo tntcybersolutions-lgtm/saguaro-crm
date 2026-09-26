@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
         .single(),
       db
         .from('pay_applications')
-        .select('current_payment_due, total_retainage')
+        .select('app_number, current_payment_due, total_retainage, total_completed_stored')
         .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId),
       db
@@ -60,8 +60,42 @@ export async function GET(req: NextRequest) {
     const payApps = payAppsRes.error ? null : payAppsRes.data;
     const changeOrders = changeOrdersRes.error ? null : changeOrdersRes.data;
 
-    const billedFromChildren = sumOrNull(payApps, 'current_payment_due');
-    const retainageFromChildren = sumOrNull(payApps, 'total_retainage');
+    /* TWO OF THESE THREE FIGURES WERE SUMS OF THINGS THAT MUST NOT BE SUMMED.
+       Both surfaced by putting the same project through every financial
+       endpoint at once and comparing: this route disagreed with the project
+       API on billed-to-date by exactly one retainage, and with the cash-flow
+       forecast on retainage held by a factor of four.
+
+       BILLED TO DATE. This summed current_payment_due — each period's draw —
+       and labelled the total "billed to date". On a job billed to $3,730,000
+       that produced $3,357,000, because the draws are already net of
+       retainage. Both numbers are real; only one is billed-to-date. AIA G702
+       line 4, Total Completed and Stored to Date, is what a GC means by
+       billed, it is what the project API returns, and it is what the field
+       app's financials screen shows. This route was the outlier, so two
+       screens in the same product quoted a customer different numbers under
+       the same heading.
+
+       RETAINAGE HELD. total_retainage is derived from total_completed_stored
+       and is therefore cumulative too. Summing six applications gave
+       $1,383,100 against a true $373,000 — the same double-count already
+       fixed in the field app's burn chart, its command centre, and the
+       cash-flow forecast. This is the fourth place it lived.
+
+       Both are now the LATEST application's value. Ties on app_number break on
+       the larger cumulative total so a stray duplicate carrying 0 cannot win. */
+    const latestApp = (payApps ?? []).reduce<Record<string, unknown> | null>((best, a) => {
+      if (!best) return a as Record<string, unknown>;
+      const an = num((a as Record<string, unknown>).app_number);
+      const bn = num(best.app_number);
+      if (an !== bn) return an > bn ? (a as Record<string, unknown>) : best;
+      return num((a as Record<string, unknown>).total_completed_stored) > num(best.total_completed_stored)
+        ? (a as Record<string, unknown>)
+        : best;
+    }, null);
+
+    const billedFromChildren = latestApp ? toCents(num(latestApp.total_completed_stored)) : null;
+    const retainageFromChildren = latestApp ? toCents(num(latestApp.total_retainage)) : null;
     const cosFromChildren = sumOrNull(changeOrders, 'amount');
 
     // DB stores dollars; convert to cents for all arithmetic.

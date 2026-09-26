@@ -48,12 +48,42 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
     const { data: pkg } = await db
       .from('bid_packages')
-      .select('id, tenant_id, project_id, bid_due_date, due_date')
+      .select('id, tenant_id, project_id, status, bid_due_date, due_date')
       .eq('id', inv.bid_package_id)
       .eq('tenant_id', tenantId)
       .maybeSingle();
     if (!pkg) return NextResponse.json({ error: 'This link is no longer valid.' }, { status: 404 });
     const p = pkg as Record<string, any>;
+
+    /* THE PACKAGE'S OWN STATE WAS NEVER CHECKED. The invite, the tenant and
+       the due date were, and then a bid was accepted whatever state the
+       package was in.
+
+       Found by walking the lifecycle end to end: /issue correctly REFUSED to
+       send an incomplete jacket ("missing: Drawings, Specifications, Bid
+       Form"), so the package stayed in draft — and both invited subs then
+       opened the portal and submitted priced bids against a scope the GC had
+       never issued. The GC ends up holding bids on a jacket they were
+       deliberately stopped from sending.
+
+       The other end is worse. 'closed' and 'awarded' were equally acceptable,
+       so a sub holding the link could submit after bidding shut and after the
+       job was awarded, landing a new row in a leveling sheet somebody had
+       already made a decision from. The due-date check did not cover it: a GC
+       who closes early, or awards before the date, leaves the window open.
+
+       'sent' is what /issue sets. Anything earlier is not open yet; anything
+       later is over. */
+    const pkgStatus = String(p.status || 'draft').toLowerCase();
+    if (pkgStatus === 'draft' || pkgStatus === 'pending') {
+      return NextResponse.json(
+        { error: 'This bid package has not been issued yet. The general contractor will send it when the documents are ready.' },
+        { status: 409 },
+      );
+    }
+    if (['closed', 'awarded', 'cancelled', 'canceled', 'archived'].includes(pkgStatus)) {
+      return NextResponse.json({ error: 'Bidding for this package has closed.' }, { status: 409 });
+    }
 
     const due = p.bid_due_date || p.due_date;
     if (due && new Date(due).getTime() < Date.now()) {

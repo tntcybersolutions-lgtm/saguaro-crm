@@ -71,6 +71,21 @@ const PATTERNS = [
   { name: 'sumCents', re: /\bsum(?:Cents)?\s*\(([^;]{0,240})\)/g },
   // running += p.total_completed_stored
   { name: '+=',       re: /(\w+)\s*\+=\s*([^;\n]{0,160})/g },
+
+  /* THE COLUMN AS A STRING ARGUMENT. This one was missed on the first pass
+     and cost a real bug: financial/project-report sums through a generic
+     helper —
+
+       const sumOrNull = (rows, key) => sumCents(rows.map(r => toCents(num(r[key]))));
+       const retainageFromChildren = sumOrNull(payApps, 'total_retainage');
+
+     — so the column name never appears inside an aggregation expression, only
+     at the call site. The tool reported the whole web app clean while that
+     route was quoting $1,383,100 of retainage against a true $373,000.
+     Any helper whose name says it adds things up, handed a cumulative column
+     by name, is the same mistake wearing a different shape. */
+  { name: 'sum-helper',
+    re: /\b(?:sum|total|add|accumulate|rollup|roll_?up)\w*\s*\(\s*[^)]{0,80}?,\s*['"]([a-z_]+)['"]\s*\)/gi },
 ];
 
 const findings = [];
@@ -114,6 +129,9 @@ for (const root of ROOTS) {
            Only flag when the thing being iterated is pay applications. */
         const collection = (tail.match(/^\s*([\w.]+)\s*\.reduce/) || [])[1]
           || (tail.match(/\(\s*([\w.]+)\s*\.map/) || [])[1]
+          /* sum-helper: sumOrNull(payApps, 'total_retainage') — the rows are the
+             first argument, so that is where the collection name lives. */
+          || (name === 'sum-helper' ? (tail.match(/\(\s*([\w.]+)\s*,/) || [])[1] : undefined)
           || '';
         const isPayApps = /payapp|pay_app|applications|\bapps\b/i.test(collection)
           || /payapp|pay_app/i.test(expr);

@@ -82,6 +82,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ toke
     if (p.sub_portal_enabled === false) {
       return NextResponse.json({ error: 'This bid package is no longer accepting access.' }, { status: 404 });
     }
+
+    /* A DRAFT IS NOT SOMETHING A SUBCONTRACTOR SHOULD BE READING. Adding subs
+       mints their tokens; /issue is what sends the jacket. Between those two
+       the scope is still being assembled, and this route let an invited sub
+       open it and price from an unfinished set — which is how the lifecycle
+       walk found two subs bidding on a jacket /issue had refused to send for
+       missing Drawings, Specifications and a Bid Form.
+
+       Only draft is blocked. A closed or awarded package stays readable on
+       purpose: a sub who bid should be able to go back and see what they bid
+       on. Submitting is a different question and respond/ decides it there. */
+    const pkgStatus = String(p.status || 'draft').toLowerCase();
+    if (pkgStatus === 'draft' || pkgStatus === 'pending') {
+      return NextResponse.json(
+        { error: 'This bid package has not been issued yet. The general contractor will send it when the documents are ready.' },
+        { status: 409 },
+      );
+    }
     if (p.sub_portal_expires_at && new Date(p.sub_portal_expires_at).getTime() < Date.now()) {
       return NextResponse.json({ error: 'This link has expired. Contact the general contractor.' }, { status: 410 });
     }
