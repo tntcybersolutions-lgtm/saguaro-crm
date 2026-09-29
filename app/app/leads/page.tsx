@@ -5,7 +5,7 @@ import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
-import { PremiumFX, ModuleHero, StatStrip, AutoChip, FlowSteps } from '@/components/ui/premium';
+import { PremiumFX, ModuleHero, StatStrip, AutoChip, FlowSteps, SectionCard } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { Funnel } from '@phosphor-icons/react';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
@@ -33,6 +33,9 @@ type Lead = {
   contact_phone: string; source: string; estimated_value: number; stage: Stage;
   notes: string; tags: string[]; created_at: string; updated_at: string;
   project_type?: string | null; next_action_date?: string | null;
+  /* Who owns this deal. Stored since lead_pipeline existed and read by
+     nothing, so an owner could not tell who was producing. */
+  assigned_to?: string | null;
 };
 type Activity = {
   id: string; lead_id: string; activity_type: string; description: string;
@@ -102,6 +105,11 @@ export default function LeadsPage() {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [ownerFilter, setOwnerFilter] = useState<string>('all');
+  /* lead_pipeline.assigned_to is a uuid; the rep's name lives on profiles.
+     Without this join an owner cannot tell who is producing, which is the
+     first question anybody running a sales team asks. */
+  const [team, setTeam] = useState<{ id: string; full_name?: string; email?: string }[]>([]);
   const [valueMin, setValueMin] = useState('');
   const [valueMax, setValueMax] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -176,6 +184,7 @@ export default function LeadsPage() {
     return leads.filter(l => {
       if (stageFilter !== 'all' && l.stage !== stageFilter) return false;
       if (sourceFilter !== 'all' && l.source !== sourceFilter) return false;
+      if (ownerFilter !== 'all' && (l.assigned_to || 'unassigned') !== ownerFilter) return false;
       if (valueMin && num(l.estimated_value) < Number(valueMin)) return false;
       if (valueMax && num(l.estimated_value) > Number(valueMax)) return false;
       if (search) {
@@ -185,7 +194,7 @@ export default function LeadsPage() {
       }
       return true;
     });
-  }, [leads, stageFilter, sourceFilter, valueMin, valueMax, search]);
+  }, [leads, stageFilter, sourceFilter, ownerFilter, valueMin, valueMax, search]);
 
   /* ─── Sorted (list view) ─── */
   const sorted = useMemo(() => {
@@ -203,6 +212,23 @@ export default function LeadsPage() {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     else { setSortCol(col); setSortDir('asc'); }
   };
+
+  useEffect(() => {
+    let live = true;
+    fetch('/api/team/users')
+      .then(r => (r.ok ? r.json() : { users: [] }))
+      .then(d => { if (live) setTeam(Array.isArray(d?.users) ? d.users : []); })
+      /* A failed team read must not break the pipeline — the board still works,
+         reps just show as Unassigned until it succeeds. */
+      .catch(() => { if (live) setTeam([]); });
+    return () => { live = false; };
+  }, []);
+
+  const ownerName = useCallback((id?: string | null) => {
+    if (!id) return 'Unassigned';
+    const u = team.find(t => t.id === id);
+    return u?.full_name || u?.email || 'Unassigned';
+  }, [team]);
 
   /* ─── Pipeline Metrics ─── */
   const metrics = useMemo(() => {
@@ -227,6 +253,30 @@ export default function LeadsPage() {
     });
     return { total: leads.length, totalVal, wonVal, activeVal, winRate, avgDeal, byStage };
   }, [leads]);
+
+  /* ─── Per-rep performance ───
+     Who is producing. Grouped on assigned_to, which every lead has carried
+     since lead_pipeline existed and which nothing has ever read. Unassigned is
+     its own row on purpose — leads nobody owns are the ones that go cold, and
+     hiding them would hide the problem. */
+  const byRep = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; open: number; openVal: number; won: number; wonVal: number; lost: number }>();
+    leads.forEach(l => {
+      const id = l.assigned_to || 'unassigned';
+      if (!map.has(id)) map.set(id, { id, name: ownerName(l.assigned_to), open: 0, openVal: 0, won: 0, wonVal: 0, lost: 0 });
+      const r = map.get(id)!;
+      const v = num(l.estimated_value);
+      if (l.stage === 'Won') { r.won++; r.wonVal += v; }
+      else if (l.stage === 'Lost') { r.lost++; }
+      else { r.open++; r.openVal += v; }
+    });
+    return Array.from(map.values()).sort((a, b) => (b.wonVal - a.wonVal) || (b.openVal - a.openVal));
+  }, [leads, ownerName]);
+
+  const ownerOptions = useMemo(
+    () => Array.from(new Set(leads.map(l => l.assigned_to || 'unassigned'))),
+    [leads],
+  );
 
   /* ─── Create / Update lead ─── */
   const handleSave = async () => {
@@ -465,7 +515,63 @@ export default function LeadsPage() {
         }))} />
       )}
 
-      {/* ─── List toolbar — search + stage/source filters; value range rides in extra ─── */}
+      {/* ─── Who is producing ───
+           assigned_to has been on every lead since lead_pipeline existed and was
+           read by nothing, so an owner had no way to compare reps. Unassigned is
+           deliberately its own row: leads nobody owns are the ones that go cold,
+           and leaving them out would hide the problem rather than show it. */}
+      {!loading && leads.length > 0 && (
+        <SectionCard
+          title="By owner"
+          subtitle={`${byRep.length} owner${byRep.length === 1 ? '' : 's'} across ${leads.length} lead${leads.length === 1 ? '' : 's'}`}
+          style={{ marginBottom: 20 }}
+        >
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ textAlign: 'left', color: DIM, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <th style={{ padding: '6px 10px 8px 0', fontWeight: 700 }}>Owner</th>
+                  <th style={{ padding: '6px 10px 8px', fontWeight: 700, textAlign: 'right' }}>Open</th>
+                  <th style={{ padding: '6px 10px 8px', fontWeight: 700, textAlign: 'right' }}>Pipeline</th>
+                  <th style={{ padding: '6px 10px 8px', fontWeight: 700, textAlign: 'right' }}>Won</th>
+                  <th style={{ padding: '6px 10px 8px', fontWeight: 700, textAlign: 'right' }}>Won value</th>
+                  <th style={{ padding: '6px 0 8px 10px', fontWeight: 700, textAlign: 'right' }}>Win rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {byRep.map(r => {
+                  const closed = r.won + r.lost;
+                  const rate = closed > 0 ? Math.round((r.won / closed) * 100) : null;
+                  const unowned = r.id === 'unassigned';
+                  return (
+                    <tr
+                      key={r.id}
+                      onClick={() => setOwnerFilter(ownerFilter === r.id ? 'all' : r.id)}
+                      style={{
+                        borderTop: `1px solid ${BORDER}`, cursor: 'pointer',
+                        background: ownerFilter === r.id ? 'rgba(255,255,255,0.05)' : 'transparent',
+                      }}
+                    >
+                      <td style={{ padding: '9px 10px 9px 0', fontWeight: 700, color: unowned ? AMBER : TEXT }}>
+                        {r.name}
+                      </td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', color: TEXT }}>{r.open}</td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', color: TEXT }}>{fmt(r.openVal)}</td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', color: TEXT }}>{r.won}</td>
+                      <td style={{ padding: '9px 10px', textAlign: 'right', color: r.wonVal > 0 ? GREEN : DIM }}>{fmt(r.wonVal)}</td>
+                      <td style={{ padding: '9px 0 9px 10px', textAlign: 'right', color: rate === null ? DIM : rate >= 50 ? GREEN : AMBER }}>
+                        {rate === null ? '—' : `${rate}%`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
+
+      {/* ─── List toolbar — search + stage/source/owner filters; value range rides in extra ─── */}
       <ListToolbar
         module="leads"
         search={search}
@@ -474,14 +580,16 @@ export default function LeadsPage() {
         filters={[
           { key: 'stage', label: 'Stage', value: stageFilter, onChange: setStageFilter, allLabel: 'All Stages', options: [...STAGES] },
           { key: 'source', label: 'Source', value: sourceFilter, onChange: setSourceFilter, allLabel: 'All Sources', options: [...SOURCES] },
+          { key: 'owner', label: 'Owner', value: ownerFilter, onChange: setOwnerFilter, allLabel: 'All Owners',
+            options: ownerOptions.map(id => ({ value: id, label: id === 'unassigned' ? 'Unassigned' : ownerName(id) })) },
         ]}
         count={{ shown: filtered.length, total: leads.length }}
         style={{ marginBottom: 20 }}
         extra={<div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input type="number" placeholder="Min value" value={valueMin} onChange={e => setValueMin(e.target.value)} style={{ ...inputS, width: 110 }} />
           <input type="number" placeholder="Max value" value={valueMax} onChange={e => setValueMax(e.target.value)} style={{ ...inputS, width: 110 }} />
-          {(search || stageFilter !== 'all' || sourceFilter !== 'all' || valueMin || valueMax) && (
-            <button onClick={() => { setSearch(''); setStageFilter('all'); setSourceFilter('all'); setValueMin(''); setValueMax(''); }} style={{ ...btnS('transparent', DIM), border: `1px solid ${BORDER}`, fontSize: 12 }}>Clear Filters</button>
+          {(search || stageFilter !== 'all' || sourceFilter !== 'all' || ownerFilter !== 'all' || valueMin || valueMax) && (
+            <button onClick={() => { setSearch(''); setStageFilter('all'); setSourceFilter('all'); setOwnerFilter('all'); setValueMin(''); setValueMax(''); }} style={{ ...btnS('transparent', DIM), border: `1px solid ${BORDER}`, fontSize: 12 }}>Clear Filters</button>
           )}
         </div>}
       />
