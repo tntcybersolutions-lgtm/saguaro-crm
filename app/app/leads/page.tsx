@@ -130,6 +130,8 @@ export default function LeadsPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [actLoading, setActLoading] = useState(false);
   const [actForm, setActForm] = useState({ activity_type: 'call', description: '', scheduled_at: '' });
+  const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
+  const [emailSending, setEmailSending] = useState(false);
   const [actSaving, setActSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [sortCol, setSortCol] = useState<string>('created_at');
@@ -371,6 +373,31 @@ export default function LeadsPage() {
       showToast(humanError(e, "Couldn't add the activity. Please try again."), 'error');
     } finally {
       setActSaving(false);
+    }
+  };
+
+  /* ─── Send an email to the lead ───
+     The route answers 503 when email is not configured and writes no activity
+     in that case, so a mail that never left is never logged as sent. Surface
+     the server's own words rather than a cheerful generic success. */
+  const handleSendEmail = async () => {
+    if (!detailLead || !emailForm.subject.trim() || !emailForm.message.trim()) return;
+    setEmailSending(true);
+    try {
+      const r = await fetch(`/api/leads/${detailLead.id}/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emailForm),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d?.error || `Request failed (${r.status})`);
+      setEmailForm({ subject: '', message: '' });
+      fetchActivities(detailLead.id);
+      showToast(`Sent to ${detailLead.contact_email || 'the lead'}`, 'success');
+    } catch (e: any) {
+      showToast(humanError(e, "Couldn't send that email."), 'error');
+    } finally {
+      setEmailSending(false);
     }
   };
 
@@ -1335,6 +1362,43 @@ export default function LeadsPage() {
               <h3 style={{
                 margin: '0 0 14px', fontSize: 16, fontWeight: 700, color: TEXT,
               }}>Activity Log</h3>
+
+              {/* Email the lead — the send is logged here as an activity, but
+                  only once the provider has actually accepted it. */}
+              {detailLead?.contact_email ? (
+                <div style={{
+                  background: BG, borderRadius: 10, padding: 14,
+                  marginBottom: 16, border: `1px solid ${BORDER}`,
+                }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 8 }}>
+                    Email {detailLead.contact_email}
+                  </div>
+                  <input
+                    placeholder="Subject"
+                    value={emailForm.subject}
+                    onChange={e => setEmailForm({ ...emailForm, subject: e.target.value })}
+                    style={{ ...inputS, width: '100%', marginBottom: 8 }}
+                  />
+                  <textarea
+                    placeholder="Write your message…"
+                    value={emailForm.message}
+                    onChange={e => setEmailForm({ ...emailForm, message: e.target.value })}
+                    rows={4}
+                    style={{ ...inputS, width: '100%', resize: 'vertical', marginBottom: 8 }}
+                  />
+                  <button
+                    onClick={handleSendEmail}
+                    disabled={emailSending || !emailForm.subject.trim() || !emailForm.message.trim()}
+                    style={{
+                      ...btnS(BLUE, '#fff'),
+                      opacity: emailSending || !emailForm.subject.trim() || !emailForm.message.trim() ? 0.5 : 1,
+                      cursor: emailSending ? 'wait' : 'pointer',
+                    }}
+                  >
+                    {emailSending ? 'Sending…' : 'Send email'}
+                  </button>
+                </div>
+              ) : null}
 
               {/* New activity form */}
               <div style={{
