@@ -10,6 +10,7 @@ import { CurrencyDollar, ShieldCheck, ClipboardText, CheckCircle, ChartBar, Tren
 import { useSavedLayout, ConfiguredDashboard } from '@/components/dashboard-widgets';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import GettingStartedRail from '@/components/GettingStartedRail';
+import SalesJourneyRail from '@/components/SalesJourneyRail';
 import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
 
 // Lazy-load Recharts to avoid SSR issues
@@ -461,6 +462,11 @@ export default function DashboardPage() {
 
         {/* GC Guided Journey — first project to first payment. The step count
             lives in GettingStartedRail; do not restate it here. */}
+        {/* Sales first, because sales happens first. GettingStartedRail opens
+            at "Create your project" — everything a salesperson does happens
+            before that, and until this rail existed the product never said so.
+            Both hide themselves once their own steps are all behind you. */}
+        <SalesJourneyRail />
         <GettingStartedRail />
 
         {hasCustomLayout && savedLayout ? (
