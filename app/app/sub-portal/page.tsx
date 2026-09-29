@@ -205,6 +205,20 @@ export default function SubPortalPage() {
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>('users');
 
+  /* Deep-link support (?tab=invite|users|permissions|...) — read once on mount,
+     client-only so there is no prerender/Suspense requirement from
+     useSearchParams. Same pattern as app/app/people/page.tsx.
+     Added because the Command Palette's "Invite Subcontractor" action pointed
+     at /app/subs/invite, which has never been a route: the palette offered an
+     action that 404'd. The invite tab is the real destination. */
+  useEffect(() => {
+    try {
+      const t = new URLSearchParams(window.location.search).get('tab') as Tab | null;
+      const valid: Tab[] = ['users', 'invite', 'permissions', 'activity', 'documents', 'compliance', 'directory', 'messages'];
+      if (t && valid.includes(t)) setTab(t);
+    } catch { /* no-op */ }
+  }, []);
+
   /* data */
   const [users, setUsers] = useState<SubUser[]>([]);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);

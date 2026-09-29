@@ -50,7 +50,7 @@ const ACTION_ITEMS: Omit<PaletteItem, 'section'>[] = [
   { id: 'act-new-rfi',      icon: '❓', label: 'New RFI',          description: 'Select a project to submit an RFI',    shortcut: 'R', href: '/app/projects' },
   { id: 'act-create-bid',   icon: '📦', label: 'Create Bid Package', description: 'Select a project to start bid pkg', shortcut: 'B', href: '/app/projects' },
   { id: 'act-gen-doc',      icon: '📄', label: 'Generate Document', description: 'AI-powered document generation',      shortcut: 'D', href: '/app/documents' },
-  { id: 'act-invite-sub',   icon: '🤝', label: 'Invite Subcontractor', description: 'Send a sub portal invite',         shortcut: 'I', href: '/app/subs/invite' },
+  { id: 'act-invite-sub',   icon: '🤝', label: 'Invite Subcontractor', description: 'Send a sub portal invite',         shortcut: 'I', href: '/app/sub-portal?tab=invite' },
   { id: 'act-new-log',      icon: '📋', label: 'New Daily Log',   description: "Open today's field log composer",      shortcut: 'L', href: '/app/daily-logs?new=1' },
   { id: 'act-new-punch',    icon: '🔨', label: 'New Punch Item',  description: 'Select a project to add a punch item', href: '/app/projects' },
 ];
