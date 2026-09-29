@@ -163,7 +163,19 @@ export default function CustomersPage() {
       const res = await fetch('/api/projects/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer_id: c.id, name: `${c.name} Project` }),
+        /* ownerName/ownerEmail are the two fields /api/projects/create actually
+           reads for the owner — it has never read customer_id. Without them the
+           project was written with owner_name '' and owner_email '', so the
+           projectRollup above could only find it through the "<Name> Project"
+           naming convention, and the owner never reached the project directory.
+           Sending them makes the rollup join on email (its strongest match) and
+           lets the route seed the Owner contact it already knows how to seed. */
+        body: JSON.stringify({
+          customer_id: c.id,
+          name: `${c.name} Project`,
+          ownerName: c.name,
+          ownerEmail: c.email,
+        }),
       });
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       showToast(`Project created for ${c.name}`, 'success');

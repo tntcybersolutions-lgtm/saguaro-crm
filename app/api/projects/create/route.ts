@@ -53,7 +53,14 @@ export async function POST(req: NextRequest) {
       ntp_date: body.noticeToProceedDate || null,
       substantial_date: body.substantialCompletionDate || null,
       final_completion_date: body.finalCompletionDate || null,
-      // Owner
+      /* Owner. Callers may also send `customer_id` (the Customers page does):
+         it is deliberately NOT written here, because projects has no
+         customer_id column yet — that is Phase 3. Until it exists, the owner
+         columns below ARE the link, and app/app/customers/page.tsx joins
+         customers to projects on owner_email. When the column lands, persist
+         customer_id here and the rollup collapses from a string match to a
+         join. Documented rather than silently dropped so the next reader does
+         not mistake the omission for an oversight. */
       owner_name: body.ownerName || '',
       owner_email: body.ownerEmail || '',
       owner_entity: body.ownerName ? { name: body.ownerName, email: body.ownerEmail } : {},
