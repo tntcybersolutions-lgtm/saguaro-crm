@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const g = await requirePermission(req, 'Projects', 'Edit');
+    const g = await requirePermission(req, 'Sales', 'Edit');
     if (!g.ok) return g.res;
     const user = g.user;
 

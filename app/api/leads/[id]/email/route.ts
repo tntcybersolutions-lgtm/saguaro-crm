@@ -34,7 +34,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const g = await requirePermission(req, 'Projects', 'Edit');
+  const g = await requirePermission(req, 'Sales', 'Edit');
   if (!g.ok) return g.res;
   const user = g.user;
   const { id } = await params;

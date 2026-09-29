@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { CATEGORIES } from '@/lib/permission-categories';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 
 /* ── palette ── */
@@ -55,10 +56,10 @@ interface AuditEntry {
 
 const PERM_LEVELS: PermLevel[] = ['None', 'View', 'Edit', 'Full'];
 
-const CATEGORIES = [
-  'Projects', 'Budget', 'Schedule', 'Safety', 'Documents',
-  'RFIs', 'Submittals', 'Change Orders', 'Pay Apps', 'Reports', 'Admin',
-];
+/* Sourced from lib/permission-categories, not copied. This file used to keep
+   its own list, which is how a category can exist on the server with no
+   checkbox in the UI that grants it. That module is a leaf with no server
+   imports precisely so this client component can read it. */
 
 const ROLE_PRESETS: { name: string; desc: string; color: string; perms: PermissionMap }[] = [
   { name: 'Admin', desc: 'Full system access across all modules.', color: GOLD,

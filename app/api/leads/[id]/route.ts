@@ -4,7 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const g = await requirePermission(req, 'Projects', 'Edit');
+  const g = await requirePermission(req, 'Sales', 'Edit');
   if (!g.ok) return g.res;
   const user = g.user;
   try {
@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const g = await requirePermission(req, 'Projects', 'Full');
+  const g = await requirePermission(req, 'Sales', 'Full');
   if (!g.ok) return g.res;
   const user = g.user;
   try {

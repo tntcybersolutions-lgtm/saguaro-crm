@@ -63,7 +63,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   try {
-    const g = await requirePermission(req, 'Projects', 'Edit');
+    const g = await requirePermission(req, 'Sales', 'Edit');
     if (!g.ok) return g.res;
     const user = g.user;
 
@@ -107,7 +107,7 @@ export async function DELETE(
 ) {
   const { id } = await params;
   try {
-    const g = await requirePermission(req, 'Projects', 'Full');
+    const g = await requirePermission(req, 'Sales', 'Full');
     if (!g.ok) return g.res;
     const user = g.user;
 

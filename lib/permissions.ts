@@ -12,30 +12,19 @@
  * Server only — imports the service-role client. Never import from a client component.
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { CATEGORIES, INHERITS_WHEN_ABSENT, type PermCategory } from './permission-categories';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerClient, getUser } from './supabase-server';
 import type { Database } from './database.types';
 
-/* ── vocabulary (must mirror app/app/roles-permissions/page.tsx) ── */
+/* ── vocabulary ── the category list lives in lib/permission-categories,
+   which both this module and the client-side matrix in
+   components/team/AccessManager read. ── */
 export type PermLevel = 'None' | 'View' | 'Edit' | 'Full';
 
-export type PermCategory =
-  | 'Projects'
-  | 'Budget'
-  | 'Schedule'
-  | 'Safety'
-  | 'Documents'
-  | 'RFIs'
-  | 'Submittals'
-  | 'Change Orders'
-  | 'Pay Apps'
-  | 'Reports'
-  | 'Admin';
 
-export const CATEGORIES: PermCategory[] = [
-  'Projects', 'Budget', 'Schedule', 'Safety', 'Documents',
-  'RFIs', 'Submittals', 'Change Orders', 'Pay Apps', 'Reports', 'Admin',
-];
+export { CATEGORIES, INHERITS_WHEN_ABSENT };
+export type { PermCategory };
 
 export type PermissionMap = Record<PermCategory, PermLevel>;
 
@@ -146,7 +135,13 @@ export async function getEffectivePermissions(
   for (const rd of roleDefs ?? []) {
     const perms = (rd.permissions ?? {}) as Record<string, unknown>;
     for (const c of CATEGORIES) {
-      merged[c] = maxLevel(merged[c], normalizeLevel(perms[c]));
+      /* A category the stored role never mentioned inherits from the one it
+         used to be gated on, rather than defaulting to None — see
+         INHERITS_WHEN_ABSENT. `in` rather than a truthiness check: an explicit
+         "Sales": "None" is a decision and must not be overridden. */
+      const inheritFrom = INHERITS_WHEN_ABSENT[c];
+      const raw = (inheritFrom && !(c in perms)) ? perms[inheritFrom] : perms[c];
+      merged[c] = maxLevel(merged[c], normalizeLevel(raw));
     }
   }
   return merged;
