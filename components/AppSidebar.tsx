@@ -84,6 +84,16 @@ interface NavItem {
 interface NavSection {
   title: string;
   items: NavItem[];
+  /* Which half of the product this belongs to.
+     The complaint was never that a page was missing — it was that running the
+     company and running a job sat interleaved in one undifferentiated list, so
+     nobody could tell where to look. 'sell' is winning the work: who you are
+     talking to, what you are chasing, what you bid. 'build' is doing it.
+     Undefined means the section spans both and sits outside the split — Home
+     at the top, cross-cutting tools at the bottom. Company scope only; inside
+     a project the rail renders PROJECT_NAV_SECTIONS, which is one job's worth
+     of work and has no halves to separate. */
+  zone?: 'sell' | 'build';
 }
 
 /** "Acme General Contractors" -> "AG" (first letters of the first two words). */
@@ -320,9 +330,25 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Time Clock',   href: '/app/time',         icon: Clock, accentKey: 'time' },
       { label: 'Fleet',        href: '/app/fleet',        icon: Truck, gate: 'fleet', accentKey: 'fleet' },
     ],
+  },  {
+    zone: 'sell',
+    title: 'Sales',
+    items: [
+      /* Leads and Customers lead this group because that is where the work starts:
+         a lead becomes a customer, a customer becomes a bid. Both pages have been
+         built and wired for months (1,384 and 636 lines, with working APIs), but
+         neither had an href in this array — so lib/company-tools' HAS_WORK rules
+         for '/app/leads' and '/app/customers' were guarding doors that did not
+         exist, and no amount of data could reveal them. */
+      { label: 'Leads',            href: '/app/leads',        icon: Kanban, accentKey: 'bids' },
+      { label: 'Customers',        href: '/app/customers',    icon: AddressBook, accentKey: 'contacts' },
+      { label: 'Bid Board',        href: '/app/bids',         icon: CurrencyDollar, core: true, accentKey: 'bids' },
+      { label: 'Intelligence',     href: '/app/intelligence', icon: Brain, accentKey: 'bidintelligence' },
+    ],
   },
   {
     // Entire section is gated to command_center — hidden unless the tenant is entitled.
+    zone: 'build',
     title: 'Franchise Rollout',
     items: [
       { label: 'Command Center',    href: '/app/command-center',            icon: Gauge,        gate: 'command_center', accentKey: 'commandcenter' },
@@ -347,24 +373,16 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    zone: 'build',
     title: 'Pre-Construction',
     items: [
-      /* Leads and Customers lead this group because that is where the work starts:
-         a lead becomes a customer, a customer becomes a bid. Both pages have been
-         built and wired for months (1,384 and 636 lines, with working APIs), but
-         neither had an href in this array — so lib/company-tools' HAS_WORK rules
-         for '/app/leads' and '/app/customers' were guarding doors that did not
-         exist, and no amount of data could reveal them. */
-      { label: 'Leads',            href: '/app/leads',        icon: Kanban, accentKey: 'bids' },
-      { label: 'Customers',        href: '/app/customers',    icon: AddressBook, accentKey: 'contacts' },
-      { label: 'Bid Board',        href: '/app/bids',         icon: CurrencyDollar, core: true, accentKey: 'bids' },
       { label: 'Takeoff Studio',   href: '/app/takeoff',      icon: Blueprint, accentKey: 'takeoff', core: true },
       { label: 'Catalog',          href: '/app/catalog',      icon: Package, accentKey: 'catalog' },
       { label: 'Signal Studio',    href: '/app/signal-studio', icon: WifiHigh, accentKey: 'signal' },
-      { label: 'Intelligence',     href: '/app/intelligence', icon: Brain, accentKey: 'bidintelligence' },
     ],
   },
   {
+    zone: 'build',
     title: 'Execution',
     items: [
       { label: 'Documents',   href: '/app/documents',  icon: FileText, accentKey: 'documents', core: true },
@@ -374,6 +392,7 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    zone: 'build',
     title: 'Financial',
     items: [
       { label: 'Invoicing',   href: '/app/invoicing',  icon: CreditCard, accentKey: 'invoices', core: true },
@@ -825,8 +844,35 @@ export default function AppSidebar({
               : totalVisible <= OPEN_ALL_BELOW || showAllTools || holdsCurrentPage || sIdx === 0
                 || (inProject && LEADING_SECTIONS[projectPhase].includes(String(section.title).toUpperCase()));
 
+          /* THE SPLIT. A labelled rule the first time each half of the product
+             starts, so the rail reads as two halves rather than one long list
+             of groups. Company scope only: inside a project the rail is one
+             job's worth of work and has no halves to separate.
+             Nothing is moved or hidden by this — every section keeps its place
+             and its contents. It only says out loud where the boundary is. */
+          const prevZone = sIdx > 0 ? renderSections[sIdx - 1]?.zone : undefined;
+          const showZoneDivider = !inProject && !!section.zone && section.zone !== prevZone;
+          const zoneTone = section.zone === 'sell' ? '#3B82F6' : '#F59E0B';
+          const zoneLabel = section.zone === 'sell' ? 'Winning the work' : 'Running the work';
+
           return (
           <div key={section.title} style={{ marginBottom: sIdx === renderSections.length - 1 ? 4 : 14 }}>
+            {showZoneDivider && (
+              collapsed ? (
+                /* No room for words at 64px — the rule alone still marks the
+                   boundary, and the colour carries the same meaning it does on
+                   the journey rails: blue sells, gold builds. */
+                <div aria-hidden style={{ height: 2, borderRadius: 2, margin: '4px 10px 12px', background: `linear-gradient(90deg, ${zoneTone}, transparent)` }} />
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0 10px', padding: '0 2px' }}>
+                  <span style={{
+                    fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+                    color: zoneTone, whiteSpace: 'nowrap',
+                  }}>{zoneLabel}</span>
+                  <span aria-hidden style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${zoneTone}55, transparent)` }} />
+                </div>
+              )
+            )}
             {/* Section Title — a real button, so it is keyboard reachable and
                 announces its expanded state to a screen reader. */}
             {!collapsed && (
