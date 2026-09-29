@@ -64,8 +64,21 @@ const nextConfig = {
          redirect() to a meta refresh once the shell has flushed, and this
          segment has a loading.tsx that always flushes first, so no amount of
          segment config fixes it. Redirecting here happens at the edge, before
-         any React runs, and answers a real 307. */
-      { source: '/app/projects/:projectId', destination: '/app/projects/:projectId/overview', permanent: false },
+         any React runs, and answers a real 307.
+
+         The pattern excludes `new`. :projectId is a wildcard and it matched
+         the literal segment in /app/projects/new, so every "New Project" and
+         "Create your first project" button in the app bounced to
+         /app/projects/new/overview, which resolves to the [projectId] shell
+         with an id of "new", asks the API for a project called new, and shows
+         "Couldn't load project — Request failed (404)". The form was
+         unreachable from anywhere in the product. Any future non-id segment
+         added beside app/app/projects/new/ has to be added here too. */
+      {
+        source: '/app/projects/:projectId((?!new$)[^/]+)',
+        destination: '/app/projects/:projectId/overview',
+        permanent: false,
+      },
     ];
   },
 };
