@@ -156,38 +156,68 @@ function q<T>(builder: PromiseLike<T>): Promise<T> {
 }
 
 async function fetchContext(tenantId: string, projectId: string, formType: FormType, extraContext?: Record<string, unknown>) {
+  // The project is read FIRST, on its own, and nothing else is read until it
+  // comes back owned by this tenant.
+  //
+  // Every query here runs on supabaseAdmin, which is the service role and
+  // therefore ignores RLS: the only thing standing between one company's job
+  // and another is the filters written on these lines. They used to all fire
+  // together in one Promise.allSettled, and five of them carried no tenant
+  // filter at all, so a call naming somebody else's project read that
+  // company's pay applications, schedule, bid jacket, open field issues and
+  // budget lines. prefillForm threw the rows away afterwards, which is luck,
+  // not a control: it is one edit away from returning them.
+  const projectRes = await q(
+    supabaseAdmin.from('projects').select('*').eq('id', projectId).eq('tenant_id', tenantId).single()
+  ) as { data: unknown };
+
+  if (!projectRes?.data) {
+    // Not this tenant's project. Read nothing else at all. Same shape as the
+    // success path, so buildPrompt and prefillForm see what they expect.
+    return {
+      project: null as Record<string, unknown> | null,
+      contacts: [] as Record<string, unknown>[],
+      extra: [] as unknown[],
+      formType,
+      userProvided: extraContext ?? {},
+    };
+  }
+
   const fetches: Promise<unknown>[] = [
-    q(supabaseAdmin.from('projects').select('*').eq('id', projectId).eq('tenant_id', tenantId).single()),
     q(supabaseAdmin.from('project_contacts').select('*').eq('project_id', projectId).eq('tenant_id', tenantId)),
   ];
 
   if (['pay_application', 'lien_waiver', 'contract'].includes(formType)) {
     fetches.push(q(supabaseAdmin.from('contracts').select('*, contract_milestones(*)').eq('project_id', projectId).eq('tenant_id', tenantId)));
-    fetches.push(q(supabaseAdmin.from('pay_applications').select('application_number, period_to, total_completed_and_stored').eq('project_id', projectId).order('application_number', { ascending: false }).limit(1)));
+    fetches.push(q(supabaseAdmin.from('pay_applications').select('application_number, period_to, total_completed_and_stored').eq('project_id', projectId).eq('tenant_id', tenantId).order('application_number', { ascending: false }).limit(1)));
   }
 
   if (['rfi', 'change_order'].includes(formType)) {
     fetches.push(q(supabaseAdmin.from('rfis').select('number, title, status').eq('project_id', projectId).eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(10)));
-    fetches.push(q(supabaseAdmin.from('schedule_tasks').select('name, phase, status, baseline_finish_date').eq('project_id', projectId).eq('is_critical_path', true).limit(5)));
+    fetches.push(q(supabaseAdmin.from('schedule_tasks').select('name, phase, status, baseline_finish_date').eq('project_id', projectId).eq('tenant_id', tenantId).eq('is_critical_path', true).limit(5)));
   }
 
   if (formType === 'bid_invitation') {
+    // bid_jackets is the one table here with no tenant_id column, so it cannot
+    // carry the filter. It is safe only because the project above was proved
+    // to belong to this tenant before this line could run. If that gate is
+    // ever removed, this row becomes readable across companies again.
     fetches.push(q(supabaseAdmin.from('bid_jackets').select('*').eq('project_id', projectId).limit(1).maybeSingle()));
   }
 
   if (['punch_list_item', 'inspection'].includes(formType)) {
-    fetches.push(q(supabaseAdmin.from('field_issues').select('id, issue_number, location, description').eq('project_id', projectId).eq('status', 'open').limit(20)));
+    fetches.push(q(supabaseAdmin.from('field_issues').select('id, issue_number, location, description').eq('project_id', projectId).eq('tenant_id', tenantId).eq('status', 'open').limit(20)));
   }
 
   if (formType === 'budget_line') {
-    fetches.push(q(supabaseAdmin.from('budget_line_items').select('cost_code, description, category').eq('project_id', projectId).limit(20)));
+    fetches.push(q(supabaseAdmin.from('budget_line_items').select('cost_code, description, category').eq('project_id', projectId).eq('tenant_id', tenantId).limit(20)));
   }
 
   const results = await Promise.allSettled(fetches);
-  const [projectRes, contactsRes, ...rest] = results;
+  const [contactsRes, ...rest] = results;
 
   return {
-    project:  (projectRes.status === 'fulfilled' ? (projectRes.value as { data: unknown }).data : null) as Record<string,unknown> | null,
+    project:  projectRes.data as Record<string,unknown> | null,
     contacts: (contactsRes.status === 'fulfilled' ? (contactsRes.value as { data: unknown }).data : []) as Record<string,unknown>[],
     extra:    rest.map(r => r.status === 'fulfilled' ? (r.value as { data: unknown }).data : null),
     formType,

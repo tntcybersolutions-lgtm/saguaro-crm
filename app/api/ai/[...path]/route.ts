@@ -266,13 +266,23 @@ export async function POST(
   if (segment === 'chat') return robustChatHandler(req);
 
   if (segment === 'prefill') {
+    // This branch had no auth at all. It took tenantId out of the body, handed
+    // it to AutoPopulator, which reads projects, contracts, pay applications,
+    // RFIs, budget lines and field issues with the SERVICE ROLE client, and
+    // then asks Opus to write a form from them. Two things followed: anybody
+    // who knew a tenant id and a project id could read that company's job, and
+    // anybody at all could spend the Anthropic budget by posting in a loop.
+    const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await req.json().catch(() => null);
-    if (!body?.formType || !body?.tenantId || !body?.projectId) {
-      return NextResponse.json({ error: 'formType, tenantId, and projectId are required' }, { status: 400 });
+    if (!body?.formType || !body?.projectId) {
+      return NextResponse.json({ error: 'formType and projectId are required' }, { status: 400 });
     }
     try {
       const result = await AutoPopulator.prefillForm({
-        tenantId:  String(body.tenantId),
+        // from the session, never the body: the caller does not choose the tenant
+        tenantId:  user.tenantId,
         projectId: String(body.projectId),
         formType:  String(body.formType) as Parameters<typeof AutoPopulator.prefillForm>[0]['formType'],
         context:   body.context ?? {},
