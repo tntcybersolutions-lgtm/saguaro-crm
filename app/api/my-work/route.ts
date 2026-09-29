@@ -47,6 +47,19 @@ type Counts = {
   dueToday: number;
 };
 
+/** A sales follow-up: lead_pipeline.next_action falling due. */
+type FollowUp = {
+  id: string;
+  company: string;
+  contact: string | null;
+  action: string;
+  due: string;
+  bucket: 'overdue' | 'today' | 'upcoming';
+  stage: string;
+  value: number;
+  mine: boolean;
+};
+
 function zeroCounts(): Counts {
   return { todos: 0, rfis: 0, punch: 0, issues: 0, tmAwaiting: 0, assists: 0, overdue: 0, dueToday: 0 };
 }
@@ -88,6 +101,52 @@ export async function GET(req: NextRequest) {
   try {
     const db = createServerClient() as any;
 
+    /* 0) SALES FOLLOW-UPS — deliberately computed BEFORE the assignments check
+       below. They hang off a lead, not a project, so a salesperson who holds no
+       work_assignments still owes somebody a call today; returning early on an
+       empty assignment list would have shown them an empty day while their
+       pipeline went cold. next_action/next_action_date have been captured on
+       every lead since lead_pipeline existed and were read by nothing.
+       Won and Lost are excluded: a closed deal owes no follow-up. */
+    const leadRows = await rows(
+      db.from('lead_pipeline')
+        .select('id, company_name, contact_name, next_action, next_action_date, stage, estimated_value, assigned_to')
+        .eq('tenant_id', t)
+        .not('next_action_date', 'is', null)
+        .not('stage', 'in', '(Won,Lost)')
+        .or(`assigned_to.eq.${orSafe(uid)},assigned_to.is.null`)
+        .order('next_action_date', { ascending: true })
+        .limit(CAP),
+    );
+
+    /* Horizon: two weeks. The hub is a queue, not an archive — a call booked for
+       March is not work you can do today, and listing it only buries what is. */
+    const horizon = new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0];
+
+    const followUps: FollowUp[] = leadRows
+      .map((r: any) => {
+        const due = day(r.next_action_date);
+        if (!due || due > horizon) return null;
+        return {
+          id: String(r.id),
+          company: String(r.company_name || 'Untitled lead'),
+          contact: r.contact_name ?? null,
+          action: String(r.next_action || 'Follow up'),
+          due,
+          bucket: due < today ? 'overdue' : due === today ? 'today' : 'upcoming',
+          stage: String(r.stage || ''),
+          value: Number(r.estimated_value) || 0,
+          mine: !!r.assigned_to,
+        } as FollowUp;
+      })
+      .filter((f): f is FollowUp => f !== null);
+
+    const followUpCounts = {
+      overdue:  followUps.filter((f) => f.bucket === 'overdue').length,
+      today:    followUps.filter((f) => f.bucket === 'today').length,
+      upcoming: followUps.filter((f) => f.bucket === 'upcoming').length,
+    };
+
     // 1) The routing table: which projects are mine right now.
     const assignments = await rows(
       db.from('work_assignments')
@@ -100,7 +159,8 @@ export async function GET(req: NextRequest) {
     );
 
     if (assignments.length === 0) {
-      return NextResponse.json({ projects: [], totals: zeroCounts() });
+      // No assigned projects is NOT an empty day — the follow-ups still stand.
+      return NextResponse.json({ projects: [], totals: zeroCounts(), followUps, followUpCounts });
     }
 
     // Dedupe by project (a person can hold two roles on one project): merge to
@@ -294,7 +354,7 @@ export async function GET(req: NextRequest) {
       (Object.keys(totals) as (keyof Counts)[]).forEach((k) => { totals[k] += c.counts[k]; });
     }
 
-    return NextResponse.json({ projects: cards, totals });
+    return NextResponse.json({ projects: cards, totals, followUps, followUpCounts });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

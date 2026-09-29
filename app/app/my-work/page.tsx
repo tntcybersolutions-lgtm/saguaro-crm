@@ -140,6 +140,50 @@ export default function MyWorkPage() {
 
   const roleLabel = (r?: string) => String(r || 'assignee').replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
+  /* Sales follow-ups hang off a lead, not a project, so they are read straight
+     off the payload and rendered whether or not this person holds a single
+     work_assignment. A salesperson with a full pipeline and no assigned project
+     used to get "Nothing assigned to you yet" while owing four people a call. */
+  const followUps: any[] = Array.isArray(data?.followUps) ? data.followUps : [];
+  const fuCounts = data?.followUpCounts || { overdue: 0, today: 0, upcoming: 0 };
+  const fuOverdue = followUps.filter((f) => f.bucket === 'overdue');
+  const fuToday = followUps.filter((f) => f.bucket === 'today');
+  const fuUpcoming = followUps.filter((f) => f.bucket === 'upcoming');
+  const fuMoney = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const dueLabel = (d: string) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d));
+    if (!m) return d;
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+      .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const FollowUpRow = ({ f, tone }: { f: any; tone: string }) => (
+    <Link
+      href="/app/leads"
+      className="pmBtn"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px',
+        borderRadius: 10, background: PANEL, border: `1px solid ${PANEL_BORDER}`,
+        borderLeft: `3px solid ${tone}`, textDecoration: 'none', color: TEXT,
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {f.company}
+          {f.contact ? <span style={{ color: DIM, fontWeight: 400 }}>{'  ·  '}{f.contact}</span> : null}
+        </div>
+        <div style={{ fontSize: 12, color: DIM, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {f.action}
+        </div>
+      </div>
+      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: tone }}>{dueLabel(f.due)}</div>
+        <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{f.stage}{f.value ? `  ·  ${fuMoney(f.value)}` : ''}</div>
+      </div>
+      <ArrowRight size={13} weight="bold" color={colors.textDim} style={{ flexShrink: 0 }} />
+    </Link>
+  );
+
   return (
     <PremiumSurface maxWidth={1200}>
       <ModuleHero
@@ -202,8 +246,34 @@ export default function MyWorkPage() {
         </div>
       )}
 
+      {/* Sales follow-ups — what you owe somebody, soonest first */}
+      {!isLoading && !error && followUps.length > 0 && (
+        <SectionCard
+          title="Sales Follow-Ups"
+          subtitle={`${fuCounts.overdue} past due · ${fuCounts.today} today · ${fuCounts.upcoming} in the next two weeks`}
+          action={<Link href="/app/leads" style={ghostButtonStyle} className="pmBtn"><Handshake size={15} weight="bold" /> Open Pipeline</Link>}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {[
+              { list: fuOverdue,  label: 'Past due',       tone: RED },
+              { list: fuToday,    label: 'Today',          tone: '#FBBF24' },
+              { list: fuUpcoming, label: 'Next two weeks', tone: colors.textDim },
+            ].filter((g) => g.list.length > 0).map((g) => (
+              <div key={g.label}>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: g.tone, marginBottom: 7 }}>
+                  {g.label} · {g.list.length}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                  {g.list.map((f: any) => <FollowUpRow key={f.id} f={f} tone={g.tone} />)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      )}
+
       {/* Global empty state — teach how assignment works */}
-      {!isLoading && !error && rows.length === 0 && (
+      {!isLoading && !error && rows.length === 0 && followUps.length === 0 && (
         <SectionCard>
           <PremiumEmpty
             icon={<Briefcase size={32} weight="duotone" color={GOLD} />}
