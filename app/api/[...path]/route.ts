@@ -556,46 +556,20 @@ export async function POST(
   // POST /api/payroll/create
   if (seg0 === 'payroll' && seg1 === 'create') return createCertifiedPayrollHandler(req);
 
-  // POST /api/projects/create
-  if (seg0 === 'projects' && seg1 === 'create') {
-    const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const name          = String(body.name          ?? '').trim();
-    const address       = String(body.address       ?? '').trim();
-    const projectType   = String(body.projectType   ?? 'residential').trim();
-    const contractAmount = Number(body.contractAmount ?? body.budget ?? 0);
-    const startDate     = body.startDate   ? String(body.startDate)   : null;
-    const subDate       = body.subDate     ? String(body.subDate)     : null;
-    const ownerName     = body.ownerName   ? String(body.ownerName)   : null;
-    const ownerEmail    = body.ownerEmail  ? String(body.ownerEmail)  : null;
-    const archName      = body.archName    ? String(body.archName)    : null;
-    const archEmail     = body.archEmail   ? String(body.archEmail)   : null;
-    const description   = body.description ? String(body.description) : null;
-    const retainage     = Number(body.retainage ?? 10);
-    const prevailingWage = Boolean(body.prevailingWage ?? false);
-    const publicProject  = Boolean(body.publicProject ?? false);
-    const contractType  = body.contractType ? String(body.contractType) : 'Lump Sum GMP';
-    const state         = body.state ? String(body.state) : 'AZ';
-    let tenantId = String(body.tenantId ?? '');
-    const bearer = req.headers.get('authorization');
-    if (bearer?.startsWith('Bearer ') && !tenantId) {
-      const token = bearer.slice(7);
-      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
-      tenantId = user?.user_metadata?.tenant_id ?? user?.id ?? tenantId;
-    }
-    if (!tenantId) return NextResponse.json({ error: 'Unauthorized — tenantId required' }, { status: 401 });
-    if (!name) return NextResponse.json({ error: 'Project name is required' }, { status: 400 });
-    const year = new Date().getFullYear();
-    const { count } = await supabaseAdmin.from('projects').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId);
-    const seq = String((count ?? 0) + 1).padStart(4, '0');
-    const projectNumber = `${year}-${seq}`;
-    const now = new Date().toISOString();
-    const { data: project, error } = await supabaseAdmin.from('projects').insert({ tenant_id: tenantId, name, address: address || null, project_number: projectNumber, project_type: projectType, contract_amount: contractAmount || null, start_date: startDate, substantial_completion_date: subDate, owner_name: ownerName, owner_email: ownerEmail, architect_name: archName, architect_email: archEmail, description, retainage_percent: retainage, prevailing_wage: prevailingWage, public_project: publicProject, contract_type: contractType, state, status: 'active', created_at: now, updated_at: now }).select('id, project_number, name').single();
-    if (error || !project) {
-      console.error('[api/catch-all] projects/create error:', error?.message);
-      return apiError('...path', error, "Failed to create project", 500);
-    }
-    return NextResponse.json({ projectId: project.id, projectNumber: project.project_number, name: project.name });
-  }
+  /* POST /api/projects/create is NOT handled here.
+     It used to be, and the handler took tenantId straight from the request
+     body: the Bearer token was consulted only when body.tenantId was ABSENT,
+     so supplying it skipped authentication altogether and then inserted with
+     supabaseAdmin, which bypasses RLS. Anyone who knew a tenant id could have
+     created a project inside that company.
+     It was already unreachable — app/api/projects/create/route.ts is a
+     specific route and Next matches it before this catch-all, which a live
+     POST confirms: the answer is {"error":"Unauthorized"} from getUser, not
+     this branch's "tenantId required". Dead, but one rename away from being
+     live, so it is gone rather than left loaded.
+     The real handler requires getUser() and takes the tenant from the session,
+     never the body. */
+
 
   // POST /api/autopilot/dismiss
   if (seg0 === 'autopilot' && seg1 === 'dismiss') {
