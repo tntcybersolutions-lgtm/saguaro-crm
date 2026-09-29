@@ -115,10 +115,18 @@ export default function CustomersPage() {
     return Math.round(customers.reduce((s, c) => s + (Number(c.lead_score) || 0), 0) / customers.length);
   }, [customers]);
 
-  // Per-customer project rollup: count + lifetime contract value. Projects have
-  // no customer_id column, so match on owner email (strongest), owner name, or
-  // the "<Name> Project" naming Assign to Project uses. DB numerics can
-  // round-trip as strings — always Number() before math.
+  /* Per-customer project rollup: count + lifetime contract value.
+     projects.customer_id is the real link and it wins outright. The email,
+     owner-name and "<Name> Project" matching below is NOT dead code — it is
+     how every project created before that column existed still finds its
+     customer, and those rows will never be backfilled beyond the ones whose
+     owner_email matched exactly.
+     The order matters in both directions. A project that IS linked belongs to
+     that customer and to nobody else, so it returns false for everyone else
+     rather than falling through to the fuzzy checks — otherwise a linked job
+     could still be claimed by a second customer with a similar name, which is
+     the failure the link was added to stop.
+     DB numerics can round-trip as strings — always Number() before math. */
   const projectRollup = useMemo(() => {
     const map = new Map<string, { count: number; value: number; list: { id: string; name: string; status?: string; value: number }[] }>();
     customers.forEach(c => {
@@ -126,6 +134,8 @@ export default function CustomersPage() {
       const name = (c.name || '').trim().toLowerCase();
       const list = projects
         .filter((p: any) => {
+          const linked = String(p?.customer_id || '').trim();
+          if (linked) return linked === c.id;
           const pEmail = String(p?.owner_email || '').trim().toLowerCase();
           const pOwner = String(p?.owner_name || '').trim().toLowerCase();
           const pName = String(p?.name || '').trim().toLowerCase();

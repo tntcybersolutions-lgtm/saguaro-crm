@@ -31,6 +31,11 @@ export async function POST(req: NextRequest) {
     // columns the web detail + financial views read.
     const contractValue = Number(body.contractValue ?? body.contract_value ?? body.contractAmount ?? body.contract_amount ?? 0) || 0;
     const startDate = body.startDate ?? body.start_date ?? null;
+    /* Only a real uuid, never '' — the column has a foreign key to
+       customer_profiles and an empty string is not a null. */
+    const rawCustomer = String(body.customer_id ?? body.customerId ?? '').trim();
+    const customerId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      .test(rawCustomer) ? rawCustomer : null;
 
     const db = createServerClient();
 
@@ -53,14 +58,13 @@ export async function POST(req: NextRequest) {
       ntp_date: body.noticeToProceedDate || null,
       substantial_date: body.substantialCompletionDate || null,
       final_completion_date: body.finalCompletionDate || null,
-      /* Owner. Callers may also send `customer_id` (the Customers page does):
-         it is deliberately NOT written here, because projects has no
-         customer_id column yet — that is Phase 3. Until it exists, the owner
-         columns below ARE the link, and app/app/customers/page.tsx joins
-         customers to projects on owner_email. When the column lands, persist
-         customer_id here and the rollup collapses from a string match to a
-         join. Documented rather than silently dropped so the next reader does
-         not mistake the omission for an oversight. */
+      /* Owner. customer_id is the real link now that projects carries the
+         column; the owner_* columns stay because they are what the prime
+         contract, the RFIs and the pay application print, and because every
+         project created before this has only them. A project created from
+         anywhere other than the Customers page simply has no customer_id,
+         which is why the rollup still falls back to matching on email. */
+      customer_id: customerId,
       owner_name: body.ownerName || '',
       owner_email: body.ownerEmail || '',
       owner_entity: body.ownerName ? { name: body.ownerName, email: body.ownerEmail } : {},
@@ -115,14 +119,19 @@ export async function POST(req: NextRequest) {
        same two names are then asked for again by the prime contract, by every
        RFI, by submittals and by the pay application — because nothing kept
        them. They go into the directory now, at the moment they are known. */
+    /* The Owner row carries customer_id where we know it, so the person
+       outlives the job: contacts hang off project_id, and without this a
+       customer's people disappear the moment the project closes. Only the
+       Owner — the architect is a different party, not the customer. */
     const directory = [
-      { role: 'Owner',     name: body.ownerName,     email: body.ownerEmail },
-      { role: 'Architect', name: body.architectName, email: body.architectEmail },
+      { role: 'Owner',     name: body.ownerName,     email: body.ownerEmail,     customerId },
+      { role: 'Architect', name: body.architectName, email: body.architectEmail, customerId: null },
     ]
       .filter((c) => String(c.name || '').trim())
       .map((c) => ({
         tenant_id: user.tenantId,
         project_id: projectId,
+        customer_id: c.customerId,
         name: String(c.name).trim(),
         email: String(c.email || '').trim() || null,
         role: c.role,

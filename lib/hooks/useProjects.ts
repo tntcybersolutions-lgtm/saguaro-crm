@@ -18,6 +18,11 @@ export interface Project {
   project_number: string;
   phase?: string;
   owner_name?: string;
+  owner_email?: string;
+  /* The customer this job belongs to. Null on every project created before the
+     column existed, and on any created outside the Customers page — consumers
+     must treat it as optional, not assume it. */
+  customer_id?: string | null;
 }
 
 export function useProjects() {
