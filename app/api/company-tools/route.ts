@@ -39,7 +39,11 @@ export async function GET(req: NextRequest) {
       db.from('takeoffs').select('id', head).eq('tenant_id', t),
       db.from('network_projects').select('id', head).eq('tenant_id', t),
       db.from('radio_channels').select('id', head).eq('tenant_id', t),
-      db.from('documents').select('id', head).eq('tenant_id', t),
+      /* `documents` is a vestigial table (id, user_id, title, content) with no
+         tenant_id at all, so this counted nothing and errored on every call.
+         The Documents page reads `generated_documents` — both /api/documents/list
+         and /api/documents/library select from it, scoped by tenant_id. */
+      db.from('generated_documents').select('id', head).eq('tenant_id', t),
       db.from('daily_logs').select('id', head).eq('tenant_id', t),
       db.from('schedule_tasks').select('id', head).eq('tenant_id', t),
       db.from('invoices').select('id', head).eq('tenant_id', t),
@@ -51,7 +55,10 @@ export async function GET(req: NextRequest) {
       db.from('saved_reports').select('id', head).eq('tenant_id', t),
       db.from('profiles').select('id', head).eq('tenant_id', t),
       db.from('subcontractors').select('id', head).eq('tenant_id', t),
-      db.from('leads').select('id', head).eq('tenant_id', t),
+      /* The Leads UI reads and writes `lead_pipeline`; nothing has ever written
+         to `leads`. Counting `leads` pinned this signal at 0 forever, so the
+         HAS_WORK rules for /app/leads and /app/customers could never fire. */
+      db.from('lead_pipeline').select('id', head).eq('tenant_id', t),
     ]);
 
     /** A failed count is omitted, not zeroed — see the header. */

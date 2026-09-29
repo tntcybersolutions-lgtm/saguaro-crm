@@ -349,6 +349,14 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Pre-Construction',
     items: [
+      /* Leads and Customers lead this group because that is where the work starts:
+         a lead becomes a customer, a customer becomes a bid. Both pages have been
+         built and wired for months (1,384 and 636 lines, with working APIs), but
+         neither had an href in this array — so lib/company-tools' HAS_WORK rules
+         for '/app/leads' and '/app/customers' were guarding doors that did not
+         exist, and no amount of data could reveal them. */
+      { label: 'Leads',            href: '/app/leads',        icon: Kanban, accentKey: 'bids' },
+      { label: 'Customers',        href: '/app/customers',    icon: AddressBook, accentKey: 'contacts' },
       { label: 'Bid Board',        href: '/app/bids',         icon: CurrencyDollar, core: true, accentKey: 'bids' },
       { label: 'Takeoff Studio',   href: '/app/takeoff',      icon: Blueprint, accentKey: 'takeoff', core: true },
       { label: 'Catalog',          href: '/app/catalog',      icon: Package, accentKey: 'catalog' },
