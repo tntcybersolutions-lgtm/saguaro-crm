@@ -9,14 +9,15 @@
  */
 import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { humanError } from '@/lib/errors';
 import { levelBids, usd, TRADE_TEMPLATES, type ScopeLine, type Bidder, type ScopeStatus } from '@/lib/bidleveling';
 import {
-  PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowStrip,
+  PremiumSurface, ModuleHero, SectionCard, StatStrip, FlowStrip, PremiumEmpty,
   goldButtonStyle, ghostButtonStyle,
 } from '@/components/ui/premium';
 import { moduleAccent } from '@/lib/module-identity';
-import { Plus, Trash, Sparkle, Trophy, Warning, Info, FilePdf, Target, CaretDown, CaretRight, Scales, ChartBar, ListChecks, Stack, Users } from '@phosphor-icons/react';
+import { Plus, Trash, Sparkle, Trophy, Warning, Info, FilePdf, Target, CaretDown, CaretRight, Scales, ChartBar, ListChecks, Stack, Users, ArrowRight } from '@phosphor-icons/react';
 
 const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', RED = '#ef4444', HEAD = '#1c1c1e', BLUE = '#FBBF24';
@@ -204,6 +205,40 @@ function BidLevelingBoard() {
   const btn: React.CSSProperties = { ...goldButtonStyle, padding: '9px 16px', fontSize: 13.5 };
   const ghost: React.CSSProperties = { ...ghostButtonStyle, padding: '8px 12px', fontSize: 13 };
   const th: React.CSSProperties = { padding: '9px 10px', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' };
+
+  /* NO PACKAGE, NO SILENCE.
+     Everything on this screen levels ONE package and reads its id from
+     ?package=. Three loaders open with `if (!packageId) return;`, so arriving
+     without one produced a page that loaded nothing, said nothing and offered
+     nothing — and the only link to levelling in the product, the tab on the
+     company bid board, pointed here with no id at all. Every GC who found the
+     feature the intended way met a dead screen.
+     Levelling is now linked from each package's own page, where the bids are,
+     which is where it should always have been reached from. This says so for
+     anyone who still arrives the old way. */
+  if (!packageId) {
+    return (
+      <PremiumSurface maxWidth={1240}>
+        <ModuleHero
+          eyebrow="Bid Tabulation · Deterministic"
+          eyebrowIcon={<Scales size={13} weight="fill" color={BIDS.hex} />}
+          title="Bid"
+          accent="Leveling"
+          subtitle="Normalize sub bids to one scope, then award on price and coverage."
+        />
+        <PremiumEmpty
+          icon={<Scales size={30} weight="duotone" color={BIDS.hex} />}
+          title="Pick a package to level"
+          description="Leveling compares the bids on one package — spread, low bid, coverage gaps and who has not answered. Open the package you want to compare and choose Level bids; its own page is where the bids live."
+          action={
+            <Link href="/app/bids" style={{ ...goldButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}>
+              Browse bid packages <ArrowRight size={14} weight="bold" />
+            </Link>
+          }
+        />
+      </PremiumSurface>
+    );
+  }
 
   return (
     <PremiumSurface maxWidth={1240}>

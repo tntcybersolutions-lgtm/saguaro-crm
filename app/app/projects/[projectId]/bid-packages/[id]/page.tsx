@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toCents, toDollars, sumCents } from '@/lib/calc';
-import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText } from '@phosphor-icons/react';
+import { FolderOpen, Envelope, ArrowLeft, FileText, Lock, Trophy, Star, Plus, CheckCircle, XCircle, CurrencyDollar, UsersThree, Receipt, ClipboardText, Scales } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowStrip, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
@@ -365,6 +365,27 @@ export default function BidPackageDetailPage() {
       <button onClick={downloadPDF} style={ghostButtonStyle} className="pmBtn">
         <FileText size={16} weight="regular" /> Printed jacket PDF
       </button>
+      {/* LEVELLING BELONGS WHERE THE BIDS ARE.
+          This page lists every bid received and an Award button beside each
+          one, and had no route to the screen that compares them — spread, low
+          bid, gaps, who has not answered. The only link to levelling in the
+          product was on the company bid board, and it pointed at
+          /app/bids/levelling with no ?package=, which is the one argument that
+          page reads; it opens empty without it. So the GC's choice was award
+          from a list of numbers, or find the tool by hand and then pick the
+          package again.
+          Linked through the project-scoped route, which redirects carrying the
+          id, and shown only once a bid exists — there is nothing to level
+          against an empty package. */}
+      {submissions.length > 0 && (
+        <Link
+          href={`/app/projects/${projectId}/bid-packages/${id}/leveling`}
+          style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}
+          className="pmBtn"
+        >
+          <Scales size={16} weight="duotone" /> Level {submissions.length} bid{submissions.length === 1 ? '' : 's'}
+        </Link>
+      )}
       {pkg.status !== 'closed' && pkg.status !== 'awarded' && (
         <button onClick={closeBids} disabled={closing} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px 18px', borderRadius: 12, background: 'rgba(192,48,48,.12)', border: '1px solid rgba(192,48,48,.3)', color: '#ff7070', fontSize: 13.5, fontWeight: 800, cursor: 'pointer', opacity: closing ? 0.6 : 1 }}>
           {closing ? 'Closing...' : <><Lock size={15} weight="bold" /> Close Bidding</>}
