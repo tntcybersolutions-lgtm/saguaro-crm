@@ -128,6 +128,10 @@ export default function BidPackageDetailPage() {
      whole time — nothing needed building on the server, only offering. */
   const [directory, setDirectory] = useState<Array<{ id: string; company_name: string; email: string | null; trade: string | null }>>([]);
   const [pickedSubId, setPickedSubId] = useState('');
+  /* A compliance hold the GC still has to resolve — not a toast that expires
+     before they have decided. */
+  const [complianceHold, setComplianceHold] = useState<{ submissionId: string; subName: string; message: string } | null>(null);
+  const [requestingDocs, setRequestingDocs] = useState(false);
 
   useEffect(() => { loadPackage(); }, [id]);
 
@@ -217,21 +221,61 @@ export default function BidPackageDetailPage() {
     } finally { setReminding(null); }
   }
 
-  async function awardBid(submissionId: string, subName: string) {
-    if (!confirm(`Award bid to ${subName}?`)) return;
+  /**
+   * Award a bid, and when compliance holds it, keep the two ways forward on
+   * screen.
+   *
+   * The API's hold reads: "Compliance hold — W-9 not on file. Award anyway with
+   * override, or request the documents first." Both of those are real —
+   * /award takes overrideCompliance, /api/documents/w9-request files the
+   * request — and the page offered neither. The sentence arrived as a toast,
+   * the toast expired, and the GC was left facing the same Award button that
+   * had just refused, with no way to do either thing it had told them to do.
+   *
+   * The hold is now state rather than a message: it names what is missing and
+   * carries the override and the request beside it until it is dealt with.
+   */
+  async function awardBid(submissionId: string, subName: string, opts?: { override?: boolean }) {
+    if (!opts?.override && !confirm(`Award bid to ${subName}?`)) return;
     setAwarding(submissionId);
+    setComplianceHold(null);
     try {
       const r = await fetch(`/api/bid-packages/${id}/award`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submissionId, packageId: id }),
+        body: JSON.stringify({ submissionId, packageId: id, overrideCompliance: !!opts?.override }),
       });
       const d = await r.json().catch(() => ({})) as any;
-      if (!r.ok || d.error) throw new Error(d.error || 'Award failed');
+      if (!r.ok || d.error) {
+        const msg = String(d.error || 'Award failed');
+        /* A compliance hold is not a failure to report and forget — it is a
+           decision the GC now has to make, so it stays on the page. */
+        if (/compliance hold/i.test(msg)) {
+          setComplianceHold({ submissionId, subName, message: msg });
+          return;
+        }
+        throw new Error(msg);
+      }
       showToast(d.message || `Awarded to ${subName}!`);
       await loadPackage();
     } catch (e: any) {
       showToast(e?.message || `Could not award bid to ${subName}. Please try again.`, '#ff7070');
     } finally { setAwarding(null); }
+  }
+
+  /** File the W-9 request the hold told them to send. */
+  async function requestW9(subName: string, subEmail: string | null) {
+    setRequestingDocs(true);
+    try {
+      const r = await fetch('/api/documents/w9-request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, vendorName: subName, vendorEmail: subEmail || '' }),
+      });
+      const d = await r.json().catch(() => ({})) as any;
+      if (!r.ok || d.error) throw new Error(d.error || 'Could not file the W-9 request');
+      showToast(`W-9 requested from ${subName}.`);
+    } catch (e: any) {
+      showToast(e?.message || `Could not request the W-9 from ${subName}.`, '#ff7070');
+    } finally { setRequestingDocs(false); }
   }
 
   async function closeBids() {
@@ -530,6 +574,50 @@ export default function BidPackageDetailPage() {
               action={<span style={{ fontSize: 12, color: MUTED }}>{submissions.length} received</span>}
               flush
             >
+              {/* The hold sits with the bids it is holding, and carries both of
+                  the ways out that its own wording promises. */}
+              {complianceHold && (
+                <div style={{ margin: '14px 20px', padding: '14px 16px', borderRadius: 12, background: 'rgba(245,158,11,0.09)', border: '1px solid rgba(245,158,11,0.32)' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
+                    <Lock size={16} weight="duotone" color={GOLD} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ color: TEXT, fontWeight: 800, fontSize: 13.5 }}>
+                        Award to {complianceHold.subName} is on hold
+                      </div>
+                      <div style={{ color: DIM, fontSize: 12.5, lineHeight: 1.5, marginTop: 3 }}>
+                        {complianceHold.message.replace(/^Compliance hold\s*[—-]\s*/i, '')}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+                    <button
+                      onClick={() => {
+                        const s = submissions.find(x => x.id === complianceHold.submissionId);
+                        requestW9(complianceHold.subName, s?.sub_email ?? null);
+                      }}
+                      disabled={requestingDocs}
+                      className="pmBtn"
+                      style={{ ...goldButtonStyle, opacity: requestingDocs ? 0.6 : 1 }}
+                    >
+                      {requestingDocs ? 'Requesting…' : 'Request the documents'}
+                    </button>
+                    <button
+                      onClick={() => awardBid(complianceHold.submissionId, complianceHold.subName, { override: true })}
+                      disabled={!!awarding}
+                      className="pmBtn"
+                      style={{ ...ghostButtonStyle, opacity: awarding ? 0.6 : 1 }}
+                    >
+                      Award anyway (override)
+                    </button>
+                    <button
+                      onClick={() => setComplianceHold(null)}
+                      style={{ padding: '9px 14px', background: 'transparent', border: 'none', color: MUTED, fontSize: 12.5, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
               <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
