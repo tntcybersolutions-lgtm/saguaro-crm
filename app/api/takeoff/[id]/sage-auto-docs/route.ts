@@ -420,12 +420,28 @@ Rules:
                 },
               });
 
+              /* TITLE AND SOURCE, OR THE LIBRARY IS A WALL OF ONE SENTENCE.
+                 This called saveDocument with five arguments and skipped the
+                 sixth, so every jacket filed under the doc kind's default
+                 label. Fifteen packages produced fifteen rows in Documents all
+                 reading "Bid Jacket", and a GC looking for the electrical one
+                 had no way to tell them apart. saveDocument's own header warns
+                 about exactly this — it was written after eight pay
+                 applications filed as eight identical "AIA G702" lines.
+                 sourceId matters as much: the library's "Open jacket" link is
+                 gated on source_id, so without it the row could only ever be a
+                 flat PDF, never a route back to the live package. */
               const pdfUrl = await (saveDocument as any)(
                 takeoff.project_id,
                 'bid-jacket',
                 pdfBytes,
                 { bidPackageId: pkg.id, takeoffId },
-                tenantId
+                tenantId,
+                {
+                  title: `Bid Jacket — ${pkg.name || pkg.trade || `Division ${pkg.div}`}`,
+                  sourceType: 'bid_package',
+                  sourceId: pkg.id,
+                }
               );
 
               await must(supabase

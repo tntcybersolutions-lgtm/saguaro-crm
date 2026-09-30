@@ -316,12 +316,23 @@ export async function buildComplianceForBidPackages(opts: {
         requiredLimits: rl,
         branding,
       });
+      /* Named for the trade it is chasing, for the same reason the jackets
+         are. One request per package means fifteen rows in Documents, and
+         without a title every one of them filed as "Insurance Certificate
+         Request" — so the register could say a COI was outstanding but not
+         from whom. The package id goes on as the source so the row leads back
+         to the live package rather than dead-ending at a PDF. */
       await saveDocument(
         projectId,
         'coi-request',
         pdfBytes,
         { bidPackageId: pkg.id, trade: pkg.trade, tag: AUTOFILE_TAG, requiredLimits: rl },
         tenantId,
+        {
+          title: `Insurance Certificate Request — ${pkg.name || pkg.trade || 'Bid package'}`,
+          sourceType: 'bid_package',
+          sourceId: pkg.id,
+        },
       );
       result.coiDocsFiled++;
     } catch (e) {
