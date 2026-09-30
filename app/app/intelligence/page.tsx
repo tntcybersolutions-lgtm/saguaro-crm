@@ -98,6 +98,14 @@ function sevRail(s?: string): { rail: string; rank: number } {
 
 // ─── API shapes (every key optional — the page tolerates partial payloads) ───
 interface SummaryProject {
+  /* /api/intelligence/summary returns these FLAT — { projectId, name, status,
+     money, … }. This file read a nested `project` object that the route has
+     never sent, so every comparison card rendered "Untitled Project" with
+     "status unknown" underneath it. The nested shape is kept as a fallback in
+     case an older payload is ever served. */
+  projectId?: string;
+  name?: string;
+  status?: string;
   project?: { id?: string; name?: string; status?: string };
   money?: {
     contract?: unknown; billedToDate?: unknown; invoicedCosts?: unknown;
@@ -133,9 +141,9 @@ function deriveRow(sp: SummaryProject, fallbackName?: string): Row {
   // absent we derive it only if BOTH sides are real.
   const delta = num(sp.burnDelta) ?? (actual != null && expected != null ? actual - expected : null);
   return {
-    id: String(sp.project?.id ?? ''),
-    name: sp.project?.name || fallbackName || 'Untitled Project',
-    status: sp.project?.status ?? null,
+    id: String(sp.projectId ?? sp.project?.id ?? ''),
+    name: sp.name || sp.project?.name || fallbackName || 'Untitled Project',
+    status: sp.status ?? sp.project?.status ?? null,
     contract: num(sp.money?.contract),
     billed: num(sp.money?.billedToDate),
     invoiced: num(sp.money?.invoicedCosts),
@@ -375,13 +383,18 @@ export default function IntelligencePage() {
     const m = new Map<string, string>();
     for (const p of projects) m.set(p.id, p.name);
     for (const sp of data?.projects ?? []) {
-      const id = sp.project?.id; if (id && sp.project?.name) m.set(String(id), sp.project.name);
+      const id = sp.projectId ?? sp.project?.id;
+      const nm = sp.name ?? sp.project?.name;
+      if (id && nm) m.set(String(id), nm);
     }
     return m;
   }, [projects, data]);
 
   const rows = useMemo(
-    () => (data?.projects ?? []).map((sp) => deriveRow(sp, sp.project?.id ? nameOf.get(String(sp.project.id)) : undefined)),
+    () => (data?.projects ?? []).map((sp) => {
+      const id = sp.projectId ?? sp.project?.id;
+      return deriveRow(sp, id ? nameOf.get(String(id)) : undefined);
+    }),
     [data, nameOf],
   );
   const insights = useMemo(() => {
