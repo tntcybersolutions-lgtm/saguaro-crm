@@ -57,7 +57,16 @@ interface BidPackage {
   scope_summary: string | null;
   description: string | null;
   status: string;
+  /* bid_packages carries TWO due-date columns. Everything that creates a
+     package writes due_date — sage-auto-docs and /api/bid-packages/create
+     both — while most readers ask for bid_due_date and fall back. The sub
+     portal, the leveling view, the bid-reminder cron and the package list all
+     do `bid_due_date || due_date`. This screen was the one that did not, so a
+     package whose card in the list read "Oct 14, 2026 · 14d left" opened with
+     "Due: TBD" in its own header. Same package, two answers, and the wrong one
+     was on the page you go to in order to check. */
   bid_due_date: string | null;
+  due_date: string | null;
   project_id: string;
   awarded_to: string | null;
   awarded_to_id: string | null;
@@ -393,7 +402,7 @@ export default function BidPackageDetailPage() {
             />
           }
           title={pkg.name}
-          subtitle={`${pkg.trade ? pkg.trade + ' · ' : ''}Due: ${pkg.bid_due_date?.slice(0, 10) || 'TBD'}`}
+          subtitle={`${pkg.trade ? pkg.trade + ' · ' : ''}Due: ${(pkg.bid_due_date || pkg.due_date)?.slice(0, 10) || 'TBD'}`}
           actions={headerActions}
         />
 
@@ -575,12 +584,46 @@ export default function BidPackageDetailPage() {
                       }}
                       style={{ ...inp, width: '100%', boxSizing: 'border-box' }}
                     >
+                      {/* GROUPED, AND THIS PACKAGE'S TRADE FIRST.
+                          A flat alphabetical list of every sub in the directory
+                          is fine at three and unusable at three hundred — and
+                          the one you want on an Electrical package is almost
+                          always an electrician. The subs whose trade matches
+                          the package are lifted into their own group at the
+                          top, the rest stay grouped by trade beneath, and subs
+                          with no trade recorded land in "Other" rather than
+                          vanishing. */}
                       <option value="">Type a new company below…</option>
-                      {directory.map(s => (
-                        <option key={s.id} value={s.id}>
-                          {s.company_name}{s.trade ? ` — ${s.trade}` : ''}{s.email ? '' : ' (no email on file)'}
-                        </option>
-                      ))}
+                      {(() => {
+                        const norm = (t?: string | null) => (t || '').trim().toLowerCase();
+                        const pkgTrade = norm(pkg.trade);
+                        const byTrade = new Map<string, typeof directory>();
+                        for (const s of directory) {
+                          const key = (s.trade || '').trim() || 'Other';
+                          if (!byTrade.has(key)) byTrade.set(key, []);
+                          byTrade.get(key)!.push(s);
+                        }
+                        const label = (s: (typeof directory)[number]) =>
+                          `${s.company_name}${s.email ? '' : ' (no email on file)'}`;
+                        const groups = [...byTrade.entries()].sort((a, b) => {
+                          const am = pkgTrade && norm(a[0]) === pkgTrade ? 0 : 1;
+                          const bm = pkgTrade && norm(b[0]) === pkgTrade ? 0 : 1;
+                          if (am !== bm) return am - bm;              // this package's trade first
+                          if ((a[0] === 'Other') !== (b[0] === 'Other')) return a[0] === 'Other' ? 1 : -1;
+                          return a[0].localeCompare(b[0]);
+                        });
+                        return groups.map(([trade, subs]) => (
+                          <optgroup
+                            key={trade}
+                            label={pkgTrade && norm(trade) === pkgTrade ? `${trade} — matches this package` : trade}
+                          >
+                            {subs
+                              .slice()
+                              .sort((a, b) => (a.company_name || '').localeCompare(b.company_name || ''))
+                              .map(s => <option key={s.id} value={s.id}>{label(s)}</option>)}
+                          </optgroup>
+                        ));
+                      })()}
                     </select>
                   </div>
                 )}
