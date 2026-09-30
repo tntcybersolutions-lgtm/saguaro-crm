@@ -25,17 +25,17 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createClient, type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
+import { type RealtimeChannel, type SupabaseClient } from '@supabase/supabase-js';
+import { getSupabaseBrowser, HAS_SUPABASE } from '@/lib/supabase-browser';
 
-/* One socket for the app. Mirrors lib/useRealtime's client so the two share a
-   connection rather than opening a second. */
-let _client: SupabaseClient | null = null;
+/* One socket, and one auth instance, for the whole app.
+   The comment here used to say this mirrored lib/useRealtime's client "so the
+   two share a connection rather than opening a second" — and then called
+   createClient, opening a second. With lib/supabase-browser that made three
+   GoTrueClients on one localStorage key, racing each other's token refresh
+   until one lost and logged the user out. See the note in lib/useRealtime. */
 function getClient(): SupabaseClient | null {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  if (!_client) _client = createClient(url, key);
-  return _client;
+  return HAS_SUPABASE ? getSupabaseBrowser() : null;
 }
 
 /** How long a changed row stays flagged as "just changed". */

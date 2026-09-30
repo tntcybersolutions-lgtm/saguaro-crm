@@ -1,18 +1,28 @@
 'use client';
 import { useEffect, useRef } from 'react';
-import { createClient, RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
+import { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js';
 import { mutate } from 'swr';
+import { getSupabaseBrowser } from '@/lib/supabase-browser';
 
-/** Shared Supabase client for realtime — reuses single WS connection */
-let _client: SupabaseClient | null = null;
+/**
+ * THE one browser client — not a second one.
+ *
+ * This used to call createClient itself. So did lib/hooks/useLiveStatus, and
+ * lib/supabase-browser makes the third. Every supabase-js client carries its
+ * own GoTrueClient with its own auto-refresh timer, and all three shared one
+ * localStorage key. Chrome said so out loud: "Multiple GoTrueClient instances
+ * detected in the same browser context."
+ *
+ * When two of those timers fire together the refresh token is rotated by the
+ * first and the second presents a token that has already been spent —
+ * "AuthApiError: Invalid Refresh Token: Already Used" — and the session is
+ * destroyed. The user is thrown back to the login screen mid-task for no
+ * reason they can see. It happened during a walkthrough of this app.
+ *
+ * One client, one auth instance, one refresh timer.
+ */
 function getClient(): SupabaseClient {
-  if (!_client) {
-    _client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }
-  return _client;
+  return getSupabaseBrowser();
 }
 
 type AnyRecord = Record<string, unknown>;
