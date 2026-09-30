@@ -214,7 +214,10 @@ function BurnBar({ actual, expected, delta }: { actual: number | null; expected:
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
         <span style={{ fontSize: 10, color: DIM, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>
-          Billing burn vs schedule
+          {/* This plots actualBurnPct, which is invoicedCosts / contract — what
+              has been SPENT, not what has been billed to the owner. Calling it
+              billing burn put a cost ratio under a revenue heading. */}
+          Cost burn vs schedule
         </span>
         {delta != null ? (
           <span style={{ fontSize: 11, fontWeight: 800, color: ahead ? GREEN : RED, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' as const }}>
@@ -529,7 +532,7 @@ export default function IntelligencePage() {
             <PremiumEmpty
               icon={<Selection size={30} weight="duotone" color={GOLD} />}
               title="No projects selected"
-              description={`You have ${projects.length} project${projects.length === 1 ? '' : 's'} available — pick up to 5 to compare health scores, billing burn vs schedule, money position, and field signals side by side.`}
+              description={`You have ${projects.length} project${projects.length === 1 ? '' : 's'} available — pick up to 5 to compare health scores, cost burn vs schedule, money position, and field signals side by side.`}
               action={<GoldButton onClick={() => setSelectorOpen(true)}>Select Projects</GoldButton>}
             />
           )}

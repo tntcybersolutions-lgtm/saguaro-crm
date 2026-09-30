@@ -34,8 +34,13 @@ import { requirePermission } from '@/lib/permissions';
  *                     new Date('YYYY-MM-DD')). null when either date is
  *                     missing or end ≤ start — we NEVER invent dates.
  *   actualBurnPct   ← invoicedCosts / contract. null when contract is 0/missing.
+ *                     This is COST burn — what your subs and suppliers have
+ *                     invoiced YOU — not what you have billed the owner.
  *   burnDelta       ← actualBurnPct − expectedBurnPct (null if either is null).
  *                     Positive = burning money faster than the calendar.
+ *   billedPct       ← billedToDate / contract. What the OWNER has been billed.
+ *                     Kept separate because the two answer opposite questions:
+ *                     cost burn is about margin, billing burn is about cash.
  *
  * Field:
  *   openRfis / oldestRfiDays ← rfis in an open status (not deleted), aged by
@@ -340,6 +345,9 @@ export async function GET(req: NextRequest) {
         }
       }
       const actualBurnPct = contract > 0 ? round1((invoicedCosts / contract) * 100) : null;
+      /* What the OWNER has been billed, which is the only thing that can tell
+         you there is unbilled work. */
+      const billedPct = contract > 0 ? round1((billedToDate / contract) * 100) : null;
       const burnDelta =
         expectedBurnPct !== null && actualBurnPct !== null
           ? round1(actualBurnPct - expectedBurnPct)
@@ -416,13 +424,21 @@ export async function GET(req: NextRequest) {
         insights.push({
           severity: burnDelta >= BURN_RED ? 'red' : 'amber',
           projectId: pid,
-          text: `${name} is burning ${round1(burnDelta)}% ahead of schedule (${actualBurnPct}% of contract invoiced vs ${expectedBurnPct}% of calendar elapsed).`,
+          text: `${name} is spending ${round1(burnDelta)}% ahead of schedule (${actualBurnPct}% of contract in costs vs ${expectedBurnPct}% of calendar elapsed).`,
         });
-      } else if (burnDelta !== null && burnDelta <= BURN_UNDER_INFO && expectedBurnPct !== null && expectedBurnPct > 0) {
+      }
+      /* Unbilled work is a BILLING question, so it is asked of billedPct. This
+         used to be asked of actualBurnPct — the cost burn — so a job that had
+         billed the owner in full but run at a healthy 78.7% of contract in
+         costs was told it had "invoiced only 78.7% of contract, check for
+         unbilled work". That is a PM sent hunting for work that was billed
+         months ago, on the strength of a number that was actually its margin. */
+      if (billedPct !== null && expectedBurnPct !== null && expectedBurnPct > 0
+          && round1(billedPct - expectedBurnPct) <= BURN_UNDER_INFO) {
         insights.push({
           severity: 'info',
           projectId: pid,
-          text: `${name} has invoiced only ${actualBurnPct}% of contract with ${expectedBurnPct}% of the calendar gone — check for unbilled work.`,
+          text: `${name} has billed only ${billedPct}% of contract with ${expectedBurnPct}% of the calendar gone — check for unbilled work.`,
         });
       }
       if (oldestRfiDays !== null && oldestRfiDays >= RFI_AMBER && oldestRfiLabel) {
