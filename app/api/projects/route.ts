@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,17 @@ export const dynamic = 'force-dynamic';
  *   - limit:  max rows to return (default 100)
  *   - status: exact match on projects.status
  *   - search: case-insensitive match on name / project_number / address
+ *   - fields: comma-separated column subset, e.g. `fields=id,name`
+ *
+ * `fields` was being ignored. Seven call sites already pass it —
+ * app/app/layout, schedule, schedule/[id], invoicing, invoicing/[id],
+ * daily-logs and reports — and every one of them was served all fifteen
+ * columns anyway. The schedule page asks for id and name across two hundred
+ * projects and gets two hundred rows of contract values, percentages,
+ * addresses and timestamps to render a dropdown.
+ *
+ * Column names go into a PostgREST select string, so they are matched against
+ * an allowlist and never interpolated from the query as given.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -26,14 +38,28 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status');
     const search = searchParams.get('search')?.trim();
 
+    /* `phase` is here because the whole adaptive navigation is built on it —
+       lib/project-phase drives the build rail, the sidebar's leading sections
+       and the "you are here" bar off project.phase. The list endpoint never
+       returned it, so nothing downstream of this list could tell a bidding job
+       from a job under construction. */
+    const COLUMNS = [
+      'id', 'name', 'status', 'phase', 'address', 'city', 'state', 'project_number',
+      'type', 'project_type', 'contract_value', 'percent_complete',
+      'start_date', 'end_date', 'created_at', 'updated_at',
+    ];
+    const asked = (searchParams.get('fields') || '')
+      .split(',').map((f) => f.trim()).filter(Boolean);
+    const picked = asked.filter((f) => COLUMNS.includes(f));
+    // An unknown or empty `fields` returns the full row rather than nothing —
+    // a picker that asked for a column that does not exist should still render.
+    const select = (picked.length ? Array.from(new Set(['id', ...picked])) : COLUMNS).join(', ');
+
     const db = createServerClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query: any = db
       .from('projects')
-      .select(
-        'id, name, status, address, city, state, project_number, type, project_type, ' +
-          'contract_value, percent_complete, start_date, end_date, created_at, updated_at',
-      )
+      .select(select)
       .eq('tenant_id', user.tenantId)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -54,7 +80,11 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ projects: data || [] });
-  } catch {
-    return NextResponse.json({ projects: [] }, { status: 500 });
+  } catch (e) {
+    /* Was `{ projects: [] }` with a 500 — an empty list is what this endpoint
+       returns when a tenant genuinely has no projects, so a failure was shaped
+       exactly like success and nothing was logged to say otherwise. Every
+       caller already checks r.ok before parsing. */
+    return apiError('projects', e);
   }
 }
