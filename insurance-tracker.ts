@@ -64,15 +64,24 @@ function getRequiredLimits(contractAmount: number): {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function requestCOIHandler(req: NextRequest) {
+  /* The tenant comes from the session, never the body. This route read
+     tenantId straight out of the request with no authentication at all, then
+     handed it to getProjectContext and wrote an insurance_certificates row
+     with an upload token — so anyone who knew a tenant id and a project id,
+     and both travel in URLs and emails, could read that company's project and
+     mint a token against it. CLAUDE.md section 3. */
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const tenantId = user.tenantId;
+
   const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-  const tenantId    = String(body['tenantId']    ?? '');
   const projectId   = String(body['projectId']   ?? '');
   const vendorName  = String(body['vendorName']  ?? '');
   const vendorEmail = String(body['vendorEmail'] ?? '');
   const subId       = body['subcontractorCompanyId'] as string | undefined;
 
-  if (!tenantId || !projectId || !vendorName || !vendorEmail) {
-    return NextResponse.json({ error: 'tenantId, projectId, vendorName, vendorEmail required' }, { status: 400 });
+  if (!projectId || !vendorName || !vendorEmail) {
+    return NextResponse.json({ error: 'projectId, vendorName, vendorEmail required' }, { status: 400 });
   }
 
   const ctx = await getProjectContext(tenantId, projectId);
@@ -168,8 +177,13 @@ export async function uploadCOIHandler(req: NextRequest) {
   const formData = await req.formData().catch(() => null);
   if (!formData) return NextResponse.json({ error: 'Expected multipart/form-data' }, { status: 400 });
 
+  /* Session, not form data. This accepted whatever tenantId was posted and
+     wrote the uploaded file into that tenant's storage path. */
+  const user = await getUser(req);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const tenantId = user.tenantId;
+
   const coiId    = String(formData.get('coiId')    ?? '');
-  const tenantId = String(formData.get('tenantId') ?? '');
   const file     = formData.get('file') as File | null;
 
   if (!coiId || !file) return NextResponse.json({ error: 'coiId and file are required' }, { status: 400 });
@@ -184,6 +198,11 @@ export async function uploadCOIHandler(req: NextRequest) {
     .from('insurance_certificates')
     .select('id, tenant_id, project_id')
     .eq('id', coiId)
+    /* Scoped to the caller's own tenant. Without this, a signed-in user of one
+       company could upload a certificate against another company's COI id —
+       the id is the only thing that was being checked, and supabaseAdmin is
+       the service role, so RLS is not standing behind it. */
+    .eq('tenant_id', tenantId)
     .maybeSingle();
   if (coiRowErr || !coiRow) {
     return NextResponse.json({ error: 'COI record not found' }, { status: 404 });

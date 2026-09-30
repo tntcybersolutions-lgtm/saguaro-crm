@@ -32,6 +32,25 @@ import Stripe from 'stripe';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from './supabase/admin';
 import { getUser } from './lib/supabase-server';
+
+/**
+ * The tenant whose billing this request may touch.
+ *
+ * ONLY the authenticated session decides. These handlers used to accept
+ * tenantId from the request body (or a query param) whenever no session was
+ * present — so an unauthenticated caller who knew a tenant id, and they travel
+ * in URLs, exports and emails, could open that company's Stripe billing
+ * portal, cancel their subscription, or change their plan. changePlanHandler
+ * did not consult the session at all.
+ *
+ * Every one of these mutates money. A client-supplied tenant is not an
+ * identity, and CLAUDE.md section 3 says so: tenant_id is never taken from the
+ * request body, always from the authenticated user.
+ */
+async function billingTenant(request: NextRequest): Promise<string | null> {
+  const user = await getUser(request);
+  return user?.tenantId ?? null;
+}
 import { Resend } from 'resend';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -411,8 +430,7 @@ async function handleInvoiceFailed(invoice: Stripe.Invoice) {
 export async function billingPortalHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
   // Resolve tenant from the session (mirrors getSubscriptionHandler); body is fallback.
-  const sessionUser = await getUser(request);
-  const tenantId = sessionUser?.tenantId ?? String(body?.tenantId ?? '');
+  const tenantId = await billingTenant(request);
   if (!tenantId) return err('You must be signed in to manage billing', 401);
 
   const { data: sub } = await supabaseAdmin
@@ -441,8 +459,7 @@ export async function getSubscriptionHandler(request: NextRequest) {
   // Resolve the tenant from the authenticated session (cookie or Bearer), not a
   // client-supplied query param — the param was never sent by the shared plan
   // check, so this 400'd on every dashboard page (and was tenant-unsafe).
-  const user = await getUser(request);
-  const tenantId = user?.tenantId ?? request.nextUrl.searchParams.get('tenantId');
+  const tenantId = await billingTenant(request);
   if (!tenantId) return ok({ hasSubscription: false, isTrialing: false });
 
   const { data: sub } = await supabaseAdmin
@@ -492,7 +509,7 @@ export async function cancelHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
   // Resolve tenant from the session (mirrors getSubscriptionHandler); body is fallback.
   const sessionUser = await getUser(request);
-  const tenantId = sessionUser?.tenantId ?? String(body?.tenantId ?? '');
+  const tenantId = sessionUser?.tenantId ?? null;
   if (!tenantId) return err('You must be signed in to cancel', 401);
 
   const { data: sub } = await supabaseAdmin
@@ -534,7 +551,10 @@ export async function cancelHandler(request: NextRequest) {
 
   // Send retention email with the discount offer
   const r = resend();
-  const cancelEmail = (body?.email as string | undefined) ?? sessionUser?.email;
+  /* The signed-in user's own address, never one supplied in the body. The
+     body took priority here, so a caller could aim this retention email — sent
+     from our domain, offering a discount — at any address they liked. */
+  const cancelEmail = sessionUser?.email;
   if (r && cancelEmail) {
     await r.emails.send({
       from: FROM,
@@ -569,11 +589,12 @@ export async function cancelHandler(request: NextRequest) {
 
 export async function changePlanHandler(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const tenantId    = String(body?.tenantId    ?? '');
+  const tenantId    = await billingTenant(request);
   const newPlanId   = String(body?.newPlanId   ?? '');
   const newInterval = (String(body?.newInterval ?? 'monthly')) as 'monthly' | 'annual';
 
-  if (!tenantId || !newPlanId) return err('tenantId and newPlanId are required');
+  if (!tenantId) return err('You must be signed in to change your plan', 401);
+  if (!newPlanId) return err('newPlanId is required');
 
   const { data: sub } = await supabaseAdmin
     .from('subscriptions')
