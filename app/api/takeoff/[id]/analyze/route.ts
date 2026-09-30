@@ -16,6 +16,7 @@ import { costKeyForCsiLine } from '@/lib/takeoff';
 import { learnTenantRates } from '@/lib/takeoff-learn';
 import { hasFeature } from '@/lib/entitlements-server';
 import { must, tryWrite } from '@/lib/db-write';
+import { logActivity, money } from '@/lib/activity';
 
 export const runtime = 'nodejs';
 export const maxDuration = 300;
@@ -1111,6 +1112,21 @@ export async function GET(
           laborHours:  row.labor_hours,
           notes:       row.notes || '',
         }));
+
+        /* A takeoff is the single biggest thing that happens to a job before
+           anyone is paid — a drawing becomes a priced scope — and it left no
+           trace. */
+        void logActivity({
+          tenantId: user.tenantId,
+          projectId: (takeoff as Record<string, any>)?.project_id ?? null,
+          userId: user.id,
+          userName: user.email,
+          action: 'takeoff_completed',
+          entityType: 'takeoff',
+          entityId: takeoffId,
+          description: `Took off ${meta.n || 'the drawings'} — ${expandedItems.length} line items, ${money(realProjectTotal)}`,
+          metadata: { itemCount: expandedItems.length, total: realProjectTotal, sheets: analyzedSheetCount, confidence },
+        });
 
         send('result', {
           takeoffId,

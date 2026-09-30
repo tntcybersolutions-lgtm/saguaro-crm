@@ -5,6 +5,7 @@ import { onPayAppCreated } from '@/lib/triggers';
 import { recordLearning } from '@/lib/learning';
 import { toCents, toDollars, percentOf, subCents, computePayApp } from '@/lib/calc';
 import { must } from '@/lib/db-write';
+import { logActivity, money } from '@/lib/activity';
 
 /** GET ?projectId= — seed data for a NEW pay app: next number, the prior app's
  *  schedule of values (rolled forward), and the approved-CO total. The new-app
@@ -262,6 +263,21 @@ export async function POST(req: NextRequest) {
 
     // Non-blocking trigger
     onPayAppCreated((payApp as any).id).catch(console.error);
+
+    /* The money event a GC watches hardest — a pay application going out is
+       the job asking to be paid. */
+    const pa = payApp as Record<string, any>;
+    void logActivity({
+      tenantId: user.tenantId,
+      projectId,
+      userId: user.id,
+      userName: user.email,
+      action: String(pa?.status || 'draft') === 'draft' ? 'payapp_drafted' : 'payapp_submitted',
+      entityType: 'pay_application',
+      entityId: pa?.id ?? null,
+      description: `Pay application ${pa?.app_number ?? ''} ${String(pa?.status || 'draft') === 'draft' ? 'drafted' : 'submitted'} — ${money(Number(pa?.current_payment_due ?? pa?.total_earned ?? 0))}`.replace(/\s+/g, ' '),
+      metadata: { appNumber: pa?.app_number ?? null, status: pa?.status ?? null, rolledForward, changeOrdersTotal },
+    });
 
     return NextResponse.json({ payApp, success: true, rolledForward, changeOrdersTotal });
   } catch {

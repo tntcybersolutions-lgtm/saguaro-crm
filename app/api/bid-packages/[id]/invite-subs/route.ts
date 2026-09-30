@@ -4,6 +4,7 @@ import { onSubInvitedToBid } from '@/lib/triggers';
 import { requirePermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 import { tryWrite } from '@/lib/db-write';
+import { logActivity } from '@/lib/activity';
 
 /**
  * POST /api/bid-packages/[id]/invite-subs
@@ -102,6 +103,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       onSubInvitedToBid(id, (invite as Record<string, string>).id).catch((e) =>
         console.error('[bid-packages/invite-subs] email failed', email, e),
       );
+    }
+
+    /* Who was asked to bid, and when — the record a GC needs when a package
+       comes back with two responses and they cannot remember who else was on
+       it. One line for the batch, not one per sub: inviting five companies is
+       a single act. */
+    const invitedNow = results.filter(r => r.status === 'invited');
+    if (invitedNow.length) {
+      const p = pkg as Record<string, any>;
+      void logActivity({
+        tenantId: user.tenantId,
+        projectId: p?.project_id ?? null,
+        userId: user.id,
+        userName: user.email,
+        action: 'invited',
+        entityType: 'bid_package',
+        entityId: id,
+        description: `Invited ${invitedNow.length} sub${invitedNow.length === 1 ? '' : 's'} to bid ${p?.name || p?.trade || 'a package'}`,
+        metadata: { emails: invitedNow.map(r => r.email), trade: p?.trade ?? null },
+      });
     }
 
     /* num_invited is read by the package list and the jacket cover; leaving it

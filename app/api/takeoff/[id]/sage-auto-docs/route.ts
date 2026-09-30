@@ -17,6 +17,7 @@ import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import { buildComplianceForBidPackages } from '@/lib/compliance-autofile';
 import type { Database } from '@/lib/database.types';
 import { must, tryWrite } from '@/lib/db-write';
+import { logActivity, money } from '@/lib/activity';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -378,6 +379,23 @@ Rules:
           }
 
           createdPackages.push({ id: pkgId, name: packageName, div, total, trade: divName, requiresBond, insGl, insAuto, insWork });
+        }
+
+        /* Fifteen packages written in one press of one button is the biggest
+           single change this product makes to a job, and it left no trace. One
+           line for the batch — it was one act. */
+        if (createdPackages.length) {
+          void logActivity({
+            tenantId,
+            projectId: takeoff.project_id,
+            userId: user.id,
+            userName: user.email,
+            action: 'packages_created',
+            entityType: 'bid_package',
+            entityId: null,
+            description: `Wrote ${createdPackages.length} bid package${createdPackages.length === 1 ? '' : 's'} from the takeoff — ${money(createdPackages.reduce((a, p) => a + (Number(p.total) || 0), 0))}`,
+            metadata: { count: createdPackages.length, trades: createdPackages.map(p => p.trade).filter(Boolean) },
+          });
         }
 
         send('progress', { step: 4, pct: 55, message: `Generating ${createdPackages.length} bid jacket PDFs...` });
