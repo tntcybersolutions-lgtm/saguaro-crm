@@ -3,6 +3,7 @@ import { generateWH347, saveDocument } from '@/lib/pdf-engine';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { fmtDate } from '@/lib/format-date';
 
 /**
  * POST /api/payroll/generate
@@ -161,12 +162,17 @@ export async function POST(req: NextRequest) {
 
     // Upload to the private 'documents' bucket + register in generated_documents.
     // Returns a signed URL for immediate download.
+    /* A certified payroll is filed every week a crew is on a prevailing-wage
+       job, so this is the document the library accumulates fastest — fifty-two
+       rows a year, all reading "WH-347 Certified Payroll" until the payroll
+       number and the week are on the row. */
     const pdfUrl = await saveDocument(
       projectId,
       'wh347-certified-payroll',
       pdfBytes,
       { weekEnding, payrollNumber, employeeCount: employees.length, totalGross, totalNet },
       user.tenantId,
+      { title: `Payroll #${payrollNumber} — week ending ${fmtDate(weekEnding, { month: 'short', day: 'numeric', year: 'numeric' }, weekEnding)}` },
     );
 
     // ── Persist the header ───────────────────────────────────────────────────
