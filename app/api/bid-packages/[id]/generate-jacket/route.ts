@@ -62,7 +62,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const pdfUrl = await saveDocument(
       project?.id || id, 'bid-jacket', pdfBytes, { bidPackageId: id }, p.tenant_id,
       {
-        title: [p.trade, p.name].filter(Boolean).join(' — ') || 'Bid Jacket',
+        /* The package name is what the estimator typed and what distinguishes
+           one jacket from the next; the trade only stands in when there is no
+           name. Joining both gave "Low Voltage & Networking — Housing Unit C —
+           Low Voltage", since a package name usually names its own trade. */
+        title: p.name || p.trade || 'Bid Jacket',
         sourceType: 'bid_package',
         sourceId: id,
       },
