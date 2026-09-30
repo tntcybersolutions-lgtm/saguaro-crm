@@ -235,8 +235,21 @@ Rules:
 
         let aiHeartbeat: ReturnType<typeof setInterval> | null = null;
         try {
+          /* A HEARTBEAT THAT ONLY EVER GOES FORWARD.
+             Sage writes all the packages in one call, so there is no real
+             sub-progress to report — this beat exists to show the request is
+             still alive. It used to send `15 + random(10)`, which meant the bar
+             genuinely ran backwards on screen: 23%, then 21%, then 19%. A
+             progress bar that loses ground reads as a malfunction, and it was
+             reporting on the longest silent stretch of the whole build.
+             It now creeps from 15 and eases toward 29, never reaching the 30
+             that the next real step owns — so it moves, it never retreats, and
+             it never claims a milestone it has not hit. */
+          let beat = 0;
           aiHeartbeat = setInterval(() => {
-            send('progress', { step: 2, pct: 15 + Math.floor(Math.random() * 10), message: 'Sage is writing bid package content...' });
+            beat += 1;
+            const pct = Math.min(29, 15 + Math.round(14 * (1 - Math.pow(0.72, beat))));
+            send('progress', { step: 2, pct, message: 'Sage is writing bid package content…' });
           }, 5000);
 
           const aiRes = await client.messages.create({

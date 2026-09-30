@@ -1349,7 +1349,7 @@ export default function TakeoffPage() {
       /* The budget was the one thing the old "Generate All Documents" path did
          that this one did not — the sole reason three buttons existed. Folded
          in here so there is one action and it is the complete one. */
-      const budgetOk = await handleCreateBudget();
+      const budgetOk = await handleCreateBudget(true); // nested: keep generating === 'auto'
 
       setProgress({ step: 1, message: 'Sage is reading your takeoff…', pct: 5 });
       // Single stream — sage-auto-docs now builds bid packages + jackets + SOV AND
@@ -1420,9 +1420,27 @@ export default function TakeoffPage() {
   };
 
   // ── Generate Budget from Takeoff ──
-  const handleCreateBudget = async (): Promise<boolean> => {
+  /**
+   * Create the budget from the takeoff.
+   *
+   * `nested` is set when "Build the bid + compliance package" calls this as its
+   * first step, and it means "the caller owns the generating flag, do not
+   * touch it".
+   *
+   * Without it this was the reason that button looked dead. handleBuildItAll
+   * sets generating to 'auto', which is the ONLY thing that renders the
+   * streaming progress panel — and then called this, which set generating to
+   * 'budget' and, in its finally, back to null. So about five seconds in, the
+   * budget toast appeared and the flag went null, and the remaining eighty-odd
+   * seconds of writing bid packages, generating fifteen jacket PDFs and filing
+   * compliance ran with no panel on screen and the original CTA still sitting
+   * there unpressed-looking. The work was happening the whole time; the page
+   * just had no way to say so, because the state that says so had been cleared
+   * by a sub-step.
+   */
+  const handleCreateBudget = async (nested = false): Promise<boolean> => {
     if (!result) return false;
-    setGenerating('budget');
+    if (!nested) setGenerating('budget');
     try {
       const subtotal = result.totalMaterialCost + result.totalLaborCost;
       const overhead = Math.round(subtotal * (overheadPct / 100));
@@ -1464,7 +1482,9 @@ export default function TakeoffPage() {
       console.error(err); showToast(humanError(err, 'Failed to create budget. Please try again.'), 'error');
       return false;
     } finally {
-      setGenerating(null);
+      /* Only if we own it. When nested inside the full build, clearing this
+         here is what blanked the progress panel for the rest of the run. */
+      if (!nested) setGenerating(null);
     }
   };
 
@@ -2464,7 +2484,11 @@ export default function TakeoffPage() {
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sov') ? 0.5 : 1 }}>
             {generating === 'sov' ? 'Creating...' : <><Table size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> SOV</>}
           </button>
-          <button onClick={handleCreateBudget} disabled={!!generating}
+          {/* Wrapped, not passed by reference: React hands an onClick handler the
+              MouseEvent as its first argument, which would arrive as `nested`
+              and be truthy — silently turning the standalone Budget button into
+              one that never shows its own progress. */}
+          <button onClick={() => handleCreateBudget()} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'budget') ? 0.5 : 1 }}>
             {generating === 'budget' ? 'Creating...' : <><CurrencyDollar size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Budget</>}
           </button>
