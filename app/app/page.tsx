@@ -475,17 +475,25 @@ export default function DashboardPage() {
             this tenant does not have yet. So the build rail owns the empty
             state alone.
 
-            Once there IS work, both rails are past their auto-fold thresholds
-            and render as single-line headers, which is a table of contents
-            rather than two competing wizards — so that case is left as it
-            was. */}
-        {portfolioEmpty ? (
+            Gating this on "portfolio is empty" was not enough, and the reason
+            is worth writing down: the rails fold at two sales steps and three
+            build steps, so a tenant who has created their first project and
+            nothing else clears the empty-state test while clearing NEITHER
+            fold threshold — both rails open flat, two "YOU ARE HERE" markers
+            again. That in-between state is not an edge case, it is where every
+            trial account sits for its first hour.
+
+            So the rule is about the tenant's stage, not their emptiness, and it
+            yields exactly one rail at every moment: no project, and the sales
+            rail is the whole story, because its last step is what creates the
+            project. A project exists, and the build rail takes over, which is
+            precisely the hand-off the sales rail's own final step describes.
+            Neither renders until the project list has resolved, so the two
+            never cross on screen. */}
+        {projectsLoading || projectsError ? null : projects.length > 0 ? (
           <GettingStartedRail />
         ) : (
-          <>
-            <SalesJourneyRail />
-            <GettingStartedRail />
-          </>
+          <SalesJourneyRail />
         )}
 
         {hasCustomLayout && savedLayout ? (

@@ -33,9 +33,16 @@ import useSWR from 'swr';
 import { usePathname } from 'next/navigation';
 import { ArrowRight, MapPin, CheckCircle } from '@phosphor-icons/react';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { useProjects } from '@/lib/hooks/useProjects';
 import { normalisePhase, stepsForPhase, stepsDone, PHASE_LABEL } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 import { SALES_STEPS, salesStepsDone, type SalesSignals } from '@/lib/sales-journey';
+
+/* The same key GettingStartedRail writes when the GC picks which job the
+   journey follows. Read here so the bar and the rail name the same job — two
+   widgets tracking "the current project" by different rules is how they end up
+   disagreeing on screen. */
+const LS_PROJECT_KEY = 'sag_journey_project';
 
 const GOLD = '#F59E0B';
 const GOLD_HI = '#FBBF24';
@@ -63,9 +70,35 @@ export default function NextStepBar() {
   const projectId = projectIdFromPath(pathname);
   const inProject = Boolean(projectId);
 
-  const { ctx } = useProjectContext(projectId);
+  /* OUTSIDE A JOB, "SALES" IS ONLY THE ANSWER UNTIL THERE IS A JOB.
+     This read `inProject ? build : sales`, so on /app the bar always announced
+     a sales step. GettingStartedRail on that same screen announces the BUILD
+     step for the GC's current project — so a tenant with one project was told
+     "You are here: Take the lead in" by the bar and "YOU ARE HERE: Take off
+     the drawings" by the rail, a foot apart, at the same moment.
+     This component's own header says it exists because three things were
+     counting progress at once. It was added as a fourth rather than replacing
+     them, and nothing made it agree with the other three.
+     It now resolves the same job the rail does, by the same rule and the same
+     remembered choice, and speaks for the build journey whenever one exists. */
+  const { projects } = useProjects();
+  const [picked, setPicked] = React.useState<string | null>(null);
+  useEffect(() => {
+    if (inProject) return;
+    try { setPicked(localStorage.getItem(LS_PROJECT_KEY)); } catch { /* private mode */ }
+  }, [inProject]);
+
+  const pickedExists = picked && projects.some((p: { id: string }) => p.id === picked);
+  const dashboardProjectId = inProject ? null : ((pickedExists ? picked : projects[0]?.id) ?? null);
+  const journeyId = projectId ?? dashboardProjectId;
+  /* Gold whenever a job is driving the bar, whether or not we are standing on
+     that job's page — the colour states which half of the product is speaking,
+     and it would be lying if the bar said "build" in blue. */
+  const onBuildJourney = Boolean(journeyId);
+
+  const { ctx } = useProjectContext(journeyId);
   const { data: salesData } = useSWR<{ signals: SalesSignals }>(
-    inProject ? null : '/api/sales-journey',
+    onBuildJourney ? null : '/api/sales-journey',
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 300_000 },
   );
@@ -93,7 +126,7 @@ export default function NextStepBar() {
   let complete = false;
   let position = '';
 
-  if (inProject) {
+  if (onBuildJourney) {
     tone = GOLD; toneHi = GOLD_HI;
     if (!ctx) return null; // nothing to say until the job's own data is in
     const phase = normalisePhase(ctx?.project?.phase);
@@ -101,7 +134,7 @@ export default function NextStepBar() {
     const done = stepsDone(ctx, ctx?.money, isClosedStatus);
     const i = steps.findIndex((s) => !done[s.key]);
     side = PHASE_LABEL[phase];
-    const base = `/app/projects/${projectId}`;
+    const base = `/app/projects/${journeyId}`;
     if (i === -1) {
       complete = true;
       here = 'Every stage of this job is done';
@@ -185,12 +218,12 @@ export default function NextStepBar() {
           flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '6px 13px', borderRadius: 8, textDecoration: 'none',
           background: `linear-gradient(180deg, ${toneHi}, ${tone})`,
-          color: inProject ? '#241500' : '#04121F',
+          color: onBuildJourney ? '#241500' : '#04121F',
           fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap',
           boxShadow: `0 2px 10px ${tone}44`,
         }}
       >
-        {cta} <ArrowRight size={12} weight="bold" color={inProject ? '#241500' : '#04121F'} />
+        {cta} <ArrowRight size={12} weight="bold" color={onBuildJourney ? '#241500' : '#04121F'} />
       </Link>
     </div>
   );
