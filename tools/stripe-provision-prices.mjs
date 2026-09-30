@@ -91,13 +91,29 @@ const MODE = keyIsLive ? 'LIVE' : 'TEST';
 
 /* ── the work ─────────────────────────────────────────────────────────── */
 
-/** The product for a plan, reused if this has run before. */
+/**
+ * The product for a plan, reused if this has run before.
+ *
+ * This used products.search, which is the obvious call and the wrong one:
+ * Stripe's search index is eventually consistent, so a product created a
+ * moment ago is not findable yet. Running this twice in quick succession
+ * therefore created a second product each time — the prices were correctly
+ * reused via lookup_key, which is directly consistent, so the duplicates came
+ * out empty and invisible until someone opened the product catalogue.
+ *
+ * list is read straight from the data, not the index, so it sees a product
+ * created a second ago. Paged rather than capped at one request, so this stays
+ * correct on an account with more products than fit in a page.
+ */
 async function ensureProduct(plan) {
-  const existing = await stripe.products.search({
-    query: `metadata['saguaro_plan_id']:'${plan.id}'`,
-    limit: 1,
-  });
-  if (existing.data[0]) return { product: existing.data[0], created: false };
+  let starting_after;
+  for (let page = 0; page < 20; page++) {
+    const batch = await stripe.products.list({ limit: 100, ...(starting_after && { starting_after }) });
+    const hit = batch.data.find(p => p.metadata?.saguaro_plan_id === plan.id);
+    if (hit) return { product: hit, created: false };
+    if (!batch.has_more) break;
+    starting_after = batch.data[batch.data.length - 1].id;
+  }
 
   if (DRY) return { product: { id: '(would create)', name: plan.name }, created: true };
 
