@@ -75,16 +75,7 @@ export interface PhaseStep {
  */
 export const BIDDING_STEPS: PhaseStep[] = [
   { key: 'takeoff',      title: 'Take off the drawings', desc: 'Drop the plan set. Every trade measured and priced from it.', href: '/takeoff' },
-  /* /takeoff/estimate, not /estimate. Both exist and both are about the
-     estimate, which is the problem: this step said "Price it" and landed the
-     GC on the 367-line summary — takeoff totals, a bid-package count and a
-     "Go to Takeoff" button — where the one thing you cannot do is price
-     anything. The workspace that adds lines, applies crews and assemblies,
-     sets markup and exports the PDF and the Excel is the other one, and until
-     now the only door to it was a link on the takeoff page itself. So whoever
-     followed the guided journey got the read-only view and whoever wandered in
-     from takeoff got the real tool. */
-  { key: 'estimate',     title: 'Price it',              desc: 'The estimate builds from the takeoff, rolled up by CSI division.', href: '/takeoff/estimate' },
+  { key: 'estimate',     title: 'Price it',              desc: 'The estimate builds from the takeoff, rolled up by CSI division.', href: '/estimate' },
   /* Levelling is FOLDED IN here rather than being its own step. It has no
      standalone screen — you level a specific package, from that package —
      so a separate step would have carried a number the navigation could
