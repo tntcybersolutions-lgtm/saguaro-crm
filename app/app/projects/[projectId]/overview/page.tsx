@@ -140,7 +140,7 @@ export default function OverviewPage(){
   const changeOrders = data.changeOrders||[];
   const rfis = data.rfis||[];
   const subs = data.subs||[];
-  const budgetHealth = data.budgetHealth||{originalBudget:0,committedCost:0,actualCost:0,forecastCost:0,lineCount:0};
+  const budgetHealth = data.budgetHealth||{originalBudget:0,revisedBudget:0,approvedChanges:0,committedCost:0,actualCost:0,forecastCost:0,lineCount:0};
   const punchSummary = data.punchSummary||{total:0,open:0,complete:0};
   const schedulePhases = data.schedulePhases||[];
   const alerts = data.alerts||[];
@@ -158,8 +158,15 @@ export default function OverviewPage(){
   const balanceDue = Math.max(0, toDollars(balanceDueCents));
   const daysRemaining = p.end_date?Math.max(0,Math.ceil((new Date(p.end_date).getTime()-Date.now())/86400000)):0;
   const overdueRFIs = rfis.filter((r:any)=>r.status==='open'&&r.due_date&&r.due_date<new Date().toISOString().split('T')[0]);
-  const budgetVariance = toDollars(subCents(toCents(budgetHealth.forecastCost), toCents(budgetHealth.originalBudget)));
-  const budgetPct = budgetHealth.originalBudget > 0 ? (budgetHealth.actualCost / budgetHealth.originalBudget * 100).toFixed(1) : '0';
+  /* Judge spend against the REVISED budget — the original plus every approved
+     change order — not against the original alone. Measuring against the
+     original made any job carrying an approved CO read as over budget: a job
+     at 99.4% of what it is actually allowed to spend was showing "104.6%
+     spent" in red, which is the opposite of the truth. Falls back to the
+     original where the API predates the field. */
+  const budgetBasis = Number(budgetHealth.revisedBudget) || Number(budgetHealth.originalBudget) || 0;
+  const budgetVariance = toDollars(subCents(toCents(budgetHealth.forecastCost), toCents(budgetBasis)));
+  const budgetPct = budgetBasis > 0 ? (budgetHealth.actualCost / budgetBasis * 100).toFixed(1) : '0';
 
   // ── Context-snapshot intelligence (DB numerics can round-trip as strings — always Number()||0 before math) ──
   const cm = ctx?.money;
@@ -272,7 +279,7 @@ export default function OverviewPage(){
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(380px,1fr))',gap:18,alignItems:'start'}}>
         <div style={{display:'flex',flexDirection:'column',gap:18}}>
           <SectionCard flat title="Project Details" icon={<ClipboardText size={18} weight="duotone" color={CIN.goldHi}/>} delay={0.05}>
-            {[['Status',p.status||'active'],['Type',p.project_type||'—'],['State',p.state||'—'],['Owner',p.owner_entity?.name||'—'],['Architect',p.architect_entity?.name||'—'],['Start Date',p.start_date||'—'],['End Date',p.end_date||'—'],['GC License',p.gc_license||'—'],['Prevailing Wage',p.prevailing_wage?'Yes':'No'],['Public Project',p.is_public_project?'Yes':'No']].map(([l,v]:any)=>detailRow(l,v))}
+            {[['Status',p.status||'active'],['Type',p.project_type||'—'],['State',p.state||'—'],['Owner',p.owner_entity?.name||p.owner_name||'—'],['Architect',p.architect_entity?.name||p.architect_name||'—'],['Start Date',p.start_date||'—'],['End Date',p.end_date||'—'],['GC License',p.gc_license||'—'],['Prevailing Wage',p.prevailing_wage?'Yes':'No'],['Public Project',p.is_public_project?'Yes':'No']].map(([l,v]:any)=>detailRow(l,v))}
           </SectionCard>
           {budgetHealth.lineCount>0&&<SectionCard flat title="Budget Health" icon={<ChartLineUp size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/budget'}>View Budget <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.1}>
             <div style={{marginBottom:16}}>
@@ -284,7 +291,7 @@ export default function OverviewPage(){
                 <div style={{height:'100%',background:parseFloat(budgetPct)>90?RED:parseFloat(budgetPct)>75?GOLD:GREEN,width:Math.min(100,parseFloat(budgetPct))+'%',borderRadius:999,transition:'width .5s ease',boxShadow:'0 0 12px rgba(245,158,11,.4)'}}/>
               </div>
             </div>
-            {[['Original Budget',fmt(budgetHealth.originalBudget)],['Committed Cost',fmt(budgetHealth.committedCost)],['Actual Cost',fmt(budgetHealth.actualCost)],['Forecast',fmt(budgetHealth.forecastCost)],['Variance',fmt(Math.abs(budgetVariance))+(budgetVariance>0?' over':' under')]].map(([l,v]:any)=>summaryRow(l,v,l==='Variance'?(budgetVariance>0?RED:GREEN):undefined))}
+            {[['Original Budget',fmt(budgetHealth.originalBudget)],...(Number(budgetHealth.approvedChanges)?[['Approved Changes','+'+fmt(budgetHealth.approvedChanges)],['Revised Budget',fmt(budgetBasis)]]:[]),['Committed Cost',fmt(budgetHealth.committedCost)],['Actual Cost',fmt(budgetHealth.actualCost)],['Forecast',fmt(budgetHealth.forecastCost)],['Variance',fmt(Math.abs(budgetVariance))+(budgetVariance>0?' over':' under')]].map(([l,v]:any)=>summaryRow(l,v,l==='Variance'?(budgetVariance>0?RED:GREEN):undefined))}
           </SectionCard>}
           {ctx&&<SectionCard flat title="Next Scheduled Work" icon={<CalendarCheck size={18} weight="duotone" color={CIN.goldHi}/>} action={<SectionLink href={'/app/projects/'+projectId+'/schedule'}>Full Schedule <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>} delay={0.15}>
             {nextTasks.length===0

@@ -49,7 +49,11 @@ export const isDoneStatus = (s: unknown): boolean =>
   DONE_PROJECT_STATUSES.includes(String(s || '').toLowerCase() as typeof DONE_PROJECT_STATUSES[number]);
 
 /** Punch items still needing work. */
-const PUNCH_DONE = ['completed', 'voided'];
+/** Punch statuses that need no further work. Exported so the project API
+    counts the same words this module filters on — it used to look for
+    'complete' and 'closed', which the app has never written, so every
+    finished punch item was counted as neither open nor complete. */
+export const PUNCH_DONE = ['completed', 'voided'] as const;
 /** RFIs that no longer need an answer. */
 const RFI_DONE = ['answered', 'closed'];
 /** Pay applications that have reached a terminal state. */

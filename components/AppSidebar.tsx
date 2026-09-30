@@ -525,7 +525,10 @@ export default function AppSidebar({
    * whichever one holds the page you are on. A stored preference always wins
    * over both.
    */
-  const OPEN_ALL_BELOW = 16;
+  /* Retired: the rail no longer decides how much to open from how long the
+     list is, because that made the shape depend on data volume AND on the
+     current page. See the isOpen comment below. */
+  // const OPEN_ALL_BELOW = 16;
   /* "All tools" is an explicit request to see everything, so it opens
      everything. Leaving the collapse default in charge there produced a rail
      that answered a click labelled "All tools" with one link and ten shut
@@ -835,14 +838,26 @@ export default function AppSidebar({
           /* Open when the user says so. Otherwise: open everything when there
              is little enough to read at a glance, and only fall back to
              "first section + the one you are in" when the list is long. */
-          const holdsCurrentPage = visibleItems.some((item: any) => isActive(item.href));
           const stored = openSections?.[section.title];
+          /* THE RAIL MUST NOT MOVE WHEN YOU NAVIGATE.
+             This used to open a section because it "holds the current page",
+             so every navigation re-shaped the menu: a section expanded, the
+             ones below it slid down, and the link that was under your cursor a
+             second ago was now a different link. It is the reason clicking
+             Customers could land you on Projects.
+             The shape is now a function of the tenant's DATA, never of where
+             you happen to be standing — the same discipline lib/company-tools
+             already applies to which tools appear at all. At company scope
+             everything is open; a section only closes because somebody closed
+             it, and that choice is remembered. Inside a project the phase's
+             leading sections still lead, which is stable for the whole job. */
           const isOpen = collapsed
             ? true
             : stored !== undefined
               ? stored
-              : totalVisible <= OPEN_ALL_BELOW || showAllTools || holdsCurrentPage || sIdx === 0
-                || (inProject && LEADING_SECTIONS[projectPhase].includes(String(section.title).toUpperCase()));
+              : !inProject
+                ? true
+                : LEADING_SECTIONS[projectPhase].includes(String(section.title).toUpperCase()) || sIdx === 0;
 
           /* THE SPLIT. A labelled rule the first time each half of the product
              starts, so the rail reads as two halves rather than one long list

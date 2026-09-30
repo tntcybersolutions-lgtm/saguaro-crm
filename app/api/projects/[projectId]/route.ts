@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { toCents, toDollars, sumCents, summarizeContract } from '@/lib/calc';
+import { PUNCH_DONE } from '@/lib/project-lifecycle';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -70,14 +71,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
       committedCost: toDollars(sumCents(lines.map((l: any) => toCents(l.committed || 0)))),
       actualCost: toDollars(sumCents(lines.map((l: any) => toCents(l.actual || 0)))),
       forecastCost: toDollars(sumCents(lines.map((l: any) => toCents(l.projected || l.original_budget || 0)))),
+      /* The number actuals must be judged against. Original budget is what was
+         signed; revised is that plus every approved change order. Measuring
+         spend against the original made any job with an approved CO read as
+         over budget — a job at 99.4% of its revised budget was showing 104.6%
+         spent, in red. Falls back to the original where a line predates the
+         column. */
+      revisedBudget: toDollars(sumCents(lines.map((l: any) =>
+        toCents(l.revised_budget != null ? l.revised_budget : (l.original_budget || 0))))),
+      approvedChanges: toDollars(sumCents(lines.map((l: any) => toCents(l.approved_changes || 0)))),
       lineCount: lines.length,
     };
 
     // Punch list summary
+    /* Counted on the vocabulary the app actually writes — see PUNCH_DONE.
+       This asked for 'complete' or 'closed'; punch_list stores 'completed' and
+       'voided', and 'open' missed 'in_progress' entirely. A fully closed list
+       of eight therefore reported 8 total, 0 open and 0 complete, which is the
+       kind of arithmetic that makes a user stop believing the whole screen. */
+    const done = (s: unknown) => (PUNCH_DONE as readonly string[]).includes(String(s || '').toLowerCase());
     const punchSummary = {
       total: punch.length,
-      open: punch.filter((i: any) => i.status === 'open').length,
-      complete: punch.filter((i: any) => i.status === 'complete' || i.status === 'closed').length,
+      open: punch.filter((i: any) => !done(i.status)).length,
+      complete: punch.filter((i: any) => done(i.status)).length,
     };
 
     return NextResponse.json({

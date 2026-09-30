@@ -134,3 +134,65 @@ export function stepNumber(href: string, phase: ProjectPhase): number | null {
   const i = steps.findIndex(s => s.href === href);
   return i >= 0 ? i + 1 : null;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   WHICH STEPS ARE BEHIND YOU
+
+   Lifted out of components/GettingStartedRail so the rail, the navigation and
+   the always-on "you are here" bar all answer this question with the same
+   code. Three readers computing it three ways is how a screen ends up telling
+   a user two different things about the same job, which is the fastest way to
+   make them stop trusting any of it.
+
+   MONEY rule: DB numerics can round-trip as strings — Number(x)||0 before math.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/** The slice of /api/project-context these checks read. Everything optional:
+ *  a context that failed to load must leave steps unticked, never crash. */
+export interface PhaseContextLike {
+  project?: { phase?: unknown; status?: unknown } | null;
+  takeoff?: { completed?: unknown; totalCost?: unknown } | null;
+  budget?: { lineCount?: number } | null;
+  bidPackages?: Array<Record<string, unknown>> | null;
+  subs?: unknown[] | null;
+  counts?: { scheduleTasks?: number } | null;
+  recent?: { lastDailyLogDate?: unknown } | null;
+}
+
+export interface PhaseMoneyLike {
+  originalContract?: unknown;
+  payAppCount?: unknown;
+}
+
+export function stepsDone(
+  ctx: PhaseContextLike | null | undefined,
+  money: PhaseMoneyLike | null | undefined,
+  isClosed: (status: unknown) => boolean,
+): Record<string, boolean> {
+  const contract = Number(money?.originalContract) || 0;
+  const lineCount = ctx?.budget?.lineCount || 0;
+  const packages = ctx?.bidPackages || [];
+  return {
+    takeoff:        Boolean(ctx?.takeoff?.completed),
+    estimate:       (Number(ctx?.takeoff?.totalCost) || 0) > 0 || lineCount > 0,
+    'bid-packages': packages.length > 0,
+    leveling:       packages.some((p) => Boolean(p?.leveling_complete || p?.awarded_to)),
+    proposal:       contract > 0,
+    budget:         contract > 0 || lineCount > 0,
+    subs:           (ctx?.subs || []).length > 0,
+    schedule:       (ctx?.counts?.scheduleTasks || 0) > 0,
+    'daily-logs':   ctx?.recent?.lastDailyLogDate != null,
+    'pay-apps':     (Number(money?.payAppCount) || 0) > 0,
+    closeout:       isClosed(ctx?.project?.status),
+  };
+}
+
+/** The first step not yet behind you, or null when the phase is complete. */
+export function currentStep(
+  phase: ProjectPhase,
+  done: Record<string, boolean>,
+): { step: PhaseStep; index: number } | null {
+  const steps = stepsForPhase(phase);
+  const i = steps.findIndex((s) => !done[s.key]);
+  return i === -1 ? null : { step: steps[i], index: i };
+}

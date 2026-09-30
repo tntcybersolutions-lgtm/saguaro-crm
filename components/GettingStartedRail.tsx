@@ -17,7 +17,7 @@
  * Mirrors the mobile GettingStartedRail exactly.
  */
 import React, { useState, useEffect } from 'react';
-import { normalisePhase, stepsForPhase } from '@/lib/project-phase';
+import { normalisePhase, stepsForPhase, stepsDone } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 import Link from 'next/link';
 import { Compass, CaretDown, CaretUp, Check, ArrowRight } from '@phosphor-icons/react';
@@ -104,19 +104,10 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
    *
    * MONEY rule: DB numerics can round-trip as strings — Number(x)||0 before math. */
   const phase = normalisePhase(ctx?.project?.phase);
-  const done: Record<string, boolean> = {
-    takeoff:       Boolean(ctx?.takeoff?.completed),
-    estimate:      (Number(ctx?.takeoff?.totalCost) || 0) > 0 || (ctx?.budget?.lineCount || 0) > 0,
-    'bid-packages': (ctx?.bidPackages || []).length > 0,
-    leveling:      (ctx?.bidPackages || []).some((p: any) => p?.leveling_complete || p?.awarded_to),
-    proposal:      (Number(money?.originalContract) || 0) > 0,
-    budget:        (Number(money?.originalContract) || 0) > 0 || (ctx?.budget?.lineCount || 0) > 0,
-    subs:          (ctx?.subs || []).length > 0,
-    schedule:      (ctx?.counts?.scheduleTasks || 0) > 0,
-    'daily-logs':  ctx?.recent?.lastDailyLogDate != null,
-    'pay-apps':    (money?.payAppCount || 0) > 0,
-    closeout:      isClosedStatus(ctx?.project?.status),
-  };
+  /* Answered by lib/project-phase, not here. The always-on "you are here" bar
+     asks the same question, and two copies of this map would eventually tell
+     one user two different things about the same job. */
+  const done = stepsDone(ctx as any, money as any, isClosedStatus);
 
   const steps: JourneyStep[] = [
     /* "Create your project" appears ONLY while there is not one yet.

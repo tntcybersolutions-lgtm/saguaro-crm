@@ -25,6 +25,7 @@ import PresenceIndicator from '../../components/PresenceIndicator';
 import WhiteLabelProvider from '../../components/WhiteLabelProvider';
 import AppSidebar from '../../components/AppSidebar';
 import AppTopBar from '../../components/AppTopBar';
+import NextStepBar from '../../components/NextStepBar';
 import { X, ArrowRight } from '@phosphor-icons/react';
 import { colors, font, sidebar as sidebarTokens, z } from '../../lib/design-tokens';
 import { ensureBrowserSession } from '../../lib/supabase-browser';
@@ -294,6 +295,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             screen. It sits inside the fixed header and publishes its height so
             the page moves down instead of being covered by it. */}
         <HeaderMessages />
+        {/* "You are here. Do this next." One strip, same place, every screen,
+            on both halves of the product. It does not hide itself once the
+            steps are done — a guide that disappears the moment you are
+            competent is one you cannot hand to a new hire. */}
+        <NextStepBar />
       </div>
 
       {/* ── AI Expert Chat Panel ─────────────────────────────────────── */}
@@ -424,7 +430,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         className="main-content-area"
         style={{
           marginLeft: sidebarWidth,
-          paddingTop: `calc(${sidebarTokens.headerHeight}px + var(--sag-header-msg-h, 0px))`,
+          paddingTop: `calc(${sidebarTokens.headerHeight}px + var(--sag-header-msg-h, 0px) + var(--sag-nextstep-h, 0px))`,
           minHeight: '100vh',
           transition: 'margin-left .2s ease',
         }}
