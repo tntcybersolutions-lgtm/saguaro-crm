@@ -53,7 +53,7 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
     label: 'PRECONSTRUCTION',
     items: [
       { label: 'Takeoff',         href: '/takeoff',           icon: Ruler, badge: null, accent: 'takeoff' },
-      { label: 'Estimate',        href: '/estimate',          icon: Calculator, badge: null, accent: 'estimates' },
+      { label: 'Estimate',        href: '/takeoff/estimate',  icon: Calculator, badge: null, accent: 'estimates' },
       { label: 'Bid Packages',          href: '/bid-packages',      icon: Package, badge: null, accent: 'bids' },
       { label: 'Proposal',        href: '/proposal',          icon: FileText, badge: null },
     ],
