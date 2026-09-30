@@ -36,6 +36,10 @@ interface Takeoff {
   project_name?: string;
   status: 'pending' | 'uploaded' | 'analyzing' | 'complete' | 'failed';
   total_cost: number; material_cost: number; labor_cost: number;
+  /* The number you BID, as distinct from total_cost, which is the cost
+     subtotal. /api/takeoff/analyze-full writes both: total_cost from the cost
+     subtotal and grand_total from the sell price. */
+  grand_total?: number; sell_price?: number;
   building_area: number; floor_count: number; confidence: number;
   building_type: string; summary: string; project_name_detected: string;
   contingency_pct: number; recommendations: string[];
@@ -461,7 +465,15 @@ export default function TakeoffPage() {
   const avgConfidence = completed.length
     ? Math.round(completed.reduce((s, t) => s + (t.confidence || 0), 0) / completed.length)
     : 0;
-  const totalBidValue = completed.reduce((s, t) => s + (t.total_cost || 0), 0);
+  /* A bid value is what you BID, not what the work costs you. This summed
+     total_cost — the cost subtotal — and labelled it "Total Bid Value", so the
+     headline under-reported every takeoff by its whole margin. analyze-full
+     writes grand_total from the sell price; total_cost stays the fallback for
+     older rows that predate it. */
+  const totalBidValue = completed.reduce(
+    (s, t) => s + (Number(t.grand_total) || Number(t.sell_price) || Number(t.total_cost) || 0),
+    0,
+  );
   const totalBidStr = totalBidValue >= 1_000_000
     ? `$${(totalBidValue / 1_000_000).toFixed(1)}M`
     : totalBidValue >= 1000
