@@ -10,8 +10,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
+    /* Accept either spelling. /api/pay-apps, /api/change-orders,
+       /api/daily-logs and /api/cost-codes all take projectId OR
+       project_id; these three took project_id alone, so the same
+       client object that created a pay application failed here with
+       "project_id is required" and no clue the key had changed
+       between two steps of one workflow. */
+    const projectId = body.project_id ?? body.projectId;
 
-    if (!body.project_id || !body.title || !body.party_name) {
+    if (!projectId || !body.title || !body.party_name) {
       return NextResponse.json({ error: 'Missing required fields: project_id, title, party_name' }, { status: 400 });
     }
 
@@ -42,7 +49,7 @@ export async function POST(req: NextRequest) {
     const { data, error } = await db.from('contracts').insert({
       tenant_id: user.tenantId,
       created_by: user.id,
-      project_id: body.project_id,
+      project_id: projectId,
       title: body.title,
       party_name: body.party_name,
       contract_number: body.contract_number || null,

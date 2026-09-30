@@ -9,8 +9,17 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = g.db;
     const body = await req.json();
+    /* BOTH SPELLINGS, BECAUSE THE API USES BOTH.
+       /api/bid-packages/create takes project_id; this took projectId only, so
+       a caller who had just created a package and reused the same key got
+       "projectId is required" and no hint that the name had changed between
+       two endpoints in the same workflow. The subcontractors route already
+       solves this by accepting either, which is the house pattern — snake_case
+       matches the column, camelCase matches the rest of the client code, and
+       an integrator should not have to know which side of that line an
+       endpoint fell on. */
+    const projectId = body.projectId ?? body.project_id;
     const {
-      projectId,
       name,
       originalTotal,
       revisedTotal,

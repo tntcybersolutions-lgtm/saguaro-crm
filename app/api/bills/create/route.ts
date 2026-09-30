@@ -10,8 +10,15 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
+    /* Accept either spelling. /api/pay-apps, /api/change-orders,
+       /api/daily-logs and /api/cost-codes all take projectId OR
+       project_id; these three took project_id alone, so the same
+       client object that created a pay application failed here with
+       "project_id is required" and no clue the key had changed
+       between two steps of one workflow. */
+    const projectId = body.project_id ?? body.projectId;
 
-    if (!body.project_id || !body.vendor_name) {
+    if (!projectId || !body.vendor_name) {
       return NextResponse.json({ error: 'project_id and vendor_name are required' }, { status: 400 });
     }
 
@@ -22,7 +29,7 @@ export async function POST(req: NextRequest) {
       .insert({
         tenant_id: user.tenantId,
         created_by: user.id,
-        project_id: body.project_id,
+        project_id: projectId,
         vendor_name: body.vendor_name,
         bill_number: body.bill_number || null,
         vendor_email: body.vendor_email || null,
@@ -49,7 +56,7 @@ export async function POST(req: NextRequest) {
       const { data: bLine } = await db
         .from('budget_lines')
         .select('id, actual')
-        .eq('project_id', body.project_id)
+        .eq('project_id', projectId)
         .eq('tenant_id', user.tenantId)
         .or(`cost_code.eq.${body.cost_code},division.eq.${div}`)
         .limit(1)
