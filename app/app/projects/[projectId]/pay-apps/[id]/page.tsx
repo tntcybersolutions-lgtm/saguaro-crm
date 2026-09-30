@@ -384,7 +384,11 @@ export default function PayAppDetailPage() {
             </span>
           }
           title="Pay App"
-          accent={`#${payApp.application_number}`}
+          /* app_number is the column; application_number does not exist on
+             pay_applications, so this read undefined and every G702 header
+             said "Pay App #undefined". Line 337 in this same file already had
+             the fallback the right way round. */
+          accent={`#${(payApp as any).app_number ?? payApp.application_number ?? ''}`}
           subtitle={`${payApp.projects?.name || 'Project'} · Period ${fmtDate(payApp.period_from)} – ${fmtDate(payApp.period_to)}`}
           actions={<>
             {/* Downloading the G702/G703 is a secondary action, so it leads
