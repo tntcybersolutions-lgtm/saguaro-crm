@@ -2331,15 +2331,31 @@ export default function TakeoffPage() {
             </div>
           </div>
           <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
+            {/* A ZERO HERE IS USUALLY AN ANSWER, NOT A FAILURE.
+                This card sat four numbers side by side, and on the common case
+                — a GC who has not added subcontractors yet — it read
+                15 · 15 · 0 · 15. Nothing on it said why one of the four was
+                zero, so the only available reading was that a quarter of the
+                build had failed. It had not: a W-9 is a request TO a
+                subcontractor, and there are none to ask.
+                Each tile now carries the reason when its count is zero, so the
+                number stops being an accusation. */}
             {[
-              { icon: <Package size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.jackets || autoSummary.packages, label: 'Bid jackets' },
-              { icon: <Scroll size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.lienWaivers, label: 'Lien waivers' },
-              { icon: <FileText size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.w9s, label: 'W-9 requests' },
-              { icon: <FolderSimple size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.filed, label: 'Filed to Compliance' },
+              { icon: <Package size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.jackets || autoSummary.packages, label: 'Bid jackets',
+                zeroNote: 'no packages to jacket yet' },
+              { icon: <Scroll size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.lienWaivers, label: 'Lien waivers',
+                zeroNote: 'filed once a package is awarded' },
+              { icon: <FileText size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.w9s, label: 'W-9 requests',
+                zeroNote: 'none to send — add subcontractors first' },
+              { icon: <FolderSimple size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.filed, label: 'Filed to Compliance',
+                zeroNote: 'nothing needed filing' },
             ].map((s) => (
               <div key={s.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'rgba(255,255,255,0.55)', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, fontWeight: 700 }}>{s.icon}{s.label}</div>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em' }}>{fmtN(s.big)}</div>
+                <div style={{ color: s.big ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em' }}>{fmtN(s.big)}</div>
+                {!s.big && (
+                  <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{s.zeroNote}</div>
+                )}
               </div>
             ))}
           </div>
