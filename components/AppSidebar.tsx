@@ -320,15 +320,23 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
 
 /* ── Navigation Config ─────────────────────────────────────────────── */
 const NAV_SECTIONS: NavSection[] = [
+  /* THE ORDER IS THE LIFECYCLE, AND NOTHING ELSE.
+     Home → Sales → Preconstruction → Execution → Financial → Company, which is
+     the order a job actually happens in and the order Procore groups its tools
+     in. Two things used to break it. "Overview" mixed three navigation entries
+     (where am I, what's mine, every job) with three company resources (people,
+     time clock, fleet), so the first group answered two unrelated questions;
+     the resources now live in Company with the other administration. And
+     Franchise Rollout — nineteen entitlement-gated screens — sat between Sales
+     and Preconstruction, so an entitled tenant met a nineteen-item wall in the
+     middle of the lifecycle; it now sits last, where a programme bolted onto
+     the product belongs. */
   {
-    title: 'Overview',
+    title: 'Home',
     items: [
       { label: 'Dashboard',    href: '/app',              icon: GridFour, core: true, accentKey: 'portfolio' },
       { label: 'My Work',      href: '/app/my-work',      icon: Briefcase, accentKey: 'work', core: true },
       { label: 'Projects',     href: '/app/projects',     icon: FolderSimple, core: true, accentKey: 'portfolio' },
-      { label: 'People & Access', href: '/app/people',    icon: Users, accentKey: 'team' },
-      { label: 'Time Clock',   href: '/app/time',         icon: Clock, accentKey: 'time' },
-      { label: 'Fleet',        href: '/app/fleet',        icon: Truck, gate: 'fleet', accentKey: 'fleet' },
     ],
   },  {
     zone: 'sell',
@@ -347,7 +355,83 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    // Entire section is gated to command_center — hidden unless the tenant is entitled.
+    zone: 'build',
+    title: 'Preconstruction',
+    items: [
+      { label: 'Takeoff Studio',   href: '/app/takeoff',      icon: Blueprint, accentKey: 'takeoff', core: true },
+      { label: 'Catalog',          href: '/app/catalog',      icon: Package, accentKey: 'catalog' },
+      { label: 'Signal Studio',    href: '/app/signal-studio', icon: WifiHigh, accentKey: 'signal' },
+    ],
+  },
+  {
+    zone: 'build',
+    title: 'Execution',
+    items: [
+      { label: 'Documents',   href: '/app/documents',  icon: FileText, accentKey: 'documents', core: true },
+      { label: 'Document Versions', href: '/app/document-versions', icon: Notepad, accentKey: 'documents' },
+      { label: 'Daily Logs',  href: '/app/daily-logs', icon: ClipboardText, accentKey: 'daily' },
+      { label: 'Schedule',    href: '/app/schedule',   icon: CalendarBlank, accentKey: 'schedule', core: true },
+      { label: 'Resource Planning', href: '/app/resource-planning', icon: HardHat, accentKey: 'team' },
+      /* Warranty is the last thing a job does, so it sits at the end of the
+         job's own section rather than in a "Tools" drawer beside Autopilot. */
+      { label: 'Warranty Claims', href: '/app/warranty-claims', icon: Wrench, accentKey: 'compliance' },
+      { label: 'Saguaro Radio', href: '/app/radio',    icon: Broadcast, accentKey: 'radio' },
+    ],
+  },
+  {
+    zone: 'build',
+    title: 'Financial',
+    items: [
+      { label: 'Invoicing',   href: '/app/invoicing',  icon: CreditCard, accentKey: 'invoices', core: true },
+      { label: 'Billing',     href: '/app/billing',    icon: CurrencyDollar, accentKey: 'financials' },
+      /* Both of these sit under /app/billing/* but have nothing to do with the
+         subscription page above them — that URL prefix is a collision, and it
+         is why neither ever got a door. Cost Control is the CM cost report
+         (budget / committed / actual, off /api/cost-control) and Progress
+         Billing is cross-project AIA G702/G703 off lib/finance, the same engine
+         iOS uses. 270 and 265 lines, both working, both reachable only by
+         typing the URL until now. */
+      { label: 'Cost Control',    href: '/app/billing/cost-control', icon: ChartLineUp, accentKey: 'financials' },
+      { label: 'Progress Billing', href: '/app/billing/payapp',      icon: Receipt,     accentKey: 'financials' },
+      /* Certified payroll is payroll — money leaving the job under a wage
+         determination. It was filed under Execution next to Daily Logs, which
+         is where you look for what happened on site, not for what was paid. */
+      { label: 'Certified Payroll', href: '/app/certified-payroll', icon: SealCheck, accentKey: 'financials' },
+      { label: 'Reports',     href: '/app/reports',    icon: ChartBar, accentKey: 'reports' },
+    ],
+  },
+  /* COMPANY, NOT "TOOLS".
+     "Tools" is where a product puts things it has not decided about, and this
+     one held a compliance register, an AI assistant, a sub-prequalification
+     workflow and a portal manager side by side. These are company-level
+     administration — they belong to the business, not to any one job — so they
+     are named for what they are, and the two automation features that are not
+     administration are split out below. */
+  {
+    title: 'Company',
+    items: [
+      { label: 'People & Access',  href: '/app/people',           icon: Users,       accentKey: 'team', core: true },
+      { label: 'Time Clock',       href: '/app/time',             icon: Clock,       accentKey: 'time' },
+      { label: 'Fleet',            href: '/app/fleet',            icon: Truck,       gate: 'fleet', accentKey: 'fleet' },
+      { label: 'Compliance',       href: '/app/compliance',       icon: ShieldCheck, accentKey: 'compliance' },
+      { label: 'Prequalification', href: '/app/prequalification', icon: ListChecks,  accentKey: 'compliance' },
+      { label: 'Portals',          href: '/app/portals',          icon: SquaresFour, accentKey: 'ccportals' },
+    ],
+  },
+  {
+    title: 'Automation',
+    items: [
+      { label: 'Autopilot',          href: '/app/autopilot',          icon: Star,  accentKey: 'autopilot' },
+      { label: 'Approval Workflows', href: '/app/approval-workflows', icon: Flag,  accentKey: 'autopilot' },
+      { label: 'Ask Sage',           href: '/app/ask',                icon: Brain, accentKey: 'sage' },
+    ],
+  },
+  {
+    /* Entire section is gated to command_center — hidden unless the tenant is
+       entitled. LAST on purpose: nineteen screens is longer than the entire
+       core lifecycle above it, and it used to sit between Sales and
+       Preconstruction, so an entitled tenant scrolled past a rollout programme
+       to reach Takeoff. A bolt-on goes after the product, not through it. */
     zone: 'build',
     title: 'Franchise Rollout',
     items: [
@@ -370,66 +454,6 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Financials',        href: '/app/command-center/financials', icon: Receipt,      gate: 'command_center', accentKey: 'financials' },
       { label: 'QC by Trade',       href: '/app/command-center/qc',         icon: SealCheck,    gate: 'command_center', accentKey: 'ccqc' },
       { label: 'Owner Portals',     href: '/app/command-center/portals',    icon: ShareNetwork, gate: 'command_center', accentKey: 'ccportals' },
-    ],
-  },
-  {
-    zone: 'build',
-    title: 'Pre-Construction',
-    items: [
-      { label: 'Takeoff Studio',   href: '/app/takeoff',      icon: Blueprint, accentKey: 'takeoff', core: true },
-      { label: 'Catalog',          href: '/app/catalog',      icon: Package, accentKey: 'catalog' },
-      { label: 'Signal Studio',    href: '/app/signal-studio', icon: WifiHigh, accentKey: 'signal' },
-    ],
-  },
-  {
-    zone: 'build',
-    title: 'Execution',
-    items: [
-      { label: 'Documents',   href: '/app/documents',  icon: FileText, accentKey: 'documents', core: true },
-      { label: 'Document Versions', href: '/app/document-versions', icon: Notepad, accentKey: 'documents' },
-      { label: 'Daily Logs',  href: '/app/daily-logs', icon: ClipboardText, accentKey: 'daily' },
-      { label: 'Schedule',    href: '/app/schedule',   icon: CalendarBlank, accentKey: 'schedule', core: true },
-      { label: 'Certified Payroll', href: '/app/certified-payroll', icon: SealCheck, accentKey: 'financials' },
-      { label: 'Resource Planning', href: '/app/resource-planning', icon: HardHat, accentKey: 'team' },
-      { label: 'Saguaro Radio', href: '/app/radio',    icon: Broadcast, accentKey: 'radio' },
-    ],
-  },
-  {
-    zone: 'build',
-    title: 'Financial',
-    items: [
-      { label: 'Invoicing',   href: '/app/invoicing',  icon: CreditCard, accentKey: 'invoices', core: true },
-      { label: 'Billing',     href: '/app/billing',    icon: CurrencyDollar, accentKey: 'financials' },
-      /* Both of these sit under /app/billing/* but have nothing to do with the
-         subscription page above them — that URL prefix is a collision, and it
-         is why neither ever got a door. Cost Control is the CM cost report
-         (budget / committed / actual, off /api/cost-control) and Progress
-         Billing is cross-project AIA G702/G703 off lib/finance, the same engine
-         iOS uses. 270 and 265 lines, both working, both reachable only by
-         typing the URL until now. */
-      { label: 'Cost Control',    href: '/app/billing/cost-control', icon: ChartLineUp, accentKey: 'financials' },
-      { label: 'Progress Billing', href: '/app/billing/payapp',      icon: Receipt,     accentKey: 'financials' },
-      { label: 'Reports',     href: '/app/reports',    icon: ChartBar, accentKey: 'reports' },
-    ],
-  },
-  {
-    title: 'Tools',
-    items: [
-      { label: 'Autopilot',   href: '/app/autopilot',   icon: Star, accentKey: 'autopilot' },
-      { label: 'Compliance',  href: '/app/compliance',  icon: ShieldCheck, accentKey: 'compliance' },
-      { label: 'Portals',     href: '/app/portals',     icon: SquaresFour, accentKey: 'ccportals' },
-      /* Four finished features that no href in the codebase pointed at — not
-         here, not from a parent page, nowhere. A cross-reference of every /app
-         route against every href in app/, components/ and lib/ found seventeen
-         such pages; three were redirect stubs and two were superseded by
-         /app/portals, which leaves these and the ones added above. They are
-         hidden by lib/company-tools until the tenant has the matching records,
-         exactly like every other non-core tool, so the rail does not grow for
-         an account that has no subs and no documents. */
-      { label: 'Ask Sage',        href: '/app/ask',                 icon: Brain,      accentKey: 'sage' },
-      { label: 'Prequalification', href: '/app/prequalification',   icon: ListChecks, accentKey: 'compliance' },
-      { label: 'Warranty Claims',  href: '/app/warranty-claims',    icon: Wrench,     accentKey: 'compliance' },
-      { label: 'Approval Workflows', href: '/app/approval-workflows', icon: Flag,     accentKey: 'autopilot' },
     ],
   },
 ];
