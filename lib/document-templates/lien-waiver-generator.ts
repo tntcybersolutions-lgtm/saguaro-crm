@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { saveDocument, fmtCurrency } from '../pdf-engine';
 import { brandDoc, drawBrandHeader, stampFooters } from './report-theme';
+import { fmtDate } from '@/lib/format-date';
 
 export type WaiverType =
   | 'conditional_progress'
@@ -273,7 +274,12 @@ export async function generateLienWaiver(
       claimant: input.claimantName,
       amount: input.amount,
       throughDate: input.throughDate,
-    }
+    },
+    undefined,
+    /* A job collects one of these per subcontractor per billing period, so the
+       claimant and the through-date are the whole point of the row. The waiver
+       type is already the document's kind. */
+    { title: `${input.claimantName} — through ${fmtDate(input.throughDate, { month: 'short', day: 'numeric', year: 'numeric' }, input.throughDate)}` },
   );
 
   // Save to lien_waivers table

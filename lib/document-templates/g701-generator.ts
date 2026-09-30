@@ -306,6 +306,12 @@ export async function generateG701(input: G701Input): Promise<{
     newContractSum,
     // Every field that reached the paper, for the version comparison.
     fields: resolved,
+  }, undefined, {
+    /* Change orders are numbered for exactly this reason — a job with nine of
+       them should not list nine rows called "AIA G701 Change Order". */
+    title: `Change Order #${coNumber}`,
+    sourceType: 'change_order',
+    sourceId: input.changeOrderId,
   });
 
   return { pdfBytes, pdfUrl };

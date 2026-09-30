@@ -108,6 +108,13 @@ export async function generateInvoicePdf(input: InvoicePdfInput): Promise<{
     pdfBytes,
     { invoiceId: inv.id, invoiceNumber, total, vendor: inv.vendor_name },
     input.tenantId,
+    /* The number is how anyone refers to an invoice out loud; the vendor is how
+       they find it when they only remember who sent it. */
+    {
+      title: [`Invoice ${invoiceNumber}`, inv.vendor_name].filter(Boolean).join(' — '),
+      sourceType: 'invoice',
+      sourceId: inv.id,
+    },
   );
   return { pdfBytes, pdfUrl, invoiceNumber };
 }
