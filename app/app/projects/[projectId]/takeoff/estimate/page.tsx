@@ -161,6 +161,9 @@ function EstimatePage() {
   const [addingSheet, setAddingSheet] = useState(false);
   const [newSheetName, setNewSheetName] = useState('');
   const [newSheetDiscipline, setNewSheetDiscipline] = useState('General');
+  /* Why the last Add Sheet did nothing. Previously there was nowhere to put
+     that sentence, so the answer was "nothing visible happened". */
+  const [sheetError, setSheetError] = useState<string | null>(null);
   const [overhead, setOverhead] = useState(0);
   const [profit, setProfit] = useState(0);
   const [contingency, setContingency] = useState(0);
@@ -264,14 +267,65 @@ function EstimatePage() {
     selectTakeoff(created);
   };
 
-  // Add sheet
+  /**
+   * Add a sheet — and, on an estimate that has no takeoff yet, create the
+   * takeoff it has to hang off.
+   *
+   * This opened with `if (!selectedTakeoff || !newSheetName.trim()) return;`.
+   * A sheet belongs to a takeoff_project, and on a brand-new estimate there
+   * isn't one, so the guard was true and the function returned — silently. The
+   * form was fully enabled the whole time: it took a sheet name, took a
+   * discipline, and its Save button threw both away without a request, an
+   * error or any change on screen. The only way to find out was the network
+   * tab. Doing nothing is a defensible outcome; doing nothing quietly, behind
+   * a control that looks like it works, is the thing that makes people say
+   * the product is broken.
+   *
+   * The missing takeoff is not a reason to refuse — it is one POST, and the
+   * page already knows the project. So it makes one, named for the project,
+   * and carries on to the sheet. Failures now say so.
+   */
   const addSheet = async () => {
-    if (!selectedTakeoff || !newSheetName.trim()) return;
-    const res = await fetch(`/api/takeoff-projects/${selectedTakeoff.id}/sheets`, {
+    if (!newSheetName.trim()) {
+      setSheetError('Give the sheet a name first.');
+      return;
+    }
+    setSheetError(null);
+
+    let takeoff = selectedTakeoff;
+
+    if (!takeoff) {
+      const created = await fetch('/api/takeoff-projects/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: projectId,
+          name: `${project?.name || 'Estimate'} — takeoff`,
+        }),
+      }).catch(() => null);
+
+      const payload = created && created.ok ? await created.json().catch(() => null) : null;
+      takeoff = payload?.takeoffProject ?? null;
+
+      if (!takeoff) {
+        setSheetError('Could not start a takeoff for this estimate. Please try again.');
+        return;
+      }
+      setTakeoffProjects(prev => [takeoff as TakeoffProject, ...prev]);
+      setSelectedTakeoff(takeoff);
+    }
+
+    const res = await fetch(`/api/takeoff-projects/${takeoff.id}/sheets`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: newSheetName, discipline: newSheetDiscipline }),
-    });
+    }).catch(() => null);
+
+    if (!res || !res.ok) {
+      setSheetError('Could not add the sheet. Please try again.');
+      return;
+    }
+
     const d = await res.json();
     const s = d.sheet || d;
     setSheets(prev => [...prev, s]);
@@ -501,9 +555,14 @@ function EstimatePage() {
                 >
                   {(SHEET_DISCIPLINES.includes(newSheetDiscipline) ? SHEET_DISCIPLINES : [newSheetDiscipline, ...SHEET_DISCIPLINES]).map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
+                {sheetError && (
+                  <div style={{ fontSize: 12, lineHeight: 1.45, color: '#FCA5A5', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.28)', borderRadius: 8, padding: '7px 10px' }}>
+                    {sheetError}
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={addSheet} style={{ ...smallGoldBtn, flex: 1 }} className="pmBtn">Save</button>
-                  <button onClick={() => { setAddingSheet(false); setNewSheetName(''); }} style={{ ...ghostButtonStyle, flex: 1, padding: '7px 13px', fontSize: 12.5, borderRadius: 10 }} className="pmBtn">Cancel</button>
+                  <button onClick={() => { setAddingSheet(false); setNewSheetName(''); setSheetError(null); }} style={{ ...ghostButtonStyle, flex: 1, padding: '7px 13px', fontSize: 12.5, borderRadius: 10 }} className="pmBtn">Cancel</button>
                 </div>
               </div>
             )}
