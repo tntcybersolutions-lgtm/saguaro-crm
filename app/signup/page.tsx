@@ -84,7 +84,23 @@ export default function SignupPage(){
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || 'Signup failed. Please try again.'); setLoading(false); return; }
-      if (data.confirmed || data.demo) { window.location.href = '/onboarding/step-1'; return; }
+      /* STRAIGHT INTO THE WORKSPACE.
+         This sent a brand-new owner to /onboarding/step-1, an interstitial
+         listing four features they had just read about on the pricing page.
+         Its progress bar promised three steps — Welcome, First Project, Invite
+         Team — and neither of its buttons goes to step two: one opens the
+         dashboard and the other opens the new-project form. Nothing anywhere
+         in the codebase links to /onboarding/step-2 at all, and step-4's own
+         progress bar shows a different four-step sequence with a "Company"
+         step that step-1 never mentions. So the wizard was three quarters
+         unreachable and the part a new customer did meet lied about where it
+         was taking them.
+         The dashboard already carries the guided journey, and that rail is
+         now the single one on the page. Landing there means the first screen
+         after paying attention to a signup form is the product, which is what
+         Procore and Buildertrend do and what a 30-day no-card trial has to do
+         to survive its first minute. */
+      if (data.confirmed || data.demo) { window.location.href = '/app'; return; }
       setSuccess(true);
     } catch {
       setError('Signup failed. Please check your connection and try again.');
