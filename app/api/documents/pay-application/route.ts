@@ -13,6 +13,7 @@ import {
 } from '@/lib/calc';
 import { must } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
+import { fmtDate } from '@/lib/format-date';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -128,9 +129,18 @@ export async function POST(req: NextRequest) {
       }),
     });
 
+    /* Five applications on one job filed five identical library rows reading
+       "AIA G702", because saveDocument() was never told which application this
+       was. The number and the period are what a GC looks for. */
+    const period = pa.period_to ? fmtDate(pa.period_to, { month: 'short', year: 'numeric' }, '') : '';
+    const label = `Application ${pa.app_number ?? '—'}${period ? ` — ${period}` : ''}`;
+    const source = { sourceType: 'pay_application', sourceId: body.payAppId };
+
     const [g702Url, g703Url] = await Promise.all([
-      saveDocument(body.projectId || project?.id, 'g702', g702Bytes, { payAppId: body.payAppId }, tenantId),
-      saveDocument(body.projectId || project?.id, 'g703', g703Bytes, { payAppId: body.payAppId }, tenantId),
+      saveDocument(body.projectId || project?.id, 'g702', g702Bytes, { payAppId: body.payAppId }, tenantId,
+        { ...source, title: `${label} — G702` }),
+      saveDocument(body.projectId || project?.id, 'g703', g703Bytes, { payAppId: body.payAppId }, tenantId,
+        { ...source, title: `${label} — G703 continuation` }),
     ]);
 
     // Update pay app with PDF URLs and the computed (cross-footed) summary so

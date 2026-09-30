@@ -56,7 +56,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       insuranceRequirements: p.insurance_requirements || {},
     });
 
-    const pdfUrl = await saveDocument(project?.id || id, 'bid-jacket', pdfBytes, { bidPackageId: id }, p.tenant_id);
+    /* Twenty-eight jackets on one project listed as twenty-eight identical
+       rows. The trade is what tells them apart; the package id is what lets the
+       library open the live jacket instead of this flattened PDF. */
+    const pdfUrl = await saveDocument(
+      project?.id || id, 'bid-jacket', pdfBytes, { bidPackageId: id }, p.tenant_id,
+      {
+        title: [p.trade, p.name].filter(Boolean).join(' — ') || 'Bid Jacket',
+        sourceType: 'bid_package',
+        sourceId: id,
+      },
+    );
 
     // Update bid package with jacket URL (tenant-scoped — service-role bypasses RLS)
     await must(db.from('bid_packages').update({ jacket_pdf_url: pdfUrl }).eq('id', id).eq('tenant_id', user.tenantId), 'bid_packages update');

@@ -11,6 +11,7 @@ import {
   goldButtonStyle, goldOutlineButtonStyle,
 } from '@/components/ui/premium';
 import { moduleAccent } from '@/lib/module-identity';
+import { docTypeLabel } from '@/lib/document-types';
 import { PdfIcon } from '@/components/ui/FileTypeIcon';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 
@@ -79,19 +80,12 @@ function SkeletonRows({ rows = 4, cols }: { rows?: number; cols: number }) {
 const TABS = ['Library', 'Pay Applications', 'Lien Waivers', 'Bonds & Forms', 'Payroll', 'Closeout'] as const;
 type Tab = typeof TABS[number];
 
-// Generated-document type slugs -> human labels; anything unmapped prettifies.
-const DOC_TYPE_LABELS: Record<string, string> = {
-  'pay-application': 'AIA G702/G703 Pay Application', g702: 'AIA G702', g703: 'AIA G703',
-  g701: 'AIA G701 Change Order', g704: 'AIA G704 Substantial Completion', g706: 'AIA G706 Affidavit',
-  g707: 'AIA G707 Consent of Surety', a101: 'AIA A101 Agreement', a310: 'A310 Bid Bond',
-  a312: 'A312 Bond', invoice: 'Invoice', 'lien-waiver': 'Lien Waiver', w9: 'W-9',
-  'purchase-order': 'Purchase Order', subcontract: 'Subcontract', ntp: 'Notice to Proceed',
-  'daily-report': 'Daily Report', wh347: 'WH-347 Certified Payroll', jha: 'Job Hazard Analysis',
-  closeout: 'Closeout Package', 'preliminary-notice': 'Preliminary Notice',
-  'notice-completion': 'Notice of Completion', 'prevailing-wage': 'Prevailing Wage',
-};
-const docTypeLabel = (t: string) =>
-  DOC_TYPE_LABELS[t] ?? t.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+/* Labels live in lib/document-types, next to the filer that writes the slug.
+   This page kept its own map, and twelve of its keys ('a310', 'a312', 'ntp',
+   'closeout', 'daily-report', 'purchase-order', 'lien-waiver',
+   'preliminary-notice', 'notice-completion', 'prevailing-wage',
+   'pay-application') named slugs no generator writes — those rows all fell
+   through to the prettifier and read "Wh347 Certified Payroll". */
 
 const BOND_CARDS = [
   { code: 'A310', name: 'Bid Bond', desc: 'AIA A310 – Bid bond for proposal phase', icon: Clipboard },
@@ -522,7 +516,7 @@ export default function DocumentsPage() {
                         {/* A bid jacket has a real jacket behind it — drawings,
                             specs, bid form, requirements. Send the GC there
                             rather than to the flattened PDF of one section. */}
-                        {doc.doc_type === 'bid_jacket' && doc.source_id && doc.project_id && (
+                        {doc.doc_type === 'bid-jacket' && doc.source_id && doc.project_id && (
                           <Link
                             href={`/app/projects/${doc.project_id}/bid-packages/${doc.source_id}/jacket`}
                             className="pmBtn"
