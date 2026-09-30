@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
+import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
 import { PremiumFX, ModuleHero, StatStrip, AutoChip, FlowSteps, SectionCard } from '@/components/ui/premium';
@@ -45,8 +46,10 @@ type Activity = {
 /* ─── Helpers ─── */
 const fmt = (n: number) =>
   '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-const fmtDate = (d: string) =>
-  d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '\u2014';
+/* Via lib/format-date: next_action_date and the other `date` columns arrive as
+   bare YYYY-MM-DD, which new Date() reads as UTC midnight — so every follow-up
+   on this board rendered one day early for anyone west of Greenwich. */
+const fmtDate = (d: string) => fmtDateSafe(d);
 const fmtTime = (d: string) =>
   d ? new Date(d).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
 
@@ -109,7 +112,10 @@ export default function LeadsPage() {
   /* lead_pipeline.assigned_to is a uuid; the rep's name lives on profiles.
      Without this join an owner cannot tell who is producing, which is the
      first question anybody running a sales team asks. */
-  const [team, setTeam] = useState<{ id: string; full_name?: string; email?: string }[]>([]);
+  /* /api/team/users returns { id, name, email, ... } — it maps profiles.full_name
+     onto `name`. Reading full_name here got undefined and every owner fell
+     through to their email address. */
+  const [team, setTeam] = useState<{ id: string; name?: string; full_name?: string; email?: string }[]>([]);
   const [valueMin, setValueMin] = useState('');
   const [valueMax, setValueMax] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -229,7 +235,7 @@ export default function LeadsPage() {
   const ownerName = useCallback((id?: string | null) => {
     if (!id) return 'Unassigned';
     const u = team.find(t => t.id === id);
-    return u?.full_name || u?.email || 'Unassigned';
+    return u?.name || u?.full_name || u?.email || 'Unassigned';
   }, [team]);
 
   /* ─── Pipeline Metrics ─── */

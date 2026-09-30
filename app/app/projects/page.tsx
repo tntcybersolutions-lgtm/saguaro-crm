@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { fmtDate } from '@/lib/format-date';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
 import Link from 'next/link';
@@ -222,7 +223,7 @@ export default function ProjectsPage() {
                   </div>
                 </div>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                  <span style={{fontSize:11,color:colors.textDim}}>{p.start_date ? new Date(p.start_date).toLocaleDateString('en-US',{month:'short',year:'numeric'}) : 'No start date'}</span>
+                  <span style={{fontSize:11,color:colors.textDim}}>{p.start_date ? fmtDate(p.start_date,{month:'short',year:'numeric'}) : 'No start date'}</span>
                   <span style={{display:'inline-flex',alignItems:'center',gap:4,fontSize:12,fontWeight:700,color:GOLD}}>Open <ArrowRight size={13} weight="bold"/></span>
                 </div>
               </Link>
@@ -255,7 +256,7 @@ export default function ProjectsPage() {
                     <td style={{padding:'12px'}}><span style={{fontSize:10,fontWeight:800,padding:'3px 9px',borderRadius:999,background:st.bg,color:st.c,whiteSpace:'nowrap' as const}}>{(p.status||'—').replace(/_/g,' ').toUpperCase()}</span></td>
                     <td style={{padding:'12px',color:DIM,textTransform:'capitalize' as const}}>{(p.project_type||'—').replace(/_/g,' ')}</td>
                     <td style={{padding:'12px',textAlign:'right',fontWeight:700,color:contract>0?GOLD:colors.textDim,fontVariantNumeric:'tabular-nums' as const}}>{contract>0?fmt(contract):'—'}</td>
-                    <td style={{padding:'12px',color:DIM,fontVariantNumeric:'tabular-nums' as const}}>{p.start_date?new Date(p.start_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—'}</td>
+                    <td style={{padding:'12px',color:DIM,fontVariantNumeric:'tabular-nums' as const}}>{p.start_date?fmtDate(p.start_date):'—'}</td>
                     <td style={{padding:'12px',textAlign:'right'}}><ArrowRight size={14} weight="bold" color={GOLD}/></td>
                   </tr>
                 );})}
