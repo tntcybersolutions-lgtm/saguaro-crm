@@ -80,19 +80,44 @@ const ICON: Record<string, React.ReactNode> = {
   attachments: <Paperclip size={16} weight="duotone" />,
 };
 
+/**
+ * Parse a stored date the way a bid deadline is meant.
+ *
+ * bid_packages stores the due date as a plain calendar day, "2026-10-14".
+ * `new Date("2026-10-14")` is defined to read that as midnight UTC, so once it
+ * is formatted in any timezone west of Greenwich it moves back a day: in
+ * Arizona, UTC-7, this jacket printed "Oct 13, 2026" for a package the GC's own
+ * screen called Oct 14. The general contractor and the subcontractor were
+ * reading different deadlines off the same record, on the one document whose
+ * job is to say when the bid is due.
+ *
+ * A calendar day has no timezone, so it must not be given one. A YYYY-MM-DD
+ * value is built as local midnight; anything else — a real timestamp — is left
+ * for Date to parse as it always did.
+ */
+function parseStamp(iso: string | null): Date | null {
+  if (!iso) return null;
+  const dayOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  const d = dayOnly
+    ? new Date(Number(dayOnly[1]), Number(dayOnly[2]) - 1, Number(dayOnly[3]))
+    : new Date(iso);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 /** Days until the bid is due — the number a GC actually tracks. */
 function daysUntil(iso: string | null): number | null {
-  if (!iso) return null;
-  const d = new Date(iso).getTime();
-  if (Number.isNaN(d)) return null;
-  return Math.ceil((d - Date.now()) / 86_400_000);
+  const d = parseStamp(iso);
+  if (!d) return null;
+  return Math.ceil((d.getTime() - Date.now()) / 86_400_000);
 }
 
 const money = (n: number | null) =>
   n == null ? null : `$${Number(n).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
-const dateStr = (iso: string | null) =>
-  iso ? new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+const dateStr = (iso: string | null) => {
+  const d = parseStamp(iso);
+  return d ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+};
 
 export default function BidJacketView({
   jacket, projectId, packageId, backHref, slot,
