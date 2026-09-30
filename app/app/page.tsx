@@ -11,6 +11,8 @@ import { useSavedLayout, ConfiguredDashboard } from '@/components/dashboard-widg
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import GettingStartedRail from '@/components/GettingStartedRail';
 import ActivityFeed from '@/components/ActivityFeed';
+import SalesOverview from '@/components/SalesOverview';
+import { usePermissions } from '@/lib/hooks/usePermissions';
 import SalesJourneyRail from '@/components/SalesJourneyRail';
 import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
 
@@ -315,6 +317,13 @@ function DrillDownPanel({ type, onClose }: { type: DrillDownType; onClose: () =>
 
 /* ─── Main Dashboard ─────────────────────────────────────────────────── */
 export default function DashboardPage() {
+  /* Shown to anyone who sells, which includes the owner running both halves.
+     usePermissions fails open, so an unresolved fetch shows the panel rather
+     than hiding it — the cost of a spurious panel is a glance, the cost of
+     hiding a salesperson's only screen is the product. */
+  const { can: canDo } = usePermissions();
+  const canSell = canDo('Sales', 'View');
+
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [drillDown, setDrillDown] = useState<DrillDownType>(null);
 
@@ -616,6 +625,17 @@ export default function DashboardPage() {
             a GC actually opens the app with — what happened since yesterday,
             and who did it. Three tables existed for that and all three were
             empty, because nothing anywhere wrote to them. */}
+        {/* THE PERSON WHO BRINGS THE WORK IN GETS THEIR OWN FIRST SCREEN.
+            Everything else on this page answers a builder's questions — what is
+            on site, what is outstanding, where the job stands. A salesperson
+            opens the app asking what they are chasing, what it is worth, what
+            they won and what is late, and had to assemble that from four
+            pages. Shown to anyone who sells, which includes the GC: an owner
+            running both halves wants the pipeline on the same screen as the
+            jobs. Hidden only from someone with no Sales permission at all,
+            because to them it is four numbers about work they do not touch. */}
+        {canSell && <SalesOverview style={{ marginBottom: 20 }} />}
+
         <ActivityFeed limit={12} style={{ marginBottom: 20 }} />
 
         {/* Main 2-col grid */}
