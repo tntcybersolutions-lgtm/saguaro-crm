@@ -460,14 +460,33 @@ export default function DashboardPage() {
             each deep-linking to the flagged module section (NudgeRing sync). */}
         {!portfolioEmpty && <SuggestionTicker style={{ marginBottom: 24 }} />}
 
-        {/* GC Guided Journey — first project to first payment. The step count
-            lives in GettingStartedRail; do not restate it here. */}
-        {/* Sales first, because sales happens first. GettingStartedRail opens
-            at "Create your project" — everything a salesperson does happens
-            before that, and until this rail existed the product never said so.
-            Both hide themselves once their own steps are all behind you. */}
-        <SalesJourneyRail />
-        <GettingStartedRail />
+        {/* ONE JOURNEY ON SCREEN, NOT THREE.
+            A brand-new account used to get both rails fully expanded AND the
+            "Start here" card below, because every rail's auto-fold triggers on
+            work already done and a fresh tenant has none. That is six sales
+            steps, five build steps and four cards — fifteen entry points, five
+            of which are the same /app/projects/new link — with TWO of them
+            marked "YOU ARE HERE" at the same time. A GC arriving from Procore
+            reads that as the product not knowing what it wants them to do.
+
+            Before the first project exists there is exactly one useful next
+            action, and it is "create the project": the sales rail's own last
+            step hands over to this one, and its first five are about a lead
+            this tenant does not have yet. So the build rail owns the empty
+            state alone.
+
+            Once there IS work, both rails are past their auto-fold thresholds
+            and render as single-line headers, which is a table of contents
+            rather than two competing wizards — so that case is left as it
+            was. */}
+        {portfolioEmpty ? (
+          <GettingStartedRail />
+        ) : (
+          <>
+            <SalesJourneyRail />
+            <GettingStartedRail />
+          </>
+        )}
 
         {hasCustomLayout && savedLayout ? (
           <ConfiguredDashboard layout={savedLayout} />
@@ -482,18 +501,26 @@ export default function DashboardPage() {
              zero data behind it. The catalog in particular is 223 priced items
              on day one, which is the fastest way to see the product do
              something before a project exists. */
+          /* NOT A SECOND "START HERE".
+             This card was titled "Start here" and led with "Create your first
+             project" and "Price a set of drawings" — which are steps 1 and 2 of
+             the rail directly above it. Two of its four tiles were the rail
+             restated, and its create-project link was the fifth copy of that
+             same href on one screen. A reader cannot tell a summary from a
+             rival path, so it read as a second workflow disagreeing with the
+             first about where to begin.
+             The two that are NOT rail steps stay, because deleting the card
+             outright puts a fresh tenant back on the near-blank screen this
+             branch exists to prevent. Retitled so it reads as what it is:
+             things worth doing that the journey does not cover. */
           <SectionCard
-            title="Start here"
-            subtitle="All four work before you have a project."
+            title="Worth doing anytime"
+            subtitle="Neither of these needs a project first."
             icon={<Lightning size={16} weight="fill" color={GOLD} />}
             style={{ marginBottom: 28 }}
           >
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
               {[
-                { href: '/app/projects/new', Icon: Buildings,     title: 'Create your first project',
-                  desc: 'Everything — budget, schedule, bids, billing — hangs off a job.' },
-                { href: '/app/takeoff',      Icon: ClipboardText, title: 'Price a set of drawings',
-                  desc: 'Upload a plan and walk out with a measured, priced takeoff.' },
                 { href: '/app/catalog',      Icon: Receipt,       title: 'Compare material pricing',
                   desc: '223 items across 16 vendors, with the cheapest quote marked.' },
                 { href: '/app/people',       Icon: ShieldCheck,   title: 'Invite your team',
