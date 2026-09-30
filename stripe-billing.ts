@@ -32,6 +32,7 @@ import Stripe from 'stripe';
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from './supabase/admin';
 import { getUser } from './lib/supabase-server';
+import { TRIAL_DAYS } from './lib/plans';
 
 /**
  * The tenant whose billing this request may touch.
@@ -85,14 +86,38 @@ function err(msg: string, status = 400) {
 // Plan → Stripe price ID mapping (prices live in DB + env fallback)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * The Stripe price to charge for a plan.
+ *
+ * The column names here were `stripe_price_monthly` / `stripe_price_annual`,
+ * and the plans table has never had either — it stores
+ * `stripe_price_id_monthly` / `stripe_price_id_annual`. PostgREST answers a
+ * select for a column that does not exist with an error and no rows, which
+ * this function read as "no price configured" and turned into the checkout
+ * error "No Stripe price configured for plan X. Contact support." So checkout
+ * did not fail on some plans or in some cases: it could not succeed for
+ * anyone, ever, and the message pointed the reader at support rather than at
+ * the query.
+ *
+ * `.single()` additionally throws when it matches no row, which an unknown or
+ * inactive plan id does — an unhandled rejection inside the handler rather
+ * than the clean 400 the caller is written to expect. `.maybeSingle()` returns
+ * null instead and lets the caller say what it wants to say.
+ */
 async function getStripePriceId(planId: string, interval: 'monthly' | 'annual'): Promise<string | null> {
-  const col = interval === 'monthly' ? 'stripe_price_monthly' : 'stripe_price_annual';
+  const col = interval === 'monthly' ? 'stripe_price_id_monthly' : 'stripe_price_id_annual';
 
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from('plans')
     .select(col)
     .eq('id', planId)
-    .single();
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[Billing] plans lookup failed for', planId, interval, error.message);
+    return null;
+  }
 
   return (data?.[col as keyof typeof data] as string | null | undefined) ?? null;
 }
@@ -160,7 +185,12 @@ export async function createCheckoutHandler(request: NextRequest) {
     discounts:  discounts.length ? discounts : undefined,
     allow_promotion_codes: !discounts.length,
     subscription_data: {
-      trial_period_days: 30,
+      /* lib/plans.ts is explicit that the trial length is TRIAL_DAYS
+         everywhere and never hardcoded — this was the one place still holding
+         its own copy, and it is the copy that decides what Stripe actually
+         bills. A drift here would not show on any page; it would show on a
+         customer's card. */
+      trial_period_days: TRIAL_DAYS,
       metadata: { tenantId, planId, interval, email },
     },
     metadata: { tenantId, planId, interval, email },
@@ -188,6 +218,15 @@ export async function webhookHandler(request: NextRequest) {
   const sig     = request.headers.get('stripe-signature') ?? '';
   const secret  = process.env.STRIPE_WEBHOOK_SECRET ?? '';
 
+  /* An empty STRIPE_WEBHOOK_SECRET makes constructEvent throw on every call,
+     so a missing secret and a forged request are indistinguishable in the log.
+     They need different answers: one is our misconfiguration, the other is
+     someone probing. */
+  if (!secret) {
+    console.error('[Webhook] STRIPE_WEBHOOK_SECRET is not set — cannot verify any event');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+  }
+
   const s = stripe();
   let event: Stripe.Event;
 
@@ -198,7 +237,29 @@ export async function webhookHandler(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
-  console.log(`[Webhook] ${event.type}`);
+  console.log(`[Webhook] ${event.type} ${event.id}`);
+
+  /* Idempotency. Stripe delivers at least once, so the same event can arrive
+     twice — on its retry schedule, or simply because it did. Claiming the id
+     first means the second copy finds the row taken and stops here, which is
+     what makes it safe for the catch below to return a 5xx and ask for a
+     retry. The insert is the lock: it is the primary key that rejects the
+     duplicate, not a read we did a moment earlier. */
+  const { error: claimError } = await supabaseAdmin
+    .from('stripe_webhook_events')
+    .insert({ event_id: event.id, event_type: event.type });
+
+  if (claimError) {
+    /* 23505 is unique_violation: already claimed, so already handled or in
+       flight. Anything else means we cannot tell, and the safe answer to "did
+       this already run" when you do not know is to let Stripe try again. */
+    if (claimError.code === '23505') {
+      console.log(`[Webhook] ${event.id} already processed — skipping`);
+      return ok({ received: true, duplicate: true });
+    }
+    console.error('[Webhook] Could not record event', event.id, claimError.message);
+    return NextResponse.json({ error: 'Storage unavailable' }, { status: 503 });
+  }
 
   try {
     switch (event.type) {
@@ -227,10 +288,37 @@ export async function webhookHandler(request: NextRequest) {
         break;
     }
   } catch (err) {
-    console.error(`[Webhook] Error handling ${event.type}:`, err instanceof Error ? err.message : err);
-    // Return 200 so Stripe doesn't retry — log for investigation
-    return ok({ received: true, warning: 'Handler error — check logs' });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error(`[Webhook] Error handling ${event.type} (${event.id}):`, message);
+
+    /* This used to answer 200 on a handler error so that Stripe would not
+       retry. The event Stripe is most likely to fail on is
+       checkout.session.completed, and swallowing that one means a customer who
+       has been charged has no subscription row and no access, with nothing but
+       a log line to say so. A transient database blip became a silent unpaid
+       account.
+
+       Release the claim and answer 500 so Stripe redelivers on its own backoff
+       (roughly three days). If the release itself fails the row stays and the
+       retry is skipped as a duplicate, which is the same behaviour as before —
+       no worse, and only in the case where the database is already unreachable. */
+    await supabaseAdmin
+      .from('stripe_webhook_events')
+      .delete()
+      .eq('event_id', event.id)
+      .then(
+        () => {},
+        () => console.error(`[Webhook] Could not release claim on ${event.id} — retry will be skipped`),
+      );
+
+    return NextResponse.json({ error: 'Handler failed' }, { status: 500 });
   }
+
+  await supabaseAdmin
+    .from('stripe_webhook_events')
+    .update({ processed_at: new Date().toISOString() })
+    .eq('event_id', event.id)
+    .then(() => {}, () => {});
 
   return ok({ received: true });
 }
@@ -330,8 +418,55 @@ async function handleCheckoutCompleted(
   console.log(`[Webhook] Subscription activated for tenant ${tenantId} on plan ${planId}`);
 }
 
+/**
+ * Which tenant a Stripe object belongs to.
+ *
+ * Every one of these handlers read `metadata.tenantId` and returned silently
+ * when it was absent — a webhook that did nothing and said nothing. Metadata
+ * is the wrong single source for this. changePlanHandler and cancelHandler
+ * both write their own metadata onto the subscription, and neither carries
+ * tenantId forward; a subscription created in the Stripe dashboard rather than
+ * through checkout never had it; and the copy Stripe sends with an event is
+ * whatever was set when the event fired.
+ *
+ * We already know the answer: we stored it when the subscription was created.
+ * Metadata stays the fast path, the subscriptions table is the fallback, and a
+ * miss is now logged rather than passed over in silence.
+ */
+async function resolveTenantId(opts: {
+  metadataTenantId?: string | null;
+  subscriptionId?: string | null;
+  customerId?: string | null;
+  context: string;
+}): Promise<string | null> {
+  if (opts.metadataTenantId) return opts.metadataTenantId;
+
+  for (const [column, value] of [
+    ['stripe_subscription_id', opts.subscriptionId],
+    ['stripe_customer_id',     opts.customerId],
+  ] as const) {
+    if (!value) continue;
+    const { data } = await supabaseAdmin
+      .from('subscriptions')
+      .select('tenant_id')
+      .eq(column, value)
+      .maybeSingle();
+    if (data?.tenant_id) return data.tenant_id as string;
+  }
+
+  console.warn(
+    `[Webhook] ${opts.context}: no tenant for subscription=${opts.subscriptionId ?? '—'} customer=${opts.customerId ?? '—'}`,
+  );
+  return null;
+}
+
 async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
-  const tenantId = sub.metadata?.tenantId;
+  const tenantId = await resolveTenantId({
+    metadataTenantId: sub.metadata?.tenantId,
+    subscriptionId:   sub.id,
+    customerId:       typeof sub.customer === 'string' ? sub.customer : sub.customer?.id ?? null,
+    context:          'customer.subscription.updated',
+  });
   if (!tenantId) return;
 
   const priceCents = sub.items.data[0]?.price?.unit_amount ?? 0;
@@ -354,7 +489,12 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
 }
 
 async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
-  const tenantId = sub.metadata?.tenantId;
+  const tenantId = await resolveTenantId({
+    metadataTenantId: sub.metadata?.tenantId,
+    subscriptionId:   sub.id,
+    customerId:       typeof sub.customer === 'string' ? sub.customer : sub.customer?.id ?? null,
+    context:          'customer.subscription.deleted',
+  });
   if (!tenantId) return;
 
   await supabaseAdmin
@@ -372,8 +512,15 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
 }
 
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
-  const tenantId = invoice.metadata?.tenantId ??
-    ((invoice.subscription_details?.metadata as Record<string,string> | null)?.tenantId);
+  const tenantId = await resolveTenantId({
+    metadataTenantId: invoice.metadata?.tenantId ??
+      ((invoice.subscription_details?.metadata as Record<string,string> | null)?.tenantId),
+    subscriptionId: typeof invoice.subscription === 'string'
+      ? invoice.subscription
+      : invoice.subscription?.id ?? null,
+    customerId: typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null,
+    context: 'invoice.payment_succeeded',
+  });
   if (!tenantId) return;
 
   const { data: sub } = await supabaseAdmin
@@ -409,8 +556,15 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 }
 
 async function handleInvoiceFailed(invoice: Stripe.Invoice) {
-  const tenantId = invoice.metadata?.tenantId ??
-    ((invoice.subscription_details?.metadata as Record<string,string> | null)?.tenantId);
+  const tenantId = await resolveTenantId({
+    metadataTenantId: invoice.metadata?.tenantId ??
+      ((invoice.subscription_details?.metadata as Record<string,string> | null)?.tenantId),
+    subscriptionId: typeof invoice.subscription === 'string'
+      ? invoice.subscription
+      : invoice.subscription?.id ?? null,
+    customerId: typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id ?? null,
+    context: 'invoice.payment_failed',
+  });
   if (!tenantId) return;
 
   await supabaseAdmin
@@ -462,15 +616,30 @@ export async function getSubscriptionHandler(request: NextRequest) {
   const tenantId = await billingTenant(request);
   if (!tenantId) return ok({ hasSubscription: false, isTrialing: false });
 
-  const { data: sub } = await supabaseAdmin
+  /* Seven of the eight plan columns named here did not exist either, so this
+     embedded select errored and took the whole subscription row down with it —
+     a paying tenant read back as "no subscription". The names on the left are
+     the ones app/app/billing/page.tsx reads, so they are aliased rather than
+     renamed: the page keeps its vocabulary, the query uses the table's.
+     The four feature_* booleans live inside the `features` jsonb, which is
+     returned whole for the caller to read. */
+  const { data: sub, error: subError } = await supabaseAdmin
     .from('subscriptions')
     .select(`
       *,
-      plans(name, monthly_price_cents, annual_price_cents, ai_takeoffs_per_month,
-            feature_bid_intelligence, feature_white_label, feature_api_access, feature_unlimited_ai)
+      plans(name,
+            monthly_price_cents:price_monthly,
+            annual_price_cents:price_annual,
+            ai_takeoffs_per_month:max_takeoffs,
+            features)
     `)
     .eq('tenant_id', tenantId)
     .maybeSingle();
+
+  if (subError) {
+    console.error('[Billing] subscription lookup failed for tenant', tenantId, subError.message);
+    return ok({ hasSubscription: false, isTrialing: false });
+  }
 
   if (!sub) return ok({ hasSubscription: false, isTrialing: false });
 
@@ -538,7 +707,11 @@ export async function cancelHandler(request: NextRequest) {
   // Cancel at period end — customer keeps access through paid period
   const updated = await s.subscriptions.update(sub.stripe_subscription_id as string, {
     cancel_at_period_end: true,
-    metadata: { cancel_reason: body?.reason ?? 'user_requested' },
+    /* tenantId is carried through deliberately. The subscription's metadata is
+       what customer.subscription.deleted arrives holding, and writing only
+       cancel_reason here risks leaving that event with no tenant on it. There
+       is a database fallback now, but the cheap thing is to not drop it. */
+    metadata: { tenantId, cancel_reason: body?.reason ?? 'user_requested' },
   });
 
   await supabaseAdmin
@@ -617,7 +790,9 @@ export async function changePlanHandler(request: NextRequest) {
       price: newPriceId,
     }],
     proration_behavior: 'create_prorations',
-    metadata: { planId: newPlanId, interval: newInterval },
+    /* Same reason as the cancel path: customer.subscription.updated fires off
+       this write, and it should not be the event that loses the tenant. */
+    metadata: { tenantId, planId: newPlanId, interval: newInterval },
   });
 
   return ok({ success: true, message: 'Plan updated. Proration will be applied on your next invoice.' });
