@@ -108,8 +108,34 @@ export default function BidPackageDetailPage() {
   const [inviteName, setInviteName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviting, setInviting] = useState(false);
+  /* THE DIRECTORY THE REST OF THE PRODUCT ALREADY KEEPS.
+     This form was two free-text boxes, so inviting a sub you had already
+     entered meant typing their company and email again from memory — with the
+     typo risk on the address the whole bid depends on, and no link back to the
+     record holding their licence, insurance and W-9 status. The subs page even
+     advertises "picking a directory company pre-fills contacts, license, and
+     compliance"; this screen was the one place that ignored it.
+     /api/bid-packages/[id]/invite-subs has accepted a `subId` on each sub the
+     whole time — nothing needed building on the server, only offering. */
+  const [directory, setDirectory] = useState<Array<{ id: string; company_name: string; email: string | null; trade: string | null }>>([]);
+  const [pickedSubId, setPickedSubId] = useState('');
 
   useEffect(() => { loadPackage(); }, [id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/subcontractors')
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => {
+        if (cancelled || !j) return;
+        // /api/subcontractors answers { subs: [...] } — the other shapes are
+        // tolerated so this keeps working if that envelope is ever renamed.
+        const rows = Array.isArray(j) ? j : (j.subs ?? j.data ?? j.subcontractors ?? []);
+        setDirectory(Array.isArray(rows) ? rows : []);
+      })
+      .catch(() => { /* the form still works by hand if the directory is unavailable */ });
+    return () => { cancelled = true; };
+  }, []);
 
   // Dead-space kill (spec 4.1): a package with no invites opens straight into
   // the invite composer — no hunting for "Invite More". One-shot per visit so
@@ -222,12 +248,16 @@ export default function BidPackageDetailPage() {
     try {
       const r = await fetch(`/api/bid-packages/${id}/invite-subs`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subs: [{ name: inviteName, email: inviteEmail }] }),
+        /* subId ties the invite to the directory record, which is what lets the
+           award gate read their W-9 and insurance later. Omitted when the GC
+           typed a company that is not on file yet. */
+        body: JSON.stringify({ subs: [{ name: inviteName, email: inviteEmail, subId: pickedSubId || undefined }] }),
       });
       if (!r.ok) throw new Error('invite failed');
       showToast(`Invite sent to ${inviteEmail}`);
       setInviteName('');
       setInviteEmail('');
+      setPickedSubId('');
       setShowInviteForm(false);
       await loadPackage();
     } catch {
@@ -532,9 +562,36 @@ export default function BidPackageDetailPage() {
             {/* Invite More Form */}
             {showInviteForm && (
               <div style={{ padding: '14px 20px', borderBottom: `1px solid ${HAIR}`, background: 'rgba(245, 158, 11,.03)', display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                {directory.length > 0 && (
+                  <div style={{ flex: 1, minWidth: 190 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>From your directory</div>
+                    <select
+                      value={pickedSubId}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setPickedSubId(v);
+                        const s = directory.find(d => d.id === v);
+                        if (s) { setInviteName(s.company_name || ''); setInviteEmail(s.email || ''); }
+                      }}
+                      style={{ ...inp, width: '100%', boxSizing: 'border-box' }}
+                    >
+                      <option value="">Type a new company below…</option>
+                      {directory.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.company_name}{s.trade ? ` — ${s.trade}` : ''}{s.email ? '' : ' (no email on file)'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>Name</div>
-                  <input value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="Company name" style={{ ...inp, width: '100%', boxSizing: 'border-box' }} />
+                  <input
+                    value={inviteName}
+                    onChange={e => { setInviteName(e.target.value); if (pickedSubId) setPickedSubId(''); }}
+                    placeholder="Company name"
+                    style={{ ...inp, width: '100%', boxSizing: 'border-box' }}
+                  />
                 </div>
                 <div style={{ flex: 2, minWidth: 220 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 4 }}>Email *</div>
