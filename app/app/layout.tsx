@@ -282,7 +282,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* ── Top Bar ──────────────────────────────────────────────────── */}
-      <div className="topbar-area" style={{ position: 'fixed', top: 0, left: sidebarWidth, right: 0, zIndex: z.topbar, transition: 'left .2s ease' }}>
+      {/* AppTopBar renders its own position:fixed <header>, so it is OUT OF
+          FLOW and every in-flow sibling below it would otherwise start at y=0,
+          hidden behind it. Reserving the header's height here puts the strips
+          where they belong. HeaderMessages had the same latent problem and was
+          only ever invisible because it renders nothing when there is nothing
+          to say. */}
+      <div className="topbar-area" style={{ position: 'fixed', top: 0, left: sidebarWidth, right: 0, zIndex: z.topbar, transition: 'left .2s ease', paddingTop: sidebarTokens.headerHeight }}>
         <AppTopBar
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setMobileSidebarOpen(v => !v)}
