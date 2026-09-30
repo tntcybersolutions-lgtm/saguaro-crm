@@ -12,6 +12,7 @@ import {
   type SovLine,
 } from '@/lib/calc';
 import { must } from '@/lib/db-write';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
@@ -43,13 +44,18 @@ export async function POST(req: NextRequest) {
     const retainagePercent = Number(pa.retainage_percent) || 10;
     const previousPaymentsLessRetainage = toCents(pa.prev_payments || 0);
 
+    /* schedule_of_values stores prev_completed / this_period / stored_materials.
+       These read work_from_prev / work_this_period / materials_stored, which are
+       on no table — so every figure came back undefined, was coalesced to 0, and
+       the G702 would have been issued showing no work completed in any period.
+       The older names are kept as a fallback in case a caller sends them. */
     const sovLines: SovLine[] = rows.map((i, idx) => ({
       id: String(i.id ?? i.line_number ?? idx + 1),
       description: i.description || '',
       scheduledValue: toCents(i.scheduled_value || 0),
-      fromPrevious: toCents(i.work_from_prev || 0),
-      thisPeriod: toCents(i.work_this_period || 0),
-      storedMaterials: toCents(i.materials_stored || 0),
+      fromPrevious: toCents(i.prev_completed ?? i.work_from_prev ?? 0),
+      thisPeriod: toCents(i.this_period ?? i.work_this_period ?? 0),
+      storedMaterials: toCents(i.stored_materials ?? i.materials_stored ?? 0),
     }));
 
     // Compute the schedule of values so the document cross-foots. The computed
@@ -137,11 +143,18 @@ export async function POST(req: NextRequest) {
       retainage_amount: toDollars(calc.retainageTotal),
       total_earned_less_retainage: toDollars(calc.totalEarnedLessRetainage),
       current_payment_due: toDollars(calc.currentPaymentDue),
-      net_amount_due: toDollars(calc.currentPaymentDue),
+      /* net_amount_due is NOT a column on pay_applications. Writing it made
+         Postgres reject the whole update with 42703, must() threw, and the
+         empty catch below turned it into a bare 500 — so generating a G702
+         failed every time and left nothing to diagnose it by. */
     } as unknown as Database['public']['Tables']['pay_applications']['Update']).eq('id', body.payAppId).eq('tenant_id', user.tenantId), 'pay_applications update');
 
     return NextResponse.json({ g702Url, g703Url, success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    /* Was a bare `catch {}`. A G702 is the document a contractor gets paid
+       with; when generating one fails, somebody has to be able to find out
+       why. Logged server-side with a correlation id; the caller still gets a
+       message written for a GC, never the database's words. */
+    return apiError('documents/pay-application', e, 'Could not generate the pay application documents');
   }
 }

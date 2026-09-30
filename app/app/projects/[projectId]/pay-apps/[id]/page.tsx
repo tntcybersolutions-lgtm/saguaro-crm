@@ -31,9 +31,18 @@ interface SovLine {
   line_number: number;
   description: string;
   scheduled_value: number;
-  work_from_prev: number;
-  work_this_period: number;
-  materials_stored: number;
+  /* The table's columns are prev_completed / this_period / stored_materials.
+     This type named them work_from_prev / work_this_period / materials_stored,
+     which exist nowhere, so every row read undefined and the whole G702
+     rendered zeros — contract sum, completed to date, payment due, the lot —
+     on a pay application that had been paid in full. The old names stay
+     optional so a payload using them still works. */
+  prev_completed?: number;
+  this_period?: number;
+  stored_materials?: number;
+  work_from_prev?: number;
+  work_this_period?: number;
+  materials_stored?: number;
   total_completed: number;
   percent_complete: number;
   balance_to_finish: number;
@@ -70,7 +79,9 @@ interface PayApp {
 }
 
 function calcLine(l: SovLine, retPct: number): SovLine {
-  const total = (l.work_from_prev||0) + (l.work_this_period||0) + (l.materials_stored||0);
+  const total = (l.prev_completed ?? l.work_from_prev ?? 0)
+              + (l.this_period ?? l.work_this_period ?? 0)
+              + (l.stored_materials ?? l.materials_stored ?? 0);
   const sv = l.scheduled_value || 0;
   return {
     ...l,
@@ -147,9 +158,9 @@ export default function PayAppDetailPage() {
 
   // Live totals from SOV lines
   const sovScheduled  = lines.reduce((s,l) => s + (l.scheduled_value||0), 0);
-  const sovPrev       = lines.reduce((s,l) => s + (l.work_from_prev||0), 0);
-  const sovThis       = lines.reduce((s,l) => s + (l.work_this_period||0), 0);
-  const sovMats       = lines.reduce((s,l) => s + (l.materials_stored||0), 0);
+  const sovPrev       = lines.reduce((s,l) => s + (l.prev_completed ?? l.work_from_prev ?? 0), 0);
+  const sovThis       = lines.reduce((s,l) => s + (l.this_period ?? l.work_this_period ?? 0), 0);
+  const sovMats       = lines.reduce((s,l) => s + (l.stored_materials ?? l.materials_stored ?? 0), 0);
   const sovCompleted  = sovPrev + sovThis + sovMats;
   const sovRetainage  = Math.round(sovCompleted * (retPct / 100) * 100) / 100;
   const sovEarned     = sovCompleted - sovRetainage;
@@ -200,9 +211,14 @@ export default function PayAppDetailPage() {
             line_number: l.line_number,
             description: l.description,
             scheduled_value: l.scheduled_value,
-            work_from_prev: l.work_from_prev,
-            work_this_period: l.work_this_period,
-            materials_stored: l.materials_stored,
+            /* Resolved, not raw. A row loaded from the database carries
+               prev_completed / this_period / stored_materials; sending the
+               work_* names straight through meant a sheet that was merely
+               opened and saved was written back as zeros. The API accepts
+               these names and maps them onto the real columns. */
+            work_from_prev: l.prev_completed ?? l.work_from_prev ?? 0,
+            work_this_period: l.this_period ?? l.work_this_period ?? 0,
+            materials_stored: l.stored_materials ?? l.materials_stored ?? 0,
             total_completed: l.total_completed,
             percent_complete: l.percent_complete,
             balance_to_finish: l.balance_to_finish,
@@ -498,9 +514,9 @@ export default function PayAppDetailPage() {
                             ))
                           : <>
                               <td style={{ padding: '7px 10px', color: GOLD, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.scheduled_value)}</td>
-                              <td style={{ padding: '7px 10px', color: DIM, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.work_from_prev)}</td>
-                              <td style={{ padding: '7px 10px', color: GREEN, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700 }}>{fmt(l.work_this_period)}</td>
-                              <td style={{ padding: '7px 10px', color: BLUE, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.materials_stored)}</td>
+                              <td style={{ padding: '7px 10px', color: DIM, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.prev_completed ?? l.work_from_prev ?? 0)}</td>
+                              <td style={{ padding: '7px 10px', color: GREEN, textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 700 }}>{fmt(l.this_period ?? l.work_this_period ?? 0)}</td>
+                              <td style={{ padding: '7px 10px', color: BLUE, textAlign: 'right', whiteSpace: 'nowrap' }}>{fmt(l.stored_materials ?? l.materials_stored ?? 0)}</td>
                             </>
                         }
                         {/* Progress mini-bar */}
