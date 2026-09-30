@@ -39,15 +39,46 @@ function routes(dir = join(ROOT, 'app/app'), out = []) {
     if (statSync(p).isDirectory()) routes(p, out);
     else if (e === 'page.tsx' || e === 'page.jsx') {
       const rel = relative(join(ROOT, 'app'), p).replace(/\\/g, '/').replace(/\/page\.(tsx|jsx)$/, '');
-      out.push('/' + rel);
+      out.push({ route: '/' + rel, file: p });
     }
   }
   return out;
 }
 
+/* WHY AN EMPTY <main> IS USUALLY NOT A BUG.
+ *
+ * This run reported 24 blank pages and every one of them was fine. Three
+ * structures make a page render nothing on the SERVER while rendering
+ * perfectly in a browser, and the sweep only ever sees the server's HTML:
+ *
+ *   useSearchParams() inside <Suspense>  Next 14 bails out of SSR for that
+ *                                        subtree and ships only the fallback,
+ *                                        so <main> arrives empty by design.
+ *   an entitlement gate                  useFranchiseGate renders GateLoading
+ *                                        until it has resolved client-side —
+ *                                        the literal string "Loading…", which
+ *                                        is the 8 characters all nineteen
+ *                                        command-center routes reported.
+ *   a redirect stub                      a legacy route that returns null and
+ *                                        router.replace()s somewhere else.
+ *
+ * Reporting those as BLANK every run is worse than not checking: twenty-four
+ * known-good rows is exactly the haystack a genuinely blank page hides in. So
+ * read the page source and say WHICH of these it is. Anything blank that is
+ * none of them stays in BLANK, and still fails the run.
+ */
+function ssrBlankReason(file) {
+  let src = '';
+  try { src = readFileSync(file, 'utf8'); } catch { return null; }
+  if (/useFranchiseGate|GateLoading/.test(src)) return 'entitlement gate (renders "Loading…" until resolved client-side)';
+  if (/useSearchParams/.test(src) && /Suspense/.test(src)) return 'useSearchParams inside Suspense (Next bails out of SSR)';
+  if (/router\.(replace|push)\(/.test(src) && /return null/.test(src)) return 'redirect stub (returns null, navigates client-side)';
+  return null;
+}
+
 const all = routes();
-const dynamic = all.filter((r) => r.includes('['));
-const testable = all.filter((r) => !r.includes('[')).sort();
+const dynamic = all.filter((r) => r.route.includes('['));
+const testable = all.filter((r) => !r.route.includes('[')).sort((a, b) => a.route.localeCompare(b.route));
 
 const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
   auth: { persistSession: false },
@@ -85,7 +116,7 @@ const results = [];
 const CONCURRENCY = 6;
 for (let i = 0; i < testable.length; i += CONCURRENCY) {
   const batch = testable.slice(i, i + CONCURRENCY);
-  const done = await Promise.all(batch.map(async (route) => {
+  const done = await Promise.all(batch.map(async ({ route, file }) => {
     try {
       const r = await fetch(BASE + route, { headers: { cookie }, redirect: 'manual' });
       const html = r.status < 400 ? await r.text() : '';
@@ -93,9 +124,12 @@ for (let i = 0; i < testable.length; i += CONCURRENCY) {
       // <main> with almost nothing in it is a blank screen, not a page.
       const main = html.match(/<main[^>]*>([\s\S]*?)<\/main>/);
       const textLen = main ? main[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().length : -1;
-      return { route, status: r.status, marker, textLen, loc: r.headers.get('location') };
+      // Only ask WHY it is empty when it actually is — the answer is a read of
+      // the page source, and it only means anything for an empty <main>.
+      const reason = textLen >= 0 && textLen < 40 ? ssrBlankReason(file) : null;
+      return { route, status: r.status, marker, textLen, reason, loc: r.headers.get('location') };
     } catch (e) {
-      return { route, status: 'THREW', marker: String(e).slice(0, 120), textLen: -1 };
+      return { route, status: 'THREW', marker: String(e).slice(0, 120), textLen: -1, reason: null };
     }
   }));
   results.push(...done);
@@ -105,7 +139,9 @@ for (let i = 0; i < testable.length; i += CONCURRENCY) {
 const crashed  = results.filter((r) => r.status === 'THREW' || r.status >= 500);
 const notFound = results.filter((r) => r.status === 404);
 const errored  = results.filter((r) => r.status < 400 && r.marker);
-const blank    = results.filter((r) => r.status < 400 && !r.marker && r.textLen >= 0 && r.textLen < 40);
+const empty    = results.filter((r) => r.status < 400 && !r.marker && r.textLen >= 0 && r.textLen < 40);
+const clientOnly = empty.filter((r) => r.reason);
+const blank    = empty.filter((r) => !r.reason);
 const redirect = results.filter((r) => r.status >= 300 && r.status < 400);
 const good     = results.filter((r) => r.status < 300 && !r.marker && r.textLen >= 40);
 
@@ -114,11 +150,13 @@ const show = (label, rows, fmt) => {
   for (const r of rows) console.log('    ' + fmt(r));
 };
 
-console.log(`\nOK ${good.length} · redirect ${redirect.length} · 404 ${notFound.length} · error-page ${errored.length} · blank ${blank.length} · crashed ${crashed.length}`);
+console.log(`\nOK ${good.length} · redirect ${redirect.length} · 404 ${notFound.length} · error-page ${errored.length} · blank ${blank.length} · client-rendered ${clientOnly.length} · crashed ${crashed.length}`);
 if (crashed.length)  show('CRASHED (5xx / threw)', crashed,  (r) => `${r.route}  ${r.status}  ${r.marker || ''}`);
 if (errored.length)  show('RENDERED AN ERROR PAGE', errored, (r) => `${r.route}  → ${r.marker}`);
 if (notFound.length) show('404', notFound,                   (r) => r.route);
-if (blank.length)    show('BLANK (200 but no content)', blank, (r) => `${r.route}  chars=${r.textLen}`);
+if (blank.length)    show('BLANK (200, empty <main>, no reason it should be)', blank, (r) => `${r.route}  chars=${r.textLen}`);
+if (clientOnly.length) show('CLIENT-RENDERED (empty on the server BY DESIGN — needs eyes, not this tool)', clientOnly,
+                            (r) => `${r.route.padEnd(38)} ${r.reason}`);
 if (redirect.length) show('REDIRECTED', redirect,            (r) => `${r.route}  ${r.status} → ${r.loc || '?'}`);
 
 const jsonIdx = process.argv.indexOf('--json');
@@ -127,4 +165,7 @@ if (jsonIdx > -1 && process.argv[jsonIdx + 1]) {
   console.log(`\nwrote ${process.argv[jsonIdx + 1]}`);
 }
 console.log('');
-process.exitCode = crashed.length || errored.length || notFound.length ? 1 : 0;
+/* A blank page with no structural reason to be blank is a failure now. It was
+   not before, because twenty-four false positives meant the count could never
+   be trusted enough to gate on. */
+process.exitCode = crashed.length || errored.length || notFound.length || blank.length ? 1 : 0;

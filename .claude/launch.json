@@ -4,8 +4,32 @@
     {
       "name": "dev",
       "runtimeExecutable": "C:\\Program Files\\nodejs\\npx.cmd",
-      "runtimeArgs": ["next", "dev"],
+      "runtimeArgs": [
+        "next",
+        "dev"
+      ],
       "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "prod-local",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "start"
+      ],
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "regimen",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "D:/The-Regimen/tools/serve.mjs",
+        "D:/The-Regimen/theregimen-ios/www",
+        "5093"
+      ],
+      "port": 5093,
       "autoPort": false
     }
   ]
