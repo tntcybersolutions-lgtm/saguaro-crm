@@ -66,6 +66,15 @@ export const CORE_COMPANY_TOOLS: readonly string[] = [
   '/app/catalog',
   '/app/documents',
   '/app/people',
+  /* CUSTOMERS IS WHERE THE WORK STARTS, SO IT CANNOT BE EARNED.
+     This was gated on the leads signal — `(s.leads || 0) > 0`, counting rows in
+     lead_pipeline — so a GC who had customers but had never touched the leads
+     board could not see their own customer list. The gating is backwards: a
+     customer exists BEFORE the job does, referrals and repeat clients never
+     pass through a pipeline at all, and an empty customer list is not clutter,
+     it is the screen you go to in order to add the first one.
+     Leads stays earned; a pipeline board with nothing in it really is clutter. */
+  '/app/customers',
 ];
 
 /** A tool with records behind it reveals itself. */
@@ -85,9 +94,11 @@ const HAS_WORK: Record<string, (s: CompanySignals) => boolean> = {
   /* Compliance is about subs' insurance and licences, so it earns its place
      once there are subs to be compliant. */
   '/app/compliance':     s => (s.subs || 0) > 0,
-  /* Customers and leads live under their own routes; a tenant doing sales
-     work should see them. */
-  '/app/customers':      s => (s.leads || 0) > 0,
+  /* The directory itself, on the same signal: a tenant with subs on file has
+     something to look at, and one without would be opening an empty table. */
+  '/app/subs':           s => (s.subs || 0) > 0,
+  /* Leads is earned by having a pipeline. Customers is core — see the list
+     above for why it cannot be. */
   '/app/leads':          s => (s.leads || 0) > 0,
 
   /* Nine finished screens that nothing in the codebase linked to. Without a

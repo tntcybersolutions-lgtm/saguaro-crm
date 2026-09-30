@@ -52,6 +52,7 @@ import {
   WifiHigh,
   Broadcast,
   Briefcase,
+  UsersThree,
   CaretDown,
   Check,
 } from '@phosphor-icons/react';
@@ -320,17 +321,21 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
 
 /* ── Navigation Config ─────────────────────────────────────────────── */
 const NAV_SECTIONS: NavSection[] = [
-  /* THE ORDER IS THE LIFECYCLE, AND NOTHING ELSE.
-     Home → Sales → Preconstruction → Execution → Financial → Company, which is
-     the order a job actually happens in and the order Procore groups its tools
-     in. Two things used to break it. "Overview" mixed three navigation entries
-     (where am I, what's mine, every job) with three company resources (people,
-     time clock, fleet), so the first group answered two unrelated questions;
-     the resources now live in Company with the other administration. And
-     Franchise Rollout — nineteen entitlement-gated screens — sat between Sales
-     and Preconstruction, so an entitled tenant met a nineteen-item wall in the
-     middle of the lifecycle; it now sits last, where a programme bolted onto
-     the product belongs. */
+  /* OUTSIDE A JOB YOU PICK SOMETHING. INSIDE A JOB YOU FOLLOW THE STAGES.
+     That is the whole rule, and it needs no teaching because it is how a GC
+     already thinks.
+
+     This rail used to be grouped by phase — Preconstruction, Execution,
+     Financial — which is exactly how lib/project-nav groups the rail INSIDE a
+     job. Two rails, ten sections, the same six words at two different scopes.
+     A GC saw "Documents" and "Execution" twice and could not tell which one
+     they were standing in, and that is the duplication behind "hard to
+     follow": not missing structure, the same structure said twice.
+
+     The phase story belongs to the job, where the project rail tells it in
+     full. At company scope these are nouns — things you open, not stages you
+     are at. The "you are here / do this next" strip spans both and is the one
+     place that speaks in stages everywhere. */
   {
     title: 'Home',
     items: [
@@ -338,16 +343,10 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'My Work',      href: '/app/my-work',      icon: Briefcase, accentKey: 'work', core: true },
       { label: 'Projects',     href: '/app/projects',     icon: FolderSimple, core: true, accentKey: 'portfolio' },
     ],
-  },  {
-    zone: 'sell',
+  },
+  {
     title: 'Sales',
     items: [
-      /* Leads and Customers lead this group because that is where the work starts:
-         a lead becomes a customer, a customer becomes a bid. Both pages have been
-         built and wired for months (1,384 and 636 lines, with working APIs), but
-         neither had an href in this array — so lib/company-tools' HAS_WORK rules
-         for '/app/leads' and '/app/customers' were guarding doors that did not
-         exist, and no amount of data could reveal them. */
       { label: 'Leads',            href: '/app/leads',        icon: Kanban, accentKey: 'bids' },
       { label: 'Customers',        href: '/app/customers',    icon: AddressBook, accentKey: 'contacts' },
       { label: 'Bid Board',        href: '/app/bids',         icon: CurrencyDollar, core: true, accentKey: 'bids' },
@@ -355,74 +354,59 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    zone: 'build',
-    title: 'Preconstruction',
+    /* Money in is Sales; money out is here. The directory, and the three
+       screens that exist to answer "can I award them work" — compliance,
+       prequalification, and the portal they answer through. */
+    title: 'Subs & Vendors',
     items: [
-      { label: 'Takeoff Studio',   href: '/app/takeoff',      icon: Blueprint, accentKey: 'takeoff', core: true },
-      { label: 'Catalog',          href: '/app/catalog',      icon: Package, accentKey: 'catalog' },
-      { label: 'Signal Studio',    href: '/app/signal-studio', icon: WifiHigh, accentKey: 'signal' },
-    ],
-  },
-  {
-    zone: 'build',
-    title: 'Execution',
-    items: [
-      { label: 'Documents',   href: '/app/documents',  icon: FileText, accentKey: 'documents', core: true },
-      { label: 'Document Versions', href: '/app/document-versions', icon: Notepad, accentKey: 'documents' },
-      { label: 'Daily Logs',  href: '/app/daily-logs', icon: ClipboardText, accentKey: 'daily' },
-      { label: 'Schedule',    href: '/app/schedule',   icon: CalendarBlank, accentKey: 'schedule', core: true },
-      { label: 'Resource Planning', href: '/app/resource-planning', icon: HardHat, accentKey: 'team' },
-      /* Warranty is the last thing a job does, so it sits at the end of the
-         job's own section rather than in a "Tools" drawer beside Autopilot. */
-      { label: 'Warranty Claims', href: '/app/warranty-claims', icon: Wrench, accentKey: 'compliance' },
-      { label: 'Saguaro Radio', href: '/app/radio',    icon: Broadcast, accentKey: 'radio' },
-    ],
-  },
-  {
-    zone: 'build',
-    title: 'Financial',
-    items: [
-      { label: 'Invoicing',   href: '/app/invoicing',  icon: CreditCard, accentKey: 'invoices', core: true },
-      { label: 'Billing',     href: '/app/billing',    icon: CurrencyDollar, accentKey: 'financials' },
-      /* Both of these sit under /app/billing/* but have nothing to do with the
-         subscription page above them — that URL prefix is a collision, and it
-         is why neither ever got a door. Cost Control is the CM cost report
-         (budget / committed / actual, off /api/cost-control) and Progress
-         Billing is cross-project AIA G702/G703 off lib/finance, the same engine
-         iOS uses. 270 and 265 lines, both working, both reachable only by
-         typing the URL until now. */
-      { label: 'Cost Control',    href: '/app/billing/cost-control', icon: ChartLineUp, accentKey: 'financials' },
-      { label: 'Progress Billing', href: '/app/billing/payapp',      icon: Receipt,     accentKey: 'financials' },
-      /* Certified payroll is payroll — money leaving the job under a wage
-         determination. It was filed under Execution next to Daily Logs, which
-         is where you look for what happened on site, not for what was paid. */
-      { label: 'Certified Payroll', href: '/app/certified-payroll', icon: SealCheck, accentKey: 'financials' },
-      { label: 'Reports',     href: '/app/reports',    icon: ChartBar, accentKey: 'reports' },
-    ],
-  },
-  /* COMPANY, NOT "TOOLS".
-     "Tools" is where a product puts things it has not decided about, and this
-     one held a compliance register, an AI assistant, a sub-prequalification
-     workflow and a portal manager side by side. These are company-level
-     administration — they belong to the business, not to any one job — so they
-     are named for what they are, and the two automation features that are not
-     administration are split out below. */
-  {
-    title: 'Company',
-    items: [
-      { label: 'People & Access',  href: '/app/people',           icon: Users,       accentKey: 'team', core: true },
-      { label: 'Time Clock',       href: '/app/time',             icon: Clock,       accentKey: 'time' },
-      { label: 'Fleet',            href: '/app/fleet',            icon: Truck,       gate: 'fleet', accentKey: 'fleet' },
+      { label: 'Subs & Vendors',   href: '/app/subs',             icon: UsersThree,  accentKey: 'subs' },
       { label: 'Compliance',       href: '/app/compliance',       icon: ShieldCheck, accentKey: 'compliance' },
       { label: 'Prequalification', href: '/app/prequalification', icon: ListChecks,  accentKey: 'compliance' },
       { label: 'Portals',          href: '/app/portals',          icon: SquaresFour, accentKey: 'ccportals' },
     ],
   },
   {
-    title: 'Automation',
+    /* Cross-project working tools. "Preconstruction" was the old label and it
+       was the project rail's word, not this rail's — Takeoff Studio and the
+       catalog are used before a job exists and across every job after. */
+    title: 'Tools',
     items: [
-      { label: 'Autopilot',          href: '/app/autopilot',          icon: Star,  accentKey: 'autopilot' },
-      { label: 'Approval Workflows', href: '/app/approval-workflows', icon: Flag,  accentKey: 'autopilot' },
+      { label: 'Takeoff Studio',    href: '/app/takeoff',           icon: Blueprint, accentKey: 'takeoff', core: true },
+      { label: 'Catalog',           href: '/app/catalog',           icon: Package, accentKey: 'catalog' },
+      { label: 'Schedule',          href: '/app/schedule',          icon: CalendarBlank, accentKey: 'schedule', core: true },
+      { label: 'Daily Logs',        href: '/app/daily-logs',        icon: ClipboardText, accentKey: 'daily' },
+      { label: 'Resource Planning', href: '/app/resource-planning', icon: HardHat, accentKey: 'team' },
+      { label: 'Warranty Claims',   href: '/app/warranty-claims',   icon: Wrench, accentKey: 'compliance' },
+      { label: 'Signal Studio',     href: '/app/signal-studio',     icon: WifiHigh, accentKey: 'signal' },
+      { label: 'Saguaro Radio',     href: '/app/radio',             icon: Broadcast, accentKey: 'radio' },
+    ],
+  },
+  {
+    title: 'Documents',
+    items: [
+      { label: 'Documents',         href: '/app/documents',         icon: FileText, accentKey: 'documents', core: true },
+      { label: 'Document Versions', href: '/app/document-versions', icon: Notepad,  accentKey: 'documents' },
+    ],
+  },
+  {
+    title: 'Financial',
+    items: [
+      { label: 'Invoicing',         href: '/app/invoicing',            icon: CreditCard, accentKey: 'invoices', core: true },
+      { label: 'Billing',           href: '/app/billing',              icon: CurrencyDollar, accentKey: 'financials' },
+      { label: 'Cost Control',      href: '/app/billing/cost-control', icon: ChartLineUp, accentKey: 'financials' },
+      { label: 'Progress Billing',  href: '/app/billing/payapp',       icon: Receipt, accentKey: 'financials' },
+      { label: 'Certified Payroll', href: '/app/certified-payroll',    icon: SealCheck, accentKey: 'financials' },
+      { label: 'Reports',           href: '/app/reports',              icon: ChartBar, accentKey: 'reports' },
+    ],
+  },
+  {
+    title: 'Company',
+    items: [
+      { label: 'People & Access',    href: '/app/people',             icon: Users, accentKey: 'team', core: true },
+      { label: 'Time Clock',         href: '/app/time',               icon: Clock, accentKey: 'time' },
+      { label: 'Fleet',              href: '/app/fleet',              icon: Truck, gate: 'fleet', accentKey: 'fleet' },
+      { label: 'Autopilot',          href: '/app/autopilot',          icon: Star, accentKey: 'autopilot' },
+      { label: 'Approval Workflows', href: '/app/approval-workflows', icon: Flag, accentKey: 'autopilot' },
       { label: 'Ask Sage',           href: '/app/ask',                icon: Brain, accentKey: 'sage' },
     ],
   },
@@ -432,7 +416,6 @@ const NAV_SECTIONS: NavSection[] = [
        core lifecycle above it, and it used to sit between Sales and
        Preconstruction, so an entitled tenant scrolled past a rollout programme
        to reach Takeoff. A bolt-on goes after the product, not through it. */
-    zone: 'build',
     title: 'Franchise Rollout',
     items: [
       { label: 'Command Center',    href: '/app/command-center',            icon: Gauge,        gate: 'command_center', accentKey: 'commandcenter' },
