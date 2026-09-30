@@ -386,8 +386,11 @@ const NAV_SECTIONS: NavSection[] = [
     title: 'Execution',
     items: [
       { label: 'Documents',   href: '/app/documents',  icon: FileText, accentKey: 'documents', core: true },
+      { label: 'Document Versions', href: '/app/document-versions', icon: Notepad, accentKey: 'documents' },
       { label: 'Daily Logs',  href: '/app/daily-logs', icon: ClipboardText, accentKey: 'daily' },
       { label: 'Schedule',    href: '/app/schedule',   icon: CalendarBlank, accentKey: 'schedule', core: true },
+      { label: 'Certified Payroll', href: '/app/certified-payroll', icon: SealCheck, accentKey: 'financials' },
+      { label: 'Resource Planning', href: '/app/resource-planning', icon: HardHat, accentKey: 'team' },
       { label: 'Saguaro Radio', href: '/app/radio',    icon: Broadcast, accentKey: 'radio' },
     ],
   },
@@ -397,6 +400,15 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Invoicing',   href: '/app/invoicing',  icon: CreditCard, accentKey: 'invoices', core: true },
       { label: 'Billing',     href: '/app/billing',    icon: CurrencyDollar, accentKey: 'financials' },
+      /* Both of these sit under /app/billing/* but have nothing to do with the
+         subscription page above them — that URL prefix is a collision, and it
+         is why neither ever got a door. Cost Control is the CM cost report
+         (budget / committed / actual, off /api/cost-control) and Progress
+         Billing is cross-project AIA G702/G703 off lib/finance, the same engine
+         iOS uses. 270 and 265 lines, both working, both reachable only by
+         typing the URL until now. */
+      { label: 'Cost Control',    href: '/app/billing/cost-control', icon: ChartLineUp, accentKey: 'financials' },
+      { label: 'Progress Billing', href: '/app/billing/payapp',      icon: Receipt,     accentKey: 'financials' },
       { label: 'Reports',     href: '/app/reports',    icon: ChartBar, accentKey: 'reports' },
     ],
   },
@@ -406,6 +418,18 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Autopilot',   href: '/app/autopilot',   icon: Star, accentKey: 'autopilot' },
       { label: 'Compliance',  href: '/app/compliance',  icon: ShieldCheck, accentKey: 'compliance' },
       { label: 'Portals',     href: '/app/portals',     icon: SquaresFour, accentKey: 'ccportals' },
+      /* Four finished features that no href in the codebase pointed at — not
+         here, not from a parent page, nowhere. A cross-reference of every /app
+         route against every href in app/, components/ and lib/ found seventeen
+         such pages; three were redirect stubs and two were superseded by
+         /app/portals, which leaves these and the ones added above. They are
+         hidden by lib/company-tools until the tenant has the matching records,
+         exactly like every other non-core tool, so the rail does not grow for
+         an account that has no subs and no documents. */
+      { label: 'Ask Sage',        href: '/app/ask',                 icon: Brain,      accentKey: 'sage' },
+      { label: 'Prequalification', href: '/app/prequalification',   icon: ListChecks, accentKey: 'compliance' },
+      { label: 'Warranty Claims',  href: '/app/warranty-claims',    icon: Wrench,     accentKey: 'compliance' },
+      { label: 'Approval Workflows', href: '/app/approval-workflows', icon: Flag,     accentKey: 'autopilot' },
     ],
   },
 ];

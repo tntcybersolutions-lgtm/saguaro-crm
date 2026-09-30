@@ -82,6 +82,34 @@ export default function CompliancePage(){
       note="expired COI = your problem"
     />
 
+    {/* THE OTHER TWO COMPLIANCE SCREENS.
+        app/app/compliance/lien-deadlines (515 lines) and
+        app/app/compliance/prevailing-wage (493 lines) are finished, working
+        pages that nothing in the codebase linked to — not the sidebar, not
+        this page, which is their own parent route. The only way to reach
+        either was to type the URL. */}
+    <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:22}}>
+      {[
+        {href:'/app/compliance/lien-deadlines', icon:<Signature size={15} weight="duotone" color={GOLD} />,
+         title:'Lien Deadlines', sub:'statutory dates by state — miss one and the lien right is gone'},
+        {href:'/app/compliance/prevailing-wage', icon:<FileText size={15} weight="duotone" color={GOLD} />,
+         title:'Prevailing Wage', sub:'Davis-Bacon rates and certified payroll status'},
+      ].map(l=>(
+        <Link key={l.href} href={l.href} className="pmBtn" style={{
+          display:'flex',alignItems:'center',gap:11,textDecoration:'none',
+          background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,
+          padding:'11px 15px',minWidth:260,flex:'1 1 260px',
+        }}>
+          {l.icon}
+          <span style={{minWidth:0}}>
+            <span style={{display:'block',fontSize:13,fontWeight:800,color:TEXT}}>{l.title}</span>
+            <span style={{display:'block',fontSize:11.5,color:DIM,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{l.sub}</span>
+          </span>
+          <ArrowRight size={13} weight="bold" color={DIM} style={{marginLeft:'auto',flexShrink:0}} />
+        </Link>
+      ))}
+    </div>
+
     {/* Risk intelligence strip — the paperwork translated into dollars */}
     {!loading&&subs.length>0&&<StatStrip items={[
       {label:'Subcontractors', value:subs.length, sub:`across ${tradeCount} trade${tradeCount===1?'':'s'}`},

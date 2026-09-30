@@ -89,6 +89,23 @@ const HAS_WORK: Record<string, (s: CompanySignals) => boolean> = {
      work should see them. */
   '/app/customers':      s => (s.leads || 0) > 0,
   '/app/leads':          s => (s.leads || 0) > 0,
+
+  /* Nine finished screens that nothing in the codebase linked to. Without a
+     probe here an item is only ever visible under "All tools", so a door in
+     the rail is not enough on its own — the rule below is what makes each one
+     appear when the tenant has something to see in it.
+     Every one of these reuses a signal /api/company-tools already returns. */
+  '/app/billing/cost-control': s => (s.payApps || 0) > 0 || (s.invoices || 0) > 0,
+  '/app/billing/payapp':       s => (s.payApps || 0) > 0,
+  '/app/certified-payroll':    s => (s.time || 0) > 0,
+  '/app/document-versions':    s => (s.documents || 0) > 0,
+  '/app/prequalification':     s => (s.subs || 0) > 0,
+  '/app/resource-planning':    s => (s.people || 0) > 0 || (s.schedule || 0) > 0,
+  '/app/ask':                  s => (s.documents || 0) > 0,
+  /* Warranty claims and approval workflows have no counter of their own in
+     CompanySignals, so they stay under "All tools" rather than being given a
+     probe that reports on something else. A door that only opens from the full
+     list still beats no door. */
 };
 
 export function isCompanyToolVisible(
