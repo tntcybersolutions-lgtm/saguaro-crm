@@ -12,7 +12,7 @@
  * Server only — imports the service-role client. Never import from a client component.
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { CATEGORIES, INHERITS_WHEN_ABSENT, type PermCategory } from './permission-categories';
+import { CATEGORIES, INHERITS_WHEN_ABSENT, LEVEL_RANK, type PermCategory, type PermLevel } from './permission-categories';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createServerClient, getUser } from './supabase-server';
 import type { Database } from './database.types';
@@ -20,16 +20,10 @@ import type { Database } from './database.types';
 /* ── vocabulary ── the category list lives in lib/permission-categories,
    which both this module and the client-side matrix in
    components/team/AccessManager read. ── */
-export type PermLevel = 'None' | 'View' | 'Edit' | 'Full';
-
-
 export { CATEGORIES, INHERITS_WHEN_ABSENT };
-export type { PermCategory };
+export type { PermCategory, PermLevel };
 
 export type PermissionMap = Record<PermCategory, PermLevel>;
-
-/** Ordering used for comparisons: None < View < Edit < Full. */
-const LEVEL_RANK: Record<PermLevel, number> = { None: 0, View: 1, Edit: 2, Full: 3 };
 
 /** Roles that get an unconditional Full-on-everything bypass. */
 const ADMIN_ROLES = new Set(['admin', 'owner']);

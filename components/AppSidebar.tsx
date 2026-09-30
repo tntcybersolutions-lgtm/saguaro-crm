@@ -65,6 +65,8 @@ import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { isCompanyToolVisible, hiddenCompanyToolCount, type CompanySignals } from '@/lib/company-tools';
+import { usePermissions } from '@/lib/hooks/usePermissions';
+import type { PermCategory } from '@/lib/permission-categories';
 import { normalisePhase, stepsForPhase, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 import useSWR from 'swr';
@@ -320,6 +322,32 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
  */
 
 /* ── Navigation Config ─────────────────────────────────────────────── */
+/**
+ * Which permission governs each company section.
+ *
+ * The permission system has been complete and enforced on the server for a
+ * long time — twelve categories, four levels, requirePermission on the routes
+ * that matter — and the navigation ignored every bit of it. So a salesperson
+ * saw pay applications, certified payroll, cost control and the takeoff studio
+ * in their rail, and the first thing they learned about any of them was the
+ * 403 they got from opening it. A rail that lists what you may not do is not a
+ * menu, it is a list of doors that are locked.
+ *
+ * Home is absent on purpose: the dashboard, your own work and the project list
+ * are what "logged in" means, and a rail without them is not a smaller product,
+ * it is a broken one.
+ *
+ * Hiding is not the security. The guard on each route is, and it stays.
+ */
+const SECTION_PERMISSION: Record<string, PermCategory> = {
+  'Sales':          'Sales',
+  'Subs & Vendors': 'Projects',
+  'Tools':          'Projects',
+  'Documents':      'Documents',
+  'Financial':      'Pay Apps',
+  'Company':        'Admin',
+};
+
 const NAV_SECTIONS: NavSection[] = [
   /* OUTSIDE A JOB YOU PICK SOMETHING. INSIDE A JOB YOU FOLLOW THE STAGES.
      That is the whole rule, and it needs no teaching because it is how a GC
@@ -668,6 +696,8 @@ export default function AppSidebar({
   /* Filtered sections, computed once — the render below reads these, and the
      open/closed default needs the TOTAL to decide whether collapsing is even
      warranted. */
+  const { can: canDo, resolved: permsResolved } = usePermissions();
+
   const renderSections = React.useMemo(() => {
     const src: any[] = inProject ? projectSections : NAV_SECTIONS;
     const base = `/app/projects/${projectId}`;
@@ -698,6 +728,14 @@ export default function AppSidebar({
       })
       // A section whose every item is hidden takes its header with it.
       .filter((section: any) => section.items.length > 0)
+      /* AND A SECTION THIS PERSON MAY NOT USE DOES NOT APPEAR AT ALL.
+         Company scope only: inside a job the rail is one job's tools, and a
+         person who can open the job can see what the job has. */
+      .filter((section: any) => {
+        if (inProject) return true;
+        const cat = SECTION_PERMISSION[String(section.title)];
+        return !cat || canDo(cat, 'View');
+      })
       /* SECTIONS IN THE ORDER THE WORK HAPPENS.
        *
        * Rendering them in file order put EXECUTION above FINANCIAL, so a
@@ -721,7 +759,7 @@ export default function AppSidebar({
         };
         return rank(a.title) - rank(b.title);
       });
-  }, [inProject, projectSections, features, projectId, toolSignals, activeProjectHref, showAllTools, companySignals, pathname]);
+  }, [inProject, projectSections, features, projectId, toolSignals, activeProjectHref, showAllTools, companySignals, pathname, canDo, permsResolved]);
 
   const totalVisible = renderSections.reduce((n: number, s2: any) => n + s2.items.length, 0);
 

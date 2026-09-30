@@ -48,3 +48,20 @@ export const CATEGORIES: PermCategory[] = [
 export const INHERITS_WHEN_ABSENT: Partial<Record<PermCategory, PermCategory>> = {
   Sales: 'Projects',
 };
+
+/**
+ * The levels, here rather than in lib/permissions, for the same reason the
+ * categories are: that module imports the Supabase server client, so anything
+ * declared there is unreachable from a client component. The category list was
+ * moved for exactly this and the level type was left behind — so a browser hook
+ * wanting to compare two permissions had nowhere to get the vocabulary from.
+ */
+export type PermLevel = 'None' | 'View' | 'Edit' | 'Full';
+
+/** Ordering used for comparisons: None < View < Edit < Full. */
+export const LEVEL_RANK: Record<PermLevel, number> = { None: 0, View: 1, Edit: 2, Full: 3 };
+
+/** True when `have` meets or exceeds `min`. */
+export function meetsLevel(have: PermLevel | undefined, min: PermLevel): boolean {
+  return (LEVEL_RANK[have ?? 'None'] ?? 0) >= LEVEL_RANK[min];
+}
