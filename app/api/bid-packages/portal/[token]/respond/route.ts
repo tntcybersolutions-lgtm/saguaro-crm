@@ -4,6 +4,7 @@ import { checkRateLimit, getClientIP } from '@/lib/rate-limit';
 import { must, tryWrite } from '@/lib/db-write';
 import { apiError } from '@/lib/api-error';
 import { onBidSubmitted } from '@/lib/triggers';
+import { logActivity, money } from '@/lib/activity';
 
 /**
  * POST /api/bid-packages/portal/[token]/respond
@@ -48,7 +49,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
 
     const { data: pkg } = await db
       .from('bid_packages')
-      .select('id, tenant_id, project_id, status, bid_due_date, due_date')
+      /* name and trade are read so the history can say WHICH package the bid
+         landed on. Without them the feed read "bid $11,450 on a package",
+         which is the one detail that makes the line worth reading. */
+      .select('id, tenant_id, project_id, status, bid_due_date, due_date, name, trade')
       .eq('id', inv.bid_package_id)
       .eq('tenant_id', tenantId)
       .maybeSingle();
@@ -183,6 +187,21 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ tok
     /* Tell the GC. onBidSubmitted has existed with zero callers, which is why a
        bid arriving was never announced to anyone. */
     onBidSubmitted(submissionId).catch((e) => console.error('[bid respond] notify failed', e));
+
+    /* A bid arriving is the event a GC most wants to see without being told.
+       No user_id here on purpose — this half of the loop is the SUBCONTRACTOR
+       acting through their token, not a signed-in member of the tenant, and
+       recording it against a staff account would be a lie in the history. */
+    void logActivity({
+      tenantId,
+      projectId: (pkg as Record<string, any> | null)?.project_id ?? null,
+      userName: String(inv.company_name || inv.sub_name || inv.sub_email || 'Subcontractor'),
+      action: 'bid_received',
+      entityType: 'bid',
+      entityId: submissionId,
+      description: `${inv.company_name || inv.sub_name || 'A subcontractor'} bid ${money(amount)} on ${(pkg as Record<string, any> | null)?.name || (pkg as Record<string, any> | null)?.trade || 'a package'}`,
+      metadata: { amount, packageId: inv.bid_package_id },
+    });
 
     return NextResponse.json({ success: true, action: 'submitted', submissionId });
   } catch (e) {

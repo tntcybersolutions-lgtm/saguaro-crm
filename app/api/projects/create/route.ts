@@ -4,6 +4,7 @@ import { normalisePhase } from '@/lib/project-phase';
 import type { Database } from '@/lib/database.types';
 import { onProjectCreated } from '@/lib/triggers';
 import { templateByKey } from '@/lib/project-templates';
+import { logActivity } from '@/lib/activity';
 
 export async function POST(req: NextRequest) {
   try {
@@ -148,6 +149,21 @@ export async function POST(req: NextRequest) {
     }
 
     onProjectCreated(projectId).catch(console.error);
+
+    /* The first event on every job's history. Without it a project's feed
+       begins mid-story, with a takeoff appearing on a job that apparently
+       never got created. */
+    void logActivity({
+      tenantId: user.tenantId,
+      projectId,
+      userId: user.id,
+      userName: user.email,
+      action: 'created',
+      entityType: 'project',
+      entityId: projectId,
+      description: `Created the project ${body.name}`,
+      metadata: { address: body.address ?? null, phase: body.phase ?? null },
+    });
 
     return NextResponse.json({ projectId, project, success: true });
   } catch (err) {

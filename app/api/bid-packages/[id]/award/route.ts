@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { onBidAwarded } from '@/lib/triggers';
 import { requirePermission } from '@/lib/permissions';
 import { must, tryWrite } from '@/lib/db-write';
+import { logActivity, money } from '@/lib/activity';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Projects', 'Full');
@@ -64,6 +65,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         status: 'awarded', awarded_amount: amount, awarded_to: vendor, awarded_to_id: sub?.sub_id ?? null,
         awarded_at: new Date().toISOString(), awarded_by: user.id,
       }).eq('id', id).eq('tenant_id', user.tenantId), 'bid_packages update');
+
+      /* An award is the single most consequential thing that happens on a bid
+         package — money committed to a company — and until now it left no
+         trace anywhere a person could read. Deliberately not awaited: the row
+         is history, and the GC is waiting on the award, not on its record. */
+      void logActivity({
+        tenantId: user.tenantId,
+        projectId: pkg?.project_id ?? null,
+        userId: user.id,
+        userName: user.email,
+        action: 'awarded',
+        entityType: 'bid_package',
+        entityId: id,
+        description: `Awarded ${pkg?.name || pkg?.trade || 'a bid package'} to ${vendor} — ${money(amount)}`,
+        metadata: { amount, vendor, trade: pkg?.trade ?? null, overrideCompliance: !!body.overrideCompliance },
+      });
 
       if (pkg && amount > 0) {
         // A DRAFT subcontract PO = the committed cost (the GC reviews it before issuing). No re-keying.

@@ -10,6 +10,7 @@ import { CurrencyDollar, ShieldCheck, ClipboardText, CheckCircle, ChartBar, Tren
 import { useSavedLayout, ConfiguredDashboard } from '@/components/dashboard-widgets';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import GettingStartedRail from '@/components/GettingStartedRail';
+import ActivityFeed from '@/components/ActivityFeed';
 import SalesJourneyRail from '@/components/SalesJourneyRail';
 import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
 
@@ -608,6 +609,14 @@ export default function DashboardPage() {
             <TodayActionCard key={i} item={item} />
           ))}
         </SectionCard>
+
+        {/* WHAT CHANGED, WHICH THIS PAGE COULD NOT SAY.
+            Priority Actions above answers "what do I still owe"; every stat
+            below answers "where do things stand". Neither answers the question
+            a GC actually opens the app with — what happened since yesterday,
+            and who did it. Three tables existed for that and all three were
+            empty, because nothing anywhere wrote to them. */}
+        <ActivityFeed limit={12} style={{ marginBottom: 20 }} />
 
         {/* Main 2-col grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginBottom: 20 }}>
