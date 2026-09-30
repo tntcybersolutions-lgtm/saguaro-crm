@@ -24,7 +24,13 @@ interface Project { id: string; name: string; status: string; }
 interface ClientSession {
   id: string; client_name: string; client_email: string; project_id: string;
   token: string; status: string; expires_at: string | null;
-  last_accessed_at: string | null; created_at: string; project_name?: string;
+  /* The column, and what /api/portal/client/sessions returns, is
+     last_login_at — the sub table two hundred lines below reads that name
+     correctly. The client side asked for last_accessed_at, which is on no
+     payload, so every client portal reported "Never opened" however recently
+     the client had been in, the Never Opened tile counted all of them, and
+     Last Portal Visit ignored client activity entirely. */
+  last_login_at: string | null; last_accessed_at?: string | null; created_at: string; project_name?: string;
 }
 
 interface SubSession {
@@ -228,7 +234,7 @@ export default function PortalsPage() {
     ...activeClientSessions.map(s => s.project_id),
     ...activeSubSessions.map(s => s.project_id),
   ]).size;
-  const neverOpened = activeClientSessions.filter(s => !s.last_accessed_at).length
+  const neverOpened = activeClientSessions.filter(s => !(s.last_login_at ?? s.last_accessed_at)).length
     + activeSubSessions.filter(s => !s.last_login_at).length;
   const expiring30 = activeClientSessions.filter(s => {
     if (!s.expires_at) return false;
@@ -236,7 +242,7 @@ export default function PortalsPage() {
     return t > Date.now() && t - Date.now() <= 30 * 86400000;
   }).length;
   const lastVisitTs = Math.max(0,
-    ...clientSessions.map(s => (s.last_accessed_at ? new Date(s.last_accessed_at).getTime() : 0)),
+    ...clientSessions.map(s => { const v = s.last_login_at ?? s.last_accessed_at; return v ? new Date(v).getTime() : 0; }),
     ...subSessions.map(s => (s.last_login_at ? new Date(s.last_login_at).getTime() : 0)));
   const totalLinks = clientSessions.length + subSessions.length;
 
@@ -585,7 +591,7 @@ function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy,
               </td>
               <td style={{ padding: '12px 16px', color: DIM, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project_name || '—'}</td>
               <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
-              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{s.last_accessed_at ? <span style={{ color: DIM }}>{fmt(s.last_accessed_at)}</span> : s.status === 'active' ? <span style={{ color: AMBER, fontWeight: 600 }}>Never opened</span> : <span style={{ color: DIM }}>—</span>}</td>
+              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{(s.last_login_at ?? s.last_accessed_at) ? <span style={{ color: DIM }}>{fmt((s.last_login_at ?? s.last_accessed_at) as string)}</span> : s.status === 'active' ? <span style={{ color: AMBER, fontWeight: 600 }}>Never opened</span> : <span style={{ color: DIM }}>—</span>}</td>
               <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{(() => { if (!s.expires_at) return <span style={{ color: DIM }}>Never</span>; const dl = Math.ceil((new Date(s.expires_at).getTime() - Date.now()) / 86400000); return <span style={{ color: dl <= 0 ? RED : dl <= 30 ? AMBER : DIM, fontWeight: dl <= 30 ? 600 : 400 }}>{fmt(s.expires_at)}{dl <= 0 ? ' · expired' : dl <= 30 ? ` · ${dl}d left` : ''}</span>; })()}</td>
               {/* Resend invite column */}
               <td style={{ padding: '12px 16px' }}>
