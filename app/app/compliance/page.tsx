@@ -87,7 +87,17 @@ export default function CompliancePage(){
       {label:'Subcontractors', value:subs.length, sub:`across ${tradeCount} trade${tradeCount===1?'':'s'}`},
       {label:'Contract Exposure', value:fmtMoney(exposure), accent:exposure>0?RED:GREEN, sub:totalContract>0?`of ${fmtMoney(totalContract)} committed sits with non-compliant subs`:'held by non-compliant subs'},
       {label:'W-9s Missing', value:w9Missing, accent:w9Missing>0?AMBER:GREEN, sub:w9Missing>0?'blocks 1099 filing at year end':'every sub is 1099-ready'},
-      {label:'Insurance Gaps', value:noInsurance, accent:noInsurance>0?RED:GREEN, sub:certsExpiring>0?`uninsured · ${certsExpiring} cert${certsExpiring===1?'':'s'} expiring in 30d`:'no uninsured subs on site'},
+      /* The sub-line branches on THIS stat's own value, like every other tile
+         in the strip. It used to branch on certsExpiring, so a portfolio with
+         four uninsured subs and nothing expiring printed "no uninsured subs on
+         site" directly under the number 4. A tile that contradicts itself
+         teaches people to stop reading the tiles. */
+      {label:'Insurance Gaps', value:noInsurance, accent:noInsurance>0?RED:GREEN,
+       sub: noInsurance>0
+         ? `${noInsurance} sub${noInsurance===1?'':'s'} with no current COI${certsExpiring>0?` · ${certsExpiring} more expiring in 30d`:''}`
+         : certsExpiring>0
+           ? `${certsExpiring} cert${certsExpiring===1?'':'s'} expiring in 30d`
+           : 'no uninsured subs on site'},
       {label:'Waivers Pending', value:waiversPending, accent:waiversPending>0?AMBER:GREEN, sub:waiversPending>0?'unsigned — hold payment until released':'lien rights fully released'},
     ]}/>}
 
