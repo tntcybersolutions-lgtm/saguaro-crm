@@ -123,32 +123,51 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
     const subs = await subsOnProject(client as any, project.id, project.tenant_id);
 
     let waiverCount = 0;
+    let waiverFailures = 0;
     if (subs && subs.length > 0) {
       for (const sub of subs as any[]) {
         // Check if waiver already exists for this pay app + sub
+        /* maybeSingle, not single: single() treats "no rows" as an error, so the
+           idempotency probe was reporting a failure on the normal path. */
         const { data: existing } = await client
           .from('lien_waivers')
           .select('id')
           .eq('pay_application_id', payAppId)
           .eq('sub_id', sub.id)
-          .single();
+          .maybeSingle();
 
         if (existing) continue; // Idempotent — already created
 
         try {
+          /* THIS INSERT HAS NEVER SUCCEEDED. Two fatal errors, both swallowed:
+               pay_app_id        — no such column; it is pay_application_id
+               conditional_partial — rejected by lien_waivers_waiver_type_check,
+                                     which allows conditional_progress,
+                                     unconditional_progress, conditional_final,
+                                     unconditional_final
+             A progress payment takes a CONDITIONAL PROGRESS waiver: conditional
+             because payment has not cleared, progress because the job is not
+             complete. */
           await must(client.from('lien_waivers').insert({
             tenant_id: project.tenant_id,
             project_id: project.id,
             sub_id: sub.id,
-            pay_app_id: payAppId,
-            waiver_type: 'conditional_partial',
+            pay_application_id: payAppId,
+            waiver_type: 'conditional_progress',
             state: project.state || 'AZ',
             amount: sub.contract_amount || 0,
             through_date: pa.period_to,
             status: 'pending',
           }), 'lien_waivers insert');
           waiverCount++;
-        } catch { /* individual failure — continue loop */ }
+        } catch (e) {
+          /* Was `catch {}`. One sub failing must not abort the others, but a
+             silent failure is how this stayed broken: the loop swallowed every
+             error and the notification below still announced a count, so
+             "0 lien waivers generated" looked like "this pay app had no subs". */
+          waiverFailures++;
+          console.error('[auto-document-engine] lien waiver for sub %s on pay app %s:', sub.id, payAppId, e);
+        }
       }
     }
 
@@ -156,8 +175,15 @@ export async function onPayAppApproved(payAppId: string): Promise<void> {
       project.tenant_id,
       null,
       'pay_app_approved',
-      `Pay App #${pa.app_number} approved — ${waiverCount} lien waivers generated`,
-      `Conditional lien waivers auto-generated for all subs on ${project.name}`,
+      /* Say what happened, including when it did not work. The old line announced
+         a count unconditionally, so a total failure read as "this pay app had no
+         subs to waive" — which is why this went unnoticed. */
+      waiverFailures > 0
+        ? `Pay App #${pa.app_number} approved — ${waiverCount} of ${waiverCount + waiverFailures} lien waivers generated`
+        : `Pay App #${pa.app_number} approved — ${waiverCount} lien waiver${waiverCount === 1 ? '' : 's'} generated`,
+      waiverFailures > 0
+        ? `${waiverFailures} could not be created on ${project.name}. They are not waiting on a sub — they were never raised, so chase them here.`
+        : `Conditional progress lien waivers auto-generated for all subs on ${project.name}`,
       `${APP_URL}/app/projects/${project.id}/lien-waivers`,
       project.id
     );

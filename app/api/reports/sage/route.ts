@@ -92,7 +92,7 @@ Available Supabase tables and their queryable columns:
 - pay_applications: id, project_id, app_number, app_number, period_to, status('draft'|'submitted'|'approved'|'paid'), contract_sum, total_completed_stored, current_payment_due, total_retainage, created_at
 - rfis: id, project_id, rfi_number, subject, title, status('open'|'answered'|'closed'), due_date, response_due_date, cost_impact, schedule_impact, created_at
 - change_orders: id, project_id, co_number, title, status('pending'|'approved'|'rejected'), cost_impact, schedule_impact, created_at
-- lien_waivers: id, project_id, subcontractor_id, waiver_type, amount, status('pending'|'signed'|'received'), through_date, signed_at, created_at
+- lien_waivers: id, project_id, subcontractor_id, claimant_name, waiver_type, amount, status('pending'|'signed'), through_date, signed_at, created_at
 - subcontractors: id, project_id, name, trade, contract_amount, status, created_at
 - insurance_certificates: id, project_id, subcontractor_id, policy_type, carrier, policy_number, expiry_date, coverage_amount, status('active'|'expired'), created_at
 - budget_lines: id, project_id, cost_code, description, original_budget, committed_cost, actual_cost, forecast_cost, created_at

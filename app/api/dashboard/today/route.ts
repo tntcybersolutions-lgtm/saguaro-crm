@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { getEffectivePermissions, hasPermission } from '@/lib/permissions';
 import { apiError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
@@ -14,8 +15,16 @@ export async function GET(req: NextRequest) {
 
     const actions: any[] = [];
 
+    /* Pay apps and lien waivers are the money, and the rail already hides
+       FINANCIAL from whoever may not see it. This list is read by the same
+       dashboard, so it answers to the same permission. */
+    const perms = await getEffectivePermissions(db, user.id, tenantId);
+    const canPayApps = hasPermission(perms, 'Pay Apps', 'View');
+
     // Pending pay apps
-    const { data: payApps } = await db.from('pay_applications').select('*, projects(name)').eq('tenant_id', tenantId).in('status', ['submitted', 'approved']).limit(3);
+    const { data: payApps } = canPayApps
+      ? await db.from('pay_applications').select('*, projects(name)').eq('tenant_id', tenantId).in('status', ['submitted', 'approved']).limit(3)
+      : { data: null };
     (payApps || []).forEach((pa: any) => {
       actions.push({
         type: 'pay-app',
@@ -52,6 +61,41 @@ export async function GET(req: NextRequest) {
         actionUrl: `/app/projects/${(rfis![0] as any).project_id}/rfis`,
         actionLabel: 'View RFIs',
       });
+    }
+
+    /* UNSIGNED LIEN WAIVERS — tracked everywhere, surfaced nowhere.
+       They gate payment (is_payment_gate / blocks_payment), the autopilot scan
+       raises an alert for them and the compliance page counts them, and the one
+       screen a GC actually opens each morning never mentioned them.
+
+       `status = 'pending'` is the definition the rest of the live code agrees
+       on: every insert writes 'pending' and signing writes 'signed'. The two
+       other phrasings in the codebase — `<> 'signed'` and `signed_at IS NULL` —
+       return the same count today, but would also count a rejected waiver as
+       outstanding if a rejection status is ever introduced, which the
+       rejected_at column anticipates. Counted, like the rest of the money,
+       only for someone who may see it. */
+    if (canPayApps) {
+      const { data: waivers } = await db
+        .from('lien_waivers')
+        .select('id, project_id, claimant_name, amount, projects(name)')
+        .eq('tenant_id', tenantId).eq('status', 'pending')
+        .order('created_at', { ascending: true })
+        .limit(50);
+      const pending = waivers || [];
+      if (pending.length > 0) {
+        const first: any = pending[0];
+        actions.push({
+          type: 'compliance',
+          title: `${pending.length} lien waiver${pending.length > 1 ? 's' : ''} awaiting signature`,
+          subtitle: pending.length === 1
+            ? `${first.claimant_name || 'Claimant'} — ${first.projects?.name || ''}`.trim()
+            : `${first.claimant_name || 'Claimant'} and ${pending.length - 1} more`,
+          urgency: 'medium',
+          actionUrl: `/app/projects/${first.project_id}/lien-waivers`,
+          actionLabel: 'Review Waivers',
+        });
+      }
     }
 
     // Missing W9s

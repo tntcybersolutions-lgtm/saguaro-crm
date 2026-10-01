@@ -51,15 +51,24 @@ export function useDashboardStats() {
 }
 
 export function useTodayItems() {
-  const { data, error, isLoading, mutate } = useSWR<{ items: TodayItem[] } | TodayItem[]>(
-    '/api/dashboard/today',
-    fetcher,
-    { refreshInterval: 60_000 }
-  );
+  /* THE KEY IS `actions`, AND READING `items` MADE THE WHOLE PANEL EMPTY.
+     /api/dashboard/today has always answered { actions, source }. This hook
+     read `items`, which is undefined, so the list resolved to [] on every
+     render — the dashboard showed its "nothing needs you" empty state while the
+     server was returning pay apps awaiting approval, insurance expiring inside
+     30 days, overdue RFIs and missing W-9s. Proven against the running build:
+     TOP-LEVEL KEYS [actions, source], b.items undefined, 2 real actions.
+
+     Both spellings are accepted, plus a bare array. A dashboard panel is not
+     the place to be strict about which of two shapes the server sent — the
+     cost of guessing wrong is a screen that silently says there is no work. */
+  const { data, error, isLoading, mutate } = useSWR<
+    { actions?: TodayItem[]; items?: TodayItem[] } | TodayItem[]
+  >('/api/dashboard/today', fetcher, { refreshInterval: 60_000 });
 
   const items: TodayItem[] = Array.isArray(data)
     ? data
-    : (data as { items?: TodayItem[] } | undefined)?.items ?? [];
+    : data?.actions ?? data?.items ?? [];
 
   return {
     items,
