@@ -17,3 +17,9 @@ converge. One line each, newest at the bottom.
   writer since `w9-portal.ts` was deleted.
 - `app/api/reports/sage/route.ts:95` told the model `lien_waivers.status` can be
   `'received'`; nothing writes it. Fixed 1 Oct as part of the waiver work.
+- `app/api/photos/upload/route.ts:99,136` — upload response builds image URLs with
+  `getPublicUrl()` on the PRIVATE `project-files` bucket, so the optimistic preview
+  is a dead URL until a reload re-signs via `/api/photos` list (Path 3 detour).
+- Time-API ambiguity resolved while driving Path 2: `app/app/time/page.tsx` calls
+  only `/api/timeclock/{in,out,status}`. `/api/clock/{in,out}` is dead parallel code;
+  `/api/timesheets/*` is the admin side. Canonical web clock = `timeclock`.
