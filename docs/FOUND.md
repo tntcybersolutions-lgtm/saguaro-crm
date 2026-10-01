@@ -20,6 +20,10 @@ converge. One line each, newest at the bottom.
 - `app/api/photos/upload/route.ts:99,136` — upload response builds image URLs with
   `getPublicUrl()` on the PRIVATE `project-files` bucket, so the optimistic preview
   is a dead URL until a reload re-signs via `/api/photos` list (Path 3 detour).
+  FIXED: the response now signs url/thumbnail_url via signFields (same mechanism
+  as photos/list), so the preview is live immediately. The STORED values stay in
+  public-url form — list still re-signs on read. Bucket confirmed private
+  (storage.buckets.public = false for project-files/documents/photos).
 - Time-API ambiguity resolved while driving Path 2: `app/app/time/page.tsx` calls
   only `/api/timeclock/{in,out,status}`. `/api/clock/{in,out}` is dead parallel code;
   `/api/timesheets/*` is the admin side. Canonical web clock = `timeclock`.
