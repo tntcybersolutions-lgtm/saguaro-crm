@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
     // Only real lead_pipeline columns are updatable.
-    const allowed = ['company_name','contact_name','email','phone','source','stage','project_type','estimated_value','probability','assigned_to','location','notes','next_action','next_action_date','lost_reason','lost_at','won_at'];
+    const allowed = ['company_name','contact_name','email','phone','source','stage','project_type','estimated_value','probability','assigned_to','location','notes','next_action','next_action_date','lost_reason','lost_at','won_at','project_id','customer_id'];
     for (const k of allowed) if (body[k] !== undefined) updates[k] = body[k];
 
     // Canonicalise stage casing on write so the pipeline vocabulary can never
