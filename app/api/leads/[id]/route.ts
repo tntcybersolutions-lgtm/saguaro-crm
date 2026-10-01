@@ -3,6 +3,7 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
 import { normaliseStage } from '@/lib/lead-stages';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Sales', 'Edit');
@@ -34,11 +35,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const { data, error } = await supabase.from('lead_pipeline').update(updates).eq('id', params.id).eq('tenant_id', user.tenantId).select().single();
     if (error) throw error;
     return NextResponse.json({ lead: data });
-  } catch (e: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[leads/id]', e);
-    const msg = "Failed";
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // Was a dead `const msg` + generic 'Internal server error' that buried a
+    // failed stage/field update. Honest surface, correlation id, server log (§0/§3).
+    return apiError('leads/id', e, 'Could not update the lead');
   }
 }
 
@@ -52,5 +52,9 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const { error } = await supabase.from('lead_pipeline').delete().eq('id', params.id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ ok: true });
-  } catch { return NextResponse.json({ error: 'Failed' }, { status: 500 }); }
+  } catch (e) {
+    // A failed delete (FK still referencing the lead, RLS) must not read as 'Failed'
+    // with no log. apiError logs the cause and ties it to a correlation id (§0/§3).
+    return apiError('leads/id', e, 'Could not delete the lead');
+  }
 }
