@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { normaliseStage } from '@/lib/lead-stages';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Sales', 'Edit');
@@ -15,6 +16,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     // Only real lead_pipeline columns are updatable.
     const allowed = ['company_name','contact_name','email','phone','source','stage','project_type','estimated_value','probability','assigned_to','location','notes','next_action','next_action_date','lost_reason','lost_at','won_at'];
     for (const k of allowed) if (body[k] !== undefined) updates[k] = body[k];
+
+    // Canonicalise stage casing on write so the pipeline vocabulary can never
+    // split again (MUST-PASS Path 10). Keep won_at/lost_at stamping in step.
+    if (updates.stage !== undefined) updates.stage = normaliseStage(updates.stage as string);
 
     // Map the page's alternate field names onto real columns.
     if (body.name !== undefined && body.contact_name === undefined) updates.contact_name = body.name;

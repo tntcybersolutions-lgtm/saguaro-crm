@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { requirePermission } from '@/lib/permissions';
+import { normaliseStage } from '@/lib/lead-stages';
 import type { Database } from '@/lib/database.types';
 
 export async function GET(req: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const stage = url.searchParams.get('stage');
     let q = supabase.from('lead_pipeline').select('*').eq('tenant_id', user.tenantId);
-    if (stage) q = q.eq('stage', stage);
+    if (stage) q = q.eq('stage', normaliseStage(stage));
     const { data, error } = await q.order('created_at', { ascending: false });
     if (error) throw error;
     return NextResponse.json({ leads: data ?? [] });
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       email: body.email ?? body.contact_email ?? null,
       phone: body.phone ?? body.contact_phone ?? null,
       source: body.source || 'website',
-      stage: body.stage || 'New',
+      stage: normaliseStage(body.stage),
       project_type: body.project_type ?? null,
       estimated_value: body.estimated_value ?? 0,
       probability: body.probability ?? 50,
