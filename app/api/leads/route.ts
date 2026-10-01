@@ -66,10 +66,11 @@ export async function POST(req: NextRequest) {
     const { data, error } = await supabase.from('lead_pipeline').insert(insert as Database['public']['Tables']['lead_pipeline']['Insert']).select().single();
     if (error) throw error;
     return NextResponse.json({ lead: data }, { status: 201 });
-  } catch (e: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[leads]', e);
-    const msg = "Failed";
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // Was `console.error` + a dead `const msg` + a generic 'Internal server error'.
+    // A failed insert (bad column, constraint, NOT NULL) gave the caller eight
+    // generic words and no correlation id — the GET on this same route already
+    // fails honestly through apiError (§0/§3), so POST now matches it.
+    return apiError('leads', e, 'Could not create the lead');
   }
 }
