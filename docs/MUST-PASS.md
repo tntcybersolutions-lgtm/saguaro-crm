@@ -43,8 +43,8 @@ to stop.
 - Pick a project, enter crew / weather / work done, save
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
-- Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- Taps at 390px: CANNOT VERIFY — driven via API curl, not a browser at 390px
+- STATUS: PASS 2026-10-01
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out

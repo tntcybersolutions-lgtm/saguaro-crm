@@ -17,3 +17,5 @@ converge. One line each, newest at the bottom.
   writer since `w9-portal.ts` was deleted.
 - `app/api/reports/sage/route.ts:95` told the model `lien_waivers.status` can be
   `'received'`; nothing writes it. Fixed 1 Oct as part of the waiver work.
+- `app/api/daily-logs/list/route.ts:20` — bare `catch {}` returns `{logs:[],source:'error'}` with no log and no `apiError`, discarding the real error (§3, §5).
+- `app/api/daily-logs/[id]/route.ts:19,32,73` — GET, PUT, DELETE all use bare `catch {}` returning a raw string `'Internal server error'` with no `apiError` and no correlation id (§3, §5).
