@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { assertProjectInTenant } from '@/lib/assert-project';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -64,7 +65,11 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ invoice: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // Was a fully silent `catch { 'Internal server error' }` — no log at all.
+    // A failed invoice insert (NOT NULL on vendor_name/project_id, a bad
+    // category, RLS) vanished with no server-side trace. apiError logs the real
+    // cause and returns a correlation id the GC can read back to support (§0/§3).
+    return apiError('invoices/create', e, 'Could not create the invoice');
   }
 }
