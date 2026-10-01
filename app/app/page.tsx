@@ -418,6 +418,20 @@ export default function DashboardPage() {
 
   const activeProjects = stats?.activeProjects ?? 0;
   const openBids       = stats?.openBids ?? 0;
+
+  /* WITHHELD IS NOT ZERO.
+     /api/dashboard/stats omits the money, the pay applications and the RFIs
+     when the signed-in user's permissions do not cover them — the rail already
+     hides those modules, and this page used to read the same figures out loud
+     on the way past. `?? 0` would turn "you may not see this" into "it is
+     zero", which on a company running eight jobs is a wrong number stated as a
+     fact. The tile is dropped instead. A real 0 is an answer and still shows,
+     which is why these test for undefined and not falsiness.
+
+     Loading is not withheld either: while stats is null nothing is known yet,
+     and the skeleton above already covers that case. */
+  const hasMoney   = stats != null && stats.totalContractValue !== undefined;
+  const hasPayApps = stats != null && stats.pendingPayApps !== undefined;
   const pendingPayApps = stats?.pendingPayApps ?? 0;
   const totalContract  = stats?.totalContractValue ?? 0;
 
@@ -427,11 +441,15 @@ export default function DashboardPage() {
      report, this page is the getting-started rail and one button.
      Everything below returns the moment the first project, bid or pay app
      exists. Errors are not emptiness: a failed fetch still shows its card. */
+  /* Emptiness is judged only on what this user may actually see. Pay apps count
+     toward "nothing to report" when the figure was returned; for someone who
+     may not see them, a withheld 0 is not evidence the company has none. */
   const portfolioEmpty =
     !statsLoading && !statsError &&
     !projectsLoading && !projectsError &&
     projects.length === 0 &&
-    activeProjects === 0 && openBids === 0 && pendingPayApps === 0;
+    activeProjects === 0 && openBids === 0 &&
+    (!hasPayApps || pendingPayApps === 0);
 
   return (
     <>
@@ -808,25 +826,29 @@ export default function DashboardPage() {
                 sub={activeProjects === 1 ? '1 in progress' : `${activeProjects} in progress`}
                 href="/app/projects" delay={0.02}
               />
-              <Link href="/app/projects" style={{ textDecoration: 'none', display: 'block' }}>
-                <StatCard
-                  icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
-                  label="Total Contract Value" value={formatCurrency(totalContract)}
-                  sub="active projects" interactive delay={0.06}
-                />
-              </Link>
+              {hasMoney && (
+                <Link href="/app/projects" style={{ textDecoration: 'none', display: 'block' }}>
+                  <StatCard
+                    icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
+                    label="Total Contract Value" value={formatCurrency(totalContract)}
+                    sub="active projects" interactive delay={0.06}
+                  />
+                </Link>
+              )}
               <StatCard
                 icon={<Gavel size={19} weight="duotone" color={BLUE} />}
                 label="Open Bids" value={String(openBids)} accent={BLUE}
                 sub="awaiting award"
                 href="/app/bids" delay={0.10}
               />
-              <StatCard
-                icon={<Receipt size={19} weight="duotone" color={ORANGE} />}
-                label="Pending Pay Apps" value={String(pendingPayApps)} accent={pendingPayApps > 0 ? ORANGE : undefined}
-                sub="submitted / approved"
-                href="/app/billing" delay={0.14}
-              />
+              {hasPayApps && (
+                <StatCard
+                  icon={<Receipt size={19} weight="duotone" color={ORANGE} />}
+                  label="Pending Pay Apps" value={String(pendingPayApps)} accent={pendingPayApps > 0 ? ORANGE : undefined}
+                  sub="submitted / approved"
+                  href="/app/billing" delay={0.14}
+                />
+              )}
               <StatCard
                 icon={<ClipboardText size={19} weight="duotone" color={ORANGE} />}
                 label="Open RFIs"
@@ -890,7 +912,10 @@ export default function DashboardPage() {
                         data={[
                           { name: 'Active', value: stats?.activeProjects ?? 0, fill: '#F59E0B' },
                           { name: 'Open Bids', value: stats?.openBids ?? 0, fill: '#FBBF24' },
-                          { name: 'Pay Apps', value: stats?.pendingPayApps ?? 0, fill: '#D97706' },
+                          /* Withheld, not zero — see hasPayApps. The donut's own
+                             `.filter(value > 0)` would have hidden it anyway; the
+                             legend below would not, so both read the same flag. */
+                          ...(hasPayApps ? [{ name: 'Pay Apps', value: stats?.pendingPayApps ?? 0, fill: '#D97706' }] : []),
                           { name: 'RFIs', value: openRFIs?.length ?? 0, fill: '#9CA3AF' },
                         ].filter(d => d.value > 0)}
                         cx="50%" cy="50%"
@@ -911,7 +936,7 @@ export default function DashboardPage() {
                   {[
                     { label: 'Active Projects', value: stats?.activeProjects ?? 0, color: '#F59E0B' },
                     { label: 'Open Bids', value: stats?.openBids ?? 0, color: '#FBBF24' },
-                    { label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: '#D97706' },
+                    ...(hasPayApps ? [{ label: 'Pending Pay Apps', value: stats?.pendingPayApps ?? 0, color: '#D97706' }] : []),
                     { label: 'Open RFIs', value: openRFIs?.length ?? 0, color: '#9CA3AF' },
                   ].map(item => (
                     <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

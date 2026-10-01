@@ -7,15 +7,23 @@ const fetcher = async (url: string) => {
   return r.json();
 };
 
+/* OPTIONAL MEANS WITHHELD, NOT ZERO.
+   /api/dashboard/stats omits any figure the signed-in user's permissions do not
+   cover, rather than sending 0 — a withheld number that arrives as 0 is drawn
+   as a fact ("Total Contract Value $0") and is simply untrue. `undefined` here
+   is the signal to drop the tile; a real 0 still renders.
+
+   openCOs and overdueItems were declared here and never sent by the route, nor
+   read by anything — a type describing a payload that does not exist is how a
+   caller ends up rendering `undefined` with full confidence from the compiler. */
 export interface DashStats {
   activeProjects: number;
   openBids: number;
-  pendingPayApps: number;
-  totalContractValue: number;
-  monthlyRevenue: number;
-  openRFIs: number;
-  openCOs: number;
-  overdueItems: number;
+  expiringInsurance: number;
+  pendingPayApps?: number;      // requires Pay Apps: View
+  openRFIs?: number;            // requires RFIs: View
+  totalContractValue?: number;  // requires Budget: View
+  monthlyRevenue?: number;      // requires Budget: View
 }
 
 export interface TodayItem {
