@@ -35,9 +35,61 @@ if ($dirty.Lines -gt 0) {
   "ABORTED: working tree is dirty, $($dirty.Lines) file(s). Not touching it." | Out-File -FilePath $log -Append -Encoding utf8
   exit 0
 }
-git fetch origin 2>&1 | Out-File -FilePath $log -Append -Encoding utf8
-git checkout main 2>&1 | Out-File -FilePath $log -Append -Encoding utf8
-git merge --ff-only origin/main 2>&1 | Out-File -FilePath $log -Append -Encoding utf8
+# git writes progress to stderr; in PowerShell 5.1 redirecting a native command's
+# stderr wraps every line in an ErrorRecord, so the log fills with NativeCommandError
+# noise for a successful fetch. Capture the stream instead of redirecting it.
+function Log-Git { param([string[]]$GitArgs)
+  $out = & git @GitArgs 2>&1 | Out-String
+  ("git " + ($GitArgs -join ' ') + " -> " + $out.Trim()) | Out-File -FilePath $log -Append -Encoding utf8
+}
+Log-Git @('fetch','origin','--quiet')
+Log-Git @('checkout','main','--quiet')
+Log-Git @('merge','--ff-only','origin/main')
+
+# LOAD ANTHROPIC_API_KEY FROM .env.local.
+# The key lives in .env.local beside the Supabase credentials -- it is NOT a
+# Windows environment variable, which is why the first unattended run got
+# "401 OAuth access token has expired": the headless CLI fell back to the
+# standalone OAuth credential, last refreshed 16 Sep, because the desktop app
+# keeps its own auth and never refreshes the CLI's.
+# Read it into THIS process only. Never echoed, never logged, never committed.
+$envFile = Join-Path $repo '.env.local'
+if (Test-Path $envFile) {
+  foreach ($line in Get-Content $envFile) {
+    if ($line -match '^\s*ANTHROPIC_API_KEY\s*=\s*(.+)$') {
+      $env:ANTHROPIC_API_KEY = $Matches[1].Trim().Trim('"').Trim("'")
+    }
+  }
+}
+if ($env:ANTHROPIC_API_KEY) {
+  "ANTHROPIC_API_KEY loaded from .env.local (length $($env:ANTHROPIC_API_KEY.Length))" |
+    Out-File -FilePath $log -Append -Encoding utf8
+} else {
+  "no ANTHROPIC_API_KEY in .env.local -- falling back to the CLI's OAuth credential" |
+    Out-File -FilePath $log -Append -Encoding utf8
+}
+
+# AUTH PRE-FLIGHT. The first unattended run died here with
+#   "API Error: 401 OAuth access token has expired. Re-authenticate to continue."
+# and still exited 0, so Task Scheduler reported success while nothing happened.
+# A nightly job that cannot tell you it did nothing is worse than no nightly job.
+# One cheap round trip, and a distinctive marker plus a non-zero exit if it fails.
+$authProbe = & claude -p 'Reply with exactly: AUTH OK' --dangerously-skip-permissions 2>&1 | Out-String
+if ($authProbe -notmatch 'AUTH OK') {
+  "AUTH PRE-FLIGHT FAILED -- no path was attempted. Claude said:" | Out-File -FilePath $log -Append -Encoding utf8
+  $authProbe.Trim() | Out-File -FilePath $log -Append -Encoding utf8
+  @'
+
+FIX ONE OF THESE, THEN THIS RUNS ON ITS OWN:
+  (a) run `claude` once in a terminal and sign in -- refreshes
+      %USERPROFILE%\.claude\.credentials.json, which the desktop app does NOT
+      keep fresh for the standalone CLI; or
+  (b) set ANTHROPIC_API_KEY as a USER environment variable. Durable, but it is
+      metered API usage billed separately from the Claude subscription.
+'@ | Out-File -FilePath $log -Append -Encoding utf8
+  exit 2
+}
+"auth pre-flight OK" | Out-File -FilePath $log -Append -Encoding utf8
 
 $prompt = @'
 Saguaro CRM. Read CLAUDE.md and obey section 0.
@@ -92,4 +144,4 @@ not be verified and why; new line count in docs/FOUND.md.
 "=== $(Get-Date -Format 'u') finished ===" | Out-File -FilePath $log -Append -Encoding utf8
 
 # Leave the tree on main so the next run starts clean.
-git checkout main 2>&1 | Out-File -FilePath $log -Append -Encoding utf8
+Log-Git @('checkout','main','--quiet')
