@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
+import { apiError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,8 +43,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .single();
     if (error) throw error;
     return NextResponse.json({ sub: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // Was a silent `catch { 'Internal server error' }`. A failed read must not
+    // read as a generic 500 with no server trace — apiError logs it (§0/§3).
+    return apiError('subs/id', e, 'Could not load the subcontractor');
   }
 }
 
@@ -64,8 +67,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       .single();
     if (error) throw error;
     return NextResponse.json({ sub: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // Compliance edits (insurance_expiry, w9_on_file, license_expiry) land here.
+    // A silently-swallowed failure was indistinguishable from "saved" (§0/§3).
+    return apiError('subs/id', e, 'Could not save the subcontractor');
   }
 }
 
@@ -86,8 +91,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .single();
     if (error) throw error;
     return NextResponse.json({ sub: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // Same compliance-update path as PUT; honest surface + correlation id.
+    return apiError('subs/id', e, 'Could not save the subcontractor');
   }
 }
 
@@ -104,7 +110,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       .eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // A failed delete (an FK from a project/compliance row still pointing here)
+    // must surface, not vanish behind a flat 500 (§0/§3).
+    return apiError('subs/id', e, 'Could not delete the subcontractor');
   }
 }

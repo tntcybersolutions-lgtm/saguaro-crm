@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { onSubAddedToProject } from '@/lib/triggers';
+import { apiError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const user = await getUser(req);
@@ -34,7 +35,9 @@ export async function POST(req: NextRequest) {
     if (body.projectId) onSubAddedToProject(body.projectId, (sub as any).id).catch(console.error);
 
     return NextResponse.json({ sub, success: true });
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (e) {
+    // Was a silent `catch { 'Internal server error' }` — onboarding a sub that
+    // failed (duplicate, bad trade, RLS) left no trace. Honest surface (§0/§3).
+    return apiError('subs/create', e, 'Could not create the subcontractor');
   }
 }
