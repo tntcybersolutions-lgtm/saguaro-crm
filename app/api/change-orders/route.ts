@@ -63,7 +63,10 @@ export async function POST(req: NextRequest) {
     // Wrapper mirrors create route; top-level `id` matches what the calling
     // page reads (app/field/change-orders/page.tsx → const data = ...; data.id).
     return NextResponse.json({ id: (co as any)?.id, changeOrder: co, success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // Was a bare `catch { 'Internal server error' }` — no log, no correlation id,
+    // so a failed insert (a bad column, a constraint, a NOT NULL) vanished and the
+    // caller got eight generic words. Same honest surface the GET already uses (§3).
+    return apiError('change-orders', e, 'Could not create the change order');
   }
 }
