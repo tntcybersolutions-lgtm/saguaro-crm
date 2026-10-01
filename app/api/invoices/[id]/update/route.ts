@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Budget', 'Edit');
@@ -35,7 +36,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (error) throw error;
     return NextResponse.json({ success: true, invoice: data });
   } catch (err) {
-    console.error('[invoices/update]', err);
-    return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 });
+    // This route records payment (status→paid, paid_at, paid_amount, check_number).
+    // A payment write that failed used to log but return a flat 'Failed to update
+    // invoice' with no correlation id — exactly the call a GC makes to support.
+    // apiError keeps the log and adds the id that ties screen to server line (§3).
+    return apiError('invoices/update', err, 'Could not update the invoice');
   }
 }
