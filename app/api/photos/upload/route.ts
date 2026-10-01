@@ -8,6 +8,7 @@ import {
   UnsupportedImageError,
 } from '@/lib/image-thumb';
 import { apiError } from '@/lib/api-error';
+import { signFields } from '@/lib/storage-signing';
 
 // sharp is a native module and a 12MP re-encode takes ~1-2s, so this handler is
 // pinned to the Node runtime with headroom rather than the default edge limits.
@@ -180,9 +181,19 @@ export async function POST(req: NextRequest) {
       return apiError('photos/upload', insertError, 'Failed to save photo');
     }
 
+    // The row stores url/thumbnail_url in PUBLIC-url form; the bucket is private,
+    // so those 400 on load. photos/list signs them on read — but the upload
+    // response feeds the client's OPTIMISTIC preview, which rendered the dead
+    // public URL and showed a broken tile until a reload re-signed via the list
+    // (MUST-PASS Path 3 detour). Sign the RESPONSE copy here with the same
+    // signFields the list uses, so the preview is live immediately. Non-strict:
+    // the photo is already saved, so a transient signing hiccup must not turn a
+    // successful upload into a 500 — the next list re-signs regardless.
+    const [signedPhoto] = await signFields([photo], ['url', 'thumbnail_url'], 3600, { strict: false });
+
     return NextResponse.json({
       success: true,
-      photo,
+      photo: signedPhoto ?? photo,
       ...(warning ? { warning } : {}),
     });
   } catch (err: unknown) {
