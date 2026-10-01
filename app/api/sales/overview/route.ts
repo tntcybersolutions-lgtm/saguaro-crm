@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { apiError } from '@/lib/api-error';
 import { isClosedStatus, isDoneStatus } from '@/lib/project-lifecycle';
+import { summariseByStage } from '@/lib/lead-stages';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,13 +79,10 @@ export async function GET(req: NextRequest) {
     const weightedValue = open.reduce(
       (s, l) => s + num(l.estimated_value) * (num(l.probability) > 0 ? num(l.probability) / 100 : 0), 0);
 
-    const byStage: Record<string, { count: number; value: number }> = {};
-    for (const l of open) {
-      const k = String(l.stage || 'unstaged');
-      byStage[k] = byStage[k] || { count: 0, value: 0 };
-      byStage[k].count += 1;
-      byStage[k].value += num(l.estimated_value);
-    }
+    /* ONE bucketer, shared with the board and the journey signal, so the three
+       can never report different stage counts for the same rows (Path 14).
+       normalises casing and keeps unknown/empty stages instead of dropping. */
+    const byStage = summariseByStage(open);
 
     /* Follow-ups, from both places a salesperson records one: the lead's own
        next action and the project to-do list. Merged because "what is late"

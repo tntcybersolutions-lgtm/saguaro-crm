@@ -35,6 +35,7 @@
     "engine:check": "node scripts/sync-heatmap-engine.mjs --check",
     "engine:sync": "node scripts/sync-heatmap-engine.mjs --sync",
     "engine:test": "npx -y tsx lib/heatmap/sanity.test.ts",
+    "test:pipeline": "npx -y tsx lib/sales-pipeline.harness.ts",
     "prebuild": "node scripts/sync-heatmap-engine.mjs --check && node scripts/sync-takeoff-engine.mjs --check && npm run check:style-escapes",
     "check:style-escapes": "node tools/check-style-escapes.mjs --selftest && node tools/check-style-escapes.mjs",
     "e2e:sweep": "node tools/e2e-app-sweep.mjs",
