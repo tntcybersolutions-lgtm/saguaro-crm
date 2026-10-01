@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import Link from 'next/link';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
@@ -1353,10 +1354,16 @@ export default function LeadsPage() {
 
             {/* Actions row */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+              {/* The deal page (Path 12): the full stage bar, details and history
+                  on its own URL, not just this modal. */}
+              <Link href={`/app/leads/${detailLead.id}`} style={{
+                ...btnS(GOLD), padding: '7px 16px', fontSize: 12, textDecoration: 'none',
+                display: 'inline-flex', alignItems: 'center',
+              }}>Open deal page →</Link>
               <button onClick={() => {
                 setEditLead(detailLead); setShowModal(true); setDetailLead(null);
               }} style={{
-                ...btnS(GOLD), padding: '7px 16px', fontSize: 12,
+                ...btnS('transparent', DIM), border: `1px solid ${BORDER}`, padding: '7px 16px', fontSize: 12,
               }}>Edit Lead</button>
               <button onClick={() => handleDelete(detailLead.id)} style={{
                 ...btnS('transparent', RED), border: `1px solid ${RED}44`,

@@ -5,6 +5,30 @@ import { must } from '@/lib/db-write';
 import { normaliseStage } from '@/lib/lead-stages';
 import { apiError } from '@/lib/api-error';
 
+// GET /api/leads/[id] — one lead, tenant-scoped. The deal page (Path 12,
+// app/app/leads/[id]) needs a single lead; the board only ever had the list.
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const g = await requirePermission(req, 'Sales', 'View');
+  if (!g.ok) return g.res;
+  const user = g.user;
+  try {
+    const supabase = createServerClient();
+    const { data, error } = await supabase
+      .from('lead_pipeline')
+      .select('*')
+      .eq('id', params.id)
+      .eq('tenant_id', user.tenantId)
+      .maybeSingle();
+    if (error) throw error;
+    // 404, not an empty 200: a deal page that renders a blank shell for a
+    // missing/cross-tenant id reads as "this deal has no data" (§0/§3).
+    if (!data) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+    return NextResponse.json({ lead: data });
+  } catch (e) {
+    return apiError('leads/id', e, 'Could not load the lead');
+  }
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const g = await requirePermission(req, 'Sales', 'Edit');
   if (!g.ok) return g.res;
