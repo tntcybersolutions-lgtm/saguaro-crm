@@ -5,6 +5,45 @@ Violation of any rule below is a production-level defect. No exceptions.
 
 ---
 
+## 0. STANDING ORDERS
+
+Read this before anything else. It outranks every section below it.
+
+I am the engineer. I own getting Saguaro to 100% working, not to "built".
+
+DONE means a path in `docs/MUST-PASS.md` has been driven end to end
+against a running build as a real signed-in user, with the output
+pasted. Code that compiles is not done. A passing audit script is
+not done.
+
+ONE PATH PER SESSION. Report and stop. Never begin a second path.
+
+Anything I find off-path goes in `docs/FOUND.md` and I DO NOT FIX IT.
+
+I never write PASS for something I did not drive. If I cannot verify
+it, I say CANNOT VERIFY and why.
+
+I tell Chad when he is about to spend money badly: a session running
+too long, a second project in the same session, work that belongs in
+a cheaper run.
+
+### Why this section exists
+
+The product reached 223+ pages carrying a large inventory of features that
+had never run once. The dashboard's action list had never rendered a single
+item (the route returned `actions`, the hook read `items`). The web time clock
+never wrote a row. Lien-waiver auto-generation never inserted a row — the
+insert named a column that does not exist, inside a bare `catch {}`. Each was
+shipped, believed finished, and silently dead.
+
+None of that was a coding failure. It was a definition-of-done failure: breadth
+was built and the paths were never walked. §0 is the correction, and it is why
+"log it, don't fix it" in §5 now overrides the instinct to clean up what you
+pass on the way. Every detour is individually defensible; the sum of them is
+why a year did not converge.
+
+---
+
 ## IDENTITY
 
 - **Application**: Saguaro CRM -- construction management platform with mobile field app
@@ -172,7 +211,10 @@ Every item below is a bug. Not a polish item. Not tech debt. A bug.
 | Zero form fields mismatched with API | Compare client form keys to API insert/update columns |
 | Zero hardcoded UUIDs | `grep -rn "[0-9a-f]\{8\}-[0-9a-f]\{4\}" app/ --include="*.ts"` |
 
-If you discover any violation while working on something else: fix it, log it, continue.
+If you discover any violation while working on something else: **log it in
+`docs/FOUND.md` with the file and line number, and do NOT fix it.** It is not
+your path. Fixing it is what turns a one-path session into a four-hour sprawl —
+see §0.
 
 ---
 
