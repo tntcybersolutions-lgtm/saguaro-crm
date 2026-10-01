@@ -6,6 +6,7 @@ import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 import MarkOutcomeModal from '@/components/bids/MarkOutcomeModal';
 import { BUILDING_TYPES } from '@/lib/contractor-trades';
+import { summariseByStage } from '@/lib/lead-stages';
 import { PremiumFX, ModuleHero, StatStrip, AutoChip, FlowSteps, SectionCard } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { Funnel } from '@phosphor-icons/react';
@@ -251,14 +252,14 @@ export default function LeadsPage() {
       ? Math.round(won.length / (won.length + lost.length) * 100)
       : 0;
     const avgDeal = won.length > 0 ? wonVal / won.length : 0;
+    /* ONE bucketer, shared with the sales overview and the journey signal
+       (Path 14). Seed the canonical kanban columns for a stable layout, then
+       fill from the shared summary — so a legacy-cased row ('qualified') lands
+       in 'Qualified' instead of being dropped, as the old `if (byStage[l.stage])`
+       guard silently dropped it. */
+    const agg = summariseByStage(leads);
     const byStage: Record<string, { count: number; value: number }> = {};
-    STAGES.forEach(s => { byStage[s] = { count: 0, value: 0 }; });
-    leads.forEach(l => {
-      if (byStage[l.stage]) {
-        byStage[l.stage].count++;
-        byStage[l.stage].value += num(l.estimated_value);
-      }
-    });
+    STAGES.forEach(s => { byStage[s] = agg[s] || { count: 0, value: 0 }; });
     return { total: leads.length, totalVal, wonVal, activeVal, winRate, avgDeal, byStage };
   }, [leads]);
 

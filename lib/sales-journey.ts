@@ -104,6 +104,9 @@ export function salesStepsDone(s: SalesSignals | null): Record<SalesSignalKey, b
   };
 }
 
-/** Stages at or past "this is a real opportunity". Matches the stage
- *  vocabulary in app/app/leads/page.tsx — keep the two in step. */
-export const QUALIFIED_STAGES = ['Qualified', 'Proposal', 'Negotiation', 'Won'] as const;
+/** Stages at or past "this is a real opportunity".
+ *  Re-exported from the ONE canonical source (lib/lead-stages) rather than
+ *  redefined here — a second copy is a second thing to forget to update, and
+ *  the journey "qualified" count and the board/overview byStage must read the
+ *  identical list for their numbers to agree (MUST-PASS Path 14). */
+export { QUALIFIED_STAGES } from '@/lib/lead-stages';
