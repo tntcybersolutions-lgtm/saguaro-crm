@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
 
 export async function PATCH(
   req: NextRequest,
@@ -30,7 +31,10 @@ export async function PATCH(
       .single();
     if (error) throw error;
     return NextResponse.json({ data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e) {
+    // Scoring/approving a prequal (status, score, reviewed_by) that failed must
+    // not read as a flat 500 with no trace — this gates whether a sub is
+    // compliant to work. Honest surface + correlation id (§0/§3).
+    return apiError('prequalification/submissions/id', e, 'Could not update the prequalification submission');
   }
 }
