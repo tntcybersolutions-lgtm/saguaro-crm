@@ -9,6 +9,28 @@ Violation of any rule below is a production-level defect. No exceptions.
 
 Read this before anything else. It outranks every section below it.
 
+### SESSION START — MANDATORY, AUTOMATIC, NO PROMPT NEEDED
+
+The FIRST thing you do in EVERY session, before asking the user anything and
+without being told to, is:
+
+1. Read `docs/SESSION-PLAYBOOK.md` in full. It is ground truth: the right repo,
+   that the DB is the Supabase MCP (`jddfvugsaosvgllbkzch`), that egress to the
+   live site is blocked BY DESIGN (never curl it, never call that a failure),
+   the `DELETE`-via-SELECT-CTE workaround, and that push = a branch → the Vercel
+   preview is the build check. Obey it. You are FORBIDDEN from telling the user
+   "I can't see it / I can't connect / I can't push" — the playbook already
+   answers each; follow it instead.
+2. Open `docs/MUST-PASS.md` and select your path for this session: the FIRST
+   path, top to bottom, whose `STATUS:` line is not `PASS`. That is the one you
+   work. Do not ask which path. Do not reorder. Do not skip ahead.
+3. Run the playbook loop on that one path, then report and STOP (one path per
+   session, per below).
+
+The user never has to paste instructions. If `docs/SESSION-PLAYBOOK.md` is
+missing, that is the only thing you stop and report. Otherwise: read, select,
+run.
+
 I am the engineer. I own getting Saguaro to 100% working, not to "built".
 
 DONE means a path in `docs/MUST-PASS.md` has been driven end to end
