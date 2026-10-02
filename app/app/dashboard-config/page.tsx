@@ -450,6 +450,21 @@ export default function DashboardConfigPage() {
     });
   };
 
+  /* ── Drag to reorder (grab the handle, drop on another card) ── */
+  const [dragId, setDragId] = useState<string | null>(null);
+  const reorderTo = (targetId: string) => {
+    setLayout(prev => {
+      if (!dragId || dragId === targetId) return prev;
+      const arr = [...prev.widgets];
+      const from = arr.findIndex(w => w.id === dragId);
+      const to = arr.findIndex(w => w.id === targetId);
+      if (from < 0 || to < 0) return prev;
+      const [item] = arr.splice(from, 1);
+      arr.splice(to, 0, item);
+      return { ...prev, widgets: arr };
+    });
+  };
+
   /* ── Change widget size ── */
   const setWidgetSize = (id: string, size: WidgetSize) => {
     setLayout(prev => ({
@@ -695,12 +710,16 @@ export default function DashboardConfigPage() {
                 return (
                   <div
                     key={w.id}
+                    onDragOver={(e) => { if (dragId && dragId !== w.id) e.preventDefault(); }}
+                    onDrop={(e) => { e.preventDefault(); reorderTo(w.id); setDragId(null); }}
                     style={{
                       ...cardStyle,
                       gridColumn: `span ${colSpan}`,
-                      border: `1px solid ${isConfiguring ? GOLD : BORDER}`,
+                      border: `1px solid ${dragId && dragId !== w.id ? GOLD : isConfiguring ? GOLD : BORDER}`,
+                      borderStyle: dragId && dragId !== w.id ? 'dashed' : 'solid',
                       position: 'relative',
-                      transition: 'border-color .15s, box-shadow .15s',
+                      opacity: dragId === w.id ? 0.4 : 1,
+                      transition: 'border-color .15s, box-shadow .15s, opacity .15s',
                       boxShadow: isConfiguring ? `0 0 0 2px ${GOLD}30` : 'none',
                     }}
                   >
@@ -713,7 +732,15 @@ export default function DashboardConfigPage() {
                           {SIZE_LABELS[w.size]}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', gap: 3 }}>
+                      <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                        <span
+                          draggable
+                          onDragStart={() => setDragId(w.id)}
+                          onDragEnd={() => setDragId(null)}
+                          title="Drag to reorder"
+                          aria-label="Drag to reorder"
+                          style={{ cursor: 'grab', color: DIM, fontSize: 16, lineHeight: 1, padding: '0 5px', userSelect: 'none' }}
+                        >⠿</span>
                         <button onClick={() => moveWidget(w.id, 'up')} disabled={idx === 0}
                           style={{ ...miniBtn, opacity: idx === 0 ? 0.3 : 1 }} title="Move up"><CaretUp size={14} color={DIM} weight="regular" /></button>
                         <button onClick={() => moveWidget(w.id, 'down')} disabled={idx === layout.widgets.length - 1}
