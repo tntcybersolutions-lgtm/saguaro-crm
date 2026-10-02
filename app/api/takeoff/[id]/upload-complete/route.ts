@@ -5,6 +5,7 @@ import { mergePDFs } from '@/lib/pdf-engine';
 import { requirePermission } from '@/lib/permissions';
 import { apiError, apiFail } from '@/lib/api-error';
 import { must } from '@/lib/db-write';
+import { registerTakeoffPlanDrawings } from '@/lib/drawing-register';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -60,6 +61,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     const row = takeoff as unknown as {
       project_id: string;
+      name?: string | null;
       source_files?: Array<{ path: string; name: string; type: string }> | null;
     };
     const projectId = row.project_id;
@@ -135,6 +137,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (updateError) throw updateError;
 
+    /* The plan set the estimate was built from belongs in the project's Drawing
+       Register — it used to live only inside the takeoff, so the register showed
+       nothing for a job whose plans were already uploaded. One drawing per source
+       file, referencing the object already in `blueprints` (no copy), idempotent
+       per file. Never fails the upload; a register error is logged and reported. */
+    const register = await registerTakeoffPlanDrawings(db, {
+      tenantId: g.user.tenantId,
+      projectId,
+      bucket: BUCKET,
+      sources,
+      takeoffName: row.name ?? null,
+    });
+
     /* Page count and thumbnail from the stored bytes. Both are recorded on the
        row; neither blocks the response, and the analyzer counts pages itself
        if this has not finished by the time it runs. */
@@ -188,6 +203,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       /* An image upload cannot be merged into a PDF set, so it replaces. Say so
          rather than overwriting in silence, which is what used to happen. */
       replacedPrevious: !isPdf && existing.length > 0,
+      drawingsRegistered: register.created,
+      drawingRegisterError: register.error ? 'The plans uploaded, but could not be added to the Drawing Register.' : undefined,
     });
   } catch (err) {
     return apiError('takeoff/upload-complete', err, 'The blueprint uploaded but could not be registered. Please try again.');
