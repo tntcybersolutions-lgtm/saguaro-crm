@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
        it — id comes from the URL and this client is the service role key. */
     const { data: pkg } = await db
       .from('bid_packages')
-      .select('id, tenant_id, project_id, trade, name')
+      .select('id, tenant_id, project_id, trade, name, status')
       .eq('id', id)
       .eq('tenant_id', user.tenantId)
       .maybeSingle();
@@ -150,6 +150,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
              it says, and leaves it available as a genuine kill switch: a GC
              who sets it false shuts the whole package's portal off. */
           sub_portal_enabled: true,
+          /* A package goes OUT FOR BID when the first invite goes out — not when
+             it is written. Auto-built packages are created 'draft' (ready, not
+             sent), and the sub portal refuses to take a bid on a draft, so
+             without this flip every invited sub would hit "not issued yet".
+             Only draft/pending/unset move; closed/awarded are never reopened. */
+          ...(invitedNow.length > 0 && ['', 'draft', 'pending'].includes(String((pkg as Record<string, unknown>).status ?? '').toLowerCase())
+            ? { status: 'open' }
+            : {}),
         } as never)
         .eq('id', id)
         .eq('tenant_id', user.tenantId),

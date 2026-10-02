@@ -6,7 +6,17 @@
  *  1. Bid packages per CSI division — Sage writes scope narratives, bid instructions,
  *     bond requirements, insurance minimums, and due dates
  *  2. Bid jacket PDFs for each package
- *  3. Schedule of Values (G703) tied to a new Pay Application
+ *  3. Schedule of Values (G703) tied to a new Pay Application — ONLY once the job
+ *     is won (projects.phase = building). While bidding there is no contract to
+ *     bill against; the per-division cost lives in the budget the takeoff page
+ *     builds in the same run.
+ *
+ * Money basis: every division total here is DIRECT cost = material + labor
+ * (lib/takeoff-line-cost) — the same number the takeoff screen's Cost column
+ * and the budget carry. takeoff_materials.total_cost alone is material only.
+ *
+ * Packages are written as 'draft' — "ready, not sent". The invite route flips a
+ * package to 'open' when the first invite actually goes out.
  *
  * All fields are populated with correct project name, dates, and trade-specific content.
  */
@@ -18,6 +28,9 @@ import { buildComplianceForBidPackages } from '@/lib/compliance-autofile';
 import type { Database } from '@/lib/database.types';
 import { must, tryWrite } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
+import { laborAllocation, lineDirectCost } from '@/lib/takeoff-line-cost';
+import { resolveTenantCompany } from '@/lib/tenant-company';
+import { normalisePhase } from '@/lib/project-phase';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -29,6 +42,13 @@ const fmt$ = (n: number) =>
 
 function addDays(d: number): string {
   return new Date(Date.now() + d * 86_400_000).toISOString().split('T')[0];
+}
+
+/** Last day of the current billing month (YYYY-MM-DD). A pay app covers ONE
+ *  billing period — this used to default to today + 365 days. */
+function endOfThisMonth(): string {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).toISOString().split('T')[0];
 }
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -110,6 +130,21 @@ export async function GET(
           .order('sort_order', { ascending: true });
 
         let materials = (materialsData || []) as RawMaterial[];
+        if (materials.length > 0) {
+          /* AI takeoff lines store MATERIAL in total_cost and labor only as hours;
+             the labor dollars live on the header (takeoffs.labor_cost). Fold each
+             line's share of labor in so packages, jackets and the SOV carry the
+             full direct cost — the same number the takeoff screen shows. */
+          const alloc = laborAllocation(
+            materials.map((m) => ({ totalCost: Number(m.total_cost) || 0, laborHours: Number(m.labor_hours) || 0 })),
+            Number((takeoff as any).labor_cost) || 0,
+          );
+          materials = materials.map((m) => {
+            const direct = Math.round(lineDirectCost({ totalCost: Number(m.total_cost) || 0, laborHours: Number(m.labor_hours) || 0 }, alloc) * 100) / 100;
+            const qty = Number(m.quantity) || 0;
+            return { ...m, total_cost: direct, unit_cost: qty > 0 ? Math.round((direct / qty) * 100) / 100 : Number(m.unit_cost) || 0 };
+          });
+        }
         if (materials.length === 0) {
           // Fallback: measured/deterministic takeoffs write takeoff_line_items (not
           // takeoff_materials). Map them to the same shape so the chain works from BOTH paths.
@@ -147,7 +182,12 @@ export async function GET(
         // ALWAYS the caller's tenant — every package/pay-app/SOV write below must land in the
         // caller's tenant, never a value derived from a (possibly foreign) project row.
         const tenantId   = user.tenantId;
-        const gcName     = String(proj.gc_name || 'General Contractor');
+        /* The GC is the TENANT. projects.gc_name is empty on almost every job, so
+           the jacket cover read "GENERAL CONTRACTOR" over the job-site address.
+           Name / office address / license now come from the company record. */
+        const company    = await resolveTenantCompany(supabase, tenantId, proj);
+        const gcName     = company.name;
+        const isBuilding = normalisePhase(proj.phase) === 'building';
         const ownerName  = String(proj.owner_entity?.name || '');
         const ownerAddr  = String(proj.owner_entity?.address || '');
         const projAddr   = String(proj.address || '');
@@ -203,7 +243,7 @@ Today's date: ${today}
 Project: ${projectName}
 Building type: ${takeoff.building_type || 'Commercial'}
 Location: ${projState || 'AZ'}
-Total project cost: ${fmt$(takeoff.total_cost || 0)}
+Estimated direct cost (material + labor): ${fmt$(materials.reduce((s, m) => s + (Number(m.total_cost) || 0), 0))}
 Square footage: ${(takeoff.building_area || 0).toLocaleString()} SF
 
 Trade packages to document:
@@ -343,7 +383,10 @@ Rules:
               csi_codes:             uniqueCsiCodes,
               due_date:              dueDate,
               bid_instructions:      bidInstructions,
-              status:                'open',
+              /* 'draft' = ready, not sent. It used to be 'open', so the Bid Board
+                 showed fifteen packages "Out for bid" with zero invites. The
+                 invite route opens a package when invites actually go out. */
+              status:                'draft',
               requires_bond:         requiresBond,
               insurance_requirements: {
                 general_liability:   insGl,
@@ -418,8 +461,9 @@ Rules:
                 ownerName,
                 ownerAddress:         ownerAddr,
                 gcName,
-                gcAddress:            projAddr,
-                gcLicense:            proj.gc_license,
+                // The contractor's OFFICE — never the job address (that is projectAddress).
+                gcAddress:            company.address,
+                gcLicense:            company.license || undefined,
                 tradeName:            CSI_DIVISIONS[div]?.name || `Division ${div}`,
                 dueDate:              addDays(pkg.total > 250_000 ? 21 : 14),
                 scopeNarrative:       ai?.scope || `${pkg.name} scope of work for ${projectName}.`,
@@ -496,7 +540,7 @@ Rules:
               db: supabase,
               tenantId,
               projectId: takeoff.project_id,
-              project: proj,
+              project: { ...proj, gc_name: gcName },
               packages: createdPackages.map(p => ({
                 id: p.id, name: p.name, div: p.div, total: p.total, trade: p.trade,
                 requiresBond: p.requiresBond, insGl: p.insGl, insAuto: p.insAuto, insWork: p.insWork,
@@ -512,96 +556,118 @@ Rules:
           }
         }
 
-        send('progress', { step: 5, pct: 80, message: 'Building Schedule of Values (G703)...' });
-
-        // ── 8. Create SOV / Pay Application ─────────────────────────────────
+        // ── 8. SOV + Pay Application — only once the job is WON ──────────────
+        /* This created "Pay App #1 (draft)" on every takeoff — during the bid,
+           against a contract that does not exist yet — with contract_sum set to
+           the raw takeoff cost, original_contract_sum 0, and a billing period of
+           one YEAR (today → today + 365). A bidding job has nothing to bill; the
+           per-division cost lives in the budget the takeoff page builds in the
+           same run. When the project is already in the building phase, the pay
+           app covers ONE billing period (today → end of this month) and its
+           contract sum is the project's contract value, with the SOV lines scaled
+           so the G703 foots to it. */
         let sovId: string | null = null;
         let sovLines = 0;
+        const sovDeferred = !isBuilding;
 
-        try {
-          const { data: lastApp } = await supabase
-            .from('pay_applications')
-            .select('app_number')
-            .eq('project_id', takeoff.project_id)
-            .order('app_number', { ascending: false })
-            .limit(1)
-            .maybeSingle();
+        if (sovDeferred) {
+          send('progress', { step: 5, pct: 80, message: 'Project is still bidding — pay application and SOV wait for the award.' });
+        } else {
+          send('progress', { step: 5, pct: 80, message: 'Building Schedule of Values (G703)...' });
+          try {
+            const directTotal = divisions.reduce((s, [, items]) => s + items.reduce((a, i) => a + (i.total_cost || 0), 0), 0);
+            const contractValue = Number(proj.contract_value ?? proj.original_contract_value ?? proj.contract_amount ?? proj.contract_sum) || 0;
+            const contractSum = contractValue > 0 ? contractValue : directTotal;
+            // Scale division values onto the contract sum so Σ scheduled_value = contract_sum.
+            const scale = directTotal > 0 ? contractSum / directTotal : 1;
 
-          const appNumber = (((lastApp as any)?.app_number as number) || 0) + 1;
+            const { data: lastApp } = await supabase
+              .from('pay_applications')
+              .select('app_number')
+              .eq('project_id', takeoff.project_id)
+              .eq('tenant_id', tenantId)
+              .order('app_number', { ascending: false })
+              .limit(1)
+              .maybeSingle();
 
-          const { data: payApp, error: payErr } = await supabase
-            .from('pay_applications')
-            .insert({
-              tenant_id:                   tenantId,
-              project_id:                  takeoff.project_id,
-              app_number:                  appNumber,
-              period_from:                 new Date().toISOString().split('T')[0],
-              period_to:                   addDays(365),
-              status:                      'draft',
-              contract_sum:                takeoff.total_cost || 0,
-              contract_sum_to_date:        takeoff.total_cost || 0,
-              change_orders_total:         0,
-              prev_completed:              0,
-              this_period:                 0,
-              materials_stored:            0,
-              total_completed:             0,
-              percent_complete:            0,
-              retainage_percent:           10,
-              retainage_amount:            0,
-              total_earned_less_retainage: 0,
-              prev_payments:               0,
-              current_payment_due:         0,
-              owner_name:                  ownerName,
-              owner_address:               ownerAddr,
-              notes: `Auto-generated by Sage from AI Blueprint Takeoff — ${takeoffId.slice(0, 8)} — ${today}`,
-            } as unknown as Database['public']['Tables']['pay_applications']['Insert'])
-            .select()
-            .single();
+            const appNumber = (((lastApp as any)?.app_number as number) || 0) + 1;
 
-          if (!payErr && payApp) {
-            sovId = (payApp as any).id as string;
+            const { data: payApp, error: payErr } = await supabase
+              .from('pay_applications')
+              .insert({
+                tenant_id:                   tenantId,
+                project_id:                  takeoff.project_id,
+                app_number:                  appNumber,
+                period_from:                 new Date().toISOString().split('T')[0],
+                period_to:                   endOfThisMonth(),
+                status:                      'draft',
+                original_contract_sum:       contractSum,
+                contract_sum:                contractSum,
+                contract_sum_to_date:        contractSum,
+                change_orders_total:         0,
+                prev_completed:              0,
+                this_period:                 0,
+                materials_stored:            0,
+                total_completed:             0,
+                percent_complete:            0,
+                retainage_percent:           10,
+                retainage_amount:            0,
+                total_earned_less_retainage: 0,
+                prev_payments:               0,
+                current_payment_due:         0,
+                owner_name:                  ownerName,
+                owner_address:               ownerAddr,
+                notes: `Auto-generated by Sage from AI Blueprint Takeoff — ${takeoffId.slice(0, 8)} — ${today}`,
+              } as unknown as Database['public']['Tables']['pay_applications']['Insert'])
+              .select()
+              .single();
 
-            // Build SOV rows grouped by CSI division (one row per division = cleaner G703)
-            const sovRows: Record<string, unknown>[] = [];
-            let lineNum = 1;
+            if (payErr) console.error('[sage-auto-docs] pay app insert failed:', payErr);
+            if (!payErr && payApp) {
+              sovId = (payApp as any).id as string;
 
-            for (const [div, items] of divisions) {
-              const divTotal  = items.reduce((s, i) => s + (i.total_cost || 0), 0);
-              const divName   = sagePackages[div]?.name || CSI_DIVISIONS[div]?.name || `Division ${div}`;
-              sovRows.push({
-                tenant_id:        tenantId,
-                project_id:       takeoff.project_id,
-                pay_app_id:       sovId,
-                line_number:      lineNum,
-                description:      `${div} — ${divName}`,
-                scheduled_value:  divTotal,
-                prev_completed:   0,
-                this_period:      0,
-                stored_materials: 0,
-                total_completed:  0,
-                percent_complete: 0,
-                balance_to_finish: divTotal,
-                retainage:        0,
-                cost_code:        div,
-                sort_order:       lineNum,
-                ai_generated:     true,
-              });
-              lineNum++;
+              // Build SOV rows grouped by CSI division (one row per division = cleaner G703)
+              const sovRows: Record<string, unknown>[] = [];
+              let lineNum = 1;
+
+              for (const [div, items] of divisions) {
+                const divTotal  = Math.round(items.reduce((s, i) => s + (i.total_cost || 0), 0) * scale * 100) / 100;
+                const divName   = sagePackages[div]?.name || CSI_DIVISIONS[div]?.name || `Division ${div}`;
+                sovRows.push({
+                  tenant_id:        tenantId,
+                  project_id:       takeoff.project_id,
+                  pay_app_id:       sovId,
+                  line_number:      lineNum,
+                  description:      `${div} — ${divName}`,
+                  scheduled_value:  divTotal,
+                  prev_completed:   0,
+                  this_period:      0,
+                  stored_materials: 0,
+                  total_completed:  0,
+                  percent_complete: 0,
+                  balance_to_finish: divTotal,
+                  retainage:        0,
+                  cost_code:        div,
+                  sort_order:       lineNum,
+                  ai_generated:     true,
+                });
+                lineNum++;
+              }
+
+              const { error: sovInsertErr } = await supabase
+                .from('schedule_of_values')
+                .insert(sovRows as Database['public']['Tables']['schedule_of_values']['Insert'][]);
+              if (sovInsertErr) {
+                console.error('[sage-auto-docs] SOV line insert failed:', sovInsertErr);
+                sovLines = 0;
+              } else {
+                sovLines = sovRows.length;
+              }
             }
-
-            const { error: sovInsertErr } = await supabase
-              .from('schedule_of_values')
-              .insert(sovRows as Database['public']['Tables']['schedule_of_values']['Insert'][]);
-            if (sovInsertErr) {
-              console.error('[sage-auto-docs] SOV line insert failed:', sovInsertErr);
-              sovLines = 0;
-            } else {
-              sovLines = sovRows.length;
-            }
+          } catch (sovErr) {
+            console.error('[sage-auto-docs] SOV error:', sovErr);
+            // Non-fatal — packages, jackets and compliance are already written.
           }
-        } catch (sovErr) {
-          console.error('[sage-auto-docs] SOV error:', sovErr);
-          // Non-fatal
         }
 
         send('progress', { step: 6, pct: 95, message: 'Saving and finalizing...' });
@@ -611,6 +677,8 @@ Rules:
           packagesCreated: createdPackages.length,
           jacketsGenerated,
           sovCreated:      !!sovId && sovLines > 0,
+          // true while the project is bidding: no pay app/SOV by design, not a failure.
+          sovDeferred,
           sovLines,
           sovId,
           projectId:       takeoff.project_id,
