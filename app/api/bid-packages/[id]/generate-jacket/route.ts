@@ -4,6 +4,7 @@ import { generateBidJacket, saveDocument } from '@/lib/pdf-engine';
 import { generateBidJacketContent } from '@/lib/construction-intelligence';
 import { requirePermission } from '@/lib/permissions';
 import { must } from '@/lib/db-write';
+import { resolveTenantCompany } from '@/lib/tenant-company';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Projects', 'Edit');
@@ -21,6 +22,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const p = pkg as any;
     const project = p.projects;
     const itemsList = (items || []) as any[];
+    // The GC on the cover is the tenant's company (project gc_name → company
+    // settings → tenant name), and its address is the office, never the job.
+    const gc = await resolveTenantCompany(db, user.tenantId, project);
 
     // Generate scope narrative with AI
     const { scopeNarrative, csiSections } = await generateBidJacketContent(
@@ -39,9 +43,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       projectAddress: project?.address || '',
       ownerName: project?.owner_entity?.name || '',
       ownerAddress: project?.owner_entity?.address || '',
-      gcName: project?.gc_name || 'General Contractor',
-      gcAddress: project?.address || '',
-      gcLicense: project?.gc_license,
+      gcName: gc.name,
+      gcAddress: gc.address,
+      gcLicense: gc.license || project?.gc_license,
       tradeName: p.trade,
       dueDate: p.due_date || '',
       scopeNarrative: p.scope_narrative || scopeNarrative,
