@@ -41,6 +41,54 @@ function Hop({ href, title, desc, tone }: { href: string; title: string; desc: s
   );
 }
 
+/** Universal search — one box across leads, jobs, customers, photos (/api/search). */
+function UniversalSearch() {
+  const [q, setQ] = React.useState('');
+  const [hits, setHits] = React.useState<{ type: string; id: string; label: string; sub?: string; href: string }[]>([]);
+  const [open, setOpen] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  React.useEffect(() => {
+    const term = q.trim();
+    if (term.length < 2) { setHits([]); setOpen(false); return; }
+    setBusy(true);
+    const h = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(term)}`)
+        .then((r) => (r.ok ? r.json() : { results: [] }))
+        .then((d) => { setHits(d.results || []); setOpen(true); })
+        .catch(() => setHits([]))
+        .finally(() => setBusy(false));
+    }, 220);
+    return () => clearTimeout(h);
+  }, [q]);
+  const TONE: Record<string, string> = { lead: '#3B82F6', job: GOLD, customer: '#3B82F6', photo: DIM };
+  return (
+    <div style={{ position: 'relative', marginBottom: 18 }}>
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        onFocus={() => { if (hits.length) setOpen(true); }}
+        placeholder="Search leads, jobs, customers, photos…"
+        style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT, fontSize: 14, outline: 'none' }}
+      />
+      {open && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 50, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
+          {hits.length === 0 ? (
+            <div style={{ padding: '12px 14px', color: DIM, fontSize: 13 }}>{busy ? 'Searching…' : `No matches for “${q.trim()}”.`}</div>
+          ) : hits.map((h) => (
+            <Link key={`${h.type}:${h.id}`} href={h.href} onClick={() => setOpen(false)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '10px 14px', borderBottom: `1px solid ${BORDER}`, textDecoration: 'none', color: TEXT }}>
+              <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.label}</span>
+              <span style={{ display: 'flex', gap: 8, alignItems: 'center', whiteSpace: 'nowrap' }}>
+                {h.sub ? <span style={{ fontSize: 11, color: DIM }}>{h.sub}</span> : null}
+                <span style={{ fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.4, color: TONE[h.type] || DIM }}>{h.type}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const GREEN = '#22C55E', RED = '#EF4444';
 const usd = (cents: number) => '$' + Math.round((cents || 0) / 100).toLocaleString('en-US');
 
@@ -146,6 +194,9 @@ export default function SalesHomePage() {
           }}>Open the pipeline →</Link>
         }
       />
+
+      {/* Universal search across leads, jobs, customers, photos. */}
+      <UniversalSearch />
 
       {/* Quick hops — the rep's whole surface, one tap each. */}
       <div style={{
