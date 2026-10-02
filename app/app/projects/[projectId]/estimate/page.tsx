@@ -157,11 +157,11 @@ export default function EstimatePage() {
           />
           {ctx && (
             <StatStrip items={[
-              { label: 'Original Contract', value: fmt0(originalContract), sub: 'the number the estimate answers to' },
-              { label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
-              { label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'no budget lines yet' },
-              { label: 'Bid Packages', value: String(bidPackages.length), sub: awardedPkgs.length > 0 ? awardedPkgs.length + ' awarded · ' + fmt0(awardedTotal) : 'none awarded yet' },
-              { label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'ready to price scopes' },
+              {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt0(originalContract), sub: 'the number the estimate answers to' },
+              {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
+              {href: `/app/projects/${projectId}/budget`,  label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'no budget lines yet' },
+              {href: `/app/projects/${projectId}/bid-packages`,  label: 'Bid Packages', value: String(bidPackages.length), sub: awardedPkgs.length > 0 ? awardedPkgs.length + ' awarded · ' + fmt0(awardedTotal) : 'none awarded yet' },
+              {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'ready to price scopes' },
             ]} />
           )}
           <SectionCard flush>
@@ -213,25 +213,25 @@ export default function EstimatePage() {
           {/* Contract + budget context — the live money the estimate answers to */}
           {ctx && (
             <StatStrip items={[
-              { label: 'Estimate Total', value: fmt0(takeoff.total_cost), accent: '#FBBF24', sub: takeoff.materials.length + ' lines · ' + rollup.length + ' division' + (rollup.length === 1 ? '' : 's') },
-              { label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'no budget lines yet' },
-              { label: 'Est. vs Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', accent: budgetOriginal > 0 ? (estBudgetDelta > 0 ? '#ef4444' : '#3dd68c') : undefined, sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'estimate runs over the budget' : 'estimate fits inside the budget') : 'seed the budget to compare' },
-              { label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
-              { label: 'Implied Margin', value: revisedContract > 0 ? fmt0(impliedMargin) : '—', accent: revisedContract > 0 ? (impliedMargin >= 0 ? '#3dd68c' : '#ef4444') : undefined, sub: revisedContract > 0 ? Math.round((impliedMargin / revisedContract) * 100) + '% of revised contract' : 'set the contract to see margin' },
+              {href: `/app/projects/${projectId}/estimate`,  label: 'Estimate Total', value: fmt0(takeoff.total_cost), accent: '#FBBF24', sub: takeoff.materials.length + ' lines · ' + rollup.length + ' division' + (rollup.length === 1 ? '' : 's') },
+              {href: `/app/projects/${projectId}/budget`,  label: 'Project Budget', value: fmt0(budgetOriginal), sub: budgetLineCount > 0 ? budgetLineCount + ' CSI-coded lines' : 'no budget lines yet' },
+              {href: `/app/projects/${projectId}/budget`,  label: 'Est. vs Budget', value: budgetOriginal > 0 ? fmtSigned(estBudgetDelta) : '—', accent: budgetOriginal > 0 ? (estBudgetDelta > 0 ? '#ef4444' : '#3dd68c') : undefined, sub: budgetOriginal > 0 ? (estBudgetDelta > 0 ? 'estimate runs over the budget' : 'estimate fits inside the budget') : 'seed the budget to compare' },
+              {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(revisedContract), sub: (Number(money?.approvedCoCount) || 0) + ' approved CO' + ((Number(money?.approvedCoCount) || 0) === 1 ? '' : 's') },
+              {href: `/app/projects/${projectId}/estimate`,  label: 'Implied Margin', value: revisedContract > 0 ? fmt0(impliedMargin) : '—', accent: revisedContract > 0 ? (impliedMargin >= 0 ? '#3dd68c' : '#ef4444') : undefined, sub: revisedContract > 0 ? Math.round((impliedMargin / revisedContract) * 100) + '% of revised contract' : 'set the contract to see margin' },
             ]} />
           )}
 
           {/* Summary Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-            <StatCard icon={<Package size={19} weight="duotone" color="#F59E0B" />} label="Material Cost" value={fmt(takeoff.material_cost)} />
-            <StatCard icon={<HardHat size={19} weight="duotone" color="#F59E0B" />} label="Labor Cost" value={fmt(takeoff.labor_cost)} />
-            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color="#F59E0B" />} label="Total" value={fmt(takeoff.total_cost)} accent="#F59E0B" />
+            <StatCard icon={<Package size={19} weight="duotone" color="#F59E0B" />} label="Material Cost" value={fmt(takeoff.material_cost)}  href={`/app/projects/${projectId}/estimate`}/>
+            <StatCard icon={<HardHat size={19} weight="duotone" color="#F59E0B" />} label="Labor Cost" value={fmt(takeoff.labor_cost)}  href={`/app/projects/${projectId}/estimate`}/>
+            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color="#F59E0B" />} label="Total" value={fmt(takeoff.total_cost)} accent="#F59E0B"  href={`/app/projects/${projectId}/estimate`}/>
             <StatCard
               icon={<Ruler size={19} weight="duotone" color="#F59E0B" />}
               label="Cost per SF"
               value={takeoff.square_footage > 0 ? fmt(takeoff.total_cost / takeoff.square_footage) : 'N/A'}
               sub={takeoff.square_footage > 0 ? `${takeoff.square_footage.toLocaleString()} SF` : undefined}
-            />
+             href={`/app/projects/${projectId}/estimate`}/>
           </div>
 
           {/* Division Rollup — canonical MasterFormat, tied to the budget */}

@@ -376,12 +376,12 @@ export default function PayrollPage() {
       {/* Project intelligence strip — what the system already knows */}
       {(ctx || records.length > 0 || timeEntries.length > 0) && (
         <StatStrip items={[
-          { label: 'Payroll', value: '#' + (records.length + 1), sub: lastFiled ? 'follows week ' + lastFiled.week_ending : 'first WH-347 on this project' },
-          { label: 'Filed to Date', value: String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : 'no WH-347s yet' },
-          { label: 'Crew This Week', value: String(employees.length), sub: totalWeekHours.toFixed(1) + ' hrs entered' },
-          { label: 'Field Time Clock', value: weekEndingDate ? weekClockedHours.toFixed(1) + ' hrs' : timeEntries.length + ' entries', accent: weekClockedHours > 0 ? '#3dd68c' : undefined, sub: weekEndingDate ? weekClockedNames.length + ' employee' + (weekClockedNames.length === 1 ? '' : 's') + ' clocked this week' : 'pick a week ending to match' },
-          { label: 'Prevailing Wage', value: pw ? 'Flagged' : 'Standard', accent: pw ? GOLD : undefined, sub: pw ? pw.state + (pw.county ? ' · ' + pw.county : '') + (pw.wageDecision ? ' · ' + pw.wageDecision : '') : 'not a Davis-Bacon project' },
-          { label: 'Subs on Job', value: String((ctx?.subs || []).length), sub: 'on the project roster' },
+          {href: `/app/projects/${pid}/payroll`,  label: 'Payroll', value: '#' + (records.length + 1), sub: lastFiled ? 'follows week ' + lastFiled.week_ending : 'first WH-347 on this project' },
+          {href: `/app/projects/${pid}/payroll`,  label: 'Filed to Date', value: String(records.length), sub: grossFiled > 0 ? fmt0(grossFiled) + ' gross certified' : 'no WH-347s yet' },
+          {href: `/app/projects/${pid}/crews`,  label: 'Crew This Week', value: String(employees.length), sub: totalWeekHours.toFixed(1) + ' hrs entered' },
+          {href: `/app/projects/${pid}/timesheets`,  label: 'Field Time Clock', value: weekEndingDate ? weekClockedHours.toFixed(1) + ' hrs' : timeEntries.length + ' entries', accent: weekClockedHours > 0 ? '#3dd68c' : undefined, sub: weekEndingDate ? weekClockedNames.length + ' employee' + (weekClockedNames.length === 1 ? '' : 's') + ' clocked this week' : 'pick a week ending to match' },
+          {href: `/app/projects/${pid}/payroll`,  label: 'Prevailing Wage', value: pw ? 'Flagged' : 'Standard', accent: pw ? GOLD : undefined, sub: pw ? pw.state + (pw.county ? ' · ' + pw.county : '') + (pw.wageDecision ? ' · ' + pw.wageDecision : '') : 'not a Davis-Bacon project' },
+          {href: `/app/projects/${pid}/subs`,  label: 'Subs on Job', value: String((ctx?.subs || []).length), sub: 'on the project roster' },
         ]} />
       )}
 
@@ -393,7 +393,7 @@ export default function PayrollPage() {
           value={totalWeekHours.toFixed(1) + ' hrs'}
           sub={`${employees.length} employee${employees.length === 1 ? '' : 's'}`}
           delay={0.02}
-        />
+         href={`/app/projects/${pid}/payroll`}/>
         <StatCard
           icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
           label="Gross Wages This Week"
@@ -401,7 +401,7 @@ export default function PayrollPage() {
           accent={GOLD}
           sub="before deductions"
           delay={0.06}
-        />
+         href={`/app/projects/${pid}/payroll`}/>
         <StatCard
           icon={<Wallet size={19} weight="duotone" color="#1db954" />}
           label="Net Wages This Week"
@@ -409,7 +409,7 @@ export default function PayrollPage() {
           accent="#1db954"
           sub="after deductions"
           delay={0.10}
-        />
+         href={`/app/projects/${pid}/payroll`}/>
       </div>
 
       {/* Messages */}

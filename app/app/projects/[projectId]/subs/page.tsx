@@ -247,21 +247,21 @@ export default function SubsPage() {
       {/* Roster intelligence — what the system already knows about this job */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Subs on Job', value: String(roster.length), sub: 'on the project roster' },
-          { label: 'Sub Commitments', value: fmt(rosterTotal), sub: 'combined sub contracts' },
-          { label: 'Compliance Issues', value: String(complianceIssues), accent: complianceIssues > 0 ? '#EF4444' : '#22C55E', sub: complianceIssues > 0 ? 'missing W-9 or lapsed COI' : rosterIds.size > 0 ? 'roster is clean' : 'directory is clean' },
-          { label: 'Directory', value: String(subs.length), sub: 'companies tenant-wide' },
-          { label: 'Awarded Packages', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded` },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(roster.length), sub: 'on the project roster' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Sub Commitments', value: fmt(rosterTotal), sub: 'combined sub contracts' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliance Issues', value: String(complianceIssues), accent: complianceIssues > 0 ? '#EF4444' : '#22C55E', sub: complianceIssues > 0 ? 'missing W-9 or lapsed COI' : rosterIds.size > 0 ? 'roster is clean' : 'directory is clean' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Directory', value: String(subs.length), sub: 'companies tenant-wide' },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded Packages', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded` },
         ]} />
       )}
 
       {/* KPIs (fallback when the context snapshot is unavailable) */}
       {!ctx && (
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:16,marginBottom:28}}>
-        <StatCard icon={<Users size={19} weight="duotone" color={GOLD} />} label="Total Subs" value={String(subs.length)} accent={GOLD} delay={0.02} />
-        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Contract Value" value={fmt(totalContract)} accent={GOLD} delay={0.06} />
-        <StatCard icon={<HandCoins size={19} weight="duotone" color="#22C55E" />} label="Total Paid" value={fmt(totalPaid)} accent="#22C55E" delay={0.10} />
-        <StatCard icon={<Heartbeat size={19} weight="duotone" color={avgScoreColor || GOLD} />} label="Avg Health Score" value={String(avgScore)} accent={avgScoreColor} delay={0.14} />
+        <StatCard icon={<Users size={19} weight="duotone" color={GOLD} />} label="Total Subs" value={String(subs.length)} accent={GOLD} delay={0.02}  href={`/app/projects/${projectId}/subs`}/>
+        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Contract Value" value={fmt(totalContract)} accent={GOLD} delay={0.06}  href={`/app/projects/${projectId}/contracts`}/>
+        <StatCard icon={<HandCoins size={19} weight="duotone" color="#22C55E" />} label="Total Paid" value={fmt(totalPaid)} accent="#22C55E" delay={0.10}  href={`/app/projects/${projectId}/subs`}/>
+        <StatCard icon={<Heartbeat size={19} weight="duotone" color={avgScoreColor || GOLD} />} label="Avg Health Score" value={String(avgScore)} accent={avgScoreColor} delay={0.14}  href={`/app/projects/${projectId}/subs`}/>
       </div>
       )}
 

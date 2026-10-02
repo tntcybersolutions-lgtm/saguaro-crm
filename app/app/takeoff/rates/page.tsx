@@ -72,9 +72,9 @@ export default function CostCatalogPage() {
 
       {/* Source breakdown */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<Sparkle size={19} weight="duotone" color={GREEN} />} label="Learned" value={String(learnedCount)} accent={GREEN} sub="computed from your jobs" delay={0.02} />
-        <StatCard icon={<PencilSimple size={19} weight="duotone" color={BLUE} />} label="Manual" value={String(manualCount)} accent={BLUE} sub="rates you set" delay={0.06} />
-        <StatCard icon={<BookOpen size={19} weight="duotone" color={GOLD} />} label="On Book" value={String(bookCount)} sub="default book rates" delay={0.10} />
+        <StatCard icon={<Sparkle size={19} weight="duotone" color={GREEN} />} label="Learned" value={String(learnedCount)} accent={GREEN} sub="computed from your jobs" delay={0.02}  href="/app/takeoff/rates"/>
+        <StatCard icon={<PencilSimple size={19} weight="duotone" color={BLUE} />} label="Manual" value={String(manualCount)} accent={BLUE} sub="rates you set" delay={0.06}  href="/app/takeoff/rates"/>
+        <StatCard icon={<BookOpen size={19} weight="duotone" color={GOLD} />} label="On Book" value={String(bookCount)} sub="default book rates" delay={0.10}  href="/app/takeoff/rates"/>
       </div>
 
       {/* Rates table */}

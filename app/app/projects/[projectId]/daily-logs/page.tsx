@@ -478,14 +478,14 @@ export default function DailyLogsPage(){
           {/* KPIs */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
             <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="Total Logs" value={String(logs.length)} accent={GOLD} sub="all field reports" delay={0.02}/>
+              label="Total Logs" value={String(logs.length)} accent={GOLD} sub="all field reports" delay={0.02} href={`/app/projects/${projectId}/daily-logs`}/>
             <StatCard icon={<CalendarBlank size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="This Month" value={String(thisMonth)} sub="logged this month" delay={0.06}/>
+              label="This Month" value={String(thisMonth)} sub="logged this month" delay={0.06} href={`/app/projects/${projectId}/daily-logs`}/>
             <StatCard icon={<HardHat size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="Avg Crew / Day" value={String(avgCrew)} accent={GOLD} sub="workers on site" delay={0.10}/>
+              label="Avg Crew / Day" value={String(avgCrew)} accent={GOLD} sub="workers on site" delay={0.10} href={`/app/projects/${projectId}/crews`}/>
             <StatCard icon={<WarningCircle size={19} weight="duotone" color={delayDays>0?RED:DIM}/>}
               label="Days w/ Delays" value={String(delayDays)} accent={delayDays>0?RED:undefined}
-              sub={delayDays>0?'flagged delays':'none flagged'} delay={0.14}/>
+              sub={delayDays>0?'flagged delays':'none flagged'} delay={0.14} href={`/app/projects/${projectId}/daily-logs`}/>
           </div>
 
           {/* What the system already knows about this job */}
@@ -494,14 +494,14 @@ export default function DailyLogsPage(){
             const gap = lastLog ? missedWorkdays(lastLog, new Date().toISOString().split('T')[0]) : 0;
             return (
               <StatStrip items={[
-                {label:'Last Log', value: lastLog ? fmtDay(lastLog) : 'None yet',
+                {href: `/app/projects/${projectId}/daily-logs`, label:'Last Log', value: lastLog ? fmtDay(lastLog) : 'None yet',
                   accent: gap>0 ? '#f87171' : (lastLog ? '#3dd68c' : undefined),
                   sub: lastLog ? (gap>0 ? `${gap} workday${gap===1?'':'s'} unlogged` : 'record is current') : 'start the record'},
-                {label:'% Complete', value:`${Number(ctx.project?.percentComplete)||0}%`, sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g,' ') : 'project status'},
-                {label:'Schedule Tasks', value:String(ctx.counts?.scheduleTasks??0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'on the schedule'},
-                {label:'Open RFIs', value:String(ctx.counts?.openRfis??0), accent:(Number(ctx.counts?.openRfis)||0)>0?'#FBBF24':undefined, sub:'awaiting answers'},
-                {label:'Open Submittals', value:String(ctx.counts?.openSubmittals??0), sub:'in review'},
-                {label:'Open Punch', value:String(ctx.counts?.openPunch??0), accent:(Number(ctx.counts?.openPunch)||0)>0?'#f87171':undefined, sub:'items to close'},
+                {href: `/app/projects/${projectId}/daily-logs`, label:'% Complete', value:`${Number(ctx.project?.percentComplete)||0}%`, sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g,' ') : 'project status'},
+                {href: `/app/projects/${projectId}/schedule`, label:'Schedule Tasks', value:String(ctx.counts?.scheduleTasks??0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'on the schedule'},
+                {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs', value:String(ctx.counts?.openRfis??0), accent:(Number(ctx.counts?.openRfis)||0)>0?'#FBBF24':undefined, sub:'awaiting answers'},
+                {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals', value:String(ctx.counts?.openSubmittals??0), sub:'in review'},
+                {href: `/app/projects/${projectId}/punch-list`, label:'Open Punch', value:String(ctx.counts?.openPunch??0), accent:(Number(ctx.counts?.openPunch)||0)>0?'#f87171':undefined, sub:'items to close'},
               ]}/>
             );
           })()}

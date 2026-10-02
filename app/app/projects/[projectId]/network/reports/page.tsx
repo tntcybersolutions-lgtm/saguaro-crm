@@ -200,10 +200,10 @@ export default function ReportsPage() {
         const latest = history.reduce<ReportHistory | null>((best, r) => (!best || new Date(r.created_at) > new Date(best.created_at)) ? r : best, null);
         return (
           <StatStrip items={[
-            { label: 'Report Types', value: String(REPORT_TYPES.length), sub: 'IP schedule to as-built' },
-            { label: 'Formats', value: String(FORMAT_OPTIONS.length), sub: FORMAT_OPTIONS.map((f) => f.toUpperCase()).join(', ') },
-            { label: 'Reports Generated', value: String(history.length), sub: history.length ? 'archived in history below' : 'none generated yet' },
-            { label: 'Last Export', value: latest ? new Date(latest.created_at).toLocaleDateString() : 'Never', sub: latest ? latest.name : 'one tap builds the first' },
+            {href: `/app/projects/${projectId}/network/reports`,  label: 'Report Types', value: String(REPORT_TYPES.length), sub: 'IP schedule to as-built' },
+            {href: `/app/projects/${projectId}/network/reports`,  label: 'Formats', value: String(FORMAT_OPTIONS.length), sub: FORMAT_OPTIONS.map((f) => f.toUpperCase()).join(', ') },
+            {href: `/app/projects/${projectId}/network/reports`,  label: 'Reports Generated', value: String(history.length), sub: history.length ? 'archived in history below' : 'none generated yet' },
+            {href: `/app/projects/${projectId}/network/reports`,  label: 'Last Export', value: latest ? new Date(latest.created_at).toLocaleDateString() : 'Never', sub: latest ? latest.name : 'one tap builds the first' },
           ]} />
         );
       })()}

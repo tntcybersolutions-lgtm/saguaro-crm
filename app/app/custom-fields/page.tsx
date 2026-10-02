@@ -1155,7 +1155,7 @@ export default function CustomFieldsPage() {
             value={stats.total}
             sub={stats.total > 0 ? 'defined on this module' : 'none defined yet'}
             delay={0.02}
-          />
+           href="/app/custom-fields"/>
           <StatCard
             icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
             label="Active"
@@ -1163,7 +1163,7 @@ export default function CustomFieldsPage() {
             accent={stats.active > 0 ? GREEN : undefined}
             sub={stats.active > 0 ? `showing on every ${activeModule} record` : 'toggle a field on to show it'}
             delay={0.06}
-          />
+           href="/app/custom-fields"/>
           <StatCard
             icon={<Asterisk size={19} weight="duotone" color={AMBER} />}
             label="Required"
@@ -1171,14 +1171,14 @@ export default function CustomFieldsPage() {
             accent={stats.required > 0 ? AMBER : undefined}
             sub="block save until filled in"
             delay={0.10}
-          />
+           href="/app/custom-fields"/>
           <StatCard
             icon={<Stack size={19} weight="duotone" color={PURPLE} />}
             label="Field Types"
             value={Object.keys(stats.byType).length}
             sub={`of ${FIELD_TYPES.length} available types in use`}
             delay={0.14}
-          />
+           href="/app/custom-fields"/>
         </div>
 
         {/* Search Bar */}

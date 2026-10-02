@@ -59,11 +59,11 @@ export default function VendorsPage() {
 
         {!loading && rows.length > 0 && (
           <StatStrip items={[
-            { label: 'Scheduled Items', value: String(summary.total), icon: <Truck size={11} weight="bold" /> },
-            { label: 'Next 30 Days', value: String(summary.upcoming), accent: summary.upcoming > 0 ? C.yellow : undefined },
-            { label: 'At Risk', value: String(summary.atRisk), accent: summary.atRisk ? C.red : C.green },
-            { label: 'Delivered', value: String(summary.delivered), accent: C.green },
-            { label: 'Committed Value', value: fmtMoneyShort(summary.value), accent: C.gold },
+            {href: '/app/command-center/vendors',  label: 'Scheduled Items', value: String(summary.total), icon: <Truck size={11} weight="bold" /> },
+            {href: '/app/command-center/vendors',  label: 'Next 30 Days', value: String(summary.upcoming), accent: summary.upcoming > 0 ? C.yellow : undefined },
+            {href: '/app/command-center/risks',  label: 'At Risk', value: String(summary.atRisk), accent: summary.atRisk ? C.red : C.green },
+            {href: '/app/command-center/vendors',  label: 'Delivered', value: String(summary.delivered), accent: C.green },
+            {href: '/app/command-center/budget',  label: 'Committed Value', value: fmtMoneyShort(summary.value), accent: C.gold },
           ]} />
         )}
 

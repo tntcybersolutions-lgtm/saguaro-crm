@@ -199,10 +199,10 @@ export default function VlanManagerPage() {
         const purposes = new Set(vlans.map((v) => v.purpose)).size;
         return (
           <StatStrip items={[
-            { label: 'VLANs', value: String(vlans.length), sub: `${purposes} purpose${purposes === 1 ? '' : 's'} in use` },
-            { label: 'Devices Assigned', value: String(devicesAssigned), sub: 'across all VLANs' },
-            { label: 'DHCP Scopes', value: String(dhcpScopes), sub: `of ${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} have ranges` },
-            { label: 'Usable IPs Planned', value: usableIps.toLocaleString(), sub: 'from subnet CIDRs' },
+            {href: `/app/projects/${projectId}/network/vlans`,  label: 'VLANs', value: String(vlans.length), sub: `${purposes} purpose${purposes === 1 ? '' : 's'} in use` },
+            {href: `/app/projects/${projectId}/network/devices`,  label: 'Devices Assigned', value: String(devicesAssigned), sub: 'across all VLANs' },
+            {href: `/app/projects/${projectId}/network/vlans`,  label: 'DHCP Scopes', value: String(dhcpScopes), sub: `of ${vlans.length} VLAN${vlans.length === 1 ? '' : 's'} have ranges` },
+            {href: `/app/projects/${projectId}/network/vlans`,  label: 'Usable IPs Planned', value: usableIps.toLocaleString(), sub: 'from subnet CIDRs' },
           ]} />
         );
       })()}

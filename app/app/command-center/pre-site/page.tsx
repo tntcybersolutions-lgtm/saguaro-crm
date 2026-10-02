@@ -77,10 +77,10 @@ export default function PreSitePage() {
         ) : (
           <>
             <StatStrip items={[
-              { label: 'Reviewed', value: `${view.reviewed}/${view.list.length}`, accent: view.pct >= 100 ? C.green : C.gold },
-              { label: 'Passed', value: String(view.passed), accent: C.green },
-              { label: 'Flagged', value: String(view.flagged), accent: view.flagged ? C.red : undefined, sub: view.flagged ? 'needs resolution' : 'clear' },
-              { label: 'Complete', value: `${view.pct}%`, accent: view.pct >= 100 ? C.green : C.gold },
+              {href: '/app/command-center/pre-site',  label: 'Reviewed', value: `${view.reviewed}/${view.list.length}`, accent: view.pct >= 100 ? C.green : C.gold },
+              {href: '/app/command-center/pre-site',  label: 'Passed', value: String(view.passed), accent: C.green },
+              {href: '/app/command-center/pre-site',  label: 'Flagged', value: String(view.flagged), accent: view.flagged ? C.red : undefined, sub: view.flagged ? 'needs resolution' : 'clear' },
+              {href: '/app/command-center/pre-site',  label: 'Complete', value: `${view.pct}%`, accent: view.pct >= 100 ? C.green : C.gold },
             ]} />
             {view.flagged > 0 && (
               <div style={{ background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.25)', borderRadius: 12, padding: '11px 14px', marginBottom: 14, fontSize: 13, color: C.text }}>

@@ -140,10 +140,10 @@ function StorageSettings() {
       {/* Live figures — connections and providers come straight from the API. */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Connections', value: String(connectors.length), sub: connectors.length ? 'linked to this workspace' : 'none yet' },
-          { label: 'Healthy', value: String(healthy), accent: connectors.length > 0 && healthy < connectors.length ? RED : (healthy > 0 ? GREEN : undefined), sub: connectors.length > 0 && healthy < connectors.length ? `${connectors.length - healthy} need attention` : 'verified reachable' },
-          { label: 'One-Click Providers', value: String(oneClick.filter((p) => p.available).length), sub: `of ${oneClick.length} sign-in providers` },
-          { label: 'Bring Your Own', value: String(advanced.length), sub: 'key-based options (S3, Egnyte)' },
+          {href: '/app/settings/storage',  label: 'Connections', value: String(connectors.length), sub: connectors.length ? 'linked to this workspace' : 'none yet' },
+          {href: '/app/settings/storage',  label: 'Healthy', value: String(healthy), accent: connectors.length > 0 && healthy < connectors.length ? RED : (healthy > 0 ? GREEN : undefined), sub: connectors.length > 0 && healthy < connectors.length ? `${connectors.length - healthy} need attention` : 'verified reachable' },
+          {href: '/app/settings/storage',  label: 'One-Click Providers', value: String(oneClick.filter((p) => p.available).length), sub: `of ${oneClick.length} sign-in providers` },
+          {href: '/app/settings/storage',  label: 'Bring Your Own', value: String(advanced.length), sub: 'key-based options (S3, Egnyte)' },
         ]} />
       )}
 

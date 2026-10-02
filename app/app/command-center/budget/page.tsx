@@ -71,13 +71,13 @@ export default function BudgetPage() {
       {/* Portfolio money strip — Original / Committed / Actual / Variance plus CO exposure, every figure Number()-coerced in the totals memo */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Portfolio Original', value: fmtMoneyShort(Number(totals.original) || 0), accent: C.gold, sub: `${(budgets as any[]).length} site budget${(budgets as any[]).length === 1 ? '' : 's'}` },
-          { label: 'Committed', value: fmtMoneyShort(Number(totals.committed) || 0), sub: 'subcontracts + POs' },
-          { label: 'Actual to Date', value: fmtMoneyShort(Number(totals.actual) || 0), sub: 'billed against budgets' },
-          { label: 'Approved COs', value: '+' + fmtMoneyShort(Number(totals.approvedCO) || 0), accent: C.green, sub: 'in revised budgets' },
-          { label: 'Pending COs', value: fmtMoneyShort(Number(totals.pendingCO) || 0), accent: totals.pendingCO ? C.gold : undefined, sub: totals.pendingCO ? 'awaiting approval' : 'none in flight' },
-          { label: 'Revised Budget', value: fmtMoneyShort(Number(totals.revised) || 0), sub: 'original + approved COs' },
-          { label: 'Forecast Variance', value: (portfolioVar >= 0 ? '+' : '') + fmtMoneyShort(portfolioVar), accent: portfolioVar < 0 ? C.red : C.green, sub: portfolioVar < 0 ? 'over budget' : 'under budget' },
+          {href: '/app/command-center/budget',  label: 'Portfolio Original', value: fmtMoneyShort(Number(totals.original) || 0), accent: C.gold, sub: `${(budgets as any[]).length} site budget${(budgets as any[]).length === 1 ? '' : 's'}` },
+          {href: '/app/command-center/budget',  label: 'Committed', value: fmtMoneyShort(Number(totals.committed) || 0), sub: 'subcontracts + POs' },
+          {href: '/app/command-center/budget',  label: 'Actual to Date', value: fmtMoneyShort(Number(totals.actual) || 0), sub: 'billed against budgets' },
+          {href: '/app/command-center/budget',  label: 'Approved COs', value: '+' + fmtMoneyShort(Number(totals.approvedCO) || 0), accent: C.green, sub: 'in revised budgets' },
+          {href: '/app/command-center/budget',  label: 'Pending COs', value: fmtMoneyShort(Number(totals.pendingCO) || 0), accent: totals.pendingCO ? C.gold : undefined, sub: totals.pendingCO ? 'awaiting approval' : 'none in flight' },
+          {href: '/app/command-center/budget',  label: 'Revised Budget', value: fmtMoneyShort(Number(totals.revised) || 0), sub: 'original + approved COs' },
+          {href: '/app/command-center/budget',  label: 'Forecast Variance', value: (portfolioVar >= 0 ? '+' : '') + fmtMoneyShort(portfolioVar), accent: portfolioVar < 0 ? C.red : C.green, sub: portfolioVar < 0 ? 'over budget' : 'under budget' },
         ]} />
       )}
 

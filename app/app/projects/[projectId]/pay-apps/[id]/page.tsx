@@ -458,11 +458,11 @@ export default function PayAppDetailPage() {
 
         {/* KPI Cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <StatCard icon={<Receipt size={19} weight="duotone" color={GOLD} />} label="Contract Sum" value={fmt(contractToDate)} delay={0.02} />
-          <StatCard icon={<CalendarBlank size={19} weight="duotone" color={GOLD} />} label="This Period" value={fmt(sovThis)} accent={GOLD} delay={0.06} />
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Total Completed" value={fmt(sovCompleted)} accent={GREEN} delay={0.10} />
-          <StatCard icon={<Coins size={19} weight="duotone" color={ORANGE} />} label="Retainage Held" value={fmt(sovRetainage)} accent={ORANGE} delay={0.14} />
-          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GREEN} />} label="Payment Due" value={fmt(sovPayment)} accent={GREEN} delay={0.18} />
+          <StatCard icon={<Receipt size={19} weight="duotone" color={GOLD} />} label="Contract Sum" value={fmt(contractToDate)} delay={0.02}  href={`/app/projects/${projectId}/pay-apps`}/>
+          <StatCard icon={<CalendarBlank size={19} weight="duotone" color={GOLD} />} label="This Period" value={fmt(sovThis)} accent={GOLD} delay={0.06}  href={`/app/projects/${projectId}/pay-apps`}/>
+          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Total Completed" value={fmt(sovCompleted)} accent={GREEN} delay={0.10}  href={`/app/projects/${projectId}/pay-apps`}/>
+          <StatCard icon={<Coins size={19} weight="duotone" color={ORANGE} />} label="Retainage Held" value={fmt(sovRetainage)} accent={ORANGE} delay={0.14}  href={`/app/projects/${projectId}/pay-apps`}/>
+          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GREEN} />} label="Payment Due" value={fmt(sovPayment)} accent={GREEN} delay={0.18}  href={`/app/projects/${projectId}/pay-apps`}/>
         </div>
 
         {/* Main grid: SOV table + sidebar */}

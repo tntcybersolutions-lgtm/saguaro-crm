@@ -206,7 +206,7 @@ export default function PayAppPage() {
       <SectionCard flat title="G702 — Application Summary" icon={<Calculator size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 20 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
           {g702Stats.map((s) => (
-            <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} accent={s.accent} />
+            <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} accent={s.accent}  href="/app/billing/payapp"/>
           ))}
         </div>
         <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '16px 20px', borderRadius: 14, background: 'linear-gradient(90deg, rgba(245,158,11,0.14), rgba(245,158,11,0.04))', border: '1px solid rgba(245,158,11,0.4)' }}>

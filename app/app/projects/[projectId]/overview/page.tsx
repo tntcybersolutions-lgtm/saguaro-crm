@@ -242,21 +242,21 @@ export default function OverviewPage(){
 
       {/* KPI stat tiles */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:14,marginBottom:22}}>
-        <StatCard delay={0.02} icon={<CurrencyDollar size={17} weight="duotone" color={CIN.goldHi}/>} label="Contract to Date" value={fmt(heroContract)} sub={approvedCOs>0?'+'+fmt(approvedCOs)+' in COs':ctxCoTotal>0?'+'+fmt(ctxCoTotal)+' in COs':'No change orders'}/>
-        <StatCard delay={0.06} icon={<Receipt size={17} weight="duotone" color={CIN.goldHi}/>} label="Billed to Date" value={fmt(heroBilled)} sub={fmtPct(heroBilled,heroContract)+' complete'}/>
-        <StatCard delay={0.10} icon={<HandCoins size={17} weight="duotone" color={CIN.goldHi}/>} label="Paid to Date" value={fmt(heroPaid)} sub={payApps.filter((pa:any)=>pa.status==='paid').length+' payment(s)'}/>
-        <StatCard delay={0.14} icon={<Coins size={17} weight="duotone" color={CIN.goldHi}/>} label="Retainage Held" value={fmt(retainageHeld)} sub={(p.retainage_percent||10)+'% retained'}/>
-        <StatCard delay={0.18} icon={<CalendarBlank size={17} weight="duotone" color={CIN.goldHi}/>} label="Days Remaining" value={daysRemaining>0?String(daysRemaining):'—'} valueColor={daysRemaining>0&&daysRemaining<14?CIN.red:undefined} sub={p.end_date?'Due '+p.end_date:'No end date set'}/>
+        <StatCard delay={0.02} icon={<CurrencyDollar size={17} weight="duotone" color={CIN.goldHi}/>} label="Contract to Date" value={fmt(heroContract)} sub={approvedCOs>0?'+'+fmt(approvedCOs)+' in COs':ctxCoTotal>0?'+'+fmt(ctxCoTotal)+' in COs':'No change orders'} href={`/app/projects/${projectId}/contracts`}/>
+        <StatCard delay={0.06} icon={<Receipt size={17} weight="duotone" color={CIN.goldHi}/>} label="Billed to Date" value={fmt(heroBilled)} sub={fmtPct(heroBilled,heroContract)+' complete'} href={`/app/projects/${projectId}/overview`}/>
+        <StatCard delay={0.10} icon={<HandCoins size={17} weight="duotone" color={CIN.goldHi}/>} label="Paid to Date" value={fmt(heroPaid)} sub={payApps.filter((pa:any)=>pa.status==='paid').length+' payment(s)'} href={`/app/projects/${projectId}/overview`}/>
+        <StatCard delay={0.14} icon={<Coins size={17} weight="duotone" color={CIN.goldHi}/>} label="Retainage Held" value={fmt(retainageHeld)} sub={(p.retainage_percent||10)+'% retained'} href={`/app/projects/${projectId}/overview`}/>
+        <StatCard delay={0.18} icon={<CalendarBlank size={17} weight="duotone" color={CIN.goldHi}/>} label="Days Remaining" value={daysRemaining>0?String(daysRemaining):'—'} valueColor={daysRemaining>0&&daysRemaining<14?CIN.red:undefined} sub={p.end_date?'Due '+p.end_date:'No end date set'} href={`/app/projects/${projectId}/overview`}/>
       </div>
 
       {/* Field pulse — open items, schedule risk, and documentation, from the context snapshot */}
       {ctx&&<StatStrip items={[
-        {icon:<Question size={11} weight="bold" color={CIN.goldHi}/>, label:'Open RFIs', value:String(openRfiCount), accent:overdueRFIs.length>0?RED:openRfiCount>0?CIN.goldHi:undefined, sub:overdueRFIs.length>0?overdueRFIs.length+' overdue — respond now':openRfiCount>0?'awaiting answers':'all answered'},
-        {icon:<Tray size={11} weight="bold" color={CIN.goldHi}/>, label:'Open Submittals', value:String(openSubmittalCount), accent:openSubmittalCount>0?CIN.goldHi:undefined, sub:openSubmittalCount>0?'in review':'nothing in court'},
-        {icon:<ListChecks size={11} weight="bold" color={CIN.goldHi}/>, label:'Open Punch', value:String(openPunchCount), accent:openPunchCount>0?CIN.goldHi:undefined, sub:punchSummary.complete>0?punchSummary.complete+' closed to date':openPunchCount>0?'items to close':'list is clear'},
-        {icon:<Warning size={11} weight="bold" color={CIN.goldHi}/>, label:'Critical Path', value:String(criticalTasks), accent:criticalTasks>0?RED:undefined, sub:criticalTasks>0?'tasks can slip the finish':'no critical tasks open'},
-        {icon:<NotePencil size={11} weight="bold" color={CIN.goldHi}/>, label:'Last Daily Log', value:logAgeDays==null?'—':logAgeDays===0?'Today':logAgeDays+'d ago', accent:logAgeDays!=null&&logAgeDays>3?RED:undefined, sub:lastLogDate?fmtShortDate(lastLogDate):'no field logs yet'},
-        {icon:<CurrencyDollar size={11} weight="bold" color={CIN.goldHi}/>, label:'Money Docs', value:String(moneyDocCount), sub:invoiceCount+' inv · '+billCount+' bills · '+poCount+' POs'},
+        {href: `/app/projects/${projectId}/rfis`, icon:<Question size={11} weight="bold" color={CIN.goldHi}/>, label:'Open RFIs', value:String(openRfiCount), accent:overdueRFIs.length>0?RED:openRfiCount>0?CIN.goldHi:undefined, sub:overdueRFIs.length>0?overdueRFIs.length+' overdue — respond now':openRfiCount>0?'awaiting answers':'all answered'},
+        {href: `/app/projects/${projectId}/submittals`, icon:<Tray size={11} weight="bold" color={CIN.goldHi}/>, label:'Open Submittals', value:String(openSubmittalCount), accent:openSubmittalCount>0?CIN.goldHi:undefined, sub:openSubmittalCount>0?'in review':'nothing in court'},
+        {href: `/app/projects/${projectId}/punch-list`, icon:<ListChecks size={11} weight="bold" color={CIN.goldHi}/>, label:'Open Punch', value:String(openPunchCount), accent:openPunchCount>0?CIN.goldHi:undefined, sub:punchSummary.complete>0?punchSummary.complete+' closed to date':openPunchCount>0?'items to close':'list is clear'},
+        {href: `/app/projects/${projectId}/schedule`, icon:<Warning size={11} weight="bold" color={CIN.goldHi}/>, label:'Critical Path', value:String(criticalTasks), accent:criticalTasks>0?RED:undefined, sub:criticalTasks>0?'tasks can slip the finish':'no critical tasks open'},
+        {href: `/app/projects/${projectId}/daily-logs`, icon:<NotePencil size={11} weight="bold" color={CIN.goldHi}/>, label:'Last Daily Log', value:logAgeDays==null?'—':logAgeDays===0?'Today':logAgeDays+'d ago', accent:logAgeDays!=null&&logAgeDays>3?RED:undefined, sub:lastLogDate?fmtShortDate(lastLogDate):'no field logs yet'},
+        {href: `/app/projects/${projectId}/overview`, icon:<CurrencyDollar size={11} weight="bold" color={CIN.goldHi}/>, label:'Money Docs', value:String(moneyDocCount), sub:invoiceCount+' inv · '+billCount+' bills · '+poCount+' POs'},
       ]}/>}
 
       {overdueRFIs.length>0&&<div style={{background:'rgba(239,68,68,.07)',border:'1px solid rgba(239,68,68,.28)',borderRadius:14,padding:'14px 18px',marginBottom:18,display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>

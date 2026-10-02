@@ -400,22 +400,22 @@ export default function DocumentsPage() {
           icon={<Receipt size={19} weight="duotone" color={GOLD} />}
           label="Pay Applications" value={statVal(loadingPayApps, errorPayApps, payApps.length)}
           sub="AIA G702 / G703" accent={GOLD} delay={0.02}
-        />
+         href="/app/documents"/>
         <StatCard
           icon={<Shield size={19} weight="duotone" color={GOLD} />}
           label="Lien Waivers" value={statVal(loadingLienWaivers, errorLienWaivers, lienWaivers.length)}
           sub="signed & pending" delay={0.06}
-        />
+         href="/app/documents"/>
         <StatCard
           icon={<NotePencil size={19} weight="duotone" color={GOLD} />}
           label="Certified Payroll" value={statVal(loadingPayroll, errorPayroll, payroll.length)}
           sub="WH-347 filings" delay={0.10}
-        />
+         href="/app/documents"/>
         <StatCard
           icon={<Clipboard size={19} weight="duotone" color={GOLD} />}
           label="AIA Forms" value={String(BOND_CARDS.length)}
           sub="bond & closeout templates" delay={0.14}
-        />
+         href="/app/documents"/>
       </div>
 
       {/* Tab bar + search */}

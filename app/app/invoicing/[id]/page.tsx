@@ -454,10 +454,10 @@ export default function InvoiceDetailPage() {
 
       {/* Totals strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Amount" value={money(inv.amount)} sub="Pre-tax" delay={0.02} />
-        <StatCard icon={<Percent size={19} weight="duotone" color={GOLD} />} label="Tax" value={money(inv.tax)} delay={0.06} />
-        <StatCard icon={<Coins size={19} weight="duotone" color={GOLD} />} label="Total" value={money(computedTotal)} accent={GOLD} sub="Amount + tax" delay={0.10} />
-        <StatCard icon={<CalendarBlank size={19} weight="duotone" color={overdue ? colors.red : GOLD} />} label="Due Date" value={dateOnlyStr(inv.due_date)} accent={overdue ? colors.red : undefined} sub={overdue ? 'Past due' : undefined} delay={0.14} />
+        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Amount" value={money(inv.amount)} sub="Pre-tax" delay={0.02}  href="/app/invoicing"/>
+        <StatCard icon={<Percent size={19} weight="duotone" color={GOLD} />} label="Tax" value={money(inv.tax)} delay={0.06}  href="/app/invoicing"/>
+        <StatCard icon={<Coins size={19} weight="duotone" color={GOLD} />} label="Total" value={money(computedTotal)} accent={GOLD} sub="Amount + tax" delay={0.10}  href="/app/invoicing"/>
+        <StatCard icon={<CalendarBlank size={19} weight="duotone" color={overdue ? colors.red : GOLD} />} label="Due Date" value={dateOnlyStr(inv.due_date)} accent={overdue ? colors.red : undefined} sub={overdue ? 'Past due' : undefined} delay={0.14}  href="/app/invoicing"/>
       </div>
 
       {/* Line item / details */}

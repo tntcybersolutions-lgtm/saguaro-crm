@@ -438,8 +438,8 @@ export default function IntelligencePage() {
   const coverage = (s: { n: number }) => s.n === rows.length ? `across ${rows.length} project${rows.length === 1 ? '' : 's'}` : `${s.n} of ${rows.length} reporting`;
   const moneyStat = (label: string, s: { total: number; n: number }, sub?: string) =>
     s.n > 0
-      ? { label, value: fmtK(s.total), sub: sub ?? coverage(s), accent: GOLD }
-      : { label, value: '—', sub: 'no data yet' };
+      ? { label, href: '/app/intelligence', value: fmtK(s.total), sub: sub ?? coverage(s), accent: GOLD }
+      : { label, href: '/app/intelligence', value: '—', sub: 'no data yet' };
 
   if (loading) {
     return (

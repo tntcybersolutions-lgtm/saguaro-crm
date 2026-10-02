@@ -264,15 +264,15 @@ export default function SettingsPage() {
       {/* Workspace snapshot — what the system knows about this account */}
       {(me || sub) && (
         <StatStrip items={[
-          { label: 'Plan', value: sub?.plan_name || 'Free Trial', accent: isPastDue ? RED : undefined, sub: sub?.status === 'active' ? 'subscription active' : isTrialing ? 'trial in progress' : isPastDue ? 'payment failed — fix in Billing' : 'manage in Billing' },
+          {href: '/app/settings',  label: 'Plan', value: sub?.plan_name || 'Free Trial', accent: isPastDue ? RED : undefined, sub: sub?.status === 'active' ? 'subscription active' : isTrialing ? 'trial in progress' : isPastDue ? 'payment failed — fix in Billing' : 'manage in Billing' },
           ...(isTrialing && trialDays !== null
-            ? [{ label: 'Trial', value: `${trialDays}d left`, accent: trialDays <= 5 ? GOLD : undefined, sub: 'upgrade any time in Billing' }]
+            ? [{href: '/app/settings',  label: 'Trial', value: `${trialDays}d left`, accent: trialDays <= 5 ? GOLD : undefined, sub: 'upgrade any time in Billing' }]
             : sub?.current_period_end
-              ? [{ label: 'Renews', value: new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), sub: 'next billing date' }]
+              ? [{href: '/app/settings',  label: 'Renews', value: new Date(sub.current_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), sub: 'next billing date' }]
               : []),
-          { label: 'Branding', value: (branding.logo_url || branding.company_name) ? 'Custom' : 'Default', accent: (branding.logo_url || branding.company_name) ? GREEN : undefined, sub: branding.company_name || 'set a name + logo below' },
-          { label: 'Brand Color', value: branding.primary_color || 'Saguaro Gold', sub: branding.primary_color ? 'white-label accent' : 'default accent' },
-          { label: 'Signed In As', value: me?.name || '—', sub: me?.email || undefined },
+          {href: '/app/settings',  label: 'Branding', value: (branding.logo_url || branding.company_name) ? 'Custom' : 'Default', accent: (branding.logo_url || branding.company_name) ? GREEN : undefined, sub: branding.company_name || 'set a name + logo below' },
+          {href: '/app/settings',  label: 'Brand Color', value: branding.primary_color || 'Saguaro Gold', sub: branding.primary_color ? 'white-label accent' : 'default accent' },
+          {href: '/app/settings',  label: 'Signed In As', value: me?.name || '—', sub: me?.email || undefined },
         ]} />
       )}
 

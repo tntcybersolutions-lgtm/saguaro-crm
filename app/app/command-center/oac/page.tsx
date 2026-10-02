@@ -87,10 +87,10 @@ export default function OacPage() {
       {/* Meeting pulse — logged meetings and the accountability they created */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Meetings', value: String(summary.meetings), sub: 'logged across sites' },
-          { label: 'Open Actions', value: String(summary.open), accent: summary.open ? C.gold : C.green, sub: summary.open ? 'awaiting owners' : 'all closed out' },
-          { label: 'Overdue Actions', value: String(summary.overdue), accent: summary.overdue ? C.red : C.green, sub: summary.overdue ? 'past their due date' : 'none late' },
-          { label: 'Sites Covered', value: String(summary.sites), sub: 'with logged meetings' },
+          {href: '/app/command-center/oac',  label: 'Meetings', value: String(summary.meetings), sub: 'logged across sites' },
+          {href: '/app/command-center/oac',  label: 'Open Actions', value: String(summary.open), accent: summary.open ? C.gold : C.green, sub: summary.open ? 'awaiting owners' : 'all closed out' },
+          {href: '/app/command-center/oac',  label: 'Overdue Actions', value: String(summary.overdue), accent: summary.overdue ? C.red : C.green, sub: summary.overdue ? 'past their due date' : 'none late' },
+          {href: '/app/command-center/oac',  label: 'Sites Covered', value: String(summary.sites), sub: 'with logged meetings' },
         ]} />
       )}
 

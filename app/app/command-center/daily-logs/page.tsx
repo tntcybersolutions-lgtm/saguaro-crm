@@ -46,10 +46,10 @@ export default function DailyLogsPage() {
       {/* Reporting pulse — today's compliance across active sites */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Reported Today', value: String(compliance.reported), accent: compliance.total > 0 && compliance.reported === compliance.total ? C.green : undefined, sub: `of ${compliance.total} active site${compliance.total === 1 ? '' : 's'}` },
-          { label: 'Awaiting', value: String(compliance.total - compliance.reported), accent: compliance.total - compliance.reported ? C.red : C.green, sub: compliance.total - compliance.reported ? 'no report yet' : 'all sites in' },
-          { label: 'Late (after 4 PM)', value: String(compliance.late), accent: compliance.late ? C.yellow : C.green, sub: 'site local time' },
-          { label: 'Reports (21d)', value: String((logs as any[]).length), sub: 'across all sites' },
+          {href: '/app/command-center/daily-logs',  label: 'Reported Today', value: String(compliance.reported), accent: compliance.total > 0 && compliance.reported === compliance.total ? C.green : undefined, sub: `of ${compliance.total} active site${compliance.total === 1 ? '' : 's'}` },
+          {href: '/app/command-center/daily-logs',  label: 'Awaiting', value: String(compliance.total - compliance.reported), accent: compliance.total - compliance.reported ? C.red : C.green, sub: compliance.total - compliance.reported ? 'no report yet' : 'all sites in' },
+          {href: '/app/command-center/daily-logs',  label: 'Late (after 4 PM)', value: String(compliance.late), accent: compliance.late ? C.yellow : C.green, sub: 'site local time' },
+          {href: '/app/command-center/daily-logs',  label: 'Reports (21d)', value: String((logs as any[]).length), sub: 'across all sites' },
         ]} />
       )}
 

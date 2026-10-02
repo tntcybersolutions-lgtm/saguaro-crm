@@ -238,12 +238,12 @@ export default function SpecsPage() {
       {/* Project intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Project', value: ctx.project?.projectNumber || ctx.project?.name || '—', sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g, ' ') : 'active' },
-          { label: 'Divisions Covered', value: `${coveredDivisions} of ${DIV_CODES.length}`, sub: 'CSI MasterFormat' },
-          { label: 'Bid Packages', value: String(pkgs.length), sub: pkgDivisions.size > 0 ? `across ${pkgDivisions.size} division${pkgDivisions.size === 1 ? '' : 's'}` : 'none scoped yet' },
-          { label: 'Spec Gaps', value: String(uncoveredPkgDivs.length), accent: uncoveredPkgDivs.length > 0 ? T.gold : T.green, sub: uncoveredPkgDivs.length > 0 ? `Div ${uncoveredPkgDivs.slice(0, 3).join(', ')}${uncoveredPkgDivs.length > 3 ? '…' : ''} unspecified` : 'every package covered' },
-          { label: 'Open Submittals', value: String(openSubmittals), accent: openSubmittals > 0 ? T.gold : undefined, sub: 'reviewed against the book' },
-          { label: 'Subs on the Job', value: String((ctx.subs || []).length), sub: 'bound by these sections' },
+          {href: `/app/projects/${projectId}/specs`,  label: 'Project', value: ctx.project?.projectNumber || ctx.project?.name || '—', sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g, ' ') : 'active' },
+          {href: `/app/projects/${projectId}/specs`,  label: 'Divisions Covered', value: `${coveredDivisions} of ${DIV_CODES.length}`, sub: 'CSI MasterFormat' },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Bid Packages', value: String(pkgs.length), sub: pkgDivisions.size > 0 ? `across ${pkgDivisions.size} division${pkgDivisions.size === 1 ? '' : 's'}` : 'none scoped yet' },
+          {href: `/app/projects/${projectId}/specs`,  label: 'Spec Gaps', value: String(uncoveredPkgDivs.length), accent: uncoveredPkgDivs.length > 0 ? T.gold : T.green, sub: uncoveredPkgDivs.length > 0 ? `Div ${uncoveredPkgDivs.slice(0, 3).join(', ')}${uncoveredPkgDivs.length > 3 ? '…' : ''} unspecified` : 'every package covered' },
+          {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(openSubmittals), accent: openSubmittals > 0 ? T.gold : undefined, sub: 'reviewed against the book' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx.subs || []).length), sub: 'bound by these sections' },
         ]} />
       )}
 
@@ -253,22 +253,22 @@ export default function SpecsPage() {
           icon={<FileText size={19} weight="duotone" color={T.gold} />}
           label="Total Sections" value={String(specs.length)} accent={T.gold}
           sub={coveredDivisions > 0 ? `across ${coveredDivisions} division${coveredDivisions === 1 ? '' : 's'}` : 'across all divisions'} delay={0.02}
-        />
+         href={`/app/projects/${projectId}/specs`}/>
         <StatCard
           icon={<NotePencil size={19} weight="duotone" color={T.gold} />}
           label="Draft" value={String(draftCount)}
           sub="not yet issued" delay={0.06}
-        />
+         href={`/app/projects/${projectId}/specs`}/>
         <StatCard
           icon={<Export size={19} weight="duotone" color={T.gold} />}
           label="Issued" value={String(issuedCount)} accent={T.gold}
           sub="out for review" delay={0.10}
-        />
+         href={`/app/projects/${projectId}/specs`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={T.green} />}
           label="Approved" value={String(approvedCount)} accent={T.green}
           sub="finalized" delay={0.14}
-        />
+         href={`/app/projects/${projectId}/specs`}/>
       </div>
 
       {successMsg && (

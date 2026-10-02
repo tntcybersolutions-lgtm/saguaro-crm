@@ -642,11 +642,11 @@ export default function TmTicketsPage() {
           </div>
         ) : (
           <StatStrip items={[
-            { label: 'Total Value', value: fmtUSD(totalValue), accent: GOLD, sub: `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, icon: <CurrencyCircleDollar size={12} weight="bold" color={TM_ACCENT} /> },
-            { label: 'Approved', value: fmtUSD(approvedValue), accent: approvedValue > 0 ? GREEN : undefined, sub: `${statusCounts['approved'] || 0} approved`, icon: <CheckCircle size={12} weight="bold" color={GREEN} /> },
-            { label: 'Awaiting Approval', value: fmtUSD(awaitingValue), accent: awaitingCount > 0 ? GOLD_HI : undefined, sub: awaitingCount > 0 ? `${awaitingCount} submitted` : 'none submitted', icon: <Clock size={12} weight="bold" color={GOLD_HI} /> },
-            { label: 'Drafts', value: String(draftCount), sub: draftCount > 0 ? 'not yet submitted' : 'all sent', icon: <NotePencil size={12} weight="bold" color={DIM} /> },
-            { label: 'Billed', value: fmtUSD(billedValue), accent: billedValue > 0 ? STEEL : undefined, sub: `${statusCounts['billed'] || 0} on invoices`, icon: <Receipt size={12} weight="bold" color={STEEL} /> },
+            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Total Value', value: fmtUSD(totalValue), accent: GOLD, sub: `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}`, icon: <CurrencyCircleDollar size={12} weight="bold" color={TM_ACCENT} /> },
+            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Approved', value: fmtUSD(approvedValue), accent: approvedValue > 0 ? GREEN : undefined, sub: `${statusCounts['approved'] || 0} approved`, icon: <CheckCircle size={12} weight="bold" color={GREEN} /> },
+            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Awaiting Approval', value: fmtUSD(awaitingValue), accent: awaitingCount > 0 ? GOLD_HI : undefined, sub: awaitingCount > 0 ? `${awaitingCount} submitted` : 'none submitted', icon: <Clock size={12} weight="bold" color={GOLD_HI} /> },
+            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Drafts', value: String(draftCount), sub: draftCount > 0 ? 'not yet submitted' : 'all sent', icon: <NotePencil size={12} weight="bold" color={DIM} /> },
+            {href: `/app/projects/${projectId}/tm-tickets`,  label: 'Billed', value: fmtUSD(billedValue), accent: billedValue > 0 ? STEEL : undefined, sub: `${statusCounts['billed'] || 0} on invoices`, icon: <Receipt size={12} weight="bold" color={STEEL} /> },
           ]} />
         )}
 

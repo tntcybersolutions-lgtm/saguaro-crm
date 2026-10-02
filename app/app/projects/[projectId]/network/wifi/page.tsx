@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { WifiHigh, Broadcast, UsersThree, MapTrifold, Plus, ArrowUpRight } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
+
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
@@ -231,17 +232,17 @@ export default function WifiManagerPage() {
           icon={<WifiHigh size={19} weight="duotone" color={GOLD} />}
           label="WiFi Networks" value={String(networks.length)} accent={GOLD}
           sub={networks.length === 1 ? '1 SSID configured' : `${networks.length} SSIDs configured`}
-        />
+         href={`/app/projects/${projectId}/network/wifi`}/>
         <StatCard
           icon={<Broadcast size={19} weight="duotone" color={BLUE} />}
           label="Access Points" value={String(aps.length)} accent={BLUE}
           sub={`${floorApCount} on floor ${selectedFloor}`}
-        />
+         href={`/app/projects/${projectId}/network/wifi`}/>
         <StatCard
           icon={<UsersThree size={19} weight="duotone" color={GREEN} />}
           label="Connected Clients" value={String(totalClients)} accent={totalClients > 0 ? GREEN : undefined}
           sub="across all SSIDs"
-        />
+         href={`/app/projects/${projectId}/network/wifi`}/>
       </div>
 
       {/* Add SSID Form */}

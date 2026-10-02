@@ -188,11 +188,11 @@ export default function CableSchedulePage() {
 
       {/* Summary Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<ListChecks size={19} weight="duotone" color={BLUE} />} label="Total Runs" value={String(totalRuns)} accent={BLUE} sub="cable runs" delay={0.02} />
-        <StatCard icon={<Gauge size={19} weight="duotone" color={GREEN} />} label="Tested" value={`${testedCount}/${totalRuns}`} accent={GREEN} sub="tested" delay={0.06} />
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passCount)} accent={GREEN} sub="passed tests" delay={0.10} />
-        <StatCard icon={<XCircle size={19} weight="duotone" color={failCount > 0 ? RED : GREEN} />} label="Failed" value={String(failCount)} accent={failCount > 0 ? RED : GREEN} sub="failed tests" delay={0.14} />
-        <StatCard icon={<Percent size={19} weight="duotone" color={passRate >= 95 ? GREEN : passRate >= 80 ? GOLD : RED} />} label="Pass Rate" value={`${passRate}%`} accent={passRate >= 95 ? GREEN : passRate >= 80 ? GOLD : RED} sub="of tested" delay={0.18} />
+        <StatCard icon={<ListChecks size={19} weight="duotone" color={BLUE} />} label="Total Runs" value={String(totalRuns)} accent={BLUE} sub="cable runs" delay={0.02}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<Gauge size={19} weight="duotone" color={GREEN} />} label="Tested" value={`${testedCount}/${totalRuns}`} accent={GREEN} sub="tested" delay={0.06}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passCount)} accent={GREEN} sub="passed tests" delay={0.10}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<XCircle size={19} weight="duotone" color={failCount > 0 ? RED : GREEN} />} label="Failed" value={String(failCount)} accent={failCount > 0 ? RED : GREEN} sub="failed tests" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<Percent size={19} weight="duotone" color={passRate >= 95 ? GREEN : passRate >= 80 ? GOLD : RED} />} label="Pass Rate" value={`${passRate}%`} accent={passRate >= 95 ? GREEN : passRate >= 80 ? GOLD : RED} sub="of tested" delay={0.18}  href={`/app/projects/${projectId}/network/cables`}/>
       </div>
 
       {/* Add Form */}

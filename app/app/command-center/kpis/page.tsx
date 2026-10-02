@@ -147,14 +147,14 @@ export default function KpiDashboardPage() {
 
       {/* Headline KPIs — dense strip, zero dead space */}
       <StatStrip items={[
-        { label: 'Portfolio Value', value: fmtMoneyShort(k.portfolioValue), sub: `${k.sites} active site${k.sites === 1 ? '' : 's'}` },
-        { label: 'Avg Complete', value: k.avgComplete == null ? '—' : `${k.avgComplete}%`, sub: 'across reporting sites' },
-        { label: 'Sites Needing Attn', value: String(k.sitesAttention), accent: k.sitesAttention > 0 ? C.yellow : C.green, sub: `of ${k.sites}` },
-        { label: 'Long-Lead At Risk', value: String(k.llAtRisk), accent: k.llAtRisk > 0 ? C.red : C.green, sub: `of ${k.llTotal} tracked` },
-        { label: 'Critical Risks', value: String(k.openCritical), accent: k.openCritical > 0 ? C.red : C.green, sub: `${k.openRisks} open total` },
-        { label: 'Escalations', value: String(k.openEsc), accent: k.openEsc > 0 ? C.red : C.green, sub: 'open now' },
-        { label: 'Milestones Slipping', value: String(k.slipping), accent: k.slipping > 0 ? C.yellow : C.green, sub: `of ${k.msTotal}` },
-        { label: 'Overall Score', value: k.overall == null ? '—' : String(k.overall), accent: k.overall == null ? undefined : k.overall >= 80 ? C.green : k.overall >= 55 ? C.yellow : C.red, sub: 'site-health avg / 100' },
+        {href: '/app/command-center/kpis',  label: 'Portfolio Value', value: fmtMoneyShort(k.portfolioValue), sub: `${k.sites} active site${k.sites === 1 ? '' : 's'}` },
+        {href: '/app/command-center/kpis',  label: 'Avg Complete', value: k.avgComplete == null ? '—' : `${k.avgComplete}%`, sub: 'across reporting sites' },
+        {href: '/app/command-center/kpis',  label: 'Sites Needing Attn', value: String(k.sitesAttention), accent: k.sitesAttention > 0 ? C.yellow : C.green, sub: `of ${k.sites}` },
+        {href: '/app/command-center/long-lead',  label: 'Long-Lead At Risk', value: String(k.llAtRisk), accent: k.llAtRisk > 0 ? C.red : C.green, sub: `of ${k.llTotal} tracked` },
+        {href: '/app/command-center/risks',  label: 'Critical Risks', value: String(k.openCritical), accent: k.openCritical > 0 ? C.red : C.green, sub: `${k.openRisks} open total` },
+        {href: '/app/command-center/escalations',  label: 'Escalations', value: String(k.openEsc), accent: k.openEsc > 0 ? C.red : C.green, sub: 'open now' },
+        {href: '/app/command-center/milestones',  label: 'Milestones Slipping', value: String(k.slipping), accent: k.slipping > 0 ? C.yellow : C.green, sub: `of ${k.msTotal}` },
+        {href: '/app/command-center/kpis',  label: 'Overall Score', value: k.overall == null ? '—' : String(k.overall), accent: k.overall == null ? undefined : k.overall >= 80 ? C.green : k.overall >= 55 ? C.yellow : C.red, sub: 'site-health avg / 100' },
       ]} />
 
       {/* Portfolio scorecard bars */}

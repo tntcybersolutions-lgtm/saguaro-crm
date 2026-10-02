@@ -269,34 +269,34 @@ export default function PortalsPage() {
 
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard label="Active Client Portals" value={loading ? '—' : String(clientActive)} sub="clients with access" accent={GOLD} icon={<House size={19} weight="duotone" color={GOLD} />} />
-        <StatCard label="Active Sub Portals" value={loading ? '—' : String(subActive)} sub="subcontractors with access" accent={GOLD} icon={<HardHat size={19} weight="duotone" color={GOLD} />} />
-        <StatCard label="Total Active Links" value={loading ? '—' : String(clientActive + subActive)} sub="secure portal links live" accent={GREEN} icon={<ShareNetwork size={19} weight="duotone" color={GREEN} />} />
+        <StatCard label="Active Client Portals" value={loading ? '—' : String(clientActive)} sub="clients with access" accent={GOLD} icon={<House size={19} weight="duotone" color={GOLD} />}  href="/app/portals"/>
+        <StatCard label="Active Sub Portals" value={loading ? '—' : String(subActive)} sub="subcontractors with access" accent={GOLD} icon={<HardHat size={19} weight="duotone" color={GOLD} />}  href="/app/portals"/>
+        <StatCard label="Total Active Links" value={loading ? '—' : String(clientActive + subActive)} sub="secure portal links live" accent={GREEN} icon={<ShareNetwork size={19} weight="duotone" color={GREEN} />}  href="/app/portals"/>
       </div>
 
       {/* Portal intelligence strip — coverage, engagement, and expiry pressure */}
       {!loading && totalLinks > 0 && (
         <StatStrip items={[
-          {
+          {href: '/app/portals', 
             label: 'Projects Covered', value: `${coveredProjects} of ${projects.length}`,
             sub: coveredProjects < projects.length ? `${projects.length - coveredProjects} project${projects.length - coveredProjects === 1 ? '' : 's'} without portal access` : 'every project has a live portal',
             accent: projects.length > 0 && coveredProjects < projects.length ? GOLD : GREEN,
           },
-          {
+          {href: '/app/portals', 
             label: 'Never Opened', value: String(neverOpened),
             accent: neverOpened > 0 ? AMBER : GREEN,
             sub: neverOpened > 0 ? 'links sent but never visited — resend the invite' : 'every active link has been visited',
           },
-          {
+          {href: '/app/portals', 
             label: 'Expiring in 30 Days', value: String(expiring30),
             accent: expiring30 > 0 ? RED : GREEN,
             sub: expiring30 > 0 ? 'client links auto-expire — reinvite to extend' : 'no client links expiring soon',
           },
-          {
+          {href: '/app/portals', 
             label: 'Last Portal Visit', value: lastVisitTs > 0 ? fmt(new Date(lastVisitTs).toISOString()) : '—',
             sub: 'most recent client or sub activity',
           },
-          {
+          {href: '/app/portals', 
             label: 'Links Issued', value: String(totalLinks),
             sub: `${clientSessions.length} client · ${subSessions.length} sub`,
           },

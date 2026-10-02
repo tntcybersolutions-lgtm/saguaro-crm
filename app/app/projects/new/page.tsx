@@ -380,10 +380,10 @@ export default function NewProjectPage() {
       {/* Portfolio snapshot — what the system already knows before you type */}
       {pf && (
         <StatStrip items={[
-          {label:'Project Number', value: projectNumber || `${year}-001`, sub: pf.total>0 ? `next in your ${year} sequence` : `first in the ${year} sequence`},
-          {label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? '#3dd68c' : undefined, sub: contractType},
-          {label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf.retMode && auto.ret ? 'your portfolio standard' : 'default — editable'},
-          {label:'Jurisdiction', value: stateJurisdiction || '—', sub:'lien waiver + wage rules'},
+          {href: '/app/projects/new', label:'Project Number', value: projectNumber || `${year}-001`, sub: pf.total>0 ? `next in your ${year} sequence` : `first in the ${year} sequence`},
+          {href: '/app/projects/new', label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? '#3dd68c' : undefined, sub: contractType},
+          {href: '/app/projects/new', label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf.retMode && auto.ret ? 'your portfolio standard' : 'default — editable'},
+          {href: '/app/projects/new', label:'Jurisdiction', value: stateJurisdiction || '—', sub:'lien waiver + wage rules'},
         ]}/>
       )}
 

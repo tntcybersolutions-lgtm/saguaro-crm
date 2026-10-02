@@ -158,12 +158,12 @@ export default function AutopilotPage() {
       {/* What Autopilot is watching — the live surface area of this project */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), accent: Number(counts?.openRfis) ? GOLD : undefined, sub: 'checked for overdue responses' },
-          { label: 'Pending COs', value: String(pendingCos), accent: pendingCos ? AMBER : undefined, sub: 'flagged when stale > 14 days' },
-          { label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'insurance + waivers tracked' },
-          { label: 'Invoices', value: String(Number(counts?.invoices) || 0), sub: 'due dates watched' },
-          { label: 'Open Submittals', value: String(Number(counts?.openSubmittals) || 0), sub: 'in review' },
-          { label: 'Last Daily Log', value: fmtD(ctx?.recent?.lastDailyLogDate), sub: ctx?.recent?.lastDailyLogDate ? 'field reporting active' : 'no logs yet' },
+          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), accent: Number(counts?.openRfis) ? GOLD : undefined, sub: 'checked for overdue responses' },
+          {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(pendingCos), accent: pendingCos ? AMBER : undefined, sub: 'flagged when stale > 14 days' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'insurance + waivers tracked' },
+          {href: `/app/projects/${projectId}/invoices`,  label: 'Invoices', value: String(Number(counts?.invoices) || 0), sub: 'due dates watched' },
+          {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(Number(counts?.openSubmittals) || 0), sub: 'in review' },
+          {href: `/app/projects/${projectId}/daily-logs`,  label: 'Last Daily Log', value: fmtD(ctx?.recent?.lastDailyLogDate), sub: ctx?.recent?.lastDailyLogDate ? 'field reporting active' : 'no logs yet' },
         ]} />
       )}
 
@@ -176,7 +176,7 @@ export default function AutopilotPage() {
           accent={activeAlerts.length ? GOLD : undefined}
           sub={activeAlerts.length === 1 ? '1 open on this project' : `${activeAlerts.length} open on this project`}
           delay={0.02}
-        />
+         href={`/app/projects/${projectId}/autopilot`}/>
         <StatCard
           icon={<WarningCircle size={19} weight="duotone" color={RED} />}
           label="Critical"
@@ -184,7 +184,7 @@ export default function AutopilotPage() {
           accent={criticalCount ? RED : undefined}
           sub="need immediate action"
           delay={0.06}
-        />
+         href={`/app/projects/${projectId}/autopilot`}/>
         <StatCard
           icon={<Warning size={19} weight="duotone" color={AMBER} />}
           label="High"
@@ -192,7 +192,7 @@ export default function AutopilotPage() {
           accent={highCount ? AMBER : undefined}
           sub="review soon"
           delay={0.10}
-        />
+         href={`/app/projects/${projectId}/autopilot`}/>
         <StatCard
           icon={isClear
             ? <CheckCircle size={19} weight="duotone" color={GREEN} />
@@ -202,7 +202,7 @@ export default function AutopilotPage() {
           accent={isClear ? GREEN : AMBER}
           sub={isClear ? 'All clear' : 'Requires review'}
           delay={0.14}
-        />
+         href={`/app/projects/${projectId}/autopilot`}/>
       </div>
 
       {toast && (

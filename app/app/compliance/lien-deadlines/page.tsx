@@ -266,22 +266,22 @@ export default function LienDeadlinePage() {
           label="Overdue" value={String(overdueCount)} accent={RED}
           sub={overdueCount === 1 ? '1 past due' : `${overdueCount} past due`}
           delay={0.02}
-        />
+         href="/app/compliance/lien-deadlines"/>
         <StatCard
           icon={<Clock size={19} weight="duotone" color={GOLD} />}
           label="Due in 7 Days" value={String(due7Count)} accent={GOLD}
           sub="needs action" delay={0.06}
-        />
+         href="/app/compliance/lien-deadlines"/>
         <StatCard
           icon={<CalendarCheck size={19} weight="duotone" color={BLUE} />}
           label="Due in 30 Days" value={String(due30Count)} accent={BLUE}
           sub="upcoming" delay={0.10}
-        />
+         href="/app/compliance/lien-deadlines"/>
         <StatCard
           icon={<CalendarDots size={19} weight="duotone" color={GRAY} />}
           label="Future" value={String(futureCount)} accent={GRAY}
           sub="beyond 30 days" delay={0.14}
-        />
+         href="/app/compliance/lien-deadlines"/>
       </div>
 
       {/* Add Deadline Form */}

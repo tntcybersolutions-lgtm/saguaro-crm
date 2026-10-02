@@ -207,12 +207,12 @@ export default function InsurancePage() {
         {/* Sub-coverage strip — who on the roster is covered, lapsing, or bare */}
         {ctx && subs.length>0 && (
           <StatStrip items={[
-            {label:'Subs on Roster', value:String(subs.length), icon:<Users size={12} color={GOLD} />, sub:'active on this project'},
-            {label:'COI on File', value:`${coveredSubs} of ${subs.length}`, accent:coveredSubs===subs.length?'#3dd68c':'#FBBF24', sub:'subs holding a current certificate'},
-            {label:'No COI', value:String(missingSubs.length), accent:missingSubs.length>0?'#ff7070':'#3dd68c', sub:missingSubs.length>0?'uninsured exposure on site':'every sub is covered'},
-            {label:'Expiring ≤30d', value:String(expiringCount), accent:expiringCount>0?'#f59e0b':undefined, sub:'renewal window open'},
-            {label:'Expired', value:String(expiredCount), accent:expiredCount>0?'#ff7070':undefined, sub:'past expiry — request renewal'},
-            {label:'Coverage Tracked', value:fmt(totalCoverage), sub:`across ${totalCount} certificate${totalCount===1?'':'s'}`},
+            {href: `/app/projects/${projectId}/subs`, label:'Subs on Roster', value:String(subs.length), icon:<Users size={12} color={GOLD} />, sub:'active on this project'},
+            {href: `/app/projects/${projectId}/insurance`, label:'COI on File', value:`${coveredSubs} of ${subs.length}`, accent:coveredSubs===subs.length?'#3dd68c':'#FBBF24', sub:'subs holding a current certificate'},
+            {href: `/app/projects/${projectId}/insurance`, label:'No COI', value:String(missingSubs.length), accent:missingSubs.length>0?'#ff7070':'#3dd68c', sub:missingSubs.length>0?'uninsured exposure on site':'every sub is covered'},
+            {href: `/app/projects/${projectId}/insurance`, label:'Expiring ≤30d', value:String(expiringCount), accent:expiringCount>0?'#f59e0b':undefined, sub:'renewal window open'},
+            {href: `/app/projects/${projectId}/insurance`, label:'Expired', value:String(expiredCount), accent:expiredCount>0?'#ff7070':undefined, sub:'past expiry — request renewal'},
+            {href: `/app/projects/${projectId}/insurance`, label:'Coverage Tracked', value:fmt(totalCoverage), sub:`across ${totalCount} certificate${totalCount===1?'':'s'}`},
           ]}/>
         )}
 
@@ -306,10 +306,10 @@ export default function InsurancePage() {
 
         {/* KPI Cards */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<ShieldCheck size={19} weight="duotone" color={GOLD} />}    label="Total"         value={totalCount}    sub="certificates"    delay={0.02} />
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />} label="Active"        value={activeCount}   accent="#3dd68c" sub="30+ days out"  delay={0.06} />
-          <StatCard icon={<Warning size={19} weight="duotone" color="#f59e0b" />}     label="Expiring Soon" value={expiringCount} accent="#f59e0b" sub="under 30 days" delay={0.10} />
-          <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />}   label="Expired"       value={expiredCount}  accent={RED}     sub="past due"      delay={0.14} />
+          <StatCard icon={<ShieldCheck size={19} weight="duotone" color={GOLD} />}    label="Total"         value={totalCount}    sub="certificates"    delay={0.02}  href={`/app/projects/${projectId}/insurance`}/>
+          <StatCard icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />} label="Active"        value={activeCount}   accent="#3dd68c" sub="30+ days out"  delay={0.06}  href={`/app/projects/${projectId}/insurance`}/>
+          <StatCard icon={<Warning size={19} weight="duotone" color="#f59e0b" />}     label="Expiring Soon" value={expiringCount} accent="#f59e0b" sub="under 30 days" delay={0.10}  href={`/app/projects/${projectId}/insurance`}/>
+          <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />}   label="Expired"       value={expiredCount}  accent={RED}     sub="past due"      delay={0.14}  href={`/app/projects/${projectId}/insurance`}/>
         </div>
 
         {/* Expiry & gap intelligence — what needs action this month */}

@@ -444,10 +444,10 @@ export default function ReportsPage() {
 
       {/* What the reporting engine already knows — all figures live on this page */}
       <StatStrip items={[
-        { label: 'Report Library', value: String(STANDARD_REPORTS.length), sub: 'standard reports, one tap each' },
-        { label: 'Projects In Scope', value: String(projects.length), sub: projectFilter ? (projects.find(p => p.id === projectFilter)?.name || 'one selected') : 'all projects' },
-        { label: 'Runs This Session', value: String(history.length), sub: history[0] ? `last: ${timeAgo(history[0].ts)}` : 'none yet' },
-        { label: 'Export Formats', value: '3', sub: 'CSV, Excel, and PDF' },
+        {href: '/app/reports',  label: 'Report Library', value: String(STANDARD_REPORTS.length), sub: 'standard reports, one tap each' },
+        {href: '/app/reports',  label: 'Projects In Scope', value: String(projects.length), sub: projectFilter ? (projects.find(p => p.id === projectFilter)?.name || 'one selected') : 'all projects' },
+        {href: '/app/reports',  label: 'Runs This Session', value: String(history.length), sub: history[0] ? `last: ${timeAgo(history[0].ts)}` : 'none yet' },
+        {href: '/app/reports',  label: 'Export Formats', value: '3', sub: 'CSV, Excel, and PDF' },
       ]} />
       <SectionCard flush style={{ marginBottom: 16 }} bodyStyle={{ padding: '16px 20px' }}>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>

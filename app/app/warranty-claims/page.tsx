@@ -437,12 +437,12 @@ export default function WarrantyClaimsPage() {
       {selectedProject && !loading && !loadError && claims.length > 0 && (
         <>
           <StatStrip items={[
-            { label: 'Claims', value: stats.total, sub: `${stats.open} open · ${stats.closed} closed` },
-            { label: 'Emergency', value: stats.emergency, accent: stats.emergency > 0 ? RED : undefined, sub: stats.emergency > 0 ? 'need immediate action' : 'none outstanding' },
-            { label: 'Avg Resolution', value: `${stats.avgDays}d`, sub: 'reported to completed' },
-            { label: 'Warranty Cost', value: `$${(Number(stats.totalCost) || 0).toLocaleString()}`, sub: `${claims.filter(c => c.covered_under_warranty).length} covered · ${claims.filter(c => !c.covered_under_warranty).length} not covered` },
-            { label: 'Expired Coverage', value: stats.expiredCount, accent: stats.expiredCount > 0 ? RED : undefined, sub: stats.expiredCount > 0 ? 'claims past warranty' : 'all inside warranty' },
-            { label: 'Denied', value: stats.denied, sub: `of ${stats.total} total claim${stats.total === 1 ? '' : 's'}` },
+            {href: '/app/warranty-claims',  label: 'Claims', value: stats.total, sub: `${stats.open} open · ${stats.closed} closed` },
+            {href: '/app/warranty-claims',  label: 'Emergency', value: stats.emergency, accent: stats.emergency > 0 ? RED : undefined, sub: stats.emergency > 0 ? 'need immediate action' : 'none outstanding' },
+            {href: '/app/warranty-claims',  label: 'Avg Resolution', value: `${stats.avgDays}d`, sub: 'reported to completed' },
+            {href: '/app/warranty-claims',  label: 'Warranty Cost', value: `$${(Number(stats.totalCost) || 0).toLocaleString()}`, sub: `${claims.filter(c => c.covered_under_warranty).length} covered · ${claims.filter(c => !c.covered_under_warranty).length} not covered` },
+            {href: '/app/warranty-claims',  label: 'Expired Coverage', value: stats.expiredCount, accent: stats.expiredCount > 0 ? RED : undefined, sub: stats.expiredCount > 0 ? 'claims past warranty' : 'all inside warranty' },
+            {href: '/app/warranty-claims',  label: 'Denied', value: stats.denied, sub: `of ${stats.total} total claim${stats.total === 1 ? '' : 's'}` },
           ]} />
           <StatusPipeline
             byStatus={stats.byStatus}
@@ -498,16 +498,16 @@ export default function WarrantyClaimsPage() {
         <div>
           {/* stat cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-            <StatCard icon={<ClipboardText size={19} weight="duotone" color={GOLD} />} label="Total Claims" value={stats.total} accent={GOLD} delay={0.02} />
-            <StatCard icon={<FolderOpen size={19} weight="duotone" color={BLUE} />} label="Open" value={stats.open} accent={BLUE} delay={0.06} />
-            <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Closed" value={stats.closed} accent={GREEN} delay={0.10} />
-            <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Denied" value={stats.denied} accent={RED} delay={0.14} />
+            <StatCard icon={<ClipboardText size={19} weight="duotone" color={GOLD} />} label="Total Claims" value={stats.total} accent={GOLD} delay={0.02}  href="/app/warranty-claims"/>
+            <StatCard icon={<FolderOpen size={19} weight="duotone" color={BLUE} />} label="Open" value={stats.open} accent={BLUE} delay={0.06}  href="/app/warranty-claims"/>
+            <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Closed" value={stats.closed} accent={GREEN} delay={0.10}  href="/app/warranty-claims"/>
+            <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Denied" value={stats.denied} accent={RED} delay={0.14}  href="/app/warranty-claims"/>
             {/* An average over zero resolved claims is not "0 days" — it is unknown. */}
-            <StatCard icon={<Timer size={19} weight="duotone" color={AMBER} />} label="Avg Resolution" value={stats.resolvedCount > 0 ? `${stats.avgDays}d` : '—'} accent={AMBER} delay={0.18} />
-            <StatCard icon={<Warning size={19} weight="duotone" color={RED} />} label="Emergency" value={stats.emergency} accent={RED} delay={0.22} />
+            <StatCard icon={<Timer size={19} weight="duotone" color={AMBER} />} label="Avg Resolution" value={stats.resolvedCount > 0 ? `${stats.avgDays}d` : '—'} accent={AMBER} delay={0.18}  href="/app/warranty-claims"/>
+            <StatCard icon={<Warning size={19} weight="duotone" color={RED} />} label="Emergency" value={stats.emergency} accent={RED} delay={0.22}  href="/app/warranty-claims"/>
             {/* $0 across claims that never had a cost entered is a fabrication. */}
-            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={stats.costedCount > 0 ? `$${stats.totalCost.toLocaleString()}` : '—'} accent={GOLD} delay={0.26} />
-            <StatCard icon={<ShieldSlash size={19} weight="duotone" color={RED} />} label="Expired Warranty" value={stats.expiredCount} accent={RED} delay={0.30} />
+            <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={stats.costedCount > 0 ? `$${stats.totalCost.toLocaleString()}` : '—'} accent={GOLD} delay={0.26}  href="/app/warranty-claims"/>
+            <StatCard icon={<ShieldSlash size={19} weight="duotone" color={RED} />} label="Expired Warranty" value={stats.expiredCount} accent={RED} delay={0.30}  href="/app/warranty-claims"/>
           </div>
 
           {/* charts row */}

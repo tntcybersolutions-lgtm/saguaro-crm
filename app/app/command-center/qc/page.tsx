@@ -63,9 +63,9 @@ export default function QCPage() {
         ) : (
           <>
             <StatStrip items={[
-              { label: 'Trades Passed', value: `${trades.passed}/${trades.list.length}`, accent: trades.pct >= 100 ? C.green : C.gold },
-              { label: 'Remaining', value: String(trades.list.length - trades.passed), accent: trades.list.length - trades.passed > 0 ? C.yellow : C.green },
-              { label: 'QC Complete', value: `${trades.pct}%`, accent: trades.pct >= 100 ? C.green : C.gold },
+              {href: '/app/command-center/qc',  label: 'Trades Passed', value: `${trades.passed}/${trades.list.length}`, accent: trades.pct >= 100 ? C.green : C.gold },
+              {href: '/app/command-center/qc',  label: 'Remaining', value: String(trades.list.length - trades.passed), accent: trades.list.length - trades.passed > 0 ? C.yellow : C.green },
+              {href: '/app/command-center/qc',  label: 'QC Complete', value: `${trades.pct}%`, accent: trades.pct >= 100 ? C.green : C.gold },
             ]} />
             <SectionCard
               icon={<MagnifyingGlass size={16} weight="duotone" color={C.gold} />}

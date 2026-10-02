@@ -115,19 +115,19 @@ export default function PeopleAccessHub() {
       {/* ── roster intelligence strip — what the system already knows ── */}
       {snap && (
         <StatStrip items={[
-          { label: 'Team Members', value: String(snap.users), sub: 'platform sign-ins' },
-          { label: 'Roles Defined', value: String(snap.roles), sub: snap.roles > 0 ? 'permission templates in force' : 'built-ins seed on first visit' },
-          {
+          {href: '/app/people',  label: 'Team Members', value: String(snap.users), sub: 'platform sign-ins' },
+          {href: '/app/people',  label: 'Roles Defined', value: String(snap.roles), sub: snap.roles > 0 ? 'permission templates in force' : 'built-ins seed on first visit' },
+          {href: '/app/people', 
             label: 'Role Assignments', value: String(snap.assigns),
             accent: snap.users > 0 && snap.assigns === 0 ? '#FBBF24' : undefined,
             sub: snap.assigns > 0 ? 'users mapped to roles' : snap.users > 0 ? 'no roles assigned yet — start in Users' : 'assign roles from Roles & Access',
           },
-          {
+          {href: '/app/people', 
             label: 'Pending Invites', value: String(snap.invites),
             accent: snap.expired > 0 ? '#ef4444' : snap.invites > 0 ? '#FBBF24' : undefined,
             sub: snap.expired > 0 ? `${snap.expired} expired — resend from Users` : snap.invites > 0 ? 'invites expire after 7 days' : 'none outstanding',
           },
-          { label: 'Crew Directory', value: String(snap.crew), sub: snap.crew > 0 ? `${snap.osha} OSHA certified` : 'add employees in Directory' },
+          {href: '/app/people',  label: 'Crew Directory', value: String(snap.crew), sub: snap.crew > 0 ? `${snap.osha} OSHA certified` : 'add employees in Directory' },
         ]} />
       )}
 

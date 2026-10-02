@@ -219,11 +219,11 @@ export default function ScheduleTaskDetailPage() {
 
       {/* Timeline band */}
       <StatStrip items={[
-        { label: 'Start Date', value: dateStr(t.start_date), icon: <CalendarBlank size={12} weight="fill" color={ACCENT.hex} /> },
-        { label: 'End Date', value: dateStr(t.end_date), accent: overdue ? RED : undefined, sub: overdue ? 'overdue' : undefined, icon: <CalendarBlank size={12} weight="fill" color={ACCENT.hex} /> },
-        { label: 'Duration', value: t.duration != null ? `${Number(t.duration) || 0}d` : '—', icon: <ChartBar size={12} weight="fill" color={ACCENT.hex} /> },
-        { label: '% Complete', value: `${pct}%`, accent: GOLD, icon: <ChartBar size={12} weight="fill" color={ACCENT.hex} /> },
-        { label: 'Status', value: cfg.label, accent: cfg.color, icon: <ClipboardText size={12} weight="fill" color={ACCENT.hex} /> },
+        {href: '/app/schedule',  label: 'Start Date', value: dateStr(t.start_date), icon: <CalendarBlank size={12} weight="fill" color={ACCENT.hex} /> },
+        {href: '/app/schedule',  label: 'End Date', value: dateStr(t.end_date), accent: overdue ? RED : undefined, sub: overdue ? 'overdue' : undefined, icon: <CalendarBlank size={12} weight="fill" color={ACCENT.hex} /> },
+        {href: '/app/schedule',  label: 'Duration', value: t.duration != null ? `${Number(t.duration) || 0}d` : '—', icon: <ChartBar size={12} weight="fill" color={ACCENT.hex} /> },
+        {href: '/app/schedule',  label: '% Complete', value: `${pct}%`, accent: GOLD, icon: <ChartBar size={12} weight="fill" color={ACCENT.hex} /> },
+        {href: '/app/schedule',  label: 'Status', value: cfg.label, accent: cfg.color, icon: <ClipboardText size={12} weight="fill" color={ACCENT.hex} /> },
       ]} />
 
       {/* Progress */}

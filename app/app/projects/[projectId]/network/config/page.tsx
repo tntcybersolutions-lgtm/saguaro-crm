@@ -175,10 +175,10 @@ export default function ConfigGeneratorPage() {
       {/* Generator intelligence — live counts from the data already fetched */}
       {(templates.length > 0 || devices.length > 0) && (
         <StatStrip items={[
-          { label: 'Templates', value: String(filteredTemplates.length), sub: activeTab === 'All' ? 'all manufacturers' : `${activeTab} library` },
-          { label: 'Manufacturers', value: String(MANUFACTURER_TABS.length - 1), sub: 'vetted template libraries' },
-          { label: 'Project Devices', value: String(devices.length), sub: 'ready to receive config' },
-          { label: 'Selected', value: selectedTemplate ? selectedTemplate.name : '—', sub: selectedTemplate ? selectedTemplate.manufacturer : 'pick a template to begin' },
+          {href: `/app/projects/${projectId}/network/config`,  label: 'Templates', value: String(filteredTemplates.length), sub: activeTab === 'All' ? 'all manufacturers' : `${activeTab} library` },
+          {href: `/app/projects/${projectId}/network/config`,  label: 'Manufacturers', value: String(MANUFACTURER_TABS.length - 1), sub: 'vetted template libraries' },
+          {href: `/app/projects/${projectId}/network/devices`,  label: 'Project Devices', value: String(devices.length), sub: 'ready to receive config' },
+          {href: `/app/projects/${projectId}/network/config`,  label: 'Selected', value: selectedTemplate ? selectedTemplate.name : '—', sub: selectedTemplate ? selectedTemplate.manufacturer : 'pick a template to begin' },
         ]} />
       )}
 

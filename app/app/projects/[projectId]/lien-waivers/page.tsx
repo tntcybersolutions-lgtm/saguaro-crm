@@ -295,12 +295,12 @@ export default function LienWaiversPage() {
       {/* Waiver intelligence strip — coverage, exposure, and what's gating payment */}
       {!loading && waivers.length>0 && (
         <StatStrip items={[
-          {label:'Total Waivers', value:String(waivers.length), sub:subs.length>0?`${matrix.length} of ${subs.length} subs covered`:'generated on this project'},
-          {label:'Signed', value:String(signed), accent:'#3dd68c', sub:'fully executed'},
-          {label:'Pending', value:String(pending), accent:pending>0?'#FBBF24':undefined, sub:'awaiting signature'},
-          {label:'Blocking Payment', value:String(blocking), accent:blocking>0?'#ff7070':'#3dd68c', sub:blocking>0?'unsigned — mark-paid is held':'nothing holds mark-paid'},
-          {label:'Waiver Value', value:fmt(waiverTotal), sub:'released across all waivers'},
-          ...(lastApp?[{label:`Pay App #${lastApp.appNumber}`, value:String(lastApp.status||'—').replace(/_/g,' '), sub:`certified ${fmt(Number(lastApp.currentPaymentDue)||0)}`}]:[]),
+          {href: `/app/projects/${projectId}/lien-waivers`, label:'Total Waivers', value:String(waivers.length), sub:subs.length>0?`${matrix.length} of ${subs.length} subs covered`:'generated on this project'},
+          {href: `/app/projects/${projectId}/lien-waivers`, label:'Signed', value:String(signed), accent:'#3dd68c', sub:'fully executed'},
+          {href: `/app/projects/${projectId}/lien-waivers`, label:'Pending', value:String(pending), accent:pending>0?'#FBBF24':undefined, sub:'awaiting signature'},
+          {href: `/app/projects/${projectId}/lien-waivers`, label:'Blocking Payment', value:String(blocking), accent:blocking>0?'#ff7070':'#3dd68c', sub:blocking>0?'unsigned — mark-paid is held':'nothing holds mark-paid'},
+          {href: `/app/projects/${projectId}/lien-waivers`, label:'Waiver Value', value:fmt(waiverTotal), sub:'released across all waivers'},
+          ...(lastApp?[{href: `/app/projects/${projectId}/pay-apps`, label:`Pay App #${lastApp.appNumber}`, value:String(lastApp.status||'—').replace(/_/g,' '), sub:`certified ${fmt(Number(lastApp.currentPaymentDue)||0)}`}]:[]),
         ]}/>
       )}
 

@@ -500,12 +500,12 @@ export default function DocumentVersionsPage() {
 
       {/* Stats — live version-control intelligence, not bare counts */}
       <StatStrip items={[
-        { label: 'Documents', value: String(documents.length), sub: (() => { const n = documents.reduce((s, d) => s + d.versions.length, 0); return `${n} revision${n === 1 ? '' : 's'} on file`; })() },
-        { label: 'Approved', value: String(documents.filter((d) => d.status === 'Approved').length), accent: C.GREEN, sub: 'released & current' },
-        { label: 'Under Review', value: String(documents.filter((d) => d.status === 'Under Review').length), accent: documents.some((d) => d.status === 'Under Review') ? C.AMBER : undefined, sub: 'awaiting approval' },
-        { label: 'Drafts', value: String(documents.filter((d) => d.status === 'Draft').length), sub: 'not yet submitted' },
-        { label: 'Checked Out', value: String(documents.filter((d) => d.checkedOutBy).length), accent: documents.some((d) => d.checkedOutBy) ? C.RED : undefined, sub: (() => { const names = Array.from(new Set(documents.filter((d) => d.checkedOutBy).map((d) => d.checkedOutBy as string))); return names.length ? `locked by ${names.slice(0, 2).join(', ')}${names.length > 2 ? '…' : ''}` : 'nothing locked'; })() },
-        { label: 'Last Activity', value: (() => { const m = documents.reduce<string | null>((acc, d) => (d.lastModified && (!acc || d.lastModified > acc) ? d.lastModified : acc), null); return m ? fmtDate(m) : '—'; })(), sub: 'most recent revision' },
+        {href: '/app/document-versions',  label: 'Documents', value: String(documents.length), sub: (() => { const n = documents.reduce((s, d) => s + d.versions.length, 0); return `${n} revision${n === 1 ? '' : 's'} on file`; })() },
+        {href: '/app/document-versions',  label: 'Approved', value: String(documents.filter((d) => d.status === 'Approved').length), accent: C.GREEN, sub: 'released & current' },
+        {href: '/app/document-versions',  label: 'Under Review', value: String(documents.filter((d) => d.status === 'Under Review').length), accent: documents.some((d) => d.status === 'Under Review') ? C.AMBER : undefined, sub: 'awaiting approval' },
+        {href: '/app/document-versions',  label: 'Drafts', value: String(documents.filter((d) => d.status === 'Draft').length), sub: 'not yet submitted' },
+        {href: '/app/document-versions',  label: 'Checked Out', value: String(documents.filter((d) => d.checkedOutBy).length), accent: documents.some((d) => d.checkedOutBy) ? C.RED : undefined, sub: (() => { const names = Array.from(new Set(documents.filter((d) => d.checkedOutBy).map((d) => d.checkedOutBy as string))); return names.length ? `locked by ${names.slice(0, 2).join(', ')}${names.length > 2 ? '…' : ''}` : 'nothing locked'; })() },
+        {href: '/app/document-versions',  label: 'Last Activity', value: (() => { const m = documents.reduce<string | null>((acc, d) => (d.lastModified && (!acc || d.lastModified > acc) ? d.lastModified : acc), null); return m ? fmtDate(m) : '—'; })(), sub: 'most recent revision' },
       ]} />
 
       {/* Search */}

@@ -297,12 +297,12 @@ function BidLevelingBoard() {
       {/* Stat strip — the tabulation at a glance, all from the deterministic engine */}
       {bidders.length > 0 && scopeLines.length > 0 && (
         <StatStrip items={[
-          { label: 'Bidders', value: String(result.bidders.length), icon: <Users size={11} weight="bold" color={BIDS.hex} /> },
-          { label: 'Scope Lines', value: String(scopeLines.length), sub: `${scopeLines.filter((l) => l.required !== false).length} required`, icon: <ListChecks size={11} weight="bold" color={BIDS.hex} /> },
-          ...(low ? [{ label: 'Low Leveled', value: usd(low.leveledTotalCents), accent: GOLD, sub: low.name, icon: <Trophy size={11} weight="bold" color={GOLD} /> }] : []),
-          { label: 'Spread', value: usd(result.spreadCents), sub: 'low to high, leveled', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
-          ...(result.budgetCents ? [{ label: 'Your Budget', value: usd(result.budgetCents), icon: <Target size={11} weight="bold" color={BIDS.hex} /> }] : []),
-          { label: 'Coverage Gaps', value: String(result.uncoveredRequired), accent: result.uncoveredRequired > 0 ? RED : GREEN, sub: result.uncoveredRequired > 0 ? 'required lines uncovered' : 'every required line covered', icon: <Warning size={11} weight="bold" color={result.uncoveredRequired > 0 ? RED : GREEN} /> },
+          {href: '/app/bids/leveling',  label: 'Bidders', value: String(result.bidders.length), icon: <Users size={11} weight="bold" color={BIDS.hex} /> },
+          {href: '/app/bids/leveling',  label: 'Scope Lines', value: String(scopeLines.length), sub: `${scopeLines.filter((l) => l.required !== false).length} required`, icon: <ListChecks size={11} weight="bold" color={BIDS.hex} /> },
+          ...(low ? [{href: '/app/bids/leveling',  label: 'Low Leveled', value: usd(low.leveledTotalCents), accent: GOLD, sub: low.name, icon: <Trophy size={11} weight="bold" color={GOLD} /> }] : []),
+          {href: '/app/bids/leveling',  label: 'Spread', value: usd(result.spreadCents), sub: 'low to high, leveled', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
+          ...(result.budgetCents ? [{href: '/app/bids/leveling',  label: 'Your Budget', value: usd(result.budgetCents), icon: <Target size={11} weight="bold" color={BIDS.hex} /> }] : []),
+          {href: '/app/bids/leveling',  label: 'Coverage Gaps', value: String(result.uncoveredRequired), accent: result.uncoveredRequired > 0 ? RED : GREEN, sub: result.uncoveredRequired > 0 ? 'required lines uncovered' : 'every required line covered', icon: <Warning size={11} weight="bold" color={result.uncoveredRequired > 0 ? RED : GREEN} /> },
         ]} />
       )}
 

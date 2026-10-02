@@ -235,22 +235,22 @@ export default function InspectionsPage() {
       {/* Inspection intelligence strip — what the record already shows */}
       {!loading && (ctx || inspections.length > 0) && (
         <StatStrip items={[
-          { label: 'Pass Rate', value: resulted > 0 ? `${passRate}%` : '—', accent: resulted > 0 ? (passRate >= 80 ? GREEN : passRate >= 60 ? GOLD : RED) : undefined, sub: resulted > 0 ? `${passed} passed of ${resulted} resulted` : 'no results recorded yet' },
-          { label: 'Deficiencies', value: String(deficiencies), accent: deficiencies > 0 ? '#F0A63C' : undefined, sub: deficiencies > 0 ? 'flagged on inspection checklists' : 'none flagged' },
-          { label: 'Re-Inspections Due', value: String(awaitingReinspection.length), accent: awaitingReinspection.length > 0 ? RED : GREEN, sub: awaitingReinspection.length > 0 ? awaitingReinspection.slice(0, 2).map(f => f.type).join(', ') : 'every failure re-passed' },
-          { label: 'Next Scheduled', value: nextUp ? fmtDate(nextUp.date) : '—', sub: nextUp ? nextUp.type : 'nothing on the calendar' },
-          { label: 'Project Progress', value: `${pctComplete}%`, sub: `next milestone: ${suggestedType}` },
-          { label: 'Open Punch Items', value: String(openPunch), accent: openPunch > 0 ? GOLD : undefined, sub: openPunch > 0 ? 'clear before final inspections' : 'nothing blocking finals' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Pass Rate', value: resulted > 0 ? `${passRate}%` : '—', accent: resulted > 0 ? (passRate >= 80 ? GREEN : passRate >= 60 ? GOLD : RED) : undefined, sub: resulted > 0 ? `${passed} passed of ${resulted} resulted` : 'no results recorded yet' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Deficiencies', value: String(deficiencies), accent: deficiencies > 0 ? '#F0A63C' : undefined, sub: deficiencies > 0 ? 'flagged on inspection checklists' : 'none flagged' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Re-Inspections Due', value: String(awaitingReinspection.length), accent: awaitingReinspection.length > 0 ? RED : GREEN, sub: awaitingReinspection.length > 0 ? awaitingReinspection.slice(0, 2).map(f => f.type).join(', ') : 'every failure re-passed' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Next Scheduled', value: nextUp ? fmtDate(nextUp.date) : '—', sub: nextUp ? nextUp.type : 'nothing on the calendar' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Project Progress', value: `${pctComplete}%`, sub: `next milestone: ${suggestedType}` },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch Items', value: String(openPunch), accent: openPunch > 0 ? GOLD : undefined, sub: openPunch > 0 ? 'clear before final inspections' : 'nothing blocking finals' },
         ]} />
       )}
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passed)} accent={GREEN} sub={resulted > 0 ? `${passRate}% pass rate` : undefined} delay={0.02} />
-        <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Failed" value={String(failed)} accent={failed > 0 ? RED : undefined} sub={awaitingReinspection.length > 0 ? `${awaitingReinspection.length} awaiting re-inspection` : undefined} delay={0.06} />
-        <StatCard icon={<Warning size={19} weight="duotone" color={deficiencies > 0 ? '#F0A63C' : GOLD} />} label="Deficiencies" value={String(deficiencies)} accent={deficiencies > 0 ? '#F0A63C' : undefined} sub="checklist items flagged" delay={0.10} />
-        <StatCard icon={<CalendarCheck size={19} weight="duotone" color={GOLD} />} label="Scheduled" value={String(scheduled)} accent={GOLD} sub={nextUp ? `next: ${fmtDate(nextUp.date)}` : undefined} delay={0.14} />
-        <StatCard icon={<ClipboardText size={19} weight="duotone" color={GOLD} />} label="Total" value={String(inspections.length)} sub={lastRecord ? `last: ${fmtDate(lastRecord.date)}` : undefined} delay={0.18} />
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passed)} accent={GREEN} sub={resulted > 0 ? `${passRate}% pass rate` : undefined} delay={0.02}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Failed" value={String(failed)} accent={failed > 0 ? RED : undefined} sub={awaitingReinspection.length > 0 ? `${awaitingReinspection.length} awaiting re-inspection` : undefined} delay={0.06}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<Warning size={19} weight="duotone" color={deficiencies > 0 ? '#F0A63C' : GOLD} />} label="Deficiencies" value={String(deficiencies)} accent={deficiencies > 0 ? '#F0A63C' : undefined} sub="checklist items flagged" delay={0.10}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<CalendarCheck size={19} weight="duotone" color={GOLD} />} label="Scheduled" value={String(scheduled)} accent={GOLD} sub={nextUp ? `next: ${fmtDate(nextUp.date)}` : undefined} delay={0.14}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<ClipboardText size={19} weight="duotone" color={GOLD} />} label="Total" value={String(inspections.length)} sub={lastRecord ? `last: ${fmtDate(lastRecord.date)}` : undefined} delay={0.18}  href={`/app/projects/${projectId}/inspections`}/>
       </div>
 
       {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}

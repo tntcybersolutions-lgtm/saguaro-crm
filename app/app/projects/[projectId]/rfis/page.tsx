@@ -441,18 +441,18 @@ export default function RFIsPage() {
         ) : error ? (
           <div style={{ gridColumn: '1 / -1', opacity: 0.55 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              <StatCard icon={<Clipboard size={19} weight="duotone" color={T.faint} />} label="Total RFIs" value="—" />
-              <StatCard icon={<FolderOpen size={19} weight="duotone" color={T.faint} />} label="Open" value="—" />
-              <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.faint} />} label="Answered" value="—" />
-              <StatCard icon={<Clock size={19} weight="duotone" color={T.faint} />} label="Overdue" value="—" />
+              <StatCard icon={<Clipboard size={19} weight="duotone" color={T.faint} />} label="Total RFIs" value="—"  href={`/app/projects/${projectId}/rfis`}/>
+              <StatCard icon={<FolderOpen size={19} weight="duotone" color={T.faint} />} label="Open" value="—"  href={`/app/projects/${projectId}/rfis`}/>
+              <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.faint} />} label="Answered" value="—"  href={`/app/projects/${projectId}/rfis`}/>
+              <StatCard icon={<Clock size={19} weight="duotone" color={T.faint} />} label="Overdue" value="—"  href={`/app/projects/${projectId}/rfis`}/>
             </div>
           </div>
         ) : (
           <>
-            <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('rfis').hex} />} label="Total RFIs" value={String(totalCount ?? 0)} delay={0.02} />
-            <StatCard icon={<FolderOpen size={19} weight="duotone" color={moduleAccent('rfis').hex} />} label="Open" value={String(openCount ?? 0)} accent={T.gold} delay={0.06} />
-            <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Answered" value={String(answeredCount ?? 0)} accent={T.green} delay={0.10} />
-            <StatCard icon={<Clock size={19} weight="duotone" color={overdueCount > 0 ? T.red : T.faint} />} label="Overdue" value={String(overdueCount ?? 0)} accent={overdueCount > 0 ? T.red : undefined} sub={overdueCount > 0 ? 'Needs attention' : undefined} delay={0.14} />
+            <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('rfis').hex} />} label="Total RFIs" value={String(totalCount ?? 0)} delay={0.02}  href={`/app/projects/${projectId}/rfis`}/>
+            <StatCard icon={<FolderOpen size={19} weight="duotone" color={moduleAccent('rfis').hex} />} label="Open" value={String(openCount ?? 0)} accent={T.gold} delay={0.06}  href={`/app/projects/${projectId}/rfis`}/>
+            <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Answered" value={String(answeredCount ?? 0)} accent={T.green} delay={0.10}  href={`/app/projects/${projectId}/rfis`}/>
+            <StatCard icon={<Clock size={19} weight="duotone" color={overdueCount > 0 ? T.red : T.faint} />} label="Overdue" value={String(overdueCount ?? 0)} accent={overdueCount > 0 ? T.red : undefined} sub={overdueCount > 0 ? 'Needs attention' : undefined} delay={0.14}  href={`/app/projects/${projectId}/rfis`}/>
           </>
         )}
       </div>
@@ -471,12 +471,12 @@ export default function RFIsPage() {
         <div style={{ marginBottom: 22 }}>
           {ctx && (
             <StatStrip items={[
-              { label: 'Next RFI', value: `#${nextRfiNumber}`, sub: totalCount > 0 ? `follows ${totalCount} on this project` : 'first on this project' },
-              { label: 'Ball in Court', value: architectName || 'Unassigned', sub: architectName ? 'architect of record' : 'pick a recipient below' },
-              { label: 'Open RFIs', value: String(openCount), accent: overdueCount > 0 ? T.red : undefined, sub: overdueCount > 0 ? `${overdueCount} overdue` : oldestOpenDays > 0 ? `oldest ${oldestOpenDays}d` : 'all current' },
-              { label: 'Response Due', value: '+7 days', sub: 'standard turnaround' },
-              { label: 'Subs on Job', value: String(subs.length), sub: subs.length > 0 ? 'roster ready to assign' : 'none awarded yet' },
-              { label: 'Open Submittals', value: String(ctx?.counts?.openSubmittals ?? 0), sub: 'linkable from an answer' },
+              {href: `/app/projects/${projectId}/rfis`,  label: 'Next RFI', value: `#${nextRfiNumber}`, sub: totalCount > 0 ? `follows ${totalCount} on this project` : 'first on this project' },
+              {href: `/app/projects/${projectId}/rfis`,  label: 'Ball in Court', value: architectName || 'Unassigned', sub: architectName ? 'architect of record' : 'pick a recipient below' },
+              {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(openCount), accent: overdueCount > 0 ? T.red : undefined, sub: overdueCount > 0 ? `${overdueCount} overdue` : oldestOpenDays > 0 ? `oldest ${oldestOpenDays}d` : 'all current' },
+              {href: `/app/projects/${projectId}/rfis`,  label: 'Response Due', value: '+7 days', sub: 'standard turnaround' },
+              {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(subs.length), sub: subs.length > 0 ? 'roster ready to assign' : 'none awarded yet' },
+              {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(ctx?.counts?.openSubmittals ?? 0), sub: 'linkable from an answer' },
             ]} />
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 330px', gap: 22, alignItems: 'start' }}>

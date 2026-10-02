@@ -326,14 +326,14 @@ export default function TimeClockPage() {
 
       {/* Week intelligence strip — what the engine already knows */}
       <StatStrip items={[
-        { label: 'Today', value: `${todayHours.toFixed(2)} h`, sub: clockedIn ? 'shift running now' : 'completed shifts', accent: clockedIn ? GREEN : undefined },
-        { label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: `week of ${fmtDate(thisWeekKey)}` },
-        { label: 'Regular', value: `${(week?.regularHours ?? 0).toFixed(2)} h`, sub: 'inside the 40 h threshold' },
-        { label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, accent: (week?.overtimeHours ?? 0) > 0 ? GOLD : undefined, sub: 'past 40 h/week or 8 h/day' },
-        { label: 'Leave', value: `${leaveHours.toFixed(2)} h`, sub: 'PTO / sick / holiday' },
+        {href: '/app/time',  label: 'Today', value: `${todayHours.toFixed(2)} h`, sub: clockedIn ? 'shift running now' : 'completed shifts', accent: clockedIn ? GREEN : undefined },
+        {href: '/app/time',  label: 'This Week', value: `${(week?.workedHours ?? 0).toFixed(2)} h`, sub: `week of ${fmtDate(thisWeekKey)}` },
+        {href: '/app/time',  label: 'Regular', value: `${(week?.regularHours ?? 0).toFixed(2)} h`, sub: 'inside the 40 h threshold' },
+        {href: '/app/time',  label: 'Overtime', value: `${(week?.overtimeHours ?? 0).toFixed(2)} h`, accent: (week?.overtimeHours ?? 0) > 0 ? GOLD : undefined, sub: 'past 40 h/week or 8 h/day' },
+        {href: '/app/time',  label: 'Leave', value: `${leaveHours.toFixed(2)} h`, sub: 'PTO / sick / holiday' },
         ...(regRate > 0
-          ? [{ label: 'Est. Gross', value: fmtMoney(estGross), accent: GREEN, sub: `$${regRate}/h reg · $${otRate}/h OT` }]
-          : [{ label: 'Pending Approval', value: String(pendingCount), sub: 'entries awaiting review' }]),
+          ? [{href: '/app/time',  label: 'Est. Gross', value: fmtMoney(estGross), accent: GREEN, sub: `$${regRate}/h reg · $${otRate}/h OT` }]
+          : [{href: '/app/time',  label: 'Pending Approval', value: String(pendingCount), sub: 'entries awaiting review' }]),
       ]} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 18, alignItems: 'start' }}>

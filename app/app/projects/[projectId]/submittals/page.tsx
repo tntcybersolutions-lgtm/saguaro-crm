@@ -318,14 +318,14 @@ export default function SubmittalsPage(){
           {/* KPIs */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
             <StatCard icon={<Stack size={19} weight="duotone" color={moduleAccent('specs').hex} />}
-              label="Total" value={String(total)} accent={GOLD} sub="submittals" delay={0.02} />
+              label="Total" value={String(total)} accent={GOLD} sub="submittals" delay={0.02}  href={`/app/projects/${projectId}/submittals`}/>
             <StatCard icon={<Clock size={19} weight="duotone" color={DIM} />}
-              label="Pending" value={String(pending)} sub="awaiting submission" delay={0.06} />
+              label="Pending" value={String(pending)} sub="awaiting submission" delay={0.06}  href={`/app/projects/${projectId}/submittals`}/>
             <StatCard icon={<Eye size={19} weight="duotone" color={moduleAccent('specs').hex} />}
-              label="Under Review" value={String(underReview)} accent={GOLD} sub="in review" delay={0.10} />
+              label="Under Review" value={String(underReview)} accent={GOLD} sub="in review" delay={0.10}  href={`/app/projects/${projectId}/submittals`}/>
             <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />}
               label="Overdue" value={String(overdue)} accent={overdue>0?RED:undefined}
-              sub={overdue>0?'past required date':'none overdue'} delay={0.14} />
+              sub={overdue>0?'past required date':'none overdue'} delay={0.14}  href={`/app/projects/${projectId}/submittals`}/>
           </div>
 
           {/* Filters + Log */}
@@ -525,10 +525,10 @@ export default function SubmittalsPage(){
               <div style={{display:'flex',flexDirection:'column',gap:14}}>
                 {mode==='create'&&ctx&&(
                   <StatStrip items={[
-                    {label:'Log', value:String(total), sub:`${ctx.counts?.openSubmittals??0} open now`},
-                    {label:'Reviewer', value:ctx.project?.architectName||'Architect', sub:'ball moves here on submit'},
-                    {label:'Sub Roster', value:String((ctx.subs||[]).length), sub:'trades to pick from'},
-                    {label:'Overdue', value:String(overdue), accent:overdue>0?RED:undefined, sub:overdue>0?'need attention first':'log is current'},
+                    {href: `/app/projects/${projectId}/submittals`, label:'Log', value:String(total), sub:`${ctx.counts?.openSubmittals??0} open now`},
+                    {href: `/app/projects/${projectId}/submittals`, label:'Reviewer', value:ctx.project?.architectName||'Architect', sub:'ball moves here on submit'},
+                    {href: `/app/projects/${projectId}/subs`, label:'Sub Roster', value:String((ctx.subs||[]).length), sub:'trades to pick from'},
+                    {href: `/app/projects/${projectId}/submittals`, label:'Overdue', value:String(overdue), accent:overdue>0?RED:undefined, sub:overdue>0?'need attention first':'log is current'},
                   ]}/>
                 )}
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>

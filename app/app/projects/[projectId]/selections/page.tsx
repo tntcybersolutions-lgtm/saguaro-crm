@@ -254,14 +254,14 @@ export default function SelectionsPage(){
           {/* KPIs */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
             <StatCard icon={<Package size={19} weight="duotone" color={GOLD}/>}
-              label="Total Items" value={String(items.length)} delay={0.02}/>
+              label="Total Items" value={String(items.length)} delay={0.02} href={`/app/projects/${projectId}/selections`}/>
             <StatCard icon={<Hourglass size={19} weight="duotone" color={ORANGE}/>}
-              label="Pending Decision" value={String(pendingCount)} accent={ORANGE} delay={0.06}/>
+              label="Pending Decision" value={String(pendingCount)} accent={ORANGE} delay={0.06} href={`/app/projects/${projectId}/selections`}/>
             <StatCard icon={<SealCheck size={19} weight="duotone" color={GREEN}/>}
-              label="Owner Approved" value={String(approvedCount)} accent={GREEN} delay={0.10}/>
+              label="Owner Approved" value={String(approvedCount)} accent={GREEN} delay={0.10} href={`/app/projects/${projectId}/selections`}/>
             <StatCard icon={<Scales size={19} weight="duotone" color={overage>0?RED:GREEN}/>}
               label={overage>0?'Over Allowance':'Under Allowance'}
-              value={overage>=0?`+${fmt(overage)}`:fmt(overage)} accent={overage>0?RED:GREEN} delay={0.14}/>
+              value={overage>=0?`+${fmt(overage)}`:fmt(overage)} accent={overage>0?RED:GREEN} delay={0.14} href={`/app/projects/${projectId}/selections`}/>
           </div>
 
           {/* Budget bar */}
@@ -424,10 +424,10 @@ export default function SelectionsPage(){
               <div style={{display:'flex',flexDirection:'column',gap:16}}>
                 {mode==='create'&&(
                   <StatStrip items={[
-                    {label:'Selections Made', value:String(items.length-pendingCount), sub:`of ${items.length} logged`},
-                    {label:'Pending', value:String(pendingCount), accent:pendingCount>0?ORANGE:undefined, sub:'awaiting decision'},
-                    {label:'Total Allowance', value:fmt(totalAllowance), sub:'across all items'},
-                    {label:'Variance', value:(overage>0?'+':'')+fmt(overage), accent:overage>0?RED:GREEN, sub:overage>0?'over allowances':'under allowances'},
+                    {href: `/app/projects/${projectId}/selections`, label:'Selections Made', value:String(items.length-pendingCount), sub:`of ${items.length} logged`},
+                    {href: `/app/projects/${projectId}/selections`, label:'Pending', value:String(pendingCount), accent:pendingCount>0?ORANGE:undefined, sub:'awaiting decision'},
+                    {href: `/app/projects/${projectId}/selections`, label:'Total Allowance', value:fmt(totalAllowance), sub:'across all items'},
+                    {href: `/app/projects/${projectId}/selections`, label:'Variance', value:(overage>0?'+':'')+fmt(overage), accent:overage>0?RED:GREEN, sub:overage>0?'over allowances':'under allowances'},
                   ]}/>
                 )}
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>

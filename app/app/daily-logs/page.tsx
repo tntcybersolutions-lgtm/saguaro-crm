@@ -381,12 +381,12 @@ export default function DailyLogsPage() {
         const latest = logs.reduce((m, l) => (l.log_date || '') > m ? (l.log_date || '') : m, '');
         return (
           <StatStrip items={[
-            { label: 'Latest Log', value: latest ? fmtDay(latest) : '—', sub: 'across all projects' },
-            { label: 'Total Logs', value: String(logs.length), sub: 'all field reports' },
-            { label: 'This Month', value: String(thisMonth), sub: monthIso },
-            { label: 'Avg Crew / Day', value: String(avgCrew), sub: 'workers on site' },
-            { label: 'Days w/ Delays', value: String(delayDays), accent: delayDays > 0 ? colors.red : undefined, sub: delayDays > 0 ? 'flagged delays' : 'none flagged' },
-            { label: 'Projects', value: String(projectsCovered), sub: 'with field reports' },
+            {href: '/app/daily-logs',  label: 'Latest Log', value: latest ? fmtDay(latest) : '—', sub: 'across all projects' },
+            {href: '/app/daily-logs',  label: 'Total Logs', value: String(logs.length), sub: 'all field reports' },
+            {href: '/app/daily-logs',  label: 'This Month', value: String(thisMonth), sub: monthIso },
+            {href: '/app/daily-logs',  label: 'Avg Crew / Day', value: String(avgCrew), sub: 'workers on site' },
+            {href: '/app/daily-logs',  label: 'Days w/ Delays', value: String(delayDays), accent: delayDays > 0 ? colors.red : undefined, sub: delayDays > 0 ? 'flagged delays' : 'none flagged' },
+            {href: '/app/daily-logs',  label: 'Projects', value: String(projectsCovered), sub: 'with field reports' },
           ]} />
         );
       })()}

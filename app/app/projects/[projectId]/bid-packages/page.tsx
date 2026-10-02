@@ -513,11 +513,11 @@ export default function BidPackagesPage() {
       {/* Project money context — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Budget', value: fmt(budgetOriginal), sub: `${Number(ctx?.budget?.lineCount) || 0} budget lines` },
-          { label: 'Committed', value: fmt(budgetCommitted), sub: budgetOriginal > 0 ? `${Math.round((budgetCommitted / budgetOriginal) * 100)}% of budget` : 'POs + subcontracts' },
-          { label: 'Awarded via Bids', value: fmt(awardedTotal), accent: awardedTotal > 0 ? GOLD : undefined, sub: `${totalAwarded} package${totalAwarded === 1 ? '' : 's'} placed` },
-          { label: 'Sub Roster', value: String(rosterCount), sub: rosterCount > 0 ? 'ready to invite' : 'invite by email works too' },
-          { label: 'Responses', value: `${totalSubmissions} / ${totalInvited}`, accent: totalSubmissions > 0 ? '#3dd68c' : undefined, sub: 'bids in vs invites out' },
+          {href: `/app/projects/${projectId}/budget`,  label: 'Budget', value: fmt(budgetOriginal), sub: `${Number(ctx?.budget?.lineCount) || 0} budget lines` },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Committed', value: fmt(budgetCommitted), sub: budgetOriginal > 0 ? `${Math.round((budgetCommitted / budgetOriginal) * 100)}% of budget` : 'POs + subcontracts' },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded via Bids', value: fmt(awardedTotal), accent: awardedTotal > 0 ? GOLD : undefined, sub: `${totalAwarded} package${totalAwarded === 1 ? '' : 's'} placed` },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Sub Roster', value: String(rosterCount), sub: rosterCount > 0 ? 'ready to invite' : 'invite by email works too' },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Responses', value: `${totalSubmissions} / ${totalInvited}`, accent: totalSubmissions > 0 ? '#3dd68c' : undefined, sub: 'bids in vs invites out' },
         ]} />
       )}
 
@@ -527,22 +527,22 @@ export default function BidPackagesPage() {
           icon={<Package size={19} weight="duotone" color={GOLD} />}
           label="Total Packages" value={String(packages.length)} accent={GOLD}
           sub="all statuses" delay={0.02}
-        />
+         href={`/app/projects/${projectId}/bid-packages`}/>
         <StatCard
           icon={<Trophy size={19} weight="duotone" color="#45B37D" />}
           label="Awarded" value={String(totalAwarded)} accent="#45B37D"
           sub="contracts placed" delay={0.06}
-        />
+         href={`/app/projects/${projectId}/bid-packages`}/>
         <StatCard
           icon={<UsersThree size={19} weight="duotone" color={GOLD} />}
           label="Subs Invited" value={String(totalInvited)} accent={GOLD}
           sub="across packages" delay={0.10}
-        />
+         href={`/app/projects/${projectId}/bid-packages`}/>
         <StatCard
           icon={<Tray size={19} weight="duotone" color="#F0A63C" />}
           label="Bids Received" value={String(totalSubmissions)} accent={totalSubmissions > 0 ? '#F0A63C' : undefined}
           sub="submitted" delay={0.14}
-        />
+         href={`/app/projects/${projectId}/bid-packages`}/>
       </div>
 
       {/* Table */}

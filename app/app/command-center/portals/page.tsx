@@ -55,10 +55,10 @@ export default function PortalsPage() {
 
         {!loading && (
           <StatStrip items={[
-            { label: 'Active Portals', value: String(list.length), icon: <LinkSimple size={11} weight="bold" /> },
-            { label: 'Sites', value: String(sites), icon: <Buildings size={11} weight="bold" /> },
-            { label: 'Viewed', value: String(viewed), accent: viewed > 0 ? C.green : undefined, icon: <Eye size={11} weight="bold" /> },
-            { label: 'Awaiting First View', value: String(list.length - viewed), accent: list.length - viewed > 0 ? C.yellow : undefined },
+            {href: '/app/command-center/portals',  label: 'Active Portals', value: String(list.length), icon: <LinkSimple size={11} weight="bold" /> },
+            {href: '/app/command-center/portals',  label: 'Sites', value: String(sites), icon: <Buildings size={11} weight="bold" /> },
+            {href: '/app/command-center/portals',  label: 'Viewed', value: String(viewed), accent: viewed > 0 ? C.green : undefined, icon: <Eye size={11} weight="bold" /> },
+            {href: '/app/command-center/portals',  label: 'Awaiting First View', value: String(list.length - viewed), accent: list.length - viewed > 0 ? C.yellow : undefined },
           ]} />
         )}
 

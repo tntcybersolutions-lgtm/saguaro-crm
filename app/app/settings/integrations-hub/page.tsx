@@ -245,10 +245,10 @@ export default function IntegrationsHubPage() {
       {/* Live figures — keys and webhooks come straight from the API. */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Marketplace', value: String(MARKETPLACE.length), sub: 'live integrations' },
-          { label: 'Active API Keys', value: String(liveKeys.length), sub: keys.length > liveKeys.length ? `${keys.length - liveKeys.length} revoked` : 'none revoked' },
-          { label: 'Webhooks', value: String(hooks.length), sub: hooks.length ? `${activeHooks.length} active` : 'none configured' },
-          { label: 'Events Emitted', value: String(WEBHOOK_EVENTS.length), sub: 'subscribable event types' },
+          {href: '/app/settings/integrations-hub',  label: 'Marketplace', value: String(MARKETPLACE.length), sub: 'live integrations' },
+          {href: '/app/settings/integrations-hub',  label: 'Active API Keys', value: String(liveKeys.length), sub: keys.length > liveKeys.length ? `${keys.length - liveKeys.length} revoked` : 'none revoked' },
+          {href: '/app/settings/integrations-hub',  label: 'Webhooks', value: String(hooks.length), sub: hooks.length ? `${activeHooks.length} active` : 'none configured' },
+          {href: '/app/settings/integrations-hub',  label: 'Events Emitted', value: String(WEBHOOK_EVENTS.length), sub: 'subscribable event types' },
         ]} />
       )}
 

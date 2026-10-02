@@ -438,14 +438,14 @@ export default function SchedulePage(){
               ? Array.from({length:4}).map((_,i)=><SkeletonKPI key={i}/>)
               : <>
                   <StatCard icon={<TrendUp size={19} weight="duotone" color={GREEN} />}
-                    label="% Complete" value={`${avgPct}%`} accent={GREEN} sub="avg completion" delay={0.02} />
+                    label="% Complete" value={`${avgPct}%`} accent={GREEN} sub="avg completion" delay={0.02}  href={`/app/projects/${projectId}/schedule`}/>
                   <StatCard icon={<Clock size={19} weight="duotone" color={moduleAccent('schedule').hex} />}
-                    label="Days Remaining" value={daysLeft?String(daysLeft):'—'} sub="to project end" delay={0.06} />
+                    label="Days Remaining" value={daysLeft?String(daysLeft):'—'} sub="to project end" delay={0.06}  href={`/app/projects/${projectId}/schedule`}/>
                   <StatCard icon={<CheckCircle size={19} weight="duotone" color={moduleAccent('schedule').hex} />}
-                    label="Tasks Complete" value={`${completedCount}/${tasks.length}`} accent={GOLD} sub="tasks finished" delay={0.10} />
+                    label="Tasks Complete" value={`${completedCount}/${tasks.length}`} accent={GOLD} sub="tasks finished" delay={0.10}  href={`/app/projects/${projectId}/schedule`}/>
                   <StatCard icon={<WarningCircle size={19} weight="duotone" color={delayedCount?RED:DIM} />}
                     label="Delayed" value={String(delayedCount)} accent={delayedCount?RED:undefined}
-                    sub={delayedCount?'need attention':'on track'} delay={0.14} />
+                    sub={delayedCount?'need attention':'on track'} delay={0.14}  href={`/app/projects/${projectId}/schedule`}/>
                 </>}
           </div>
 
@@ -636,9 +636,9 @@ export default function SchedulePage(){
               <div style={{display:'flex',flexDirection:'column',gap:16}}>
                 {mode==='create'&&ctx&&(
                   <StatStrip items={[
-                    {label:'Tasks',value:String(tasks.length),sub:`${completedCount} complete · ${delayedCount} delayed`},
-                    {label:'Critical Path',value:String(ctx.schedule?.criticalCount??0),accent:(ctx.schedule?.criticalCount??0)>0?GOLD:undefined,sub:'tasks drive the end date'},
-                    {label:'Next Milestone',value:ctx.schedule?.nextTasks?.[0]?.name||'—',sub:ctx.schedule?.nextTasks?.[0]?`starts ${fmtShort(ctx.schedule.nextTasks[0].startDate)}`:'nothing queued yet'},
+                    {href: `/app/projects/${projectId}/schedule`, label:'Tasks',value:String(tasks.length),sub:`${completedCount} complete · ${delayedCount} delayed`},
+                    {href: `/app/projects/${projectId}/schedule`, label:'Critical Path',value:String(ctx.schedule?.criticalCount??0),accent:(ctx.schedule?.criticalCount??0)>0?GOLD:undefined,sub:'tasks drive the end date'},
+                    {href: `/app/projects/${projectId}/schedule`, label:'Next Milestone',value:ctx.schedule?.nextTasks?.[0]?.name||'—',sub:ctx.schedule?.nextTasks?.[0]?`starts ${fmtShort(ctx.schedule.nextTasks[0].startDate)}`:'nothing queued yet'},
                   ]}/>
                 )}
                 <Field label="Task Name *">

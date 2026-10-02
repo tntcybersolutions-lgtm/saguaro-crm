@@ -99,9 +99,9 @@ export default function PlatformIntegrationsPage() {
       {/* Live figures — provider states come straight from the API. */}
       {apps !== null && (
         <StatStrip items={[
-          { label: 'Providers', value: String(apps.length), sub: 'supported OAuth apps' },
-          { label: 'Configured', value: String(configured.length), accent: configured.length > 0 ? GREEN : undefined, sub: 'live for all tenants' },
-          { label: 'Not Configured', value: String(pending.length), accent: pending.length > 0 ? GOLD : undefined, sub: pending.length ? 'tenants can’t connect these yet' : 'everything is live' },
+          {href: '/app/settings/platform-integrations',  label: 'Providers', value: String(apps.length), sub: 'supported OAuth apps' },
+          {href: '/app/settings/platform-integrations',  label: 'Configured', value: String(configured.length), accent: configured.length > 0 ? GREEN : undefined, sub: 'live for all tenants' },
+          {href: '/app/settings/platform-integrations',  label: 'Not Configured', value: String(pending.length), accent: pending.length > 0 ? GOLD : undefined, sub: pending.length ? 'tenants can’t connect these yet' : 'everything is live' },
         ]} />
       )}
 

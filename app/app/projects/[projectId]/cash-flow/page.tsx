@@ -145,10 +145,10 @@ function CashFlowContent() {
       <PremiumSurface maxWidth={1300}>
         {ctx && (
           <StatStrip items={[
-            { label: 'Revised Contract', value: fmt0(ctxRevised), sub: (Number(money?.approvedCoCount) || 0) + ' approved COs' },
-            { label: 'Billed to Date', value: fmt0(ctxBilled), sub: (Number(money?.billedPct) || 0) + '% of revised' },
-            { label: 'Collected', value: fmt0(ctxPaid), accent: GREEN, sub: 'paid on the contract' },
-            { label: 'Outstanding AR', value: fmt0(ctxOutstanding), accent: ctxOutstanding > 0 ? GOLD : GREEN, sub: 'billed, not collected' },
+            {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(ctxRevised), sub: (Number(money?.approvedCoCount) || 0) + ' approved COs' },
+            {href: `/app/projects/${projectId}/cash-flow`,  label: 'Billed to Date', value: fmt0(ctxBilled), sub: (Number(money?.billedPct) || 0) + '% of revised' },
+            {href: `/app/projects/${projectId}/cash-flow`,  label: 'Collected', value: fmt0(ctxPaid), accent: GREEN, sub: 'paid on the contract' },
+            {href: `/app/projects/${projectId}/cash-flow`,  label: 'Outstanding AR', value: fmt0(ctxOutstanding), accent: ctxOutstanding > 0 ? GOLD : GREEN, sub: 'billed, not collected' },
           ]} />
         )}
         <SectionCard>
@@ -233,12 +233,12 @@ function CashFlowContent() {
       {/* Live money strip — what the system already knows about this project */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Revised Contract', value: fmt0(ctxRevised), sub: `${Number(money?.approvedCoCount) || 0} approved CO${(Number(money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
-          { label: 'Billed to Date', value: fmt0(ctxBilled), sub: `${Number(money?.billedPct) || 0}% of revised` },
-          { label: 'Collected', value: fmt0(ctxPaid), accent: GREEN, sub: `${Number(money?.payAppCount) || 0} pay app${(Number(money?.payAppCount) || 0) === 1 ? '' : 's'}` },
-          { label: 'Outstanding AR', value: fmt0(ctxOutstanding), accent: ctxOutstanding > 0 ? GOLD : GREEN, sub: 'billed, not yet collected' },
-          { label: 'Committed', value: fmt0(budgetCommitted), sub: budgetOriginal > 0 ? `of ${fmt0(budgetOriginal)} budget` : 'no budget lines yet' },
-          { label: 'Cost to Date', value: fmt0(budgetActual), accent: budgetCommitted > 0 && budgetActual > budgetCommitted ? RED : undefined, sub: budgetCommitted > 0 ? `${Math.round((budgetActual / budgetCommitted) * 100)}% of committed` : 'from approved bills' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt0(ctxRevised), sub: `${Number(money?.approvedCoCount) || 0} approved CO${(Number(money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Billed to Date', value: fmt0(ctxBilled), sub: `${Number(money?.billedPct) || 0}% of revised` },
+          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Collected', value: fmt0(ctxPaid), accent: GREEN, sub: `${Number(money?.payAppCount) || 0} pay app${(Number(money?.payAppCount) || 0) === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Outstanding AR', value: fmt0(ctxOutstanding), accent: ctxOutstanding > 0 ? GOLD : GREEN, sub: 'billed, not yet collected' },
+          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Committed', value: fmt0(budgetCommitted), sub: budgetOriginal > 0 ? `of ${fmt0(budgetOriginal)} budget` : 'no budget lines yet' },
+          {href: `/app/projects/${projectId}/cash-flow`,  label: 'Cost to Date', value: fmt0(budgetActual), accent: budgetCommitted > 0 && budgetActual > budgetCommitted ? RED : undefined, sub: budgetCommitted > 0 ? `${Math.round((budgetActual / budgetCommitted) * 100)}% of committed` : 'from approved bills' },
         ]} />
       )}
 
@@ -268,7 +268,7 @@ function CashFlowContent() {
             sub={kpi.sub}
             accent={kpi.color}
             delay={0.04 * i}
-          />
+           href={`/app/projects/${projectId}/cash-flow`}/>
         ))}
       </div>
 

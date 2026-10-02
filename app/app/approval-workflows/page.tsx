@@ -519,11 +519,11 @@ export default function ApprovalWorkflowsPage() {
 
         {/* summary */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-          <StatCard icon={<TreeStructure size={19} weight="duotone" color={GREEN} />} label="Active Workflows" value={String(activeCount)} accent={GREEN} delay={0.02} />
-          <StatCard icon={<Power size={19} weight="duotone" color={DIM} />} label="Disabled" value={String(workflows.length - activeCount)} delay={0.06} />
-          <StatCard icon={<Clock size={19} weight="duotone" color={AMBER} />} label="Pending Approvals" value={String(pending.length)} accent={AMBER} delay={0.10} />
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Approved" value={String(approvedCount)} accent={GREEN} delay={0.14} />
-          <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Rejected" value={String(rejectedCount)} accent={RED} delay={0.18} />
+          <StatCard icon={<TreeStructure size={19} weight="duotone" color={GREEN} />} label="Active Workflows" value={String(activeCount)} accent={GREEN} delay={0.02}  href="/app/approval-workflows"/>
+          <StatCard icon={<Power size={19} weight="duotone" color={DIM} />} label="Disabled" value={String(workflows.length - activeCount)} delay={0.06}  href="/app/approval-workflows"/>
+          <StatCard icon={<Clock size={19} weight="duotone" color={AMBER} />} label="Pending Approvals" value={String(pending.length)} accent={AMBER} delay={0.10}  href="/app/approval-workflows"/>
+          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Approved" value={String(approvedCount)} accent={GREEN} delay={0.14}  href="/app/approval-workflows"/>
+          <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Rejected" value={String(rejectedCount)} accent={RED} delay={0.18}  href="/app/approval-workflows"/>
         </div>
 
         {/* tabs */}

@@ -544,6 +544,7 @@ export default function LeadsPage() {
       {!loading && leads.length > 0 && (
         <StatStrip items={STAGES.map(s => ({
           label: s,
+          href: '/app/leads',
           value: fmt(metrics.byStage[s]?.value || 0),
           accent: (metrics.byStage[s]?.count || 0) > 0 ? STAGE_COLORS[s] : undefined,
           sub: `${metrics.byStage[s]?.count || 0} lead${(metrics.byStage[s]?.count || 0) === 1 ? '' : 's'}`,
