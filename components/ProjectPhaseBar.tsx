@@ -16,6 +16,9 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { PROJECT_PHASES, phaseForPath } from '@/lib/project-nav';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { normalisePhase, stepsDone } from '@/lib/project-phase';
+import { isClosedStatus } from '@/lib/project-lifecycle';
 
 const BORDER = 'rgba(255,255,255,0.10)';
 
@@ -32,11 +35,56 @@ const PHASE_COLORS: Record<string, string> = {
   closeout:  '#2DD4BF', // teal
 };
 
+type PhaseProgress = 'done' | 'progress' | 'todo';
+
+/**
+ * WHERE THE JOB ACTUALLY IS — not where the user is standing.
+ *
+ * This bar used to mark every phase to the LEFT of the current page "Done",
+ * so opening Docs & Comms on day one announced Preconstruction, Execution,
+ * Field and Financials all finished. Page position is not progress. Progress
+ * comes from the same completion data as the rail checklist and the
+ * next-step bar (lib/project-phase stepsDone), so the three never disagree:
+ *
+ *   precon     bidding: in progress until takeoff, estimate, bid packages
+ *              and proposal are all done. building: done — the bid was won.
+ *   execution  building: done once subs are awarded AND a schedule exists,
+ *              otherwise in progress. bidding: not started.
+ *   field      building: in progress (done only when the job is closed).
+ *   financial  building: in progress (done only when the job is closed).
+ *   closeout   done when the job is closed.
+ *   overview / docs  continuous — never "done", never "in progress".
+ *
+ * A closed job marks every working phase done. Until the snapshot loads,
+ * nothing claims anything: every phase reads its step number.
+ */
+function phaseProgress(ctx: any): Record<string, PhaseProgress> {
+  const out: Record<string, PhaseProgress> = {};
+  if (!ctx) return out;
+  const closed = isClosedStatus(ctx?.project?.status);
+  const building = normalisePhase(ctx?.project?.phase) === 'building';
+  const d = stepsDone(ctx, ctx?.money, isClosedStatus);
+  if (closed) {
+    for (const k of ['precon', 'execution', 'field', 'financial', 'closeout']) out[k] = 'done';
+    return out;
+  }
+  out.precon = building || (d.takeoff && d.estimate && d['bid-packages'] && d.proposal) ? 'done' : 'progress';
+  out.execution = building ? (d.subs && d.schedule ? 'done' : 'progress') : 'todo';
+  out.field = building ? 'progress' : 'todo';
+  out.financial = building ? 'progress' : 'todo';
+  out.closeout = 'todo';
+  return out;
+}
+
 export default function ProjectPhaseBar() {
   const pathname = usePathname() || '';
   const params = useParams();
   const projectId = (params?.['projectId'] as string) || '';
-  if (!projectId || projectId === 'new') return null;
+  const validId = Boolean(projectId) && projectId !== 'new';
+  /* Same SWR key the layout, rail and next-step bar read — no extra request. */
+  const { ctx } = useProjectContext(validId ? projectId : null);
+  const progress = React.useMemo(() => phaseProgress(ctx), [ctx]);
+  if (!validId) return null;
 
   const base = `/app/projects/${projectId}`;
   const rel = pathname.startsWith(base) ? pathname.slice(base.length) : '';
@@ -63,7 +111,9 @@ export default function ProjectPhaseBar() {
       {PROJECT_PHASES.map((ph, i) => {
         const Icon = ph.icon;
         const isActive = i === activeIdx;
-        const isDone = i < activeIdx;
+        const state = progress[ph.key] ?? 'todo';
+        const isDone = state === 'done';
+        const inProgress = state === 'progress';
         const href = base + ph.href;
         const c = PHASE_COLORS[ph.key] || '#94A3B8';
         const tintBg = `color-mix(in srgb, ${c} 14%, transparent)`;
@@ -102,7 +152,7 @@ export default function ProjectPhaseBar() {
                   fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
                   color: isActive ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap',
                 }}>
-                  {isActive ? 'You are here' : isDone ? 'Done' : `Step ${i + 1}`}
+                  {isActive ? 'You are here' : isDone ? 'Done' : inProgress ? 'In progress' : `Step ${i + 1}`}
                 </span>
                 <span style={{
                   fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',

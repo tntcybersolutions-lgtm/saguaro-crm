@@ -20,6 +20,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretUpDown, MagnifyingGlass, Buildings, Check } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 
 const GOLD = '#F59E0B';
 const TEXT = '#F0F4FF';
@@ -68,11 +69,11 @@ export default function HeaderProjectPicker() {
    * could open the sixteenth job and see the breadcrumb read "Project" — the
    * one crumb whose whole purpose is telling you where you are.
    */
+  const inList = list.some((p) => p.id === currentId);
   const [fetchedName, setFetchedName] = useState<string | null>(null);
   useEffect(() => {
     setFetchedName(null);
-    if (!currentId) return;
-    if (list.some((p) => p.id === currentId)) return;
+    if (!currentId || inList) return;
     let cancelled = false;
     fetch(`/api/projects/${currentId}?fields=id,name`)
       .then((r) => (r.ok ? r.json() : null))
@@ -81,12 +82,23 @@ export default function HeaderProjectPicker() {
         const p = d.project ?? d;
         if (p?.name || p?.project_name) setFetchedName(p.name || p.project_name);
       })
-      .catch(() => { /* the picker still works, it just reads "Select a job" */ });
+      .catch(() => { /* the project-context name below still covers it */ });
     return () => { cancelled = true; };
-  }, [currentId, list]);
+    /* inList, not list: the list's identity changes on every SWR refresh (and
+       on every render while it is still loading), which re-ran this effect,
+       nulled the name and cancelled the request before it landed — the
+       picker read "Choose a job" inside a job. */
+  }, [currentId, inList]);
+
+  /* The project snapshot every project screen (layout, rail, next-step bar)
+     already loads, on the same SWR key — so the name is available inside
+     /app/projects/<id>/* even when the job is outside the header's
+     fifteen-row list or the by-id fetch has not landed. */
+  const { ctx: currentCtx } = useProjectContext(currentId);
+  const ctxName = (currentCtx?.project?.name as string | undefined) || null;
 
   const current = list.find((p) => p.id === currentId);
-  const currentName = current ? nameOf(current) : fetchedName;
+  const currentName = current ? nameOf(current) : (ctxName ?? fetchedName);
 
   const matches = useMemo(() => {
     const needle = q.trim().toLowerCase();
