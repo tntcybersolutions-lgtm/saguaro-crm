@@ -15,6 +15,7 @@ import SalesOverview from '@/components/SalesOverview';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import SalesJourneyRail from '@/components/SalesJourneyRail';
 import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
+import StatusTicker from '@/components/StatusTicker';
 
 // Lazy-load Recharts to avoid SSR issues
 const BarChart = dynamic(() => import('recharts').then(m => m.BarChart), { ssr: false });
@@ -486,6 +487,9 @@ export default function DashboardPage() {
 
         {/* Live suggestion ticker — real learning moments with honest $ impact,
             each deep-linking to the flagged module section (NudgeRing sync). */}
+        {/* New items as they're added, colour-coded by status so the GC reads
+            them at a glance; above the findings ticker. */}
+        {!portfolioEmpty && <StatusTicker style={{ marginBottom: 12 }} />}
         {!portfolioEmpty && <SuggestionTicker style={{ marginBottom: 24 }} />}
 
         {/* ONE JOURNEY ON SCREEN, NOT THREE.

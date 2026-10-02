@@ -51,20 +51,26 @@ export async function GET(req: NextRequest) {
     /* Name the jobs. A feed reading "Awarded Electrical to Mesa Ridge" is only
        useful if you can see WHICH job it was on. */
     const projectIds = [...new Set(rows.map(r => (r as { project_id?: string | null }).project_id).filter(Boolean))] as string[];
-    let names: Record<string, string> = {};
+    let meta: Record<string, { name: string; status: string | null }> = {};
     if (projectIds.length) {
       const { data: projs } = await db
         .from('projects')
-        .select('id, name')
+        .select('id, name, status')
         .in('id', projectIds)
         .eq('tenant_id', user.tenantId);
-      names = Object.fromEntries((projs || []).map(p => [(p as { id: string }).id, (p as { name: string }).name]));
+      meta = Object.fromEntries((projs || []).map(p => {
+        const row = p as { id: string; name: string; status: string | null };
+        return [row.id, { name: row.name, status: row.status ?? null }];
+      }));
     }
 
     return NextResponse.json({
+      // project_status is included so a status ticker can colour each item by
+      // the job's lifecycle (ongoing / under contract / completed / closed).
       activities: rows.map(r => {
         const row = r as Record<string, unknown>;
-        return { ...row, project_name: row.project_id ? names[String(row.project_id)] ?? null : null };
+        const m = row.project_id ? meta[String(row.project_id)] : undefined;
+        return { ...row, project_name: m?.name ?? null, project_status: m?.status ?? null };
       }),
       count: rows.length,
     });
