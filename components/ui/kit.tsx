@@ -484,6 +484,22 @@ export function DataTable<T>({
   );
 }
 
+// ─── DetailList ──────────────────────────────────────────────────────────────
+
+/** Label / value rows for a record's details panel. Empty values show "—". */
+export function DetailList({ items }: { items: [string, React.ReactNode][] }) {
+  return (
+    <dl className="k-dl">
+      {items.map(([k, v]) => (
+        <div key={k} className="k-dl-row">
+          <dt>{k}</dt>
+          <dd>{v == null || v === '' ? '—' : v}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 // ─── EmptyState ──────────────────────────────────────────────────────────────
 
 export function EmptyState({ icon, title, text, action }: { icon?: React.ReactNode; title: string; text?: React.ReactNode; action?: React.ReactNode }) {
