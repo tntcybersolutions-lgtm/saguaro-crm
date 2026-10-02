@@ -204,6 +204,23 @@ function BidsPageInner() {
   const [pipelineLoading, setPipelineLoading] = useState(true);
   const [pipelineError, setPipelineError] = useState(false);
   const [dupPkgId, setDupPkgId] = useState<string|null>(null);
+  const [closingId, setClosingId] = useState<string|null>(null);
+
+  /** One-click close: stops a package taking new bids and moves it to history.
+   *  Hits the tenant-scoped close endpoint (Projects:Edit), then refreshes. */
+  async function handleClosePackage(op: any) {
+    if (closingId) return;
+    if (typeof window !== 'undefined' &&
+        !window.confirm(`Close "${op.name || 'this package'}"? It stops taking new bids and moves to history. You can still award a winner from inside the package.`)) return;
+    setClosingId(op.id);
+    try {
+      const r = await fetch(`/api/bid-packages/${op.id}/close`, { method: 'POST' });
+      if (!r.ok) throw new Error();
+      showToast('Package closed');
+      fetchPackages();
+    } catch { showToast('Could not close the package'); }
+    setClosingId(null);
+  }
 
   /** One-click repeat: copies a package's real server data — scope, trade,
    *  instructions, CSI codes, line items — into a new draft. Dates and status
@@ -603,6 +620,14 @@ function BidsPageInner() {
                       title="Copy scope, trade, instructions, and line items into a new draft — dates and status regenerate"
                       style={{marginLeft:6,background:'transparent',border:`1px solid ${BORDER}`,borderRadius:'var(--radius-sm)',color:dupPkgId===op.id?DIM:TEXT,fontSize:11,padding:'5px 10px',fontWeight:700,cursor:dupPkgId===op.id?'wait':'pointer',opacity:dupPkgId===op.id?0.6:1}}
                     >{dupPkgId===op.id?'Duplicating…':'Duplicate'}</button>
+                    {op.status!=='closed'&&op.status!=='awarded'&&(
+                    <button
+                      onClick={()=>handleClosePackage(op)}
+                      disabled={closingId===op.id}
+                      title="Stop taking new bids and move this package to history. You can still award a winner from inside the package."
+                      style={{marginLeft:6,background:'transparent',border:`1px solid ${BORDER}`,borderRadius:'var(--radius-sm)',color:closingId===op.id?DIM:TEXT,fontSize:11,padding:'5px 10px',fontWeight:700,cursor:closingId===op.id?'wait':'pointer',opacity:closingId===op.id?0.6:1}}
+                    >{closingId===op.id?'Closing…':'Close'}</button>
+                    )}
                   </td>
                 </tr>
               );
