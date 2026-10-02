@@ -80,6 +80,13 @@ export default function DealPage() {
   const [actDesc, setActDesc] = useState('');
   const [actSaving, setActSaving] = useState(false);
 
+  // Send-to-GC composer (P5). Emails the deal's contact via the existing,
+  // honesty-contracted /api/leads/[id]/email and logs it on the activity trail.
+  const [sendOpen, setSendOpen] = useState(false);
+  const [sendSubject, setSendSubject] = useState('');
+  const [sendMessage, setSendMessage] = useState('');
+  const [sending, setSending] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -103,6 +110,31 @@ export default function DealPage() {
   }, [id]);
 
   useEffect(() => { void load(); }, [load]);
+
+  /* Send a message to the GC (the deal's contact). Reuses the email route,
+     which is honest: it returns 503 and logs NOTHING when email isn't
+     configured, so we never show a "sent" that didn't leave. On success the
+     route logs an 'email' activity — reload to pull it into the timeline. */
+  const sendToGc = useCallback(async () => {
+    if (!lead || sending) return;
+    if (!sendSubject.trim() || !sendMessage.trim()) { showToast('Add a subject and a message.', 'error'); return; }
+    setSending(true);
+    try {
+      const r = await fetch(`/api/leads/${id}/email`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: sendSubject.trim(), message: sendMessage.trim() }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || 'Could not send to the GC');
+      showToast('Sent to the GC.', 'success');
+      setSendOpen(false); setSendSubject(''); setSendMessage('');
+      void load();
+    } catch (e) {
+      showToast(humanError(e, 'Could not send to the GC.'), 'error');
+    } finally {
+      setSending(false);
+    }
+  }, [lead, id, sending, sendSubject, sendMessage, showToast, load]);
 
   /* The spine: move the deal to a stage. One PATCH, which normalises casing;
      won_at / lost_at are stamped here so every pipeline reader agrees at once. */
@@ -214,6 +246,42 @@ export default function DealPage() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Send to the GC — message the deal's contact (P5) */}
+      <div style={{ ...card, marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <div>
+            <div style={labelS}>Send to the GC</div>
+            <div style={{ fontSize: 13, color: DIM, marginTop: 2 }}>
+              {lead.email ? `${lead.contact_name || 'Contact'} · ${lead.email}` : 'No email on this deal — add one to send.'}
+            </div>
+          </div>
+          <button
+            onClick={() => setSendOpen((o) => !o)}
+            disabled={!lead.email}
+            style={{
+              ...btn(sendOpen ? 'transparent' : '#3B82F6', sendOpen ? DIM : '#fff'),
+              border: sendOpen ? `1px solid ${BORDER}` : 'none', opacity: lead.email ? 1 : 0.5,
+            }}
+          >
+            {sendOpen ? 'Cancel' : 'Compose message →'}
+          </button>
+        </div>
+        {sendOpen && lead.email && (
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <input value={sendSubject} onChange={(e) => setSendSubject(e.target.value)} placeholder="Subject — e.g. Updated proposal for Back Nine" style={inputS} />
+            <textarea value={sendMessage} onChange={(e) => setSendMessage(e.target.value)} placeholder="Write your message to the GC…" rows={5} style={{ ...inputS, resize: 'vertical', fontFamily: 'inherit' }} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={sendToGc} disabled={sending || !sendSubject.trim() || !sendMessage.trim()} style={btn(GOLD)}>
+                {sending ? 'Sending…' : 'Send email'}
+              </button>
+            </div>
+            <div style={{ fontSize: 11, color: DIM }}>
+              Logged on this deal's activity. If email isn't configured on this environment, nothing is sent and you'll be told — no false "sent".
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stage button bar — the Path 12 spine */}
