@@ -45,7 +45,10 @@ export default function ProjectPhaseBar() {
         scrollbarWidth: 'none',
       }}
     >
-      <style>{`nav[aria-label="Project phase"]::-webkit-scrollbar{display:none}`}</style>
+      {/* dangerouslySetInnerHTML, not a text child: the attribute-selector
+          quote would otherwise be escaped to &quot; and break the CSS (the
+          repo's check:style-escapes build guard enforces this). */}
+      <style dangerouslySetInnerHTML={{ __html: 'nav[aria-label="Project phase"]::-webkit-scrollbar{display:none}' }} />
       {PROJECT_PHASES.map((ph, i) => {
         const Icon = ph.icon;
         const isActive = i === activeIdx;
