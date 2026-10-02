@@ -953,7 +953,7 @@ button.k-stat { text-align: left; font: inherit; }
 /* Row actions — inline buttons + an overflow menu */
 .k-row-actions { display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end; }
 .k-menu { position: relative; display: inline-flex; }
-.k-menu-list { position: absolute; right: 0; top: calc(100% + 4px); z-index: 60; min-width: 180px; padding: 4px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); }
+.k-menu-list { position: fixed; z-index: 10002; /* portal'd to body — above modals and the chat widget */ min-width: 180px; padding: 4px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); }
 .k-menu-item { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 6px; font-size: var(--fs-sm); color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
 .k-menu-item:hover, .k-menu-item:focus-visible { background: rgba(255,255,255,0.07); color: var(--text-primary); }
 .k-menu-item[data-tone="danger"] { color: #FCA5A5; }
@@ -990,6 +990,11 @@ select.k-select { padding-right: 36px; }
 .k-modal-title { font-size: var(--fs-lg); font-weight: 800; color: var(--text-primary); }
 .k-modal-body { padding: var(--sp-6); overflow-y: auto; flex: 1 1 auto; }
 .k-modal-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3) var(--sp-6); border-top: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+/* Loading placeholder + toast */
+.k-skel { display: inline-block; height: 10px; border-radius: 4px; background: rgba(255,255,255,0.07); animation: pulse 1.4s ease-in-out infinite; }
+.k-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10001; max-width: min(520px, calc(100vw - 32px)); padding: 10px 16px; border-radius: var(--radius-sm); background: var(--bg-elevated); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); font-size: var(--fs-sm); font-weight: 600; color: #6EE7B7; }
+.k-toast[data-tone="bad"] { color: #FCA5A5; }
 
 /* Empty state */
 .k-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-2); padding: 48px var(--sp-4); }

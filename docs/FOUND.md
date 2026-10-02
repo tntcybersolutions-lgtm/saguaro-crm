@@ -37,3 +37,6 @@ converge. One line each, newest at the bottom.
   overrides every table's own sizing — another reason tables never looked uniform.
 - (2 Oct) ~many pages hardcode `#0a0a0a` / `#141416` inline instead of tokens; they
   will not pick up the lifted `--bg-base` palette until migrated onto the kit.
+- (2 Oct) `app/app/layout.tsx:291` — the fixed top bar uses `left: sidebarWidth` even on
+  phones where the sidebar is hidden, so at 390px the header starts ~240px in and its
+  buttons run off-screen (seen on /app/bids at 390px).

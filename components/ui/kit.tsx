@@ -17,6 +17,7 @@
  */
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { CaretRight, DotsThree, MagnifyingGlass, X, Tray } from '@phosphor-icons/react';
 import { useSortedRows, type SortState, type SortDir } from './premium';
 import { STATUS_COLORS, type StatusKind } from '@/lib/status-colors';
@@ -250,20 +251,42 @@ export type Action = {
   hidden?: boolean;
 };
 
-/** The ⋯ overflow menu. Closes on outside click and Escape. */
+/** The ⋯ overflow menu. Rendered in a portal with fixed positioning so a
+ *  scrolling table or card can never clip it; flips upward near the bottom of
+ *  the viewport. Closes on outside click, Escape, scroll and resize. */
 export function Menu({ actions, label = 'More actions' }: { actions: Action[]; label?: string }) {
-  const [open, setOpen] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
+  const [pos, setPos] = React.useState<{ top?: number; bottom?: number; right: number } | null>(null);
+  const btnRef = React.useRef<HTMLDivElement>(null);
+  const listRef = React.useRef<HTMLDivElement>(null);
+  const open = pos !== null;
+
+  const toggle = () => {
+    if (open) { setPos(null); return; }
+    const r = btnRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const right = Math.max(8, window.innerWidth - r.right);
+    const spaceBelow = window.innerHeight - r.bottom;
+    setPos(spaceBelow < 260 && r.top > spaceBelow ? { bottom: window.innerHeight - r.top + 4, right } : { top: r.bottom + 4, right });
+  };
 
   React.useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    const close = () => setPos(null);
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || listRef.current?.contains(t)) return;
+      close();
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
     return () => {
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
     };
   }, [open]);
 
@@ -271,15 +294,15 @@ export function Menu({ actions, label = 'More actions' }: { actions: Action[]; l
   const firstDanger = actions.findIndex((a) => a.tone === 'danger');
 
   return (
-    <div className="k-menu" ref={ref} onClick={(e) => e.stopPropagation()}>
-      <Button variant="ghost" size="sm" icon={<DotsThree size={18} weight="bold" />} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} />
-      {open && (
-        <div className="k-menu-list" role="menu">
+    <div className="k-menu" ref={btnRef} onClick={(e) => e.stopPropagation()}>
+      <Button variant="ghost" size="sm" icon={<DotsThree size={18} weight="bold" />} aria-label={label} title={label} aria-haspopup="menu" aria-expanded={open} onClick={toggle} />
+      {open && createPortal(
+        <div className="k-menu-list" role="menu" ref={listRef} style={{ position: 'fixed', top: pos.top, bottom: pos.bottom, right: pos.right }} onClick={(e) => e.stopPropagation()}>
           {actions.map((a, i) => (
             <React.Fragment key={a.label}>
               {i === firstDanger && i > 0 && <div className="k-menu-sep" />}
               {a.href ? (
-                <a className="k-menu-item" role="menuitem" href={a.href} data-tone={a.tone} onClick={() => setOpen(false)}>
+                <a className="k-menu-item" role="menuitem" href={a.href} data-tone={a.tone} onClick={() => setPos(null)}>
                   {a.icon}{a.label}
                 </a>
               ) : (
@@ -289,14 +312,15 @@ export function Menu({ actions, label = 'More actions' }: { actions: Action[]; l
                   role="menuitem"
                   data-tone={a.tone}
                   disabled={a.disabled}
-                  onClick={() => { setOpen(false); a.onClick?.(); }}
+                  onClick={() => { setPos(null); a.onClick?.(); }}
                 >
                   {a.icon}{a.label}
                 </button>
               )}
             </React.Fragment>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
@@ -371,6 +395,7 @@ export function DataTable<T>({
   rowActions,
   empty,
   defaultSort,
+  loading,
 }: {
   columns: Column<T>[];
   rows: T[];
@@ -381,6 +406,8 @@ export function DataTable<T>({
   /** Rendered when rows is empty — pass an <EmptyState/>. */
   empty?: React.ReactNode;
   defaultSort?: { key: string; dir: SortDir };
+  /** Shows placeholder rows instead of data (never computed zeros). */
+  loading?: boolean;
 }) {
   const [sort, setSort] = React.useState<SortState>(defaultSort ?? null);
   const byKey = React.useMemo(() => new Map(columns.map((c) => [c.key, c])), [columns]);
@@ -420,7 +447,15 @@ export function DataTable<T>({
           </tr>
         </thead>
         <tbody>
-          {sorted.length === 0 ? (
+          {loading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <tr key={i}>
+                {Array.from({ length: colCount }).map((__, j) => (
+                  <td key={j}><span className="k-skel" style={{ width: j === 0 ? '70%' : '50%' }} /></td>
+                ))}
+              </tr>
+            ))
+          ) : sorted.length === 0 ? (
             <tr>
               <td className="k-table-empty" colSpan={colCount}>{empty ?? 'Nothing here yet.'}</td>
             </tr>
@@ -622,4 +657,24 @@ export function FormModal({
       </div>
     </div>
   );
+}
+
+// ─── Toast ───────────────────────────────────────────────────────────────────
+
+/** One-line confirmation, bottom-center. Pair with useToast(). */
+export function Toast({ message, tone = 'good' }: { message: string | null; tone?: 'good' | 'bad' }) {
+  if (!message) return null;
+  return <div className="k-toast" data-tone={tone} role="status">{message}</div>;
+}
+
+export function useToast(ms = 2800) {
+  const [toast, setToast] = React.useState<{ message: string; tone: 'good' | 'bad' } | null>(null);
+  const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const show = React.useCallback((message: string, tone: 'good' | 'bad' = 'good') => {
+    if (timer.current) clearTimeout(timer.current);
+    setToast({ message, tone });
+    timer.current = setTimeout(() => setToast(null), ms);
+  }, [ms]);
+  React.useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  return { toast, show };
 }
