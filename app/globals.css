@@ -15,11 +15,13 @@
   --border-subtle: rgba(255,255,255,0.06);
   --border-default: rgba(255,255,255,0.12);
   --border-strong: rgba(255,255,255,0.20);
-  /* Text — bright on dark */
+  /* Text — bright on dark. Lifted 2026-10-02 for legibility: secondary/tertiary
+     grey read too dim on the near-black surfaces (owner feedback). Brighter
+     steps, still a clear hierarchy. */
   --text-primary: #FFFFFF;
-  --text-secondary: #CBD5E1;
-  --text-tertiary: #8094B0;
-  --text-disabled: #5B677A;
+  --text-secondary: #E3E9F2;
+  --text-tertiary: #AEBBCE;
+  --text-disabled: #7E8CA1;
   /* ── Brand primary — the single white-label override point. Defaults to
      Saguaro gold; WhiteLabelProvider overrides --brand-primary (+ the derived
      vars) per tenant on the white-label tier. The --gold* aliases below AND
@@ -56,8 +58,9 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-html { font-size: 14px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: clip; max-width: 100%; }
-body { background: var(--bg-base); color: var(--text-primary); overflow-x: hidden; font-size: 13px; line-height: 1.5; font-weight: 400; letter-spacing: -0.006em; }
+/* Base type bumped 2026-10-02 for legibility (14→15 / 13→14). */
+html { font-size: 15px; scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: clip; max-width: 100%; }
+body { background: var(--bg-base); color: var(--text-primary); overflow-x: hidden; font-size: 14px; line-height: 1.55; font-weight: 400; letter-spacing: -0.006em; }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg-base); }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); border-radius: 3px; }
