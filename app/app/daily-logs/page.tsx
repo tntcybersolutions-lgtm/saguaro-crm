@@ -27,8 +27,9 @@ interface DailyLog {
   project_id: string;
   log_date: string;
   weather: string | null;
-  temperature_high: number | null;
-  temperature_low: number | null;
+  /* The column is high_temp / low_temp (text) — the list route returns select('*'). */
+  high_temp: string | number | null;
+  low_temp: string | number | null;
   crew_count: number;
   work_performed: string;
   delays: string;
@@ -46,6 +47,9 @@ interface DailyLog {
 interface Project { id: string; name: string; }
 
 const columnHelper = createColumnHelper<DailyLog>();
+
+/** Today in the user's own calendar — toISOString() is UTC and files an evening log under tomorrow. */
+const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 
 const fmtDay = (d?: string | null) => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '—';
 /** Workdays (Mon-Fri) strictly between two ISO dates — 0 across a plain weekend. */
@@ -80,7 +84,7 @@ export default function DailyLogsPage() {
 
   const [form, setForm] = useState({
     projectId: '',
-    logDate: new Date().toISOString().slice(0, 10),
+    logDate: localToday(),
     weather: '',
     temperatureHigh: '',
     temperatureLow: '',
@@ -259,7 +263,7 @@ export default function DailyLogsPage() {
       setLastApplied({});
       setCarryUsed(false);
       setShowCreate(false);
-      setForm({ projectId: '', logDate: new Date().toISOString().slice(0, 10), weather: '', temperatureHigh: '', temperatureLow: '', crewCount: '', workPerformed: '', delays: '', safetyNotes: '', materialsDelivered: '', visitors: '', notes: '', superintendent: '', precipitation: '', windConditions: '', phaseOfWork: '', equipment: '' });
+      setForm({ projectId: '', logDate: localToday(), weather: '', temperatureHigh: '', temperatureLow: '', crewCount: '', workPerformed: '', delays: '', safetyNotes: '', materialsDelivered: '', visitors: '', notes: '', superintendent: '', precipitation: '', windConditions: '', phaseOfWork: '', equipment: '' });
       setAutoCrew(false);
       await fetchLogs();
       return true;
@@ -296,11 +300,11 @@ export default function DailyLogsPage() {
       header: 'Weather',
       cell: (info) => info.getValue() || '—',
     }),
-    columnHelper.accessor((row) => `${row.temperature_high ?? '—'}° / ${row.temperature_low ?? '—'}°`, {
+    columnHelper.accessor((row) => `${row.high_temp ?? '—'}° / ${row.low_temp ?? '—'}°`, {
       id: 'temp',
       header: 'Temp',
       // The cell renders "72° / 55°" — sort on the numeric high, not the string.
-      sortingFn: (a, b) => (Number(a.original.temperature_high) || 0) - (Number(b.original.temperature_high) || 0),
+      sortingFn: (a, b) => (Number(a.original.high_temp) || 0) - (Number(b.original.high_temp) || 0),
       cell: (info) => <span style={{ color: colors.textMuted }}>{info.getValue()}</span>,
     }),
     columnHelper.accessor('crew_count', {
@@ -373,7 +377,7 @@ export default function DailyLogsPage() {
 
       {/* Cross-project field intelligence — no dead space above the table */}
       {!loading && logs.length > 0 && (() => {
-        const monthIso = new Date().toISOString().slice(0, 7);
+        const monthIso = localToday().slice(0, 7);
         const thisMonth = logs.filter(l => (l.log_date || '').startsWith(monthIso)).length;
         const avgCrew = logs.length ? Math.round(logs.reduce((s, l) => s + (Number(l.crew_count) || 0), 0) / logs.length) : 0;
         const delayDays = logs.filter(l => (l.delays || '').trim()).length;
@@ -442,7 +446,7 @@ export default function DailyLogsPage() {
             <form onSubmit={handleCreate} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {form.projectId && ctx ? (() => {
                 const lastLog = ctx.recent?.lastDailyLogDate as string | null;
-                const gap = lastLog ? missedWorkdays(lastLog, new Date().toISOString().slice(0, 10)) : 0;
+                const gap = lastLog ? missedWorkdays(lastLog, localToday()) : 0;
                 const prev = prevLogFor(form.projectId);
                 return (
                   <div style={{ background: gap > 0 ? 'rgba(239,68,68,.07)' : 'rgba(255,255,255,0.03)', border: `1px solid ${gap > 0 ? 'rgba(239,68,68,.3)' : colors.border}`, borderRadius: radius.md, padding: '12px 14px' }}>
