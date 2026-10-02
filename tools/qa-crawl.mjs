@@ -83,6 +83,25 @@ const run = async () => {
 
     for (const e of consoleErrors.slice(0, 5)) add(route, 'console-error', e);
 
+    // Horizontal overflow at phone width = a responsive break (the page does
+    // not auto-fit). Report the widest offending element so it is fixable.
+    const overflow = await page.evaluate(() => {
+      const de = document.documentElement;
+      const w = window.innerWidth;
+      if (de.scrollWidth <= w + 2) return null;
+      let worst = null, worstW = 0;
+      for (const el of Array.from(document.querySelectorAll('body *'))) {
+        const r = el.getBoundingClientRect();
+        if (r.right > w + 2 && r.width > worstW && r.width <= de.scrollWidth + 1) {
+          worstW = Math.round(r.width);
+          const cls = (el.className && typeof el.className === 'string') ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : '';
+          worst = (el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + cls).slice(0, 90);
+        }
+      }
+      return { scrollWidth: de.scrollWidth, innerWidth: w, worst };
+    }).catch(() => null);
+    if (overflow) add(route, 'mobile-overflow', `${overflow.scrollWidth}px wide at ${overflow.innerWidth}px — widest offender: ${overflow.worst || 'unknown'}`);
+
     // Dead-button check: click each visible, enabled button; flag no-ops.
     const buttons = await page.locator('button:visible:not([disabled])').all().catch(() => []);
     let idx = 0;
