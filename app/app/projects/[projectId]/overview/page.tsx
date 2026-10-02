@@ -212,9 +212,6 @@ export default function OverviewPage(){
         title={p.name}
         subtitle={[p.address,p.city,p.state].filter(Boolean).join(', ') || 'Command center for this project — financials, schedule, and field health at a glance.'}
         actions={<>
-          <HeroButton variant="ghost" onClick={runAutopilot} disabled={scanning} icon={<Lightning size={15} weight="fill" color={CIN.goldHi} />}>
-            {scanning?'Scanning…':'Run Autopilot'}
-          </HeroButton>
           <HeroButton href={'/app/projects/'+projectId+'/pay-apps/new'} icon={<Plus size={15} weight="bold" color="#241a05" />}>
             New Pay App
           </HeroButton>
@@ -265,7 +262,12 @@ export default function OverviewPage(){
       </div>}
 
       {alerts.length>0&&<div style={{marginBottom:18}}>
-        <SectionCard flat title="Autopilot Alerts" icon={<Lightning size={18} weight="duotone" color={CIN.goldHi}/>}>
+        {/* Autopilot de-featured: a secondary Intelligence card, not a hero action. */}
+        <SectionCard flat title="Intelligence · Autopilot alerts" icon={<Lightning size={18} weight="duotone" color={CIN.goldHi}/>}
+          action={<span style={{display:'inline-flex',gap:14,alignItems:'center'}}>
+            <button onClick={runAutopilot} disabled={scanning} style={{all:'unset',cursor:scanning?'wait':'pointer',fontSize:12,fontWeight:700,color:CIN.goldHi}}>{scanning?'Scanning…':'Re-scan'}</button>
+            <SectionLink href={'/app/projects/'+projectId+'/autopilot'}>All alerts <ArrowRight size={11} weight="bold" color={CIN.goldHi}/></SectionLink>
+          </span>}>
           {alerts.slice(0,3).map((a:any)=>(
             <div key={a.id} style={{display:'flex',alignItems:'flex-start',gap:10,padding:'8px 0',borderBottom:`1px solid ${CIN.border}`}}>
               <div style={{width:6,height:6,borderRadius:'50%',background:GOLD,marginTop:6,flexShrink:0,boxShadow:'0 0 8px rgba(245,158,11,.7)'}}/>

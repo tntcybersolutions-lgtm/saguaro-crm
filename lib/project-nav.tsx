@@ -160,10 +160,10 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
     ],
   },
   {
-    label: 'MORE · AI',
+    label: 'MORE · INTELLIGENCE',
     items: [
-      { label: 'Autopilot Alerts', href: '/autopilot',       icon: Robot  },
       { label: 'Bid Intelligence', href: '/intelligence',    icon: Brain, badge: null },
+      { label: 'Autopilot Alerts', href: '/autopilot',       icon: Robot  },
     ],
   },
 ];
