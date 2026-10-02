@@ -991,6 +991,23 @@ select.k-select { padding-right: 36px; }
 .k-modal-body { padding: var(--sp-6); overflow-y: auto; flex: 1 1 auto; }
 .k-modal-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3) var(--sp-6); border-top: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 
+/* Board (kanban) — columns scroll sideways inside their own container,
+   never the page. */
+.k-board { display: flex; gap: var(--sp-3); overflow-x: auto; padding-bottom: var(--sp-2); }
+.k-board-col { flex: 1 0 248px; min-width: 248px; max-width: 320px; display: flex; flex-direction: column; gap: var(--sp-2); }
+.k-board-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); padding: 8px 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+.k-board-list { display: flex; flex-direction: column; gap: var(--sp-2); max-height: 62vh; overflow-y: auto; }
+.k-board-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.k-board-card:hover { border-color: var(--border-strong); background: var(--bg-surface-2); }
+.k-board-empty { padding: 16px; text-align: center; border: 1px dashed var(--border-default); border-radius: var(--radius-sm); color: var(--text-tertiary); font-size: var(--fs-xs); }
+
+/* Detail list (label / value rows) */
+.k-dl { display: flex; flex-direction: column; }
+.k-dl-row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: var(--fs-sm); }
+.k-dl-row:last-child { border-bottom: none; }
+.k-dl-row dt { color: var(--text-tertiary); white-space: nowrap; }
+.k-dl-row dd { color: var(--text-primary); font-weight: 600; text-align: right; min-width: 0; overflow-wrap: anywhere; }
+
 /* Loading placeholder + toast */
 .k-skel { display: inline-block; height: 10px; border-radius: 4px; background: rgba(255,255,255,0.07); animation: pulse 1.4s ease-in-out infinite; }
 .k-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10001; max-width: min(520px, calc(100vw - 32px)); padding: 10px 16px; border-radius: var(--radius-sm); background: var(--bg-elevated); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); font-size: var(--fs-sm); font-weight: 600; color: #6EE7B7; }

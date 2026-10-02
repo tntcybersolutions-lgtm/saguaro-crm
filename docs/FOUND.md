@@ -40,3 +40,9 @@ converge. One line each, newest at the bottom.
 - (2 Oct) `app/app/layout.tsx:291` — the fixed top bar uses `left: sidebarWidth` even on
   phones where the sidebar is hidden, so at 390px the header starts ~240px in and its
   buttons run off-screen (seen on /app/bids at 390px).
+- (2 Oct, Phase 2) `components/SalesOverview.tsx` — shared by /app/sales and the main
+  dashboard, still on the old premium cards (fat tiles, its own donut card). Migrate it
+  together with the dashboard so both screens change at once.
+- (2 Oct) The floating chat widget (`components/SaguaroChatWidget.tsx`, fixed bottom-right,
+  z 9999) covers right-aligned controls at the bottom of the viewport — e.g. "Upload files"
+  on /app/leads/[id] when the files card sits at the fold.
