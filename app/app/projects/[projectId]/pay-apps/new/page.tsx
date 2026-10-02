@@ -239,7 +239,7 @@ export default function NewPayAppPage() {
   }
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Back to list */}
       <Link href={`/app/projects/${projectId}/pay-apps`} style={{...ghostButtonStyle,padding:'7px 14px',fontSize:12.5,marginBottom:18}} className="pmBtn">
         <ArrowLeft size={14} weight="bold" /> Pay Applications

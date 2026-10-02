@@ -619,7 +619,7 @@ export default function TmTicketsPage() {
         </div>
       )}
 
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
 
         <ModuleHero
           eyebrow="Field Money"

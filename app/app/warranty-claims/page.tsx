@@ -398,7 +398,7 @@ export default function WarrantyClaimsPage() {
 
   /* ──────── RENDER ──────── */
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* header */}
       <ModuleHero
         eyebrow="Warranty Program"

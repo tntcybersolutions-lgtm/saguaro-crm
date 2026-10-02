@@ -281,7 +281,7 @@ export default function PayAppDetailPage() {
   }
 
   if (loading) return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Layout-true shell — back link stays live; the SOV table paints its real
           header immediately with skeleton rows underneath (house pattern: rfis). */}
       <Link href={`/app/projects/${projectId}/pay-apps`}
@@ -328,7 +328,7 @@ export default function PayAppDetailPage() {
   );
 
   if (!payApp) return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       <PremiumEmpty
         icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
         title="Pay application not found"
@@ -382,7 +382,7 @@ export default function PayAppDetailPage() {
         </div>
       )}
 
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
 
         {/* Back link */}
         <Link href={`/app/projects/${projectId}/pay-apps`}

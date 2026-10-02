@@ -494,7 +494,7 @@ export default function BidPackagesPage() {
   };
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Procurement'}

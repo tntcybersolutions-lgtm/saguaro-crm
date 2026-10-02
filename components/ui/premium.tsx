@@ -143,7 +143,7 @@ export function Aurora({ soft = true }: { soft?: boolean }) {
 // sits above the backdrop at zIndex 1.
 export function PremiumSurface({
   children,
-  maxWidth = 1600,
+  maxWidth = 2200,
   soft = true,
   pad = '32px 24px 56px',
 }: {

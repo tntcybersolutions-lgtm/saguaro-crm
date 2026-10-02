@@ -564,7 +564,7 @@ export default function CatalogPage() {
   }
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       <style>{`
         .catAdd:active{transform:translateY(1px)!important;filter:brightness(.94)!important;box-shadow:0 1px 4px rgba(245,158,11,0.18),inset 0 1px 0 rgba(255,255,255,0.22)!important}
         .catStep:hover{transform:none!important;filter:none!important;background:rgba(245,158,11,0.20)!important}

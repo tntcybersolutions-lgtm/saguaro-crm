@@ -17,9 +17,20 @@ import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
 import { PROJECT_PHASES, phaseForPath } from '@/lib/project-nav';
 
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
 const BORDER = 'rgba(255,255,255,0.10)';
+
+/* Each phase its own color so the section tabs read as a colorful headline row
+   you can scan at a glance — the one you're in is filled and lit, the rest
+   carry a tint of their color so every section still stands out. */
+const PHASE_COLORS: Record<string, string> = {
+  overview:  '#94A3B8', // slate
+  precon:    '#60A5FA', // blue
+  execution: '#FBBF24', // gold
+  field:     '#34D399', // green
+  financial: '#FB923C', // orange
+  docs:      '#C084FC', // purple
+  closeout:  '#2DD4BF', // teal
+};
 
 export default function ProjectPhaseBar() {
   const pathname = usePathname() || '';
@@ -54,7 +65,8 @@ export default function ProjectPhaseBar() {
         const isActive = i === activeIdx;
         const isDone = i < activeIdx;
         const href = base + ph.href;
-        const tone = isActive ? GOLD : isDone ? 'rgba(245,158,11,0.55)' : 'rgba(255,255,255,0.40)';
+        const c = PHASE_COLORS[ph.key] || '#94A3B8';
+        const tintBg = `color-mix(in srgb, ${c} 14%, transparent)`;
         return (
           <React.Fragment key={ph.key}>
             {i > 0 && (
@@ -68,33 +80,33 @@ export default function ProjectPhaseBar() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 9, flexShrink: 0,
                 padding: '7px 13px', borderRadius: 10, textDecoration: 'none',
-                background: isActive
-                  ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD})`
-                  : isDone ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.02)',
-                border: `1px solid ${isActive ? GOLD : isDone ? 'rgba(245,158,11,0.28)' : BORDER}`,
-                boxShadow: isActive ? `0 4px 16px -6px ${GOLD}88` : 'none',
+                // Active = filled in the phase's color. Otherwise a tint of it,
+                // so every tab still shows its own color and the name stands out.
+                background: isActive ? `linear-gradient(180deg, ${c}, color-mix(in srgb, ${c} 82%, #000))` : tintBg,
+                border: `1px solid ${isActive ? c : `color-mix(in srgb, ${c} 40%, transparent)`}`,
+                boxShadow: isActive ? `0 4px 18px -6px ${c}` : 'none',
                 transition: 'background .15s ease, border-color .15s ease',
               }}
-              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = isDone ? 'rgba(245,158,11,0.08)' : 'rgba(255,255,255,0.02)'; }}
+              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = `color-mix(in srgb, ${c} 26%, transparent)`; }}
+              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = tintBg; }}
             >
               <span style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 width: 24, height: 24, borderRadius: 7, flexShrink: 0,
                 background: isActive ? 'rgba(0,0,0,0.18)' : 'transparent',
               }}>
-                <Icon size={15} weight={isActive ? 'fill' : 'regular'} color={isActive ? '#1C1200' : tone} />
+                <Icon size={15} weight={isActive ? 'fill' : 'bold'} color={isActive ? '#0A0A0A' : c} />
               </span>
               <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
                 <span style={{
                   fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  color: isActive ? 'rgba(28,18,0,0.7)' : 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap',
+                  color: isActive ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap',
                 }}>
-                  {isActive ? 'You are here' : `Step ${i + 1}`}
+                  {isActive ? 'You are here' : isDone ? 'Done' : `Step ${i + 1}`}
                 </span>
                 <span style={{
                   fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',
-                  color: isActive ? '#1C1200' : isDone ? '#E8D4AE' : 'rgba(255,255,255,0.82)',
+                  color: isActive ? '#0A0A0A' : c,
                 }}>
                   {ph.label}
                 </span>

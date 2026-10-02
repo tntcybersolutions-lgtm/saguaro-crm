@@ -292,7 +292,7 @@ function AssemblyLibraryContent() {
     <>
       {/* Content shifts left when the edit/create panel is open (behavior preserved). */}
       <div style={{ transition: 'margin-right 0.3s ease', marginRight: panelOpen ? 480 : 0 }}>
-        <PremiumSurface maxWidth={1600}>
+        <PremiumSurface maxWidth={2200}>
           {/* Header */}
           <ModuleHero
             eyebrow="Assembly Library"

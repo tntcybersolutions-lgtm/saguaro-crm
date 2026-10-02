@@ -283,7 +283,7 @@ export default function CrewsPage() {
 
       {/* Main */}
       <div style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
-        <PremiumSurface maxWidth={1600}>
+        <PremiumSurface maxWidth={2200}>
           <ModuleHero
             eyebrow="FIELD WORKFORCE"
             eyebrowIcon={<IconChip size={24} vivid={AC.vivid ?? AC.hex}><UsersThree size={13} weight="fill" color="#F8FAFC" /></IconChip>}

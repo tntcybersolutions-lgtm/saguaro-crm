@@ -426,7 +426,7 @@ export default function PrequalificationPage() {
   /* ═══════════════════════════ RENDER ═══════════════════════════ */
   return (
     <>
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Toast */}
       {toast && <div style={{ position: 'fixed', top: 20, right: 20, background: GREEN + '22', border: `1px solid ${GREEN}`, color: GREEN, padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, zIndex: 2000 }}>{toast}</div>}
 

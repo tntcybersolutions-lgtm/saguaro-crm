@@ -305,7 +305,7 @@ export default function InvoicesPage() {
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
 
       {/* Header */}
       <ModuleHero

@@ -235,7 +235,7 @@ export default function TeamPage(){
     setInviteMsg('');
   }
 
-  return <PremiumSurface maxWidth={1600}>
+  return <PremiumSurface maxWidth={2200}>
     <ModuleHero
       eyebrow={ctx?.project?.name || 'Project Team'}
       eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}

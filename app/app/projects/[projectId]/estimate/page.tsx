@@ -143,7 +143,7 @@ export default function EstimatePage() {
   }
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60, color: T.muted }}>Loading estimate data...</div>
       ) : !takeoff ? (

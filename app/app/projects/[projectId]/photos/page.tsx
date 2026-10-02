@@ -368,7 +368,7 @@ export default function PhotosPage(){
 
       {/* Main */}
       <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface maxWidth={1600}>
+        <PremiumSurface maxWidth={2200}>
           {/* Header */}
           <ModuleHero
             /* Always name the job on screen — never a bare "Photos" that leaves a GC

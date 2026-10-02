@@ -148,14 +148,14 @@ export default function ConfigGeneratorPage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
   }
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Breadcrumb */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginBottom: 14 }}>
         <Link href={`/app/projects/${projectId}/network`} style={{ color: 'rgba(255,255,255,0.62)', textDecoration: 'none' }}>Network</Link>

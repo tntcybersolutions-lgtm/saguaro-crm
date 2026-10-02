@@ -410,7 +410,7 @@ export default function RFIsPage() {
   });
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow="Project RFIs"

@@ -372,7 +372,7 @@ export default function ChangeOrdersPage() {
         </div>
       )}
 
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
 
         {/* Header */}
         <ModuleHero

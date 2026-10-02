@@ -507,7 +507,7 @@ export default function TakeoffPage() {
         @keyframes tk-scan { 0% { top: 0 } 50% { top: calc(100% - 2px) } 100% { top: 0 } }
         @media (max-width: 900px) { .tk-strip { grid-template-columns: repeat(2, 1fr); } }
       ` }} />
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         {/* Header */}
         <ModuleHero
           eyebrow="Estimating"

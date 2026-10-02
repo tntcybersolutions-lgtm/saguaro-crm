@@ -106,7 +106,7 @@ export default function FilesPage() {
 
   return (
     <>
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         {/* Header */}
         <ModuleHero
           eyebrow={ctx?.project?.name || 'Media Library'}

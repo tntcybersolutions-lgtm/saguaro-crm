@@ -425,7 +425,7 @@ export default function ReportsPage() {
   // ── Render ───────────────────────────────────────────────────
   return (
     <>
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       <div style={{ color: TEXT }}>
 
       {/* ── Page Header ── */}
