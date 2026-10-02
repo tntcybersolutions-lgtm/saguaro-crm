@@ -121,29 +121,36 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
   return (
     <div style={style}>
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: 16 }}>
+        {/* Every card routes to the section it summarises — contract value to
+            the jobs it totals, pipeline and win rate to the leads board, past
+            due to the follow-up list on My Work. */}
         <StatCard
           label="Contract value"
           value={money(contract.activeValue)}
           sub={`${contract.activeCount} active job${contract.activeCount === 1 ? '' : 's'}`}
           icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}
+          href="/app/projects"
         />
         <StatCard
           label="Pipeline"
           value={money(pipeline.value)}
           sub={`${pipeline.openCount} open · ${money(pipeline.weightedValue)} weighted`}
           icon={<Kanban size={17} weight="duotone" color={GOLD} />}
+          href="/app/leads"
         />
         <StatCard
           label="Past due"
           value={String(followUps.overdueCount)}
           sub={followUps.overdueCount ? 'follow-ups already late' : 'nothing is late'}
           icon={<WarningCircle size={17} weight="duotone" color={followUps.overdueCount ? RED : GREEN} />}
+          href="/app/my-work"
         />
         <StatCard
           label="Win rate"
           value={outcomes.winRate === null ? '—' : `${outcomes.winRate}%`}
           sub={outcomes.winRate === null ? 'nothing decided yet' : `${outcomes.wonCount} won · ${outcomes.lostCount} lost`}
           icon={<Target size={17} weight="duotone" color={GOLD} />}
+          href="/app/leads"
         />
       </div>
 

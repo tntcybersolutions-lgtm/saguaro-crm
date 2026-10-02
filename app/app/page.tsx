@@ -863,7 +863,7 @@ export default function DashboardPage() {
                 value={winData?.winRate != null ? `${Math.round(winData.winRate * 100)}%` : '—'}
                 accent={winData?.winRate != null ? GREEN : undefined}
                 sub={winData?.winRate != null ? `${winData.wins} won / ${winData.losses} lost` : 'No bids marked yet'}
-                delay={0.22}
+                href="/app/bids" delay={0.22}
               />
             </>
           )}
