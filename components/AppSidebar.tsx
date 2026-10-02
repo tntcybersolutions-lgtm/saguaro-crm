@@ -381,6 +381,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Customers',        href: '/app/customers',    icon: AddressBook, accentKey: 'contacts' },
       { label: 'Bid Board',        href: '/app/bids',         icon: CurrencyDollar, core: true, accentKey: 'bids' },
       { label: 'Intelligence',     href: '/app/intelligence', icon: Brain, accentKey: 'bidintelligence' },
+      { label: 'Reviews',          href: '/app/reviews',      icon: Star, accentKey: 'contacts' },
     ],
   },
   {
