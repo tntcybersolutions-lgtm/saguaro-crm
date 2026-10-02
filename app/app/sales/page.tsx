@@ -41,6 +41,87 @@ function Hop({ href, title, desc, tone }: { href: string; title: string; desc: s
   );
 }
 
+const GREEN = '#22C55E', RED = '#EF4444';
+const usd = (cents: number) => '$' + Math.round((cents || 0) / 100).toLocaleString('en-US');
+
+type ProfitJob = {
+  projectId: string; name: string | null; revenueCents: number;
+  costCents: number | null; marginCents: number | null; marginPct: number | null; hasCostData: boolean;
+};
+type ProfitData = {
+  jobs: ProfitJob[];
+  totals: { jobCount: number; costedJobCount: number; totalRevenueCents: number; totalCostCents: number; totalMarginCents: number; marginPct: number | null };
+};
+
+/** Booked profit across active jobs — revenue vs the same projected cost Cost Control shows. */
+function ProfitPanel() {
+  const [data, setData] = React.useState<ProfitData | null>(null);
+  const [state, setState] = React.useState<'loading' | 'ok' | 'error'>('loading');
+
+  React.useEffect(() => {
+    let off = false;
+    fetch('/api/sales/profit')
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((d) => { if (!off) { setData(d as ProfitData); setState('ok'); } })
+      .catch(() => { if (!off) setState('error'); });
+    return () => { off = true; };
+  }, []);
+
+  const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, marginBottom: 14 };
+  if (state === 'loading') return <div style={{ ...card, color: DIM }}>Loading booked profit…</div>;
+  if (state === 'error' || !data) return <div style={{ ...card, color: DIM }}>Couldn’t load profit right now.</div>;
+
+  const t = data.totals;
+  const marginTone = t.totalMarginCents >= 0 ? GREEN : RED;
+  const tile = (label: string, value: string, tone = TEXT, sub?: string) => (
+    <div style={{ flex: '1 1 150px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px 14px' }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 800, color: tone, marginTop: 4 }}>{value}</div>
+      {sub ? <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>{sub}</div> : null}
+    </div>
+  );
+
+  const costed = data.jobs.filter((j) => j.hasCostData).slice(0, 6);
+  const uncosted = t.jobCount - t.costedJobCount;
+
+  return (
+    <div style={card}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 10 }}>
+        Booked profit · active jobs
+      </div>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: costed.length ? 14 : 0 }}>
+        {tile('Booked margin', usd(t.totalMarginCents), marginTone, t.marginPct != null ? `${t.marginPct}% of contract` : undefined)}
+        {tile('Contract revenue', usd(t.totalRevenueCents), TEXT, `${t.costedJobCount} job${t.costedJobCount === 1 ? '' : 's'} with costs`)}
+        {tile('Projected cost', usd(t.totalCostCents), TEXT, 'worst of budget / committed / actual')}
+      </div>
+
+      {costed.length > 0 && (
+        <div>
+          {costed.map((j) => (
+            <Link key={j.projectId} href={`/app/projects/${j.projectId}`} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
+              padding: '9px 2px', borderBottom: `1px solid ${BORDER}`, textDecoration: 'none', color: TEXT,
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{j.name || 'Untitled job'}</span>
+              <span style={{ display: 'flex', gap: 12, alignItems: 'center', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 12, color: DIM }}>{usd(j.revenueCents)}</span>
+                <span style={{ fontSize: 13, fontWeight: 800, color: (j.marginCents ?? 0) >= 0 ? GREEN : RED, minWidth: 90, textAlign: 'right' }}>
+                  {usd(j.marginCents ?? 0)}{j.marginPct != null ? ` · ${j.marginPct}%` : ''}
+                </span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+      {uncosted > 0 && (
+        <div style={{ fontSize: 11, color: DIM, marginTop: 10 }}>
+          {uncosted} active job{uncosted === 1 ? '' : 's'} have no budget or cost yet — add a budget to see their margin.
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SalesHomePage() {
   const { can, resolved, name } = usePermissions();
   const router = useRouter();
@@ -77,6 +158,9 @@ export default function SalesHomePage() {
         <Hop href="/app/reports"   title="Reports"        desc="Win rate, revenue, activity" tone={GOLD} />
         <Hop href="/app/people"    title="Reps & access"  desc="Add a rep, set what each role can touch" tone={BLUE} />
       </div>
+
+      {/* Booked profit across active jobs (same cost engine as Cost Control). */}
+      <ProfitPanel />
 
       {/* Pipeline + follow-ups, self-fetched from /api/sales/overview. */}
       <SalesOverview />
