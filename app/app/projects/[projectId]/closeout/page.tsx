@@ -80,6 +80,11 @@ export default function CloseoutPage() {
     blockers: { key: string; label: string; count: number; href: string }[];
     unchecked: string[];
     project: Record<string, any> | null;
+    /** Auto-filed "[Award pending]" waivers with no claimant — not blockers. */
+    placeholderWaivers?: number;
+    /** Contract sum read across every column it can live in (and the
+     *  accepted proposal) — see lib/closeout-doc-data. */
+    contract?: { original: number; approvedCoTotal: number; approvedCoCount: number; revised: number; source: string } | null;
   } | null>(null);
   const [closing, setClosing] = useState(false);
   const [confirmOverride, setConfirmOverride] = useState(false);
@@ -158,9 +163,15 @@ export default function CloseoutPage() {
   // Live figures from the project snapshot (DB numerics may arrive as strings).
   const fmtM = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
   const money = ctx?.money;
-  const revised = Number(money?.revisedContract) || 0;
+  /* The project snapshot reads only two contract columns, so a job whose
+     contract lives on the accepted proposal showed a $0 contract and "fully
+     billed". The closeout endpoint reads every place the contract can be;
+     prefer it, and recompute the billed % against the same number. */
+  const gateRevised = Number(gate?.contract?.revised) || 0;
+  const revised = gateRevised || Number(money?.revisedContract) || 0;
+  const approvedCoCount = gateRevised ? Number(gate?.contract?.approvedCoCount) || 0 : Number(money?.approvedCoCount) || 0;
   const billed = Number(money?.billedToDate) || 0;
-  const billedPct = Number(money?.billedPct) || 0;
+  const billedPct = revised > 0 ? Math.round((billed / revised) * 1000) / 10 : 0;
   const openPunch = Number(ctx?.counts?.openPunch) || 0;
   const openRfis = Number(ctx?.counts?.openRfis) || 0;
   const billCount = Number(ctx?.counts?.bills) || 0;
@@ -168,6 +179,23 @@ export default function CloseoutPage() {
   const lastApp = money?.lastPayApp || null;
   const retainageHeld = billed * ((Number(money?.retainagePct) || 0) / 100);
   const balanceToFinish = Math.max(0, revised - billed);
+  // "Fully billed" only when there is a contract and it has been billed out —
+  // $0 billed against a $0 contract is "no contract sum", not done.
+  const fullyBilled = revised > 0 && billed >= revised;
+  const balanceSub = revised <= 0 ? 'no contract sum set' : fullyBilled ? 'fully billed' : 'still to bill';
+  const balanceAccent = fullyBilled ? T.green : revised > 0 ? '#FBBF24' : undefined;
+  // Unsigned waivers that actually block the close (placeholders excluded),
+  // so the checklist and the gate count the same thing.
+  const waiverBlockers = Number(gate?.blockers?.find(b => b.key === 'lien_waivers')?.count) || 0;
+  const placeholderWaivers = Number(gate?.placeholderWaivers) || 0;
+  const placeholderNote = placeholderWaivers > 0
+    ? ` ${placeholderWaivers} placeholder waiver${placeholderWaivers === 1 ? '' : 's'} for unawarded bid packages ${placeholderWaivers === 1 ? 'has' : 'have'} no sub to sign and ${placeholderWaivers === 1 ? 'does' : 'do'} not block the close.`
+    : '';
+  const waiverHint = subCount > 0
+    ? `${subCount} sub${subCount === 1 ? '' : 's'} on the job — each needs an unconditional final waiver before retainage releases.`
+    : waiverBlockers > 0
+      ? `No subs on the roster, but ${waiverBlockers} unsigned lien waiver${waiverBlockers === 1 ? ' is' : 's are'} on file — get ${waiverBlockers === 1 ? 'it' : 'them'} signed or void ${waiverBlockers === 1 ? 'it' : 'them'} before closing.`
+      : 'No subs on the roster — only your own final waiver applies.';
   const pctComplete = Number(ctx?.project?.percentComplete) || 0;
   const docsDone = ['as_built_drawings', 'om_manuals', 'equipment_warranties', 'w9_forms'].every(id => items.find(i => i.id === id)?.status === 'complete');
   const inspectDone = ['final_inspection', 'certificate_of_occupancy'].every(id => items.find(i => i.id === id)?.status === 'complete');
@@ -176,7 +204,7 @@ export default function CloseoutPage() {
     final_pay_app: lastApp
       ? { hint: `App #${lastApp.appNumber} ${String(lastApp.status || '').replace(/_/g, ' ')} — billed ${billedPct}% of ${fmtM(revised)}.`, ready: billedPct >= 100, warn: billedPct > 0 && billedPct < 100 }
       : { hint: 'No pay applications yet — the final app closes out the contract sum.', warn: true },
-    all_lien_waivers: { hint: subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'} on the job — each needs an unconditional final waiver before retainage releases.` : 'No subs on the roster — only your own final waiver applies.' },
+    all_lien_waivers: { hint: waiverHint + placeholderNote, warn: waiverBlockers > 0 },
     final_inspection: openPunch > 0
       ? { hint: `${openPunch} punch item${openPunch === 1 ? '' : 's'} still open — clear the list before calling the inspection.`, warn: true }
       : { hint: 'Punch list is clear — schedule the final inspection.', ready: true },
@@ -407,9 +435,9 @@ export default function CloseoutPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtM(revised), sub: `${Number(money?.approvedCoCount) || 0} approved CO${(Number(money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtM(revised), sub: `${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` },
           {href: `/app/projects/${projectId}/closeout`,  label: 'Billed to Date', value: fmtM(billed), sub: `${billedPct}% of revised` },
-          {href: `/app/projects/${projectId}/closeout`,  label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: balanceToFinish > 0 ? '#FBBF24' : T.green, sub: balanceToFinish > 0 ? 'still to bill' : 'fully billed' },
+          {href: `/app/projects/${projectId}/closeout`,  label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: balanceAccent, sub: balanceSub },
           {href: `/app/projects/${projectId}/closeout`,  label: 'Retainage Held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout` },
           {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? '#ef4444' : T.green, sub: openPunch > 0 ? 'blocks final inspection' : 'list is clear' },
           {href: `/app/projects/${projectId}/closeout`,  label: 'Subs to Clear', value: String(subCount), sub: 'final waivers + W-9s' },
@@ -536,7 +564,7 @@ export default function CloseoutPage() {
         <SectionCard flat title="Path to Handover" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
           <FlowSteps title="" steps={[
             { title: 'Clear the punch list', done: !!ctx && openPunch === 0, desc: openPunch > 0 ? `${openPunch} item${openPunch === 1 ? '' : 's'} still open.` : 'No open punch items on record.' },
-            { title: 'Bill the contract out', done: billedPct >= 100, desc: revised > 0 ? `${fmtM(billed)} of ${fmtM(revised)} billed (${billedPct}%).` : 'Contract money flows in from pay applications.' },
+            { title: 'Bill the contract out', done: fullyBilled, desc: revised > 0 ? `${fmtM(billed)} of ${fmtM(revised)} billed (${billedPct}%).` : 'Contract money flows in from pay applications.' },
             { title: 'Collect final waivers', done: items.find(i => i.id === 'all_lien_waivers')?.status === 'complete', desc: subCount > 0 ? `Unconditional finals from all ${subCount} subs release retainage cleanly.` : 'Your own final waiver clears the owner.' },
             { title: 'Assemble turnover docs', done: docsDone, desc: 'As-builts, O&M manuals, warranties, and W-9s in one binder.' },
             { title: 'Inspect and certify', done: inspectDone, desc: 'Final inspection, then the certificate of occupancy.' },
@@ -547,7 +575,7 @@ export default function CloseoutPage() {
           <SectionCard flat title="What Saguaro Knows" icon={<ChartBar size={17} weight="duotone" color="#F59E0B" />}>
             <InsightRow label="Revised contract" value={fmtM(revised)} strong />
             <InsightRow label="Billed to date" value={`${fmtM(billed)} · ${billedPct}%`} />
-            <InsightRow label="Balance to finish" value={fmtM(balanceToFinish)} accent={balanceToFinish > 0 ? '#FBBF24' : T.green} />
+            <InsightRow label="Balance to finish" value={fmtM(balanceToFinish)} accent={balanceAccent} />
             <InsightRow label="Retainage held" value={`≈${fmtM(retainageHeld)}`} />
             <InsightRow label="Open punch items" value={String(openPunch)} accent={openPunch > 0 ? '#ef4444' : T.green} />
             <InsightRow label="Subs to clear" value={String(subCount)} />
