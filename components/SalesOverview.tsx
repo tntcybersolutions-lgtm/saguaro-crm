@@ -20,6 +20,7 @@ import {
   Target, ArrowRight, CheckCircle,
 } from '@phosphor-icons/react';
 import { SectionCard, StatCard, PremiumEmpty } from '@/components/ui/premium';
+import { WinLossBar, DonutRatio } from '@/components/charts';
 
 const GOLD = '#F59E0B', TEXT = '#FFFFFF', DIM = 'rgba(255,255,255,0.62)';
 const BORDER = 'rgba(255,255,255,0.10)', RED = '#FF3B30', AMBER = '#FF9500', GREEN = '#34C759';
@@ -154,6 +155,20 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
         />
       </div>
 
+      {/* Real tracking graphs — win/loss ratio + pipeline mix, live numbers */}
+      <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginBottom: 16 }}>
+        <WinLossBar won={outcomes.wonCount} lost={outcomes.lostCount} title="Win / loss" subtitle="Closed deals" />
+        {stages.length > 0 && (
+          <DonutRatio
+            title="Pipeline by stage"
+            data={stages.map(([stage, v]) => ({ label: stage.replace(/_/g, ' '), value: v.value }))}
+            format="currency"
+            centerValue={money(pipeline.value)}
+            centerLabel="Pipeline"
+          />
+        )}
+      </div>
+
       <SectionCard
         title="Follow-ups"
         subtitle="Late first, then today, then the week ahead"
@@ -195,48 +210,6 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
               </div>
             )}
             {followUps.upcoming.map(f => <FollowUpRow key={f.id} f={f} tone={DIM} />)}
-          </div>
-        )}
-      </SectionCard>
-
-      <SectionCard
-        title="Pipeline by stage"
-        subtitle={`${money(pipeline.value)} across ${pipeline.openCount} open lead${pipeline.openCount === 1 ? '' : 's'}`}
-        icon={<Kanban size={17} weight="duotone" color={GOLD} />}
-        action={
-          <Link href="/app/leads" style={{ fontSize: 12.5, fontWeight: 700, color: GOLD, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            Pipeline <ArrowRight size={13} weight="bold" />
-          </Link>
-        }
-        flush
-      >
-        {stages.length === 0 ? (
-          <PremiumEmpty
-            icon={<Kanban size={28} weight="duotone" color={GOLD} />}
-            title="No open leads"
-            description="Add a lead and it appears here, staged and valued, with its next action on the list above."
-            compact
-          />
-        ) : (
-          <div>
-            {stages.map(([stage, v]) => {
-              const pct = pipeline.value > 0 ? Math.round((v.value / pipeline.value) * 100) : 0;
-              return (
-                <div key={stage} style={{ padding: '11px 20px', borderTop: `1px solid ${BORDER}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 6 }}>
-                    <span style={{ color: TEXT, fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>
-                      {stage.replace(/_/g, ' ')}
-                    </span>
-                    <span style={{ color: DIM, fontSize: 12.5, whiteSpace: 'nowrap' }}>
-                      {v.count} · {money(v.value)}
-                    </span>
-                  </div>
-                  <div style={{ height: 5, borderRadius: 999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: `linear-gradient(90deg, ${GOLD}, #FBBF24)` }} />
-                  </div>
-                </div>
-              );
-            })}
           </div>
         )}
       </SectionCard>
