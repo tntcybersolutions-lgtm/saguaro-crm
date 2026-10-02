@@ -20,11 +20,11 @@ export const colors = {
   // field app: navy page background #0a0a0a with slate cards/panels. Naming kept
   // (`dark` = page bg, `surface`/`raised` = cards) so existing token consumers
   // re-theme without renames.
-  dark:       '#0a0a0a', // page background (dark navy)
-  darkAlt:    '#141416', // card / panel (slate)
-  raised:     '#141416', // raised card
-  raisedAlt:  '#1c1c1e', // grouped inset / input
-  surface:    '#141416', // surface / card
+  dark:       '#0d1117', // page background — matches --bg-base
+  darkAlt:    '#151b23', // card / panel — matches --bg-surface
+  raised:     '#151b23', // raised card
+  raisedAlt:  '#1c232d', // grouped inset / input — matches --bg-surface-2
+  surface:    '#151b23', // surface / card
 
   border:     'rgba(255,255,255,0.12)',
   borderDim:  'rgba(255,255,255,0.06)',

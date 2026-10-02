@@ -27,3 +27,16 @@ converge. One line each, newest at the bottom.
 - Time-API ambiguity resolved while driving Path 2: `app/app/time/page.tsx` calls
   only `/api/timeclock/{in,out,status}`. `/api/clock/{in,out}` is dead parallel code;
   `/api/timesheets/*` is the admin side. Canonical web clock = `timeclock`.
+- (2 Oct, design-system Phase 0) `app/globals.css:247` forces `input, textarea, select
+  { font-size: 13px !important }` app-wide. Below 16px, iOS Safari zooms on focus
+  (CLAUDE.md §7). Kit fields override it; every legacy hand-rolled form still zooms.
+- (2 Oct) `app/globals.css:615` / `:644` — `-webkit-text-fill-color: #FFFFFF !important`
+  on inputs also paints `::placeholder`, so placeholders read like typed values on
+  every legacy form. Kit fields override it.
+- (2 Oct) `app/globals.css:259` `td { font-size: 13px !important; padding: 6px 12px }`
+  overrides every table's own sizing — another reason tables never looked uniform.
+- (2 Oct) ~many pages hardcode `#0a0a0a` / `#141416` inline instead of tokens; they
+  will not pick up the lifted `--bg-base` palette until migrated onto the kit.
+- (2 Oct) `app/app/layout.tsx:291` — the fixed top bar uses `left: sidebarWidth` even on
+  phones where the sidebar is hidden, so at 390px the header starts ~240px in and its
+  buttons run off-screen (seen on /app/bids at 390px).

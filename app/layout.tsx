@@ -197,7 +197,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </>
         )}
       </head>
-      <body style={{ margin: 0, padding: 0, background: '#0a0a0a', color: '#FFFFFF' }}>
+      <body style={{ margin: 0, padding: 0, background: 'var(--bg-base)', color: '#FFFFFF' }}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
