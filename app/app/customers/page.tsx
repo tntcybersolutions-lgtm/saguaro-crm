@@ -52,6 +52,11 @@ export default function CustomersPage() {
   // Team member chosen in the Actions panel to own the new/linked project.
   // Composite: '' | 'user:<id>' | 'sub:<id>' — the picker spans team + subs.
   const [assignee, setAssignee] = useState('');
+  // Compose-and-send email (via Resend) straight from the customer record.
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
@@ -226,6 +231,35 @@ export default function CustomersPage() {
     }
   }, [assigning, assignee, load, revalidateProjects, router, showToast]);
 
+  /* Send an email to the customer through the CRM (Resend) and log it on the
+     record. Honest: a 503 (email not configured) surfaces as an error and
+     nothing is logged — no fake "sent". */
+  const sendCustomerEmail = useCallback(async (customerId: string) => {
+    if (emailSending) return;
+    if (!emailSubject.trim() || !emailMessage.trim()) {
+      showToast('Add a subject and a message first.', 'error');
+      return;
+    }
+    setEmailSending(true);
+    try {
+      const res = await fetch(`/api/customers/${customerId}/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: emailSubject, message: emailMessage }),
+      });
+      const data = await res.json().catch(() => ({} as Record<string, unknown>));
+      if (!res.ok) throw new Error(typeof data?.error === 'string' ? data.error : `Request failed: ${res.status}`);
+      showToast('Email sent.', 'success');
+      setEmailOpen(false);
+      setEmailSubject('');
+      setEmailMessage('');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not send that email.', 'error');
+    } finally {
+      setEmailSending(false);
+    }
+  }, [emailSending, emailSubject, emailMessage, showToast]);
+
   /* ─── Detail View ─── */
   if (selected) {
     const c = selected;
@@ -335,12 +369,50 @@ export default function CustomersPage() {
                   {assigning ? 'Assigning…' : 'Assign to Project'}
                 </button>
                 <button onClick={() => {
-                  window.open(`mailto:${c.email}`, '_blank');
+                  if (!c.email) { showToast('This customer has no email address on file.', 'error'); return; }
+                  setEmailSubject(''); setEmailMessage(''); setEmailOpen(true);
                 }} className="pmBtn" style={{ ...ghostButtonStyle, width: '100%' }}>
                   Send Email
                 </button>
               </div>
             </SectionCard>
+
+            {/* Compose & send — real email through the CRM, logged on the record */}
+            {emailOpen && (
+              <div
+                onClick={() => !emailSending && setEmailOpen(false)}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+              >
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ width: '100%', maxWidth: 520, background: '#141416', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Email {c.name}</div>
+                  <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>To: {c.email}</div>
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    <input
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      placeholder="Subject"
+                      style={{ width: '100%', borderRadius: 10 }}
+                    />
+                    <textarea
+                      value={emailMessage}
+                      onChange={(e) => setEmailMessage(e.target.value)}
+                      placeholder="Write your message…"
+                      rows={7}
+                      style={{ width: '100%', borderRadius: 10, resize: 'vertical', padding: '10px 12px' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+                    <button onClick={() => setEmailOpen(false)} disabled={emailSending} className="pmBtn" style={{ ...ghostButtonStyle }}>Cancel</button>
+                    <button onClick={() => sendCustomerEmail(c.id)} disabled={emailSending} className="pmBtn" style={{ ...goldButtonStyle, opacity: emailSending ? 0.6 : 1, cursor: emailSending ? 'wait' : 'pointer' }}>
+                      {emailSending ? 'Sending…' : 'Send Email'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Projects & lifetime value — matched from live project data */}
             <SectionCard flat title="Projects & Lifetime Value" icon={<Buildings size={17} weight="duotone" color={GOLD} />}>
