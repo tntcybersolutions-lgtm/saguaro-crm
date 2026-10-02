@@ -91,7 +91,7 @@ const HAS_WORK: Record<string, (s: CompanySignals) => boolean> = {
   '/app/autopilot':      s => (s.autopilot || 0) > 0,
   '/app/intelligence':   s => (s.bidHistory || 0) > 0 || (s.bidPackages || 0) > 0,
   '/app/reports':        s => (s.savedReports || 0) > 0 || (s.invoices || 0) > 0 || (s.payApps || 0) > 0,
-  /* Compliance is about subs' insurance and licences, so it earns its place
+  /* Compliance is about subs' insurance and licenses, so it earns its place
      once there are subs to be compliant. */
   '/app/compliance':     s => (s.subs || 0) > 0,
   /* The directory itself, on the same signal: a tenant with subs on file has
@@ -129,9 +129,9 @@ export function isCompanyToolVisible(
   if (CORE_COMPANY_TOOLS.includes(href)) return true;
   if (href === currentPath) return true;
   /* Franchise Rollout is nineteen screens behind one entitlement. A tenant
-     entitled to it is by definition running a rollout programme, so the
+     entitled to it is by definition running a rollout program, so the
      entitlement IS the signal — asking again whether each of the nineteen has
-     data would hide a programme that has not started yet, which is precisely
+     data would hide a program that has not started yet, which is precisely
      when you need its checklists. Entitlement already hides it from everyone
      else. */
   if (href.startsWith('/app/command-center')) return true;

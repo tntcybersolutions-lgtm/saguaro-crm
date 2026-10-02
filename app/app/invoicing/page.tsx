@@ -436,7 +436,7 @@ export default function InvoicingPage() {
 
   return (
     <>
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow="Finance"

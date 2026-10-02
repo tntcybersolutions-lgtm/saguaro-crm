@@ -23,7 +23,7 @@
  * says so and still offers the sensible next move. A guide that removes itself
  * the moment you are competent is a guide you cannot hand to a new hire.
  *
- * Gold on the job side, blue on the sales side — the same two colours the
+ * Gold on the job side, blue on the sales side — the same two colors the
  * rails and the sidebar zones already use, so the half of the product you are
  * in is readable before any word is.
  */
@@ -92,7 +92,7 @@ export default function NextStepBar() {
   const dashboardProjectId = inProject ? null : ((pickedExists ? picked : projects[0]?.id) ?? null);
   const journeyId = projectId ?? dashboardProjectId;
   /* Gold whenever a job is driving the bar, whether or not we are standing on
-     that job's page — the colour states which half of the product is speaking,
+     that job's page — the color states which half of the product is speaking,
      and it would be lying if the bar said "build" in blue. */
   const onBuildJourney = Boolean(journeyId);
 

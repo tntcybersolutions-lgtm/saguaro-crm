@@ -74,7 +74,7 @@ export const SALES_STEPS: SalesStep[] = [
   {
     key: 'priced',
     title: 'Price the work',
-    desc: 'Take off the drawings and put packages out to your subs. What comes back becomes the number you submit.',
+    desc: 'Measure and price the drawings, then send packages to your subs. What comes back becomes the number you submit.',
     href: '/app/bids',
   },
   {

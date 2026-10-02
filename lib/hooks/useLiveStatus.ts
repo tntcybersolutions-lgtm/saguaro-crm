@@ -7,7 +7,7 @@
  * page loaded and wrong ten minutes later is still a system of record: the GC
  * has to refresh to find out the owner signed. This subscribes to the table so
  * the status changes on screen, and reports WHICH rows changed so the pill can
- * flash rather than silently swapping colour while nobody is looking.
+ * flash rather than silently swapping color while nobody is looking.
  *
  * Built on lib/useRealtime's connection — one websocket for the whole app,
  * already in use by the drawing viewer and the radio console. This adds a

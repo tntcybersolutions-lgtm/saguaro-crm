@@ -114,7 +114,7 @@ export default function TimeClockPage() {
       /* Default to a job only when there is exactly one it could be.
          It used to pre-select whichever project sorted first alphabetically,
          so a GC with several jobs could clock a full shift onto the wrong one
-         without ever touching the picker — and labour cost lands in that job's
+         without ever touching the picker — and labor cost lands in that job's
          budget. With more than one job, the choice has to be deliberate. */
       sb.from('projects').select('id, name').order('name').then(({ data }) => {
         setProjects(data ?? []);
@@ -311,7 +311,7 @@ export default function TimeClockPage() {
         accentColor={moduleAccent('time').hex}
         title="Time"
         accent="Clock"
-        subtitle="GPS-stamped, CSI-coded labour. Same engine as the phone."
+        subtitle="GPS-stamped, CSI-coded labor. Same engine as the phone."
         note="GPS stamped — no more paper"
         actions={
           <>

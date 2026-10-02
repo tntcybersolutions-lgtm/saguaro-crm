@@ -79,7 +79,7 @@ export function pathFromStored(stored: string | null | undefined, bucket: string
 /**
  * A signing failure must NEVER be returned as if it were a signed URL.
  *
- * The old behaviour here was to fall back to the original stored value. For a
+ * The old behavior here was to fall back to the original stored value. For a
  * demo:// or foreign URL that is correct — but for a Supabase PUBLIC url the
  * buckets are private, so the fallback handed back a URL that *looks* valid and
  * then 400s on fetch. That is the same failure mode as Supabase's unlicensed

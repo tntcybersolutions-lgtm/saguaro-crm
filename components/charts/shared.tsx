@@ -3,12 +3,12 @@
 /**
  * components/charts/shared — the common language for the financial chart kit.
  *
- * Every chart in this folder draws its colours, card chrome, number formatting
+ * Every chart in this folder draws its colors, card chrome, number formatting
  * and tooltip from here so the set reads as ONE system and matches the premium
  * surface (components/ui/premium.tsx): the same gold (#F59E0B brand) / blue
  * (#3B82F6 sales) accents, the same milled-plate card, tabular-nums, uppercase
  * micro-labels, and the readability tokens from globals.css (--text-*,
- * --brand-primary, --bg-surface, --border-*). Colours resolve through the CSS
+ * --brand-primary, --bg-surface, --border-*). Colors resolve through the CSS
  * variables so white-label re-themes and the app's readability pass carry
  * straight through to the charts.
  *
@@ -17,7 +17,7 @@
 
 import React from 'react';
 
-// ─── Colour tokens (resolve through globals.css :root, with safe fallbacks) ──
+// ─── Color tokens (resolve through globals.css :root, with safe fallbacks) ──
 export const CHART = {
   gold: 'var(--brand-primary, #F59E0B)',
   goldStrong: 'var(--brand-primary-strong, #FBBF24)',

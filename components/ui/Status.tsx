@@ -11,7 +11,7 @@
  *
  * Three things on screen, in order of how often they matter:
  *
- *   the pill    what state, in a colour that means the same thing everywhere
+ *   the pill    what state, in a color that means the same thing everywhere
  *   the rail    how far through, and what the next stage is called
  *   the nudge   what to do about it — and, when it has gone quiet in somebody
  *               else's court, for how long
@@ -193,8 +193,8 @@ export function StatusFlashStyles() {
 /* ── legend ─────────────────────────────────────────────────────────────── */
 
 /**
- * What the colours mean. Worth showing once on a status-heavy screen — a
- * colour system nobody explained is decoration.
+ * What the colors mean. Worth showing once on a status-heavy screen — a
+ * color system nobody explained is decoration.
  */
 export function StatusLegend({ tones }: { tones?: Tone[] }) {
   const show = tones ?? (['active', 'waiting', 'good', 'warn', 'bad'] as Tone[]);

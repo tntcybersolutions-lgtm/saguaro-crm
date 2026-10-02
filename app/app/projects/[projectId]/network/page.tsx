@@ -168,7 +168,7 @@ export default function NetworkDashboard() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
@@ -176,7 +176,7 @@ export default function NetworkDashboard() {
 
   if (showSetup) {
     return (
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleHero
           eyebrow={ctx?.project?.name || 'Network Hub'}
           eyebrowIcon={<Globe size={13} weight="fill" color={GOLD} />}
@@ -266,7 +266,7 @@ export default function NetworkDashboard() {
   }
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Network Hub'}

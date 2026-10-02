@@ -507,7 +507,7 @@ export default function SubPortalPage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleSkeleton kpis={4} rows={6} />
       </PremiumSurface>
     );
@@ -527,7 +527,7 @@ export default function SubPortalPage() {
 
   return (
     <>
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* ── header ── */}
       <ModuleHero
         eyebrow="Sub Portal"

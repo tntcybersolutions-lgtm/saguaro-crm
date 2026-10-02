@@ -4,7 +4,7 @@
  * MiniSpark — a tiny inline sparkline for embedding inside StatCards / metric
  * tiles. Hand-drawn as a crisp inline SVG (no ResponsiveContainer, so it costs
  * nothing at tile size and never fights its parent for layout). The stroke and
- * soft fill colour themselves by trend: green when the series ends higher than
+ * soft fill color themselves by trend: green when the series ends higher than
  * it started, red when lower, neutral when flat — or force it with `trend`.
  */
 
@@ -16,14 +16,14 @@ export interface MiniSparkProps {
   data: number[];
   width?: number;
   height?: number;
-  /** 'auto' (first vs last) by default; or pin the colour. */
+  /** 'auto' (first vs last) by default; or pin the color. */
   trend?: 'auto' | TrendDirection;
   strokeWidth?: number;
   /** Fill the area under the line. Default true. */
   fill?: boolean;
   /** Mark the final point with a dot. Default true. */
   showEndDot?: boolean;
-  /** Explicit colour override (wins over trend colouring). */
+  /** Explicit color override (wins over trend colouring). */
   color?: string;
   style?: React.CSSProperties;
   'aria-label'?: string;

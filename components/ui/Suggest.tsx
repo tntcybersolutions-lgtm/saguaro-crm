@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * <Suggest> — a text field with suggestions, in our own colours.
+ * <Suggest> — a text field with suggestions, in our own colors.
  *
  * Replaces `<input list="x">` + `<datalist id="x">`. The native datalist popup
  * is drawn by the browser, not the page: it ignores `color-scheme: dark`, it

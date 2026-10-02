@@ -1,20 +1,18 @@
 import React from 'react';
 import Script from 'next/script';
 import type { Metadata } from 'next';
-import { Inter, Permanent_Marker } from 'next/font/google';
+import { Permanent_Marker } from 'next/font/google';
 import './globals.css';
 import 'react-datepicker/dist/react-datepicker.css';
 import { ToastProvider } from '../components/Toast';
 import MarketingChatWrapper from '../components/MarketingChatWrapper';
 
-// Crisp, professional UI type — self-hosted, no layout shift. Exposed as a CSS var so a
-// global !important rule can force it over the per-page inline `-apple-system/Segoe UI`
-// stacks (which were overriding it and rendering chunky Segoe UI on Windows).
-// Inter is a variable font — no weight array so the full 100–900 range is available.
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+// The UI uses the native system font (San Francisco / Segoe UI / Roboto) via a
+// global rule in globals.css — no downloaded webfont, so it renders in each
+// device's own face and matches the native iOS app.
 
-// The annotation face — a super marking up a drawing. Used only by
-// components/Scribble.tsx, which opts out of the global Inter override below.
+// The annotation face — a marker scrawl on a drawing. Used only by
+// components/Scribble.tsx, which opts out of the global font rule below.
 const marker = Permanent_Marker({ subsets: ['latin'], weight: '400', variable: '--font-marker', display: 'swap' });
 
 export const viewport = {
@@ -125,7 +123,7 @@ const PH_HOST   = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${marker.variable}`}>
+    <html lang="en" className={`${marker.variable}`}>
       <head>
         <meta charSet="utf-8" />
         {/* Theme color + status bar tint */}

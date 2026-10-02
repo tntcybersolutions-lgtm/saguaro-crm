@@ -484,7 +484,7 @@ export default function LeadsPage() {
   /* ═══════════════════════════════ RENDER ═══════════════════════════════ */
   return (
     <div className="pmRoot" style={{
-      padding: '28px 32px', maxWidth: 1600, margin: '0 auto', color: TEXT,
+      padding: '28px 32px', maxWidth: 2200, margin: '0 auto', color: TEXT,
       fontFamily: '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif',
     }}>
 

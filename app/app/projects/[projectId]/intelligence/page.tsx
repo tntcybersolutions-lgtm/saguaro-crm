@@ -206,7 +206,7 @@ function IntelligenceChat() {
   };
 
   return (
-    <PremiumSurface maxWidth={1600} pad="40px 28px 40px">
+    <PremiumSurface maxWidth={2200} pad="40px 28px 40px">
       <ModuleHero
         eyebrow="Project Intelligence"
         eyebrowIcon={<Brain size={13} weight="fill" color={GOLD} />}

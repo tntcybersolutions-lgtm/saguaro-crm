@@ -141,7 +141,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
                   excluded: r.excluded ?? 0,
                   clarify: r.clarify ?? 0,
                   /* The per-line included/excluded/clarify matrix. The leveling
-                     board renders this directly, so an analysed package opens
+                     board renders this directly, so an analyzed package opens
                      with the scope grid already filled in rather than every
                      cell needing a click. */
                   scope: r.scope ?? [],

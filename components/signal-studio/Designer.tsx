@@ -231,7 +231,7 @@ const rssiThroughputEff = (dbm: number) => Math.max(0.12, Math.min(1, (dbm + 85)
 const round5 = (n: number) => Math.round(n / 5) * 5;
 
 // ── display layers: group device typeIds into per-SYSTEM toggleable categories (show/hide) ──
-//    Keys/colours align to the approved SYSTEM_COLORS single source of truth.
+//    Keys/colors align to the approved SYSTEM_COLORS single source of truth.
 const DEVICE_LAYER: Partial<Record<DeviceTypeId, string>> = {
   wifi_ap: 'wifi', camera: 'camera',
   motion_pir_ceiling: 'sensor', motion_pir_wall: 'sensor', smoke_detector_spot: 'sensor', heat_detector_spot: 'sensor',
@@ -304,7 +304,7 @@ function chip(ctx: CanvasRenderingContext2D, text: string, cx: number, cy: numbe
 /* ── Cinematic coverage hero (best-server per-AP territory field) for the client report ──
    Mirrors the design harness: each AP paints its own hue, brightness = signal strength,
    grey for dead cells, a white emission glow per AP masked to its footprint, walls drawn on
-   top, and dashed-red dead-zone callouts labelled "Place 1 AP here". Deterministic + DOM-canvas. */
+   top, and dashed-red dead-zone callouts labeled "Place 1 AP here". Deterministic + DOM-canvas. */
 const HM_HUES: number[][] = [[56, 140, 255], [168, 85, 247], [20, 200, 170], [244, 114, 22], [236, 72, 153], [132, 204, 22]];
 const HM_SLATE: number[] = [70, 76, 86];
 function hmClamp(v: number, a: number, b: number) { return Math.max(a, Math.min(b, v)); }
@@ -1522,7 +1522,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(d.pos.x, d.pos.y); ctx.arc(d.pos.x, d.pos.y, rPx, aim - half, aim + half); ctx.closePath(); ctx.fill();
         ctx.strokeStyle = def.color + '80'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(d.pos.x, d.pos.y); ctx.arc(d.pos.x, d.pos.y, rPx, aim - half, aim + half); ctx.closePath(); ctx.stroke();
       }
-      // minimal crisp pin: dark disc + 2px system-colour ring + tiny white centre dot
+      // minimal crisp pin: dark disc + 2px system-color ring + tiny white center dot
       const rDisc = sel ? 9 : 7.5;
       ctx.save();
       if (sel) { ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 8; }
@@ -1727,7 +1727,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         const nn = nnFt(ap); const half = nn != null && nn < 45;
         return `<tr><td><b>${ap.label || 'AP ' + (i + 1)}</b>${ap.channel != null ? ` · ch ${ap.channel}` : ''}</td><td>${nn != null ? Math.round(nn) + ' ft' : 'isolated'}</td><td><b style="color:${half ? '#a8620a' : '#137a3f'}">${half ? 'Half (50%)' : 'Full (100%)'}</b></td><td style="color:#555;font-size:12px">${half ? 'Overlaps a neighbour closely — half power trims co-channel interference and improves roaming.' : 'Well spaced — full power to reach the edges of its cell.'}</td></tr>`;
       }).join('')}</tbody></table></div>` : '';
-    // ── cable & termination schedule (rack = a gateway/switch if placed, else plan centre) ──
+    // ── cable & termination schedule (rack = a gateway/switch if placed, else plan center) ──
     const idfDev = project.devices.find(isIdfDevice);
     const rack = idfDev?.pos || (project.devices.find((d) => d.typeId === 'iot_gateway' || d.typeId === 'smart_switch')?.pos) || { x: project.imgW / 2, y: project.imgH / 2 };
     const cs = summarizeCables(project, rack);
@@ -1788,7 +1788,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         const nn = nnFt(ap); const a = servedFt2(ap.id);
         return `<tr><td><b>${ap.label || 'AP ' + (i + 1)}</b>${ap.channel != null ? ` · ch ${ap.channel}` : ''}</td><td class="r">${a != null ? a.toLocaleString() + ' ft²' : '—'}</td><td class="r">${nn != null ? Math.round(nn) + ' ft to nearest' : 'only AP'}</td><td class="c">${ap.band || '5'} GHz</td><td class="r">${ap.txPowerDbm ?? 15} dBm</td></tr>`;
       }).join('')}</tbody></table>
-      <p style="font-size:12px;color:#555;margin-top:6px">Area served = floor cells where this AP is the strongest signal (best-server model${covForAps ? `, ${covForAps.cellPx} px grid` : ''}). Spacing is centre-to-centre on the plan.</p></div>` : '';
+      <p style="font-size:12px;color:#555;margin-top:6px">Area served = floor cells where this AP is the strongest signal (best-server model${covForAps ? `, ${covForAps.cellPx} px grid` : ''}). Spacing is center-to-center on the plan.</p></div>` : '';
 
     // ── building-wide summary section (multi-floor only) ──
     const buildingHtml = summary ? `<div class="sect"><h2>Building summary</h2>
@@ -3246,7 +3246,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
   const hasPort = !!netRow && netRow.poeW > 0 && netRow.port !== '—';
   const pxPerFt = project.scale?.pxPerFt || 10;
 
-  // cabling: home-run back to the rack (a placed gateway/switch, else plan centre) — mirrors the BOM/report logic
+  // cabling: home-run back to the rack (a placed gateway/switch, else plan center) — mirrors the BOM/report logic
   const rack = project.devices.find((x) => x.typeId === 'iot_gateway' || x.typeId === 'smart_switch')?.pos || { x: project.imgW / 2, y: project.imgH / 2 };
   const runFt = runLengthFt(d.pos, rack, pxPerFt);
   const cab = recommendCabling(d.typeId, { distanceFt: runFt });

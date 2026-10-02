@@ -12,7 +12,7 @@
  *
  *   ONE MEANING PER COLOUR, EVERYWHERE. Blue means "someone else has it" on a
  *   pay application, an RFI, a submittal and a purchase order alike. If blue
- *   meant "submitted" on one screen and "in progress" on another, the colour
+ *   meant "submitted" on one screen and "in progress" on another, the color
  *   would carry no information and the whole thing is decoration.
  *
  *   NEVER RENDER BLANK. Only `takeoffs` has a CHECK constraint on its status
@@ -32,7 +32,7 @@
 /* ── tone ───────────────────────────────────────────────────────────────── */
 
 /**
- * Six meanings, and only six. Adding a seventh is how a colour system dies.
+ * Six meanings, and only six. Adding a seventh is how a color system dies.
  *
  * The one that earns its keep is `active` versus `waiting`: both are "not
  * finished", but one is on the GC's desk and the other is on somebody else's.
@@ -55,13 +55,13 @@ export type Tone =
   | 'done';
 
 export interface ToneStyle {
-  /** Text and dot colour. */
+  /** Text and dot color. */
   fg: string;
   /** Pill fill. */
   bg: string;
   /** Pill hairline. */
   border: string;
-  /** What this colour means, shown on hover. */
+  /** What this color means, shown on hover. */
   meaning: string;
 }
 

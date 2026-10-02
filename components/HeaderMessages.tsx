@@ -40,7 +40,7 @@ export interface HeaderMessage {
    * page that re-renders cannot pile up six copies of one warning.
    */
   id?: string;
-  /** Reuses the platform tone vocabulary — same colours, same meanings. */
+  /** Reuses the platform tone vocabulary — same colors, same meanings. */
   tone: Extract<Tone, 'active' | 'waiting' | 'good' | 'warn' | 'bad'>;
   text: string;
   action?: { label: string; href?: string; onClick?: () => void };

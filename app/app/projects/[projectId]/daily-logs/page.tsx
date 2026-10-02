@@ -445,7 +445,7 @@ export default function DailyLogsPage(){
 
       {/* Main */}
       <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface maxWidth={1600}>
+        <PremiumSurface maxWidth={2200}>
           {/* Header */}
           <ModuleHero
             eyebrow="FIELD REPORTS"

@@ -97,7 +97,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }));
 
     const subs = (subsRes.data || []) as any[];
-    if (!subs.length) return NextResponse.json({ error: 'No bids to analyse yet.' }, { status: 400 });
+    if (!subs.length) return NextResponse.json({ error: 'No bids to analyze yet.' }, { status: 400 });
     if (!scopeLines.length) {
       return NextResponse.json(
         { error: 'This package has no line items, so there is no checklist to level against.' },

@@ -33,7 +33,7 @@ const FAINT = 'rgba(255,255,255,0.42)';
 /* Versioned on purpose.
    The collapse preference is remembered forever, and a hard refresh does not
    clear localStorage — so anybody who had ever expanded this rail kept the old
-   behaviour and never saw the new default. The screen looked identical after a
+   behavior and never saw the new default. The screen looked identical after a
    deploy that had definitely shipped, which is indistinguishable from nothing
    having changed. Bumping the key hands everyone the new default once; their
    next explicit toggle is remembered from then on. */

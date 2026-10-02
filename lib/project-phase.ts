@@ -74,7 +74,7 @@ export interface PhaseStep {
  * pretending a bid flows into billing is what made the single journey wrong.
  */
 export const BIDDING_STEPS: PhaseStep[] = [
-  { key: 'takeoff',      title: 'Take off the drawings', desc: 'Drop the plan set. Every trade measured and priced from it.', href: '/takeoff' },
+  { key: 'takeoff',      title: 'Measure the drawings', desc: 'Upload the plans and the system measures and prices every trade from them.', href: '/takeoff' },
   { key: 'estimate',     title: 'Price it',              desc: 'The estimate builds from the takeoff, rolled up by CSI division.', href: '/estimate' },
   /* Levelling is FOLDED IN here rather than being its own step. It has no
      standalone screen — you level a specific package, from that package —

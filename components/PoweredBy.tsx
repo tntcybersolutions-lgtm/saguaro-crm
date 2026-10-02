@@ -4,7 +4,7 @@
  * "Powered by Saguaro" — the one place the name appears once white-label is on.
  *
  * A tenant who has branded the platform is entitled to have it read as their
- * system: their logo, their colours, their company name on the documents. This
+ * system: their logo, their colors, their company name on the documents. This
  * is the single exception, and it is deliberately small and quiet — a line in
  * the footer, not a badge on the chrome.
  *

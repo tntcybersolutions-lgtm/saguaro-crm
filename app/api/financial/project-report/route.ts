@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
        forecast on retainage held by a factor of four.
 
        BILLED TO DATE. This summed current_payment_due — each period's draw —
-       and labelled the total "billed to date". On a job billed to $3,730,000
+       and labeled the total "billed to date". On a job billed to $3,730,000
        that produced $3,357,000, because the draws are already net of
        retainage. Both numbers are real; only one is billed-to-date. AIA G702
        line 4, Total Completed and Stored to Date, is what a GC means by
@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
        RETAINAGE HELD. total_retainage is derived from total_completed_stored
        and is therefore cumulative too. Summing six applications gave
        $1,383,100 against a true $373,000 — the same double-count already
-       fixed in the field app's burn chart, its command centre, and the
+       fixed in the field app's burn chart, its command center, and the
        cash-flow forecast. This is the fourth place it lived.
 
        Both are now the LATEST application's value. Ties on app_number break on

@@ -516,7 +516,7 @@ export default function DashboardConfigPage() {
   /* ─── Render ─────────────────────────────────────────────────────────── */
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
           <div style={{ width: 40, height: 40, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
           <div style={{ color: DIM, fontSize: 15 }}>Loading dashboard configuration...</div>
@@ -530,7 +530,7 @@ export default function DashboardConfigPage() {
     <>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
 
         {/* ── Header ── */}
         <ModuleHero

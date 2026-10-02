@@ -39,7 +39,7 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
   purchase_order: 'Purchase Order',
   subcontract: 'Subcontract',
 
-  /* Payroll & labour compliance */
+  /* Payroll & labor compliance */
   wh347: 'WH-347 Certified Payroll',
   'wh347-certified-payroll': 'WH-347 Certified Payroll',
   prevailing_wage: 'Prevailing Wage Statement',

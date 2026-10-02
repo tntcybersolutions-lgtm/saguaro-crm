@@ -448,7 +448,7 @@ export default function ResourcePlanningPage() {
   const availableCount = availability.filter(a => a.weekFree[0]).length;
 
   /* ======== RENDER ======== */
-  return <PremiumSurface maxWidth={1600}>
+  return <PremiumSurface maxWidth={2200}>
     {/* Inline keyframes for spinner */}
     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 

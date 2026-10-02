@@ -6,8 +6,8 @@
  * Two things a page like this usually gets wrong, and the reasons this one is
  * built the way it is:
  *
- * It lets you pick a colour that hides the text, then leaves you to work out
- * why the product looks broken. Here every colour is run through
+ * It lets you pick a color that hides the text, then leaves you to work out
+ * why the product looks broken. Here every color is run through
  * lib/brand-theme, which measures each pair against WCAG and adjusts anything
  * that falls short — and then SAYS SO, on this page, in words, with the
  * before-and-after ratio. A GC whose brand had to be darkened learns that from
@@ -15,7 +15,7 @@
  *
  * And it shows swatches instead of the product. The preview here is a real
  * card, a real button, real body and secondary text, on the real surfaces —
- * because a colour that looks fine as a square can still be unreadable as a
+ * because a color that looks fine as a square can still be unreadable as a
  * label.
  *
  * The help below is written for somebody who has never done this and does not
@@ -81,7 +81,7 @@ export default function BrandingPage() {
     [primary, surface],
   );
 
-  /* What the colours would have done WITHOUT the guarantee — this is what the
+  /* What the colors would have done WITHOUT the guarantee — this is what the
      warning panel is really reporting, and why it is worth reading. */
   const rawRisk = useMemo(() => {
     const p = parseHex(primary);
@@ -133,8 +133,8 @@ export default function BrandingPage() {
           eyebrowIcon={<Palette size={13} weight="fill" color={GOLD} />}
           title="Make it"
           accent="yours"
-          subtitle="Your logo and colours, everywhere customers see you."
-          note="pick your colour — we keep it readable"
+          subtitle="Your logo and colors, everywhere customers see you."
+          note="pick your color — we keep it readable"
         />
 
         {msg && (
@@ -184,14 +184,14 @@ export default function BrandingPage() {
               </Link>
             </SectionCard>
 
-            <SectionCard title="Step 3 · Your colour" icon={<Palette size={17} weight="duotone" color={GOLD} />}>
-              <label style={label}>Brand colour</label>
+            <SectionCard title="Step 3 · Your color" icon={<Palette size={17} weight="duotone" color={GOLD} />}>
+              <label style={label}>Brand color</label>
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
                 <input
                   type="color"
                   value={primary}
                   onChange={(e) => setPrimary(e.target.value)}
-                  aria-label="Brand colour"
+                  aria-label="Brand color"
                   style={{ width: 56, height: 44, padding: 0, border: `1px solid ${BORDER}`, borderRadius: 9, background: 'transparent', cursor: 'pointer' }}
                 />
                 <input
@@ -277,7 +277,7 @@ export default function BrandingPage() {
           <div style={{ position: 'sticky', top: 84, display: 'grid', gap: 16 }}>
 
             <SectionCard title="What it will look like" icon={<Eye size={17} weight="duotone" color={GOLD} />}>
-              {/* The real thing, not swatches — a colour that reads fine as a
+              {/* The real thing, not swatches — a color that reads fine as a
                   square can still be unreadable as a label. */}
               <div style={{ background: theme.base, borderRadius: 12, padding: 16, border: `1px solid ${theme.border}` }}>
                 <div style={{ background: theme.surface2, border: `1px solid ${theme.border}`, borderRadius: 10, padding: 14 }}>
@@ -322,16 +322,16 @@ export default function BrandingPage() {
             >
               {theme.fixes.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#C6D6E8', lineHeight: 1.6, margin: 0 }}>
-                  Your colours passed every readability check on their own — nothing was changed.
+                  Your colors passed every readability check on their own — nothing was changed.
                   Text, labels and buttons all clear the accessibility standard for normal sight
                   and for anyone using your system in bright sun on a jobsite.
                 </p>
               ) : (
                 <>
                   <p style={{ fontSize: 13, color: '#C6D6E8', lineHeight: 1.6, margin: '0 0 12px' }}>
-                    Your colours are used as you chose them wherever they work. In these places
+                    Your colors are used as you chose them wherever they work. In these places
                     they would have been hard or impossible to read, so we shifted them just far
-                    enough — the colour is still yours, only lighter or darker.
+                    enough — the color is still yours, only lighter or darker.
                   </p>
                   <div style={{ display: 'grid', gap: 9 }}>
                     {theme.fixes.map((f) => (
@@ -356,7 +356,7 @@ export default function BrandingPage() {
 
               {rawRisk !== null && rawRisk < 2 && (
                 <div style={{ marginTop: 12, fontSize: 12.5, color: '#FB923C', lineHeight: 1.55 }}>
-                  Your brand colour and your background are very close to each other. We can keep
+                  Your brand color and your background are very close to each other. We can keep
                   the text readable, but buttons will be hard to pick out. Try a lighter or darker
                   background above.
                 </div>
@@ -372,11 +372,11 @@ export default function BrandingPage() {
               {[
                 {
                   q: 'The text is hard to read',
-                  a: 'It should not be — every colour is checked before it is used, and anything that would fail is adjusted automatically. If a screen still looks wrong, change the background in step 4 to “Platform dark” and save. That returns everything except your logo and accent to the standard theme. Then tell us what you were looking at, because that is a bug in ours, not a mistake in yours.',
+                  a: 'It should not be — every color is checked before it is used, and anything that would fail is adjusted automatically. If a screen still looks wrong, change the background in step 4 to “Platform dark” and save. That returns everything except your logo and accent to the standard theme. Then tell us what you were looking at, because that is a bug in ours, not a mistake in yours.',
                 },
                 {
-                  q: 'My brand colour looks different from my letterhead',
-                  a: 'Check the panel above. If your colour appears there, we lightened or darkened it because at its original value the text on top of it could not be read. The hue is unchanged — it is the same colour, adjusted only as far as it had to be. If you would rather keep the exact colour, use a different background so it has more to stand against.',
+                  q: 'My brand color looks different from my letterhead',
+                  a: 'Check the panel above. If your color appears there, we lightened or darkened it because at its original value the text on top of it could not be read. The hue is unchanged — it is the same color, adjusted only as far as it had to be. If you would rather keep the exact color, use a different background so it has more to stand against.',
                 },
                 {
                   q: 'My logo looks small, or sits on a white box',
@@ -384,7 +384,7 @@ export default function BrandingPage() {
                 },
                 {
                   q: 'I want to start over',
-                  a: 'Set the background to “Platform dark”, press Reset beside the colour, and save. You are back to the standard look with your logo and company name intact.',
+                  a: 'Set the background to “Platform dark”, press Reset beside the color, and save. You are back to the standard look with your logo and company name intact.',
                 },
                 {
                   q: 'Who sees this?',

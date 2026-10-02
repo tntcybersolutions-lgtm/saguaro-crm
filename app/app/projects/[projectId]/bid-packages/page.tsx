@@ -73,9 +73,9 @@ interface WizardState {
 /**
  * Defers to the platform status treatment.
  *
- * This had its own four-colour table, in which "open" was gold — the colour
+ * This had its own four-color table, in which "open" was gold — the color
  * that means "waiting on you" everywhere else, when a package that is out for
- * bid is waiting on subs. A colour that means one thing here and another on
+ * bid is waiting on subs. A color that means one thing here and another on
  * the next screen carries no information at all.
  */
 function StatusBadge({ status }: { status: string }) {
@@ -494,7 +494,7 @@ export default function BidPackagesPage() {
   };
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Procurement'}

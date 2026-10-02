@@ -121,7 +121,7 @@ export default function BidPackageDetailPage() {
      This form was two free-text boxes, so inviting a sub you had already
      entered meant typing their company and email again from memory — with the
      typo risk on the address the whole bid depends on, and no link back to the
-     record holding their licence, insurance and W-9 status. The subs page even
+     record holding their license, insurance and W-9 status. The subs page even
      advertises "picking a directory company pre-fills contacts, license, and
      compliance"; this screen was the one place that ignored it.
      /api/bid-packages/[id]/invite-subs has accepted a `subId` on each sub the

@@ -1,6 +1,6 @@
 'use client';
 /**
- * StatusTicker — new items scrolling across the top, colour-coded by status.
+ * StatusTicker — new items scrolling across the top, color-coded by status.
  *
  * The owner's mandate: when a salesperson or employee adds anything to the
  * system, the GC should see it scroll past and read its status by COLOUR — red

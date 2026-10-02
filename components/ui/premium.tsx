@@ -143,7 +143,7 @@ export function Aurora({ soft = true }: { soft?: boolean }) {
 // sits above the backdrop at zIndex 1.
 export function PremiumSurface({
   children,
-  maxWidth = 1600,
+  maxWidth = 2200,
   soft = true,
   pad = '32px 24px 56px',
 }: {
@@ -553,11 +553,11 @@ export const ghostButtonStyle: React.CSSProperties = {
  * The SECOND action on a screen, and it is deliberately not gold any more.
  *
  * There are 356 filled-gold buttons across the app and 86 gold-outlined ones,
- * so a typical screen shouted in the same colour three or four times. When one
- * colour means "this is the important thing" and it is used four times on one
+ * so a typical screen shouted in the same color three or four times. When one
+ * color means "this is the important thing" and it is used four times on one
  * view, it has stopped meaning anything — the eye has nowhere to land and
  * every page reads as a wall of amber. It is the same failure the status
- * colours had before they were given one meaning each.
+ * colors had before they were given one meaning each.
  *
  * Gold now marks exactly one thing per screen: the filled button, the action
  * the GC came to that page to take. Everything beside it is a neutral outline

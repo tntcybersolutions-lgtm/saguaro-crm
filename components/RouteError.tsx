@@ -14,7 +14,7 @@
  * happens:
  *
  *   1. A way out that is not the browser's back button — reset() re-renders
- *      the route without a reload, and there is always a labelled way home.
+ *      the route without a reload, and there is always a labeled way home.
  *   2. The error text on screen. A client-side crash writes no server log, so
  *      this is frequently the only place the cause is ever visible.
  *   3. The digest, quoted as a reference, so a support call has something to

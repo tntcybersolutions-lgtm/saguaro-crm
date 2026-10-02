@@ -69,7 +69,7 @@ export default function CompliancePage(){
   const complianceColor = (c:string) => c==='compliant'?GREEN:c==='at_risk'?AMBER:RED;
   const complianceBg = (c:string) => c==='compliant'?'rgba(69,179,125,.14)':c==='at_risk'?'rgba(240,166,60,.14)':'rgba(224,100,78,.14)';
 
-  return <PremiumSurface maxWidth={1600}>
+  return <PremiumSurface maxWidth={2200}>
 
     {/* Header */}
     <ModuleHero

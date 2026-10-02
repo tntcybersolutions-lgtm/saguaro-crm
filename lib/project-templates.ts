@@ -24,7 +24,7 @@ export interface ProjectTemplate {
   key: string;
   name: string;
   blurb: string;
-  /** One line a GC can recognise their own job in. */
+  /** One line a GC can recognize their own job in. */
   example: string;
   projectType: string;
   contractType: string;

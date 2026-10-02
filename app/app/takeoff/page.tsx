@@ -466,7 +466,7 @@ export default function TakeoffPage() {
     ? Math.round(completed.reduce((s, t) => s + (t.confidence || 0), 0) / completed.length)
     : 0;
   /* A bid value is what you BID, not what the work costs you. This summed
-     total_cost — the cost subtotal — and labelled it "Total Bid Value", so the
+     total_cost — the cost subtotal — and labeled it "Total Bid Value", so the
      headline under-reported every takeoff by its whole margin. analyze-full
      writes grand_total from the sell price; total_cost stays the fallback for
      older rows that predate it. */
@@ -507,7 +507,7 @@ export default function TakeoffPage() {
         @keyframes tk-scan { 0% { top: 0 } 50% { top: calc(100% - 2px) } 100% { top: 0 } }
         @media (max-width: 900px) { .tk-strip { grid-template-columns: repeat(2, 1fr); } }
       ` }} />
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         {/* Header */}
         <ModuleHero
           eyebrow="Estimating"

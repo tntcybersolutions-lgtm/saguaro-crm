@@ -461,7 +461,7 @@ export default function DashboardPage() {
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       `}</style>
 
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
 
         {/* Header */}
         <ModuleHero
@@ -487,7 +487,7 @@ export default function DashboardPage() {
 
         {/* Live suggestion ticker — real learning moments with honest $ impact,
             each deep-linking to the flagged module section (NudgeRing sync). */}
-        {/* New items as they're added, colour-coded by status so the GC reads
+        {/* New items as they're added, color-coded by status so the GC reads
             them at a glance; above the findings ticker. */}
         {!portfolioEmpty && <StatusTicker style={{ marginBottom: 12 }} />}
         {!portfolioEmpty && <SuggestionTicker style={{ marginBottom: 24 }} />}

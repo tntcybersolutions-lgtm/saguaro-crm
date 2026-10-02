@@ -223,7 +223,7 @@ export default function W9Page() {
   const formValid = !!formName.trim() && !!formEmail.trim();
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow="W-9 Requests"

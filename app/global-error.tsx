@@ -10,7 +10,7 @@
  * not the tokens, not next/link. Whatever just failed took the layout down
  * with it, and a shared import is a second chance to fail on the screen whose
  * whole job is to survive. Everything here is inline and self-contained; the
- * colours are duplicated from the tokens on purpose.
+ * colors are duplicated from the tokens on purpose.
  */
 
 export default function GlobalError({

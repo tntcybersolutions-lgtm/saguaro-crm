@@ -1046,8 +1046,8 @@ export const TOURS: Tour[] = [
         advance: 'read',
       },
       {
-        title: 'Your logo and colour',
-        body: 'Upload the logo and it appears in the sidebar immediately and on every generated PDF. The brand colour replaces Saguaro gold throughout.',
+        title: 'Your logo and color',
+        body: 'Upload the logo and it appears in the sidebar immediately and on every generated PDF. The brand color replaces Saguaro gold throughout.',
         route: '/app/settings',
         anchorText: ['Save Branding'],
         advance: 'read',

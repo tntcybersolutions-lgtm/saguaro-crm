@@ -443,14 +443,14 @@ export default function IntelligencePage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
   }
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow="Cross-Project Analytics"

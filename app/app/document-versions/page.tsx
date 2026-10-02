@@ -451,7 +451,7 @@ export default function DocumentVersionsPage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1600}>
+      <PremiumSurface maxWidth={2200}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: 40, height: 40, border: `3px solid ${C.BORDER}`, borderTopColor: C.GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
@@ -464,7 +464,7 @@ export default function DocumentVersionsPage() {
   }
 
   return (
-    <PremiumSurface maxWidth={1600}>
+    <PremiumSurface maxWidth={2200}>
       <style>{responsiveCSS}</style>
 
       {/* Toast */}
