@@ -31,6 +31,29 @@ The user never has to paste instructions. If `docs/SESSION-PLAYBOOK.md` is
 missing, that is the only thing you stop and report. Otherwise: read, select,
 run.
 
+### IF YOU CAN REACH THE RUNNING APP — a LOCAL session with a browser or the iOS Simulator
+
+Cloud sessions CANNOT reach the live app (egress is blocked by design), so the
+on-device QA is yours and yours alone. If this session has a browser,
+Playwright, or Xcode, your session-start job is the **iOS QA loop**, not a
+MUST-PASS path — the user should never have to drive it by hand:
+
+1. Read `docs/IOS-DEVICE-QA.md` and run it end to end against the app: Chrome
+   with iPhone-15 device emulation at https://saguarocontrol.net signed in, or
+   the iOS Simulator (`npm run cap:build:ios`) for camera/GPS. Sign-in from env
+   (`E2E_EMAIL` / `E2E_PASSWORD`) — never hardcode, never commit creds.
+2. Tap EVERY button, link, tab and row. Create a record → save → reopen it →
+   confirm every field persisted and pre-filled and that relationships updated
+   (won deal → job, stage move → card moves). Ask at each screen whether a
+   first-time user would know what to do.
+3. Write EVERY defect into `docs/IOS-FLOW-AUDIT.md` using its Findings template
+   (screen, steps, expected, actual, severity, screenshot), then commit, push a
+   branch, and open a PR. The pushed findings ARE the deliverable.
+
+You FIND on the device; the cloud session FIXES in the code. Do not stop after
+one screen — walk the whole script. This block outranks the MUST-PASS selection
+above whenever you can actually reach the app.
+
 I am the engineer. I own getting Saguaro to 100% working, not to "built".
 
 DONE means a path in `docs/MUST-PASS.md` has been driven end to end
