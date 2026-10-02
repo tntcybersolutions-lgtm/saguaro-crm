@@ -17,6 +17,7 @@ import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { fmtDate as fmtDateSafe } from '@/lib/format-date';
 import { LEAD_STAGES } from '@/lib/lead-stages';
+import { FileTypeBadge } from '@/components/FileTypeBadge';
 
 /* Tokens match app/app/leads/page.tsx so the deal page and the board read as
    one surface. */
@@ -393,7 +394,10 @@ export default function DealPage() {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
                 padding: '9px 2px', borderBottom: `1px solid ${BORDER}`, textDecoration: 'none', color: TEXT,
               }}>
-                <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <FileTypeBadge name={m.name} mime={m.content_type} />
+                  <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
+                </span>
                 <span style={{ display: 'flex', gap: 12, alignItems: 'center', whiteSpace: 'nowrap' }}>
                   <span style={{ fontSize: 11, color: DIM }}>{fmtBytes(m.size_bytes)}</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>Download ↓</span>

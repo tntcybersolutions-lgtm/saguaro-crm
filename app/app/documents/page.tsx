@@ -4,6 +4,7 @@ import { useProjects } from '@/lib/hooks/useProjects';
 import Link from 'next/link';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { WarningCircle, FileText, Clipboard, Shield, Hammer, Buildings, NotePencil, CheckCircle, Square, Receipt, Plus, MagnifyingGlass } from '@phosphor-icons/react';
+import { FileTypeBadge } from '@/components/FileTypeBadge';
 import { humanError } from '@/lib/errors';
 import { openPdf } from '@/components/PdfViewer';
 import {
@@ -502,12 +503,18 @@ export default function DocumentsPage() {
                           title; show it, and keep the type as the second line
                           so the column still scans by kind. */}
                       <td style={{ padding: '12px 16px', fontWeight: 700 }}>
-                        {doc.title || docTypeLabel(doc.doc_type)}
-                        {doc.title && (
-                          <div style={{ fontSize: 11.5, fontWeight: 500, color: '#9CA3AF', marginTop: 2 }}>
-                            {docTypeLabel(doc.doc_type)}
-                          </div>
-                        )}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                          {/* Generated library docs are PDFs — show the real type, not a generic row. */}
+                          <FileTypeBadge name={doc.file_name ?? doc.title} url={doc.url} mime={doc.mime_type ?? 'application/pdf'} />
+                          <span>
+                            {doc.title || docTypeLabel(doc.doc_type)}
+                            {doc.title && (
+                              <div style={{ fontSize: 11.5, fontWeight: 500, color: '#9CA3AF', marginTop: 2 }}>
+                                {docTypeLabel(doc.doc_type)}
+                              </div>
+                            )}
+                          </span>
+                        </span>
                       </td>
                       <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>{doc.projectName ?? '—'}</td>
                       <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>{fmtDay(doc.created_at) ?? '—'}</td>
