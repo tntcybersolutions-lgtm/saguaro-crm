@@ -44,7 +44,15 @@ to stop.
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
 - Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- Code walk (cloud, no runtime):
+  - page + `/api/daily-logs/list|create|[id]` exist — CODE-VERIFIED
+  - create reads the camelCase keys the page sends, auth via requirePermission, tenant_id from user, project checked in-tenant — CODE-VERIFIED
+  - list returns `{logs}`, page reads `data.logs` — CODE-VERIFIED
+  - Temp column read `temperature_high/low`; DB + API use `high_temp/low_temp` (column always "—° / —°") — FIXED, CODE-VERIFIED
+  - default log date was UTC (`toISOString`), now local calendar day — FIXED, NEEDS-LIVE-RUN
+  - save → reopen `/app/daily-logs/[id]` persists — NEEDS-LIVE-RUN
+  - tsc / npm run build — NOT RUN (no node_modules in this container); Vercel preview is the build check
+- STATUS: CODE-VERIFIED — AWAITING LIVE RUN
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out

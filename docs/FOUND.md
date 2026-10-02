@@ -27,3 +27,8 @@ converge. One line each, newest at the bottom.
 - Time-API ambiguity resolved while driving Path 2: `app/app/time/page.tsx` calls
   only `/api/timeclock/{in,out,status}`. `/api/clock/{in,out}` is dead parallel code;
   `/api/timesheets/*` is the admin side. Canonical web clock = `timeclock`.
+- app/app/daily-logs/page.tsx:246 — 409 "log already exists for this day" body (error + existingLogId) is discarded; user sees generic "Failed to create daily log".
+- app/app/daily-logs/page.tsx:539 — Work Performed is labelled required (*) but neither the form nor app/api/daily-logs/create/route.ts enforces it.
+- app/api/daily-logs/create/route.ts:49 — server fallback log_date uses UTC (toISOString) instead of the tenant's local day.
+- app/api/daily-logs/list/route.ts:20 and app/api/daily-logs/[id]/route.ts:20,38,48,60 — bare `catch {}` swallows the error, returns no apiError ref (and list returns 500 with empty logs).
+- app/api/daily-logs/[id]/route.ts:11 — GET does not filter deleted_at (column exists on daily_logs); list/GET may show soft-deleted rows.
