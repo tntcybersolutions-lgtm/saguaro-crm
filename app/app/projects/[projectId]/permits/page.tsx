@@ -10,6 +10,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import PermitCorrespondence from '@/components/PermitCorrespondence';
 
 interface Permit {
   id: string;
@@ -417,6 +418,9 @@ export default function PermitsPage() {
           </div>
         )}
       </SectionCard>
+
+      {/* Tracked back-and-forth with the architect and the city/AHJ */}
+      <PermitCorrespondence projectId={projectId} />
     <UnsavedGuardModal guard={guard} />
     </PremiumSurface>
   );
