@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import { useParams } from 'next/navigation';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
+import { laborAllocation, lineDirectCost, lineLabor, type LaborAllocation } from '@/lib/takeoff-line-cost';
+import { QTY_CHECK_TAG } from '@/lib/takeoff-quantity-sanity';
 import { parsePastedLines, looksLikeGrid } from '@/lib/estimating/paste';
 import { humanError } from '@/lib/errors';
 import { useToast } from '../../../../../components/Toast';
@@ -73,6 +75,11 @@ const fmt$ = (n: number) => CURRENCY_FMT.format(Number.isFinite(n) ? n : 0);
 const fmtN = (n: number) => NUMBER_FMT.format(Number.isFinite(n) ? n : 0);
 // Safe numeric coercion for SSE done-payload fields (which arrive as unknown JSON).
 const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+/** Human file size — a 3 KB drawing used to read "0.0 MB". KB under 1 MB, MB above. */
+const fmtFileSize = (bytes: number) =>
+  bytes < 1024 * 1024
+    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+    : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
 // The compliance chain endpoint (task 2). SSE — SAME contract as sage-auto-docs:
 //   progress { step, pct, message } · error { message } · done { ...counts }
@@ -83,6 +90,8 @@ interface AutoBuildSummary {
   packages: number;
   jackets: number;
   sov: boolean;
+  /** Project is still bidding — the pay app / SOV wait for the award (not a failure). */
+  sovDeferred?: boolean;
   lienWaivers: number;
   w9s: number;
   filed: number;
@@ -230,7 +239,15 @@ h2.tkH2{font-size:clamp(22px,3vw,30px)!important;font-weight:800!important;line-
 // Scoped animated backdrop — aurora gold blobs + drifting blueprint grid + vignette.
 // position:absolute so it fills only the page's content column (never bleeds under the
 // project sidebar). Purely decorative; pointer-events:none keeps the dropzone clickable.
-function Aurora({ soft = false }: { soft?: boolean }) {
+/* `still` drops every infinite animation. The results page is tall (a 55-line table,
+   cards, charts) and this backdrop is absolutely positioned over ALL of it: three
+   600px blobs under 30-42px blur, transform-animated forever, plus a masked grid
+   whose background-position pans every frame — background-position is not a
+   compositor property, so that layer was repainted (mask + gradients) on the main
+   thread 60 times a second across the full page height. That is the renderer stall
+   seen after results render. The hero screens keep the motion; the work screen
+   does not need it. */
+function Aurora({ soft = false, still = false }: { soft?: boolean; still?: boolean }) {
   const grid =
     'linear-gradient(rgba(245,158,11,0.055) 1px, transparent 1px),' +
     'linear-gradient(90deg, rgba(245,158,11,0.055) 1px, transparent 1px)';
@@ -238,10 +255,10 @@ function Aurora({ soft = false }: { soft?: boolean }) {
   return (
     <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% -8%, rgba(245,158,11,0.10), transparent 55%)' }} />
-      <div style={{ position: 'absolute', width: 680, height: 680, left: '-16%', top: '-26%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.20), transparent 62%)', filter: 'blur(30px)', animation: 'tkAur1 17s ease-in-out infinite', opacity: soft ? 0.55 : 1 }} />
-      <div style={{ position: 'absolute', width: 560, height: 560, right: '-12%', top: '0%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,119,6,0.17), transparent 60%)', filter: 'blur(38px)', animation: 'tkAur2 21s ease-in-out infinite', opacity: soft ? 0.5 : 1 }} />
-      <div style={{ position: 'absolute', width: 540, height: 540, left: '28%', bottom: '-28%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(251,191,36,0.12), transparent 60%)', filter: 'blur(42px)', animation: 'tkAur3 24s ease-in-out infinite', opacity: soft ? 0.45 : 1 }} />
-      <div style={{ position: 'absolute', inset: -24, backgroundImage: grid, backgroundSize: '34px 34px', animation: 'tkGridPan 9s linear infinite', maskImage: gridMask, WebkitMaskImage: gridMask, opacity: soft ? 0.35 : 0.65 }} />
+      <div style={{ position: 'absolute', width: 680, height: 680, left: '-16%', top: '-26%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.20), transparent 62%)', filter: 'blur(30px)', animation: still ? 'none' : 'tkAur1 17s ease-in-out infinite', opacity: soft ? 0.55 : 1 }} />
+      <div style={{ position: 'absolute', width: 560, height: 560, right: '-12%', top: '0%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,119,6,0.17), transparent 60%)', filter: 'blur(38px)', animation: still ? 'none' : 'tkAur2 21s ease-in-out infinite', opacity: soft ? 0.5 : 1 }} />
+      <div style={{ position: 'absolute', width: 540, height: 540, left: '28%', bottom: '-28%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(251,191,36,0.12), transparent 60%)', filter: 'blur(42px)', animation: still ? 'none' : 'tkAur3 24s ease-in-out infinite', opacity: soft ? 0.45 : 1 }} />
+      <div style={{ position: 'absolute', inset: -24, backgroundImage: grid, backgroundSize: '34px 34px', animation: still ? 'none' : 'tkGridPan 9s linear infinite', maskImage: gridMask, WebkitMaskImage: gridMask, opacity: soft ? 0.35 : 0.65 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(130% 100% at 50% -6%, transparent 50%, rgba(2,4,8,0.62))' }} />
     </div>
   );
@@ -333,10 +350,12 @@ function EditableCell({ rawValue, display, align, numeric, disabled, cellStyle, 
 
 /** One editable takeoff line: inline edit on description / qty / unit / $/unit,
  *  a note editor (indicator dot when a note exists), and delete-with-undo. */
-const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, onDuplicate, onInsertBelow, onDelete }: {
+const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc, onPatch, onDuplicate, onInsertBelow, onDelete }: {
   item: TakeoffItem;
   idx: number;
+  /** Bid price ÷ direct cost — applied to the line's DIRECT cost (material + labor). */
   sellMult: number;
+  laborAlloc: LaborAllocation;
   onPatch: (item: TakeoffItem, patch: LinePatch) => void;
   onDuplicate: (item: TakeoffItem) => void;
   onInsertBelow: (item: TakeoffItem) => void;
@@ -346,6 +365,12 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, on
   const [noteDraft, setNoteDraft] = useState('');
   const editable = isSavedRow(item);
   const hasNote = !!item.notes && item.notes.trim().length > 0;
+  /* The analyzer's quantity sanity check (lib/takeoff-quantity-sanity) writes a
+     QTY_CHECK_TAG note when it corrected or doubts a line. Surfaced on the row
+     itself — a note hidden behind the note button is not a warning. */
+  const qtyCheck = hasNote && item.notes.includes(QTY_CHECK_TAG);
+  const labor = lineLabor(item, laborAlloc);
+  const direct = item.totalCost + labor;
 
   const commitNum = (field: 'quantity' | 'unitCost') => (raw: string) => {
     const n = Number(raw);
@@ -361,7 +386,14 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, on
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: ROW_GRID, padding: '8px 16px', borderBottom: `1px solid rgba(255,255,255,0.04)`, fontSize: 13, alignItems: 'center', background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
-        <div style={{ color: GOLD, fontFamily: 'monospace', fontSize: 12 }}>{item.csiCode}</div>
+        <div style={{ color: GOLD, fontFamily: 'monospace', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+          {item.csiCode}
+          {qtyCheck && (
+            <span title={item.notes} aria-label="Quantity flagged for review" style={{ display: 'inline-flex', cursor: 'help' }}>
+              <Warning size={14} weight="fill" color="#F87171" />
+            </span>
+          )}
+        </div>
         <EditableCell rawValue={item.description} display={item.description} align="left" disabled={!editable}
           cellStyle={{ color: 'rgba(255,255,255,0.85)', marginRight: 8 }} onCommit={commitText('description')} />
         <EditableCell rawValue={String(item.quantity)} display={fmtN(item.quantity)} align="right" numeric disabled={!editable}
@@ -370,8 +402,11 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, on
           cellStyle={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }} onCommit={commitText('unit')} />
         <EditableCell rawValue={String(item.unitCost)} display={`$${item.unitCost.toFixed(2)}`} align="right" numeric disabled={!editable}
           cellStyle={{ color: 'rgba(255,255,255,0.6)' }} onCommit={commitNum('unitCost')} />
-        <div style={{ textAlign: 'right', color: GOLD, fontWeight: 600 }}>{fmt$(item.totalCost)}</div>
-        <div style={{ textAlign: 'right', color: '#22C55E', fontWeight: 600 }}>{fmt$(item.totalCost * sellMult)}</div>
+        <div style={{ textAlign: 'right', color: GOLD, fontWeight: 600 }}
+          title={`Material ${fmt$(item.totalCost)} + labor ${fmt$(labor)}${item.laborHours ? ` (${fmtN(item.laborHours)} hrs)` : ''}`}>
+          {fmt$(direct)}
+        </div>
+        <div style={{ textAlign: 'right', color: '#22C55E', fontWeight: 600 }}>{fmt$(direct * sellMult)}</div>
         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
           <button className="tkIconBtn" disabled={!editable} title={hasNote ? 'Edit note' : 'Add note'}
             onClick={() => { setNoteDraft(item.notes || ''); setNoteOpen((o) => !o); }}>
@@ -489,9 +524,10 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
  * Every row is inline-editable (qty / unit / $/unit / description / notes / delete),
  * and each division header carries an add-line composer.
  */
-const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPatch, onAdd, onPaste, onDuplicate, onInsertBelow, onDelete }: {
+const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, laborAlloc, onPatch, onAdd, onPaste, onDuplicate, onInsertBelow, onDelete }: {
   groupedItems: Record<string, TakeoffItem[]>;
   sellMult: number;
+  laborAlloc: LaborAllocation;
   onPatch: (item: TakeoffItem, patch: LinePatch) => void;
   onAdd: (div: string, draft: LineDraft) => Promise<boolean>;
   onPaste: (div: string, text: string) => Promise<number>;
@@ -515,7 +551,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
         if (budget <= 0) return null;
         const shown = budget === Infinity ? items : items.slice(0, budget);
         budget -= shown.length;
-        const divTotal = items.reduce((s, i) => s + i.totalCost, 0);
+        const divTotal = items.reduce((s, i) => s + lineDirectCost(i, laborAlloc), 0);
         const divName = CSI_DIVISION_NAMES[div] || `Division ${div}`;
         return (
           <div
@@ -563,7 +599,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
               <DivisionComposer div={div} divName={divName} onAdd={onAdd} onClose={() => setComposerDiv(null)} />
             )}
             {shown.map((item, idx) => (
-              <EditableRow key={item.id ?? `${div}-${idx}`} item={item} idx={idx} sellMult={sellMult} onPatch={onPatch} onDuplicate={onDuplicate} onInsertBelow={onInsertBelow} onDelete={onDelete} />
+              <EditableRow key={item.id ?? `${div}-${idx}`} item={item} idx={idx} sellMult={sellMult} laborAlloc={laborAlloc} onPatch={onPatch} onDuplicate={onDuplicate} onInsertBelow={onInsertBelow} onDelete={onDelete} />
             ))}
           </div>
         );
@@ -705,6 +741,11 @@ export default function TakeoffPage() {
         recommendations:   Array.isArray(data.recommendations) ? data.recommendations : [],
         itemCount:         items.length,
       });
+      /* The analyzer picked a contingency for this job and folded it into
+         takeoffs.total_cost. The slider is now the ONE place contingency is
+         applied, so it starts at the analyzer's number instead of a flat 10%
+         stacked on top of a total that already carried it. */
+      setContingencyPct(Math.min(25, Math.max(0, Math.round(contingencyPct))));
       if (cancelled) return;
       setTakeoffId(String(data.id));
       setState('results');
@@ -1157,6 +1198,9 @@ export default function TakeoffPage() {
             analysisResolved = true;
             eventSource.close();
             setResult(data as TakeoffResult);
+            if (Number.isFinite(Number(data.contingency))) {
+              setContingencyPct(Math.min(25, Math.max(0, Math.round(Number(data.contingency)))));
+            }
             setState('results');
             // hydrate DB row ids in the background so every line is editable
             void hydrateIds(String(analysisId));
@@ -1269,13 +1313,14 @@ export default function TakeoffPage() {
           projectId,
           periodFrom:    new Date().toISOString().split('T')[0],
           periodTo:      new Date().toISOString().split('T')[0],
-          contractSum:   result.totalProjectCost,
+          contractSum:   bidPrice,
           // lineItems is what the API reads — each item maps to a schedule_of_values row
           lineItems: result.items.map(i => ({
             description:    `${i.csiCode} — ${i.description}`,
-            scheduledValue: i.totalCost,
+            // Each line's share of the bid, so the G703 column foots to contractSum.
+            scheduledValue: Math.round(lineDirectCost(i, laborAlloc) * bidRatio * 100) / 100,
             csiCode:        i.csiCode,
-            balanceToFinish: i.totalCost,
+            balanceToFinish: Math.round(lineDirectCost(i, laborAlloc) * bidRatio * 100) / 100,
           })),
         }),
       });
@@ -1369,6 +1414,7 @@ export default function TakeoffPage() {
         packages:    num(docs.packagesCreated),
         jackets:     num(docs.jacketsGenerated),
         sov:         !!docs.sovCreated,
+        sovDeferred: !!docs.sovDeferred,
         lienWaivers: num(docs.lienWaiversFiled ?? docs.lienWaiversCreated ?? docs.waiversCreated ?? docs.lienWaivers),
         w9s:         num(docs.w9RequestsFiled ?? docs.w9RequestsCreated ?? docs.w9sCreated ?? docs.w9Requests ?? docs.w9s),
         filed:       num(docs.coiRequestsFiled ?? docs.filedCount ?? docs.documentsFiled ?? docs.filed),
@@ -1381,7 +1427,8 @@ export default function TakeoffPage() {
       (budgetOk ? built : failed).push('budget');
       if (summary.packages) built.push(`${summary.packages} bid packages`); else failed.push('bid packages');
       if (summary.jackets) built.push(`${summary.jackets} jacket PDFs`); else failed.push('jacket PDFs');
-      if (summary.sov) built.push('schedule of values'); else failed.push('schedule of values');
+      if (summary.sov) built.push('schedule of values');
+      else if (!summary.sovDeferred) failed.push('schedule of values');
       if (summary.lienWaivers) built.push(`${summary.lienWaivers} lien waivers`);
       if (summary.w9s) built.push(`${summary.w9s} W-9 requests`);
 
@@ -1442,11 +1489,11 @@ export default function TakeoffPage() {
     if (!result) return false;
     if (!nested) setGenerating('budget');
     try {
-      const subtotal = result.totalMaterialCost + result.totalLaborCost;
-      const overhead = Math.round(subtotal * (overheadPct / 100));
-      const profit = Math.round(subtotal * (profitPct / 100));
-      const contingency = Math.round(subtotal * (contingencyPct / 100));
-      const total = subtotal + overhead + profit + contingency;
+      /* The budget's header total is the SAME bid price the screen shows (engine
+         markup stack), and each line carries its FULL direct cost — material plus
+         its share of labor. It used to send material only, so a budget built from
+         a $1.8M takeoff showed $1.17M and every dollar of labor was missing. */
+      const total = Math.round(bidPrice);
 
       const res = await fetch('/api/budgets/create', {
         method: 'POST',
@@ -1463,12 +1510,12 @@ export default function TakeoffPage() {
             costCode: i.csiCode,
             csiDivision: i.csiDivision,
             description: i.description,
-            category: 'material',
+            category: 'material_labor',
             unit: i.unit,
             quantity: i.quantity,
             unitCost: i.unitCost,
-            originalAmount: i.totalCost,
-            revisedAmount: i.totalCost,
+            originalAmount: Math.round(lineDirectCost(i, laborAlloc) * 100) / 100,
+            revisedAmount: Math.round(lineDirectCost(i, laborAlloc) * 100) / 100,
           })),
         }),
       });
@@ -1554,10 +1601,29 @@ export default function TakeoffPage() {
     const overhead = mk.overheadCents / 100;
     const profit = mk.profitCents / 100;
     const contingency = mk.contingencyCents / 100;
-    const totalJobCost = mk.sellCents / 100;        // the sell price (engine stack)
+    const totalJobCost = mk.sellCents / 100;        // THE bid price (engine stack)
+    /* Direct cost = material + labor = Σ line costs (each line carries its share
+       of labor, lib/takeoff-line-cost). This is the base every markup rides on —
+       NOT result.totalProjectCost, which the analyzer stores with the AI's own
+       contingency already baked in. Showing that number as "Total Project Cost"
+       and then adding the contingency slider on top is how the screen ended up
+       with four totals that did not reconcile. */
+    const directCost = matCost + labCost;
     const costPerSF = result.estimatedSF > 0 ? totalJobCost / result.estimatedSF : 0;
-    return { matCost, labCost, subtotal, materialTax, laborBurden, generalConditions, overhead, profit, contingency, bond, totalJobCost, costPerSF };
+    return { matCost, labCost, directCost, subtotal, materialTax, laborBurden, generalConditions, overhead, profit, contingency, bond, totalJobCost, costPerSF };
   }, [result, ...[overheadPct, profitPct, contingencyPct, salesTaxPct, laborBurdenPct, generalConditionsPct, bondPct]]);
+
+  /** How the takeoff's labor total is spread over its lines (by hours). */
+  const laborAlloc = useMemo<LaborAllocation>(
+    () => laborAllocation(result?.items ?? [], result?.totalLaborCost ?? 0),
+    [result],
+  );
+  /** The bid price, everywhere: header, package button, chart, table footer, Cost/SF. */
+  const bidPrice = computedCosts?.totalJobCost ?? 0;
+  /** Bid ÷ direct cost — a line's (or division's) share of the bid is its direct
+   *  cost × this ratio, so the Sell column sums EXACTLY to the bid price even when
+   *  tax/burden ride only one bucket. Falls back to the slider-only multiplier. */
+  const bidRatio = computedCosts && computedCosts.directCost > 0 ? bidPrice / computedCosts.directCost : sellMult;
 
   // Group items by CSI division. Memoized on `result` ONLY — moving a markup slider
   // no longer rebuilds this map, so the giant line-item table is never re-derived on drag.
@@ -1573,7 +1639,7 @@ export default function TakeoffPage() {
 
   // Copy values for the autonomous Sage card ("$X sell across N divisions, M items").
   const divCount = Object.keys(groupedItems).length;
-  const sellTotal = (result?.totalProjectCost || 0) * sellMult;
+  const sellTotal = bidPrice;
 
   // ── STATE A0: MEASURED HAND-OFF ──────────────────────────────────────────────
   // The newest takeoff was measured by hand in Takeoff Studio. Its conditions,
@@ -1710,7 +1776,7 @@ export default function TakeoffPage() {
                   </div>
                   <div style={{ color: GREEN, fontWeight: 800, fontSize: 18, wordBreak: 'break-word' }}>{selectedFile.name}</div>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 6 }}>
-                    {(selectedFile.size / 1024 / 1024).toFixed(1)} MB · ready to analyze — click to change
+                    {fmtFileSize(selectedFile.size)} · ready to analyze — click to change
                   </div>
                 </div>
               ) : (
@@ -1927,7 +1993,7 @@ export default function TakeoffPage() {
     <div className="tkRoot" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 56px)' }}>
       <style>{FX_KEYFRAMES}</style>
       <UiFx />
-      <Aurora soft />
+      <Aurora soft still />
       <div style={{ position: 'relative', zIndex: 1, padding: '24px', maxWidth: 1180, margin: '0 auto' }}>
 
       {/* Summary header — hero sell number */}
@@ -2008,7 +2074,7 @@ export default function TakeoffPage() {
                 Let me pick
               </button>
               <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, lineHeight: 1.5 }}>
-                {divCount} divisions · {result.itemCount} lines · {fmt$(sellTotal)} sell
+                {divCount} divisions · {result.itemCount} lines · {fmt$(sellTotal)} bid price
                 <br />
                 bid packages, jacket PDFs, schedule of values, lien waivers and W-9 requests
               </span>
@@ -2023,10 +2089,15 @@ export default function TakeoffPage() {
           )}
         </div>
         <div style={{ position: 'relative', textAlign: 'right', flex: '1 1 auto', minWidth: 220 }}>
-          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>Total Project Cost</div>
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>Bid price</div>
           <div style={{ fontWeight: 900, fontSize: 'clamp(38px,5vw,56px)', lineHeight: 1.02, letterSpacing: '-0.03em', background: `linear-gradient(100deg, ${GOLD}, ${GOLD_HI} 55%, #FDE68A)`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', textShadow: '0 0 50px rgba(245,158,11,0.3)', animation: 'tkPop .6s ease .1s both' }}>
-            {fmt$(result?.totalProjectCost || 0)}
+            {fmt$(bidPrice)}
           </div>
+          {computedCosts && (
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, marginTop: 4 }}>
+              {fmt$(computedCosts.directCost)} direct cost + markups below
+            </div>
+          )}
           <div style={{ display: 'inline-flex', gap: 8, marginTop: 10, justifyContent: 'flex-end' }}>
             <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
               <div style={{ color: GREEN, fontWeight: 800, fontSize: 16 }}>{result?.confidence ?? 0}%</div>
@@ -2048,8 +2119,10 @@ export default function TakeoffPage() {
             {[
               { label: 'Material Cost', value: computedCosts.matCost, color: GOLD, icon: <Package size={15} weight="duotone" color={GOLD} /> },
               { label: 'Labor Cost', value: computedCosts.labCost, color: '#FBBF24', icon: <Lightning size={15} weight="duotone" color="#FBBF24" /> },
-              { label: 'Subtotal', value: computedCosts.subtotal, color: '#fff', icon: <Table size={15} weight="duotone" color="rgba(255,255,255,0.8)" /> },
-              { label: 'Total Job Cost', value: computedCosts.totalJobCost, color: '#22C55E', icon: <TrendUp size={15} weight="duotone" color={GREEN} /> },
+              /* Direct cost = material + labor = the Cost column's footer. Tax and
+                 burden (when set) are markups below, not part of this number. */
+              { label: 'Direct Cost', value: computedCosts.directCost, color: '#fff', icon: <Table size={15} weight="duotone" color="rgba(255,255,255,0.8)" /> },
+              { label: 'Bid Price', value: computedCosts.totalJobCost, color: '#22C55E', icon: <TrendUp size={15} weight="duotone" color={GREEN} /> },
             ].map((card, ci) => (
               <div key={card.label} className="tkHover" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '15px 16px', animation: `tkPop .45s ease ${(0.05 * ci).toFixed(2)}s both` }}>
                 <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${card.color}, transparent)` }} />
@@ -2094,7 +2167,7 @@ export default function TakeoffPage() {
           {/* Cost per SF */}
           {computedCosts.costPerSF > 0 && (
             <div style={{ marginTop: 8, textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
-              Cost/SF: <span style={{ color: GOLD, fontWeight: 600 }}>${computedCosts.costPerSF.toFixed(2)}</span> · {fmtN(result?.estimatedSF || 0)} SF
+              Bid price/SF: <span style={{ color: GOLD, fontWeight: 600 }}>${computedCosts.costPerSF.toFixed(2)}</span> · {fmtN(result?.estimatedSF || 0)} SF
             </div>
           )}
         </div>
@@ -2121,14 +2194,14 @@ export default function TakeoffPage() {
         const padX    = 20;
         const padY    = 20;
         const svgH    = bldgH + padY * 2 + 40;
-        const totalSell = (result.totalProjectCost || 0) * sellMult;
+        const totalSell = bidPrice;
 
         // Compute division breakdown for bar chart
         const divTotals = Object.entries(groupedItems)
           .map(([div, items]) => ({
             div,
             name: CSI_DIVISION_NAMES[div] || `Div ${div}`,
-            total: items.reduce((s, i) => s + i.totalCost, 0),
+            total: items.reduce((s, i) => s + lineDirectCost(i, laborAlloc), 0),
           }))
           .sort((a, b) => b.total - a.total)
           .slice(0, 8);
@@ -2202,7 +2275,7 @@ export default function TakeoffPage() {
               </div>
               {divTotals.map(({ div, name, total }, bi) => {
                 const pct = total / maxDiv;
-                const sellAmt = total * sellMult;
+                const sellAmt = total * bidRatio;
                 return (
                   <div key={div} style={{ marginBottom: 11 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -2225,7 +2298,7 @@ export default function TakeoffPage() {
               })}
               <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
                 <span style={{ color: 'rgba(255,255,255,0.4)' }}>Cost → Sell breakdown across {Object.keys(groupedItems).length} divisions</span>
-                <span style={{ color: '#22C55E', fontWeight: 600 }}>Sell Total: {fmt$(totalSell)}</span>
+                <span style={{ color: '#22C55E', fontWeight: 600 }}>Bid price: {fmt$(totalSell)}</span>
               </div>
             </div>
           </div>
@@ -2270,13 +2343,13 @@ export default function TakeoffPage() {
           <div style={{ textAlign: 'right' }}>Qty</div>
           <div style={{ textAlign: 'right' }}>Unit</div>
           <div style={{ textAlign: 'right' }}>$/Unit</div>
-          <div style={{ textAlign: 'right' }}>Cost</div>
-          <div style={{ textAlign: 'right', color: '#22C55E' }}>Sell</div>
+          <div style={{ textAlign: 'right' }} title="Material + labor">Cost (M+L)</div>
+          <div style={{ textAlign: 'right', color: '#22C55E' }} title="This line's share of the bid price">Bid</div>
           <div aria-hidden />
         </div>
 
         {/* Grouped rows — memoized + row-capped so slider drags and huge extractions don't freeze */}
-        <LineItemTable groupedItems={groupedItems} sellMult={sellMult} onPatch={patchLine} onAdd={addLine} onPaste={pasteLines} onDuplicate={duplicateLine} onInsertBelow={insertLineBelow} onDelete={deleteLine} />
+        <LineItemTable groupedItems={groupedItems} sellMult={bidRatio} laborAlloc={laborAlloc} onPatch={patchLine} onAdd={addLine} onPaste={pasteLines} onDuplicate={duplicateLine} onInsertBelow={insertLineBelow} onDelete={deleteLine} />
 
         {/* Grand total row */}
         <div style={{
@@ -2290,11 +2363,11 @@ export default function TakeoffPage() {
           <div style={{ gridColumn: '1 / 6', color: GOLD, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             Total — {result?.itemCount ?? 0} Line Items
           </div>
-          <div style={{ textAlign: 'right', color: GOLD, fontSize: 16 }}>
-            {fmt$(result?.totalProjectCost || 0)}
+          <div style={{ textAlign: 'right', color: GOLD, fontSize: 16 }} title="Direct cost — material + labor">
+            {fmt$(computedCosts?.directCost ?? 0)}
           </div>
-          <div style={{ textAlign: 'right', color: '#22C55E', fontSize: 16 }}>
-            {fmt$((result?.totalProjectCost || 0) * sellMult)}
+          <div style={{ textAlign: 'right', color: '#22C55E', fontSize: 16 }} title="Bid price — direct cost with every markup above">
+            {fmt$(bidPrice)}
           </div>
           <div aria-hidden />
         </div>
@@ -2381,7 +2454,7 @@ export default function TakeoffPage() {
           </div>
           <div style={{ position: 'relative', color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <CheckCircle size={15} weight="fill" color={GREEN} />
-            {autoSummary.packages} bid package{autoSummary.packages !== 1 ? 's' : ''} written{autoSummary.sov ? ', Schedule of Values built' : ''} — everything filed to Documents / Compliance.
+            {autoSummary.packages} bid package{autoSummary.packages !== 1 ? 's' : ''} written{autoSummary.sov ? ', Schedule of Values built' : autoSummary.sovDeferred ? ' (pay application waits until the job is won)' : ''} — everything filed to Documents / Compliance.
           </div>
           <div style={{ position: 'relative', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
             <a href={`/app/projects/${projectId}/bid-packages`} className="tkBtn" style={{ textDecoration: 'none', padding: '11px 20px', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, borderRadius: 10, color: '#1A1206', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 12px 30px -12px rgba(245,158,11,0.6)' }}>
