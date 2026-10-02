@@ -24,7 +24,10 @@ export function FilePreview({ kind, url, name, height = 460 }: { kind: FileKind;
   if (!url) return <div style={box}><span style={{ color: '#64748B' }}>No preview available</span></div>;
 
   if (kind === 'image') return <div style={box}><img src={url} alt={name || ''} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /></div>;
-  if (kind === 'video') return <div style={box}><video src={url} controls playsInline style={{ maxWidth: '100%', maxHeight: '100%' }} /></div>;
+  // preload="metadata" + a direct (range-capable) src lets the browser stream
+  // and seek without downloading the whole file first — smooth playback, fast
+  // start, even on large site videos.
+  if (kind === 'video') return <div style={box}><video src={url} controls playsInline preload="metadata" style={{ maxWidth: '100%', maxHeight: '100%' }} /></div>;
   if (kind === 'audio') return <div style={{ ...box, height: 120, flexDirection: 'column', gap: 14 }}><FileAudio size={40} color={KIND_TINT.audio} /><audio src={url} controls style={{ width: '80%' }} /></div>;
   if (kind === 'pdf') return <iframe src={url} title={name || 'PDF'} style={{ width: '100%', height, border: 'none', borderRadius: 12, background: '#fff' }} />;
 

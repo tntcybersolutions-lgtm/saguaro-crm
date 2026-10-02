@@ -6,6 +6,12 @@
  */
 import React, { useCallback, useRef, useState } from 'react';
 import { UploadSimple, Spinner } from '@phosphor-icons/react';
+import { uploadFileDirect } from '@/lib/upload-direct';
+
+// Vercel caps a serverless request body near 4.5 MB. Files at or under this go
+// through /api/files/upload (one fast batch); anything larger uploads straight
+// to storage via a signed URL so big files (video) actually make it.
+const DIRECT_THRESHOLD = 4 * 1024 * 1024;
 
 export function FileDropzone({
   projectId, folder, category, entityType, entityId, onUploaded, compact,
@@ -24,18 +30,37 @@ export function FileDropzone({
     if (!files.length) return;
     setBusy(true); setMsg(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}…`);
     try {
-      const fd = new FormData();
-      files.forEach((f) => fd.append('file', f));
-      if (projectId) fd.append('projectId', projectId);
-      if (folder) fd.append('folder', folder);
-      if (category) fd.append('category', category);
-      if (entityType) fd.append('entityType', entityType);
-      if (entityId) fd.append('entityId', entityId);
-      const res = await fetch('/api/files/upload', { method: 'POST', body: fd });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
-      const rows = json.files || [];
-      const failed = json.failed || [];
+      const small = files.filter((f) => f.size <= DIRECT_THRESHOLD);
+      const big = files.filter((f) => f.size > DIRECT_THRESHOLD);
+      const rows: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const failed: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+      // Small files: one batch through the function (unchanged, fast path).
+      if (small.length) {
+        const fd = new FormData();
+        small.forEach((f) => fd.append('file', f));
+        if (projectId) fd.append('projectId', projectId);
+        if (folder) fd.append('folder', folder);
+        if (category) fd.append('category', category);
+        if (entityType) fd.append('entityType', entityType);
+        if (entityId) fd.append('entityId', entityId);
+        const res = await fetch('/api/files/upload', { method: 'POST', body: fd });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+        rows.push(...(json.files || []));
+        failed.push(...(json.failed || []));
+      }
+
+      // Big files: straight to storage via a signed URL, one at a time.
+      for (const f of big) {
+        setMsg(`Uploading ${f.name}…`);
+        try {
+          rows.push(await uploadFileDirect(f, { projectId, folder, category, entityType, entityId }));
+        } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+          failed.push({ name: f.name, error: e?.message || 'upload failed' });
+        }
+      }
+
       setMsg(failed.length ? `${rows.length} uploaded, ${failed.length} failed` : `${rows.length} uploaded`);
       onUploaded?.(rows);
     } catch (e: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
