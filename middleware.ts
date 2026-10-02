@@ -94,6 +94,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // A signed-in user opening the ROOT should land in the app, not on the
+  // marketing homepage. The iOS app loads server.url (/), so without this a
+  // logged-in rep opens the app onto "Start free trial / Pricing" and is lost —
+  // the #1 "confused on open" complaint. Logged-out visitors still get
+  // marketing; redirecting to /app sends a logged-out device to /login via the
+  // /app guard below. (Pointing the native server.url at /app is the follow-up
+  // for the logged-out-on-device case; this fixes the common signed-in case
+  // without a native rebuild.)
+  if (pathname === '/') {
+    const at = request.cookies.get('sb-access-token')?.value;
+    const rt = request.cookies.get('sb-refresh-token')?.value;
+    if (isValid(at) || !!rt) {
+      return NextResponse.redirect(new URL('/app', request.url));
+    }
+  }
+
   // Always allow public paths
   if (isPublic(pathname)) return NextResponse.next();
 
