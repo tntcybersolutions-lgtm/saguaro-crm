@@ -36,6 +36,18 @@ const run = async () => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } }); // iPhone-ish
   const page = await ctx.newPage();
 
+  // QA_STUB=1: answer every /api/** with a clean empty 200 so there is no
+  // failed-fetch retry storm. Without this, a DB-less run (sandbox/CI) drowns
+  // in 500s and spurious "Maximum update depth" warnings that are retry
+  // artifacts, not real bugs. With it, render + dead-button signal is clean
+  // even when no database is reachable. (Use a real DB for data/flow truth.)
+  if (process.env.QA_STUB === '1') {
+    await page.route('**/api/**', (route) => route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: '{"ok":true,"data":[],"leads":[],"reviews":[],"projects":[],"documents":[],"media":[],"activities":[],"avgRating":null}',
+    }));
+  }
+
   for (const route of ROUTES) {
     const url = BASE + route;
     const consoleErrors = [];
