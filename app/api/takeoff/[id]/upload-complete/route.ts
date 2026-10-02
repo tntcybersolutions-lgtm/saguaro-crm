@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
  * The bytes are already in storage — the browser PUT them to a signed URL, so
  * they never passed through a function body. This does everything the old
  * upload route did AFTER the bytes landed: count the sheets, make the
- * thumbnail, and mark the takeoff ready to analyse.
+ * thumbnail, and mark the takeoff ready to analyze.
  *
  * The file is read back out of storage to count pages. That download is
  * server-to-server inside the same region and has no 4.5 MB ceiling, which is
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
        Images cannot be merged into a PDF here, so an image upload replaces
        whatever was there — and the response says so, rather than the old
-       behaviour of overwriting silently. */
+       behavior of overwriting silently. */
     const existing = row.source_files ?? [];
     const isPdf = fileType === 'application/pdf';
     const priorPdfs = existing.filter((s) => s.type === 'application/pdf');

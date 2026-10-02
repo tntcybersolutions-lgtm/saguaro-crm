@@ -701,7 +701,7 @@ function Dropdown({
   );
 }
 
-/** One labelled control in the "Make a record" form. Two-column grid; `wide`
+/** One labeled control in the "Make a record" form. Two-column grid; `wide`
  * takes the whole row. Kit geometry only — no bespoke field chrome. */
 function PromoteField({ label, hint, wide, children }: {
   label: string;

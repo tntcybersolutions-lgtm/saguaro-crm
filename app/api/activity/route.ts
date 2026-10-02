@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({
-      // project_status is included so a status ticker can colour each item by
+      // project_status is included so a status ticker can color each item by
       // the job's lifecycle (ongoing / under contract / completed / closed).
       activities: rows.map(r => {
         const row = r as Record<string, unknown>;

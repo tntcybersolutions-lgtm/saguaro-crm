@@ -1,13 +1,13 @@
 /**
  * Tenant theming with a hard guarantee: text stays readable.
  *
- * A GC picks their company colour and the whole platform becomes theirs. The
+ * A GC picks their company color and the whole platform becomes theirs. The
  * obvious way to build that is to drop their hex into the CSS variables and
  * hope. The predictable result is a tenant whose brand is pale yellow choosing
  * it as a surface, white body text landing on it, and a screen of invisible
  * words — with no way for them to tell whether the product broke or they did.
  *
- * So nothing here trusts an input colour to be usable. Every derived pair is
+ * So nothing here trusts an input color to be usable. Every derived pair is
  * measured with the WCAG contrast formula and, where it falls short, the
  * FOREGROUND is walked toward whichever pole gives more separation until it
  * passes. The tenant's hue survives; only its lightness moves, and only as far
@@ -24,13 +24,13 @@
  * One definition of the tenant's theme, not three that drift.
  */
 
-/* ── colour primitives ──────────────────────────────────────────────────── */
+/* ── color primitives ──────────────────────────────────────────────────── */
 
 export interface RGB { r: number; g: number; b: number }
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
 
-/** #abc, #aabbcc, with or without the hash. Null when it is not a colour. */
+/** #abc, #aabbcc, with or without the hash. Null when it is not a color. */
 export function parseHex(input: string | null | undefined): RGB | null {
   if (!input) return null;
   let h = String(input).trim().replace(/^#/, '');
@@ -169,7 +169,7 @@ export function bestTextOn(bg: RGB): RGB {
   return contrast(white, bg) >= contrast(ink, bg) ? white : ink;
 }
 
-/** Mix two colours by weight, for deriving surfaces from a base. */
+/** Mix two colors by weight, for deriving surfaces from a base. */
 function mix(a: RGB, b: RGB, weight: number): RGB {
   const w = clamp(weight, 0, 1);
   return { r: a.r + (b.r - a.r) * w, g: a.g + (b.g - a.g) * w, b: a.b + (b.b - a.b) * w };
@@ -219,7 +219,7 @@ const SAGUARO_BASE = '#0d1117';
 /**
  * Build a complete, readable theme from whatever the tenant supplied.
  *
- * Nothing in here can produce an unreadable pair. Where the tenant's own colour
+ * Nothing in here can produce an unreadable pair. Where the tenant's own color
  * would, it is adjusted and the adjustment is recorded rather than hidden.
  */
 export function deriveTheme(input: BrandInput): BrandTheme {
@@ -280,12 +280,12 @@ export function deriveTheme(input: BrandInput): BrandTheme {
     });
   }
 
-  /* The accent has to be visible AS a colour against the page — a navy brand on
+  /* The accent has to be visible AS a color against the page — a navy brand on
      a navy ground is a button you cannot find. */
   const primaryFixed = ensureContrast(primaryRgb, surface, AA_LARGE);
   if (primaryFixed.adjusted) {
     fixes.push({
-      what: 'Your brand colour against the page',
+      what: 'Your brand color against the page',
       was: Number(contrast(primaryRgb, surface).toFixed(2)),
       now: Number(contrast(primaryFixed.rgb, surface).toFixed(2)),
       from: toHex(primaryRgb), to: toHex(primaryFixed.rgb),
@@ -293,13 +293,13 @@ export function deriveTheme(input: BrandInput): BrandTheme {
   }
 
   /* And the label on a filled button has to read against the fill. This is the
-     pair that breaks most often in practice, because a brand colour is chosen
+     pair that breaks most often in practice, because a brand color is chosen
      to look good on a letterhead, not to carry white type. */
   const onPrimaryBase = bestTextOn(primaryFixed.rgb);
   const onPrimaryFixed = ensureContrast(onPrimaryBase, primaryFixed.rgb, AA_TEXT);
   if (onPrimaryFixed.adjusted) {
     fixes.push({
-      what: 'Button text on your brand colour',
+      what: 'Button text on your brand color',
       was: Number(contrast(onPrimaryBase, primaryFixed.rgb).toFixed(2)),
       now: Number(contrast(onPrimaryFixed.rgb, primaryFixed.rgb).toFixed(2)),
       from: toHex(onPrimaryBase), to: toHex(onPrimaryFixed.rgb),

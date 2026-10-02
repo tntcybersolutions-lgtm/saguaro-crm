@@ -230,7 +230,7 @@ export default function WarrantyClaimsPage() {
       : 0;
 
     /* Buckets skip rows that carry no value for the dimension — a claim with no
-     * category must not become a bar labelled "undefined". */
+     * category must not become a bar labeled "undefined". */
     const costByCat: Record<string, number> = {};
     claims.forEach(c => { if (c.category && Number(c.cost)) costByCat[c.category] = (costByCat[c.category] || 0) + Number(c.cost); });
 

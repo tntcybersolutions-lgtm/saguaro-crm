@@ -4,7 +4,7 @@
  * DonutRatio — a recharts donut for a ratio breakdown (pipeline by stage,
  * revenue by project type, …). A center label shows the total (or a caller
  * override), each arc is hoverable for its value and share, and a readable
- * legend lists every slice with its colour, value and percentage. Responsive
+ * legend lists every slice with its color, value and percentage. Responsive
  * down to phone width; the legend wraps/stacks beside or under the ring.
  */
 
@@ -26,7 +26,7 @@ import {
 export interface DonutSlice {
   label: string;
   value: number;
-  /** Optional explicit colour; otherwise taken from the categorical palette. */
+  /** Optional explicit color; otherwise taken from the categorical palette. */
   color?: string;
 }
 

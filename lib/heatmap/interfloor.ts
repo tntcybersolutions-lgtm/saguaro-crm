@@ -48,7 +48,7 @@ export const DEFAULT_FLOOR_HEIGHT_FT = 11;
 export const BLEED_NEGLIGIBLE_DBM = -82;
 /** Only same-channel bleed at or above this level counts as inter-floor interference. */
 export const INTERFERENCE_FLOOR_DBM = -85;
-/** Hard cap on how many floors away we bother modelling (loss dominates past this). */
+/** Hard cap on how many floors away we bother modeling (loss dominates past this). */
 export const MAX_FLOORS_AWAY = 3;
 
 export interface StackedFloor {
@@ -121,7 +121,7 @@ export interface InterFloorResult {
 /* ── Vertical-loss model ───────────────────────────────────────────────────── */
 
 /**
- * Extra loss (dB) seen by a signal travelling `floorsAway` levels vertically:
+ * Extra loss (dB) seen by a signal traveling `floorsAway` levels vertically:
  *   slab loss × floors crossed  +  the log-distance path loss of the vertical drop.
  * The vertical drop uses the SAME log-distance exponent as the receiving floor's
  * environment; we take only the distance-dependent term (not REF_LOSS_1M) because

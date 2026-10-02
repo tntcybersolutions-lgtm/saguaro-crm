@@ -1112,7 +1112,7 @@ export default function TakeoffPage() {
         xhr.send(file);
       });
 
-      // Count the sheets, build the thumbnail, mark it ready to analyse.
+      // Count the sheets, build the thumbnail, mark it ready to analyze.
       const doneRes = await fetch(`/api/takeoff/${analysisId}/upload-complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1205,7 +1205,7 @@ export default function TakeoffPage() {
   };
 
   const handleGenerateBidPackages = async () => {
-    /* No analysed takeoff in hand means this button is on screen doing
+    /* No analyzed takeoff in hand means this button is on screen doing
        nothing. Say so rather than swallowing the press. */
     if (!result) { showToast('Run the blueprint analysis first — there is nothing to build bid packages from.', 'error'); return; }
     setGenerating('bid-packages');
@@ -1255,7 +1255,7 @@ export default function TakeoffPage() {
   };
 
   const handleGenerateSOV = async () => {
-    /* No analysed takeoff in hand means this button is on screen doing
+    /* No analyzed takeoff in hand means this button is on screen doing
        nothing. Say so rather than swallowing the press. */
     if (!result) { showToast('Run the blueprint analysis first — there is nothing to build a schedule of values from.', 'error'); return; }
     setGenerating('sov');
@@ -1321,7 +1321,7 @@ export default function TakeoffPage() {
   const handleBuildItAll = async () => {
     if (!result) return;
 
-    /* On a page that was reloaded rather than analysed in this session,
+    /* On a page that was reloaded rather than analyzed in this session,
        takeoffId could be null — and this used to `return` on that, so the
        button did precisely nothing: no request, no error, no toast. Pressing
        it looked identical to it being broken, which it was. Resolve the id
@@ -1490,7 +1490,7 @@ export default function TakeoffPage() {
 
   // ── Generate Lien Waiver Templates ──
   const handleGenerateLienWaivers = async () => {
-    /* No analysed takeoff in hand means this button is on screen doing
+    /* No analyzed takeoff in hand means this button is on screen doing
        nothing. Say so rather than swallowing the press. */
     if (!result) { showToast('Run the blueprint analysis first — there is nothing to build lien waivers from.', 'error'); return; }
     setGenerating('lien-waivers');

@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     lineItems.push({ description: r.item, quantity: r.qty, unit: 'ea', unitPrice: r.unit || null, totalAmount: r.ext || null, csiCode: '27 00 00' });
   }
 
-  // ── cabling (per floor, rack = a placed gateway/switch else plan centre) ──
+  // ── cabling (per floor, rack = a placed gateway/switch else plan center) ──
   let cableCost = 0, cableFeet = 0;
   const cableTally = new Map<string, { name: string; feet: number; cost: number; unit: number }>();
   for (const f of floors) {

@@ -58,7 +58,7 @@ const METHOD_COLORS: Record<string, string> = {
 
 // Only the GET /api/v1/* endpoints below are LIVE — they accept sk_live_ keys
 // and are tenant-scoped. Everything marked 'soon' is on the roadmap but does
-// not yet accept API-key auth, and is labelled as such rather than implied to work.
+// not yet accept API-key auth, and is labeled as such rather than implied to work.
 const API_MODULES: APIModule[] = [
   {
     name: 'Projects',
@@ -226,7 +226,7 @@ export default function ApiDocsPage() {
         eyebrowIcon={<Plugs size={13} weight="fill" color={API_ACCENT} />}
         title="API"
         accent="Documentation"
-        subtitle="Tenant-scoped keys. Every endpoint labelled live or coming soon."
+        subtitle="Tenant-scoped keys. Every endpoint labeled live or coming soon."
         actions={
           <Link href="/app/settings/integrations-hub" style={goldOutlineButtonStyle} className="pmBtn">
             <Key size={15} weight="bold" /> Mint an API Key

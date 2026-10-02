@@ -340,7 +340,7 @@ export async function generateSubcontract(input: SubcontractInput): Promise<{
      printed, so a subcontract with none of these reads exactly as before. */
   const supplementary = ([
     ['Subcontractor address', String(pick('subAddress', ''))],
-    ['Subcontractor licence', String(pick('subLicense', ''))],
+    ['Subcontractor license', String(pick('subLicense', ''))],
     ['Contract type', String(pick('contractType', ''))],
     ['Start on site', String(pick('startDate', ''))],
     ['Completion', String(pick('completionDate', ''))],

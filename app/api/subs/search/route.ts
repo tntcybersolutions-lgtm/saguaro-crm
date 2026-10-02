@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   // service-role client that bypasses RLS, that meant no session, no filter:
   // an unauthenticated GET returned fifty subcontractors from every tenant in
   // the system, select('*'), so company name, email, phone, address, EIN and
-  // licence numbers included. A scope that only applies when someone happens to
+  // license numbers included. A scope that only applies when someone happens to
   // be signed in is not a scope. Require the session, then always filter.
   const user = await getUser(req);
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

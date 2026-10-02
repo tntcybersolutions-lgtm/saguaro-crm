@@ -29,7 +29,7 @@ import { apiError } from '@/lib/api-error';
  *  signed-in user holding Projects/Full in their OWN company could point a
  *  global catalog row's image at any URL they liked, and every other contractor
  *  on the platform would then render it. Projects/Full is a permission inside a
- *  tenant; it is not a licence to edit rows the whole platform reads.
+ *  tenant; it is not a license to edit rows the whole platform reads.
  *
  *  The rule now matches who owns the row:
  *    tenant_id IS NULL  →  the shared catalog. Platform admins only

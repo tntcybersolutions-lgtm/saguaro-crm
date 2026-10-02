@@ -449,7 +449,7 @@ const NAV_SECTIONS: NavSection[] = [
     /* Entire section is gated to command_center — hidden unless the tenant is
        entitled. LAST on purpose: nineteen screens is longer than the entire
        core lifecycle above it, and it used to sit between Sales and
-       Preconstruction, so an entitled tenant scrolled past a rollout programme
+       Preconstruction, so an entitled tenant scrolled past a rollout program
        to reach Takeoff. A bolt-on goes after the product, not through it. */
     title: 'Franchise Rollout',
     items: [
@@ -597,7 +597,7 @@ export default function AppSidebar({
   // const OPEN_ALL_BELOW = 16;
   /* "All tools" is an explicit request to see everything, so it opens
      everything. Leaving the collapse default in charge there produced a rail
-     that answered a click labelled "All tools" with one link and ten shut
+     that answered a click labeled "All tools" with one link and ten shut
      headers — technically all the tools, visibly none of them. */
   /* ── PER-PROJECT TOOL VISIBILITY ─────────────────────────────────────
    *
@@ -935,7 +935,7 @@ export default function AppSidebar({
                 ? true
                 : LEADING_SECTIONS[projectPhase].includes(String(section.title).toUpperCase()) || sIdx === 0;
 
-          /* THE SPLIT. A labelled rule the first time each half of the product
+          /* THE SPLIT. A labeled rule the first time each half of the product
              starts, so the rail reads as two halves rather than one long list
              of groups. Company scope only: inside a project the rail is one
              job's worth of work and has no halves to separate.
@@ -951,7 +951,7 @@ export default function AppSidebar({
             {showZoneDivider && (
               collapsed ? (
                 /* No room for words at 64px — the rule alone still marks the
-                   boundary, and the colour carries the same meaning it does on
+                   boundary, and the color carries the same meaning it does on
                    the journey rails: blue sells, gold builds. */
                 <div aria-hidden style={{ height: 2, borderRadius: 2, margin: '4px 10px 12px', background: `linear-gradient(90deg, ${zoneTone}, transparent)` }} />
               ) : (
@@ -982,7 +982,7 @@ export default function AppSidebar({
                   /* Was textFaint (#5B677A) at 10px — dark slate on near-black,
                      uppercase and tracked out. When a section is collapsed these
                      headers are the ONLY nav text on screen, and at that size and
-                     colour they read as disabled rather than as structure.
+                     color they read as disabled rather than as structure.
                      Gold at 78% keeps them clearly subordinate to the item
                      labels while actually being readable, and ties the rail to
                      the brand instead of to a grey that means nothing. */
@@ -1116,7 +1116,7 @@ export default function AppSidebar({
                        *   vivid  71-96% saturation   #F59E0B, #3B82F6, #22C55E
                        *
                        * Measured all 97 modules against this rail: every vivid
-                       * clears 3:1, most sit between 5:1 and 9:1. So the colour
+                       * clears 3:1, most sit between 5:1 and 9:1. So the color
                        * is confident AND legible, which is what the pastels
                        * never were.
                        *
@@ -1124,7 +1124,7 @@ export default function AppSidebar({
                        * so the rail still reads as a list rather than a rainbow
                        * of text, and the active item keeps its vivid chip and
                        * gold rule to stay the loudest thing on screen. Full
-                       * opacity — dimming a saturated colour is what produced
+                       * opacity — dimming a saturated color is what produced
                        * the mud in the first place. */
                       color={vivid || undefined}
                       style={{ flexShrink: 0, opacity: 1 }}
@@ -1254,7 +1254,7 @@ export default function AppSidebar({
                 />
               )}
               {/* Same rule as the main rail: the resting icon inherits the link
-                  colour and stays at full opacity. Dimming a neutral only muddies
+                  color and stays at full opacity. Dimming a neutral only muddies
                   it — the weight change from regular to fill already marks active. */}
               <Icon size={collapsed ? 20 : 18} weight={active ? 'fill' : 'regular'} style={{ flexShrink: 0, opacity: 1 }} />
               {!collapsed && <span>{item.label}</span>}

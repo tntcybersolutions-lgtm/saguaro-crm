@@ -46,10 +46,10 @@ function safeHex(v: unknown): string | null {
  * Paint the tenant's theme onto the document.
  *
  * This used to set the accent and nothing else, with the derived shades built
- * by color-mix — which produces a plausible-looking colour and knows nothing
+ * by color-mix — which produces a plausible-looking color and knows nothing
  * about whether the text on top of it can be read. Now the whole palette comes
  * from deriveTheme, which measures every pair against WCAG and adjusts what
- * fails. A tenant can pick any colour on earth and the words stay legible.
+ * fails. A tenant can pick any color on earth and the words stay legible.
  *
  * Surfaces are applied only when the tenant actually chose a ground. Leaving
  * them alone otherwise keeps the platform's own dark theme exactly as it is

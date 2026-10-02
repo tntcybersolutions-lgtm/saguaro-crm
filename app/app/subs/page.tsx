@@ -4,7 +4,7 @@
  *
  * WHY THIS PAGE DID NOT EXIST, AND WHY THAT MATTERED.
  * The subcontractors table is tenant-wide: a sub entered on one job is on file
- * for every job after it, with their trade, licence, insurance expiry, W-9
+ * for every job after it, with their trade, license, insurance expiry, W-9
  * status and prequalification. /api/subcontractors has served that list the
  * whole time. Nothing rendered it. The only place a GC could see their own
  * subs was the invite dropdown inside a single bid package — so the directory
@@ -202,7 +202,7 @@ export default function SubsAndVendorsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr>
-                  {['Company', 'Trade', 'Contact', 'Licence', 'Insurance', 'W-9'].map(h => (
+                  {['Company', 'Trade', 'Contact', 'License', 'Insurance', 'W-9'].map(h => (
                     <th key={h} style={{ textAlign: 'left', padding: '11px 16px', color: DIM, fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
