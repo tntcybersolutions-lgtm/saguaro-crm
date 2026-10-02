@@ -527,18 +527,19 @@ export default function TakeoffPage() {
         {/* ── The Studio's doors. Measured takeoff / assemblies / rates already
             shipped as siblings of this page but NOTHING linked to them — users
             could only find them by typing URLs. One row, every tool. ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 14, marginBottom: 28 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10, marginBottom: 22 }}>
           {[
-            { href: '/app/takeoff/measured', title: 'Measured takeoff', sub: 'Trace and measure the drawing — deterministic, priced live', icon: <Ruler size={20} weight="duotone" color={GOLD} /> },
-            { href: '/app/takeoff/assemblies', title: 'Assembly library', sub: 'Cost templates that explode into full priced bills', icon: <Stack size={20} weight="duotone" color={GOLD} /> },
-            { href: '/app/takeoff/rates', title: 'Cost rates', sub: 'Your learned material & labor rates', icon: <CurrencyDollar size={20} weight="duotone" color={GOLD} /> },
+            { href: '/app/takeoff/measured', title: 'Measured takeoff', sub: 'Trace & price the drawing live', icon: <Ruler size={16} weight="duotone" color={GOLD} /> },
+            { href: '/app/takeoff/assemblies', title: 'Assembly library', sub: 'Templates that explode into bills', icon: <Stack size={16} weight="duotone" color={GOLD} /> },
+            { href: '/app/takeoff/rates', title: 'Cost rates', sub: 'Your material & labor rates', icon: <CurrencyDollar size={16} weight="duotone" color={GOLD} /> },
           ].map(d => (
-            <Link key={d.href} href={d.href} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', borderRadius: 12, border: '1px solid rgba(245,158,11,0.28)', background: 'linear-gradient(160deg, rgba(245,158,11,0.07), rgba(255,255,255,0.015))', textDecoration: 'none', boxShadow: 'var(--shadow-sm)' }}>
+            <Link key={d.href} href={d.href} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(245,158,11,0.22)', background: 'rgba(245,158,11,0.05)', textDecoration: 'none' }}>
               {d.icon}
-              <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{d.title}</span>
-                <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, lineHeight: 1.45 }}>{d.sub}</span>
+              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>{d.title}</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.sub}</span>
               </span>
+              <span aria-hidden style={{ marginLeft: 'auto', color: 'rgba(245,158,11,0.5)', fontWeight: 900 }}>›</span>
             </Link>
           ))}
         </div>

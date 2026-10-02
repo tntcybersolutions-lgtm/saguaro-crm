@@ -95,6 +95,8 @@ function BidsPageInner() {
   // One delete confirmation for both packages and history bids.
   const [confirmDelete, setConfirmDelete] = useState<{ kind: 'package' | 'bid'; id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // Close confirmation (from claude/finish-crm-app-McOeo): closing stops new bids.
+  const [confirmClose, setConfirmClose] = useState<Pkg | null>(null);
 
   async function fetchHistory(outcome?: string) {
     setHistoryLoading(true);
@@ -399,8 +401,9 @@ function BidsPageInner() {
     try {
       const r = await fetch(`/api/bid-packages/${op.id}/close`, { method: 'POST' });
       if (!r.ok) throw new Error('close failed');
-      setPackages((prev) => prev.map((p) => (p.id === op.id ? { ...p, status: 'closed' } : p)));
-      showToast(`Closed "${op.name || 'package'}"`);
+      showToast(`Closed "${op.name || 'package'}" — it's no longer taking bids`);
+      setConfirmClose(null);
+      fetchPackages();
     } catch {
       showToast('Could not close the package', 'bad');
     } finally {
@@ -538,12 +541,13 @@ function BidsPageInner() {
   return (
     <PageShell
       title="Bid Board"
-      subtitle="Every live bid package across your projects, and the record of every bid you've scored."
+      subtitle="Active bid packages, invites, and awards — all in one board"
       actions={
         <>
           <Button href="/app/bid-intelligence" icon={<Brain size={15} />}>Bid Intelligence</Button>
           <Button href="/app/bids/leveling" icon={<ArrowRight size={15} />}>Bid leveling</Button>
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setShowScore(true)} data-tour="score-bid">Score a bid</Button>
+          {/* Score a Bid is de-featured: still reachable at /app/bids?tab=score (Bid Intelligence has its own scorer). */}
+          <Button variant="primary" href="/app/projects" title="Open a project to start a package." icon={<Plus size={15} weight="bold" />}>New bid package</Button>
         </>
       }
     >
@@ -604,9 +608,9 @@ function BidsPageInner() {
                 <EmptyState
                   title={needle ? 'No bids match your search' : historyFilter === 'all' ? 'No bid history yet' : `No ${historyFilter} bids`}
                   text={historyFilter === 'all' && !needle
-                    ? 'Every bid you score lands here as pending. Record the outcome and win rate, average margin and pursued value build themselves.'
+                    ? 'Bid outcomes land here. Record a win or loss on any package and your win rate, average margin, and pursued value build themselves.'
                     : 'Try a different filter or clear the search.'}
-                  action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => setShowScore(true)}>Score a bid</Button>}
+                  action={<Button onClick={refreshHistory}>Refresh</Button>}
                 />
               }
             />
@@ -633,7 +637,7 @@ function BidsPageInner() {
                 { label: 'View', icon: <Eye size={14} />, inline: true, href: pkgHref(p) },
                 { label: 'Level & award', icon: <Trophy size={14} />, href: pkgHref(p), hidden: (Number(p.num_responded ?? p.bid_count) || 0) === 0 },
                 { label: busy ? 'Working…' : 'Duplicate', icon: <Copy size={14} />, onClick: () => duplicatePackage(p), disabled: busy },
-                { label: 'Close', icon: <Archive size={14} />, onClick: () => closePackage(p), disabled: busy, hidden: st === 'closed' },
+                { label: 'Close', icon: <Archive size={14} />, onClick: () => setConfirmClose(p), disabled: busy, hidden: st === 'closed' || st === 'awarded' },
                 { label: 'Delete', icon: <Trash size={14} />, tone: 'danger', onClick: () => setConfirmDelete({ kind: 'package', id: p.id, name: p.name || 'this package' }) },
               ];
             }}
@@ -749,6 +753,27 @@ function BidsPageInner() {
             <Textarea value={editNote} onChange={(e) => setEditNote(e.target.value)} placeholder="Why this number, what changed…" />
           </Field>
         </FormGrid>
+      </FormModal>
+
+      {/* ── Close confirmation ── */}
+      <FormModal
+        open={!!confirmClose}
+        onClose={() => setConfirmClose(null)}
+        size="sm"
+        busy={!!confirmClose && busyPkg === confirmClose.id}
+        title="Close bid package?"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmClose(null)} disabled={!!busyPkg}>Cancel</Button>
+            <Button variant="primary" icon={<Archive size={15} />} onClick={() => confirmClose && closePackage(confirmClose)} disabled={!!busyPkg}>
+              {confirmClose && busyPkg === confirmClose.id ? 'Closing…' : 'Close package'}
+            </Button>
+          </>
+        }
+      >
+        <p style={{ color: 'var(--text-secondary)' }}>
+          {confirmClose?.name || 'This package'} stops taking new bids and moves to history. You can still award a winner from inside the package.
+        </p>
       </FormModal>
 
       {/* ── Delete confirmation ── */}

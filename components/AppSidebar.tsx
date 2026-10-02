@@ -440,7 +440,8 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'People & Access',    href: '/app/people',             icon: Users, accentKey: 'team', core: true },
       { label: 'Time Clock',         href: '/app/time',               icon: Clock, accentKey: 'time' },
       { label: 'Fleet',              href: '/app/fleet',              icon: Truck, gate: 'fleet', accentKey: 'fleet' },
-      { label: 'Autopilot',          href: '/app/autopilot',          icon: Star, accentKey: 'autopilot' },
+      /* Autopilot de-featured: no top-level entry. It lives under Sales →
+         Intelligence (a secondary link there) and at its direct URL. */
       { label: 'Approval Workflows', href: '/app/approval-workflows', icon: Flag, accentKey: 'autopilot' },
       { label: 'Ask Sage',           href: '/app/ask',                icon: Brain, accentKey: 'sage' },
     ],

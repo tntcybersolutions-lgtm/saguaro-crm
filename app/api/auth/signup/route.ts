@@ -20,6 +20,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@/lib/supabase-server';
 
 import { apiError } from '@/lib/api-error';
+import { defaultRoleRows } from '@/lib/default-roles';
 function isConfigured() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -124,6 +125,15 @@ export async function POST(req: NextRequest) {
         console.error('[signup] profile update error:', profileErr.message);
         // Non-fatal: the trigger already created a usable profile row.
       }
+
+      // Seed the built-in role templates so the new company gets the full role
+      // set (incl. Salesperson) out of the box — a coded default that reaches
+      // every tenant, not a manual per-tenant insert. Fresh tenant → plain
+      // insert is safe. Non-fatal: signup still succeeds if this hiccups.
+      const { error: rolesErr } = await admin
+        .from('role_definitions')
+        .insert(defaultRoleRows(tenantId) as never);
+      if (rolesErr) console.error('[signup] default roles seed error:', rolesErr.message);
     } catch (err) {
       console.error('[signup] provisioning exception:', err);
       return NextResponse.json({ error: 'Could not finish creating your company. Please contact support.' }, { status: 500 });
