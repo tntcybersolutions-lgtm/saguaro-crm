@@ -31,6 +31,13 @@ const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.
 const GREEN='#1a8a4a',RED='#c03030';
 
 const ALBUMS=['General','Progress','Inspections','Closeout','Issues','Other'];
+/* Images that live in the project's Files & Media library. /api/photos/list
+   merges them in read-only (source 'files', id 'file:<uuid>') so the gallery and
+   the library show one picture of the job. They are edited in Files, not here. */
+const FILES_ALBUM='From Files';
+const isFromFiles=(p:any)=>p?.source==='files'||p?.read_only===true;
+/** "ZZ-AUDIT_jobsite-photo-1.jpg" -> "ZZ AUDIT jobsite photo 1" */
+const titleFromFileName=(name:string)=>name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim();
 const ALBUM_COLORS:Record<string,string>={
   General:DIM,
   Progress:'#FBBF24',
@@ -38,6 +45,7 @@ const ALBUM_COLORS:Record<string,string>={
   Closeout:GREEN,
   Issues:RED,
   Other:'#a78bfa',
+  [FILES_ALBUM]:'#60A5FA',
 };
 
 const inp:React.CSSProperties={
@@ -124,6 +132,10 @@ export default function PhotosPage(){
     if(!file) return;
     setFormError('');
     setUploadFile(file);
+    // Title is required — start it from the file's name (as Drawings does) so the
+    // first save does not bounce with "Give the photo a title first."
+    const suggested=titleFromFileName(file.name||'');
+    if(suggested) setForm(f=>(f.title.trim()?f:{...f,title:suggested}));
     const reader=new FileReader();
     reader.onload=()=>setUploadPreview(String(reader.result||''));
     reader.onerror=()=>{setUploadPreview('');setFormError("That file couldn't be read. Pick it again.");};
@@ -135,7 +147,7 @@ export default function PhotosPage(){
     try{
       setLoadError('');
       const h=await getAuthHeaders();
-      const r=await fetch(`/api/photos/list?projectId=${projectId}`,{headers:h});
+      const r=await fetch(`/api/photos/list?projectId=${projectId}&include=files`,{headers:h});
       if (!r.ok) throw new Error('Failed to load data');
       const d=await r.json();
       setPhotos(d.photos||[]);
@@ -414,7 +426,7 @@ export default function PhotosPage(){
             searchPlaceholder="Search by title or tag..."
             filters={[
               {key:'album',label:'Album',value:filterAlbum,onChange:setFilterAlbum,
-                allValue:'All',allLabel:'All Albums',options:ALBUMS},
+                allValue:'All',allLabel:'All Albums',options:albums.includes(FILES_ALBUM)?[...ALBUMS,FILES_ALBUM]:ALBUMS},
             ]}
             count={{shown:filtered.length,total:photos.length}}
             extra={filterAlbum==='All'?(
@@ -529,7 +541,7 @@ export default function PhotosPage(){
               {mode==='create'?'Add Photo':mode==='edit'?'Edit Photo':'Photo Detail'}
             </div>
             <div style={{display:'flex',gap:8}}>
-              {mode==='view'&&selected&&(
+              {mode==='view'&&selected&&!isFromFiles(selected)&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
                     style={{padding:'6px 14px',background:'rgba(245,158,11,.1)',
@@ -691,6 +703,12 @@ export default function PhotosPage(){
                   <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                     <Pill label={selected.album||'General'} color={ALBUM_COLORS[selected.album]||DIM}/>
                   </div>
+                  {isFromFiles(selected)&&(
+                    <div style={{marginTop:10,fontSize:12,color:DIM,lineHeight:1.5}}>
+                      This image lives in the project&apos;s Files &amp; Media library. Rename, move or delete it there.{' '}
+                      <a href={`/app/projects/${projectId}/files`} style={{color:'#FBBF24',fontWeight:700}}>Open Files &amp; Media</a>
+                    </div>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -757,7 +775,9 @@ function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
       onMouseEnter={e=>{if(!selected)e.currentTarget.style.borderColor='rgba(245, 158, 11,.4)';}}
       onMouseLeave={e=>{if(!selected)e.currentTarget.style.borderColor=BORDER_C;}}>
       {photo.url?(
-        <img src={photo.url} alt={photo.title}
+        /* Grid tiles render the ~400px thumbnail; the full original is for the
+           detail panel only (see THUMBNAIL CONTRACT in /api/photos/list). */
+        <img src={photo.thumbnail_url||photo.url} alt={photo.title} loading="lazy" decoding="async"
           style={{width:'100%',height:140,objectFit:'cover',display:'block'}}
           onError={e=>{(e.target as HTMLImageElement).parentElement!.style.background='#1c1c1e';(e.target as HTMLImageElement).style.display='none';}}/>
       ):(
@@ -787,7 +807,7 @@ function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
             {photo.location}
           </div>
         )}
-        {photo.url && onEdit && (
+        {photo.url && onEdit && !isFromFiles(photo) && (
           <button onClick={(e)=>{e.stopPropagation();onEdit(photo.id,photo.url);}}
             style={{marginTop:8,width:'100%',padding:'6px',background:'rgba(245, 158, 11,.08)',border:`1px solid rgba(245, 158, 11,.2)`,borderRadius:6,color:'#F59E0B',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
             <PencilSimple size={13} weight="regular" color="#F59E0B" /> Edit / Crop / Rotate

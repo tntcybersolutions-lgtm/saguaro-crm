@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
+import { revisionDateValue } from '@/lib/drawing-register';
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await requirePermission(req, 'Documents', 'Edit');
   if (!g.ok) return g.res;
@@ -28,13 +30,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       status: pick('status'),
       notes: pick('notes'),
     };
+    // A bad or blank date clears the field instead of 500ing the whole save.
+    if (candidates.revision_date !== undefined) candidates.revision_date = revisionDateValue(candidates.revision_date);
     const fields: Record<string, any> = {};
     for (const [col, val] of Object.entries(candidates)) { if (val !== undefined) fields[col] = val; }
     const { error } = await db.from('drawings').update(fields).eq('id', id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e: unknown) {
+    return apiError('drawings/update', e, 'The drawing could not be updated. Please try again.');
   }
 }
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -48,7 +52,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const { error } = await db.from('drawings').delete().eq('id', id).eq('tenant_id', user.tenantId);
     if (error) throw error;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e: unknown) {
+    return apiError('drawings/delete', e, 'The drawing could not be deleted. Please try again.');
   }
 }

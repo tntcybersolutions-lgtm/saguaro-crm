@@ -44,10 +44,13 @@ export function FilePreview({ kind, url, name, height = 460 }: { kind: FileKind;
 /** Small thumbnail for grid cards. Images/video posters show the media; others show a tinted icon. */
 export function FileThumb({ kind, url, poster, size = 132 }: { kind: FileKind; url?: string | null; poster?: string | null; size?: number }) {
   const wrap: React.CSSProperties = { width: '100%', height: size, background: '#0b0f14', borderRadius: 10, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' };
-  if (kind === 'image' && url) return <div style={wrap}><img src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>;
+  /* A tile is ~168px: draw the stored ~400px thumbnail (poster) when there is
+     one, and never decode an off-screen original. The full original stays for
+     FilePreview / Download. */
+  if (kind === 'image' && (poster || url)) return <div style={wrap}><img src={poster || url || ''} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>;
   if (kind === 'video') return (
     <div style={wrap}>
-      {poster ? <img src={poster} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <FileVideo size={40} color={KIND_TINT.video} />}
+      {poster ? <img src={poster} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <FileVideo size={40} color={KIND_TINT.video} />}
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 40, height: 40, borderRadius: 20, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 0, height: 0, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '13px solid #fff', marginLeft: 3 }} /></div></div>
     </div>
   );

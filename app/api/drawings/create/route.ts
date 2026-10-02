@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { signUrl } from '@/lib/storage-signing';
+import { apiError } from '@/lib/api-error';
+import { revisionDateValue } from '@/lib/drawing-register';
 export async function POST(req: NextRequest) {
   const g = await requirePermission(req, 'Documents', 'Edit');
   if (!g.ok) return g.res;
@@ -20,7 +22,8 @@ export async function POST(req: NextRequest) {
       name: body.title || '',
       discipline: body.discipline || 'Architectural',
       version: body.revision ?? 0,
-      revision_date: body.revision_date || null,
+      // A new sheet is dated today unless the title block says otherwise.
+      revision_date: revisionDateValue(body.revision_date ?? body.revisionDate, { defaultToday: true }),
       status: body.status || 'current',
       url: body.url || '',
       notes: body.notes || '',
@@ -28,7 +31,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     if (data?.url) (data as any).url = await signUrl((data as any).url);
     return NextResponse.json({ success: true, drawing: data });
-  } catch {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (e: unknown) {
+    return apiError('drawings/create', e, 'The drawing could not be saved. Please try again.');
   }
 }

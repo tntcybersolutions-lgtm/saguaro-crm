@@ -92,9 +92,26 @@ function InfoCard({label,value}:{label:string;value:string|undefined|null}){
   );
 }
 
+/* revision_date is a timestamptz, so the API hands back "2026-10-02T00:00:00+00:00".
+   Appending "T12:00:00" to that (the old code) built an unparseable string and
+   every sheet rendered "Invalid Date". Read the calendar day off the front of
+   whatever arrives, render it at local noon (so no timezone shifts it a day),
+   and never print "Invalid Date" for a value we cannot read. */
+function dayOf(s:string|null|undefined):string{
+  const m=String(s??'').match(/^(\d{4}-\d{2}-\d{2})/);
+  return m?m[1]:'';
+}
 function fmtDate(s:string|null|undefined){
-  if(!s) return '—';
-  return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const day=dayOf(s);
+  if(!day) return '—';
+  const d=new Date(day+'T12:00:00');
+  if(Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+/** Today's calendar day in the user's timezone, yyyy-mm-dd (toISOString() is UTC — tomorrow, every evening in Arizona). */
+function todayIso(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 export default function DrawingsPage(){
@@ -151,7 +168,7 @@ export default function DrawingsPage(){
   useEffect(()=>{load();},[load]);
 
   function openCreate(){
-    setForm({...EMPTY_FORM,revision_date:new Date().toISOString().slice(0,10)});
+    setForm({...EMPTY_FORM,revision_date:todayIso()});
     setAutoFields({date:true});
     setUploadFile(null);
     setMode('create');setSelected(null);
@@ -176,7 +193,7 @@ export default function DrawingsPage(){
       title:drawing.title||drawing.name||'',
       discipline:drawing.discipline||'Architectural',
       revision:drawing.revision??0,
-      revision_date:drawing.revision_date?drawing.revision_date.substring(0,10):'',
+      revision_date:dayOf(drawing.revision_date),
       status:drawing.status||'current',
       url:drawing.url||'',
       notes:drawing.notes||'',
@@ -208,16 +225,20 @@ export default function DrawingsPage(){
         fd.append('title',form.title);
         fd.append('discipline',form.discipline);
         if(form.notes) fd.append('notes',form.notes);
+        if(form.revision_date) fd.append('revision_date',form.revision_date);
         if(Number(form.revision)) fd.append('version',String(Number(form.revision)));
         const r=await fetch('/api/drawings/upload',{method:'POST',headers:h,body:fd});
         const d=await r.json();
         if(!r.ok||d.error) throw new Error(d.error||'Upload failed');
-        if(d.drawing?.id&&((form.status&&form.status!=='current')||form.revision_date)){
-          await fetch(`/api/drawings/${d.drawing.id}`,{
+        // The upload route takes the revision date itself; only a non-default
+        // status still needs the follow-up PUT.
+        if(d.drawing?.id&&form.status&&form.status!=='current'){
+          const st=await fetch(`/api/drawings/${d.drawing.id}`,{
             method:'PUT',
             headers:{...h,'Content-Type':'application/json'},
-            body:JSON.stringify({status:form.status,revision_date:form.revision_date||null}),
-          }).catch(()=>{});
+            body:JSON.stringify({status:form.status}),
+          }).catch((e:unknown)=>{console.error('[drawings] status follow-up failed',e);return null;});
+          if(!st||!st.ok) showToast('Sheet uploaded, but its status did not save — edit it to set the status','error');
         }
         setUploadFile(null);
         showToast('Sheet uploaded and filed');
@@ -293,7 +314,7 @@ export default function DrawingsPage(){
   }
 
   const groupOrder=[...DISCIPLINES.filter(d=>grouped[d]),...Object.keys(grouped).filter(d=>!DISCIPLINES.includes(d)).sort()];
-  const latestRev=drawings.filter(d=>d.revision_date).sort((a,b)=>String(b.revision_date).localeCompare(String(a.revision_date)))[0];
+  const latestRev=drawings.filter(d=>dayOf(d.revision_date)).sort((a,b)=>dayOf(b.revision_date).localeCompare(dayOf(a.revision_date)))[0];
   const counts=ctx?.counts;
 
   function DrawingRow({drawing}:{drawing:any}){

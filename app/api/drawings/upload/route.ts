@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
+import { apiError } from '@/lib/api-error';
+import { revisionDateValue } from '@/lib/drawing-register';
 
 export const dynamic = 'force-dynamic';
 
@@ -63,6 +65,8 @@ export async function POST(req: NextRequest) {
       sheet_number: sheetNumber,
       discipline,
       status: 'current',
+      // Dated today unless the client sends the title-block date.
+      revision_date: revisionDateValue(field('revision_date', 'revisionDate'), { defaultToday: true }),
     };
 
     // Optional metadata if the client supplies it.
@@ -75,10 +79,6 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true, drawing: dbData, url });
   } catch (err: unknown) {
-    // A raw Error's text is the database's words, not ours — log it, show the line we wrote.
-    console.error('[drawings/upload]', err);
-    const msg = "Internal server error";
-    console.error('[drawings/upload] error:', msg);
-    return NextResponse.json({ error: `Failed to upload drawing: ${msg}` }, { status: 500 });
+    return apiError('drawings/upload', err, 'Failed to upload drawing. Please try again.');
   }
 }
