@@ -70,9 +70,26 @@ export default function LoginPage(){
         return;
       }
 
-      // Success — redirect to intended page or app
-      const next = new URLSearchParams(window.location.search).get('next') || '/app';
-      window.location.href = next;
+      // Success. An explicit ?next= (a deep link they were sent to) always wins.
+      const explicitNext = new URLSearchParams(window.location.search).get('next');
+      if (explicitNext) { window.location.href = explicitNext; return; }
+
+      // Otherwise land a sales-ONLY rep on their own workspace, not the GC's
+      // build dashboard (MUST-PASS sales workspace P2). "Sales only" = can sell
+      // but holds neither Budget nor Admin — i.e. the Salesperson role, never an
+      // owner/admin who also sells (they keep the full dashboard). Permissions
+      // decide it, not a role string, so a custom role lands correctly too.
+      let dest = '/app';
+      try {
+        const pr = await fetch('/api/auth/permissions');
+        if (pr.ok) {
+          const pd = await pr.json();
+          const perms = (pd?.permissions ?? {}) as Record<string, string>;
+          const held = (c: string) => String(perms[c] ?? 'None') !== 'None';
+          if (held('Sales') && !held('Budget') && !held('Admin')) dest = '/app/sales';
+        }
+      } catch { /* any trouble resolving the role → the normal dashboard */ }
+      window.location.href = dest;
     } catch {
       setError('Login failed. Please check your connection and try again.');
     }
