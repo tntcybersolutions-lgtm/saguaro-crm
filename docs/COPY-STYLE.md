@@ -52,3 +52,22 @@ When unsure, leave it and list it in your report.
 ## 5. Colors (status pills, badges, buttons)
 - The six status colors live in `lib/status-colors.ts` and render through the kit `Badge` / `.k-badge` and the premium `Pill`. They are tuned brighter for the dark theme: stronger foreground, more opaque fill, clearer border. Every pill in the app reads from those tokens — no hand-picked status hex values on pages.
 - The project phase pill uses the same palette: **Bidding** = Lead blue, **Building** = Ongoing green.
+
+## 6. Background and surfaces — jet black + glass (owner decision 2026-10-02)
+The warm brown/amber backdrop behind text (animated aurora blobs, amber radial
+glows, gold-tinted page gradients) made words hard to read. The look is now:
+- **Page background: jet black** `#000000` (`--bg-base`). No brown, amber or
+  gold tint, no animated aurora behind content. A very faint cool sheen at the
+  top of the page is allowed; nothing warm.
+- **Cards / panels / modals: glass.** Translucent white over black with blur:
+  `background: rgba(255,255,255,0.045)`, `backdrop-filter: blur(16px) saturate(140%)`,
+  `border: 1px solid rgba(255,255,255,0.09)`, a 1px top highlight
+  `inset 0 1px 0 rgba(255,255,255,0.06)`. Raised surfaces (inputs, table header,
+  menus) a step brighter: `rgba(255,255,255,0.07)`.
+- **Text stays high-contrast:** primary `#FFFFFF`, secondary `#D7DEE8`,
+  tertiary `#A9B4C4`. Never put body text directly on a colored glow.
+- **Gold is for the one primary action and the brand mark only**, not for
+  backgrounds, borders of every card, or glows.
+- Pages must not hard-code their own page background (`#0a0a0a`, `#0d1117`,
+  `#141416`, amber gradients…). Use the tokens (`var(--bg-base)`,
+  `var(--bg-surface)`, `var(--bg-surface-2)`) or the kit `Card` / `.k-card`.
