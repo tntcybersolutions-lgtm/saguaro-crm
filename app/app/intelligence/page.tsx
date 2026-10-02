@@ -460,6 +460,10 @@ export default function IntelligencePage() {
         subtitle={`Health, burn, money, and field signals for ${ids.length} selected project${ids.length !== 1 ? 's' : ''} — every figure real or absent.`}
         actions={
           <div style={{ position: 'relative' as const, display: 'flex', gap: 10, alignItems: 'center' }}>
+            {/* Autopilot's only nav entry (de-featured from the sidebar). */}
+            <GhostButton size="md" href="/app/autopilot" title="Overdue RFIs, expiring insurance, stale change orders — flagged across every project">
+              Autopilot alerts
+            </GhostButton>
             {ids.length > 0 && (
               <GhostButton size="md" icon={<ArrowsClockwise size={14} weight="bold" />} onClick={() => void mutate()}>
                 Refresh

@@ -1011,9 +1011,17 @@ export const TOURS: Tour[] = [
     question: 'What is Autopilot watching for?',
     blurb: 'Overdue RFIs, expiring insurance, budget overruns — found for you.',
     category: 'Run the business',
-    startRoute: '/app/autopilot',
+    startRoute: '/app/intelligence',
     steps: [
-      nav('/app/autopilot', 'Autopilot'),
+      {
+        title: 'Open Autopilot',
+        body: 'Autopilot lives under Sales → Intelligence. Click Autopilot alerts.',
+        route: '/app/intelligence',
+        anchor: ['a[href="/app/autopilot"]'],
+        anchorText: ['Autopilot alerts'],
+        advance: 'route',
+        nextRoute: '/app/autopilot',
+      },
       {
         title: 'Run a scan',
         body: 'It reads every project for overdue RFIs, unpaid invoices, expiring insurance, stale change orders, budget overruns and scope creep — the things that cost money while nobody is looking.',

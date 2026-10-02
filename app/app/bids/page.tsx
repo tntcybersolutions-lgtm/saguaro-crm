@@ -204,6 +204,23 @@ function BidsPageInner() {
   const [pipelineLoading, setPipelineLoading] = useState(true);
   const [pipelineError, setPipelineError] = useState(false);
   const [dupPkgId, setDupPkgId] = useState<string|null>(null);
+  const [closingId, setClosingId] = useState<string|null>(null);
+
+  /** One-click close: stops a package taking new bids and moves it to history.
+   *  Hits the tenant-scoped close endpoint (Projects:Edit), then refreshes. */
+  async function handleClosePackage(op: any) {
+    if (closingId) return;
+    if (typeof window !== 'undefined' &&
+        !window.confirm(`Close "${op.name || 'this package'}"? It stops taking new bids and moves to history. You can still award a winner from inside the package.`)) return;
+    setClosingId(op.id);
+    try {
+      const r = await fetch(`/api/bid-packages/${op.id}/close`, { method: 'POST' });
+      if (!r.ok) throw new Error();
+      showToast('Package closed');
+      fetchPackages();
+    } catch { showToast('Could not close the package'); }
+    setClosingId(null);
+  }
 
   /** One-click repeat: copies a package's real server data — scope, trade,
    *  instructions, CSI codes, line items — into a new draft. Dates and status
@@ -448,10 +465,11 @@ function BidsPageInner() {
         eyebrowIcon={<Gavel size={13} weight="fill" color={GOLD} />}
         title="Bid"
         accent="Center"
-        subtitle="AI-scored opportunities and active bid packages"
+        subtitle="Active bid packages, invites, and awards — all in one board"
         actions={<>
           <Link href="/app/bid-intelligence" style={goldOutlineButtonStyle} className="pmBtn"><Brain size={15} weight="regular" /> Bid Intelligence</Link>
-          <button data-tour="score-bid" style={goldButtonStyle} className="pmBtn" onClick={()=>setShowScore(true)}><Plus size={15} weight="bold" /> Score a Bid</button>
+          {/* Score a Bid is de-featured: still reachable at /app/bids?tab=score (and from Bid Intelligence). */}
+          <Link href="/app/projects" title="Open a project to start a package." style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Bid Package</Link>
         </>}
       />
 
@@ -507,7 +525,7 @@ function BidsPageInner() {
               icon={<ChartBar size={30} weight="duotone" color={GOLD} />}
               title="No Open Bid Packages"
               description="The pipeline tracks every package with status open or bidding across all projects. Create one on a project — invites go out with portal links, sub bids come back priced against your line items, and the spread flags what to level before you award."
-              action={<div style={{display:'flex',gap:10,flexWrap:'wrap' as const,justifyContent:'center'}}><button onClick={()=>router.push('/app/projects')} style={goldButtonStyle} className="pmBtn">Go to Projects</button><button onClick={()=>setShowScore(true)} style={goldOutlineButtonStyle} className="pmBtn">Score a Bid First</button></div>}
+              action={<button onClick={()=>router.push('/app/projects')} style={goldButtonStyle} className="pmBtn">Go to Projects</button>}
             />
           </SectionCard>
         ) : (
@@ -603,6 +621,14 @@ function BidsPageInner() {
                       title="Copy scope, trade, instructions, and line items into a new draft — dates and status regenerate"
                       style={{marginLeft:6,background:'transparent',border:`1px solid ${BORDER}`,borderRadius:'var(--radius-sm)',color:dupPkgId===op.id?DIM:TEXT,fontSize:11,padding:'5px 10px',fontWeight:700,cursor:dupPkgId===op.id?'wait':'pointer',opacity:dupPkgId===op.id?0.6:1}}
                     >{dupPkgId===op.id?'Duplicating…':'Duplicate'}</button>
+                    {op.status!=='closed'&&op.status!=='awarded'&&(
+                    <button
+                      onClick={()=>handleClosePackage(op)}
+                      disabled={closingId===op.id}
+                      title="Stop taking new bids and move this package to history. You can still award a winner from inside the package."
+                      style={{marginLeft:6,background:'transparent',border:`1px solid ${BORDER}`,borderRadius:'var(--radius-sm)',color:closingId===op.id?DIM:TEXT,fontSize:11,padding:'5px 10px',fontWeight:700,cursor:closingId===op.id?'wait':'pointer',opacity:closingId===op.id?0.6:1}}
+                    >{closingId===op.id?'Closing…':'Close'}</button>
+                    )}
                   </td>
                 </tr>
               );
@@ -668,9 +694,9 @@ function BidsPageInner() {
             icon={<ChartBar size={30} weight="duotone" color={GOLD} />}
             title={historyFilter==='all'?'No bid history yet':'No '+historyFilter+' bids found'}
             description={historyFilter==='all'
-              ? 'Every scored bid lands here as pending, and every outcome you record trains the win-probability model. Score a live opportunity to start the ledger — win rate, average margin, and total pursued value build themselves.'
-              : 'No '+historyFilter+' bids on record. Record outcomes from the All view — each win or loss sharpens future fit scores.'}
-            action={<div style={{display:'flex',gap:10,flexWrap:'wrap' as const,justifyContent:'center'}}><button onClick={()=>setShowScore(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Score a Bid</button><button onClick={()=>fetchHistory(historyFilter==='all'?undefined:historyFilter)} style={goldOutlineButtonStyle} className="pmBtn">Refresh</button></div>}
+              ? 'Bid outcomes land here. Record a win or loss on any package and your win rate, average margin, and pursued value build themselves.'
+              : 'No '+historyFilter+' bids on record. Record outcomes from the All view to see them here.'}
+            action={<button onClick={()=>fetchHistory(historyFilter==='all'?undefined:historyFilter)} style={goldOutlineButtonStyle} className="pmBtn">Refresh</button>}
           />
         </SectionCard>}
         {!historyLoading&&!historyError&&historyBids.length>0&&<table style={{width:'100%',borderCollapse:'collapse' as const,fontSize:13}}>

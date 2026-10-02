@@ -45,5 +45,15 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Saguaro Field uses the camera to capture jobsite photos, daily logs, punch lists, and inspections.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Saguaro Field needs photo library access to attach existing jobsite photos to logs, punch items, and inspections.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Saguaro Field saves captured jobsite photos to your photo library.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Saguaro Field uses your location to GPS-stamp photos, clock in and out, and field reports.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Saguaro Field uses the microphone for voice notes and video capture.</string>
 </dict>
 </plist>

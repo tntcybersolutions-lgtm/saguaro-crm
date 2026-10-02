@@ -143,10 +143,10 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: 'AI',
+    label: 'Intelligence',
     items: [
-      { label: 'Autopilot Alerts', href: '/autopilot',       icon: Robot  },
       { label: 'Bid Intelligence', href: '/intelligence',    icon: Brain, badge: null },
+      { label: 'Autopilot Alerts', href: '/autopilot',       icon: Robot  },
     ],
   },
 ];
