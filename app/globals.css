@@ -7,10 +7,13 @@
      scheme — on an already-dark site that turns the inputs pale. */
   color-scheme: dark;
   /* Surfaces — Sonoran DARK (Rob's direction 2026-07-22): navy page + slate cards */
-  --bg-base: #0a0a0a;
-  --bg-surface: #141416;
-  --bg-surface-2: #1c1c1e;
-  --bg-elevated: #1E2A3F;
+  /* Layered professional dark (Design System Phase 0, 2026-10-02): lifted off
+     pure #0a0a0a so cards, inputs and modals separate from the page by tone,
+     not by heavy borders. Cool blue-grey, four clear steps. */
+  --bg-base: #0d1117;
+  --bg-surface: #151b23;
+  --bg-surface-2: #1c232d;
+  --bg-elevated: #232c38;
   /* Hairlines — white-alpha on dark */
   --border-subtle: rgba(255,255,255,0.06);
   --border-default: rgba(255,255,255,0.12);
@@ -55,6 +58,24 @@
   --radius-lg: 14px;
   --radius-xl: 18px;
   --radius-pill: 999px;
+  /* Spacing scale (4px grid) — the ONLY spacing values kit components use. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  /* Type scale */
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 26px;
+  /* Layout widths — one page width, one modal width, app-wide. */
+  --page-max: 1680px;
+  --modal-w: min(1040px, 94vw);
+  --modal-w-sm: min(560px, 94vw);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
@@ -847,3 +868,145 @@ input:-webkit-autofill:focus {
 .sidebarNav::-webkit-scrollbar-track { background: transparent; }
 .sidebarNav::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.32); border-radius: 999px; }
 .sidebarNav::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.58); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SAGUARO KIT — the one shared UI (components/ui/kit.tsx). Every class here
+   reads the tokens in :root; pages never restyle these inline. Showcase:
+   /app/kit. Change it here and every migrated page follows.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Page frame */
+.k-page { width: 100%; max-width: var(--page-max); margin: 0 auto; padding: var(--sp-6) var(--sp-6) var(--sp-8); display: flex; flex-direction: column; gap: var(--sp-4); }
+.k-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.k-crumbs a { color: var(--text-tertiary); }
+.k-crumbs a:hover { color: var(--text-primary); }
+.k-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-3) var(--sp-4); }
+.k-title { font-size: var(--fs-2xl); font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; color: var(--text-primary); }
+.k-sub { margin-top: 4px; font-size: var(--fs-md); color: var(--text-tertiary); max-width: 760px; }
+.k-head-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+
+/* Buttons — one family, four variants, two sizes */
+.k-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid transparent; font-size: var(--fs-sm); font-weight: 700; line-height: 1; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.k-btn:disabled, .k-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; pointer-events: none; }
+.k-btn-sm { height: 30px; padding: 0 10px; font-size: var(--fs-xs); }
+.k-btn-primary { background: var(--brand-primary); color: #1d1300; border-color: var(--brand-primary); }
+.k-btn-primary:hover { background: var(--brand-primary-strong); border-color: var(--brand-primary-strong); color: #1d1300; }
+.k-btn-secondary { background: var(--bg-surface-2); color: var(--text-primary); border-color: var(--border-default); }
+.k-btn-secondary:hover { background: var(--bg-elevated); border-color: var(--border-strong); color: var(--text-primary); }
+.k-btn-ghost { background: transparent; color: var(--text-secondary); }
+.k-btn-ghost:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); border-color: transparent; }
+.k-btn-danger { background: rgba(239,68,68,0.12); color: #FCA5A5; border-color: rgba(239,68,68,0.35); }
+.k-btn-danger:hover { background: rgba(239,68,68,0.22); border-color: rgba(239,68,68,0.55); color: #FECACA; }
+.k-icon-btn { width: 30px; padding: 0; }
+
+/* Card */
+.k-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); min-width: 0; }
+.k-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border-subtle); }
+.k-card-title { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
+.k-card-sub { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
+.k-card-body { padding: var(--sp-4); }
+.k-card-flush { padding: 0; }
+
+/* Stat tiles — one compact KPI tile, laid out in a StatRow */
+.k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--sp-3); }
+.k-stat { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: 2px; min-width: 0; text-decoration: none; color: inherit; }
+a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); background: var(--bg-surface-2); }
+button.k-stat { text-align: left; font: inherit; }
+.k-stat-label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.k-stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.k-stat-sub { font-size: var(--fs-xs); color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Badge */
+.k-badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700; white-space: nowrap; border: 1px solid; line-height: 1; }
+.k-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Toolbar (search + filters + right-side actions above a table) */
+.k-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.k-toolbar-spacer { flex: 1 1 auto; }
+.k-search { position: relative; flex: 0 1 320px; min-width: 200px; }
+.k-search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); pointer-events: none; }
+.k-search .k-input { padding-left: 32px; }
+
+/* Tabs */
+.k-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border-subtle); overflow-x: auto; scrollbar-width: none; }
+.k-tab { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; padding: 9px 12px; font-size: var(--fs-sm); font-weight: 600; color: var(--text-tertiary); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; white-space: nowrap; }
+.k-tab:hover { color: var(--text-primary); }
+.k-tab[aria-selected="true"] { color: var(--text-primary); border-bottom-color: var(--brand-primary); }
+.k-tab-count { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text-secondary); }
+
+/* Data table — dense rows, sticky header, row actions on the right */
+.k-table-wrap { overflow-x: auto; }
+.k-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.k-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
+.k-table th[data-sortable="true"] { cursor: pointer; }
+.k-table th[data-sortable="true"]:hover, .k-table th[aria-sort="ascending"], .k-table th[aria-sort="descending"] { color: var(--text-primary); }
+.k-table td { padding: 0 12px; height: 44px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.k-table th:first-child, .k-table td:first-child { padding-left: var(--sp-4); }
+.k-table th:last-child, .k-table td:last-child { padding-right: var(--sp-4); }
+.k-table tbody tr:last-child td { border-bottom: none; }
+.k-table tbody tr:hover td { background: rgba(255,255,255,0.03); }
+.k-table tbody tr[data-clickable="true"] { cursor: pointer; }
+.k-table td.k-td-primary { color: var(--text-primary); font-weight: 600; }
+.k-table td.k-td-actions { width: 1%; text-align: right; }
+.k-table td.k-table-empty { padding: 40px 16px; height: auto; text-align: center; color: var(--text-tertiary); white-space: normal; }
+
+/* Row actions — inline buttons + an overflow menu */
+.k-row-actions { display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end; }
+.k-menu { position: relative; display: inline-flex; }
+.k-menu-list { position: absolute; right: 0; top: calc(100% + 4px); z-index: 60; min-width: 180px; padding: 4px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); }
+.k-menu-item { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 6px; font-size: var(--fs-sm); color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
+.k-menu-item:hover, .k-menu-item:focus-visible { background: rgba(255,255,255,0.07); color: var(--text-primary); }
+.k-menu-item[data-tone="danger"] { color: #FCA5A5; }
+.k-menu-item[data-tone="danger"]:hover { background: rgba(239,68,68,0.14); }
+.k-menu-sep { height: 1px; margin: 4px 2px; background: var(--border-subtle); }
+
+/* Action bar — the detail-page counterpart of RowActions */
+.k-actionbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+
+/* Form fields */
+.k-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.k-label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-secondary); }
+.k-label .k-req { color: var(--brand-primary); margin-left: 2px; }
+.k-hint { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.k-error { font-size: var(--fs-xs); color: #FCA5A5; }
+.k-input, .k-textarea, select.k-select { width: 100%; min-height: 40px; padding: 8px 12px; font-size: var(--fs-md); font-weight: 500; color: var(--text-primary); background-color: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); }
+select.k-select { padding-right: 36px; }
+.k-textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+/* The app-wide input rules above use !important (13px, #26262B). Kit fields
+   sit on the token surfaces instead, so they must out-rank them the same way. */
+.k-input, .k-textarea, select.k-select { background-color: var(--bg-surface-2) !important; font-size: var(--fs-md) !important; }
+/* Placeholder must read as a hint, not as a typed value. */
+.k-input::placeholder, .k-textarea::placeholder { color: var(--text-disabled) !important; -webkit-text-fill-color: var(--text-disabled) !important; font-weight: 400; }
+.k-input[aria-invalid="true"], .k-textarea[aria-invalid="true"], select.k-select[aria-invalid="true"] { border-color: rgba(239,68,68,0.6); }
+.k-form-grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(var(--k-cols, 2), minmax(0, 1fr)); }
+.k-form-grid > .k-span-all { grid-column: 1 / -1; }
+.k-form-section { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-tertiary); padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle); grid-column: 1 / -1; }
+
+/* Modal — ONE size family, sticky header/footer, scrolling body */
+.k-overlay { position: fixed; inset: 0; z-index: 10000; /* above the chat widget (9999) */ background: rgba(3,6,10,0.72); backdrop-filter: blur(2px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 12px 12px; overflow-y: auto; }
+.k-modal { width: var(--modal-w); max-height: 88vh; display: flex; flex-direction: column; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+.k-modal[data-size="sm"] { width: var(--modal-w-sm); }
+.k-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-6); border-bottom: 1px solid var(--border-subtle); }
+.k-modal-title { font-size: var(--fs-lg); font-weight: 800; color: var(--text-primary); }
+.k-modal-body { padding: var(--sp-6); overflow-y: auto; flex: 1 1 auto; }
+.k-modal-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3) var(--sp-6); border-top: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+/* Empty state */
+.k-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-2); padding: 48px var(--sp-4); }
+.k-empty-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,0.05); color: var(--text-tertiary); margin-bottom: 4px; }
+.k-empty-title { font-size: var(--fs-lg); font-weight: 700; color: var(--text-primary); }
+.k-empty-text { font-size: var(--fs-md); color: var(--text-tertiary); max-width: 420px; }
+
+@media (max-width: 720px) {
+  .k-page { padding: var(--sp-4) var(--sp-4) var(--sp-6); }
+  .k-title { font-size: var(--fs-xl); }
+  .k-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .k-search { flex: 1 1 100%; }
+  /* Row actions stay reachable while the rest of the row scrolls sideways. */
+  .k-table td.k-td-actions, .k-table th:last-child { position: sticky; right: 0; background: var(--bg-surface); box-shadow: -8px 0 12px -8px rgba(0,0,0,0.6); }
+  .k-table th:last-child { background: var(--bg-surface-2); z-index: 2; }
+  .k-modal-head, .k-modal-body, .k-modal-foot { padding-left: var(--sp-4); padding-right: var(--sp-4); }
+  .k-overlay { padding: 0; align-items: stretch; }
+  .k-modal { width: 100%; max-height: none; border-radius: 0; }
+  .k-input, .k-textarea, select.k-select { font-size: 16px !important; }
+}
