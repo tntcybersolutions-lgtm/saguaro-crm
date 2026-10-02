@@ -236,10 +236,10 @@ export default function ApiDocsPage() {
 
       {/* Stat strip — the platform surface at a glance, counted from the catalog */}
       <StatStrip items={[
-        { label: 'Live Endpoints', value: String(liveCount), accent: GREEN, sub: 'accepting sk_live_ keys today', icon: <Broadcast size={11} weight="bold" color={GREEN} /> },
-        { label: 'Coming Soon', value: String(soonCount), sub: 'documented, on the roadmap', icon: <Code size={11} weight="bold" color={API_ACCENT} /> },
-        { label: 'API Modules', value: String(API_MODULES.length), sub: 'projects to takeoffs', icon: <Cube size={11} weight="bold" color={API_ACCENT} /> },
-        { label: 'Webhook Events', value: String(WEBHOOK_EVENTS.length), sub: 'all emitted by the dispatcher', icon: <WebhooksLogo size={11} weight="bold" color={API_ACCENT} /> },
+        {href: '/app/integrations/api-docs',  label: 'Live Endpoints', value: String(liveCount), accent: GREEN, sub: 'accepting sk_live_ keys today', icon: <Broadcast size={11} weight="bold" color={GREEN} /> },
+        {href: '/app/integrations/api-docs',  label: 'Coming Soon', value: String(soonCount), sub: 'documented, on the roadmap', icon: <Code size={11} weight="bold" color={API_ACCENT} /> },
+        {href: '/app/integrations/api-docs',  label: 'API Modules', value: String(API_MODULES.length), sub: 'projects to takeoffs', icon: <Cube size={11} weight="bold" color={API_ACCENT} /> },
+        {href: '/app/integrations/api-docs',  label: 'Webhook Events', value: String(WEBHOOK_EVENTS.length), sub: 'all emitted by the dispatcher', icon: <WebhooksLogo size={11} weight="bold" color={API_ACCENT} /> },
       ]} />
 
       {/* Section Tabs */}

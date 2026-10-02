@@ -552,31 +552,31 @@ export default function SubPortalPage() {
           { label: 'Expired Docs', value: stats.compExpired, color: RED, icon: <XCircle size={19} weight="duotone" color={RED} /> },
           { label: 'Missing Docs', value: stats.compMissing, color: DIM, icon: <FileX size={19} weight="duotone" color={DIM} /> },
         ].map((s, i) => (
-          <StatCard key={i} icon={s.icon} label={s.label} value={String(s.value)} accent={s.color} delay={i * 0.04} />
+          <StatCard key={i} icon={s.icon} label={s.label} value={String(s.value)} accent={s.color} delay={i * 0.04}  href="/app/sub-portal"/>
         ))}
       </div>
 
       {/* ── roster intelligence strip — adoption, engagement, compliance health ── */}
       {users.length > 0 && (
         <StatStrip items={[
-          {
+          {href: '/app/sub-portal', 
             label: 'Portal Adoption', value: `${intel.adoption}%`,
             accent: intel.adoption >= 70 ? GREEN : AMBER,
             sub: `${stats.active} active of ${stats.total} invited`,
           },
-          {
+          {href: '/app/sub-portal', 
             label: 'Never Logged In', value: String(intel.neverLogged),
             accent: intel.neverLogged > 0 ? AMBER : GREEN,
             sub: intel.neverLogged > 0 ? 'active accounts, zero visits — resend the link' : 'every active sub has visited',
           },
-          { label: 'Trades Onboarded', value: String(intel.uniqueTrades), sub: 'distinct trades across the roster' },
-          {
+          {href: '/app/sub-portal',  label: 'Trades Onboarded', value: String(intel.uniqueTrades), sub: 'distinct trades across the roster' },
+          {href: '/app/sub-portal', 
             label: 'Compliance Health', value: compliance.length > 0 ? `${intel.compPct}%` : '—',
             accent: compliance.length === 0 ? undefined : intel.compPct >= 80 ? GREEN : intel.needAttention > 0 ? RED : AMBER,
             sub: compliance.length > 0 ? `${intel.needAttention} document${intel.needAttention === 1 ? '' : 's'} need attention` : 'no compliance docs tracked yet',
           },
-          { label: 'Docs Shared', value: String(docs.length), sub: docs.length > 0 ? `${intel.docsAll} visible to all subs` : 'nothing shared to the portal yet' },
-          {
+          {href: '/app/sub-portal',  label: 'Docs Shared', value: String(docs.length), sub: docs.length > 0 ? `${intel.docsAll} visible to all subs` : 'nothing shared to the portal yet' },
+          {href: '/app/sub-portal', 
             label: 'Activity (7d)', value: String(intel.events7),
             sub: intel.lastEventTs > 0 ? `last event ${fmtDateTime(new Date(intel.lastEventTs).toISOString())}` : 'no portal events yet',
           },
@@ -938,7 +938,7 @@ export default function SubPortalPage() {
               { label: 'Expired', count: compliance.filter(c => c.status === 'expired').length, color: RED, icon: <XCircle size={19} weight="duotone" color={RED} /> },
               { label: 'Missing', count: compliance.filter(c => c.status === 'missing').length, color: DIM, icon: <FileX size={19} weight="duotone" color={DIM} /> },
             ].map((s, i) => (
-              <StatCard key={i} icon={s.icon} label={s.label} value={String(s.count)} accent={s.color} delay={i * 0.04} />
+              <StatCard key={i} icon={s.icon} label={s.label} value={String(s.count)} accent={s.color} delay={i * 0.04}  href="/app/sub-portal"/>
             ))}
           </div>
 

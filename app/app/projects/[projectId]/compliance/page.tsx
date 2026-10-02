@@ -232,20 +232,20 @@ export default function CompliancePage() {
       {/* Compliance intelligence strip — live scores from certs, W-9s, and waivers */}
       {scoredSummary && (
         <StatStrip items={[
-          { label: 'Subs Tracked', value: String(merged.length), sub: ctxSubs.length ? `${ctxSubs.length} on the project roster` : 'from live compliance tables' },
-          { label: 'Compliant', value: String(Number(scoredSummary.compliant) || 0), accent: '#3dd68c', sub: 'score 80+ — cleared to work' },
-          { label: 'At Risk', value: String(Number(scoredSummary.at_risk) || 0), accent: Number(scoredSummary.at_risk) > 0 ? '#f59e0b' : undefined, sub: 'gaps to close this month' },
-          { label: 'Non-Compliant', value: String(Number(scoredSummary.non_compliant) || 0), accent: Number(scoredSummary.non_compliant) > 0 ? '#ff7070' : '#3dd68c', sub: 'hold payment and site access' },
-          { label: 'Avg Score', value: `${Number(scoredSummary.avg_score) || 0}/100`, sub: 'W-9 25 · insurance 40 · waivers 35' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs Tracked', value: String(merged.length), sub: ctxSubs.length ? `${ctxSubs.length} on the project roster` : 'from live compliance tables' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Compliant', value: String(Number(scoredSummary.compliant) || 0), accent: '#3dd68c', sub: 'score 80+ — cleared to work' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'At Risk', value: String(Number(scoredSummary.at_risk) || 0), accent: Number(scoredSummary.at_risk) > 0 ? '#f59e0b' : undefined, sub: 'gaps to close this month' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Non-Compliant', value: String(Number(scoredSummary.non_compliant) || 0), accent: Number(scoredSummary.non_compliant) > 0 ? '#ff7070' : '#3dd68c', sub: 'hold payment and site access' },
+          {href: `/app/projects/${projectId}/compliance`,  label: 'Avg Score', value: `${Number(scoredSummary.avg_score) || 0}/100`, sub: 'W-9 25 · insurance 40 · waivers 35' },
         ]} />
       )}
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Compliant Subs" value={String(compliantCount)} accent={T.green} delay={0.02} />
-        <StatCard icon={<XCircle size={19} weight="duotone" color={T.red} />} label="COI Gaps" value={String(expiredCOIs)} accent={expiredCOIs > 0 ? T.red : undefined} delay={0.06} />
-        <StatCard icon={<Clipboard size={19} weight="duotone" color={T.muted} />} label="Missing Licenses" value={String(missingLicenses)} accent={missingLicenses > 0 ? T.amber : undefined} delay={0.10} />
-        <StatCard icon={<Warning size={19} weight="duotone" color={T.amber} />} label="Wage Flags" value={String(wageViolations)} accent={wageViolations > 0 ? T.amber : undefined} delay={0.14} />
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Compliant Subs" value={String(compliantCount)} accent={T.green} delay={0.02}  href={`/app/projects/${projectId}/compliance`}/>
+        <StatCard icon={<XCircle size={19} weight="duotone" color={T.red} />} label="COI Gaps" value={String(expiredCOIs)} accent={expiredCOIs > 0 ? T.red : undefined} delay={0.06}  href={`/app/projects/${projectId}/insurance`}/>
+        <StatCard icon={<Clipboard size={19} weight="duotone" color={T.muted} />} label="Missing Licenses" value={String(missingLicenses)} accent={missingLicenses > 0 ? T.amber : undefined} delay={0.10}  href={`/app/projects/${projectId}/compliance`}/>
+        <StatCard icon={<Warning size={19} weight="duotone" color={T.amber} />} label="Wage Flags" value={String(wageViolations)} accent={wageViolations > 0 ? T.amber : undefined} delay={0.14}  href={`/app/projects/${projectId}/compliance`}/>
       </div>
 
       {toast && (

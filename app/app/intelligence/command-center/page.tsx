@@ -253,7 +253,7 @@ export default function CommandCenterPage() {
           sub={`${filtered.length} shown`}
           accent={GOLD}
           delay={0.02}
-        />
+         href="/app/intelligence/command-center"/>
         <StatCard
           icon={<ClipboardText size={19} weight="duotone" color="#F97316" />}
           label="Open Items"
@@ -261,7 +261,7 @@ export default function CommandCenterPage() {
           sub="RFIs · Punch · COs"
           accent={totalOpen > 0 ? '#F97316' : undefined}
           delay={0.06}
-        />
+         href="/app/intelligence/command-center"/>
         <StatCard
           icon={<Gauge size={19} weight="duotone" color={GREEN} />}
           label="Avg Complete"
@@ -269,7 +269,7 @@ export default function CommandCenterPage() {
           sub="across portfolio"
           accent={GREEN}
           delay={0.10}
-        />
+         href="/app/intelligence/command-center"/>
       </div>
 
       {/* Sort + Filter controls */}

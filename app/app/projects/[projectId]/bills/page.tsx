@@ -343,11 +343,11 @@ export default function BillsPage() {
       {/* What the system already knows: the budget every bill posts against */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
-          { label: 'Committed', value: fmt(bCommitted), sub: 'POs + subcontracts' },
-          { label: 'Actual to Date', value: fmt(bActual), sub: 'bills + invoices posted' },
-          { label: 'Remaining', value: fmt(bRemaining), accent: bRemaining < 0 ? RED : GREEN, sub: 'original less actual' },
-          { label: 'Known Vendors', value: String(vendors.length), sub: 'autocomplete in the form' },
+          {href: `/app/projects/${projectId}/budget`,  label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
+          {href: `/app/projects/${projectId}/bills`,  label: 'Committed', value: fmt(bCommitted), sub: 'POs + subcontracts' },
+          {href: `/app/projects/${projectId}/bills`,  label: 'Actual to Date', value: fmt(bActual), sub: 'bills + invoices posted' },
+          {href: `/app/projects/${projectId}/bills`,  label: 'Remaining', value: fmt(bRemaining), accent: bRemaining < 0 ? RED : GREEN, sub: 'original less actual' },
+          {href: `/app/projects/${projectId}/bills`,  label: 'Known Vendors', value: String(vendors.length), sub: 'autocomplete in the form' },
         ]} />
       )}
 
@@ -590,14 +590,14 @@ export default function BillsPage() {
             label="Total Bills"
             value={String(bills.length)}
             sub={`${paidCount} paid`}
-          />
+           href={`/app/projects/${projectId}/bills`}/>
           <StatCard
             icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
             label="Pending + Approved"
             value={'$' + pendingTotal.toLocaleString()}
             accent={GOLD}
             sub="awaiting payment"
-          />
+           href={`/app/projects/${projectId}/bills`}/>
         </div>
       )}
 

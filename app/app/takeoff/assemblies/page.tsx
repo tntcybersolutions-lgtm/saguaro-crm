@@ -312,19 +312,19 @@ function AssemblyLibraryContent() {
             <StatCard
               icon={<Stack size={19} weight="duotone" color={GOLD} />}
               label="Assemblies" value={String(libStats.count)} sub="in library" accent={GOLD} delay={0.02}
-            />
+             href="/app/takeoff/assemblies"/>
             <StatCard
               icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
               label="Library Value" value={currency(libStats.totalValue)} sub="total assembly cost" delay={0.06}
-            />
+             href="/app/takeoff/assemblies"/>
             <StatCard
               icon={<SquaresFour size={19} weight="duotone" color={GOLD} />}
               label="CSI Divisions" value={String(libStats.divisions)} sub="covered" delay={0.10}
-            />
+             href="/app/takeoff/assemblies"/>
             <StatCard
               icon={<FunnelSimple size={19} weight="duotone" color={GOLD} />}
               label="Showing" value={String(filtered.length)} sub={`of ${libStats.count} assemblies`} delay={0.14}
-            />
+             href="/app/takeoff/assemblies"/>
           </div>
 
           {/* Catalog */}

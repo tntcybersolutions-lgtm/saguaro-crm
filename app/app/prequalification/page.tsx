@@ -468,31 +468,31 @@ export default function PrequalificationPage() {
               {/* Pipeline intelligence strip — funnel, decisions, compliance, expiry */}
               {(submissions.length > 0 || invites.length > 0 || templates.length > 0) && (
                 <StatStrip items={[
-                  {
+                  {href: '/app/prequalification', 
                     label: 'Invite Funnel', value: `${inviteFunnel.completed}/${inviteFunnel.sent}`,
                     sub: inviteFunnel.sent > 0 ? `${inviteFunnel.rate}% submitted${inviteFunnel.opened ? ` · ${inviteFunnel.opened} opened` : ''}` : 'no invites sent yet',
                     accent: inviteFunnel.sent > 0 && inviteFunnel.rate < 50 ? AMBER : undefined,
                   },
-                  {
+                  {href: '/app/prequalification', 
                     label: 'Approval Rate', value: `${decidedRate}%`,
                     accent: stats.approved + stats.rejected === 0 ? undefined : decidedRate >= 70 ? GREEN : AMBER,
                     sub: stats.approved + stats.rejected > 0 ? `${stats.approved} approved · ${stats.rejected} rejected` : 'no decisions yet',
                   },
-                  {
+                  {href: '/app/prequalification', 
                     label: 'Docs on File', value: docStats.tot > 0 ? `${docStats.pct}%` : '—',
                     accent: docStats.tot === 0 ? undefined : docStats.pct >= 80 ? GREEN : AMBER,
                     sub: docStats.tot > 0 ? `${docStats.up} of ${docStats.tot} required documents` : 'no document requests yet',
                   },
-                  {
+                  {href: '/app/prequalification', 
                     label: 'Expiry Pressure', value: String(docStats.expired + docStats.exp30),
                     accent: docStats.expired + docStats.exp30 > 0 ? RED : GREEN,
                     sub: `${docStats.expired} expired · ${docStats.exp30} in 30d · ${docStats.exp60} in 60d`,
                   },
-                  {
+                  {href: '/app/prequalification', 
                     label: 'Templates', value: String(templates.length),
                     sub: templates.length > 0 ? `avg pass threshold ${avgThreshold}%` : 'create your first form',
                   },
-                  {
+                  {href: '/app/prequalification', 
                     label: 'Approved Bench', value: String(stats.approved),
                     accent: stats.approved > 0 ? GREEN : undefined,
                     sub: approvedTrades > 0 ? `covering ${approvedTrades} trade${approvedTrades === 1 ? '' : 's'}` : 'no approved subs yet',
@@ -511,7 +511,7 @@ export default function PrequalificationPage() {
                   { label: 'Avg Score', value: `${stats.avgScore}%`, icon: <ChartBar size={19} weight="duotone" color={pctColor(stats.avgScore)} />, accent: pctColor(stats.avgScore) },
                   { label: 'Expiring Soon', value: String(stats.expiring), icon: <WarningCircle size={19} weight="duotone" color={stats.expiring > 0 ? RED : GREEN} />, accent: stats.expiring > 0 ? RED : GREEN },
                 ].map((s, i) => (
-                  <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} accent={s.accent} delay={i * 0.04} />
+                  <StatCard key={s.label} icon={s.icon} label={s.label} value={s.value} accent={s.accent} delay={i * 0.04}  href="/app/prequalification"/>
                 ))}
               </div>
 
@@ -663,10 +663,10 @@ export default function PrequalificationPage() {
                 const fExpiring = filtered.filter(s => s.expires_at && daysUntil(s.expires_at) <= 30).length;
                 return (
                   <StatStrip items={[
-                    { label: 'Showing', value: `${filtered.length} of ${submissions.length}`, sub: `${fPending} pending · ${fReview} in review · ${fApproved} approved` },
-                    { label: 'Avg Score (shown)', value: fScored.length > 0 ? `${fAvg}%` : '—', accent: fScored.length > 0 ? pctColor(fAvg) : undefined, sub: avgThreshold > 0 && fScored.length > 0 ? `${fPass} of ${fScored.length} clear the ${avgThreshold}% threshold` : 'no scored submissions in view' },
-                    { label: 'Docs Complete', value: fDocsTot > 0 ? `${Math.round((fDocsUp / fDocsTot) * 100)}%` : '—', accent: fDocsTot === 0 ? undefined : fDocsUp === fDocsTot ? GREEN : AMBER, sub: fDocsTot > 0 ? `${fDocsUp} of ${fDocsTot} required documents uploaded` : 'no documents requested' },
-                    { label: 'Prequals Expiring', value: String(fExpiring), accent: fExpiring > 0 ? RED : GREEN, sub: fExpiring > 0 ? 'within 30 days — request a renewal' : 'none within 30 days' },
+                    {href: '/app/prequalification',  label: 'Showing', value: `${filtered.length} of ${submissions.length}`, sub: `${fPending} pending · ${fReview} in review · ${fApproved} approved` },
+                    {href: '/app/prequalification',  label: 'Avg Score (shown)', value: fScored.length > 0 ? `${fAvg}%` : '—', accent: fScored.length > 0 ? pctColor(fAvg) : undefined, sub: avgThreshold > 0 && fScored.length > 0 ? `${fPass} of ${fScored.length} clear the ${avgThreshold}% threshold` : 'no scored submissions in view' },
+                    {href: '/app/prequalification',  label: 'Docs Complete', value: fDocsTot > 0 ? `${Math.round((fDocsUp / fDocsTot) * 100)}%` : '—', accent: fDocsTot === 0 ? undefined : fDocsUp === fDocsTot ? GREEN : AMBER, sub: fDocsTot > 0 ? `${fDocsUp} of ${fDocsTot} required documents uploaded` : 'no documents requested' },
+                    {href: '/app/prequalification',  label: 'Prequals Expiring', value: String(fExpiring), accent: fExpiring > 0 ? RED : GREEN, sub: fExpiring > 0 ? 'within 30 days — request a renewal' : 'none within 30 days' },
                   ]} />
                 );
               })()}
@@ -803,10 +803,10 @@ export default function PrequalificationPage() {
                 const oldestDays = oldest > 0 ? Math.floor((Date.now() - oldest) / 86400000) : 0;
                 return (
                   <StatStrip items={[
-                    { label: 'Forms Sent', value: String(invites.length), sub: tplUsed > 0 ? `${tplUsed} template${tplUsed === 1 ? '' : 's'} in use` : 'awaiting template link' },
-                    { label: 'Opened', value: String(iOpened), sub: 'clicked the secure link, not yet submitted' },
-                    { label: 'Submitted', value: String(iDone), accent: iDone > 0 ? GREEN : undefined, sub: `${Math.round((iDone / invites.length) * 100)}% completion rate` },
-                    { label: 'Still Waiting', value: String(iWaiting), accent: iWaiting > 0 ? AMBER : GREEN, sub: iWaiting === 0 ? 'every invite came back' : oldestDays > 0 ? `oldest outstanding ${oldestDays}d — resend below` : 'resend from the table below' },
+                    {href: '/app/prequalification',  label: 'Forms Sent', value: String(invites.length), sub: tplUsed > 0 ? `${tplUsed} template${tplUsed === 1 ? '' : 's'} in use` : 'awaiting template link' },
+                    {href: '/app/prequalification',  label: 'Opened', value: String(iOpened), sub: 'clicked the secure link, not yet submitted' },
+                    {href: '/app/prequalification',  label: 'Submitted', value: String(iDone), accent: iDone > 0 ? GREEN : undefined, sub: `${Math.round((iDone / invites.length) * 100)}% completion rate` },
+                    {href: '/app/prequalification',  label: 'Still Waiting', value: String(iWaiting), accent: iWaiting > 0 ? AMBER : GREEN, sub: iWaiting === 0 ? 'every invite came back' : oldestDays > 0 ? `oldest outstanding ${oldestDays}d — resend below` : 'resend from the table below' },
                   ]} />
                 );
               })()}

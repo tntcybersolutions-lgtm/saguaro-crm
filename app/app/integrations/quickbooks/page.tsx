@@ -240,11 +240,11 @@ export default function QuickBooksPage() {
 
       {/* What the integration already knows — every figure derived from live state */}
       <StatStrip items={[
-        { label: 'Connection', value: connected ? 'Connected' : 'Not Connected', accent: connected ? GREEN : RED, sub: 'QuickBooks Online' },
-        { label: 'Last Sync', value: timeAgo(integration?.last_sync_at ?? null), sub: 'most recent run' },
-        { label: 'Syncs Recorded', value: String(syncHistory.length), sub: 'kept in history below' },
-        { label: 'Records Synced', value: String(syncHistory.reduce((s, h) => s + Object.values(h.results).reduce((x, r) => x + (r.count || 0), 0), 0)), sub: 'across all runs' },
-        { label: 'Entities Enabled', value: `${[syncInvoices, syncBills, syncCustomers, syncVendors].filter(Boolean).length}/${SYNC_ENTITIES.length}`, sub: 'invoices to vendors' },
+        {href: '/app/integrations/quickbooks',  label: 'Connection', value: connected ? 'Connected' : 'Not Connected', accent: connected ? GREEN : RED, sub: 'QuickBooks Online' },
+        {href: '/app/integrations/quickbooks',  label: 'Last Sync', value: timeAgo(integration?.last_sync_at ?? null), sub: 'most recent run' },
+        {href: '/app/integrations/quickbooks',  label: 'Syncs Recorded', value: String(syncHistory.length), sub: 'kept in history below' },
+        {href: '/app/integrations/quickbooks',  label: 'Records Synced', value: String(syncHistory.reduce((s, h) => s + Object.values(h.results).reduce((x, r) => x + (r.count || 0), 0), 0)), sub: 'across all runs' },
+        {href: '/app/integrations/quickbooks',  label: 'Entities Enabled', value: `${[syncInvoices, syncBills, syncCustomers, syncVendors].filter(Boolean).length}/${SYNC_ENTITIES.length}`, sub: 'invoices to vendors' },
       ]} />
 
       {/* Connection Status */}

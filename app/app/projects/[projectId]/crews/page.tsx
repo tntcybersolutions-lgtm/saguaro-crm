@@ -301,13 +301,13 @@ export default function CrewsPage() {
           {/* KPIs */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, marginBottom: 24 }}>
             <StatCard icon={<UsersThree size={19} weight="duotone" color={AC.hex} />}
-              label="Crews" value={String(crews.length)} sub={showArchived ? 'archived crews' : 'on this project'} delay={0.02} />
+              label="Crews" value={String(crews.length)} sub={showArchived ? 'archived crews' : 'on this project'} delay={0.02}  href={`/app/projects/${projectId}/crews`}/>
             <StatCard icon={<HardHat size={19} weight="duotone" color={AC.hex} />}
-              label="Active" value={String(activeCount)} accent={activeCount > 0 ? GREEN : undefined} sub="ready for the field" delay={0.06} />
+              label="Active" value={String(activeCount)} accent={activeCount > 0 ? GREEN : undefined} sub="ready for the field" delay={0.06}  href={`/app/projects/${projectId}/crews`}/>
             <StatCard icon={<User size={19} weight="duotone" color={AC.hex} />}
-              label="Workers Rostered" value={String(totalMembers)} sub="across all crews" delay={0.10} />
+              label="Workers Rostered" value={String(totalMembers)} sub="across all crews" delay={0.10}  href={`/app/projects/${projectId}/crews`}/>
             <StatCard icon={<Wrench size={19} weight="duotone" color={AC.hex} />}
-              label="Trades Covered" value={String(tradesCovered)} sub="distinct crew trades" delay={0.14} />
+              label="Trades Covered" value={String(tradesCovered)} sub="distinct crew trades" delay={0.14}  href={`/app/projects/${projectId}/subs`}/>
           </div>
 
           <SectionCard

@@ -429,13 +429,13 @@ export default function PrevailingWagePage() {
                   label="Daily (8hr)"
                   value={fmt(dailyCost)}
                   sub={`${fmt(rate.total)}/hr total`}
-                />
+                 href="/app/compliance/prevailing-wage"/>
                 <StatCard
                   icon={<CalendarCheck size={19} weight="duotone" color={GOLD} />}
                   label="Weekly (40hr)"
                   value={fmt(weeklyCost)}
                   sub={`${fmt(rate.total)}/hr total`}
-                />
+                 href="/app/compliance/prevailing-wage"/>
               </div>
             </>
           )}

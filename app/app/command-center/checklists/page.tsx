@@ -69,10 +69,10 @@ export default function ChecklistsPage() {
       {/* Playbook pulse — real counts for the selected site */}
       {!loading && groups.length > 0 && (
         <StatStrip items={[
-          { label: 'Steps Complete', value: `${overall.done}/${overall.total}`, sub: 'on this site' },
-          { label: 'Progress', value: `${overall.pct}%`, accent: overall.pct >= 100 ? C.green : C.gold, sub: overall.pct >= 100 ? 'playbook complete' : 'of the playbook' },
-          { label: 'Phases', value: String(groups.length), sub: 'in the template' },
-          { label: 'Phases Complete', value: String(phasesComplete), accent: phasesComplete > 0 ? C.green : undefined, sub: `${groups.length - phasesComplete} still open` },
+          {href: '/app/command-center/checklists',  label: 'Steps Complete', value: `${overall.done}/${overall.total}`, sub: 'on this site' },
+          {href: '/app/command-center/checklists',  label: 'Progress', value: `${overall.pct}%`, accent: overall.pct >= 100 ? C.green : C.gold, sub: overall.pct >= 100 ? 'playbook complete' : 'of the playbook' },
+          {href: '/app/command-center/checklists',  label: 'Phases', value: String(groups.length), sub: 'in the template' },
+          {href: '/app/command-center/checklists',  label: 'Phases Complete', value: String(phasesComplete), accent: phasesComplete > 0 ? C.green : undefined, sub: `${groups.length - phasesComplete} still open` },
         ]} />
       )}
 

@@ -444,11 +444,11 @@ export default function InvoicingPage() {
 
       {!loading && invoices.length > 0 && (
         <StatStrip items={[
-          { label: 'Total Billed', value: fmtUsd(pageBilled), sub: `across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` },
-          { label: 'Collected', value: fmtUsd(pagePaid), accent: '#3dd68c', sub: 'marked paid' },
-          { label: 'Outstanding', value: fmtUsd(pageOutstanding), accent: pageOutstanding > 0 ? '#F59E0B' : undefined, sub: 'sent, awaiting payment' },
-          { label: 'Overdue', value: String(pageOverdue), accent: pageOverdue > 0 ? colors.red : undefined, sub: pageOverdue > 0 ? 'past due, excludes drafts' : 'nothing past due' },
-          { label: 'Drafts', value: String(pageDrafts), sub: 'not yet sent' },
+          {href: '/app/invoicing',  label: 'Total Billed', value: fmtUsd(pageBilled), sub: `across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` },
+          {href: '/app/invoicing',  label: 'Collected', value: fmtUsd(pagePaid), accent: '#3dd68c', sub: 'marked paid' },
+          {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(pageOutstanding), accent: pageOutstanding > 0 ? '#F59E0B' : undefined, sub: 'sent, awaiting payment' },
+          {href: '/app/invoicing',  label: 'Overdue', value: String(pageOverdue), accent: pageOverdue > 0 ? colors.red : undefined, sub: pageOverdue > 0 ? 'past due, excludes drafts' : 'nothing past due' },
+          {href: '/app/invoicing',  label: 'Drafts', value: String(pageDrafts), sub: 'not yet sent' },
         ]} />
       )}
 
@@ -477,11 +477,11 @@ export default function InvoicingPage() {
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
               {ctx && (
                 <StatStrip items={[
-                  { label: 'Original Contract', value: fmtUsd(cOriginal) },
-                  { label: 'Approved COs', value: (cCoTotal >= 0 ? '+' : '') + fmtUsd(cCoTotal), accent: cCoTotal > 0 ? '#3dd68c' : undefined },
-                  { label: 'Revised', value: fmtUsd(cRevised) },
-                  { label: 'Billed to Date', value: fmtUsd(cBilled) },
-                  { label: 'Outstanding', value: fmtUsd(Math.max(0, cBilled - cPaid)), accent: '#F59E0B' },
+                  {href: '/app/invoicing',  label: 'Original Contract', value: fmtUsd(cOriginal) },
+                  {href: '/app/invoicing',  label: 'Approved COs', value: (cCoTotal >= 0 ? '+' : '') + fmtUsd(cCoTotal), accent: cCoTotal > 0 ? '#3dd68c' : undefined },
+                  {href: '/app/invoicing',  label: 'Revised', value: fmtUsd(cRevised) },
+                  {href: '/app/invoicing',  label: 'Billed to Date', value: fmtUsd(cBilled) },
+                  {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(Math.max(0, cBilled - cPaid)), accent: '#F59E0B' },
                 ]} />
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

@@ -212,22 +212,22 @@ export default function FirewallRulesPage() {
           icon={<ShieldCheck size={19} weight="duotone" color={GOLD} />}
           label="Total Rules" value={String(rules.length)} accent={GOLD}
           sub="across all categories" delay={0.02}
-        />
+         href={`/app/projects/${projectId}/network/firewall`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
           label="Enabled" value={String(enabledCount)} accent={enabledCount ? GREEN : undefined}
           sub={`${rules.length - enabledCount} disabled`} delay={0.06}
-        />
+         href={`/app/projects/${projectId}/network/firewall`}/>
         <StatCard
           icon={<Prohibit size={19} weight="duotone" color={RED} />}
           label="Blocking" value={String(blockingCount)} accent={blockingCount ? RED : undefined}
           sub="deny / drop" delay={0.10}
-        />
+         href={`/app/projects/${projectId}/network/firewall`}/>
         <StatCard
           icon={<ClipboardText size={19} weight="duotone" color={GOLD} />}
           label="Logging" value={String(loggingCount)}
           sub="rules logged" delay={0.14}
-        />
+         href={`/app/projects/${projectId}/network/firewall`}/>
       </div>
 
       {/* Add Rule Form */}

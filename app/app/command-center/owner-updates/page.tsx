@@ -105,12 +105,12 @@ export default function OwnerUpdatesPage() {
 
         {!loading && updates.length > 0 && (
           <StatStrip items={[
-            { label: 'Sites', value: String(updates.length), icon: <Buildings size={11} weight="bold" /> },
-            { label: 'On Track', value: String(greenCount), accent: greenCount > 0 ? C.green : undefined },
-            { label: 'Needs Attention', value: String(yellowCount), accent: yellowCount > 0 ? C.yellow : undefined },
-            { label: 'At Risk', value: String(redCount), accent: redCount > 0 ? C.red : undefined },
-            { label: 'Milestones Slipping', value: String(slippingTotal), accent: slippingTotal > 0 ? C.yellow : undefined },
-            { label: 'Escalations', value: String(escTotal), accent: escTotal > 0 ? C.red : undefined, sub: llTotal > 0 ? `${llTotal} long-lead at risk` : 'long-lead clear' },
+            {href: '/app/command-center/owner-updates',  label: 'Sites', value: String(updates.length), icon: <Buildings size={11} weight="bold" /> },
+            {href: '/app/command-center/owner-updates',  label: 'On Track', value: String(greenCount), accent: greenCount > 0 ? C.green : undefined },
+            {href: '/app/command-center/owner-updates',  label: 'Needs Attention', value: String(yellowCount), accent: yellowCount > 0 ? C.yellow : undefined },
+            {href: '/app/command-center/risks',  label: 'At Risk', value: String(redCount), accent: redCount > 0 ? C.red : undefined },
+            {href: '/app/command-center/milestones',  label: 'Milestones Slipping', value: String(slippingTotal), accent: slippingTotal > 0 ? C.yellow : undefined },
+            {href: '/app/command-center/escalations',  label: 'Escalations', value: String(escTotal), accent: escTotal > 0 ? C.red : undefined, sub: llTotal > 0 ? `${llTotal} long-lead at risk` : 'long-lead clear' },
           ]} />
         )}
 

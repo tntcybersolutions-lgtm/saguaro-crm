@@ -399,7 +399,7 @@ export default function BudgetPage() {
           { l: 'Forecast (EAC)', v: fmt(totalForecast), c: totalForecast > totalRevised ? '#ff7070' : '#3dd68c', ac: totalForecast > totalRevised ? '#ff7070' : '#3dd68c', icon: <ChartLineUp size={17} weight="duotone" color={CIN.goldHi} /> },
           { l: 'Variance', v: (totalVariance >= 0 ? '+' : '') + fmt(totalVariance), c: totalVariance >= 0 ? '#3dd68c' : '#ff7070', ac: totalVariance >= 0 ? '#3dd68c' : '#ff7070', icon: <TrendUp size={17} weight="duotone" color={CIN.goldHi} /> },
         ].map((k, i) => (
-          <StatCard key={k.l} delay={0.02 + i * 0.04} icon={k.icon} label={k.l} value={k.v} valueColor={k.c} accentColor={k.ac} />
+          <StatCard key={k.l} delay={0.02 + i * 0.04} icon={k.icon} label={k.l} value={k.v} valueColor={k.c} accentColor={k.ac}  href={`/app/projects/${projectId}/budget`}/>
         ))}
       </div>
 
@@ -407,12 +407,12 @@ export default function BudgetPage() {
       {showAddForm && (
         <div style={{ marginBottom: 20 }}>
           <StatStrip items={[
-            { label: 'Budget Lines', value: String(lines.length), sub: lines.length > 0 ? `across ${divisionsUsed} CSI division${divisionsUsed === 1 ? '' : 's'}` : 'first line on this project' },
-            { label: 'Original Budget', value: fmt(Number(totalOriginal) || 0), sub: 'sum of all lines' },
-            { label: 'Committed', value: fmt(Number(totalCommitted) || 0), accent: '#4a9de8', sub: 'subcontracts + POs' },
-            { label: 'Actual to Date', value: fmt(Number(totalActual) || 0), accent: '#f97316', sub: 'approved bills' },
-            { label: 'Variance', value: ((Number(totalVariance) || 0) >= 0 ? '+' : '') + fmt(Number(totalVariance) || 0), accent: (Number(totalVariance) || 0) >= 0 ? '#3dd68c' : '#ff7070', sub: 'revised vs forecast' },
-            ...(primeContract > 0 ? [{ label: 'Prime Contract', value: fmt(primeContract), sub: `incl. ${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` }] : []),
+            {href: `/app/projects/${projectId}/budget`,  label: 'Budget Lines', value: String(lines.length), sub: lines.length > 0 ? `across ${divisionsUsed} CSI division${divisionsUsed === 1 ? '' : 's'}` : 'first line on this project' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Original Budget', value: fmt(Number(totalOriginal) || 0), sub: 'sum of all lines' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Committed', value: fmt(Number(totalCommitted) || 0), accent: '#4a9de8', sub: 'subcontracts + POs' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Actual to Date', value: fmt(Number(totalActual) || 0), accent: '#f97316', sub: 'approved bills' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Variance', value: ((Number(totalVariance) || 0) >= 0 ? '+' : '') + fmt(Number(totalVariance) || 0), accent: (Number(totalVariance) || 0) >= 0 ? '#3dd68c' : '#ff7070', sub: 'revised vs forecast' },
+            ...(primeContract > 0 ? [{href: `/app/projects/${projectId}/contracts`,  label: 'Prime Contract', value: fmt(primeContract), sub: `incl. ${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` }] : []),
           ]} />
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 16, alignItems: 'start' }}>
           <SectionCard title="Add Budget Line" subtitle="Pick the CSI division — code and description fill themselves" icon={<Plus size={18} weight="bold" color={CIN.goldHi} />}>

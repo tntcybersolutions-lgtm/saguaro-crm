@@ -84,10 +84,10 @@ export default function VerifyHubPage() {
 
         {!loading && summary.total > 0 && (
           <StatStrip items={[
-            { label: 'Pending', value: String(summary.pending), accent: summary.pending ? C.gold : C.green, sub: summary.pending ? 'awaiting your sign-off' : 'all reviewed' },
-            { label: 'Verified', value: String(summary.verified), accent: C.green },
-            { label: 'Rejected', value: String(summary.rejected), accent: summary.rejected ? C.red : undefined },
-            { label: 'Sites', value: String(summary.sites) },
+            {href: '/app/command-center/verify',  label: 'Pending', value: String(summary.pending), accent: summary.pending ? C.gold : C.green, sub: summary.pending ? 'awaiting your sign-off' : 'all reviewed' },
+            {href: '/app/command-center/verify',  label: 'Verified', value: String(summary.verified), accent: C.green },
+            {href: '/app/command-center/verify',  label: 'Rejected', value: String(summary.rejected), accent: summary.rejected ? C.red : undefined },
+            {href: '/app/command-center/verify',  label: 'Sites', value: String(summary.sites) },
           ]} />
         )}
 

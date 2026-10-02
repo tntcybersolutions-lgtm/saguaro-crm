@@ -476,23 +476,23 @@ export default function BidPackageDetailPage() {
           <StatCard
             icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
             label="Scope Value" value={fmt(totalSov)}
-          />
+           href={`/app/projects/${projectId}/bid-packages`}/>
           <StatCard
             icon={<Trophy size={19} weight="duotone" color={GOLD} />}
             label="Awarded Amount"
             value={pkg.awarded_amount ? fmt(pkg.awarded_amount) : 'TBD'}
             accent={pkg.awarded_amount ? '#1db954' : undefined}
-          />
+           href={`/app/projects/${projectId}/bid-packages`}/>
           <StatCard
             icon={<UsersThree size={19} weight="duotone" color={GOLD} />}
             label="Subs Invited" value={String(pkg.invited_subs.length)}
-          />
+           href={`/app/projects/${projectId}/bid-packages`}/>
           <StatCard
             icon={<Receipt size={19} weight="duotone" color={GOLD} />}
             label="Bids Received"
             value={String(submissions.length || submittedSubs.length)}
             accent={(submissions.length || submittedSubs.length) > 0 ? '#1db954' : undefined}
-          />
+           href={`/app/projects/${projectId}/bid-packages`}/>
         </div>
 
         {/* Awarded banner */}

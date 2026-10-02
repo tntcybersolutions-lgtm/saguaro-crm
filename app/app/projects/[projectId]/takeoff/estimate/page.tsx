@@ -517,9 +517,9 @@ function EstimatePage() {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<Calculator size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={currency(grandTotal)} accent={GOLD} sub="material + labor" delay={0.02} />
-        <StatCard icon={<Cube size={19} weight="duotone" color="#61afef" />} label="Material" value={currency(totalMaterial)} accent="#61afef" sub="rolled up" delay={0.06} />
-        <StatCard icon={<Users size={19} weight="duotone" color="#98c379" />} label="Labor" value={currency(totalLabor)} accent="#98c379" sub="rolled up" delay={0.10} />
+        <StatCard icon={<Calculator size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={currency(grandTotal)} accent={GOLD} sub="material + labor" delay={0.02}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
+        <StatCard icon={<Cube size={19} weight="duotone" color="#61afef" />} label="Material" value={currency(totalMaterial)} accent="#61afef" sub="rolled up" delay={0.06}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
+        <StatCard icon={<Users size={19} weight="duotone" color="#98c379" />} label="Labor" value={currency(totalLabor)} accent="#98c379" sub="rolled up" delay={0.10}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
       </div>
 
       {/* WORKSPACE */}

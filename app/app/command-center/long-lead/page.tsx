@@ -73,11 +73,11 @@ export default function LongLeadPage() {
       {/* Procurement pulse — severity mix plus committed dollars, all Number()-coerced via num() */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Long-Lead Items', value: String(summary.total), sub: 'across all sites' },
-          { label: 'On Track', value: String(summary.green), accent: C.green, sub: 'order date protected' },
-          { label: 'At Risk', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'order window closing' },
-          { label: 'Critical', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'order now' },
-          { label: 'Committed Value', value: fmtMoney(Number(summary.value) || 0), accent: C.gold, sub: 'qty times unit cost' },
+          {href: '/app/command-center/long-lead',  label: 'Long-Lead Items', value: String(summary.total), sub: 'across all sites' },
+          {href: '/app/command-center/long-lead',  label: 'On Track', value: String(summary.green), accent: C.green, sub: 'order date protected' },
+          {href: '/app/command-center/risks',  label: 'At Risk', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'order window closing' },
+          {href: '/app/command-center/long-lead',  label: 'Critical', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'order now' },
+          {href: '/app/command-center/budget',  label: 'Committed Value', value: fmtMoney(Number(summary.value) || 0), accent: C.gold, sub: 'qty times unit cost' },
         ]} />
       )}
 

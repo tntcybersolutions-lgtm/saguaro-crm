@@ -486,12 +486,12 @@ export default function SafetyPage() {
       {/* Safety intelligence strip — leading and lagging indicators together */}
       {!loading && (
         <StatStrip items={[
-          { label: 'OSHA Recordables', value: String(recordables), accent: recordables > 0 ? RED : GREEN, sub: recordables > 0 ? 'on the 300 log' : 'clean 300 log' },
-          { label: 'Near Misses', value: String(nearMisses), accent: nearMisses > 0 ? AMBER : undefined, sub: 'leading indicator — keep reporting' },
-          { label: 'Toolbox Talks', value: String(talks.length), sub: lastTalk ? `last: ${fmtDate(lastTalk.talk_date)}` : 'none logged yet' },
-          { label: 'Talk Cadence', value: daysSinceTalk == null ? '—' : `${daysSinceTalk}d ago`, accent: daysSinceTalk != null && daysSinceTalk > 7 ? AMBER : daysSinceTalk != null ? GREEN : undefined, sub: daysSinceTalk != null && daysSinceTalk > 7 ? 'weekly cadence slipping' : 'weekly cadence target' },
-          { label: 'Days Incident-Free', value: String(daysSinceLast), accent: daysSinceLast > 30 ? GREEN : undefined, sub: lastIncident ? `since ${fmtDate(lastIncident.date)}` : 'no recordable incidents' },
-          { label: 'Crews On Site', value: String(subCount), sub: subCount > 0 ? 'subs to cover in talks' : 'no subs on the roster yet' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'OSHA Recordables', value: String(recordables), accent: recordables > 0 ? RED : GREEN, sub: recordables > 0 ? 'on the 300 log' : 'clean 300 log' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Near Misses', value: String(nearMisses), accent: nearMisses > 0 ? AMBER : undefined, sub: 'leading indicator — keep reporting' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Toolbox Talks', value: String(talks.length), sub: lastTalk ? `last: ${fmtDate(lastTalk.talk_date)}` : 'none logged yet' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Talk Cadence', value: daysSinceTalk == null ? '—' : `${daysSinceTalk}d ago`, accent: daysSinceTalk != null && daysSinceTalk > 7 ? AMBER : daysSinceTalk != null ? GREEN : undefined, sub: daysSinceTalk != null && daysSinceTalk > 7 ? 'weekly cadence slipping' : 'weekly cadence target' },
+          {href: `/app/projects/${projectId}/safety`,  label: 'Days Incident-Free', value: String(daysSinceLast), accent: daysSinceLast > 30 ? GREEN : undefined, sub: lastIncident ? `since ${fmtDate(lastIncident.date)}` : 'no recordable incidents' },
+          {href: `/app/projects/${projectId}/crews`,  label: 'Crews On Site', value: String(subCount), sub: subCount > 0 ? 'subs to cover in talks' : 'no subs on the roster yet' },
         ]} />
       )}
 
@@ -501,17 +501,17 @@ export default function SafetyPage() {
           icon={<ClipboardText size={19} weight="duotone" color={GOLD} />}
           label="Total Incidents" value={String(totalIncidents)} accent={GOLD}
           delay={0.02}
-        />
+         href={`/app/projects/${projectId}/safety`}/>
         <StatCard
           icon={<WarningCircle size={19} weight="duotone" color={RED} />}
           label="Open" value={String(openCount)} accent={openCount > 0 ? RED : undefined}
           delay={0.06}
-        />
+         href={`/app/projects/${projectId}/safety`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
           label="Resolved" value={String(resolvedCount)} accent={resolvedCount > 0 ? GREEN : undefined}
           delay={0.10}
-        />
+         href={`/app/projects/${projectId}/safety`}/>
         <StatCard
           icon={<ShieldCheck size={19} weight="duotone" color={GREEN} />}
           label="Days Since Last Incident"
@@ -519,12 +519,12 @@ export default function SafetyPage() {
           accent={daysSinceLast > 30 ? GREEN : undefined}
           sub={daysSinceLast > 30 ? 'Excellent record' : undefined}
           delay={0.14}
-        />
+         href={`/app/projects/${projectId}/safety`}/>
         <StatCard
           icon={<Warning size={19} weight="duotone" color={AMBER} />}
           label="Open Actions" value={String(openActionsCount)} accent={openActionsCount > 0 ? AMBER : undefined}
           delay={0.18}
-        />
+         href={`/app/projects/${projectId}/safety`}/>
         <StatCard
           icon={<ClockCountdown size={19} weight="duotone" color={RED} />}
           label="Overdue Actions"
@@ -532,7 +532,7 @@ export default function SafetyPage() {
           accent={overdueActionsCount > 0 ? RED : undefined}
           sub={overdueActionsCount > 0 ? 'Needs attention' : undefined}
           delay={0.22}
-        />
+         href={`/app/projects/${projectId}/safety`}/>
       </div>
 
       {successMsg && (

@@ -168,11 +168,11 @@ export default function NotificationsPage() {
       {/* Activity intelligence strip — what the feed holds right now */}
       {!loading && notifications.length > 0 && (
         <StatStrip items={[
-          { label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? GOLD : undefined, sub: unreadCount > 0 ? 'waiting on you' : 'all caught up' },
-          { label: 'In the Feed', value: String(notifications.length), sub: 'most recent 100 events' },
-          { label: 'Money Events', value: String((typeCounts['Pay App'] || 0) + (typeCounts['Change Order'] || 0)), sub: 'pay apps + change orders' },
-          { label: 'Alerts', value: String(typeCounts['Alert'] || 0), accent: (typeCounts['Alert'] || 0) > 0 ? RED : undefined, sub: (typeCounts['Alert'] || 0) > 0 ? 'budget / overdue flags' : 'nothing flagged' },
-          { label: 'Latest', value: notifications[0] ? timeAgo(notifications[0].created_at) : '—', sub: notifications[0] ? getConfig(notifications[0].type).label : undefined },
+          {href: '/app/notifications',  label: 'Unread', value: String(unreadCount), accent: unreadCount > 0 ? GOLD : undefined, sub: unreadCount > 0 ? 'waiting on you' : 'all caught up' },
+          {href: '/app/notifications',  label: 'In the Feed', value: String(notifications.length), sub: 'most recent 100 events' },
+          {href: '/app/notifications',  label: 'Money Events', value: String((typeCounts['Pay App'] || 0) + (typeCounts['Change Order'] || 0)), sub: 'pay apps + change orders' },
+          {href: '/app/notifications',  label: 'Alerts', value: String(typeCounts['Alert'] || 0), accent: (typeCounts['Alert'] || 0) > 0 ? RED : undefined, sub: (typeCounts['Alert'] || 0) > 0 ? 'budget / overdue flags' : 'nothing flagged' },
+          {href: '/app/notifications',  label: 'Latest', value: notifications[0] ? timeAgo(notifications[0].created_at) : '—', sub: notifications[0] ? getConfig(notifications[0].type).label : undefined },
         ]} />
       )}
 

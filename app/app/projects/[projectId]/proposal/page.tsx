@@ -218,12 +218,12 @@ export default function ProposalPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Original Contract', value: fmt(original), sub: 'base agreement' },
-          { label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
-          { label: 'Contract to Date', value: fmt(revised), sub: 'original + approved COs' },
-          { label: 'Versions', value: String(proposals.length), sub: lastProposal ? `latest ${lastProposal.version} — ${String(lastProposal.status || '').replace(/_/g, ' ')}` : 'none yet' },
-          { label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', accent: accepted ? GREEN : undefined, sub: accepted ? accepted.version : 'no accepted version yet' },
-          { label: 'Billed to Date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract` },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'base agreement' },
+          {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Contract to Date', value: fmt(revised), sub: 'original + approved COs' },
+          {href: `/app/projects/${projectId}/proposal`,  label: 'Versions', value: String(proposals.length), sub: lastProposal ? `latest ${lastProposal.version} — ${String(lastProposal.status || '').replace(/_/g, ' ')}` : 'none yet' },
+          {href: `/app/projects/${projectId}/proposal`,  label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', accent: accepted ? GREEN : undefined, sub: accepted ? accepted.version : 'no accepted version yet' },
+          {href: `/app/projects/${projectId}/proposal`,  label: 'Billed to Date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract` },
         ]} />
       )}
 
@@ -236,7 +236,7 @@ export default function ProposalPage() {
             value={`$${accepted.amount.toLocaleString()}`}
             accent={GREEN}
             sub={(() => { const d = revised > 0 ? (Number(accepted.amount) || 0) - revised : 0; const base = accepted.notes ? `${accepted.version} — ${accepted.notes}` : accepted.version; return d !== 0 ? `${base} · ${d > 0 ? '+' : '-'}${fmt(Math.abs(d))} vs contract to date` : base; })()}
-          />
+           href={`/app/projects/${projectId}/proposal`}/>
         </div>
       )}
 

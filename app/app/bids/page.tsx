@@ -458,12 +458,12 @@ function BidsPageInner() {
       {/* Bid Center pulse — the page walks in knowing every live package */}
       {!pipelineLoading && !pipelineError && packages.length > 0 && (
         <StatStrip items={[
-          { label: 'Live Packages', value: String(activePackages.length), sub: `${openNow.length} open for bids` },
-          { label: 'Bids In', value: `${respondedTotal} / ${invitedTotal}`, accent: respondedTotal > 0 ? GREEN : undefined, sub: 'responses vs invites' },
-          { label: 'Coverage', value: activePackages.length ? `${coveredCount}/${activePackages.length}` : '—', accent: activePackages.length > 0 && coveredCount === activePackages.length ? GREEN : undefined, sub: activePackages.length - coveredCount > 0 ? `${activePackages.length - coveredCount} awaiting first bid` : 'every package has a bid' },
-          { label: 'Low-Bid Pipeline', value: fmt(lowBidPipeline), sub: 'sum of current low bids' },
-          { label: 'Awarded', value: fmt(awardedTotal), accent: awardedTotal > 0 ? GOLD : undefined, sub: `${awardedPkgs.length} package${awardedPkgs.length === 1 ? '' : 's'} placed` },
-          { label: 'Widest Spread', value: widestSpread ? `${Math.round(Number(widestSpread.spread_pct))}%` : '—', accent: widestSpread ? spreadColor(Number(widestSpread.spread_pct)) : undefined, sub: widestSpread ? `${widestSpread.name || 'package'} — level before award` : 'needs 2+ bids on a package' },
+          {href: '/app/bids',  label: 'Live Packages', value: String(activePackages.length), sub: `${openNow.length} open for bids` },
+          {href: '/app/bids',  label: 'Bids In', value: `${respondedTotal} / ${invitedTotal}`, accent: respondedTotal > 0 ? GREEN : undefined, sub: 'responses vs invites' },
+          {href: '/app/bids',  label: 'Coverage', value: activePackages.length ? `${coveredCount}/${activePackages.length}` : '—', accent: activePackages.length > 0 && coveredCount === activePackages.length ? GREEN : undefined, sub: activePackages.length - coveredCount > 0 ? `${activePackages.length - coveredCount} awaiting first bid` : 'every package has a bid' },
+          {href: '/app/bids',  label: 'Low-Bid Pipeline', value: fmt(lowBidPipeline), sub: 'sum of current low bids' },
+          {href: '/app/bids',  label: 'Awarded', value: fmt(awardedTotal), accent: awardedTotal > 0 ? GOLD : undefined, sub: `${awardedPkgs.length} package${awardedPkgs.length === 1 ? '' : 's'} placed` },
+          {href: '/app/bids',  label: 'Widest Spread', value: widestSpread ? `${Math.round(Number(widestSpread.spread_pct))}%` : '—', accent: widestSpread ? spreadColor(Number(widestSpread.spread_pct)) : undefined, sub: widestSpread ? `${widestSpread.name || 'package'} — level before award` : 'needs 2+ bids on a package' },
         ]}/>
       )}
 
@@ -629,7 +629,7 @@ function BidsPageInner() {
               {l:'Avg Margin',v:(Number(historyStats.avgMargin) || 0).toFixed(1)+'%',c:GOLD,icon:<ChartBar size={19} weight="duotone" color={GOLD} />},
               {l:'Total Value',v:fmt(Number(historyStats.totalValue) || 0),c:GOLD,icon:<CurrencyDollar size={19} weight="duotone" color={GOLD} />},
             ].map((k,i)=>(
-              <StatCard key={k.l} icon={k.icon} label={k.l} value={k.v} accent={k.c} delay={i*0.04} />
+              <StatCard key={k.l} icon={k.icon} label={k.l} value={k.v} accent={k.c} delay={i*0.04}  href="/app/bids"/>
             ))}
           </div>
         ) : null}

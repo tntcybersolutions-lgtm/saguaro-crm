@@ -545,10 +545,10 @@ export default function TakeoffPage() {
 
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <StatCard icon={<Clipboard size={19} weight="duotone" color={GOLD} />} label="This Month" value={String(thisMonthComplete.length)} sub="completed takeoffs" delay={0.02} />
-          <StatCard icon={<Target size={19} weight="duotone" color={GOLD} />} label="Avg Confidence" value={completed.length ? `${avgConfidence}%` : '—'} sub="across all analyses" delay={0.06} />
-          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Bid Value" value={completed.length ? totalBidStr : '—'} sub="sum of complete takeoffs" delay={0.10} />
-          <StatCard icon={<Lightning size={19} weight="duotone" color={GOLD} />} label="Avg Processing" value={processingSecs.length ? `~${fmtSecs(avgProcessingSecs)}` : '—'} sub="per blueprint analysis" delay={0.14} />
+          <StatCard icon={<Clipboard size={19} weight="duotone" color={GOLD} />} label="This Month" value={String(thisMonthComplete.length)} sub="completed takeoffs" delay={0.02}  href="/app/takeoff"/>
+          <StatCard icon={<Target size={19} weight="duotone" color={GOLD} />} label="Avg Confidence" value={completed.length ? `${avgConfidence}%` : '—'} sub="across all analyses" delay={0.06}  href="/app/takeoff"/>
+          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Bid Value" value={completed.length ? totalBidStr : '—'} sub="sum of complete takeoffs" delay={0.10}  href="/app/takeoff"/>
+          <StatCard icon={<Lightning size={19} weight="duotone" color={GOLD} />} label="Avg Processing" value={processingSecs.length ? `~${fmtSecs(avgProcessingSecs)}` : '—'} sub="per blueprint analysis" delay={0.14}  href="/app/takeoff"/>
         </div>
 
         {/* Main 2-col layout */}
@@ -1129,25 +1129,25 @@ export default function TakeoffPage() {
                         label="Material Cost"
                         value={fmt(selectedTakeoff.material_cost)}
                         sub="direct materials"
-                      />
+                       href="/app/takeoff"/>
                       <StatCard
                         icon={<HardHat size={19} weight="duotone" color={GOLD} />}
                         label="Labor Cost"
                         value={fmt(selectedTakeoff.labor_cost)}
                         sub="all trades"
-                      />
+                       href="/app/takeoff"/>
                       <StatCard
                         icon={<ChartBar size={19} weight="duotone" color={GOLD} />}
                         label="Contingency"
                         value={`${selectedTakeoff.contingency_pct || 10}%`}
                         sub={fmt((selectedTakeoff.total_cost || 0) * ((selectedTakeoff.contingency_pct || 10) / 100))}
-                      />
+                       href="/app/takeoff"/>
                       <StatCard
                         icon={<Ruler size={19} weight="duotone" color={GOLD} />}
                         label="Building Area"
                         value={selectedTakeoff.building_area > 0 ? `${selectedTakeoff.building_area.toLocaleString()} SF` : '—'}
                         sub={selectedTakeoff.floor_count > 0 ? `${selectedTakeoff.floor_count} floor${selectedTakeoff.floor_count !== 1 ? 's' : ''}` : undefined}
-                      />
+                       href="/app/takeoff"/>
                     </div>
 
                     {/* AI Summary */}

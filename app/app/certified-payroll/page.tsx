@@ -75,11 +75,11 @@ export default function CertifiedPayrollPage() {
       {/* Org-wide compliance rollup — real filed totals, Number-coerced */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Projects', value: String(projects.length), sub: projects.filter(p => ((p.status || '').toLowerCase().includes('active') || (p.status || '').toLowerCase().includes('progress'))).length + ' active' },
-          { label: 'WH-347s Filed', value: String(records.length), sub: records.length > 0 ? 'across all projects' : 'none filed yet' },
-          { label: 'Gross Wages Certified', value: fmt0(grossFiled), accent: grossFiled > 0 ? '#3dd68c' : undefined, sub: 'total across filed payrolls' },
-          { label: 'Last Filed Week', value: lastFiled ? lastFiled.week_ending : '—', sub: lastFiled ? (Number(lastFiled.employee_count) || 0) + ' employees · ' + fmt0(Number(lastFiled.total_gross) || 0) : 'open a project to file' },
-          { label: 'Certified', value: String(certifiedCount), sub: (records.length - certifiedCount) + ' submitted / draft' },
+          {href: '/app/certified-payroll',  label: 'Projects', value: String(projects.length), sub: projects.filter(p => ((p.status || '').toLowerCase().includes('active') || (p.status || '').toLowerCase().includes('progress'))).length + ' active' },
+          {href: '/app/certified-payroll',  label: 'WH-347s Filed', value: String(records.length), sub: records.length > 0 ? 'across all projects' : 'none filed yet' },
+          {href: '/app/certified-payroll',  label: 'Gross Wages Certified', value: fmt0(grossFiled), accent: grossFiled > 0 ? '#3dd68c' : undefined, sub: 'total across filed payrolls' },
+          {href: '/app/certified-payroll',  label: 'Last Filed Week', value: lastFiled ? lastFiled.week_ending : '—', sub: lastFiled ? (Number(lastFiled.employee_count) || 0) + ' employees · ' + fmt0(Number(lastFiled.total_gross) || 0) : 'open a project to file' },
+          {href: '/app/certified-payroll',  label: 'Certified', value: String(certifiedCount), sub: (records.length - certifiedCount) + ' submitted / draft' },
         ]} />
       )}
 

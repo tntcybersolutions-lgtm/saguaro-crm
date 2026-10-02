@@ -325,12 +325,12 @@ export default function ContractsPage() {
       {/* What the system already knows — money, roster, awards */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Prime Contract', value: fmt(money?.revisedContract || 0), sub: (money?.approvedCoCount || 0) > 0 ? `${fmt(money?.originalContract || 0)} + ${money.approvedCoCount} approved CO${money.approvedCoCount === 1 ? '' : 's'}` : 'original + approved COs' },
-          { label: 'Sub Commitments', value: fmt(total), sub: `${contracts.length} contract${contracts.length === 1 ? '' : 's'} on the ledger` },
-          { label: 'Subs on Roster', value: String(roster.length), sub: 'available as contract parties' },
-          { label: 'Awarded Packages', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded` },
-          { label: 'Ready to Paper', value: String(unpapered.length), accent: unpapered.length > 0 ? '#FBBF24' : GREEN, sub: unpapered.length > 0 ? 'awards without a contract' : 'every award is contracted' },
-          { label: 'Default Retainage', value: `${Number(ctx.defaults?.retainagePct) || 10}%`, sub: 'from project contract terms' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Prime Contract', value: fmt(money?.revisedContract || 0), sub: (money?.approvedCoCount || 0) > 0 ? `${fmt(money?.originalContract || 0)} + ${money.approvedCoCount} approved CO${money.approvedCoCount === 1 ? '' : 's'}` : 'original + approved COs' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Sub Commitments', value: fmt(total), sub: `${contracts.length} contract${contracts.length === 1 ? '' : 's'} on the ledger` },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Roster', value: String(roster.length), sub: 'available as contract parties' },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded Packages', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded` },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Ready to Paper', value: String(unpapered.length), accent: unpapered.length > 0 ? '#FBBF24' : GREEN, sub: unpapered.length > 0 ? 'awards without a contract' : 'every award is contracted' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Default Retainage', value: `${Number(ctx.defaults?.retainagePct) || 10}%`, sub: 'from project contract terms' },
         ]} />
       )}
 
@@ -473,14 +473,14 @@ export default function ContractsPage() {
             value={String(contracts.length)}
             accent={GOLD}
             sub="on this project"
-          />
+           href={`/app/projects/${projectId}/contracts`}/>
           <StatCard
             icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
             label="Total Value"
             value={`$${total.toLocaleString()}`}
             accent={GOLD}
             sub="combined contract value"
-          />
+           href={`/app/projects/${projectId}/contracts`}/>
         </div>
       )}
 

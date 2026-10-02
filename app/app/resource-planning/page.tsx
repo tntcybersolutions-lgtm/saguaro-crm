@@ -491,7 +491,7 @@ export default function ResourcePlanningPage() {
         { label: 'Conflicts', value: conflicts.length, accent: conflicts.length ? RED : GREEN, sub: 'scheduling overlaps', icon: <Warning size={19} weight="duotone" color={conflicts.length ? RED : GREEN} /> },
         { label: 'Avg Utilization', value: avgUtil + '%', accent: avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN, sub: 'next 4 weeks', icon: <Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} /> },
         { label: 'Overbooked / Available', value: `${overbookedCount} / ${availableCount}`, accent: overbookedCount > 0 ? RED : GREEN, sub: 'this week', icon: <Scales size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} /> },
-      ].map((s, i) => <StatCard key={s.label} label={s.label} value={s.value} sub={s.sub} accent={s.accent} icon={s.icon} delay={0.04 * i} />)}
+      ].map((s, i) => <StatCard key={s.label} label={s.label} value={s.value} sub={s.sub} accent={s.accent} icon={s.icon} delay={0.04 * i}  href="/app/resource-planning"/>)}
     </div>
 
     {/* Filters */}
@@ -822,10 +822,10 @@ export default function ResourcePlanningPage() {
       {!loading && tab === 'utilization' && <div>
         {/* Summary cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 18 }}>
-          <StatCard label="Avg Utilization" value={`${avgUtil}%`} accent={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} icon={<Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} />} />
-          <StatCard label="Overbooked (100%+)" value={overbookedCount} accent={overbookedCount > 0 ? RED : GREEN} icon={<Warning size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} />} />
-          <StatCard label="Under-utilized (<50%)" value={utilization.filter(u => u.pct < 50 && u.pct > 0).length} accent={BLUE} icon={<TrendDown size={19} weight="duotone" color={BLUE} />} />
-          <StatCard label="Unassigned" value={utilization.filter(u => u.pct === 0).length} accent={DIM} icon={<UserMinus size={19} weight="duotone" color={DIM} />} />
+          <StatCard label="Avg Utilization" value={`${avgUtil}%`} accent={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} icon={<Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} />}  href="/app/resource-planning"/>
+          <StatCard label="Overbooked (100%+)" value={overbookedCount} accent={overbookedCount > 0 ? RED : GREEN} icon={<Warning size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} />}  href="/app/resource-planning"/>
+          <StatCard label="Under-utilized (<50%)" value={utilization.filter(u => u.pct < 50 && u.pct > 0).length} accent={BLUE} icon={<TrendDown size={19} weight="duotone" color={BLUE} />}  href="/app/resource-planning"/>
+          <StatCard label="Unassigned" value={utilization.filter(u => u.pct === 0).length} accent={DIM} icon={<UserMinus size={19} weight="duotone" color={DIM} />}  href="/app/resource-planning"/>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
@@ -979,18 +979,18 @@ export default function ResourcePlanningPage() {
 
         {/* Cost summary */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-          <StatCard label="Total Labor Cost" value={fmtMoney(projectCosts.reduce((s, p) => s + p.labor, 0))} accent={GOLD} icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} />
-          <StatCard label="Total Hours" value={projectCosts.reduce((s, p) => s + p.hours, 0).toLocaleString()} accent={BLUE} icon={<Clock size={19} weight="duotone" color={BLUE} />} />
+          <StatCard label="Total Labor Cost" value={fmtMoney(projectCosts.reduce((s, p) => s + p.labor, 0))} accent={GOLD} icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}  href="/app/resource-planning"/>
+          <StatCard label="Total Hours" value={projectCosts.reduce((s, p) => s + p.hours, 0).toLocaleString()} accent={BLUE} icon={<Clock size={19} weight="duotone" color={BLUE} />}  href="/app/resource-planning"/>
           <StatCard label="Blended Rate" accent={GREEN} icon={<Scales size={19} weight="duotone" color={GREEN} />} value={(() => {
             const h = projectCosts.reduce((s, p) => s + p.hours, 0);
             const c = projectCosts.reduce((s, p) => s + p.labor, 0);
             return h > 0 ? fmtMoney(c / h) + '/hr' : '-';
-          })()} />
+          })()}  href="/app/resource-planning"/>
           <StatCard label="Cost per FTE/Month" accent={PURPLE} icon={<UserGear size={19} weight="duotone" color={PURPLE} />} value={(() => {
             const fte = parseFloat(totalFTEs);
             const monthlyCost = forecast[0]?.cost || 0;
             return fte > 0 ? fmtMoney(monthlyCost / fte) : '-';
-          })()} />
+          })()}  href="/app/resource-planning"/>
         </div>
 
         {/* Trade breakdown */}

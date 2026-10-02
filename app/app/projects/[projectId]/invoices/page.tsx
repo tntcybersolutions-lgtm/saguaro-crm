@@ -325,11 +325,11 @@ export default function InvoicesPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Original Contract', value: fmt(original), sub: 'base agreement' },
-          { label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
-          { label: 'Revised Contract', value: fmt(revised), sub: 'contract sum to date' },
-          { label: 'Billed to Date', value: fmt(ctxBilled), sub: `${Number(money?.billedPct) || 0}% of revised` },
-          { label: 'Outstanding', value: fmt(Math.max(0, ctxBilled - ctxPaid)), accent: ctxBilled - ctxPaid > 0 ? GOLD : GREEN, sub: 'billed, not yet collected' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'base agreement' },
+          {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmt(revised), sub: 'contract sum to date' },
+          {href: `/app/projects/${projectId}/invoices`,  label: 'Billed to Date', value: fmt(ctxBilled), sub: `${Number(money?.billedPct) || 0}% of revised` },
+          {href: `/app/projects/${projectId}/invoices`,  label: 'Outstanding', value: fmt(Math.max(0, ctxBilled - ctxPaid)), accent: ctxBilled - ctxPaid > 0 ? GOLD : GREEN, sub: 'billed, not yet collected' },
         ]} />
       )}
 
@@ -339,17 +339,17 @@ export default function InvoicesPage() {
           icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
           label="Total Billed" value={fmt(totalBilled > 0 ? totalBilled : ctxBilled)}
           sub={totalBilled > 0 ? `across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` : ctxBilled > 0 ? 'project billed to date (pay apps)' : 'across all invoices'} delay={0.02}
-        />
+         href={`/app/projects/${projectId}/invoices`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
           label="Total Paid" value={fmt(totalPaid > 0 ? totalPaid : ctxPaid)} accent={GREEN}
           sub={totalPaid > 0 ? 'collected on invoices' : ctxPaid > 0 ? 'collected on the contract' : 'collected'} delay={0.06}
-        />
+         href={`/app/projects/${projectId}/invoices`}/>
         <StatCard
           icon={<WarningCircle size={19} weight="duotone" color={totalOutstanding > 0 ? GOLD : GREEN} />}
           label="Outstanding" value={fmt(totalOutstanding > 0 ? totalOutstanding : Math.max(0, ctxBilled - ctxPaid))} accent={totalOutstanding > 0 || ctxBilled - ctxPaid > 0 ? GOLD : GREEN}
           sub={totalOutstanding > 0 ? 'awaiting payment' : ctxBilled - ctxPaid > 0 ? 'billed less collected (contract)' : 'awaiting payment'} delay={0.10}
-        />
+         href={`/app/projects/${projectId}/invoices`}/>
       </div>
 
       {successMsg && <div style={{ margin: '0 0 16px', padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}

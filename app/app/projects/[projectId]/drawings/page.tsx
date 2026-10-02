@@ -389,21 +389,21 @@ export default function DrawingsPage(){
         {/* Project intelligence strip — what the system already knows */}
         {ctx&&(
           <StatStrip items={[
-            {label:'Project',value:ctx.project?.projectNumber||ctx.project?.name||'—',sub:ctx.project?.status?String(ctx.project.status).replace(/_/g,' '):'active'},
-            {label:'Current Set',value:String(current),sub:superseded>0?`${superseded} superseded on record`:'no superseded sheets'},
-            {label:'Latest Revision',value:latestRev?fmtDate(latestRev.revision_date):'—',sub:latestRev?`${sheetNo(latestRev)||latestRev.title||'sheet'} R${latestRev.revision??latestRev.version??0}`:'no revision dates yet'},
-            {label:'Open RFIs',value:String(Number(counts?.openRfis)||0),accent:Number(counts?.openRfis)>0?GOLD:undefined,sub:'often resolve on these sheets'},
-            {label:'Open Submittals',value:String(Number(counts?.openSubmittals)||0),sub:'checked against the set'},
-            {label:'Subs on the Job',value:String((ctx.subs||[]).length),sub:'build from the current set'},
+            {href: `/app/projects/${projectId}/drawings`, label:'Project',value:ctx.project?.projectNumber||ctx.project?.name||'—',sub:ctx.project?.status?String(ctx.project.status).replace(/_/g,' '):'active'},
+            {href: `/app/projects/${projectId}/drawings`, label:'Current Set',value:String(current),sub:superseded>0?`${superseded} superseded on record`:'no superseded sheets'},
+            {href: `/app/projects/${projectId}/drawings`, label:'Latest Revision',value:latestRev?fmtDate(latestRev.revision_date):'—',sub:latestRev?`${sheetNo(latestRev)||latestRev.title||'sheet'} R${latestRev.revision??latestRev.version??0}`:'no revision dates yet'},
+            {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs',value:String(Number(counts?.openRfis)||0),accent:Number(counts?.openRfis)>0?GOLD:undefined,sub:'often resolve on these sheets'},
+            {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals',value:String(Number(counts?.openSubmittals)||0),sub:'checked against the set'},
+            {href: `/app/projects/${projectId}/subs`, label:'Subs on the Job',value:String((ctx.subs||[]).length),sub:'build from the current set'},
           ]}/>
         )}
 
         {/* KPIs */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<Stack size={19} weight="duotone" color={moduleAccent('drawings').hex}/>} label="Total Drawings" value={String(total)} accent="#FBBF24" sub="in register" delay={0.02}/>
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN}/>} label="Current" value={String(current)} accent={GREEN} sub={superseded>0?`vs ${superseded} superseded`:'active sheets'} delay={0.06}/>
-          <StatCard icon={<Eye size={19} weight="duotone" color={GOLD}/>} label="For Review" value={String(forReview)} accent={GOLD} sub="awaiting review" delay={0.10}/>
-          <StatCard icon={<SquaresFour size={19} weight="duotone" color="#a78bfa"/>} label="Disciplines" value={String(disciplineCount)} accent="#a78bfa" sub="represented" delay={0.14}/>
+          <StatCard icon={<Stack size={19} weight="duotone" color={moduleAccent('drawings').hex}/>} label="Total Drawings" value={String(total)} accent="#FBBF24" sub="in register" delay={0.02} href={`/app/projects/${projectId}/drawings`}/>
+          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN}/>} label="Current" value={String(current)} accent={GREEN} sub={superseded>0?`vs ${superseded} superseded`:'active sheets'} delay={0.06} href={`/app/projects/${projectId}/drawings`}/>
+          <StatCard icon={<Eye size={19} weight="duotone" color={GOLD}/>} label="For Review" value={String(forReview)} accent={GOLD} sub="awaiting review" delay={0.10} href={`/app/projects/${projectId}/drawings`}/>
+          <StatCard icon={<SquaresFour size={19} weight="duotone" color="#a78bfa"/>} label="Disciplines" value={String(disciplineCount)} accent="#a78bfa" sub="represented" delay={0.14} href={`/app/projects/${projectId}/drawings`}/>
         </div>
 
         {/* List toolbar — search + discipline/status filters; set + view toggles in extra */}

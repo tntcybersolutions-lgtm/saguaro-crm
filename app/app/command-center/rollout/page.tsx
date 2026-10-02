@@ -68,10 +68,10 @@ export default function RolloutPipelinePage() {
         />
 
         <StatStrip items={[
-          { label: 'Locations', value: String(summary.total), icon: <Buildings size={11} weight="bold" /> },
-          { label: 'In Construction', value: String(summary.inConstruction), accent: summary.inConstruction > 0 ? C.yellow : undefined },
-          { label: 'Opening Soon', value: String(summary.openingSoon), accent: summary.openingSoon > 0 ? C.green : undefined },
-          { label: 'Pipeline Value', value: fmtMoneyShort(summary.value), accent: C.gold },
+          {href: '/app/command-center/rollout',  label: 'Locations', value: String(summary.total), icon: <Buildings size={11} weight="bold" /> },
+          {href: '/app/command-center/rollout',  label: 'In Construction', value: String(summary.inConstruction), accent: summary.inConstruction > 0 ? C.yellow : undefined },
+          {href: '/app/command-center/rollout',  label: 'Opening Soon', value: String(summary.openingSoon), accent: summary.openingSoon > 0 ? C.green : undefined },
+          {href: '/app/command-center/rollout',  label: 'Pipeline Value', value: fmtMoneyShort(summary.value), accent: C.gold },
         ]} />
 
         {loading ? (

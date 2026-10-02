@@ -425,11 +425,11 @@ export default function NetworkWizardPage() {
           {result.cable_estimate && (
             <SectionCard flat title="Cable Estimate" icon={<Path size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-                <StatCard icon={<Path size={19} weight="duotone" color={GOLD} />} label="Cat6 Runs" value={String(result.cable_estimate.cat6_runs)} />
-                <StatCard icon={<Path size={19} weight="duotone" color={GOLD} />} label="Cat6a Runs" value={String(result.cable_estimate.cat6a_runs)} />
-                <StatCard icon={<Path size={19} weight="duotone" color={BLUE} />} label="Fiber Runs" value={String(result.cable_estimate.fiber_runs)} accent={BLUE} />
-                <StatCard icon={<Ruler size={19} weight="duotone" color={GOLD} />} label="Total Length" value={`${result.cable_estimate.total_length_ft?.toLocaleString()} ft`} />
-                <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GREEN} />} label="Est. Cost" value={fmt$(result.cable_estimate.estimated_cost || 0)} accent={GREEN} />
+                <StatCard icon={<Path size={19} weight="duotone" color={GOLD} />} label="Cat6 Runs" value={String(result.cable_estimate.cat6_runs)}  href={`/app/projects/${projectId}/network/cables`}/>
+                <StatCard icon={<Path size={19} weight="duotone" color={GOLD} />} label="Cat6a Runs" value={String(result.cable_estimate.cat6a_runs)}  href={`/app/projects/${projectId}/network/cables`}/>
+                <StatCard icon={<Path size={19} weight="duotone" color={BLUE} />} label="Fiber Runs" value={String(result.cable_estimate.fiber_runs)} accent={BLUE}  href={`/app/projects/${projectId}/network/cables`}/>
+                <StatCard icon={<Ruler size={19} weight="duotone" color={GOLD} />} label="Total Length" value={`${result.cable_estimate.total_length_ft?.toLocaleString()} ft`}  href={`/app/projects/${projectId}/network/wizard`}/>
+                <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GREEN} />} label="Est. Cost" value={fmt$(result.cable_estimate.estimated_cost || 0)} accent={GREEN}  href={`/app/projects/${projectId}/network/wizard`}/>
               </div>
             </SectionCard>
           )}

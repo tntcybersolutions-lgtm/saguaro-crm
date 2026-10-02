@@ -642,14 +642,14 @@ export default function NotificationSettingsPage() {
           value={prefs.globalEnabled ? 'ON' : 'OFF'}
           accent={prefs.globalEnabled ? GREEN : RED}
           sub={prefs.globalEnabled ? 'Notifications on' : 'All muted'}
-        />
+         href="/app/notification-settings"/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={GOLD} />}
           label="Active"
           value={totalEnabled}
           accent={GOLD}
           sub={`of ${totalPossible} possible`}
-        />
+         href="/app/notification-settings"/>
         {CHANNELS.map(ch => {
           const ChIcon = ch.icon;
           return (
@@ -660,7 +660,7 @@ export default function NotificationSettingsPage() {
               value={channelCounts[ch.key].enabled}
               accent={GOLD}
               sub={`of ${channelCounts[ch.key].total}`}
-            />
+             href="/app/notification-settings"/>
           );
         })}
         <StatCard
@@ -669,7 +669,7 @@ export default function NotificationSettingsPage() {
           value={prefs.quietHours.enabled ? 'ON' : 'OFF'}
           accent={prefs.quietHours.enabled ? AMBER : undefined}
           sub={prefs.quietHours.enabled ? `${prefs.quietHours.start}–${prefs.quietHours.end}` : 'Disabled'}
-        />
+         href="/app/notification-settings"/>
       </div>
 
       {/* Global toggle */}

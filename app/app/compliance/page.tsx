@@ -112,21 +112,21 @@ export default function CompliancePage(){
 
     {/* Risk intelligence strip — the paperwork translated into dollars */}
     {!loading&&subs.length>0&&<StatStrip items={[
-      {label:'Subcontractors', value:subs.length, sub:`across ${tradeCount} trade${tradeCount===1?'':'s'}`},
-      {label:'Contract Exposure', value:fmtMoney(exposure), accent:exposure>0?RED:GREEN, sub:totalContract>0?`of ${fmtMoney(totalContract)} committed sits with non-compliant subs`:'held by non-compliant subs'},
-      {label:'W-9s Missing', value:w9Missing, accent:w9Missing>0?AMBER:GREEN, sub:w9Missing>0?'blocks 1099 filing at year end':'every sub is 1099-ready'},
+      {href: '/app/compliance', label:'Subcontractors', value:subs.length, sub:`across ${tradeCount} trade${tradeCount===1?'':'s'}`},
+      {href: '/app/compliance', label:'Contract Exposure', value:fmtMoney(exposure), accent:exposure>0?RED:GREEN, sub:totalContract>0?`of ${fmtMoney(totalContract)} committed sits with non-compliant subs`:'held by non-compliant subs'},
+      {href: '/app/compliance', label:'W-9s Missing', value:w9Missing, accent:w9Missing>0?AMBER:GREEN, sub:w9Missing>0?'blocks 1099 filing at year end':'every sub is 1099-ready'},
       /* The sub-line branches on THIS stat's own value, like every other tile
          in the strip. It used to branch on certsExpiring, so a portfolio with
          four uninsured subs and nothing expiring printed "no uninsured subs on
          site" directly under the number 4. A tile that contradicts itself
          teaches people to stop reading the tiles. */
-      {label:'Insurance Gaps', value:noInsurance, accent:noInsurance>0?RED:GREEN,
+      {href: '/app/compliance', label:'Insurance Gaps', value:noInsurance, accent:noInsurance>0?RED:GREEN,
        sub: noInsurance>0
          ? `${noInsurance} sub${noInsurance===1?'':'s'} with no current COI${certsExpiring>0?` · ${certsExpiring} more expiring in 30d`:''}`
          : certsExpiring>0
            ? `${certsExpiring} cert${certsExpiring===1?'':'s'} expiring in 30d`
            : 'no uninsured subs on site'},
-      {label:'Waivers Pending', value:waiversPending, accent:waiversPending>0?AMBER:GREEN, sub:waiversPending>0?'unsigned — hold payment until released':'lien rights fully released'},
+      {href: '/app/compliance', label:'Waivers Pending', value:waiversPending, accent:waiversPending>0?AMBER:GREEN, sub:waiversPending>0?'unsigned — hold payment until released':'lien rights fully released'},
     ]}/>}
 
     {/* Summary KPIs */}
@@ -136,22 +136,22 @@ export default function CompliancePage(){
         label="Avg Compliance Score" value={summary.avg_score+'%'}
         accent={summary.avg_score>=80?GREEN:summary.avg_score>=50?AMBER:RED}
         sub="portfolio average" delay={0.02}
-      />
+       href="/app/compliance"/>
       <StatCard
         icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
         label="Compliant" value={summary.compliant} accent={GREEN}
         sub="fully compliant" delay={0.06}
-      />
+       href="/app/compliance"/>
       <StatCard
         icon={<WarningCircle size={19} weight="duotone" color={AMBER} />}
         label="At Risk" value={summary.at_risk} accent={AMBER}
         sub="needs attention" delay={0.10}
-      />
+       href="/app/compliance"/>
       <StatCard
         icon={<XCircle size={19} weight="duotone" color={RED} />}
         label="Non-Compliant" value={summary.non_compliant} accent={RED}
         sub="action required" delay={0.14}
-      />
+       href="/app/compliance"/>
     </div>}
 
     {/* Scorecard + detail split */}

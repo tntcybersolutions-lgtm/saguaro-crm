@@ -560,12 +560,12 @@ export default function DashboardConfigPage() {
 
         {/* Layout intelligence strip — what this configuration holds right now */}
         <StatStrip items={[
-          { label: 'Widgets Placed', value: String(layout.widgets.length), accent: layout.widgets.length > 0 ? GOLD : undefined, sub: `${WIDGET_CATALOG.length} widget types in the gallery` },
-          { label: 'Grid', value: `${layout.columns} columns`, sub: `${layout.widgets.filter(w => w.size === 'full-width').length} full-width row${layout.widgets.filter(w => w.size === 'full-width').length === 1 ? '' : 's'}` },
-          { label: 'Coverage', value: `${new Set(layout.widgets.map(w => WIDGET_CATALOG.find(c => c.id === w.catalogId)?.category).filter(Boolean)).size} of 5`, sub: 'widget categories in use' },
-          { label: 'Preset', value: layout.preset ? layout.preset.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Custom', sub: layout.preset ? 'starting template' : 'built by hand' },
-          { label: 'Status', value: isDirty ? 'Unsaved' : 'Saved', accent: isDirty ? AMBER : GREEN, sub: layout.updatedAt ? `last saved ${new Date(layout.updatedAt).toLocaleDateString()}` : 'save to keep this layout' },
-          { label: 'Preview Data', value: metricsLoading ? 'Syncing' : 'Live', accent: metricsLoading ? undefined : GREEN, sub: 'previews pull your real project metrics' },
+          {href: '/app/dashboard-config',  label: 'Widgets Placed', value: String(layout.widgets.length), accent: layout.widgets.length > 0 ? GOLD : undefined, sub: `${WIDGET_CATALOG.length} widget types in the gallery` },
+          {href: '/app/dashboard-config',  label: 'Grid', value: `${layout.columns} columns`, sub: `${layout.widgets.filter(w => w.size === 'full-width').length} full-width row${layout.widgets.filter(w => w.size === 'full-width').length === 1 ? '' : 's'}` },
+          {href: '/app/dashboard-config',  label: 'Coverage', value: `${new Set(layout.widgets.map(w => WIDGET_CATALOG.find(c => c.id === w.catalogId)?.category).filter(Boolean)).size} of 5`, sub: 'widget categories in use' },
+          {href: '/app/dashboard-config',  label: 'Preset', value: layout.preset ? layout.preset.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Custom', sub: layout.preset ? 'starting template' : 'built by hand' },
+          {href: '/app/dashboard-config',  label: 'Status', value: isDirty ? 'Unsaved' : 'Saved', accent: isDirty ? AMBER : GREEN, sub: layout.updatedAt ? `last saved ${new Date(layout.updatedAt).toLocaleDateString()}` : 'save to keep this layout' },
+          {href: '/app/dashboard-config',  label: 'Preview Data', value: metricsLoading ? 'Syncing' : 'Live', accent: metricsLoading ? undefined : GREEN, sub: 'previews pull your real project metrics' },
         ]} />
 
         {/* ── Layout Name & Preset Row ── */}

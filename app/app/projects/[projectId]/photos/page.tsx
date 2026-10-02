@@ -389,21 +389,21 @@ export default function PhotosPage(){
           {/* Project intelligence strip — what the system already knows */}
           {ctx&&(
             <StatStrip items={[
-              {label:'Project',value:`${Number(ctx?.project?.percentComplete)||0}%`,sub:'complete — the gallery is the proof'},
-              {label:'Photos',value:String(photos.length),sub:albums.length>0?`${albums.length} album${albums.length===1?'':'s'} in use`:'no albums yet'},
-              {label:'This Month',value:String(thisMonth),accent:thisMonth>0?'#3dd68c':undefined,sub:'added since the 1st'},
-              {label:'Last Photo',value:lastPhotoAt?fmtDate(lastPhotoAt):'—',sub:lastPhotoAt?'most recent capture':'nothing documented yet'},
-              {label:'Issues Tagged',value:String(issueCount),accent:issueCount>0?RED:undefined,sub:issueCount>0?'flagged for follow-up':'clean so far'},
-              {label:'Last Daily Log',value:ctx?.recent?.lastDailyLogDate?fmtDate(ctx.recent.lastDailyLogDate):'—',sub:Number(ctx?.counts?.openPunch)>0?`${ctx.counts.openPunch} open punch`:'field activity'},
+              {href: `/app/projects/${projectId}/photos`, label:'Project',value:`${Number(ctx?.project?.percentComplete)||0}%`,sub:'complete — the gallery is the proof'},
+              {href: `/app/projects/${projectId}/photos`, label:'Photos',value:String(photos.length),sub:albums.length>0?`${albums.length} album${albums.length===1?'':'s'} in use`:'no albums yet'},
+              {href: `/app/projects/${projectId}/photos`, label:'This Month',value:String(thisMonth),accent:thisMonth>0?'#3dd68c':undefined,sub:'added since the 1st'},
+              {href: `/app/projects/${projectId}/photos`, label:'Last Photo',value:lastPhotoAt?fmtDate(lastPhotoAt):'—',sub:lastPhotoAt?'most recent capture':'nothing documented yet'},
+              {href: `/app/projects/${projectId}/photos`, label:'Issues Tagged',value:String(issueCount),accent:issueCount>0?RED:undefined,sub:issueCount>0?'flagged for follow-up':'clean so far'},
+              {href: `/app/projects/${projectId}/daily-logs`, label:'Last Daily Log',value:ctx?.recent?.lastDailyLogDate?fmtDate(ctx.recent.lastDailyLogDate):'—',sub:Number(ctx?.counts?.openPunch)>0?`${ctx.counts.openPunch} open punch`:'field activity'},
             ]}/>
           )}
 
           {/* KPIs */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-            <StatCard icon={<Images size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="Total Photos" value={String(photos.length)} accent="#FBBF24" sub="all albums" delay={0.02} />
-            <StatCard icon={<CalendarBlank size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="This Month" value={String(thisMonth)} accent={GOLD} sub="added this month" delay={0.06} />
-            <StatCard icon={<FolderSimple size={19} weight="duotone" color={GREEN} />} label="Albums" value={String(albums.length||ALBUMS.length)} accent={GREEN} sub="in use" delay={0.10} />
-            <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />} label="Issues Tagged" value={String(issueCount)} accent={RED} sub="flagged" delay={0.14} />
+            <StatCard icon={<Images size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="Total Photos" value={String(photos.length)} accent="#FBBF24" sub="all albums" delay={0.02}  href={`/app/projects/${projectId}/photos`}/>
+            <StatCard icon={<CalendarBlank size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="This Month" value={String(thisMonth)} accent={GOLD} sub="added this month" delay={0.06}  href={`/app/projects/${projectId}/photos`}/>
+            <StatCard icon={<FolderSimple size={19} weight="duotone" color={GREEN} />} label="Albums" value={String(albums.length||ALBUMS.length)} accent={GREEN} sub="in use" delay={0.10}  href={`/app/projects/${projectId}/photos`}/>
+            <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />} label="Issues Tagged" value={String(issueCount)} accent={RED} sub="flagged" delay={0.14}  href={`/app/projects/${projectId}/photos`}/>
           </div>
 
           {/* Toolbar */}

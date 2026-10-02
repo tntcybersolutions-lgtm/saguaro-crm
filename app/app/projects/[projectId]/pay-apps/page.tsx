@@ -295,12 +295,12 @@ export default function PayAppsPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          {label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
-          {label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#3dd68c':undefined, sub:`${Number(money?.approvedCoCount)||0} approved${Number(money?.pendingCoCount)?` · ${money.pendingCoCount} pending`:''}`},
-          {label:'Revised Contract', value:fmt(revised), sub:'contract sum to date'},
-          {label:'Billed to Date', value:fmt(ctxBilled), sub:`${Number(money?.billedPct)||0}% of revised`},
-          {label:'Retainage Held', value:fmt(retainageHeld), sub:`held to date · ${Number(money?.retainagePct)||10}% per contract`},
-          {label:'Paid to Date', value:fmt(ctxPaid), accent:ctxPaid>0?'#3dd68c':undefined, sub:outstandingCertified>0?`${fmt(outstandingCertified)} certified, unpaid`:'all certified money collected'},
+          {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
+          {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#3dd68c':undefined, sub:`${Number(money?.approvedCoCount)||0} approved${Number(money?.pendingCoCount)?` · ${money.pendingCoCount} pending`:''}`},
+          {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'contract sum to date'},
+          {href: `/app/projects/${projectId}/pay-apps`, label:'Billed to Date', value:fmt(ctxBilled), sub:`${Number(money?.billedPct)||0}% of revised`},
+          {href: `/app/projects/${projectId}/pay-apps`, label:'Retainage Held', value:fmt(retainageHeld), sub:`held to date · ${Number(money?.retainagePct)||10}% per contract`},
+          {href: `/app/projects/${projectId}/pay-apps`, label:'Paid to Date', value:fmt(ctxPaid), accent:ctxPaid>0?'#3dd68c':undefined, sub:outstandingCertified>0?`${fmt(outstandingCertified)} certified, unpaid`:'all certified money collected'},
         ]}/>
       )}
 
@@ -317,25 +317,25 @@ export default function PayAppsPage() {
           icon={<ClipboardText size={19} weight="duotone" color={moduleAccent('payapps').hex} />}
           label="Total Apps" value={String(payApps.length)} accent={GOLD}
           sub={money?.lastPayApp?`latest #${money.lastPayApp.appNumber} · ${String(money.lastPayApp.status||'draft').replace(/_/g,' ')}`:(payApps.length===1?'1 application':`${payApps.length} applications`)} delay={0.02}
-        />
+         href={`/app/projects/${projectId}/pay-apps`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={SAGE} />}
           label="Total Certified" value={fmt(totalCertified)} accent={SAGE}
           sub={ctxPaid>0?`${fmt(ctxPaid)} of it collected`:'approved / paid'} delay={0.06}
-        />
+         href={`/app/projects/${projectId}/pay-apps`}/>
         <StatCard
           icon={<FileText size={19} weight="duotone" color={waiverTotals.total>0&&waiverTotals.signed===waiverTotals.total?SAGE:AMBER} />}
           label="Lien Waivers" value={waiverTotals.total>0?`${waiverTotals.signed}/${waiverTotals.total}`:'—'}
           accent={waiverTotals.total>0?(waiverTotals.signed===waiverTotals.total?SAGE:AMBER):undefined}
           sub={waiverTotals.total>0?'signed — payment is waiver-gated':'generate at owner approval'} delay={0.10}
-        />
+         href={`/app/projects/${projectId}/lien-waivers`}/>
         <StatCard
           icon={<Hourglass size={19} weight="duotone" color={AMBER} />}
           label="Pending Approval"
           value={String(pendingApproval)}
           accent={pendingApproval>0?AMBER:undefined}
           sub={pendingApproval>0?'awaiting owner sign-off':'nothing awaiting the owner'} delay={0.14}
-        />
+         href={`/app/projects/${projectId}/pay-apps`}/>
       </div>
 
       {/* Loading — skeleton rows shaped like the real table (house pattern: rfis) */}

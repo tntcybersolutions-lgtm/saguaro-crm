@@ -140,10 +140,10 @@ export default function SubsAndVendorsPage() {
       />
 
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: 22 }}>
-        <StatCard label="On file" value={String(subs.length)} sub="companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />} />
-        <StatCard label="Paperwork missing" value={String(missingPaper)} sub={missingPaper ? 'cannot be awarded without override' : 'everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? RED : GREEN} />} />
-        <StatCard label="Prequalified" value={String(prequalified)} sub="passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />} />
-        <StatCard label="Trades covered" value={String(trades.length)} sub="distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />} />
+        <StatCard label="On file" value={String(subs.length)} sub="companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
+        <StatCard label="Paperwork missing" value={String(missingPaper)} sub={missingPaper ? 'cannot be awarded without override' : 'everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? RED : GREEN} />}  href="/app/subs"/>
+        <StatCard label="Prequalified" value={String(prequalified)} sub="passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
+        <StatCard label="Trades covered" value={String(trades.length)} sub="distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
       </div>
 
       <SectionCard

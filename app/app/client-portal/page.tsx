@@ -1162,11 +1162,11 @@ export default function ClientPortalPage() {
       {/* Portal intelligence strip — what the system already knows */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Portal Users', value: String(users.length), sub: users.length ? `${portalStats.active} active${portalStats.pending ? ` · ${portalStats.pending} pending` : ''}` : 'invite your first client' },
-          { label: 'Unread From Clients', value: String(portalStats.unread), accent: portalStats.unread > 0 ? GOLD : undefined, sub: portalStats.unread > 0 ? `across ${portalStats.unreadThreads} conversation${portalStats.unreadThreads === 1 ? '' : 's'}` : 'inbox clear' },
-          { label: 'Projects Shared', value: String(portalStats.sharedProjects), sub: projects.length ? `of ${projects.length} project${projects.length === 1 ? '' : 's'}` : 'no projects yet' },
-          { label: 'Activity (7 Days)', value: String(portalStats.weekActivity), accent: portalStats.weekActivity > 0 ? GREEN : undefined, sub: 'client actions logged' },
-          { label: 'Last Client Login', value: portalStats.lastLogin ? relTime(portalStats.lastLogin.ts) : 'Never', sub: portalStats.lastLogin ? portalStats.lastLogin.name : 'no logins recorded yet' },
+          {href: '/app/client-portal',  label: 'Portal Users', value: String(users.length), sub: users.length ? `${portalStats.active} active${portalStats.pending ? ` · ${portalStats.pending} pending` : ''}` : 'invite your first client' },
+          {href: '/app/client-portal',  label: 'Unread From Clients', value: String(portalStats.unread), accent: portalStats.unread > 0 ? GOLD : undefined, sub: portalStats.unread > 0 ? `across ${portalStats.unreadThreads} conversation${portalStats.unreadThreads === 1 ? '' : 's'}` : 'inbox clear' },
+          {href: '/app/client-portal',  label: 'Projects Shared', value: String(portalStats.sharedProjects), sub: projects.length ? `of ${projects.length} project${projects.length === 1 ? '' : 's'}` : 'no projects yet' },
+          {href: '/app/client-portal',  label: 'Activity (7 Days)', value: String(portalStats.weekActivity), accent: portalStats.weekActivity > 0 ? GREEN : undefined, sub: 'client actions logged' },
+          {href: '/app/client-portal',  label: 'Last Client Login', value: portalStats.lastLogin ? relTime(portalStats.lastLogin.ts) : 'Never', sub: portalStats.lastLogin ? portalStats.lastLogin.name : 'no logins recorded yet' },
         ]} />
       )}
 

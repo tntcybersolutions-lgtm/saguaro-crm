@@ -407,12 +407,12 @@ export default function CloseoutPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Revised Contract', value: fmtM(revised), sub: `${Number(money?.approvedCoCount) || 0} approved CO${(Number(money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
-          { label: 'Billed to Date', value: fmtM(billed), sub: `${billedPct}% of revised` },
-          { label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: balanceToFinish > 0 ? '#FBBF24' : T.green, sub: balanceToFinish > 0 ? 'still to bill' : 'fully billed' },
-          { label: 'Retainage Held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout` },
-          { label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? '#ef4444' : T.green, sub: openPunch > 0 ? 'blocks final inspection' : 'list is clear' },
-          { label: 'Subs to Clear', value: String(subCount), sub: 'final waivers + W-9s' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtM(revised), sub: `${Number(money?.approvedCoCount) || 0} approved CO${(Number(money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/closeout`,  label: 'Billed to Date', value: fmtM(billed), sub: `${billedPct}% of revised` },
+          {href: `/app/projects/${projectId}/closeout`,  label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: balanceToFinish > 0 ? '#FBBF24' : T.green, sub: balanceToFinish > 0 ? 'still to bill' : 'fully billed' },
+          {href: `/app/projects/${projectId}/closeout`,  label: 'Retainage Held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout` },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? '#ef4444' : T.green, sub: openPunch > 0 ? 'blocks final inspection' : 'list is clear' },
+          {href: `/app/projects/${projectId}/closeout`,  label: 'Subs to Clear', value: String(subCount), sub: 'final waivers + W-9s' },
         ]} />
       )}
 
@@ -425,14 +425,14 @@ export default function CloseoutPage() {
           sub={`of ${total} items`}
           accent={completed > 0 ? T.green : undefined}
           delay={0.02}
-        />
+         href={`/app/projects/${projectId}/closeout`}/>
         <StatCard
           icon={<Hourglass size={19} weight="duotone" color="#F59E0B" />}
           label="Remaining"
           value={String(total - completed)}
           sub={total - completed === 0 ? 'all complete' : 'still outstanding'}
           delay={0.06}
-        />
+         href={`/app/projects/${projectId}/closeout`}/>
         <StatCard
           icon={<ChartBar size={19} weight="duotone" color="#F59E0B" />}
           label="Progress"
@@ -440,7 +440,7 @@ export default function CloseoutPage() {
           sub={pct === 100 ? 'ready to export' : 'to handover'}
           accent={pct === 100 ? T.green : '#F59E0B'}
           delay={0.10}
-        />
+         href={`/app/projects/${projectId}/closeout`}/>
       </div>
 
       {toast && (

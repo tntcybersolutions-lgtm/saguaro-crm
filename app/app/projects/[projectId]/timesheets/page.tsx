@@ -221,21 +221,21 @@ export default function TimesheetsPage() {
       {/* What the system already knows about this job */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Crew Roster', value: String(roster.length), sub: roster.length ? 'names on file — type-ahead below' : 'builds as you log time' },
-          { label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'approved labor posts here' },
-          { label: 'Cost Codes', value: String(ctx.costCodes?.length || Object.keys(CSI_DIVISIONS).length), sub: ctx.costCodes?.length ? 'from the project budget' : 'CSI divisions (no budget yet)' },
-          { label: 'Schedule Tasks', value: String(ctx.counts?.scheduleTasks ?? 0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'on the schedule' },
-          { label: 'Open RFIs', value: String(ctx.counts?.openRfis ?? 0), accent: (Number(ctx.counts?.openRfis) || 0) > 0 ? '#FBBF24' : undefined, sub: 'awaiting answers' },
-          { label: 'Open Punch', value: String(ctx.counts?.openPunch ?? 0), accent: (Number(ctx.counts?.openPunch) || 0) > 0 ? '#F87171' : undefined, sub: 'items to close' },
+          {href: `/app/projects/${projectId}/crews`,  label: 'Crew Roster', value: String(roster.length), sub: roster.length ? 'names on file — type-ahead below' : 'builds as you log time' },
+          {href: `/app/projects/${projectId}/budget`,  label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'approved labor posts here' },
+          {href: `/app/projects/${projectId}/timesheets`,  label: 'Cost Codes', value: String(ctx.costCodes?.length || Object.keys(CSI_DIVISIONS).length), sub: ctx.costCodes?.length ? 'from the project budget' : 'CSI divisions (no budget yet)' },
+          {href: `/app/projects/${projectId}/schedule`,  label: 'Schedule Tasks', value: String(ctx.counts?.scheduleTasks ?? 0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'on the schedule' },
+          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(ctx.counts?.openRfis ?? 0), accent: (Number(ctx.counts?.openRfis) || 0) > 0 ? '#FBBF24' : undefined, sub: 'awaiting answers' },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(ctx.counts?.openPunch ?? 0), accent: (Number(ctx.counts?.openPunch) || 0) > 0 ? '#F87171' : undefined, sub: 'items to close' },
         ]} />
       )}
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard icon={<FileText size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Entries" value={String(totalEntries)} accent={GOLD} sub="logged this period" delay={0.02} />
-        <StatCard icon={<Clock size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Hours" value={`${totalHours.toFixed(1)}h`} accent={GOLD} sub="regular + overtime" delay={0.06} />
-        <StatCard icon={<Hourglass size={19} weight="duotone" color={ORANGE} />} label="Pending Approval" value={String(pendingCount)} accent={pendingCount > 0 ? ORANGE : undefined} sub="awaiting review" delay={0.10} />
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Approved" value={String(approvedCount)} accent={approvedCount > 0 ? GREEN : undefined} sub="this period" delay={0.14} />
+        <StatCard icon={<FileText size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Entries" value={String(totalEntries)} accent={GOLD} sub="logged this period" delay={0.02}  href={`/app/projects/${projectId}/timesheets`}/>
+        <StatCard icon={<Clock size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Hours" value={`${totalHours.toFixed(1)}h`} accent={GOLD} sub="regular + overtime" delay={0.06}  href={`/app/projects/${projectId}/timesheets`}/>
+        <StatCard icon={<Hourglass size={19} weight="duotone" color={ORANGE} />} label="Pending Approval" value={String(pendingCount)} accent={pendingCount > 0 ? ORANGE : undefined} sub="awaiting review" delay={0.10}  href={`/app/projects/${projectId}/timesheets`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Approved" value={String(approvedCount)} accent={approvedCount > 0 ? GREEN : undefined} sub="this period" delay={0.14}  href={`/app/projects/${projectId}/timesheets`}/>
       </div>
 
       {/* Week filter */}

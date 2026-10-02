@@ -508,12 +508,12 @@ export default function ReportBuilderPage() {
 
         {/* Live figures — every number on this strip is real page state. */}
         <StatStrip items={[
-          { label: 'Data Sources', value: String(REPORT_ENTITIES.length), sub: 'live entities to report over' },
-          { label: 'Columns', value: `${selectedCols.length}/${entity.columns.length}`, sub: `selected on ${entity.label}` },
-          { label: 'Filters', value: String(filters.length), sub: filters.length ? 'narrowing this run' : 'all rows for your tenant' },
-          { label: 'Saved Reports', value: savedLoading ? '…' : String(saved.length), sub: savedLoading ? 'loading' : saved.length ? 'reusable configurations' : 'nothing saved yet' },
-          { label: 'Last Run', value: result ? String(result.rowCount) : '—', accent: result ? GOLD_HI : undefined, sub: result ? `row${result.rowCount === 1 ? '' : 's'} returned` : 'not run yet' },
-          { label: 'Email Schedules', value: schedulesLoading ? '…' : String(schedules.filter((s) => s.schedule.enabled).length), sub: schedulesLoading ? 'loading' : 'recurring deliveries' },
+          {href: '/app/reports/builder',  label: 'Data Sources', value: String(REPORT_ENTITIES.length), sub: 'live entities to report over' },
+          {href: '/app/reports/builder',  label: 'Columns', value: `${selectedCols.length}/${entity.columns.length}`, sub: `selected on ${entity.label}` },
+          {href: '/app/reports/builder',  label: 'Filters', value: String(filters.length), sub: filters.length ? 'narrowing this run' : 'all rows for your tenant' },
+          {href: '/app/reports/builder',  label: 'Saved Reports', value: savedLoading ? '…' : String(saved.length), sub: savedLoading ? 'loading' : saved.length ? 'reusable configurations' : 'nothing saved yet' },
+          {href: '/app/reports/builder',  label: 'Last Run', value: result ? String(result.rowCount) : '—', accent: result ? GOLD_HI : undefined, sub: result ? `row${result.rowCount === 1 ? '' : 's'} returned` : 'not run yet' },
+          {href: '/app/reports/builder',  label: 'Email Schedules', value: schedulesLoading ? '…' : String(schedules.filter((s) => s.schedule.enabled).length), sub: schedulesLoading ? 'loading' : 'recurring deliveries' },
         ]} />
       </div>
 

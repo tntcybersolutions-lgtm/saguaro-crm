@@ -469,9 +469,9 @@ export default function SchedulePage() {
             <form onSubmit={handleCreate} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
               {form.projectId && (
                 <StatStrip items={[
-                  { label: 'Tasks', value: String(formProjectTasks.length), sub: `${formProjectTasks.filter(t => t.status === 'complete').length} complete on this project` },
-                  { label: 'Critical Path', value: String(ctx?.schedule?.criticalCount ?? 0), accent: (ctx?.schedule?.criticalCount ?? 0) > 0 ? colors.gold : undefined, sub: 'tasks drive the end date' },
-                  { label: 'Next Milestone', value: ctx?.schedule?.nextTasks?.[0]?.name || '—', sub: ctx?.schedule?.nextTasks?.[0]?.startDate ? `starts ${fmtDate(String(ctx.schedule.nextTasks[0].startDate).slice(0, 10))}` : 'nothing queued yet' },
+                  {href: '/app/schedule',  label: 'Tasks', value: String(formProjectTasks.length), sub: `${formProjectTasks.filter(t => t.status === 'complete').length} complete on this project` },
+                  {href: '/app/schedule',  label: 'Critical Path', value: String(ctx?.schedule?.criticalCount ?? 0), accent: (ctx?.schedule?.criticalCount ?? 0) > 0 ? colors.gold : undefined, sub: 'tasks drive the end date' },
+                  {href: '/app/schedule',  label: 'Next Milestone', value: ctx?.schedule?.nextTasks?.[0]?.name || '—', sub: ctx?.schedule?.nextTasks?.[0]?.startDate ? `starts ${fmtDate(String(ctx.schedule.nextTasks[0].startDate).slice(0, 10))}` : 'nothing queued yet' },
                 ]} />
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

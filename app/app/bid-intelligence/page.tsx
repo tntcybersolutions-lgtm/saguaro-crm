@@ -143,11 +143,11 @@ export default function IntelligencePage() {
       {/* Stat strip — the learning engine at a glance, all from recorded outcomes */}
       {!dataLoading && hasAnyData && (
         <StatStrip items={[
-          { label: 'Overall Win Rate', value: `${headlineWinRate}%`, accent: headlineWinRate >= 50 ? GREEN : undefined, sub: `${recordWins}W · ${recordLosses}L recorded`, icon: <Trophy size={11} weight="bold" color={BIDS.hex} /> },
-          { label: 'Avg Winning Margin', value: `${(avgMargin||0).toFixed(1)}%`, icon: <Percent size={11} weight="bold" color={BIDS.hex} /> },
-          { label: 'Bids Analyzed', value: String(bidsAnalyzed), sub: 'marked Won or Lost', icon: <Stack size={11} weight="bold" color={BIDS.hex} /> },
-          { label: 'Total Bid Value', value: `$${totalValue.toLocaleString()}`, accent: totalValue > 0 ? GOLD : undefined, sub: 'across logged bids', icon: <CurrencyCircleDollar size={11} weight="bold" color={GOLD_HI} /> },
-          { label: 'Trades Tracked', value: String(factors.length), sub: factors.length > 0 ? 'learned win factors' : 'none learned yet', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
+          {href: '/app/bid-intelligence',  label: 'Overall Win Rate', value: `${headlineWinRate}%`, accent: headlineWinRate >= 50 ? GREEN : undefined, sub: `${recordWins}W · ${recordLosses}L recorded`, icon: <Trophy size={11} weight="bold" color={BIDS.hex} /> },
+          {href: '/app/bid-intelligence',  label: 'Avg Winning Margin', value: `${(avgMargin||0).toFixed(1)}%`, icon: <Percent size={11} weight="bold" color={BIDS.hex} /> },
+          {href: '/app/bid-intelligence',  label: 'Bids Analyzed', value: String(bidsAnalyzed), sub: 'marked Won or Lost', icon: <Stack size={11} weight="bold" color={BIDS.hex} /> },
+          {href: '/app/bid-intelligence',  label: 'Total Bid Value', value: `$${totalValue.toLocaleString()}`, accent: totalValue > 0 ? GOLD : undefined, sub: 'across logged bids', icon: <CurrencyCircleDollar size={11} weight="bold" color={GOLD_HI} /> },
+          {href: '/app/bid-intelligence',  label: 'Trades Tracked', value: String(factors.length), sub: factors.length > 0 ? 'learned win factors' : 'none learned yet', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
         ]} />
       )}
 

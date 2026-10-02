@@ -267,12 +267,12 @@ export default function NewPayAppPage() {
       {/* Contract intelligence strip — what the system already knows */}
       {ctx && (
         <StatStrip items={[
-          {label:'Application', value:`#${appNumber ?? (money?.payAppCount??0)+1}`, sub: lastApp ? `follows App #${lastApp.appNumber}` : 'first on this project'},
-          {label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
-          {label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#3dd68c':undefined, sub:`${money?.approvedCoCount||0} approved${money?.pendingCoCount?` · ${money.pendingCoCount} pending`:''}`},
-          {label:'Revised Contract', value:fmt(revised), sub:'contract sum to date'},
-          {label:'Billed to Date', value:fmt(money?.billedToDate||0), sub:`${money?.billedPct||0}% of revised`},
-          {label:'Retainage', value:`${pct}%`, sub: subCount ? `${subCount} sub${subCount===1?'':'s'} on the job` : 'per contract terms'},
+          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Application', value:`#${appNumber ?? (money?.payAppCount??0)+1}`, sub: lastApp ? `follows App #${lastApp.appNumber}` : 'first on this project'},
+          {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
+          {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#3dd68c':undefined, sub:`${money?.approvedCoCount||0} approved${money?.pendingCoCount?` · ${money.pendingCoCount} pending`:''}`},
+          {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'contract sum to date'},
+          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Billed to Date', value:fmt(money?.billedToDate||0), sub:`${money?.billedPct||0}% of revised`},
+          {href: `/app/projects/${projectId}/pay-apps/new`, label:'Retainage', value:`${pct}%`, sub: subCount ? `${subCount} sub${subCount===1?'':'s'} on the job` : 'per contract terms'},
         ]}/>
       )}
 

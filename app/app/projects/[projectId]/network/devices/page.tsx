@@ -217,22 +217,22 @@ export default function DeviceInventoryPage() {
           icon={<Package size={19} weight="duotone" color={GOLD} />}
           label="Total Devices" value={String(devices.length)} accent={GOLD}
           sub="in inventory" delay={0.02}
-        />
+         href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
           label="Online" value={String(onlineCount)} accent={onlineCount ? GREEN : undefined}
           sub="reporting up" delay={0.06}
-        />
+         href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
           icon={<WarningCircle size={19} weight="duotone" color={RED} />}
           label="Offline" value={String(offlineCount)} accent={offlineCount ? RED : undefined}
           sub="not reporting" delay={0.10}
-        />
+         href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
           icon={<Clock size={19} weight="duotone" color="#94A3B8" />}
           label="Planned" value={String(plannedCount)} accent={plannedCount ? '#94A3B8' : undefined}
           sub="not yet deployed" delay={0.14}
-        />
+         href={`/app/projects/${projectId}/network/devices`}/>
       </div>
 
       {/* Add Device Form */}

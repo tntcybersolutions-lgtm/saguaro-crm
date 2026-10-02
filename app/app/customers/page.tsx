@@ -1,6 +1,8 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useProjects } from '@/lib/hooks/useProjects';
+import UserPicker from '@/components/UserPicker';
 import { SkeletonRow } from '../../../components/ui/Skeleton';
 import { UsersThree, WarningCircle, Buildings, CurrencyDollar, Target, CalendarBlank, Robot, Clipboard, CheckCircle, XCircle, Hourglass, House, Cactus, ArrowLeft, Gauge, MapPin, Lightning, Package, DownloadSimple } from '@phosphor-icons/react';
 import { useToast } from '@/components/Toast';
@@ -39,6 +41,7 @@ const fmt = (n: number | string | null | undefined) => '$' + (Number(n) || 0).to
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
 export default function CustomersPage() {
+  const router = useRouter();
   const { showToast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const { projects: liveProjects, revalidate: revalidateProjects } = useProjects();
@@ -46,6 +49,14 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  // Team member chosen in the Actions panel to own the new/linked project.
+  // Composite: '' | 'user:<id>' | 'sub:<id>' — the picker spans team + subs.
+  const [assignee, setAssignee] = useState('');
+  // Compose-and-send email (via Resend) straight from the customer record.
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
@@ -75,6 +86,12 @@ export default function CustomersPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Clear the chosen assignee when the open profile changes — the picker
+  // belongs to the customer currently in view, not the last one.
+  useEffect(() => {
+    setAssignee('');
+  }, [selected?.id]);
 
   const filtered = useMemo(() => {
     let list = customers;
@@ -165,38 +182,83 @@ export default function CustomersPage() {
   /* ─── Score Color ─── */
   const scoreColor = (s: number) => s >= 80 ? GREEN : s >= 50 ? AMBER : RED;
 
-  /* ─── Assign customer to a new project ─── */
+  /* ─── Assign customer to a project (idempotent) + route a team member ───
+     The old handler POSTed straight to /api/projects/create, which ALWAYS
+     inserts a row — so every click forked another "<Name> Project" for the
+     same customer, and the success toast fired each time. It also never opened
+     the project and could not assign it to anyone.
+
+     /api/projects/assign reuses the customer's existing project when one is
+     already linked and only creates when there is none, records the chosen
+     team member as the project's assignee (project list + document access via
+     the role model), surfaces real server errors, and we navigate to the job
+     on success. */
   const assignToProject = useCallback(async (c: Customer) => {
     if (assigning) return;
     setAssigning(true);
     try {
-      const res = await fetch('/api/projects/create', {
+      const res = await fetch('/api/projects/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        /* ownerName/ownerEmail are the two fields /api/projects/create actually
-           reads for the owner — it has never read customer_id. Without them the
-           project was written with owner_name '' and owner_email '', so the
-           projectRollup above could only find it through the "<Name> Project"
-           naming convention, and the owner never reached the project directory.
-           Sending them makes the rollup join on email (its strongest match) and
-           lets the route seed the Owner contact it already knows how to seed. */
         body: JSON.stringify({
-          customer_id: c.id,
+          customerId: c.id,
           name: `${c.name} Project`,
-          ownerName: c.name,
-          ownerEmail: c.email,
+          ...(assignee.startsWith('user:')
+            ? { assigneeUserId: assignee.slice(5) }
+            : assignee.startsWith('sub:')
+            ? { assigneeSubId: assignee.slice(4) }
+            : {}),
         }),
       });
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      showToast(`Project created for ${c.name}`, 'success');
+      const data = await res.json().catch(() => ({} as any));
+      if (!res.ok) {
+        throw new Error(typeof data?.error === 'string' ? data.error : `Request failed: ${res.status}`);
+      }
+
+      const verb = data?.reused ? 'Opened existing project for' : 'Project created for';
+      const suffix = data?.assigned && data?.assigneeName ? ` · assigned to ${data.assigneeName}` : '';
+      showToast(`${verb} ${c.name}${suffix}`, 'success');
+
       await load();
       revalidateProjects();
-    } catch {
-      showToast('Could not create project. Please try again.', 'error');
+
+      // Take the owner straight to the job they just created/linked.
+      if (data?.projectId) router.push(`/app/projects/${data.projectId}`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not assign to a project. Please try again.', 'error');
     } finally {
       setAssigning(false);
     }
-  }, [assigning, load, revalidateProjects, showToast]);
+  }, [assigning, assignee, load, revalidateProjects, router, showToast]);
+
+  /* Send an email to the customer through the CRM (Resend) and log it on the
+     record. Honest: a 503 (email not configured) surfaces as an error and
+     nothing is logged — no fake "sent". */
+  const sendCustomerEmail = useCallback(async (customerId: string) => {
+    if (emailSending) return;
+    if (!emailSubject.trim() || !emailMessage.trim()) {
+      showToast('Add a subject and a message first.', 'error');
+      return;
+    }
+    setEmailSending(true);
+    try {
+      const res = await fetch(`/api/customers/${customerId}/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: emailSubject, message: emailMessage }),
+      });
+      const data = await res.json().catch(() => ({} as Record<string, unknown>));
+      if (!res.ok) throw new Error(typeof data?.error === 'string' ? data.error : `Request failed: ${res.status}`);
+      showToast('Email sent.', 'success');
+      setEmailOpen(false);
+      setEmailSubject('');
+      setEmailMessage('');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not send that email.', 'error');
+    } finally {
+      setEmailSending(false);
+    }
+  }, [emailSending, emailSubject, emailMessage, showToast]);
 
   /* ─── Detail View ─── */
   if (selected) {
@@ -289,6 +351,17 @@ export default function CustomersPage() {
             {/* Actions */}
             <SectionCard title="Actions" icon={<Lightning size={17} weight="duotone" color={GOLD} />}>
               <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'grid', gap: 6 }}>
+                  <label style={{ fontSize: 11.5, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Assign to team member
+                  </label>
+                  <UserPicker
+                    value={assignee}
+                    onChange={setAssignee}
+                    disabled={assigning}
+                    unassignedLabel="Unassigned (link only)"
+                  />
+                </div>
                 <button onClick={() => { assignToProject(c); }} disabled={assigning} className="pmBtn" style={{
                   ...goldButtonStyle, width: '100%',
                   cursor: assigning ? 'wait' : 'pointer', opacity: assigning ? 0.6 : 1,
@@ -296,12 +369,50 @@ export default function CustomersPage() {
                   {assigning ? 'Assigning…' : 'Assign to Project'}
                 </button>
                 <button onClick={() => {
-                  window.open(`mailto:${c.email}`, '_blank');
+                  if (!c.email) { showToast('This customer has no email address on file.', 'error'); return; }
+                  setEmailSubject(''); setEmailMessage(''); setEmailOpen(true);
                 }} className="pmBtn" style={{ ...ghostButtonStyle, width: '100%' }}>
                   Send Email
                 </button>
               </div>
             </SectionCard>
+
+            {/* Compose & send — real email through the CRM, logged on the record */}
+            {emailOpen && (
+              <div
+                onClick={() => !emailSending && setEmailOpen(false)}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+              >
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ width: '100%', maxWidth: 520, background: '#141416', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
+                >
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Email {c.name}</div>
+                  <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>To: {c.email}</div>
+                  <div style={{ display: 'grid', gap: 12 }}>
+                    <input
+                      value={emailSubject}
+                      onChange={(e) => setEmailSubject(e.target.value)}
+                      placeholder="Subject"
+                      style={{ width: '100%', borderRadius: 10 }}
+                    />
+                    <textarea
+                      value={emailMessage}
+                      onChange={(e) => setEmailMessage(e.target.value)}
+                      placeholder="Write your message…"
+                      rows={7}
+                      style={{ width: '100%', borderRadius: 10, resize: 'vertical', padding: '10px 12px' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
+                    <button onClick={() => setEmailOpen(false)} disabled={emailSending} className="pmBtn" style={{ ...ghostButtonStyle }}>Cancel</button>
+                    <button onClick={() => sendCustomerEmail(c.id)} disabled={emailSending} className="pmBtn" style={{ ...goldButtonStyle, opacity: emailSending ? 0.6 : 1, cursor: emailSending ? 'wait' : 'pointer' }}>
+                      {emailSending ? 'Sending…' : 'Send Email'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Projects & lifetime value — matched from live project data */}
             <SectionCard flat title="Projects & Lifetime Value" icon={<Buildings size={17} weight="duotone" color={GOLD} />}>

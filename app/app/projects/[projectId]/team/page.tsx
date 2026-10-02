@@ -249,17 +249,17 @@ export default function TeamPage(){
       <>
         {ctx && (
           <StatStrip items={[
-            {label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
-            {label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'no email on file'},
-            {label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'design contact'},
-            {label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#3dd68c':GOLD, sub: leadersAssigned>0?'directory roles assigned':'assign in Project Settings'},
-            {label:'Trades On the Job', value: String(subTrades.length), sub: ctxSubs.length?`across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'no subs yet'},
+            {href: `/app/projects/${projectId}/team`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
+            {href: `/app/projects/${projectId}/team`, label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'no email on file'},
+            {href: `/app/projects/${projectId}/team`, label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'design contact'},
+            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#3dd68c':GOLD, sub: leadersAssigned>0?'directory roles assigned':'assign in Project Settings'},
+            {href: `/app/projects/${projectId}/subs`, label:'Trades On the Job', value: String(subTrades.length), sub: ctxSubs.length?`across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'no subs yet'},
           ]}/>
         )}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={members.length===1?'1 with access':`${members.length} with access`} />
-          <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'portal access'} />
-          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'#3dd68c':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'#3dd68c':GOLD} sub="PM · super · foreman · owner · architect" />
+          <StatCard icon={<UsersThree size={19} weight="duotone" color={GOLD} />} label="Team Members" value={String(members.length)} accent={GOLD} sub={members.length===1?'1 with access':`${members.length} with access`}  href={`/app/projects/${projectId}/team`}/>
+          <StatCard icon={<HardHat size={19} weight="duotone" color={BLUE} />} label="Subcontractors" value={String(subs.length)} accent={subs.length?BLUE:undefined} sub={subTrades.length?`${subTrades.length} trade${subTrades.length===1?'':'s'} — portal access`:'portal access'}  href={`/app/projects/${projectId}/subs`}/>
+          <StatCard icon={<IdentificationBadge size={19} weight="duotone" color={leadersAssigned>=3?'#3dd68c':GOLD} />} label="Field Leadership" value={`${leadersAssigned}/5`} accent={leadersAssigned>=3?'#3dd68c':GOLD} sub="PM · super · foreman · owner · architect"  href={`/app/projects/${projectId}/team`}/>
         </div>
       </>
     )}

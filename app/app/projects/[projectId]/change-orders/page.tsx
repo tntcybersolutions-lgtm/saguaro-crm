@@ -394,11 +394,11 @@ export default function ChangeOrdersPage() {
         {/* Contract intelligence strip — what the system already knows */}
         {(ctx || !loading) && (
           <StatStrip items={[
-            {label:'Original Contract', value:fmt(contractSum), sub:'prime contract baseline'},
-            {label:'Approved COs', value:(approvedCOs>=0?'+':'')+fmt(approvedCOs), accent:approvedCOs>0?'#3dd68c':approvedCOs<0?RED:undefined, sub:`${approvedCount} approved`},
-            {label:'Pending COs', value:(pendingCOs>=0?'+':'')+fmt(pendingCOs), accent:pendingCount>0?GOLD:undefined, sub:pendingCount>0?`${pendingCount} awaiting decision`:'none awaiting decision'},
-            {label:'Revised Contract', value:fmt(currentContract), accent:GOLD, sub:'original + approved COs'},
-            {label:'Next CO', value:`CO-${padCo(nextCoNumber)}`, sub:lastCo?`follows CO-${padCo(lastCo.co_number)}`:'first on this project'},
+            {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(contractSum), sub:'prime contract baseline'},
+            {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(approvedCOs>=0?'+':'')+fmt(approvedCOs), accent:approvedCOs>0?'#3dd68c':approvedCOs<0?RED:undefined, sub:`${approvedCount} approved`},
+            {href: `/app/projects/${projectId}/change-orders`, label:'Pending COs', value:(pendingCOs>=0?'+':'')+fmt(pendingCOs), accent:pendingCount>0?GOLD:undefined, sub:pendingCount>0?`${pendingCount} awaiting decision`:'none awaiting decision'},
+            {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(currentContract), accent:GOLD, sub:'original + approved COs'},
+            {href: `/app/projects/${projectId}/change-orders`, label:'Next CO', value:`CO-${padCo(nextCoNumber)}`, sub:lastCo?`follows CO-${padCo(lastCo.co_number)}`:'first on this project'},
           ]}/>
         )}
 
@@ -521,10 +521,10 @@ export default function ChangeOrdersPage() {
 
       {/* KPI Cards */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-        <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('changeorders').hex} />} label="Total COs" value={String(cos.length)} delay={0.02} />
-        <StatCard icon={<Warning size={19} weight="duotone" color={GOLD} />} label="Pending" value={String(cos.filter(c=>c.status==='pending').length)} accent={GOLD} delay={0.06} />
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />} label="Approved" value={String(cos.filter(c=>c.status==='approved').length)} accent="#3dd68c" delay={0.10} />
-        <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Rejected" value={String(cos.filter(c=>c.status==='rejected').length)} accent={RED} delay={0.14} />
+        <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('changeorders').hex} />} label="Total COs" value={String(cos.length)} delay={0.02}  href={`/app/projects/${projectId}/change-orders`}/>
+        <StatCard icon={<Warning size={19} weight="duotone" color={GOLD} />} label="Pending" value={String(cos.filter(c=>c.status==='pending').length)} accent={GOLD} delay={0.06}  href={`/app/projects/${projectId}/change-orders`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />} label="Approved" value={String(cos.filter(c=>c.status==='approved').length)} accent="#3dd68c" delay={0.10}  href={`/app/projects/${projectId}/change-orders`}/>
+        <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Rejected" value={String(cos.filter(c=>c.status==='rejected').length)} accent={RED} delay={0.14}  href={`/app/projects/${projectId}/change-orders`}/>
       </div>
 
         {/* Loading */}

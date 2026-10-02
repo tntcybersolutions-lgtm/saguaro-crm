@@ -76,11 +76,11 @@ export default function EscalationsPage() {
       {/* Escalation pulse — open vs resolved, worst-first */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Escalations', value: String(summary.total), sub: 'across all sites' },
-          { label: 'Open', value: String(summary.open), accent: summary.open > 0 ? C.gold : undefined, sub: summary.open ? 'still in the chain' : 'nothing in flight' },
-          { label: 'Critical', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: '7d+ overdue' },
-          { label: 'Watch', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: '1–6d overdue' },
-          { label: 'Resolved', value: String(summary.resolved), accent: C.green, sub: 'cleared the chain' },
+          {href: '/app/command-center/escalations',  label: 'Escalations', value: String(summary.total), sub: 'across all sites' },
+          {href: '/app/command-center/escalations',  label: 'Open', value: String(summary.open), accent: summary.open > 0 ? C.gold : undefined, sub: summary.open ? 'still in the chain' : 'nothing in flight' },
+          {href: '/app/command-center/escalations',  label: 'Critical', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: '7d+ overdue' },
+          {href: '/app/command-center/escalations',  label: 'Watch', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: '1–6d overdue' },
+          {href: '/app/command-center/escalations',  label: 'Resolved', value: String(summary.resolved), accent: C.green, sub: 'cleared the chain' },
         ]} />
       )}
 

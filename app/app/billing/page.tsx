@@ -316,11 +316,11 @@ export default function BillingPage() {
         {/* Account intelligence strip — live plan, usage, and renewal totals */}
         {sub && (
           <StatStrip items={[
-            { label: 'Plan', value: sub.plan_name || 'Subscription', sub: sub.billing_interval === 'annual' ? 'annual billing' : 'monthly billing' },
-            { label: 'Status', value: sub.status === 'trialing' ? (trialDays ?? 0) + ' trial days left' : (sub.status || '').replace(/_/g, ' '), accent: sub.status === 'past_due' ? RED : sub.status === 'active' ? GREEN : GOLD, sub: sub.cancel_at ? 'cancels ' + new Date(sub.cancel_at).toLocaleDateString() : sub.status === 'trialing' ? 'full access during trial' : undefined },
-            { label: 'Price', value: priceCents > 0 ? fmtC(priceCents) : '—', sub: priceCents > 0 ? 'billed ' + (sub.billing_interval === 'annual' ? 'annually' : 'monthly') : 'no charge on file' },
-            { label: 'AI Takeoff Pages', value: unlimitedAi ? 'Unlimited' : aiLimit != null ? aiUsed + ' / ' + aiLimit : String(aiUsed), accent: !unlimitedAi && aiLimit != null && aiUsed >= aiLimit ? RED : undefined, sub: unlimitedAi ? aiUsed + ' used this period' : aiLimit != null ? Math.max(0, aiLimit - aiUsed) + ' left this period' : 'this billing period' },
-            { label: 'Renews In', value: renewDays != null ? renewDays + ' days' : '—', sub: sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : 'no period on file' },
+            {href: '/app/billing',  label: 'Plan', value: sub.plan_name || 'Subscription', sub: sub.billing_interval === 'annual' ? 'annual billing' : 'monthly billing' },
+            {href: '/app/billing',  label: 'Status', value: sub.status === 'trialing' ? (trialDays ?? 0) + ' trial days left' : (sub.status || '').replace(/_/g, ' '), accent: sub.status === 'past_due' ? RED : sub.status === 'active' ? GREEN : GOLD, sub: sub.cancel_at ? 'cancels ' + new Date(sub.cancel_at).toLocaleDateString() : sub.status === 'trialing' ? 'full access during trial' : undefined },
+            {href: '/app/billing',  label: 'Price', value: priceCents > 0 ? fmtC(priceCents) : '—', sub: priceCents > 0 ? 'billed ' + (sub.billing_interval === 'annual' ? 'annually' : 'monthly') : 'no charge on file' },
+            {href: '/app/billing',  label: 'AI Takeoff Pages', value: unlimitedAi ? 'Unlimited' : aiLimit != null ? aiUsed + ' / ' + aiLimit : String(aiUsed), accent: !unlimitedAi && aiLimit != null && aiUsed >= aiLimit ? RED : undefined, sub: unlimitedAi ? aiUsed + ' used this period' : aiLimit != null ? Math.max(0, aiLimit - aiUsed) + ' left this period' : 'this billing period' },
+            {href: '/app/billing',  label: 'Renews In', value: renewDays != null ? renewDays + ' days' : '—', sub: sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : 'no period on file' },
           ]} />
         )}
 

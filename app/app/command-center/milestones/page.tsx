@@ -63,11 +63,11 @@ export default function MilestonesPage() {
       {/* Schedule pulse — slip mix against baseline, worst-first */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Total Milestones', value: String(summary.total), sub: 'across all sites' },
-          { label: 'On Track', value: String(summary.green), accent: C.green, sub: 'holding baseline' },
-          { label: 'Slipping', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'inside float' },
-          { label: 'Critical Slip', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'recover these first' },
-          { label: 'Critical Path', value: String(summary.critical), accent: summary.critical > 0 ? C.gold : undefined, sub: 'drive the end date' },
+          {href: '/app/command-center/milestones',  label: 'Total Milestones', value: String(summary.total), sub: 'across all sites' },
+          {href: '/app/command-center/milestones',  label: 'On Track', value: String(summary.green), accent: C.green, sub: 'holding baseline' },
+          {href: '/app/command-center/milestones',  label: 'Slipping', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'inside float' },
+          {href: '/app/command-center/milestones',  label: 'Critical Slip', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'recover these first' },
+          {href: '/app/command-center/milestones',  label: 'Critical Path', value: String(summary.critical), accent: summary.critical > 0 ? C.gold : undefined, sub: 'drive the end date' },
         ]} />
       )}
 

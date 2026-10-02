@@ -218,12 +218,12 @@ function IntelligenceChat() {
       {/* What the AI already knows - live numbers from the project snapshot */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Revised Contract', value: fmtMoney(Number(ctx.money?.revisedContract) || 0), sub: `${Number(ctx.money?.approvedCoCount) || 0} approved CO${(Number(ctx.money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
-          { label: 'Billed to Date', value: fmtMoney(Number(ctx.money?.billedToDate) || 0), sub: `${Number(ctx.money?.billedPct) || 0}% of revised` },
-          { label: 'Paid to Date', value: fmtMoney(Number(ctx.money?.paidToDate) || 0), accent: GREEN, sub: `retainage ${Number(ctx.money?.retainagePct) || 0}%` },
-          { label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), accent: (Number(ctx.counts?.openRfis) || 0) > 5 ? '#E0644E' : undefined, sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}` },
-          { label: 'Open Punch', value: String(Number(ctx.counts?.openPunch) || 0), sub: `${Number(ctx.counts?.scheduleTasks) || 0} schedule tasks` },
-          { label: 'Pending COs', value: String(Number(ctx.money?.pendingCoCount) || 0), accent: (Number(ctx.money?.pendingCoCount) || 0) > 0 ? '#F0A63C' : undefined, sub: `${(ctx.subs || []).length} sub${(ctx.subs || []).length === 1 ? '' : 's'} on the job` },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Revised Contract', value: fmtMoney(Number(ctx.money?.revisedContract) || 0), sub: `${Number(ctx.money?.approvedCoCount) || 0} approved CO${(Number(ctx.money?.approvedCoCount) || 0) === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/intelligence`,  label: 'Billed to Date', value: fmtMoney(Number(ctx.money?.billedToDate) || 0), sub: `${Number(ctx.money?.billedPct) || 0}% of revised` },
+          {href: `/app/projects/${projectId}/intelligence`,  label: 'Paid to Date', value: fmtMoney(Number(ctx.money?.paidToDate) || 0), accent: GREEN, sub: `retainage ${Number(ctx.money?.retainagePct) || 0}%` },
+          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), accent: (Number(ctx.counts?.openRfis) || 0) > 5 ? '#E0644E' : undefined, sub: `${Number(ctx.counts?.openSubmittals) || 0} open submittal${(Number(ctx.counts?.openSubmittals) || 0) === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(Number(ctx.counts?.openPunch) || 0), sub: `${Number(ctx.counts?.scheduleTasks) || 0} schedule tasks` },
+          {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(Number(ctx.money?.pendingCoCount) || 0), accent: (Number(ctx.money?.pendingCoCount) || 0) > 0 ? '#F0A63C' : undefined, sub: `${(ctx.subs || []).length} sub${(ctx.subs || []).length === 1 ? '' : 's'} on the job` },
         ]} />
       )}
 

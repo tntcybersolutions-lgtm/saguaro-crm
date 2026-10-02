@@ -69,12 +69,12 @@ export default function RisksPage() {
 
       {/* Register pulse — where the exposure sits and what needs an owner or a date */}
       <StatStrip items={[
-        { label: 'Total Risks', value: String(summary.total), sub: `${summary.open} open` },
-        { label: 'Critical / High', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'attack these first' },
-        { label: 'Medium', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'review weekly' },
-        { label: 'Low', value: String(summary.green), accent: C.green, sub: 'monitor' },
-        { label: 'Past Due', value: String(summary.overdue), accent: summary.overdue > 0 ? C.red : undefined, sub: 'mitigation date blown' },
-        { label: 'No Owner', value: String(summary.unowned), accent: summary.unowned > 0 ? C.yellow : undefined, sub: 'assign accountability' },
+        {href: '/app/command-center/risks',  label: 'Total Risks', value: String(summary.total), sub: `${summary.open} open` },
+        {href: '/app/command-center/risks',  label: 'Critical / High', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'attack these first' },
+        {href: '/app/command-center/risks',  label: 'Medium', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'review weekly' },
+        {href: '/app/command-center/risks',  label: 'Low', value: String(summary.green), accent: C.green, sub: 'monitor' },
+        {href: '/app/command-center/risks',  label: 'Past Due', value: String(summary.overdue), accent: summary.overdue > 0 ? C.red : undefined, sub: 'mitigation date blown' },
+        {href: '/app/command-center/risks',  label: 'No Owner', value: String(summary.unowned), accent: summary.unowned > 0 ? C.yellow : undefined, sub: 'assign accountability' },
       ]} />
 
       <AttentionBanner red={summary.red} yellow={summary.yellow} noun="risk" />

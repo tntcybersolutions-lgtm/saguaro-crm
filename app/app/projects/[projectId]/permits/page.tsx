@@ -10,6 +10,7 @@ import { ListToolbar } from '@/components/ui/ListToolbar';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
+import PermitCorrespondence from '@/components/PermitCorrespondence';
 
 interface Permit {
   id: string;
@@ -212,21 +213,21 @@ export default function PermitsPage() {
       {/* Project intelligence strip — open permits and the expiry watch */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Project', value: ctx.project?.projectNumber || ctx.project?.name || '—', sub: city ? `${city} jurisdiction` : (ctx.project?.status ? String(ctx.project.status).replace(/_/g, ' ') : 'active') },
-          { label: 'Open Permits', value: String(openCount), sub: `${applied} applied · ${issued} issued${inInspections > 0 ? ` · ${inInspections} inspecting` : ''}` },
-          { label: 'Expiring ≤ 30 Days', value: String(expiringSoon.length), accent: expiringSoon.length > 0 ? T.amber : T.green, sub: expiringSoon.length > 0 ? `renew ${expiringSoon[0].permit_number} first` : 'nothing lapsing soon' },
-          { label: 'Expired', value: String(expired), accent: expired > 0 ? T.red : undefined, sub: expired > 0 ? 'work at risk — renew now' : 'none lapsed' },
-          { label: 'Fees to Date', value: `$${totalFees.toLocaleString()}`, sub: `across ${permits.length} permit${permits.length === 1 ? '' : 's'}` },
-          { label: 'Closed', value: String(closed), sub: 'final sign-off on record' },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Project', value: ctx.project?.projectNumber || ctx.project?.name || '—', sub: city ? `${city} jurisdiction` : (ctx.project?.status ? String(ctx.project.status).replace(/_/g, ' ') : 'active') },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Open Permits', value: String(openCount), sub: `${applied} applied · ${issued} issued${inInspections > 0 ? ` · ${inInspections} inspecting` : ''}` },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Expiring ≤ 30 Days', value: String(expiringSoon.length), accent: expiringSoon.length > 0 ? T.amber : T.green, sub: expiringSoon.length > 0 ? `renew ${expiringSoon[0].permit_number} first` : 'nothing lapsing soon' },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Expired', value: String(expired), accent: expired > 0 ? T.red : undefined, sub: expired > 0 ? 'work at risk — renew now' : 'none lapsed' },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Fees to Date', value: `$${totalFees.toLocaleString()}`, sub: `across ${permits.length} permit${permits.length === 1 ? '' : 's'}` },
+          {href: `/app/projects/${projectId}/permits`,  label: 'Closed', value: String(closed), sub: 'final sign-off on record' },
         ]} />
       )}
 
       {/* Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 28 }}>
-        <StatCard icon={<Clipboard size={19} weight="duotone" color={T.gold} />} label="Total Permits" value={String(permits.length)} accent={T.gold} sub={closed > 0 ? `${closed} closed out` : 'on the register'} delay={0.02} />
-        <StatCard icon={<NotePencil size={19} weight="duotone" color={T.amber} />} label="Applied" value={String(applied)} accent={applied > 0 ? T.amber : undefined} sub="awaiting the AHJ" delay={0.06} />
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Issued" value={String(issued)} accent={issued > 0 ? T.green : undefined} sub={inInspections > 0 ? `+${inInspections} in inspections` : 'work may proceed'} delay={0.10} />
-        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={T.gold} />} label="Total Fees" value={`$${totalFees.toLocaleString()}`} sub={expiringSoon.length > 0 ? `${expiringSoon.length} permit${expiringSoon.length === 1 ? '' : 's'} expiring soon` : 'plan-check + permit fees'} delay={0.14} />
+        <StatCard icon={<Clipboard size={19} weight="duotone" color={T.gold} />} label="Total Permits" value={String(permits.length)} accent={T.gold} sub={closed > 0 ? `${closed} closed out` : 'on the register'} delay={0.02}  href={`/app/projects/${projectId}/permits`}/>
+        <StatCard icon={<NotePencil size={19} weight="duotone" color={T.amber} />} label="Applied" value={String(applied)} accent={applied > 0 ? T.amber : undefined} sub="awaiting the AHJ" delay={0.06}  href={`/app/projects/${projectId}/permits`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Issued" value={String(issued)} accent={issued > 0 ? T.green : undefined} sub={inInspections > 0 ? `+${inInspections} in inspections` : 'work may proceed'} delay={0.10}  href={`/app/projects/${projectId}/permits`}/>
+        <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={T.gold} />} label="Total Fees" value={`$${totalFees.toLocaleString()}`} sub={expiringSoon.length > 0 ? `${expiringSoon.length} permit${expiringSoon.length === 1 ? '' : 's'} expiring soon` : 'plan-check + permit fees'} delay={0.14}  href={`/app/projects/${projectId}/permits`}/>
       </div>
 
       {successMsg && (
@@ -417,6 +418,9 @@ export default function PermitsPage() {
           </div>
         )}
       </SectionCard>
+
+      {/* Tracked back-and-forth with the architect and the city/AHJ */}
+      <PermitCorrespondence projectId={projectId} />
     <UnsavedGuardModal guard={guard} />
     </PremiumSurface>
   );

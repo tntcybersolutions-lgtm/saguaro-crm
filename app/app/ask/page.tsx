@@ -84,11 +84,11 @@ export default function AskDocsPage() {
         {/* Live session intelligence — what Sage can reach and what it has done */}
         {projects.length > 0 && (
           <StatStrip items={[
-            { label: 'Projects', value: String(projects.length), sub: 'searchable right now' },
-            { label: 'Doc Types', value: String(Object.keys(TYPE_LABEL).length), sub: 'RFIs to T&M tickets' },
-            { label: 'Questions Asked', value: String(turns.length), sub: 'this session' },
-            { label: 'Records Searched', value: String(turns.reduce((s, t) => s + t.searched, 0)), sub: 'across your questions' },
-            { label: 'Sources Cited', value: String(turns.reduce((s, t) => s + t.citations.length, 0)), accent: turns.some((t) => t.citations.length > 0) ? GOLD : undefined, sub: 'every answer grounded' },
+            {href: '/app/ask',  label: 'Projects', value: String(projects.length), sub: 'searchable right now' },
+            {href: '/app/ask',  label: 'Doc Types', value: String(Object.keys(TYPE_LABEL).length), sub: 'RFIs to T&M tickets' },
+            {href: '/app/ask',  label: 'Questions Asked', value: String(turns.length), sub: 'this session' },
+            {href: '/app/ask',  label: 'Records Searched', value: String(turns.reduce((s, t) => s + t.searched, 0)), sub: 'across your questions' },
+            {href: '/app/ask',  label: 'Sources Cited', value: String(turns.reduce((s, t) => s + t.citations.length, 0)), accent: turns.some((t) => t.citations.length > 0) ? GOLD : undefined, sub: 'every answer grounded' },
           ]} />
         )}
 

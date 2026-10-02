@@ -124,20 +124,20 @@ export default function FilesPage() {
         {/* Library intelligence — what the system already knows */}
         {!loading && (
           <StatStrip items={[
-            { label: 'Library', value: String(counts.total), sub: bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored` : 'no storage used yet' },
-            { label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? '#3dd68c' : undefined, sub: lastUpload ? `last upload ${fmtDate(lastUpload)}` : 'nothing uploaded yet' },
-            { label: 'Photos', value: String(counts.image), sub: 'site + progress shots' },
-            { label: 'Videos', value: String(counts.video), sub: 'walkthroughs, site video' },
-            { label: 'Docs & Drawings', value: String(docCount), sub: 'PDFs, sheets, CAD, docs' },
-            { label: 'Folders', value: String(folders.length), sub: folders.length > 0 ? folders.slice(0, 2).join(', ') + (folders.length > 2 ? '…' : '') : 'organize with Move' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Library', value: String(counts.total), sub: bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored` : 'no storage used yet' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? '#3dd68c' : undefined, sub: lastUpload ? `last upload ${fmtDate(lastUpload)}` : 'nothing uploaded yet' },
+            {href: `/app/projects/${projectId}/photos`,  label: 'Photos', value: String(counts.image), sub: 'site + progress shots' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Videos', value: String(counts.video), sub: 'walkthroughs, site video' },
+            {href: `/app/projects/${projectId}/drawings`,  label: 'Docs & Drawings', value: String(docCount), sub: 'PDFs, sheets, CAD, docs' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Folders', value: String(folders.length), sub: folders.length > 0 ? folders.slice(0, 2).join(', ') + (folders.length > 2 ? '…' : '') : 'organize with Move' },
           ]} />
         )}
 
         {/* KPI row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
-          <StatCard icon={<Folder size={19} weight="duotone" color={T.gold} />} label="Total Files" value={String(counts.total)} accent={T.gold} delay={0.02} />
-          <StatCard icon={<ImageSquare size={19} weight="duotone" color={KIND_TINT.image} />} label="Photos" value={String(counts.image)} accent={KIND_TINT.image} delay={0.06} />
-          <StatCard icon={<FilmSlate size={19} weight="duotone" color={KIND_TINT.video} />} label="Videos" value={String(counts.video)} accent={KIND_TINT.video} delay={0.10} />
+          <StatCard icon={<Folder size={19} weight="duotone" color={T.gold} />} label="Total Files" value={String(counts.total)} accent={T.gold} delay={0.02}  href={`/app/projects/${projectId}/files`}/>
+          <StatCard icon={<ImageSquare size={19} weight="duotone" color={KIND_TINT.image} />} label="Photos" value={String(counts.image)} accent={KIND_TINT.image} delay={0.06}  href={`/app/projects/${projectId}/photos`}/>
+          <StatCard icon={<FilmSlate size={19} weight="duotone" color={KIND_TINT.video} />} label="Videos" value={String(counts.video)} accent={KIND_TINT.video} delay={0.10}  href={`/app/projects/${projectId}/files`}/>
         </div>
 
         {!trash && (

@@ -215,21 +215,21 @@ export default function TodosPage() {
       {/* Task intelligence strip — where the work stands right now */}
       {!loading && (todos.length > 0 || ctx) && (
         <StatStrip items={[
-          { label: 'Due This Week', value: String(dueThisWeek), accent: dueThisWeek > 0 ? GOLD : undefined, sub: nextDue ? `next: ${nextDue.due_date} — ${nextDue.title.slice(0, 24)}` : 'nothing coming due' },
-          { label: 'Overdue', value: String(overdueCount), accent: overdueCount > 0 ? RED : GREEN, sub: overdueCount > 0 ? 'needs attention today' : 'nothing slipping' },
-          { label: 'High Priority Open', value: String(highOpen), accent: highOpen > 0 ? RED : undefined, sub: highOpen > 0 ? 'knock these out first' : 'no fires burning' },
-          { label: 'Unassigned', value: String(unassigned), accent: unassigned > 0 ? GOLD : undefined, sub: unassigned > 0 ? 'no owner yet — assign below' : 'every task has an owner' },
-          { label: 'Completion', value: `${completionPct}%`, accent: completionPct >= 75 ? GREEN : undefined, sub: `${completedCount} of ${totalCount} done` },
-          { label: 'Busiest Assignee', value: busiest ? busiest[0] : '—', sub: busiest ? `${busiest[1]} open task${busiest[1] === 1 ? '' : 's'}` : `${team.length + subs.length} people on the roster` },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Due This Week', value: String(dueThisWeek), accent: dueThisWeek > 0 ? GOLD : undefined, sub: nextDue ? `next: ${nextDue.due_date} — ${nextDue.title.slice(0, 24)}` : 'nothing coming due' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Overdue', value: String(overdueCount), accent: overdueCount > 0 ? RED : GREEN, sub: overdueCount > 0 ? 'needs attention today' : 'nothing slipping' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'High Priority Open', value: String(highOpen), accent: highOpen > 0 ? RED : undefined, sub: highOpen > 0 ? 'knock these out first' : 'no fires burning' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Unassigned', value: String(unassigned), accent: unassigned > 0 ? GOLD : undefined, sub: unassigned > 0 ? 'no owner yet — assign below' : 'every task has an owner' },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Completion', value: `${completionPct}%`, accent: completionPct >= 75 ? GREEN : undefined, sub: `${completedCount} of ${totalCount} done` },
+          {href: `/app/projects/${projectId}/todos`,  label: 'Busiest Assignee', value: busiest ? busiest[0] : '—', sub: busiest ? `${busiest[1]} open task${busiest[1] === 1 ? '' : 's'}` : `${team.length + subs.length} people on the roster` },
         ]} />
       )}
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
-        <StatCard icon={<Clipboard size={19} weight="duotone" color={GOLD} />} label="Total" value={String(totalCount)} sub="all tasks" delay={0.02} />
-        <StatCard icon={<Circle size={19} weight="duotone" color={GOLD} />} label="Active" value={String(activeCount)} sub="in progress" accent={activeCount > 0 ? GOLD : undefined} delay={0.06} />
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Completed" value={String(completedCount)} sub="done" accent={completedCount > 0 ? GREEN : undefined} delay={0.10} />
-        <StatCard icon={<Warning size={19} weight="duotone" color={RED} />} label="Overdue" value={String(overdueCount)} sub="past due" accent={overdueCount > 0 ? RED : undefined} delay={0.14} />
+        <StatCard icon={<Clipboard size={19} weight="duotone" color={GOLD} />} label="Total" value={String(totalCount)} sub="all tasks" delay={0.02}  href={`/app/projects/${projectId}/todos`}/>
+        <StatCard icon={<Circle size={19} weight="duotone" color={GOLD} />} label="Active" value={String(activeCount)} sub="in progress" accent={activeCount > 0 ? GOLD : undefined} delay={0.06}  href={`/app/projects/${projectId}/todos`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Completed" value={String(completedCount)} sub="done" accent={completedCount > 0 ? GREEN : undefined} delay={0.10}  href={`/app/projects/${projectId}/todos`}/>
+        <StatCard icon={<Warning size={19} weight="duotone" color={RED} />} label="Overdue" value={String(overdueCount)} sub="past due" accent={overdueCount > 0 ? RED : undefined} delay={0.14}  href={`/app/projects/${projectId}/todos`}/>
       </div>
 
       {/* List toolbar — search + status/priority filters (replaces the old tab pills) */}

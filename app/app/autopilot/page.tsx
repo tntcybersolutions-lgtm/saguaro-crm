@@ -183,25 +183,25 @@ export default function AutopilotPage() {
           icon={<Bell size={19} weight="duotone" color={GOLD} />}
           label="Total Alerts" value={allAlerts.length.toString()}
           sub={byProject.length > 0 ? `${SCAN_RULES.length} checks · ${byProject.length} project${byProject.length === 1 ? '' : 's'} affected` : `across ${SCAN_RULES.length} deterministic checks`} delay={0.02}
-        />
+         href="/app/autopilot"/>
         <StatCard
           icon={<WarningOctagon size={19} weight="duotone" color="#ff7070" />}
           label="Critical" value={allAlerts.filter(a=>a.severity==='critical').length.toString()}
           accent={allAlerts.some(a=>a.severity==='critical') ? '#ff7070' : undefined}
           sub="need immediate action" delay={0.06}
-        />
+         href="/app/autopilot"/>
         <StatCard
           icon={<Warning size={19} weight="duotone" color="#f97316" />}
           label="High" value={allAlerts.filter(a=>a.severity==='high').length.toString()}
           accent={allAlerts.some(a=>a.severity==='high') ? '#f97316' : undefined}
           sub="review soon" delay={0.10}
-        />
+         href="/app/autopilot"/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />}
           label="Acknowledged" value={acknowledgedCount.toString()}
           accent={acknowledgedCount > 0 ? '#3dd68c' : undefined}
           sub="handled this session" delay={0.14}
-        />
+         href="/app/autopilot"/>
       </div>
 
       {/* Alerts + scan-pipeline rail */}

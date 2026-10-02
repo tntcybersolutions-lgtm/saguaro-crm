@@ -202,10 +202,10 @@ export default function CostControlPage() {
 
       {/* summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 18 }}>
-        <StatCard icon={<Wallet size={19} weight="duotone" color={GOLD} />} label="Revised Budget" value={usd(r.revisedBudgetCents)} delay={0.02} />
-        <StatCard icon={<Handshake size={19} weight="duotone" color={GOLD} />} label="Committed" value={usd(r.committedCents)} delay={0.06} />
-        <StatCard icon={<Receipt size={19} weight="duotone" color={GOLD} />} label="Spent to Date" value={usd(r.actualCents)} delay={0.10} />
-        <StatCard icon={<TrendUp size={19} weight="duotone" color={GOLD} />} label="Projected Final" value={usd(r.projectedFinalCents)} delay={0.14} />
+        <StatCard icon={<Wallet size={19} weight="duotone" color={GOLD} />} label="Revised Budget" value={usd(r.revisedBudgetCents)} delay={0.02}  href="/app/billing/cost-control"/>
+        <StatCard icon={<Handshake size={19} weight="duotone" color={GOLD} />} label="Committed" value={usd(r.committedCents)} delay={0.06}  href="/app/billing/cost-control"/>
+        <StatCard icon={<Receipt size={19} weight="duotone" color={GOLD} />} label="Spent to Date" value={usd(r.actualCents)} delay={0.10}  href="/app/billing/cost-control"/>
+        <StatCard icon={<TrendUp size={19} weight="duotone" color={GOLD} />} label="Projected Final" value={usd(r.projectedFinalCents)} delay={0.14}  href="/app/billing/cost-control"/>
         <StatCard
           icon={<Scales size={19} weight="duotone" color={r.varianceCents < 0 ? RED : GREEN} />}
           label="Variance"
@@ -213,7 +213,7 @@ export default function CostControlPage() {
           accent={r.varianceCents < 0 ? RED : GREEN}
           sub={<span style={{ color: r.varianceCents < 0 ? RED : GREEN, fontWeight: 700 }}>{r.varianceCents < 0 ? 'OVER budget' : 'under budget'}</span>}
           delay={0.18}
-        />
+         href="/app/billing/cost-control"/>
       </div>
 
       {/* table */}

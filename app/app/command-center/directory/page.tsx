@@ -65,9 +65,9 @@ export default function DirectoryPage() {
       {/* Roster pulse — real counts across the portfolio */}
       {!loading && (
         <StatStrip items={[
-          { label: 'Stakeholders', value: String(summary.total), accent: summary.total > 0 ? C.gold : undefined, sub: 'across the portfolio' },
-          { label: 'Sites Covered', value: String(summary.sites), sub: 'with a roster' },
-          { label: 'Distinct Roles', value: String(summary.roles), sub: 'trades, vendors, authorities' },
+          {href: '/app/command-center/directory',  label: 'Stakeholders', value: String(summary.total), accent: summary.total > 0 ? C.gold : undefined, sub: 'across the portfolio' },
+          {href: '/app/command-center/directory',  label: 'Sites Covered', value: String(summary.sites), sub: 'with a roster' },
+          {href: '/app/command-center/directory',  label: 'Distinct Roles', value: String(summary.roles), sub: 'trades, vendors, authorities' },
         ]} />
       )}
 

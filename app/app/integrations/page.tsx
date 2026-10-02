@@ -329,11 +329,11 @@ export default function IntegrationsPage() {
       {/* Marketplace intelligence \u2014 the imported StatStrip, live figures only */}
       {!loading && integrations.length > 0 && (
         <StatStrip items={[
-          { label: 'Connected', value: String(connectedCount), accent: connectedCount > 0 ? GREEN : undefined, sub: connectedCount > 0 ? 'live and syncing' : 'none connected yet' },
-          { label: 'Available Now', value: String(availableCount), sub: 'ready to connect' },
-          { label: 'Coming Soon', value: String(comingSoonCount), sub: 'on the roadmap' },
-          { label: 'Categories', value: String(categoryCount), sub: 'accounting to storage' },
-          { label: 'Last Sync', value: lastSynced ? timeAgo(lastSynced.last_sync_at) : 'Never', sub: lastSynced ? lastSynced.name : 'no syncs recorded' },
+          {href: '/app/integrations',  label: 'Connected', value: String(connectedCount), accent: connectedCount > 0 ? GREEN : undefined, sub: connectedCount > 0 ? 'live and syncing' : 'none connected yet' },
+          {href: '/app/integrations',  label: 'Available Now', value: String(availableCount), sub: 'ready to connect' },
+          {href: '/app/integrations',  label: 'Coming Soon', value: String(comingSoonCount), sub: 'on the roadmap' },
+          {href: '/app/integrations',  label: 'Categories', value: String(categoryCount), sub: 'accounting to storage' },
+          {href: '/app/integrations',  label: 'Last Sync', value: lastSynced ? timeAgo(lastSynced.last_sync_at) : 'Never', sub: lastSynced ? lastSynced.name : 'no syncs recorded' },
         ]} />
       )}
 

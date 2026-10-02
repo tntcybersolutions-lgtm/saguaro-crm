@@ -145,14 +145,14 @@ export default function CommandCenterPage() {
 
       {/* Portfolio pulse — live KPIs from the same feeds the subpages run on */}
       <StatStrip items={[
-        { label: 'Projects', value: String(summary.total), sub: `${summary.green} on track` },
-        { label: 'Watch', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'yellow health' },
-        { label: 'Escalate', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'red — act today' },
-        { label: 'Portfolio Value', value: fmtMoney(summary.contract), sub: 'sum of contracts' },
-        { label: 'Avg Complete', value: `${summary.avg}%`, sub: 'across reporting projects' },
-        { label: 'Open Risks', value: String(modCounts.openRisks), accent: modCounts.critRisks > 0 ? C.red : undefined, sub: modCounts.critRisks ? `${modCounts.critRisks} critical` : 'register-wide' },
-        { label: 'Escalations', value: String(modCounts.openEsc), accent: modCounts.openEsc > 0 ? C.red : undefined, sub: 'open now' },
-        { label: 'Long-Lead Risk', value: `${modCounts.llAtRisk}/${modCounts.llTotal}`, accent: modCounts.llAtRisk > 0 ? C.yellow : undefined, sub: 'items off runway' },
+        {href: '/app/command-center',  label: 'Projects', value: String(summary.total), sub: `${summary.green} on track` },
+        {href: '/app/command-center',  label: 'Watch', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'yellow health' },
+        {href: '/app/command-center/escalations',  label: 'Escalate', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'red — act today' },
+        {href: '/app/command-center',  label: 'Portfolio Value', value: fmtMoney(summary.contract), sub: 'sum of contracts' },
+        {href: '/app/command-center',  label: 'Avg Complete', value: `${summary.avg}%`, sub: 'across reporting projects' },
+        {href: '/app/command-center/risks',  label: 'Open Risks', value: String(modCounts.openRisks), accent: modCounts.critRisks > 0 ? C.red : undefined, sub: modCounts.critRisks ? `${modCounts.critRisks} critical` : 'register-wide' },
+        {href: '/app/command-center/escalations',  label: 'Escalations', value: String(modCounts.openEsc), accent: modCounts.openEsc > 0 ? C.red : undefined, sub: 'open now' },
+        {href: '/app/command-center/long-lead',  label: 'Long-Lead Risk', value: `${modCounts.llAtRisk}/${modCounts.llTotal}`, accent: modCounts.llAtRisk > 0 ? C.yellow : undefined, sub: 'items off runway' },
       ]} />
 
       {/* Needs-attention banner */}

@@ -260,6 +260,8 @@ export function StatCard({
   valueColor,
   accentColor = CIN.gold,
   delay = 0,
+  href,
+  onClick,
 }: {
   icon?: React.ReactNode;
   label: string;
@@ -268,10 +270,14 @@ export function StatCard({
   valueColor?: string;
   accentColor?: string;
   delay?: number;
+  href?: string;
+  onClick?: () => void;
 }) {
-  return (
+  const interactive = !!(href || onClick);
+  const inner = (
     <div
       className="sgLift"
+      onClick={onClick}
       style={{
         position: 'relative', overflow: 'hidden',
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
@@ -280,6 +286,8 @@ export function StatCard({
         borderRadius: 16,
         padding: '16px 18px',
         boxShadow: '0 12px 34px -22px rgba(0,0,0,0.7)',
+        cursor: interactive ? 'pointer' : 'default',
+        height: '100%',
       }}
     >
       <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${accentColor}, transparent)` }} />
@@ -304,6 +312,10 @@ export function StatCard({
       {sub && <div style={{ fontSize: 12, color: CIN.faint, marginTop: 6 }}>{sub}</div>}
     </div>
   );
+  if (href) {
+    return <a href={href} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>{inner}</a>;
+  }
+  return inner;
 }
 
 /* ── SectionCard — premium content panel: gradient surface, rounded corners,

@@ -203,10 +203,10 @@ export default function MyWorkPage() {
       {/* Stat strip — the day at a glance */}
       {!isLoading && !error && rows.length > 0 && (
         <StatStrip items={[
-          { label: 'Assigned Projects', value: String(rows.length), icon: <Briefcase size={11} weight="bold" /> },
-          { label: 'Due Today', value: String(dueToday), accent: dueToday > 0 ? '#FBBF24' : undefined, icon: <CalendarCheck size={11} weight="bold" />, sub: dueToday > 0 ? 'needs attention today' : 'nothing lands today' },
-          { label: 'Overdue', value: String(overdue), accent: overdue > 0 ? RED : undefined, icon: <ClockCountdown size={11} weight="bold" />, sub: overdue > 0 ? 'past their due date' : 'all caught up' },
-          { label: 'Awaiting My Approval', value: String(awaiting), accent: awaiting > 0 ? GOLD : undefined, icon: <Stamp size={11} weight="bold" />, sub: 'T&M tickets to sign off' },
+          {href: '/app/my-work',  label: 'Assigned Projects', value: String(rows.length), icon: <Briefcase size={11} weight="bold" /> },
+          {href: '/app/my-work',  label: 'Due Today', value: String(dueToday), accent: dueToday > 0 ? '#FBBF24' : undefined, icon: <CalendarCheck size={11} weight="bold" />, sub: dueToday > 0 ? 'needs attention today' : 'nothing lands today' },
+          {href: '/app/my-work',  label: 'Overdue', value: String(overdue), accent: overdue > 0 ? RED : undefined, icon: <ClockCountdown size={11} weight="bold" />, sub: overdue > 0 ? 'past their due date' : 'all caught up' },
+          {href: '/app/my-work',  label: 'Awaiting My Approval', value: String(awaiting), accent: awaiting > 0 ? GOLD : undefined, icon: <Stamp size={11} weight="bold" />, sub: 'T&M tickets to sign off' },
         ]} />
       )}
 

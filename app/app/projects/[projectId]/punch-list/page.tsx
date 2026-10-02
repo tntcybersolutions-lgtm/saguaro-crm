@@ -319,10 +319,10 @@ export default function PunchListPage(){
 
         {/* KPIs */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:22}}>
-          <StatCard icon={<FolderOpen size={19} weight="duotone" color={moduleAccent('punch').hex}/>} label="Open" value={String(openCount)} accent="#FBBF24" delay={0.02}/>
-          <StatCard icon={<CircleHalf size={19} weight="duotone" color={moduleAccent('punch').hex}/>} label="In Progress" value={String(inProg)} accent={GOLD} delay={0.06}/>
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN}/>} label="Completed" value={String(done)} accent={GREEN} delay={0.10}/>
-          <StatCard icon={<WarningCircle size={19} weight="duotone" color={crit>0?RED:'rgba(255,255,255,0.42)'}/>} label="Critical Open" value={String(crit)} accent={crit>0?RED:undefined} sub={crit>0?'Needs attention':undefined} delay={0.14}/>
+          <StatCard icon={<FolderOpen size={19} weight="duotone" color={moduleAccent('punch').hex}/>} label="Open" value={String(openCount)} accent="#FBBF24" delay={0.02} href={`/app/projects/${projectId}/punch-list`}/>
+          <StatCard icon={<CircleHalf size={19} weight="duotone" color={moduleAccent('punch').hex}/>} label="In Progress" value={String(inProg)} accent={GOLD} delay={0.06} href={`/app/projects/${projectId}/punch-list`}/>
+          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN}/>} label="Completed" value={String(done)} accent={GREEN} delay={0.10} href={`/app/projects/${projectId}/punch-list`}/>
+          <StatCard icon={<WarningCircle size={19} weight="duotone" color={crit>0?RED:'rgba(255,255,255,0.42)'}/>} label="Critical Open" value={String(crit)} accent={crit>0?RED:undefined} sub={crit>0?'Needs attention':undefined} delay={0.14} href={`/app/projects/${projectId}/punch-list`}/>
         </div>
 
         {/* Completion bar */}
@@ -492,9 +492,9 @@ export default function PunchListPage(){
                 {mode==='create'&&items.length>0&&(
                   <div style={{marginBottom:-20}}>
                     <StatStrip items={[
-                      {label:'Open',value:String(openCount),accent:'#FBBF24',sub:'on the list now'},
-                      {label:'Critical',value:String(crit),accent:crit>0?RED:undefined,sub:crit>0?'need attention':'none open'},
-                      {label:'Done',value:String(done),accent:GREEN,sub:`${pct}% complete`},
+                      {href: `/app/projects/${projectId}/punch-list`, label:'Open',value:String(openCount),accent:'#FBBF24',sub:'on the list now'},
+                      {href: `/app/projects/${projectId}/punch-list`, label:'Critical',value:String(crit),accent:crit>0?RED:undefined,sub:crit>0?'need attention':'none open'},
+                      {href: `/app/projects/${projectId}/punch-list`, label:'Done',value:String(done),accent:GREEN,sub:`${pct}% complete`},
                     ]}/>
                   </div>
                 )}

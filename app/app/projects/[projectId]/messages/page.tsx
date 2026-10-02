@@ -179,10 +179,10 @@ export default function MessagesPage() {
       {/* Thread intelligence strip */}
       {!loading && messages.length > 0 && (
         <StatStrip items={[
-          { label: 'Messages', value: String(messages.length), sub: `${todayCount} today` },
-          { label: 'Contributors', value: String(contributors.length), sub: contributors.slice(0, 2).join(', ') || 'no one yet' },
-          { label: 'Last Activity', value: lastMsg ? relativeTime(lastMsg.timestamp) || '—' : '—', sub: lastMsg ? `from ${lastMsg.sender}` : undefined },
-          { label: 'Project Roster', value: String(subCount + (ctx?.project?.ownerName ? 1 : 0)), sub: subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'}${ctx?.project?.ownerName ? ' + owner' : ''}` : 'build the directory to grow it' },
+          {href: `/app/projects/${projectId}/messages`,  label: 'Messages', value: String(messages.length), sub: `${todayCount} today` },
+          {href: `/app/projects/${projectId}/messages`,  label: 'Contributors', value: String(contributors.length), sub: contributors.slice(0, 2).join(', ') || 'no one yet' },
+          {href: `/app/projects/${projectId}/messages`,  label: 'Last Activity', value: lastMsg ? relativeTime(lastMsg.timestamp) || '—' : '—', sub: lastMsg ? `from ${lastMsg.sender}` : undefined },
+          {href: `/app/projects/${projectId}/messages`,  label: 'Project Roster', value: String(subCount + (ctx?.project?.ownerName ? 1 : 0)), sub: subCount > 0 ? `${subCount} sub${subCount === 1 ? '' : 's'}${ctx?.project?.ownerName ? ' + owner' : ''}` : 'build the directory to grow it' },
         ]} />
       )}
 

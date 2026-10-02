@@ -133,11 +133,11 @@ export default function ProjectsPage() {
         const totalContract = projects.reduce((s:number,p:any)=>s+(Number(p.contract_amount)||0),0);
         return (
           <StatStrip items={[
-            { label:'Projects', value:String(projects.length), sub:'in your portfolio' },
-            { label:'Active', value:String(active), accent:active>0?colors.green:undefined, sub:'under construction' },
-            { label:'Bidding', value:String(bidding), accent:bidding>0?GOLD:undefined, sub:'in pursuit' },
-            { label:'Complete / Closed', value:String(complete), sub:'delivered jobs' },
-            { label:'Portfolio Value', value:totalContract>0?fmt(totalContract):'—', accent:totalContract>0?GOLD:undefined, sub:'combined contracts' },
+            {href: '/app/projects',  label:'Projects', value:String(projects.length), sub:'in your portfolio' },
+            {href: '/app/projects',  label:'Active', value:String(active), accent:active>0?colors.green:undefined, sub:'under construction' },
+            {href: '/app/projects',  label:'Bidding', value:String(bidding), accent:bidding>0?GOLD:undefined, sub:'in pursuit' },
+            {href: '/app/projects',  label:'Complete / Closed', value:String(complete), sub:'delivered jobs' },
+            {href: '/app/projects',  label:'Portfolio Value', value:totalContract>0?fmt(totalContract):'—', accent:totalContract>0?GOLD:undefined, sub:'combined contracts' },
           ]} />
         );
       })()}

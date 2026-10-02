@@ -187,11 +187,11 @@ export default function NetworkDashboard() {
         {ctx && (
           <div style={{ maxWidth: 1020 }}>
             <StatStrip items={[
-              { label: 'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active') },
-              { label: 'Site Address', value: ctx.project?.address || '—', sub: 'the network documents against this site' },
-              { label: 'Subs On the Job', value: String((ctx.subs || []).length), sub: 'coordinate low-volt rough-in' },
-              { label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), sub: 'design questions in flight' },
-              { label: 'Schedule Tasks', value: String(Number(ctx.counts?.scheduleTasks) || 0), sub: Number(ctx.schedule?.criticalCount) ? `${ctx.schedule.criticalCount} critical` : 'plan cable pulls around them' },
+              {href: `/app/projects/${projectId}/network`,  label: 'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active') },
+              {href: `/app/projects/${projectId}/network`,  label: 'Site Address', value: ctx.project?.address || '—', sub: 'the network documents against this site' },
+              {href: `/app/projects/${projectId}/network`,  label: 'Subs On the Job', value: String((ctx.subs || []).length), sub: 'coordinate low-volt rough-in' },
+              {href: `/app/projects/${projectId}/network`,  label: 'Open RFIs', value: String(Number(ctx.counts?.openRfis) || 0), sub: 'design questions in flight' },
+              {href: `/app/projects/${projectId}/network`,  label: 'Schedule Tasks', value: String(Number(ctx.counts?.scheduleTasks) || 0), sub: Number(ctx.schedule?.criticalCount) ? `${ctx.schedule.criticalCount} critical` : 'plan cable pulls around them' },
             ]} />
           </div>
         )}
@@ -291,12 +291,12 @@ export default function NetworkDashboard() {
 
       {/* Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard icon={<Devices size={19} weight="duotone" color={BLUE} />} label="Total Devices" value={String(devices.length)} accent={BLUE} delay={0.02} />
-        <StatCard icon={<Circle size={19} weight="duotone" color={GREEN} />} label="Online" value={String(devices.filter(d => d.status === 'online').length)} accent={GREEN} sub={`of ${devices.length} total`} delay={0.06} />
-        <StatCard icon={<Shuffle size={19} weight="duotone" color="#8B5CF6" />} label="VLANs" value={String(vlans.length)} accent="#8B5CF6" delay={0.10} />
-        <StatCard icon={<Plug size={19} weight="duotone" color={GOLD} />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="tested" delay={0.14} />
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Pass Rate" value={cables.length > 0 ? `${Math.round((passedCables / Math.max(testedCables, 1)) * 100)}%` : 'N/A'} accent={GREEN} delay={0.18} />
-        <StatCard icon={<Warning size={19} weight="duotone" color={openAlerts > 0 ? RED : GREEN} />} label="Open Alerts" value={String(openAlerts)} accent={openAlerts > 0 ? RED : GREEN} delay={0.22} />
+        <StatCard icon={<Devices size={19} weight="duotone" color={BLUE} />} label="Total Devices" value={String(devices.length)} accent={BLUE} delay={0.02}  href={`/app/projects/${projectId}/network/devices`}/>
+        <StatCard icon={<Circle size={19} weight="duotone" color={GREEN} />} label="Online" value={String(devices.filter(d => d.status === 'online').length)} accent={GREEN} sub={`of ${devices.length} total`} delay={0.06}  href={`/app/projects/${projectId}/network`}/>
+        <StatCard icon={<Shuffle size={19} weight="duotone" color="#8B5CF6" />} label="VLANs" value={String(vlans.length)} accent="#8B5CF6" delay={0.10}  href={`/app/projects/${projectId}/network/vlans`}/>
+        <StatCard icon={<Plug size={19} weight="duotone" color={GOLD} />} label="Cable Runs" value={`${testedCables}/${cables.length}`} accent={GOLD} sub="tested" delay={0.14}  href={`/app/projects/${projectId}/network/cables`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Pass Rate" value={cables.length > 0 ? `${Math.round((passedCables / Math.max(testedCables, 1)) * 100)}%` : 'N/A'} accent={GREEN} delay={0.18}  href={`/app/projects/${projectId}/network`}/>
+        <StatCard icon={<Warning size={19} weight="duotone" color={openAlerts > 0 ? RED : GREEN} />} label="Open Alerts" value={String(openAlerts)} accent={openAlerts > 0 ? RED : GREEN} delay={0.22}  href={`/app/projects/${projectId}/network`}/>
       </div>
 
       {/* Quick Actions + modules, with a live readiness rail */}

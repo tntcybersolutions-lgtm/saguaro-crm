@@ -390,11 +390,11 @@ export default function PurchaseOrdersPage() {
       {/* What the system already knows: the budget these POs commit against */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
-          { label: 'Committed', value: fmt(bCommitted), sub: 'POs + subcontracts' },
-          { label: 'Actual to Date', value: fmt(bActual), sub: 'bills + invoices posted' },
-          { label: 'Uncommitted', value: fmt(bUncommitted), accent: bUncommitted < 0 ? T.red : T.green, sub: 'original less committed' },
-          { label: 'Next PO', value: nextPoStr, sub: 'numbered automatically' },
+          {href: `/app/projects/${projectId}/budget`,  label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
+          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Committed', value: fmt(bCommitted), sub: 'POs + subcontracts' },
+          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Actual to Date', value: fmt(bActual), sub: 'bills + invoices posted' },
+          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Uncommitted', value: fmt(bUncommitted), accent: bUncommitted < 0 ? T.red : T.green, sub: 'original less committed' },
+          {href: `/app/projects/${projectId}/purchase-orders`,  label: 'Next PO', value: nextPoStr, sub: 'numbered automatically' },
         ]} />
       )}
 
@@ -403,19 +403,19 @@ export default function PurchaseOrdersPage() {
         <StatCard
           icon={<CurrencyDollar size={19} weight="duotone" color="#F59E0B" />}
           label="Total PO Value" value={`$${totalValue.toLocaleString()}`} accent="#F59E0B" delay={0.02}
-        />
+         href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
           icon={<PencilSimple size={19} weight="duotone" color="#F59E0B" />}
           label="Draft" value={String(draftCount)} delay={0.06}
-        />
+         href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
           icon={<Export size={19} weight="duotone" color="#F0A63C" />}
           label="Sent" value={String(sentCount)} accent={sentCount > 0 ? '#F0A63C' : undefined} delay={0.10}
-        />
+         href={`/app/projects/${projectId}/purchase-orders`}/>
         <StatCard
           icon={<Package size={19} weight="duotone" color="#45B37D" />}
           label="Received" value={String(receivedCount)} accent={receivedCount > 0 ? '#45B37D' : undefined} delay={0.14}
-        />
+         href={`/app/projects/${projectId}/purchase-orders`}/>
       </div>
 
       {successMsg && (
