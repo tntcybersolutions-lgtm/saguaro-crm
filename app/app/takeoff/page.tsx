@@ -6,7 +6,7 @@ import {
   Badge, Btn, Table, ProgressBar, T,
 } from '@/components/ui/shell';
 import {
-  PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty,
+  PremiumSurface, ModuleHero, SectionCard, StatCard, StatStrip, PremiumEmpty,
 } from '@/components/ui/premium';
 import {
   Clipboard, Target, CurrencyDollar, Lightning, Buildings, Ruler, Stack,
@@ -543,12 +543,14 @@ export default function TakeoffPage() {
           ))}
         </div>
 
-        {/* Stats row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-          <StatCard icon={<Clipboard size={19} weight="duotone" color={GOLD} />} label="This Month" value={String(thisMonthComplete.length)} sub="completed takeoffs" delay={0.02}  href="/app/takeoff"/>
-          <StatCard icon={<Target size={19} weight="duotone" color={GOLD} />} label="Avg Confidence" value={completed.length ? `${avgConfidence}%` : '—'} sub="across all analyses" delay={0.06}  href="/app/takeoff"/>
-          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Total Bid Value" value={completed.length ? totalBidStr : '—'} sub="sum of complete takeoffs" delay={0.10}  href="/app/takeoff"/>
-          <StatCard icon={<Lightning size={19} weight="duotone" color={GOLD} />} label="Avg Processing" value={processingSecs.length ? `~${fmtSecs(avgProcessingSecs)}` : '—'} sub="per blueprint analysis" delay={0.14}  href="/app/takeoff"/>
+        {/* KPIs — one tight row, not four fat cards (declutter) */}
+        <div style={{ marginBottom: 28 }}>
+          <StatStrip items={[
+            { label: 'This Month', value: String(thisMonthComplete.length), sub: 'completed takeoffs', icon: <Clipboard size={12} color={GOLD} /> },
+            { label: 'Avg Confidence', value: completed.length ? `${avgConfidence}%` : '—', sub: 'across all analyses', icon: <Target size={12} color={GOLD} /> },
+            { label: 'Total Bid Value', value: completed.length ? totalBidStr : '—', sub: 'sum of complete takeoffs', icon: <CurrencyDollar size={12} color={GOLD} /> },
+            { label: 'Avg Processing', value: processingSecs.length ? `~${fmtSecs(avgProcessingSecs)}` : '—', sub: 'per blueprint analysis', icon: <Lightning size={12} color={GOLD} /> },
+          ]} />
         </div>
 
         {/* Main 2-col layout */}

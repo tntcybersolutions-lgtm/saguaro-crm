@@ -355,12 +355,12 @@ export function StatCard({
         background: ring
           ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 16%, transparent), color-mix(in srgb, ${ring} 5%, transparent)), ${SURFACE}`
           : SURFACE,
-        border: `1px solid ${ring || BORDER}`, borderRadius: 16,
-        padding: '14px 16px',
-        // milled plate: drop + top light + full-perimeter inset ring (mobile cardShadow)
+        border: `1px solid ${ring || BORDER}`, borderRadius: 12,
+        padding: '11px 14px',
+        // compact plate — tight, not fat (Procore/JobTread density)
         boxShadow: ring
-          ? `0 0 0 1px ${ring}, 0 10px 30px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
-          : `0 14px 34px -24px ${A30}, inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03)`,
+          ? `0 0 0 1px ${ring}, 0 8px 20px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
+          : `0 8px 20px -18px ${A30}, inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 0 1px rgba(255,255,255,0.03)`,
         cursor: interactive ? 'pointer' : 'default',
         animation: `pmRise .5s ease ${delay.toFixed(2)}s both`,
         height: '100%',
@@ -374,12 +374,12 @@ export function StatCard({
       )}
       {/* left accent bar */}
       <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${numberColor}, transparent)`, opacity: 0.85 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-        <IconChip size={34}>{icon}</IconChip>
-        <span style={{ fontSize: 11, color: MUTED, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <IconChip size={26}>{icon}</IconChip>
+        <span style={{ fontSize: 10.5, color: MUTED, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase' }}>{label}</span>
       </div>
-      <div style={{ fontSize: 26, fontWeight: 800, color: numberColor, letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {sub != null && <div style={{ fontSize: 12.5, color: FAINT, marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: 20, fontWeight: 800, color: numberColor, letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      {sub != null && <div style={{ fontSize: 11.5, color: FAINT, marginTop: 2 }}>{sub}</div>}
     </div>
   );
   if (href) {
