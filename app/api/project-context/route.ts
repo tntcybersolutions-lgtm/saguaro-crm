@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     safe(db.from('submittals').select('id, status').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('schedule_tasks').select('id, name, start_date, end_date, status, is_critical, pct_complete, trade').eq('project_id', projectId).eq('tenant_id', t).order('start_date').limit(200)),
     safe(db.from('daily_logs').select('log_date').eq('project_id', projectId).eq('tenant_id', t).order('log_date', { ascending: false }).limit(60)),
-    safe(db.from('takeoffs').select('id, status, total_cost, page_count').eq('project_id', projectId).eq('tenant_id', t).order('created_at', { ascending: false }).limit(5)),
+    safe(db.from('takeoffs').select('id, status, total_cost, contingency_pct, page_count').eq('project_id', projectId).eq('tenant_id', t).order('created_at', { ascending: false }).limit(5)),
     safe(db.from('contacts').select('id').eq('project_id', projectId).eq('tenant_id', t)),
     /* COUNT THE PUNCH LIST, DO NOT ASK THE PROJECT ROW.
        openPunch used to read projects.open_punch_count, a denormalised
@@ -170,17 +170,20 @@ export async function GET(req: NextRequest) {
     /* Has the plan set been priced? The journey step that produces the budget
        and the bid packages needs to know, and nothing else was reporting it. */
     takeoff: (() => {
-      const rows = ((takeoffsQ as any)?.data ?? []) as Array<{ id: string; status: string; total_cost: unknown; page_count: unknown }>;
+      const rows = ((takeoffsQ as any)?.data ?? []) as Array<{ id: string; status: string; total_cost: unknown; contingency_pct: unknown; page_count: unknown }>;
       const done = rows.find((r) => r.status === 'complete') ?? null;
       const pricedTotal = N(done?.total_cost);
-      /* The SELL number the takeoff screen headlines ("$X sell"): job cost
-         through the shared engine markup stack at the takeoff screen's
-         default sliders (overhead 10 / contingency 10 / profit 10, the
-         other four 0 — app/app/projects/[projectId]/takeoff/page.tsx). The
-         sliders are not persisted, so these defaults are what every user
-         sees there; using them keeps the proposal seed equal to that figure. */
-      const sellCents = pricedTotal > 0
-        ? applyMarkupStack({ materialCents: Math.round(pricedTotal * 100), laborCents: 0 }, { overheadPct: 10, profitPct: 10, contingencyPct: 10 }).sellCents
+      /* The BID PRICE the takeoff screen headlines, computed the same way that
+         screen does (app/app/projects/[projectId]/takeoff/page.tsx computedCosts):
+         direct cost (material + labor) through the shared engine stack at the
+         screen's defaults — overhead 10, profit 10, the analyzer's own
+         contingency (clamped 0–25), everything else 0. The analyzer stores
+         total_cost = direct × (1 + contingency), so direct is recovered from it;
+         marking up total_cost itself would charge contingency twice. */
+      const contPct = Math.min(25, Math.max(0, Math.round(N(done?.contingency_pct) || 10)));
+      const directCost = pricedTotal > 0 ? pricedTotal / (1 + contPct / 100) : 0;
+      const sellCents = directCost > 0
+        ? applyMarkupStack({ materialCents: Math.round(directCost * 100), laborCents: 0 }, { overheadPct: 10, profitPct: 10, contingencyPct: contPct }).sellCents
         : 0;
       return {
         count: rows.length,
