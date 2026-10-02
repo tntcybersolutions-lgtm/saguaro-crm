@@ -121,7 +121,7 @@ export default function InvoicingPage() {
 
   // Project intelligence — once a project is picked, the form walks in knowing it.
   const { ctx } = useProjectContext(form.project_id || null);
-  const [auto, setAuto] = useState<{ num?: boolean; due?: boolean }>({});
+  const [auto, setAuto] = useState<{ num?: boolean; due?: boolean; billto?: boolean; email?: boolean }>({});
   useEffect(() => {
     if (!form.project_id) setAuto({});
   }, [form.project_id]);
@@ -130,14 +130,24 @@ export default function InvoicingPage() {
     const n = Number(ctx.defaults?.nextInvoiceNumber) || 1;
     const due = new Date(Date.now() + 30 * 86400000);
     const dueIso = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, '0')}-${String(due.getDate()).padStart(2, '0')}`;
+    // "Enter once": pick a project and the invoice's Bill-To (the owner of
+    // record) and its email fill in from the project, like the project-level
+    // invoice form already does. Only seeds empty fields, so anything typed
+    // wins and this never clobbers an edit.
+    const ownerName = (ctx.defaults?.ownerName as string) || '';
+    const ownerEmail = (ctx.defaults?.ownerEmail as string) || '';
     setForm(f => {
       const seedNum = !f.invoice_number;
       const seedDue = !f.due_date;
-      setAuto(a => ({ num: a.num || seedNum, due: a.due || seedDue }));
+      const seedBillto = !f.vendor_name && !!ownerName;
+      const seedEmail = !f.vendor_email && !!ownerEmail;
+      setAuto(a => ({ num: a.num || seedNum, due: a.due || seedDue, billto: a.billto || seedBillto, email: a.email || seedEmail }));
       return {
         ...f,
         invoice_number: f.invoice_number || `INV-${String(n).padStart(3, '0')}`,
         due_date: f.due_date || dueIso,
+        vendor_name: f.vendor_name || ownerName,
+        vendor_email: f.vendor_email || ownerEmail,
       };
     });
   }, [ctx]);
