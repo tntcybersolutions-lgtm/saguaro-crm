@@ -561,15 +561,19 @@ tbody td { border-bottom: 1px solid rgba(255,255,255,0.12) !important; }
   color: transparent;
 }
 
-/* FIX: light-theme flip left inputs at color:#F5F5F7 (white) on a white field =
-   invisible typing in every form. Force dark text on a solid white field. */
+/* Form fields sit on a RAISED surface (#26262B), not one shade off the page
+   (#141416) — the old value barely separated a field from the #0a0a0a
+   background, which read as "floaty / hard to see". A lighter solid face with
+   bright text makes every input, textarea and select clearly a field. One
+   authoritative rule so the whole app's forms are uniform. (Pure colour — no
+   padding/size here, so checkboxes, radios and inline inputs are untouched.) */
 input, textarea, select {
-  background-color: #141416 !important;
+  background-color: #26262B !important;
   color: #FFFFFF !important;
   -webkit-text-fill-color: #FFFFFF !important;
-  caret-color: #FFFFFF;
+  caret-color: #FBBF24;
 }
-input::placeholder, textarea::placeholder { color: #CBD5E1 !important; opacity: 1; }
+input::placeholder, textarea::placeholder { color: #AEBBCE !important; opacity: 1; }
 /* FIX: Chrome/Safari autofill paints its OWN light background that background-color
    can't override — only an inset box-shadow can. Without this, autofilled email/
    password text is white-on-light = invisible (reported on the client portal). */
@@ -579,8 +583,8 @@ input:-webkit-autofill:focus,
 input:-webkit-autofill:active,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 1000px #141416 inset !important;
-  box-shadow: 0 0 0 1000px #141416 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #26262B inset !important;
+  box-shadow: 0 0 0 1000px #26262B inset !important;
   -webkit-text-fill-color: #FFFFFF !important;
   caret-color: #FFFFFF !important;
   transition: background-color 600000s 0s, color 600000s 0s;
@@ -606,9 +610,9 @@ input:autofill:focus,
 input:autofill:active,
 textarea:autofill,
 select:autofill {
-  background-color: #141416 !important;
+  background-color: #26262B !important;
   background-image: none !important;
-  box-shadow: 0 0 0 1000px #141416 inset !important;
+  box-shadow: 0 0 0 1000px #26262B inset !important;
   color: #FFFFFF !important;
   -webkit-text-fill-color: #FFFFFF !important;
   caret-color: #FFFFFF !important;
@@ -684,8 +688,8 @@ input:focus, textarea:focus, select:focus {
 }
 /* keep the autofill fix's inset shadow winning on autofilled fields */
 input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #141416 inset, 0 0 0 3px var(--brand-primary-12) !important;
-  box-shadow: 0 0 0 1000px #141416 inset, 0 0 0 3px var(--brand-primary-12) !important;
+  -webkit-box-shadow: 0 0 0 1000px #26262B inset, 0 0 0 3px var(--brand-primary-12) !important;
+  box-shadow: 0 0 0 1000px #26262B inset, 0 0 0 3px var(--brand-primary-12) !important;
 }
 
 /* Scrollbars: thin white-alpha pill thumb; track disappears into the page. */
