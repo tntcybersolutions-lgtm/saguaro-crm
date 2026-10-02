@@ -89,8 +89,8 @@ const overlayS: React.CSSProperties = {
   paddingTop: 60, overflowY: 'auto',
 };
 const modalS: React.CSSProperties = {
-  background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 28,
-  width: '100%', maxWidth: 620, color: TEXT, position: 'relative', marginBottom: 60,
+  background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 32,
+  width: '100%', maxWidth: 'min(1040px, 94vw)', color: TEXT, position: 'relative', marginBottom: 60,
 };
 const selectS: React.CSSProperties = { ...inputS, cursor: 'pointer', appearance: 'auto' as any };
 
