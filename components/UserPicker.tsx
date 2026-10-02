@@ -3,43 +3,39 @@
 import React, { useEffect, useState } from 'react';
 
 /**
- * UserPicker — a dropdown of the tenant's real team members.
+ * UserPicker — "assign to anyone": the tenant's team members AND its
+ * subcontractors / vendors, in one dropdown.
  *
- * Populated from GET /api/team/users (the same roster the Roles & Permissions
- * admin page uses), so every option is an actual member of the workspace. Used
- * on the Customers profile to choose who a customer's project is assigned to.
+ * Team members come from GET /api/team/users (the Roles & Permissions roster);
+ * subs/vendors from GET /api/subs/list. The value is a COMPOSITE string so the
+ * caller knows which kind was chosen:
+ *   ''            — unassigned
+ *   'user:<id>'   — a team member
+ *   'sub:<id>'    — a subcontractor / vendor
+ * Used on the Customers profile to assign a customer's project to whoever owns
+ * the work — a PM, or the sub actually doing it.
  */
 
-export type TeamUser = {
-  id: string;
-  name: string;
-  email: string;
-  role: string | null;
-  title: string | null;
-};
+export type TeamUser = { id: string; name: string; email: string; role: string | null; title: string | null };
+type SubRow = { id: string; name: string; trade: string | null };
 
 type Props = {
   value: string;
-  onChange: (userId: string) => void;
+  onChange: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
-  /** Label for the empty option. */
   unassignedLabel?: string;
 };
-
-const BORDER = 'rgba(255,255,255,0.12)';
-const GOLD = '#F59E0B';
-const CARD = '#141416';
-const DIM = '#CBD5E1';
 
 export default function UserPicker({
   value,
   onChange,
   disabled = false,
-  placeholder = 'Loading team…',
+  placeholder = 'Loading…',
   unassignedLabel = 'Unassigned',
 }: Props) {
   const [users, setUsers] = useState<TeamUser[]>([]);
+  const [subs, setSubs] = useState<SubRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -49,74 +45,76 @@ export default function UserPicker({
       setLoading(true);
       setError(false);
       try {
-        const res = await fetch('/api/team/users');
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        const data = await res.json();
+        const [uRes, sRes] = await Promise.all([
+          fetch('/api/team/users').catch(() => null),
+          fetch('/api/subs/list').catch(() => null),
+        ]);
         if (!active) return;
-        const list: TeamUser[] = Array.isArray(data?.users)
-          ? data.users.map((u: Record<string, unknown>) => ({
+
+        const uData = uRes && uRes.ok ? await uRes.json().catch(() => ({})) : {};
+        const list: TeamUser[] = Array.isArray(uData?.users)
+          ? uData.users.map((u: Record<string, unknown>) => ({
               id: String(u.id ?? ''),
               name: String(u.name ?? u.email ?? 'Unknown'),
               email: String(u.email ?? ''),
               role: u.role != null ? String(u.role) : null,
               title: u.title != null ? String(u.title) : null,
-            }))
+            })).filter((u: TeamUser) => u.id)
           : [];
-        setUsers(list.filter((u) => u.id));
+
+        const sData = sRes && sRes.ok ? await sRes.json().catch(() => ({})) : {};
+        const subList: SubRow[] = Array.isArray(sData?.subs)
+          ? sData.subs.map((s: Record<string, unknown>) => ({
+              id: String(s.id ?? ''),
+              name: String(s.company_name ?? s.name ?? 'Unnamed sub'),
+              trade: s.trade != null ? String(s.trade) : null,
+            })).filter((s: SubRow) => s.id)
+          : [];
+
+        if (!active) return;
+        setUsers(list);
+        setSubs(subList);
+        if (list.length === 0 && subList.length === 0 && !(uRes?.ok)) setError(true);
       } catch {
-        if (active) {
-          setError(true);
-          setUsers([]);
-        }
+        if (active) { setError(true); setUsers([]); setSubs([]); }
       } finally {
         if (active) setLoading(false);
       }
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
-  const isDisabled = disabled || loading || error;
+  const isDisabled = disabled || loading;
 
   return (
     <select
-      aria-label="Assign to team member"
+      aria-label="Assign to a team member, subcontractor or vendor"
       value={value}
       disabled={isDisabled}
       onChange={(e) => onChange(e.target.value)}
-      style={{
-        width: '100%',
-        padding: '10px 12px',
-        borderRadius: 10,
-        border: `1px solid ${BORDER}`,
-        background: CARD,
-        color: value ? '#FFFFFF' : DIM,
-        fontSize: 13,
-        fontWeight: 600,
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        opacity: isDisabled ? 0.6 : 1,
-        outline: 'none',
-        appearance: 'none',
-        WebkitAppearance: 'none',
-        MozAppearance: 'none',
-        backgroundImage:
-          "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' stroke='%23F59E0B' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>\")",
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'right 12px center',
-      }}
-      onFocus={(e) => (e.currentTarget.style.borderColor = GOLD)}
-      onBlur={(e) => (e.currentTarget.style.borderColor = BORDER)}
+      style={{ width: '100%' }}
     >
       <option value="">
-        {error ? 'Could not load team' : loading ? placeholder : unassignedLabel}
+        {error ? 'Could not load people' : loading ? placeholder : unassignedLabel}
       </option>
-      {users.map((u) => (
-        <option key={u.id} value={u.id} style={{ background: CARD, color: '#FFFFFF' }}>
-          {u.name}
-          {u.role ? ` — ${u.role}` : u.title ? ` — ${u.title}` : ''}
-        </option>
-      ))}
+      {users.length > 0 && (
+        <optgroup label="Team">
+          {users.map((u) => (
+            <option key={`user:${u.id}`} value={`user:${u.id}`}>
+              {u.name}{u.role ? ` — ${u.role}` : u.title ? ` — ${u.title}` : ''}
+            </option>
+          ))}
+        </optgroup>
+      )}
+      {subs.length > 0 && (
+        <optgroup label="Subcontractors & Vendors">
+          {subs.map((s) => (
+            <option key={`sub:${s.id}`} value={`sub:${s.id}`}>
+              {s.name}{s.trade ? ` — ${s.trade}` : ''}
+            </option>
+          ))}
+        </optgroup>
+      )}
     </select>
   );
 }

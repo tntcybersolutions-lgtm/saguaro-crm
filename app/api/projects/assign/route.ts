@@ -60,6 +60,10 @@ export async function POST(req: NextRequest) {
 
     const rawAssignee = String(body.assigneeUserId ?? body.assignee_user_id ?? '').trim();
     const assigneeUserId = UUID_RE.test(rawAssignee) ? rawAssignee : null;
+    // "Fully assignable": the job can instead be assigned to a subcontractor /
+    // vendor, linked through project_subcontractors (FK → subcontractors).
+    const rawSub = String(body.assigneeSubId ?? body.assignee_sub_id ?? '').trim();
+    const assigneeSubId = UUID_RE.test(rawSub) ? rawSub : null;
 
     // Customer must live in THIS tenant — this is also the tenant-isolation
     // check for the create path (no projectId exists yet to pass to the guard).
@@ -288,6 +292,56 @@ export async function POST(req: NextRequest) {
         entityId: projectId,
         description: `Assigned ${assigneeName ?? 'a team member'} to ${(project as { name: string }).name}`,
         metadata: { assigneeUserId },
+      });
+    }
+
+    /* ── Assign a subcontractor / vendor (optional) ─────────────────────── */
+    if (assigneeSubId) {
+      const { data: sub, error: subErr } = await anyDb
+        .from('subcontractors')
+        .select('id, company_name')
+        .eq('id', assigneeSubId)
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      if (subErr) throw subErr;
+      if (!sub) {
+        return NextResponse.json(
+          { error: 'Selected subcontractor is not in this workspace' },
+          { status: 400 },
+        );
+      }
+      assigneeName = (sub as { company_name?: string }).company_name || 'Subcontractor';
+
+      // Idempotent link — reuse an existing row rather than duplicate it.
+      const { data: existingLink } = await anyDb
+        .from('project_subcontractors')
+        .select('id')
+        .eq('tenant_id', tenantId)
+        .eq('project_id', projectId)
+        .eq('subcontractor_id', assigneeSubId)
+        .maybeSingle();
+
+      if (!existingLink) {
+        const { error: linkErr } = await anyDb.from('project_subcontractors').insert({
+          tenant_id: tenantId,
+          project_id: projectId,
+          subcontractor_id: assigneeSubId,
+          status: 'assigned',
+        } as never);
+        if (linkErr) throw linkErr;
+      }
+      assigned = true;
+
+      void logActivity({
+        tenantId,
+        projectId,
+        userId: user.id,
+        userName: user.email,
+        action: 'assigned',
+        entityType: 'project',
+        entityId: projectId,
+        description: `Assigned ${assigneeName} to ${(project as { name: string }).name}`,
+        metadata: { assigneeSubId },
       });
     }
 

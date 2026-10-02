@@ -50,7 +50,8 @@ export default function CustomersPage() {
   const [error, setError] = useState(false);
   const [assigning, setAssigning] = useState(false);
   // Team member chosen in the Actions panel to own the new/linked project.
-  const [assigneeUserId, setAssigneeUserId] = useState('');
+  // Composite: '' | 'user:<id>' | 'sub:<id>' — the picker spans team + subs.
+  const [assignee, setAssignee] = useState('');
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
@@ -84,7 +85,7 @@ export default function CustomersPage() {
   // Clear the chosen assignee when the open profile changes — the picker
   // belongs to the customer currently in view, not the last one.
   useEffect(() => {
-    setAssigneeUserId('');
+    setAssignee('');
   }, [selected?.id]);
 
   const filtered = useMemo(() => {
@@ -197,7 +198,11 @@ export default function CustomersPage() {
         body: JSON.stringify({
           customerId: c.id,
           name: `${c.name} Project`,
-          assigneeUserId: assigneeUserId || undefined,
+          ...(assignee.startsWith('user:')
+            ? { assigneeUserId: assignee.slice(5) }
+            : assignee.startsWith('sub:')
+            ? { assigneeSubId: assignee.slice(4) }
+            : {}),
         }),
       });
       const data = await res.json().catch(() => ({} as any));
@@ -219,7 +224,7 @@ export default function CustomersPage() {
     } finally {
       setAssigning(false);
     }
-  }, [assigning, assigneeUserId, load, revalidateProjects, router, showToast]);
+  }, [assigning, assignee, load, revalidateProjects, router, showToast]);
 
   /* ─── Detail View ─── */
   if (selected) {
@@ -317,8 +322,8 @@ export default function CustomersPage() {
                     Assign to team member
                   </label>
                   <UserPicker
-                    value={assigneeUserId}
-                    onChange={setAssigneeUserId}
+                    value={assignee}
+                    onChange={setAssignee}
                     disabled={assigning}
                     unassignedLabel="Unassigned (link only)"
                   />
