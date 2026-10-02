@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requirePermission } from '@/lib/permissions';
+import { applyMarkupStack } from '@/lib/takeoff/engine';
 
 /**
  * GET ?projectId= — the project intelligence snapshot every add/create screen
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
 
   const [
     projectQ, contractsQ, cosQ, payAppsQ, budgetQ, subsQ, packagesQ,
-    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ,
+    invoicesQ, billsQ, posQ, rfisQ, submittalsQ, tasksQ, logQ, takeoffsQ, contactsQ, punchQ, proposalsQ,
   ] = await Promise.all([
     safe(db.from('projects').select('id, name, status, address, project_number, owner_name, owner_email, architect_name, start_date, end_date, percent_complete, contract_amount, original_contract_amount, retainage_pct, phase, setup_step, setup_complete').eq('id', projectId).eq('tenant_id', t).single()),
     safe(db.from('contracts').select('id, contract_type, title, party_name, vendor_name, amount, contract_amount, original_amount, approved_changes, invoiced_amount, paid_amount, status, retainage_pct, trade').eq('project_id', projectId).eq('tenant_id', t)),
@@ -65,6 +66,11 @@ export async function GET(req: NextRequest) {
     safe(db.from('punch_list').select('id', { count: 'exact', head: true })
       .eq('project_id', projectId).eq('tenant_id', t)
       .not('status', 'in', '(completed,voided)')),
+    /* Proposal versions — an ACCEPTED version is the contract. Projects
+       accepted before /api/proposals/[id]/status started writing the project's
+       contract columns still carry $0 there, so originalContract falls back to
+       the accepted amount instead of reading $0 next to an accepted $2.4M. */
+    safe(db.from('proposals').select('id, proposal_number, status, amount, total_amount, created_at').eq('project_id', projectId).eq('tenant_id', t).order('created_at', { ascending: true })),
   ]);
 
   const p = (projectQ as any)?.data ?? null;
@@ -103,10 +109,15 @@ export async function GET(req: NextRequest) {
 
   // ── Contract money: original + approved COs = revised ──
   const prime = contracts.find((c) => c.contract_type === 'prime') ?? null;
+  const proposals = ((proposalsQ as any)?.data ?? []) as Array<{ id: string; proposal_number: string | null; status: string | null; amount: unknown; total_amount: unknown }>;
+  const propAmount = (r: { amount: unknown; total_amount: unknown }) => N(r.amount) || N(r.total_amount);
+  const acceptedProposal = [...proposals].reverse().find((r) => String(r.status || '').toLowerCase() === 'accepted') ?? null;
+  const latestProposal = proposals.length ? proposals[proposals.length - 1] : null;
   const originalContract =
     N(p.original_contract_amount) ||
     (prime ? N(prime.original_amount) || N(prime.contract_amount) || N(prime.amount) : 0) ||
-    N(p.contract_amount);
+    N(p.contract_amount) ||
+    (acceptedProposal ? propAmount(acceptedProposal) : 0);
   const approvedCos = cos.filter((c) => c.status === 'approved');
   const coAmount = (c: any) => N(c.cost_impact) || N(c.amount);
   const approvedCoTotal = approvedCos.reduce((s, c) => s + coAmount(c), 0);
@@ -161,14 +172,32 @@ export async function GET(req: NextRequest) {
     takeoff: (() => {
       const rows = ((takeoffsQ as any)?.data ?? []) as Array<{ id: string; status: string; total_cost: unknown; page_count: unknown }>;
       const done = rows.find((r) => r.status === 'complete') ?? null;
+      const pricedTotal = N(done?.total_cost);
+      /* The SELL number the takeoff screen headlines ("$X sell"): job cost
+         through the shared engine markup stack at the takeoff screen's
+         default sliders (overhead 10 / contingency 10 / profit 10, the
+         other four 0 — app/app/projects/[projectId]/takeoff/page.tsx). The
+         sliders are not persisted, so these defaults are what every user
+         sees there; using them keeps the proposal seed equal to that figure. */
+      const sellCents = pricedTotal > 0
+        ? applyMarkupStack({ materialCents: Math.round(pricedTotal * 100), laborCents: 0 }, { overheadPct: 10, profitPct: 10, contingencyPct: 10 }).sellCents
+        : 0;
       return {
         count: rows.length,
         completed: Boolean(done),
         latestId: done?.id ?? rows[0]?.id ?? null,
-        pricedTotal: N(done?.total_cost),
+        pricedTotal,
+        // Whole dollars — the takeoff screen shows it rounded, and it seeds a proposal amount.
+        sellTotal: Math.round(sellCents / 100),
         sheets: N(done?.page_count),
       };
     })(),
+    /* Proposal versions at a glance — what the proposal screen seeds from. */
+    proposal: {
+      count: proposals.length,
+      accepted: acceptedProposal ? { id: acceptedProposal.id, version: acceptedProposal.proposal_number, amount: propAmount(acceptedProposal) } : null,
+      latest: latestProposal ? { id: latestProposal.id, version: latestProposal.proposal_number, status: latestProposal.status, amount: propAmount(latestProposal) } : null,
+    },
     budget: {
       original: budget.reduce((s, b) => s + N(b.original_budget), 0),
       committed: budget.reduce((s, b) => s + N(b.committed), 0),

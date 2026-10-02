@@ -29,9 +29,20 @@ const STATUS_MAP: Record<string, { bg: string; color: string }> = {
   Accepted: { bg: 'rgba(61,214,140,.2)', color: GREEN },
   Superseded: { bg: 'rgba(143,163,192,.2)', color: DIM },
   Rejected: { bg: 'rgba(239,68,68,.2)', color: RED },
+  Declined: { bg: 'rgba(239,68,68,.2)', color: RED },
 };
 
 const EMPTY_FORM = { amount: 0, notes: '' };
+
+/* Statuses are stored in mixed case — the create route writes 'Draft', the
+   send route 'sent', the status route 'accepted' / 'declined' / 'superseded'.
+   Compare on the lowercase key and DISPLAY a title-case label, so the table
+   never reads "Draft" beside "accepted" and an accepted version is always
+   recognised as accepted. Stored values are left untouched. */
+const statusKey = (s: string | null | undefined) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
+const statusLabel = (s: string | null | undefined) =>
+  statusKey(s).split('_').filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || '—';
+const statusStyle = (s: string | null | undefined) => STATUS_MAP[statusLabel(s).replace(/ /g, '_')] || { bg: 'rgba(143,163,192,.2)', color: DIM };
 
 // The API returns raw `proposals` rows (proposal_number / created_at /
 // description) that don't match this page's display fields (version /
@@ -77,7 +88,7 @@ export default function ProposalPage() {
   // Win/Loss capture: after flipping accept/decline we open the universal outcome modal.
   const [outcomeModal, setOutcomeModal] = useState<{ proposalId: string; defaultOutcome: 'won' | 'lost'; ourAmount: number } | null>(null);
   // Project intelligence — the proposal screen walks in knowing the contract money.
-  const { ctx } = useProjectContext(projectId);
+  const { ctx, revalidate: revalidateCtx } = useProjectContext(projectId);
   const [auto, setAuto] = useState<{ amt?: boolean }>({});
 
   const fetchProposals = useCallback(async () => {
@@ -103,23 +114,38 @@ export default function ProposalPage() {
       .catch(() => {});
   }, [projectId]);
 
-  const accepted = proposals.find(p => p.status === 'Accepted');
+  // The newest accepted version is the contract (the status route supersedes older ones).
+  const accepted = [...proposals].reverse().find(p => statusKey(p.status) === 'accepted') ?? null;
+  const acceptedAmount = Number(accepted?.amount) || 0;
   const latestVersion = proposals.length ? `v${proposals.length + 1}.0` : 'v1.0';
 
   // Contract intelligence (from /api/project-context). DB numerics may be strings.
   const fmt = (n: number) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
   const money = ctx?.money;
-  const original = Number(money?.originalContract) || 0;
+  // An accepted version IS the contract: if the project's contract columns are
+  // still $0 (accepted before the status route wrote them), show the accepted amount.
+  const original = Number(money?.originalContract) || acceptedAmount;
   const coTotal = Number(money?.approvedCoTotal) || 0;
-  const revised = Number(money?.revisedContract) || (original + coTotal);
+  const revised = (Number(money?.revisedContract) || 0) > 0 ? Number(money?.revisedContract) : (original > 0 ? original + coTotal : 0);
   const lastProposal = proposals.length ? proposals[proposals.length - 1] : null;
+  // The completed AI takeoff's SELL total (job cost through the markup stack),
+  // from /api/project-context — the number a first proposal is built on.
+  const takeoffSell = Number(ctx?.takeoff?.sellTotal) || 0;
 
-  // Prefill the new version from what the system already knows: the prior
-  // version's amount, else the live contract sum to date.
+  /* Prefill the new version from the best number the system already has, in
+     order: the accepted version, the prior version, the contract sum to date,
+     the completed takeoff's sell total. `seed.source` names where it came from. */
+  const seedOptions: Array<{ amount: number; source: string }> = [
+    { amount: acceptedAmount, source: accepted ? `accepted ${accepted.version}` : '' },
+    { amount: Number(lastProposal?.amount) || 0, source: lastProposal ? `${lastProposal.version} (${statusLabel(lastProposal.status)})` : '' },
+    { amount: revised, source: 'contract sum to date' },
+    { amount: takeoffSell, source: 'AI takeoff sell total' },
+  ];
+  const seed = seedOptions.find(o => o.amount > 0) ?? null;
+
   function openCreate() {
-    const seed = Number(lastProposal?.amount) || revised || original;
-    setForm({ amount: seed || 0, notes: '' });
-    setAuto({ amt: seed > 0 });
+    setForm({ amount: seed?.amount || 0, notes: '' });
+    setAuto({ amt: Boolean(seed) });
     setShowForm(true);
     setErrorMsg('');
   }
@@ -132,7 +158,7 @@ export default function ProposalPage() {
       const res = await fetch('/api/proposals/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, version: latestVersion, status: 'Draft', ...form }) });
       const json = await res.json();
       if (!res.ok || !json.proposal) throw new Error(json.error || 'Create failed');
-      setProposals(prev => [...prev.map(p => p.status !== 'Accepted' ? { ...p, status: 'Superseded' } : p), normalizeProposal(json.proposal)]);
+      setProposals(prev => [...prev.map(p => statusKey(p.status) !== 'accepted' ? { ...p, status: 'Superseded' } : p), normalizeProposal(json.proposal)]);
       setShowForm(false);
       setForm(EMPTY_FORM);
       setSuccessMsg('Proposal version created.');
@@ -186,9 +212,15 @@ export default function ProposalPage() {
         body: JSON.stringify({ status: accepted ? 'accepted' : 'declined' }),
       });
       if (!res.ok) throw new Error('status failed');
-      setSuccessMsg(accepted ? 'Proposal marked accepted.' : 'Proposal marked declined.');
+      // Optimistic: the accepted version supersedes any earlier accepted one.
+      setProposals(prev => prev.map(x => x.id === p.id
+        ? { ...x, status: accepted ? 'accepted' : 'declined' }
+        : (accepted && statusKey(x.status) === 'accepted' ? { ...x, status: 'superseded' } : x)));
+      setSuccessMsg(accepted ? `Proposal accepted — ${p.version} (${fmt(Number(p.amount) || 0)}) is now the contract.` : 'Proposal marked declined.');
       setTimeout(() => setSuccessMsg(''), 4000);
       fetchProposals();
+      // The contract columns changed server-side — refresh the money strip.
+      if (accepted) revalidateCtx();
       setOutcomeModal({ proposalId: p.id, defaultOutcome: accepted ? 'won' : 'lost', ourAmount: p.amount });
     } catch {
       setErrorMsg(accepted ? 'Could not mark the proposal accepted. Please try again.' : 'Could not mark the proposal declined. Please try again.');
@@ -221,7 +253,7 @@ export default function ProposalPage() {
           {href: `/app/projects/${projectId}/contracts`,  label: 'Original Contract', value: fmt(original), sub: 'base agreement' },
           {href: `/app/projects/${projectId}/change-orders`,  label: 'Approved COs', value: (coTotal >= 0 ? '+' : '') + fmt(coTotal), accent: coTotal > 0 ? GREEN : undefined, sub: `${Number(money?.approvedCoCount) || 0} approved${Number(money?.pendingCoCount) ? ` · ${money.pendingCoCount} pending` : ''}` },
           {href: `/app/projects/${projectId}/contracts`,  label: 'Contract to Date', value: fmt(revised), sub: 'original + approved COs' },
-          {href: `/app/projects/${projectId}/proposal`,  label: 'Versions', value: String(proposals.length), sub: lastProposal ? `latest ${lastProposal.version} — ${String(lastProposal.status || '').replace(/_/g, ' ')}` : 'none yet' },
+          {href: `/app/projects/${projectId}/proposal`,  label: 'Versions', value: String(proposals.length), sub: lastProposal ? `latest ${lastProposal.version} — ${statusLabel(lastProposal.status)}` : 'none yet' },
           {href: `/app/projects/${projectId}/proposal`,  label: 'Accepted', value: accepted ? fmt(Number(accepted.amount) || 0) : '—', accent: accepted ? GREEN : undefined, sub: accepted ? accepted.version : 'no accepted version yet' },
           {href: `/app/projects/${projectId}/proposal`,  label: 'Billed to Date', value: fmt(Number(money?.billedToDate) || 0), sub: `${Number(money?.billedPct) || 0}% of contract` },
         ]} />
@@ -251,11 +283,11 @@ export default function ProposalPage() {
                 <label style={label}>Amount ($) *{auto.amt && <AutoChip />}</label>
                 <input type="number" value={form.amount} onChange={e => { setForm(p => ({ ...p, amount: Number(e.target.value) })); setAuto({}); }} style={inp} />
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>
-                  {lastProposal && Number(lastProposal.amount) > 0
-                    ? <>Seeded from {lastProposal.version} ({fmt(Number(lastProposal.amount) || 0)}).{revised > 0 && Number(form.amount) !== revised && <> Contract sum to date is <span onClick={() => { setForm(p => ({ ...p, amount: revised })); setAuto({ amt: true }); }} style={{ color: '#FBBF24', fontWeight: 700, cursor: 'pointer' }}>{fmt(revised)}</span>.</>}</>
-                    : revised > 0
-                      ? <>Contract sum to date — {fmt(original)} original{coTotal !== 0 ? ` + ${fmt(coTotal)} approved COs` : ''}.</>
-                      : <>No contract amount on file yet — enter the proposed sum.</>}
+                  {seed
+                    ? <>Seeded from {seed.source} ({fmt(seed.amount)}).{seedOptions.filter(o => o.amount > 0 && o.amount !== seed.amount && o.amount !== Number(form.amount)).slice(0, 2).map(o => (
+                        <span key={o.source}> Use {o.source}: <span onClick={() => { setForm(p => ({ ...p, amount: o.amount })); setAuto({ amt: true }); }} style={{ color: '#FBBF24', fontWeight: 700, cursor: 'pointer' }}>{fmt(o.amount)}</span>.</span>
+                      ))}</>
+                    : <>No contract amount or takeoff on file yet — enter the proposed sum.</>}
                 </div>
               </div>
               <div>
@@ -278,10 +310,12 @@ export default function ProposalPage() {
                 {coTotal !== 0 && <InsightRow label="Approved COs" value={(coTotal > 0 ? '+' : '') + fmt(coTotal)} accent={GREEN} />}
                 <InsightRow label="Contract to date" value={fmt(revised)} strong />
                 <InsightRow label="Billed to date" value={fmt(Number(money?.billedToDate) || 0)} />
+                {accepted && <InsightRow label={`Accepted — ${accepted.version}`} value={fmt(acceptedAmount)} accent={GREEN} />}
+                {takeoffSell > 0 && <InsightRow label="AI takeoff sell total" value={fmt(takeoffSell)} accent={GOLD} />}
                 {lastProposal && (
                   <>
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                    <InsightRow label={`Last version — ${lastProposal.version}`} value={String(lastProposal.status || '—').replace(/_/g, ' ')} />
+                    <InsightRow label={`Last version — ${lastProposal.version}`} value={statusLabel(lastProposal.status)} />
                     <InsightRow label="Last amount" value={fmt(Number(lastProposal.amount) || 0)} accent={GOLD} />
                   </>
                 )}
@@ -328,19 +362,19 @@ export default function ProposalPage() {
               </thead>
               <tbody>
                 {proposals.map(p => {
-                  const sc = STATUS_MAP[p.status.replace(' ', '_')] || STATUS_MAP[p.status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
-                  const s = p.status.toLowerCase();
+                  const sc = statusStyle(p.status);
+                  const s = statusKey(p.status);
                   const outcomeSet = s === 'accepted' || s === 'declined' || s === 'rejected';
                   return (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: p.status === 'Accepted' ? 'rgba(61,214,140,.06)' : 'transparent' }}>
+                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: s === 'accepted' ? 'rgba(61,214,140,.06)' : 'transparent' }}>
                       <td style={{ padding: '10px 16px', color: GOLD, fontWeight: 700 }}>{p.version}</td>
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.created_date}</td>
                       <td style={{ padding: '10px 16px', color: TEXT, fontWeight: 800, fontSize: 14 }}>${p.amount?.toLocaleString()}</td>
-                      <td style={{ padding: '10px 16px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{p.status}</span></td>
+                      <td style={{ padding: '10px 16px' }}><span style={{ padding: '3px 10px', borderRadius: 20, background: sc.bg, color: sc.color, fontSize: 11, fontWeight: 700 }}>{statusLabel(p.status)}</span></td>
                       <td style={{ padding: '10px 16px', color: DIM }}>{p.notes}</td>
                       <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', display: 'flex', gap: 6, alignItems: 'center' }}>
                         {p.pdf_url && <button onClick={() => openPdf({ url: p.pdf_url! })} style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>View PDF</button>}
-                        {p.status === 'Draft' && <button onClick={() => handleSend(p.id)} style={{ padding: '4px 10px', background: 'rgba(245,158,11,.2)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 5, color: '#FBBF24', fontSize: 12, cursor: 'pointer' }}>Send</button>}
+                        {s === 'draft' && <button onClick={() => handleSend(p.id)} style={{ padding: '4px 10px', background: 'rgba(245,158,11,.2)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 5, color: '#FBBF24', fontSize: 12, cursor: 'pointer' }}>Send</button>}
                         {!outcomeSet && <button onClick={() => handleMarkOutcome(p, true)} style={{ padding: '4px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 5, color: GREEN, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Accepted</button>}
                         {!outcomeSet && <button onClick={() => handleMarkOutcome(p, false)} style={{ padding: '4px 10px', background: 'rgba(239,68,68,.2)', border: '1px solid rgba(239,68,68,.4)', borderRadius: 5, color: RED, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Mark Declined</button>}
                         <label style={{ padding: '4px 10px', background: RAISED, border: '1px solid ' + BORDER, borderRadius: 5, color: DIM, fontSize: 12, cursor: 'pointer' }}>

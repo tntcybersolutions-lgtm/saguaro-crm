@@ -55,8 +55,24 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ proj
     // Revised contract = original + APPROVED change orders only (exact cents).
     // Original = first POSITIVE contract column (see project-report/route.ts):
     // many projects leave contract_amount at 0 and carry the value elsewhere.
+    let baseContract = Number(p.original_contract_value || p.contract_value || p.original_contract || p.contract_amount || 0) || 0;
+    /* An ACCEPTED proposal version is the contract. Projects accepted before
+       /api/proposals/[id]/status began writing the contract columns still
+       carry $0 there — fall back to the accepted amount rather than $0. */
+    if (baseContract <= 0) {
+      const { data: acc } = await db
+        .from('proposals')
+        .select('amount, total_amount, status')
+        .eq('project_id', projectId)
+        .eq('tenant_id', user.tenantId)
+        .ilike('status', 'accepted')
+        .order('created_at', { ascending: false })
+        .limit(1);
+      const row = (acc || [])[0] as { amount: unknown; total_amount: unknown } | undefined;
+      if (row) baseContract = Number(row.amount) || Number(row.total_amount) || 0;
+    }
     const contractSummary = summarizeContract(
-      toCents(p.original_contract_value || p.contract_value || p.original_contract || p.contract_amount || 0),
+      toCents(baseContract),
       cos.map((co: any) => ({
         id: String(co.id),
         description: String(co.description ?? ''),
