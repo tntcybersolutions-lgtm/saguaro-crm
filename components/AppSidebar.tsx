@@ -374,6 +374,7 @@ const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: 'Sales',
+    zone: 'sell',
     items: [
       { label: 'Leads',            href: '/app/leads',        icon: Kanban, accentKey: 'bids' },
       { label: 'Customers',        href: '/app/customers',    icon: AddressBook, accentKey: 'contacts' },
@@ -386,6 +387,7 @@ const NAV_SECTIONS: NavSection[] = [
        screens that exist to answer "can I award them work" — compliance,
        prequalification, and the portal they answer through. */
     title: 'Subs & Vendors',
+    zone: 'build',
     items: [
       { label: 'Subs & Vendors',   href: '/app/subs',             icon: UsersThree,  accentKey: 'subs' },
       { label: 'Compliance',       href: '/app/compliance',       icon: ShieldCheck, accentKey: 'compliance' },
@@ -398,6 +400,7 @@ const NAV_SECTIONS: NavSection[] = [
        was the project rail's word, not this rail's — Takeoff Studio and the
        catalog are used before a job exists and across every job after. */
     title: 'Tools',
+    zone: 'build',
     items: [
       { label: 'Takeoff Studio',    href: '/app/takeoff',           icon: Blueprint, accentKey: 'takeoff', core: true },
       { label: 'Catalog',           href: '/app/catalog',           icon: Package, accentKey: 'catalog' },
@@ -411,6 +414,7 @@ const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: 'Documents',
+    zone: 'build',
     items: [
       { label: 'Documents',         href: '/app/documents',         icon: FileText, accentKey: 'documents', core: true },
       { label: 'Document Versions', href: '/app/document-versions', icon: Notepad,  accentKey: 'documents' },
@@ -418,6 +422,7 @@ const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: 'Financial',
+    zone: 'build',
     items: [
       { label: 'Invoicing',         href: '/app/invoicing',            icon: CreditCard, accentKey: 'invoices', core: true },
       { label: 'Billing',           href: '/app/billing',              icon: CurrencyDollar, accentKey: 'financials' },
