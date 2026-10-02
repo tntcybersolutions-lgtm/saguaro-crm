@@ -172,6 +172,15 @@ export function stepsDone(
   const contract = Number(money?.originalContract) || 0;
   const lineCount = ctx?.budget?.lineCount || 0;
   const packages = ctx?.bidPackages || [];
+  /* A closed job's journey is over. Scoring it step by step left a closed
+     project's rail and "you are here" bar still pointing at "Set contract &
+     budget" — the building checklist outliving the building. Every step reads
+     as behind you, so the rail steps aside and the bar says the job is done. */
+  if (isClosed(ctx?.project?.status)) {
+    return Object.fromEntries(
+      [...BIDDING_STEPS, ...BUILDING_STEPS, { key: 'leveling' }].map((s) => [s.key, true]),
+    );
+  }
   return {
     takeoff:        Boolean(ctx?.takeoff?.completed),
     estimate:       (Number(ctx?.takeoff?.totalCost) || 0) > 0 || lineCount > 0,

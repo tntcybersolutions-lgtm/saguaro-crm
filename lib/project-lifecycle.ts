@@ -59,6 +59,39 @@ const RFI_DONE = ['answered', 'closed'];
 /** Pay applications that have reached a terminal state. */
 const PAY_APP_DONE = ['paid', 'rejected', 'void', 'voided', 'cancelled', 'canceled'];
 
+/**
+ * PLACEHOLDER WAIVERS. lib/compliance-autofile files one conditional waiver
+ * per bid package the moment Sage builds the packages — before anyone is
+ * awarded. Those rows have no sub (sub_id and subcontractor_id null) and a
+ * claimant of "[Award pending] <trade> subcontractor". Nobody can sign them:
+ * there is no claimant. Counting them as "unsigned lien waivers" blocked the
+ * close of a job with no subs at all, while the checklist beside it said "No
+ * subs on the roster", so the two halves of one screen contradicted each
+ * other. They are reported separately and never as blockers.
+ */
+export const PLACEHOLDER_WAIVER_PREFIX = '[Award pending]';
+
+/** Unsigned waivers that a real party could sign, plus the placeholder count.
+ *  Soft-deleted rows are excluded. `error` is set if either count failed. */
+export async function unsignedWaiverCounts(
+  db: SupabaseClient<any>,
+  tenantId: string,
+  projectId: string,
+): Promise<{ real: number; placeholders: number; error: unknown }> {
+  const base = () =>
+    db.from('lien_waivers').select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId).eq('project_id', projectId)
+      .is('signed_at', null).is('deleted_at', null);
+  const [all, ph] = await Promise.all([
+    base(),
+    base().is('sub_id', null).is('subcontractor_id', null)
+      .ilike('claimant_name', `${PLACEHOLDER_WAIVER_PREFIX}%`),
+  ]);
+  const error = all.error || ph.error || null;
+  const placeholders = ph.count || 0;
+  return { real: Math.max(0, (all.count || 0) - placeholders), placeholders, error };
+}
+
 export interface Blocker {
   /** Stable id so the UI can key and the API can report consistently. */
   key: string;
@@ -85,18 +118,20 @@ export async function closeoutBlockers(
   db: SupabaseClient<any>,
   tenantId: string,
   projectId: string,
-): Promise<{ blockers: Blocker[]; unchecked: string[] }> {
+): Promise<{ blockers: Blocker[]; unchecked: string[]; placeholderWaivers: number }> {
   const scope = (table: string) =>
     db.from(table).select('id', { count: 'exact', head: true })
       .eq('tenant_id', tenantId).eq('project_id', projectId);
 
-  const [punch, rfis, cos, payApps, waivers] = await Promise.all([
+  const [punch, rfis, cos, payApps, waiverCounts] = await Promise.all([
     scope('punch_list').not('status', 'in', `(${PUNCH_DONE.join(',')})`),
     scope('rfis').not('status', 'in', `(${RFI_DONE.join(',')})`),
     scope('change_orders').eq('status', 'pending'),
     scope('pay_applications').not('status', 'in', `(${PAY_APP_DONE.join(',')})`),
-    scope('lien_waivers').is('signed_at', null),
+    unsignedWaiverCounts(db, tenantId, projectId),
   ]);
+  // Placeholder waivers (no claimant to sign them) are not blockers.
+  const waivers = { count: waiverCounts.real, error: waiverCounts.error };
 
   const blockers: Blocker[] = [];
   const unchecked: string[] = [];
@@ -118,5 +153,5 @@ export async function closeoutBlockers(
   add(payApps, 'pay_apps', 'unfinalized pay application', 'unfinalized pay applications', 'pay-apps');
   add(waivers, 'lien_waivers', 'unsigned lien waiver', 'unsigned lien waivers', 'lien-waivers');
 
-  return { blockers, unchecked };
+  return { blockers, unchecked, placeholderWaivers: waiverCounts.error ? 0 : waiverCounts.placeholders };
 }
