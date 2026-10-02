@@ -18,6 +18,7 @@ import {
   CinematicPage, ModuleHero, HeroButton, StatCard, SectionCard, SectionLink, EmptyStatePremium, CIN,
 } from '@/components/ui/cinematic';
 import GettingStartedRail from '@/components/GettingStartedRail';
+import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { StatStrip } from '@/components/ui/premium';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22C55E',RED='#EF4444';
@@ -280,6 +281,7 @@ export default function OverviewPage(){
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(380px,1fr))',gap:18,alignItems:'start'}}>
         <div style={{display:'flex',flexDirection:'column',gap:18}}>
+          <ProjectOwnershipCard projectId={projectId} project={p} onSaved={()=>{ void revalidate(); }}/>
           <SectionCard flat title="Project Details" icon={<ClipboardText size={18} weight="duotone" color={CIN.goldHi}/>} delay={0.05}>
             {[['Status',p.status||'active'],['Type',p.project_type||'—'],['State',p.state||'—'],['Owner',p.owner_entity?.name||p.owner_name||'—'],['Architect',p.architect_entity?.name||p.architect_name||'—'],['Start Date',p.start_date||'—'],['End Date',p.end_date||'—'],['GC License',p.gc_license||'—'],['Prevailing Wage',p.prevailing_wage?'Yes':'No'],['Public Project',p.is_public_project?'Yes':'No']].map(([l,v]:any)=>detailRow(l,v))}
           </SectionCard>

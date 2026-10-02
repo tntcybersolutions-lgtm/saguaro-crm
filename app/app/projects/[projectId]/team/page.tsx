@@ -9,6 +9,8 @@ import { UsersThree, UserPlus, HardHat, EnvelopeSimple, Phone, IdentificationBad
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, FlowSteps, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { moduleAccent } from '@/lib/module-identity';
+import { Button, Input } from '@/components/ui/kit';
+import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 
 const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',BLUE='#1a5fa8';
 const fmt = (n:number) => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -37,6 +39,11 @@ export default function TeamPage(){
   // Project intelligence — the roster walks in knowing the job's people and parties.
   const [proj, setProj] = useState<any>(null);
   const { ctx } = useProjectContext(projectId);
+  // Inline editing of the Project Directory slots (PM / super / foreman / owner / architect).
+  const [editRole, setEditRole] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [savingLeader, setSavingLeader] = useState(false);
 
   useEffect(() => {
     if (!projectId) return;
@@ -202,6 +209,40 @@ export default function TeamPage(){
     { role: 'Architect', name: proj?.architect_name || proj?.architect || ctx?.project?.architectName || '', email: proj?.architect_email || '', phone: proj?.architect_phone || '' },
   ];
   const leadersAssigned = leadership.filter(l => l.name).length;
+  /* Directory slots are edited right here. They used to say "Set in Project
+     Settings" — a page that does not exist — so an empty slot was a dead end. */
+  const LEADER_FIELDS: Record<string, { name: string; email: string }> = {
+    'Project Manager': { name: 'pm_name', email: 'pm_email' },
+    Superintendent: { name: 'super_name', email: 'super_email' },
+    Foreman: { name: 'foreman_name', email: 'foreman_email' },
+    Owner: { name: 'owner_name', email: 'owner_email' },
+    Architect: { name: 'architect_name', email: 'architect_email' },
+  };
+  function startEdit(l: { role: string; name: string; email: string }) {
+    setEditRole(l.role); setEditName(l.name || ''); setEditEmail(l.email || '');
+  }
+  async function saveLeader() {
+    if (!editRole) return;
+    const f = LEADER_FIELDS[editRole];
+    setSavingLeader(true);
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadership: { [f.name]: editName.trim() || null, [f.email]: editEmail.trim() || null } }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || 'Could not save');
+      if (body.project) setProj(body.project);
+      setEditRole(null);
+      showToast(`${editRole} saved`, 'success');
+    } catch (err) {
+      console.error('[team] save leader', err);
+      showToast(err instanceof Error ? err.message : 'Could not save', 'error');
+    } finally {
+      setSavingLeader(false);
+    }
+  }
   const ctxSubs = (ctx?.subs || []) as any[];
   const subTrades = Array.from(new Set(ctxSubs.map((s: any) => s.trade).filter(Boolean)));
   const findCtxSub = (name: string) => ctxSubs.find((x: any) => (x.companyName || '').trim().toLowerCase() === (name || '').trim().toLowerCase());
@@ -252,7 +293,7 @@ export default function TeamPage(){
             {href: `/app/projects/${projectId}/team`, label:'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active')},
             {href: `/app/projects/${projectId}/team`, label:'Owner', value: ctx.defaults?.ownerName || '—', sub: ctx.defaults?.ownerEmail || 'no email on file'},
             {href: `/app/projects/${projectId}/team`, label:'Architect', value: ctx.defaults?.architectName || '—', sub: 'design contact'},
-            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#3dd68c':GOLD, sub: leadersAssigned>0?'directory roles assigned':'assign in Project Settings'},
+            {href: `/app/projects/${projectId}/team`, label:'Leadership', value: `${leadersAssigned}/5`, accent: leadersAssigned>=3?'#3dd68c':GOLD, sub: leadersAssigned>0?'directory roles assigned':'set them in the directory below'},
             {href: `/app/projects/${projectId}/subs`, label:'Trades On the Job', value: String(subTrades.length), sub: ctxSubs.length?`across ${ctxSubs.length} sub${ctxSubs.length===1?'':'s'}`:'no subs yet'},
           ]}/>
         )}
@@ -317,11 +358,22 @@ export default function TeamPage(){
     />
 
     <div style={{display:'flex',flexDirection:'column',gap:20}}>
-      <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — from project setup" icon={<IdentificationBadge size={17} weight="duotone" color={GOLD} />}>
+      {proj && <ProjectOwnershipCard projectId={projectId} project={proj} onSaved={(p)=>{ if (p && (p as any).id) setProj(p); }}/>}
+      <SectionCard title="Project Directory" subtitle="Field leadership and parties of record — Set or Edit any slot right here" icon={<IdentificationBadge size={17} weight="duotone" color={GOLD} />}>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(210px,1fr))',gap:12}}>
           {leadership.map(l=>(
             <div key={l.role} style={{padding:'12px 14px',borderRadius:12,border:`1px solid ${l.name?'rgba(245,158,11,0.25)':'rgba(255,255,255,0.08)'}`,background:l.name?'rgba(245,158,11,0.05)':'rgba(255,255,255,0.02)'}}>
               <div style={{fontSize:10,fontWeight:800,color:DIM,textTransform:'uppercase' as const,letterSpacing:.6,marginBottom:6}}>{l.role}</div>
+              {editRole === l.role ? (
+                <div style={{display:'flex',flexDirection:'column' as const,gap:6}}>
+                  <Input aria-label={`${l.role} name`} value={editName} onChange={e=>setEditName(e.target.value)} placeholder="Name" autoFocus/>
+                  <Input aria-label={`${l.role} email`} type="email" value={editEmail} onChange={e=>setEditEmail(e.target.value)} placeholder="Email (optional)"/>
+                  <div style={{display:'flex',gap:6}}>
+                    <Button size="sm" variant="primary" onClick={saveLeader} disabled={savingLeader}>{savingLeader?'Saving…':'Save'}</Button>
+                    <Button size="sm" variant="ghost" onClick={()=>setEditRole(null)} disabled={savingLeader}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (<>
               <div style={{fontSize:13.5,fontWeight:700,color:l.name?TEXT:'rgba(255,255,255,0.35)',marginBottom:6}}>{l.name||'Not assigned'}</div>
               {l.name ? (
                 <div style={{display:'flex',flexDirection:'column' as const,gap:3}}>
@@ -335,8 +387,10 @@ export default function TeamPage(){
                   )}
                 </div>
               ) : (
-                <div style={{fontSize:11,color:'rgba(255,255,255,0.35)'}}>Set in Project Settings</div>
+                <Button size="sm" variant="secondary" onClick={()=>startEdit(l)}>Set {l.role.toLowerCase()}</Button>
               )}
+              {l.name && <div style={{marginTop:6}}><Button size="sm" variant="ghost" onClick={()=>startEdit(l)}>Edit</Button></div>}
+              </>)}
             </div>
           ))}
         </div>

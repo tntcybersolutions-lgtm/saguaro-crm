@@ -78,7 +78,14 @@ export default function NewProjectPage() {
   const [name, setName] = useState('');
   const [projectNumber, setProjectNumber] = useState('');
   const [buildingType, setBuildingType] = useState('');
-  const [type, setType] = useState('residential');
+  /* Category follows the kind of job picked in Step 1 (ground-up / TI /
+     service -> commercial, renovation -> remodel) until the GC picks a building
+     type or sets the category by hand. It used to start at 'residential' while
+     "Ground-up construction" (a fire station, a medical plaza) was selected, so
+     the rail said Residential and the job was saved as residential. */
+  const templateCategory = (key: string) => templateByKey(key)?.projectType ?? 'commercial';
+  const [type, setType] = useState(() => templateCategory('ground-up'));
+  const [catTouched, setCatTouched] = useState(false);
   const [sector, setSector] = useState('');
 
   // Sector drives the whole identity block: filtered building types, derived
@@ -173,7 +180,7 @@ export default function NewProjectPage() {
   const [error, setError] = useState('');
 
   // Which fields the system filled in (AUTO chips) vs. what the GC typed.
-  const [auto, setAuto] = useState<{num?:boolean;cat?:boolean;ret?:boolean;start?:boolean;state?:boolean;ownerEmail?:boolean;archEmail?:boolean}>({ret:true,start:true,state:true});
+  const [auto, setAuto] = useState<{num?:boolean;cat?:boolean;ret?:boolean;start?:boolean;state?:boolean;ownerEmail?:boolean;archEmail?:boolean}>({cat:true,ret:true,start:true,state:true});
 
   // This page has no projectId, so /api/project-context does not apply. The
   // portfolio itself is the context: numbering sequence, owner/architect
@@ -240,7 +247,7 @@ export default function NewProjectPage() {
     contractType !== 'Lump Sum GMP' ||
     prevailingWage !== 'No' || publicProject !== 'No — Private' ||
     (!auto.num && !!projectNumber.trim()) || (!auto.ret && retainage !== '10') ||
-    !auto.state || !auto.start || (!auto.cat && type !== 'residential');
+    !auto.state || !auto.start || (catTouched && type !== templateCategory(templateKey));
   const draftData = {
     name, projectNumber, buildingType, type, sector, description,
     address, stateJurisdiction, budget, contractType, retainage,
@@ -417,6 +424,7 @@ export default function NewProjectPage() {
                 data-tour={`job-type-${t.key}`}
                 onClick={() => {
                   setTemplateKey(t.key);
+                  if (!catTouched && !buildingType) { setType(t.projectType); setAuto(a=>({...a,cat:true})); }
                   setRetainage(String(t.retainagePct));
                   setContractType(t.contractType);
                 }}
@@ -532,8 +540,8 @@ export default function NewProjectPage() {
                       {sectorBts.map(t=><option key={t} value={t}>{t}</option>)}
                     </select>
                   </FIELD>
-                  <FIELD label="Category" auto={auto.cat} hint="Derived from building type — drives reporting and bid history matching.">
-                    <select value={type} onChange={e=>{setType(e.target.value);setAuto(a=>({...a,cat:false}));}} style={SELECT_STYLE}>
+                  <FIELD label="Category" auto={auto.cat} hint="Set by the kind of job, refined by building type — drives reporting and bid history matching.">
+                    <select value={type} onChange={e=>{setType(e.target.value);setCatTouched(true);setAuto(a=>({...a,cat:false}));}} style={SELECT_STYLE}>
                       {PROJECT_CATEGORIES.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   </FIELD>
