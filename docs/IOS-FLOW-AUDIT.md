@@ -71,6 +71,33 @@ and knocked down.
 
 ---
 
+## Automated crawler — `tools/qa-crawl.mjs`
+
+A Playwright crawl that walks every `/app` screen in a real browser, flags render
+crashes, uncaught exceptions, real console errors (DB noise filtered), and
+**dead buttons** (a click that changes nothing — no nav, DOM, or request). Run it
+wherever the browser can reach a working DB for true findings:
+
+```
+npm i -D playwright            # one-time (Chromium already on CI/most machines)
+npm run dev                    # app on http://localhost:3000 (or set QA_BASE)
+node tools/qa-crawl.mjs        # prints findings as Markdown — paste below
+```
+
+**In-sandbox run 2026-10-02 (DB unreachable — render + wiring only):**
+- ✅ All 16 crawled screens RENDER without a crash / Next error overlay.
+- ⚠️ `/app/documents` + `/app/reviews` logged React "Maximum update depth
+  exceeded" — but only under the blocked-DB retry storm; likely a fetch-retry
+  artifact, UNCONFIRMED as a prod bug. Re-run with the DB up to confirm before
+  fixing.
+- ⚠️ Dead-button candidates (Home / Choose a job / Help me / Sage / documents
+  tabs) are mostly the chat widget (renders in a portal) or tabs showing empty
+  content because the DB is offline — treat as UNVERIFIED until a DB-up run.
+- The DB-dependent truth (data saving, fields persisting, real flow) needs the
+  crawl run against a reachable DB — it cannot be judged from the sandbox.
+
 _Fix log — append each change here as it merges:_
 - 2026-10-02: Entry redirect — signed-in `/` → `/app` (middleware). Stops the
   app opening on the marketing page.
+- 2026-10-02: Documents + deal media show real file-type badges (PDF/DOCX/…).
+- 2026-10-02: Added `tools/qa-crawl.mjs` — in-browser screen crawler (above).
