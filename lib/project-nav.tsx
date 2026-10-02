@@ -69,20 +69,11 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
     ],
   },
   {
-    label: 'FINANCIAL',
-    items: [
-      { label: 'Budget',          href: '/budget',            icon: Wallet, badge: null, accent: 'budget' },
-      { label: 'Change Orders',   href: '/change-orders',     icon: ArrowsClockwise, accent: 'changeorders' },
-      { label: 'Pay Applications', href: '/pay-apps',         icon: Money, badge: null, accent: 'payapps' },
-      { label: 'Client Invoices', href: '/invoices',          icon: Receipt, badge: null, accent: 'invoices' },
-      { label: 'Bills',           href: '/bills',             icon: FileText, badge: null, accent: 'bills' },
-      { label: 'Lien Waivers',    href: '/lien-waivers',      icon: Signature, badge: null, accent: 'waivers' },
-      { label: 'Insurance',       href: '/insurance',         icon: ShieldCheck,  badge: null },
-      { label: 'Certified Payroll', href: '/payroll',         icon: IdentificationBadge, badge: null },
-      { label: 'W-9 Requests',    href: '/w9',                icon: FileText, badge: null },
-    ],
-  },
-  {
+    /* FIELD comes before FINANCIAL: a GC runs the work in the field, and the
+       money (costing, pay apps, invoices) follows from what happened there.
+       JobTread, Buildertrend and Procore all order the in-job rail
+       Execution → Field → Financials; we had Financial above Field, which read
+       as "bill before you build". */
     label: 'FIELD',
     items: [
       { label: 'Daily Logs',      href: '/daily-logs',        icon: ClipboardText, badge: null, accent: 'daily' },
@@ -94,6 +85,20 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
       { label: 'To-Dos',          href: '/todos',             icon: CheckSquare,  badge: null, accent: 'todos' },
       { label: 'Timesheets',      href: '/timesheets',        icon: Timer,  badge: null, accent: 'time' },
       { label: 'Crews',           href: '/crews',             icon: Users,  badge: null, accent: 'crews' },
+    ],
+  },
+  {
+    label: 'FINANCIAL',
+    items: [
+      { label: 'Budget',          href: '/budget',            icon: Wallet, badge: null, accent: 'budget' },
+      { label: 'Change Orders',   href: '/change-orders',     icon: ArrowsClockwise, accent: 'changeorders' },
+      { label: 'Pay Applications', href: '/pay-apps',         icon: Money, badge: null, accent: 'payapps' },
+      { label: 'Client Invoices', href: '/invoices',          icon: Receipt, badge: null, accent: 'invoices' },
+      { label: 'Bills',           href: '/bills',             icon: FileText, badge: null, accent: 'bills' },
+      { label: 'Lien Waivers',    href: '/lien-waivers',      icon: Signature, badge: null, accent: 'waivers' },
+      { label: 'Insurance',       href: '/insurance',         icon: ShieldCheck,  badge: null },
+      { label: 'Certified Payroll', href: '/payroll',         icon: IdentificationBadge, badge: null },
+      { label: 'W-9 Requests',    href: '/w9',                icon: FileText, badge: null },
     ],
   },
   {
@@ -137,7 +142,10 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
     ],
   },
   {
-    label: 'LOW VOLTAGE / IT',
+    /* Niche vertical — collapsed under "More" at the bottom, out of the main
+       GC flow (the owner runs some low-voltage work but it is not the lifecycle
+       a GC follows on every job). */
+    label: 'MORE · LOW VOLTAGE / IT',
     items: [
       { label: 'Network',          href: '/network',            icon: Globe, badge: null },
       { label: 'Devices',          href: '/network/devices',    icon: Laptop, badge: null },
@@ -152,10 +160,61 @@ export const PROJECT_NAV_SECTIONS: ProjectNavSection[] = [
     ],
   },
   {
-    label: 'AI',
+    label: 'MORE · AI',
     items: [
       { label: 'Autopilot Alerts', href: '/autopilot',       icon: Robot  },
       { label: 'Bid Intelligence', href: '/intelligence',    icon: Brain, badge: null },
     ],
   },
 ];
+
+/**
+ * The job lifecycle as a left-to-right flow — the horizontal phase bar that
+ * sits across the top of every project screen.
+ *
+ * Every GC platform (JobTread, Procore, Buildertrend) keeps its tools in a
+ * VERTICAL rail; what they don't give you is the one-glance "where is this job
+ * in its life" that a contractor actually thinks in — win it, build it, bill
+ * it, close it. This strip is that: the mental left-to-right arc the rail can't
+ * show, with the phase you're standing in lit. Each phase jumps to its first
+ * tool; the rail (PROJECT_NAV_SECTIONS, same order) is the detail beneath it.
+ *
+ * The `match` hrefs are the tool routes that belong to the phase, so the bar
+ * can light the current phase from the URL. Keep this in step with the section
+ * order above.
+ */
+export interface ProjectPhase {
+  key: string;
+  label: string;
+  tagline: string;
+  icon: React.ElementType;
+  /** Where clicking the phase lands — its first/primary tool. '' = overview. */
+  href: string;
+  /** Tool routes (relative) that count as "in" this phase, for URL matching. */
+  match: string[];
+}
+
+export const PROJECT_PHASES: ProjectPhase[] = [
+  { key: 'overview',  label: 'Overview',        tagline: 'The job at a glance',   icon: SquaresFour, href: '',             match: [] },
+  { key: 'precon',    label: 'Preconstruction', tagline: 'Price & win the work',  icon: Calculator,  href: '/takeoff',     match: ['/takeoff', '/estimate', '/bid-packages', '/proposal'] },
+  { key: 'execution', label: 'Execution',       tagline: 'Set up & buy out',      icon: Clipboard,   href: '/schedule',    match: ['/schedule', '/selections', '/contracts', '/subs', '/purchase-orders'] },
+  { key: 'field',     label: 'Field',           tagline: 'Build & track daily',   icon: HardHat,     href: '/daily-logs',  match: ['/daily-logs', '/tm-tickets', '/photos', '/inspections', '/safety', '/punch-list', '/todos', '/timesheets', '/crews'] },
+  { key: 'financial', label: 'Financials',      tagline: 'Cost, bill & get paid', icon: Money,       href: '/budget',      match: ['/budget', '/change-orders', '/pay-apps', '/invoices', '/bills', '/lien-waivers', '/insurance', '/payroll', '/w9'] },
+  { key: 'docs',      label: 'Docs & Comms',    tagline: 'Drawings, RFIs, files', icon: Folder,      href: '/files',       match: ['/files', '/drawings', '/permits', '/specs', '/rfis', '/submittals', '/messages', '/directory', '/team', '/compliance'] },
+  { key: 'closeout',  label: 'Closeout',        tagline: 'Finish & hand over',    icon: CheckCircle, href: '/closeout',    match: ['/closeout'] },
+];
+
+/** The phase a project-relative path belongs to (longest match wins). */
+export function phaseForPath(relPath: string): string {
+  const p = relPath || '';
+  let best = 'overview';
+  let bestLen = -1;
+  for (const ph of PROJECT_PHASES) {
+    for (const m of ph.match) {
+      if (p === m || p.startsWith(m + '/') || p.startsWith(m)) {
+        if (m.length > bestLen) { best = ph.key; bestLen = m.length; }
+      }
+    }
+  }
+  return best;
+}

@@ -7,6 +7,7 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { moduleAccent } from '@/lib/module-identity';
 import { useProject } from '@/lib/hooks/useProjects';
+import ProjectPhaseBar from '@/components/ProjectPhaseBar';
 import {
   SquaresFour, Ruler, Calculator, FileText, CalendarBlank, Package, Palette,
   Clipboard, NotePencil, Wallet, ArrowsClockwise, Money, Receipt, Signature,
@@ -55,20 +56,8 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: 'FINANCIAL',
-    items: [
-      { label: 'Budget',          href: '/budget',            icon: Wallet, badge: null, accent: 'budget' },
-      { label: 'Change Orders',   href: '/change-orders',     icon: ArrowsClockwise, accent: 'changeorders' },
-      { label: 'Pay Applications', href: '/pay-apps',         icon: Money, badge: null, accent: 'payapps' },
-      { label: 'Client Invoices', href: '/invoices',          icon: Receipt, badge: null, accent: 'invoices' },
-      { label: 'Bills',           href: '/bills',             icon: FileText, badge: null, accent: 'bills' },
-      { label: 'Lien Waivers',    href: '/lien-waivers',      icon: Signature, badge: null, accent: 'waivers' },
-      { label: 'Insurance',       href: '/insurance',         icon: ShieldCheck,  badge: null },
-      { label: 'Certified Payroll', href: '/payroll',         icon: IdentificationBadge, badge: null },
-      { label: 'W-9 Requests',    href: '/w9',                icon: FileText, badge: null },
-    ],
-  },
-  {
+    // FIELD before FINANCIAL — run the work, then bill from it. Mirrors
+    // lib/project-nav.tsx (the desktop rail) so phone and desktop agree.
     label: 'FIELD',
     items: [
       { label: 'Daily Logs',      href: '/daily-logs',        icon: ClipboardText, badge: null, accent: 'daily' },
@@ -80,6 +69,20 @@ const NAV_SECTIONS = [
       { label: 'To-Dos',          href: '/todos',             icon: CheckSquare,  badge: null, accent: 'todos' },
       { label: 'Timesheets',      href: '/timesheets',        icon: Timer,  badge: null, accent: 'time' },
       { label: 'Crews',           href: '/crews',             icon: Users,  badge: null, accent: 'crews' },
+    ],
+  },
+  {
+    label: 'FINANCIAL',
+    items: [
+      { label: 'Budget',          href: '/budget',            icon: Wallet, badge: null, accent: 'budget' },
+      { label: 'Change Orders',   href: '/change-orders',     icon: ArrowsClockwise, accent: 'changeorders' },
+      { label: 'Pay Applications', href: '/pay-apps',         icon: Money, badge: null, accent: 'payapps' },
+      { label: 'Client Invoices', href: '/invoices',          icon: Receipt, badge: null, accent: 'invoices' },
+      { label: 'Bills',           href: '/bills',             icon: FileText, badge: null, accent: 'bills' },
+      { label: 'Lien Waivers',    href: '/lien-waivers',      icon: Signature, badge: null, accent: 'waivers' },
+      { label: 'Insurance',       href: '/insurance',         icon: ShieldCheck,  badge: null },
+      { label: 'Certified Payroll', href: '/payroll',         icon: IdentificationBadge, badge: null },
+      { label: 'W-9 Requests',    href: '/w9',                icon: FileText, badge: null },
     ],
   },
   {
@@ -389,6 +392,10 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 
       {/* ── Page Content ─────────────────────────────────────────────── */}
       <div style={{ flex: 1, minWidth: 0, background: '#0a0a0a' }}>
+
+        {/* Lifecycle phase bar — the left-to-right flow across the top of every
+            project screen (win → build → bill → close), phase you're in lit. */}
+        <ProjectPhaseBar />
 
         {/* Mobile module bar — only shown <=768px (hidden on desktop) */}
         <div className="project-mobile-bar" style={{

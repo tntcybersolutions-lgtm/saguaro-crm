@@ -49,9 +49,12 @@ const rowActionStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
+type W9Filter = 'all' | 'received' | 'pending' | 'missing';
+
 export default function W9Page() {
   const params = useParams();
   const projectId = params.projectId as string;
+  const base = `/app/projects/${projectId}`;
   const [subs, setSubs] = useState<W9Sub[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
@@ -60,6 +63,15 @@ export default function W9Page() {
   const [formEmail, setFormEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [requestingId, setRequestingId] = useState<string | null>(null);
+  // Which slice of the roster the table shows. The stat cards above drive this
+  // so a click on "W9 Pending" drills the list to exactly those rows, instead
+  // of the number being a dead decoration.
+  const [filter, setFilter] = useState<W9Filter>('all');
+  const tableRef = React.useRef<HTMLDivElement | null>(null);
+  const setFilterAndScroll = (f: W9Filter) => {
+    setFilter(prev => (prev === f ? 'all' : f));
+    setTimeout(() => tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  };
 
   // Project intelligence — roster + bid packages from one snapshot. W-9s are
   // not paperwork for its own sake: the bid-award gate refuses to award to a
@@ -141,6 +153,15 @@ export default function W9Page() {
   const receivedCount = subs.filter(s => s.w9_status === 'received' || s.w9_status === 'submitted').length;
   const pendingCount = subs.filter(s => s.w9_status === 'pending').length;
   const missingCount = subs.filter(s => s.w9_status === 'not_requested').length;
+
+  const matchesFilter = (s: W9Sub) => {
+    if (filter === 'all') return true;
+    if (filter === 'received') return s.w9_status === 'received' || s.w9_status === 'submitted';
+    if (filter === 'pending') return s.w9_status === 'pending';
+    return s.w9_status === 'not_requested'; // 'missing'
+  };
+  const filteredSubs = subs.filter(matchesFilter);
+  const FILTER_LABEL: Record<W9Filter, string> = { all: 'All subs', received: 'W-9 received', pending: 'W-9 pending', missing: 'W-9 missing' };
 
   // Roster subs with no W-9 trail here at all — surfaced so the bid-award gate
   // ("W-9 not on file" blocks award) never surprises anyone at buyout.
@@ -224,20 +245,21 @@ export default function W9Page() {
       {/* Project context strip — roster, commitments, and the award gate */}
       {ctx && (
         <StatStrip items={[
-          { label: 'Roster Subs', value: String(ctxSubs.length), icon: <Users size={12} color={GOLD} />, sub: 'active on this project' },
-          { label: 'Sub Commitments', value: fmt(subCommitted), sub: 'awarded contract value' },
-          { label: 'W-9 Coverage', value: `${receivedCount} of ${totalSubs || ctxSubs.length}`, accent: receivedCount > 0 && receivedCount >= (totalSubs || ctxSubs.length) ? GREEN : AMBER, sub: 'vendors with a W-9 on file' },
-          { label: 'Bid Packages', value: `${awardedPkgs} awarded`, sub: openPkgs > 0 ? `${openPkgs} open — W-9 gates award` : 'W-9 checked at every award' },
-          { label: 'Not Yet Asked', value: String(missingCount + untrackedRoster.length), accent: missingCount + untrackedRoster.length > 0 ? RED : GREEN, sub: missingCount + untrackedRoster.length > 0 ? 'requests to send below' : 'everyone has been asked' },
+          { label: 'Roster Subs', value: String(ctxSubs.length), icon: <Users size={12} color={GOLD} />, sub: 'open the subcontractor list', href: `${base}/subs` },
+          { label: 'Sub Commitments', value: fmt(subCommitted), sub: 'awarded value — open budget', href: `${base}/budget` },
+          { label: 'W-9 Coverage', value: `${receivedCount} of ${totalSubs || ctxSubs.length}`, accent: receivedCount > 0 && receivedCount >= (totalSubs || ctxSubs.length) ? GREEN : AMBER, sub: 'show the ones on file', onClick: () => setFilterAndScroll('received') },
+          { label: 'Bid Packages', value: `${awardedPkgs} awarded`, sub: openPkgs > 0 ? `${openPkgs} open — open bid packages` : 'open bid packages', href: `${base}/bid-packages` },
+          { label: 'Not Yet Asked', value: String(missingCount + untrackedRoster.length), accent: missingCount + untrackedRoster.length > 0 ? RED : GREEN, sub: missingCount + untrackedRoster.length > 0 ? 'show who still needs asking' : 'everyone has been asked', onClick: () => setFilterAndScroll('missing') },
         ]} />
       )}
 
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<Users size={19} weight="duotone" color={GOLD} />} label="Total Subs" value={String(totalSubs)} accent={GOLD} delay={0.02} />
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="W9 Received" value={String(receivedCount)} accent={receivedCount ? GREEN : undefined} delay={0.06} />
-        <StatCard icon={<Clock size={19} weight="duotone" color={AMBER} />} label="W9 Pending" value={String(pendingCount)} accent={pendingCount ? AMBER : undefined} delay={0.10} />
-        <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="W9 Missing" value={String(missingCount)} accent={missingCount ? RED : undefined} delay={0.14} />
+      {/* Stats — each card is a live filter on the W-9 Status list below.
+          Click "W9 Pending" and the table drills to exactly those rows. */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 16 }}>
+        <StatCard icon={<Users size={19} weight="duotone" color={GOLD} />} label="Total Subs" value={String(totalSubs)} accent={GOLD} active={filter === 'all'} onClick={() => setFilterAndScroll('all')} delay={0.02} />
+        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="W9 Received" value={String(receivedCount)} accent={GREEN} active={filter === 'received'} onClick={() => setFilterAndScroll('received')} delay={0.06} />
+        <StatCard icon={<Clock size={19} weight="duotone" color={AMBER} />} label="W9 Pending" value={String(pendingCount)} accent={AMBER} active={filter === 'pending'} onClick={() => setFilterAndScroll('pending')} delay={0.10} />
+        <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="W9 Missing" value={String(missingCount)} accent={RED} active={filter === 'missing'} onClick={() => setFilterAndScroll('missing')} delay={0.14} />
       </div>
 
       {toast && (
@@ -329,6 +351,13 @@ export default function W9Page() {
       )}
 
       {/* Table */}
+      <div ref={tableRef} style={{ scrollMarginTop: 80 }} />
+      {filter !== 'all' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, padding: '9px 14px', background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 13, color: T.white }}>
+          <span>Showing <strong style={{ color: GOLD }}>{FILTER_LABEL[filter]}</strong> — {filteredSubs.length} of {subs.length}</span>
+          <button onClick={() => setFilter('all')} className="pmBtn" style={{ ...rowActionStyle, marginLeft: 'auto', background: 'rgba(255,255,255,0.05)', color: T.white, border: `1px solid ${T.border}` }}>Clear filter</button>
+        </div>
+      )}
       <SectionCard title="W-9 Status" icon={<FileText size={17} weight="duotone" color={GOLD} />} flush>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 40, color: 'rgba(255,255,255,0.62)' }}>Loading...</div>
@@ -357,11 +386,16 @@ export default function W9Page() {
               </div>
             )}
           </div>
+        ) : filteredSubs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 32, color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>
+            No subs are <strong style={{ color: GOLD }}>{FILTER_LABEL[filter].toLowerCase()}</strong>.{' '}
+            <button onClick={() => setFilter('all')} style={{ background: 'none', border: 'none', color: '#FBBF24', cursor: 'pointer', fontWeight: 700, fontSize: 13, textDecoration: 'underline', padding: 0 }}>Show all {subs.length}</button>
+          </div>
         ) : (
           <div style={{ padding: '4px 8px 8px' }}>
             <Table
               headers={['Sub Name', 'Email', 'W9 Status', 'Requested Date', 'Received Date', 'Actions']}
-              rows={subs.map(s => [
+              rows={filteredSubs.map(s => [
                 <span key="n" style={{ fontWeight: 600 }}>{s.name}</span>,
                 <span key="e" style={{ color: T.muted }}>{s.email}</span>,
                 <Badge key="st" label={STATUS_LABEL[s.w9_status] || s.w9_status} color={STATUS_BADGE[s.w9_status] || 'muted'} />,

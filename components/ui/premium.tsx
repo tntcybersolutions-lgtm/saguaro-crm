@@ -327,6 +327,7 @@ export function StatCard({
   onClick,
   href,
   interactive: forceInteractive,
+  active = false,
   delay = 0,
 }: {
   icon: React.ReactNode;
@@ -337,25 +338,40 @@ export function StatCard({
   onClick?: () => void;
   href?: string;
   interactive?: boolean;
+  /** Selected state — e.g. a card acting as the active filter on a list. */
+  active?: boolean;
   delay?: number;
 }) {
   const interactive = !!(onClick || href || forceInteractive);
   const numberColor = accent || WHITE;
+  const ring = active ? (accent || GOLD) : null;
   const inner = (
     <div
       onClick={onClick}
       className={interactive ? 'pmHover' : undefined}
+      aria-pressed={onClick ? active : undefined}
       style={{
         position: 'relative', overflow: 'hidden',
-        background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 16,
+        background: ring
+          ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 16%, transparent), color-mix(in srgb, ${ring} 5%, transparent)), ${SURFACE}`
+          : SURFACE,
+        border: `1px solid ${ring || BORDER}`, borderRadius: 16,
         padding: '14px 16px',
         // milled plate: drop + top light + full-perimeter inset ring (mobile cardShadow)
-        boxShadow: `0 14px 34px -24px ${A30}, inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03)`,
+        boxShadow: ring
+          ? `0 0 0 1px ${ring}, 0 10px 30px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
+          : `0 14px 34px -24px ${A30}, inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03)`,
         cursor: interactive ? 'pointer' : 'default',
         animation: `pmRise .5s ease ${delay.toFixed(2)}s both`,
         height: '100%',
+        transition: 'border-color .15s ease, box-shadow .15s ease, background .15s ease',
       }}
     >
+      {interactive && (
+        <span aria-hidden style={{ position: 'absolute', top: 10, right: 12, fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: ring || 'rgba(255,255,255,0.28)', textTransform: 'uppercase' }}>
+          {active ? '● filtering' : 'view ›'}
+        </span>
+      )}
       {/* left accent bar */}
       <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${numberColor}, transparent)`, opacity: 0.85 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -672,7 +688,7 @@ export function AutoChip({ label = 'AUTO' }: { label?: string }) {
 /** Dense full-width stat band for the top of create screens — kills dead space
  *  by surfacing what the system already knows (sums, counts, prior records). */
 export function StatStrip({ items }: {
-  items: { label: string; value: React.ReactNode; sub?: React.ReactNode; accent?: string; icon?: React.ReactNode }[];
+  items: { label: string; value: React.ReactNode; sub?: React.ReactNode; accent?: string; icon?: React.ReactNode; href?: string; onClick?: () => void }[];
 }) {
   return (
     <div style={{
@@ -680,15 +696,27 @@ export function StatStrip({ items }: {
       background: BORDER, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden',
       marginBottom: 20,
     }}>
-      {items.map((it, i) => (
-        <div key={i} className="pmTile" style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)), #101011', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: FAINT, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 5, whiteSpace: 'nowrap' }}>
-            {it.icon}{it.label}
+      {items.map((it, i) => {
+        const clickable = !!(it.href || it.onClick);
+        const body = (
+          <div
+            className="pmTile"
+            onClick={it.onClick}
+            style={{ position: 'relative', background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)), #101011', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: FAINT, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 5, whiteSpace: 'nowrap' }}>
+              {it.icon}{it.label}
+              {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.3)', fontWeight: 900 }}>›</span>}
+            </div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: it.accent || WHITE, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', textShadow: it.accent ? '0 0 20px currentColor' : undefined, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
+            {it.sub && <div style={{ fontSize: 11, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
           </div>
-          <div style={{ fontSize: 17, fontWeight: 800, color: it.accent || WHITE, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', textShadow: it.accent ? '0 0 20px currentColor' : undefined, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
-          {it.sub && <div style={{ fontSize: 11, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
-        </div>
-      ))}
+        );
+        if (it.href) {
+          return <a key={i} href={it.href} className="pmStripLink" style={{ textDecoration: 'none', display: 'block', minWidth: 0 }}>{body}</a>;
+        }
+        return <React.Fragment key={i}>{body}</React.Fragment>;
+      })}
     </div>
   );
 }
