@@ -3,6 +3,8 @@ import { createServerClient, getUser } from '@/lib/supabase-server';
 import { requirePermission } from '@/lib/permissions';
 import { toCents, toDollars, sumCents, summarizeContract } from '@/lib/calc';
 import { PUNCH_DONE } from '@/lib/project-lifecycle';
+import { apiError } from '@/lib/api-error';
+import { assignProjectToUser } from '@/lib/project-assignment';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -196,6 +198,139 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ proj
     return NextResponse.json({ project: data });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/* Directory slots on the Team page. Free text — the owner and the architect
+   are usually not Saguaro users, and a PM/super may not have a login yet. */
+const LEADERSHIP_FIELDS = [
+  'pm_name', 'pm_email', 'super_name', 'super_email', 'foreman_name', 'foreman_email',
+  'owner_name', 'owner_email', 'architect_name', 'architect_email',
+] as const;
+
+/**
+ * PATCH /api/projects/[projectId]
+ *
+ * Who owns this job. Body (every key optional):
+ *   assignedTo:  uuid of a signed-in tenant user, or null to clear
+ *   customerId:  uuid of a tenant customer_profiles row, or null to clear
+ *   leadership:  { pm_name, pm_email, super_name, ... } free-text directory slots
+ *
+ * Before this the only way to hand an existing job to someone was the
+ * Customers page (customer-linked projects only) or a Work Assignment (locked
+ * until an emailed invite was accepted).
+ */
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
+  const { projectId } = await params;
+  const g = await requirePermission(req, 'Projects', 'Edit', { projectId });
+  if (!g.ok) return g.res;
+  const { user, db } = g;
+  const tenantId = user.tenantId;
+
+  try {
+    const body = await req.json().catch(() => ({} as Record<string, unknown>));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const anyDb = db as any;
+
+    const { data: project, error: findErr } = await anyDb
+      .from('projects')
+      .select('id, name, owner_name, owner_email')
+      .eq('id', projectId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (findErr) throw findErr;
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+
+    const updates: Record<string, unknown> = {};
+
+    /* ── Customer ─────────────────────────────────────────────────────── */
+    if (body.customerId !== undefined) {
+      const raw = body.customerId == null ? '' : String(body.customerId).trim();
+      if (!raw) {
+        updates.customer_id = null;
+      } else {
+        if (!UUID_RE.test(raw)) return NextResponse.json({ error: 'customerId must be a customer id' }, { status: 400 });
+        const { data: customer, error: custErr } = await db
+          .from('customer_profiles')
+          .select('id, name, email')
+          .eq('id', raw)
+          .eq('tenant_id', tenantId)
+          .maybeSingle();
+        if (custErr) throw custErr;
+        if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+        updates.customer_id = customer.id;
+        // The owner of record prints on the contract and pay apps; fill it
+        // from the customer only when the job has none yet.
+        if (!String(project.owner_name || '').trim() && customer.name) updates.owner_name = customer.name;
+        if (!String(project.owner_email || '').trim() && customer.email) updates.owner_email = customer.email;
+      }
+    }
+
+    /* ── Leadership directory slots ───────────────────────────────────── */
+    if (body.leadership && typeof body.leadership === 'object') {
+      const l = body.leadership as Record<string, unknown>;
+      for (const k of LEADERSHIP_FIELDS) {
+        if (l[k] === undefined) continue;
+        const v = l[k] == null ? '' : String(l[k]).trim().slice(0, 200);
+        if (k.endsWith('_email') && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+          return NextResponse.json({ error: `${k.replace('_', ' ')} is not a valid email address` }, { status: 400 });
+        }
+        updates[k] = v || null;
+      }
+    }
+
+    /* ── Assigned to (clearing only; setting goes through the shared helper) ── */
+    let assigneeName: string | null | undefined;
+    let documentsAccessGranted = false;
+    if (body.assignedTo !== undefined) {
+      const raw = body.assignedTo == null ? '' : String(body.assignedTo).trim();
+      if (!raw) {
+        updates.assigned_to = null;
+        updates.assigned_to_name = null;
+        assigneeName = null;
+      } else if (!UUID_RE.test(raw)) {
+        return NextResponse.json({ error: 'assignedTo must be a team member id' }, { status: 400 });
+      }
+    }
+
+    if (Object.keys(updates).length) {
+      updates.updated_at = new Date().toISOString();
+      const { error: updErr } = await anyDb
+        .from('projects')
+        .update(updates as never)
+        .eq('id', projectId)
+        .eq('tenant_id', tenantId);
+      if (updErr) throw updErr;
+    }
+
+    if (body.assignedTo && UUID_RE.test(String(body.assignedTo).trim())) {
+      const res = await assignProjectToUser(db, {
+        tenantId,
+        projectId,
+        projectName: project.name || 'Project',
+        assigneeUserId: String(body.assignedTo).trim(),
+        actor: { id: user.id, email: user.email },
+      });
+      if (!res.ok) {
+        return NextResponse.json({ error: 'That person is not a member of this workspace' }, { status: 400 });
+      }
+      assigneeName = res.assigneeName;
+      documentsAccessGranted = res.documentsAccessGranted;
+    }
+
+    const { data: fresh, error: readErr } = await anyDb
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .eq('tenant_id', tenantId)
+      .single();
+    if (readErr) throw readErr;
+
+    return NextResponse.json({ project: fresh, assigneeName, documentsAccessGranted });
+  } catch (e) {
+    return apiError('projects/[projectId] PATCH', e, 'Could not save the change to this project');
   }
 }
 

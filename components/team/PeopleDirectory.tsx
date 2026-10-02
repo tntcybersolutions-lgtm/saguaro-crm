@@ -21,6 +21,15 @@ const INC_TYPES = [
   { v: 'injury', l: 'Injury', c: RED, I: FirstAid }, { v: 'near_miss', l: 'Near miss', c: AMBER, I: Eye }, { v: 'commendation', l: 'Commendation', c: GREEN, I: Star },
 ];
 const incMeta = (t: string) => INC_TYPES.find((x) => x.v === t) ?? INC_TYPES[1];
+// Never show a raw Postgres message (it names tables/columns/constraints). Log the
+// real error for support and give the user words they can act on.
+const friendlyDbError = (err: { code?: string; message?: string } | null, fallback: string) => {
+  if (err) console.error('[people] save failed', err);
+  if (err?.code === '23505') return 'Someone with these details is already on your roster.';
+  if (err?.code === '42501') return "You don't have permission to change the crew roster.";
+  if (err?.code === '23502') return 'A required field is missing — check the name fields and try again.';
+  return fallback;
+};
 const fmtDate = (s: string | null) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? String(s) : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); };
 
 export function PeopleDirectory() {
@@ -68,20 +77,23 @@ export function PeopleDirectory() {
   // title, trade, phone or PAY RATE was silently dropped. Failures are surfaced
   // now, and the dialog stays open so the work is not lost.
   const addEmp = async () => {
-    if (!f.first_name?.trim() && !f.last_name?.trim()) return;
+    if (!f.first_name?.trim() && !f.last_name?.trim()) { setSaveErr('Enter a first or last name.'); return; }
     setSaveErr(null);
-    const { data, error } = await sb.from('employees').insert({ first_name: f.first_name || null, last_name: f.last_name || null, full_name: `${f.first_name ?? ''} ${f.last_name ?? ''}`.trim() || null, title: f.title || null, trade: f.trade || null, email: f.email || null, phone: f.phone || null, employment_type: f.employment_type || 'hourly', regular_rate: parseFloat(f.regular_rate) || 0, is_active: true }).select('id').maybeSingle();
-    if (error) { setSaveErr(error.message || "Couldn't add this person — nothing was saved."); return; }
+    // full_name is GENERATED ALWAYS (first_name || ' ' || last_name) — never write it.
+    // first_name/last_name are NOT NULL, so a missing half is stored as ''.
+    // tenant_id is stamped by the auto_set_tenant_id trigger; RLS scopes the rest.
+    const { data, error } = await sb.from('employees').insert({ first_name: f.first_name?.trim() || '', last_name: f.last_name?.trim() || '', title: f.title || null, trade: f.trade || null, email: f.email || null, phone: f.phone || null, employment_type: f.employment_type || 'hourly', regular_rate: parseFloat(f.regular_rate) || 0, is_active: true }).select('id').maybeSingle();
+    if (error) { setSaveErr(friendlyDbError(error, "Couldn't add this person — nothing was saved. Try again.")); return; }
     setAdding(false); setF({}); await loadRoster(); if (data?.id) setSelId(data.id);
   };
   const patch = async (payload: any): Promise<boolean> => {
     if (!selId) return false;
     setSaveErr(null);
     const { error } = await sb.from('employees').update(payload).eq('id', selId);
-    if (error) { setSaveErr(error.message || "Couldn't save that change — nothing was written."); return false; }
+    if (error) { setSaveErr(friendlyDbError(error, "Couldn't save that change — nothing was written. Try again.")); return false; }
     await loadDetail(selId); await loadRoster(); return true;
   };
-  const saveEdit = async () => { const ok = await patch({ first_name: f.first_name || null, last_name: f.last_name || null, full_name: `${f.first_name ?? ''} ${f.last_name ?? ''}`.trim() || null, title: f.title || null, trade: f.trade || null, email: f.email || null, phone: f.phone || null, address: f.address || null, regular_rate: parseFloat(f.regular_rate) || 0, overtime_rate: parseFloat(f.overtime_rate) || 0, emergency_contact_name: f.emergency_contact_name || null, emergency_contact_phone: f.emergency_contact_phone || null }); if (ok) setEditing(false); };
+  const saveEdit = async () => { const ok = await patch({ first_name: f.first_name?.trim() || '', last_name: f.last_name?.trim() || '', title: f.title || null, trade: f.trade || null, email: f.email || null, phone: f.phone || null, address: f.address || null, regular_rate: parseFloat(f.regular_rate) || 0, overtime_rate: parseFloat(f.overtime_rate) || 0, emergency_contact_name: f.emergency_contact_name || null, emergency_contact_phone: f.emergency_contact_phone || null }); if (ok) setEditing(false); };
   const addSpec = async () => { const s = specInput.trim(); if (!s) return; await patch({ specialties: [...specialties, s] }); setSpecInput(''); };
   const addAssign = async (pid: string) => { if (!selId) return; await sb.from('employee_project_assignments').insert({ employee_id: selId, project_id: pid, active: true }); loadDetail(selId); };
   const rmAssign = async (aid: string) => { await sb.from('employee_project_assignments').delete().eq('id', aid); if (selId) loadDetail(selId); };
@@ -97,7 +109,7 @@ export function PeopleDirectory() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <UsersThree size={26} weight="fill" color={GOLD} />
           <div style={{ flex: 1 }}><h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>People</h1><p style={{ color: DIM, margin: 0, fontSize: 13.5 }}>Your crew — records, certifications, assignments, and incident history.</p></div>
-          <button onClick={() => { setF({ employment_type: 'hourly' }); setAdding(true); }} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><Plus size={15} weight="bold" />Add employee</button>
+          <button onClick={() => { setF({ employment_type: 'hourly' }); setSaveErr(null); setAdding(true); }} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><Plus size={15} weight="bold" />Add employee</button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 340px) minmax(0, 1fr)', gap: 16, marginTop: 20, alignItems: 'start' }}>

@@ -479,7 +479,7 @@ export default function DashboardPage() {
           <>
             {!portfolioEmpty && <>
             <Link href="/app/dashboard-config" title="Customize dashboard" style={ghostButtonStyle} className="pmBtn"><SlidersHorizontal size={15} weight="bold" /> Customize</Link>
-            <button onClick={() => setShowScoreModal(true)} style={goldOutlineButtonStyle} className="pmBtn"><Sparkle size={15} weight="fill" /> Score a Bid</button>
+            {/* "Score a Bid" was de-featured — still reachable at /app/bids?tab=score. */}
             </>}
             <Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> New Project</Link>
           </>}
