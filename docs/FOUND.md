@@ -17,5 +17,17 @@ converge. One line each, newest at the bottom.
   writer since `w9-portal.ts` was deleted.
 - `app/api/reports/sage/route.ts:95` told the model `lien_waivers.status` can be
   `'received'`; nothing writes it. Fixed 1 Oct as part of the waiver work.
-- `app/api/daily-logs/list/route.ts:20` — bare `catch {}` returns `{logs:[],source:'error'}` with no log and no `apiError`, discarding the real error (§3, §5).
+- `app/api/photos/upload/route.ts:99,136` — upload response builds image URLs with
+  `getPublicUrl()` on the PRIVATE `project-files` bucket, so the optimistic preview
+  is a dead URL until a reload re-signs via `/api/photos` list (Path 3 detour).
+  FIXED: the response now signs url/thumbnail_url via signFields (same mechanism
+  as photos/list), so the preview is live immediately. The STORED values stay in
+  public-url form — list still re-signs on read. Bucket confirmed private
+  (storage.buckets.public = false for project-files/documents/photos).
+- Time-API ambiguity resolved while driving Path 2: `app/app/time/page.tsx` calls
+  only `/api/timeclock/{in,out,status}`. `/api/clock/{in,out}` is dead parallel code;
+  `/api/timesheets/*` is the admin side. Canonical web clock = `timeclock`.
+- `app/api/daily-logs/list/route.ts:21` — catch block silently eats the DB error (returns 500 with `source:'error'` but logs nothing server-side; violates §5 zero-empty-catch). Off-path, not fixed.
 - `app/api/daily-logs/[id]/route.ts:19,32,73` — GET, PUT, DELETE all use bare `catch {}` returning a raw string `'Internal server error'` with no `apiError` and no correlation id (§3, §5).
+- `app/api/leads/[id]/media/route.ts:33,69` — references table `deal_media` which is not in `lib/database.types.ts`, causing TS2769 type errors. Pre-existing, not in daily-logs path.
+- `app/api/reviews/route.ts:23,58` — references table `customer_reviews` which is not in `lib/database.types.ts`, causing TS2769 type errors. Pre-existing, not in daily-logs path.

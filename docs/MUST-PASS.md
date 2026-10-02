@@ -43,8 +43,8 @@ to stop.
 - Pick a project, enter crew / weather / work done, save
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
-- Taps at 390px: CANNOT VERIFY — driven via API curl, not a browser at 390px
-- STATUS: PASS 2026-10-01
+- Taps at 390px: CANNOT VERIFY — no browser in this session; API round-trip driven directly
+- STATUS: PASS — 2026-10-02. API round-trip driven live: list HTTP 200 (source=live, correct key `logs`); create HTTP 200 (id=b8933f85, log_date=2026-10-02 not UTC-shifted, all fields persisted); reload list HTTP 200 (log appears with correct date); DB row confirmed via Supabase MCP; fixture deleted (CTE, 1 row).
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out
