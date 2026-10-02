@@ -46,6 +46,17 @@ type Activity = {
   id: string; lead_id: string; activity_type: string; description: string;
   scheduled_at: string | null; created_at: string;
 };
+type MediaItem = {
+  id: string; name: string; content_type: string | null; size_bytes: number | null;
+  created_at: string; url: string;
+};
+
+const fmtBytes = (n: number | null) => {
+  const b = Number(n) || 0;
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${Math.round(b / 1024)} KB`;
+  return `${Math.round((b / (1024 * 1024)) * 10) / 10} MB`;
+};
 
 const fmt = (n: unknown) =>
   '$' + (Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -87,6 +98,10 @@ export default function DealPage() {
   const [sendMessage, setSendMessage] = useState('');
   const [sending, setSending] = useState(false);
 
+  // Deal media hub: files/photos/docs/videos attached to this deal.
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const [uploading, setUploading] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -110,6 +125,33 @@ export default function DealPage() {
   }, [id]);
 
   useEffect(() => { void load(); }, [load]);
+
+  const loadMedia = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/leads/${id}/media`);
+      if (r.ok) { const j = await r.json(); setMedia((j.media || []) as MediaItem[]); }
+    } catch { /* non-fatal: the deal still renders without its files */ }
+  }, [id]);
+  useEffect(() => { void loadMedia(); }, [loadMedia]);
+
+  const onUpload = useCallback(async (files: FileList | null) => {
+    if (!files || !files.length || uploading) return;
+    setUploading(true);
+    try {
+      for (const f of Array.from(files)) {
+        const fd = new FormData();
+        fd.append('file', f);
+        const r = await fetch(`/api/leads/${id}/media`, { method: 'POST', body: fd });
+        if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `Could not upload ${f.name}`);
+      }
+      showToast(files.length === 1 ? 'File uploaded.' : `${files.length} files uploaded.`, 'success');
+      void loadMedia();
+    } catch (e) {
+      showToast(humanError(e, 'Upload failed.'), 'error');
+    } finally {
+      setUploading(false);
+    }
+  }, [id, uploading, showToast, loadMedia]);
 
   /* Send a message to the GC (the deal's contact). Reuses the email route,
      which is honest: it returns 503 and logs NOTHING when email isn't
@@ -328,6 +370,36 @@ export default function DealPage() {
                 </button>
               </>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Files & media — upload photos/files/docs/videos; download in place (P: media hub) */}
+      <div style={{ ...card, marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: media.length ? 12 : 0 }}>
+          <div>
+            <div style={labelS}>Files &amp; media</div>
+            <div style={{ fontSize: 13, color: DIM, marginTop: 2 }}>Photos, documents, videos for this deal — uploaded here, downloaded here.</div>
+          </div>
+          <label style={{ ...btn(uploading ? 'transparent' : GOLD, uploading ? DIM : '#000'), border: uploading ? `1px solid ${BORDER}` : 'none', cursor: uploading ? 'default' : 'pointer' }}>
+            {uploading ? 'Uploading…' : 'Upload files →'}
+            <input type="file" multiple disabled={uploading} onChange={(e) => { void onUpload(e.target.files); e.currentTarget.value = ''; }} style={{ display: 'none' }} />
+          </label>
+        </div>
+        {media.length > 0 && (
+          <div>
+            {media.map((m) => (
+              <a key={m.id} href={m.url} target="_blank" rel="noopener noreferrer" style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
+                padding: '9px 2px', borderBottom: `1px solid ${BORDER}`, textDecoration: 'none', color: TEXT,
+              }}>
+                <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</span>
+                <span style={{ display: 'flex', gap: 12, alignItems: 'center', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: 11, color: DIM }}>{fmtBytes(m.size_bytes)}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>Download ↓</span>
+                </span>
+              </a>
+            ))}
           </div>
         )}
       </div>
