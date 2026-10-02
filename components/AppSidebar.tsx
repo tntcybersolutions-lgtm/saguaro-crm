@@ -830,14 +830,24 @@ export default function AppSidebar({
             move needs somewhere to live, and it belongs next to the phase it
             changes rather than buried in project settings. */}
         {inProject && !collapsed && (
-          <div style={{ padding: '0 16px 12px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              fontSize: 9.5, fontWeight: 900, letterSpacing: 0.9, textTransform: 'uppercase',
-              padding: '2px 8px', borderRadius: 999,
-              background: projectPhase === 'building' ? 'rgba(34,197,94,0.14)' : 'rgba(245,158,11,0.14)',
-              border: `1px solid ${projectPhase === 'building' ? 'rgba(34,197,94,0.32)' : 'rgba(245,158,11,0.3)'}`,
-              color: projectPhase === 'building' ? '#4ADE80' : '#FBBF24',
-            }}>{PHASE_LABEL[projectPhase]}</span>
+          <div style={{ padding: '0 16px 14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+              <span style={{
+                alignSelf: 'flex-start',
+                fontSize: 13.5, fontWeight: 900, letterSpacing: 0.7, textTransform: 'uppercase',
+                padding: '5px 13px', borderRadius: 999, lineHeight: 1,
+                background: projectPhase === 'building' ? 'rgba(34,197,94,0.24)' : 'rgba(245,158,11,0.24)',
+                border: `1.5px solid ${projectPhase === 'building' ? 'rgba(74,222,128,0.7)' : 'rgba(251,191,36,0.75)'}`,
+                color: projectPhase === 'building' ? '#5EEA90' : '#FCD34D',
+                boxShadow: projectPhase === 'building'
+                  ? '0 2px 10px rgba(34,197,94,0.25)'
+                  : '0 2px 10px rgba(245,158,11,0.25)',
+                whiteSpace: 'nowrap',
+              }}>{PHASE_LABEL[projectPhase]}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {projectPhase === 'building' ? 'You won it — running the job' : 'Chasing this job — not won yet'}
+              </span>
+            </div>
             <button
               type="button"
               onClick={async () => {
@@ -851,13 +861,18 @@ export default function AppSidebar({
                   if (r.ok) window.location.reload();
                 } catch { /* leave the rail as it is; the pill still reads true */ }
               }}
+              title={projectPhase === 'building' ? 'Move this job back to the bidding phase' : 'Mark this job won and switch to the building phase'}
+              className="pmBtn"
               style={{
-                background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
-                fontSize: 10.5, fontWeight: 700, color: colors.textMuted, textDecoration: 'underline',
-                textUnderlineOffset: 2,
+                flexShrink: 0, cursor: 'pointer', whiteSpace: 'nowrap',
+                background: projectPhase === 'building' ? 'rgba(255,255,255,0.05)' : 'rgba(34,197,94,0.16)',
+                border: `1px solid ${projectPhase === 'building' ? 'rgba(255,255,255,0.14)' : 'rgba(74,222,128,0.5)'}`,
+                borderRadius: 8, padding: '6px 11px',
+                fontSize: 11.5, fontWeight: 800,
+                color: projectPhase === 'building' ? colors.textMuted : '#5EEA90',
               }}
             >
-              {projectPhase === 'building' ? 'Back to bidding' : 'We won it'}
+              {projectPhase === 'building' ? '← Back to bidding' : 'We won it →'}
             </button>
           </div>
         )}
