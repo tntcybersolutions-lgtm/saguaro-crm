@@ -376,6 +376,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: 'Sales',
     zone: 'sell',
     items: [
+      { label: 'Sales Home',       href: '/app/sales',        icon: Gauge, core: true, accentKey: 'bids' },
       { label: 'Leads',            href: '/app/leads',        icon: Kanban, accentKey: 'bids' },
       { label: 'Customers',        href: '/app/customers',    icon: AddressBook, accentKey: 'contacts' },
       { label: 'Bid Board',        href: '/app/bids',         icon: CurrencyDollar, core: true, accentKey: 'bids' },
