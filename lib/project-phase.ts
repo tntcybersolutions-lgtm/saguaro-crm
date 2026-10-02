@@ -151,38 +151,60 @@ export function stepNumber(href: string, phase: ProjectPhase): number | null {
  *  a context that failed to load must leave steps unticked, never crash. */
 export interface PhaseContextLike {
   project?: { phase?: unknown; status?: unknown } | null;
-  takeoff?: { completed?: unknown; totalCost?: unknown } | null;
+  takeoff?: { completed?: unknown; pricedTotal?: unknown } | null;
   budget?: { lineCount?: number } | null;
   bidPackages?: Array<Record<string, unknown>> | null;
   subs?: unknown[] | null;
   counts?: { scheduleTasks?: number } | null;
-  recent?: { lastDailyLogDate?: unknown } | null;
+  recent?: { lastDailyLogDate?: unknown; dailyLogDays?: unknown } | null;
 }
 
 export interface PhaseMoneyLike {
   originalContract?: unknown;
   payAppCount?: unknown;
+  submittedPayAppCount?: unknown;
 }
 
+/** "Run the field" is a habit, not an entry: daily logs on at least this many
+ *  distinct days. One log on day one used to tick the step, which told a GC
+ *  their field reporting was done the first afternoon. Three days is the
+ *  smallest number that reads as "the crew is logging" rather than "someone
+ *  tried the screen", and it is reachable inside the first week of a job. */
+export const FIELD_LOG_DAYS_DONE = 3;
+
+/**
+ * WHAT "DONE" MEANS — each test is the thing actually having happened, not a
+ * record existing. A tick the user did not earn is worse than no tick: it
+ * tells them to skip a step they still owe.
+ *
+ *   budget        contract sum > 0 AND at least one budget line. Winning a
+ *                 job with a $0 contract and no lines used to tick this.
+ *   bid-packages  at least one sub INVITED on some package. A package that
+ *                 was drafted and never sent to anyone is not "sent".
+ *   daily-logs    logs on >= FIELD_LOG_DAYS_DONE distinct days.
+ *   pay-apps      a pay app SUBMITTED to the owner (submitted / approved /
+ *                 certified / paid). The draft auto-created on win is not a
+ *                 bill.
+ */
 export function stepsDone(
   ctx: PhaseContextLike | null | undefined,
   money: PhaseMoneyLike | null | undefined,
   isClosed: (status: unknown) => boolean,
 ): Record<string, boolean> {
   const contract = Number(money?.originalContract) || 0;
-  const lineCount = ctx?.budget?.lineCount || 0;
+  const lineCount = Number(ctx?.budget?.lineCount) || 0;
   const packages = ctx?.bidPackages || [];
   return {
     takeoff:        Boolean(ctx?.takeoff?.completed),
-    estimate:       (Number(ctx?.takeoff?.totalCost) || 0) > 0 || lineCount > 0,
-    'bid-packages': packages.length > 0,
-    leveling:       packages.some((p) => Boolean(p?.leveling_complete || p?.awarded_to)),
+    estimate:       (Number(ctx?.takeoff?.pricedTotal) || 0) > 0 || lineCount > 0,
+    'bid-packages': packages.some((p) => (Number(p?.invitedCount) || 0) > 0),
+    leveling:       packages.some((p) => Boolean(p?.awardedTo)),
     proposal:       contract > 0,
-    budget:         contract > 0 || lineCount > 0,
+    budget:         contract > 0 && lineCount > 0,
     subs:           (ctx?.subs || []).length > 0,
-    schedule:       (ctx?.counts?.scheduleTasks || 0) > 0,
-    'daily-logs':   ctx?.recent?.lastDailyLogDate != null,
-    'pay-apps':     (Number(money?.payAppCount) || 0) > 0,
+    schedule:       (Number(ctx?.counts?.scheduleTasks) || 0) > 0,
+    'daily-logs':   (Number(ctx?.recent?.dailyLogDays) || 0) >= FIELD_LOG_DAYS_DONE,
+    'pay-apps':     (Number(money?.submittedPayAppCount) || 0) > 0,
     closeout:       isClosed(ctx?.project?.status),
   };
 }

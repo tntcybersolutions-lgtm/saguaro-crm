@@ -57,6 +57,34 @@ const fetcher = async (url: string) => {
   return r.json();
 };
 
+/* THE BAR'S HEIGHT IS RESERVED BEFORE ITS DATA ARRIVES.
+   This strip sits in the fixed header and publishes its height as
+   --sag-nextstep-h, which the page's top padding reads. It used to render
+   nothing until /api/project-context (or /api/sales-journey) answered, then
+   appear — so a few hundred milliseconds after every page load the whole
+   page jumped down by the bar's height. A click aimed at a button in that
+   window landed where the button USED to be: mousedown on one spot, the
+   page moves, mouseup somewhere else, no click. That is the "first click is
+   ignored, second one works" report on Daily Logs "Auto-fill Today" and
+   Closeout "Generate G706". Reserving the same height while loading means
+   the page never moves when the bar fills in. */
+const BAR_H = 48; // 9px padding x2 + 1px borders x2 + the 28px CTA row
+
+function Reserve({ boxRef }: { boxRef: React.MutableRefObject<HTMLDivElement | null> }) {
+  return (
+    <div
+      ref={boxRef}
+      aria-hidden
+      style={{
+        minHeight: BAR_H, boxSizing: 'border-box',
+        background: 'var(--bg-base, #0a0a0a)',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}
+    />
+  );
+}
+
 /** /app/projects/<id>/... — the id, or null anywhere else. `new` is the
  *  creation form, not a project, and must not be treated as one. */
 function projectIdFromPath(pathname: string): string | null {
@@ -89,15 +117,23 @@ export default function NextStepBar() {
   }, [inProject]);
 
   const pickedExists = picked && projects.some((p: { id: string }) => p.id === picked);
-  const dashboardProjectId = inProject ? null : ((pickedExists ? picked : projects[0]?.id) ?? null);
+  /* ONLY ON THE DASHBOARD. The rule above exists so the bar agrees with
+     GettingStartedRail, and that rail lives on /app. On every other
+     company-level screen (People, Settings, CRM...) there is no job on the
+     page and the header picker says "Choose a job" — a bar announcing
+     "YOU ARE HERE: Send bid packages" for some job the user is not in
+     contradicted it. Off the dashboard and outside a job, the bar speaks for
+     the company-level sales journey instead. */
+  const onDashboard = pathname === '/app' || pathname === '/app/';
+  const dashboardProjectId = inProject || !onDashboard ? null : ((pickedExists ? picked : projects[0]?.id) ?? null);
   const journeyId = projectId ?? dashboardProjectId;
   /* Gold whenever a job is driving the bar, whether or not we are standing on
      that job's page — the color states which half of the product is speaking,
      and it would be lying if the bar said "build" in blue. */
   const onBuildJourney = Boolean(journeyId);
 
-  const { ctx } = useProjectContext(journeyId);
-  const { data: salesData } = useSWR<{ signals: SalesSignals }>(
+  const { ctx, error: ctxError } = useProjectContext(journeyId);
+  const { data: salesData, error: salesError } = useSWR<{ signals: SalesSignals }>(
     onBuildJourney ? null : '/api/sales-journey',
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 300_000 },
@@ -128,12 +164,15 @@ export default function NextStepBar() {
 
   if (onBuildJourney) {
     tone = GOLD; toneHi = GOLD_HI;
-    if (!ctx) return null; // nothing to say until the job's own data is in
+    if (!ctx) return ctxError ? null : <Reserve boxRef={boxRef} />; // nothing to say until the job's own data is in
     const phase = normalisePhase(ctx?.project?.phase);
     const steps = stepsForPhase(phase);
     const done = stepsDone(ctx, ctx?.money, isClosedStatus);
     const i = steps.findIndex((s) => !done[s.key]);
-    side = PHASE_LABEL[phase];
+    /* Off the job's own pages (the dashboard), name the job — a step with no
+       job attached reads as if it were about whatever screen you are on. */
+    const jobName = !inProject ? String(ctx?.project?.name || '').trim() : '';
+    side = jobName ? `${jobName} · ${PHASE_LABEL[phase]}` : PHASE_LABEL[phase];
     const base = `/app/projects/${journeyId}`;
     if (i === -1) {
       complete = true;
@@ -151,7 +190,7 @@ export default function NextStepBar() {
       position = `${i + 1} of ${steps.length}`;
     }
   } else {
-    if (!salesData?.signals) return null;
+    if (!salesData?.signals) return salesError || salesData ? null : <Reserve boxRef={boxRef} />;
     const done = salesStepsDone(salesData.signals);
     const i = SALES_STEPS.findIndex((s) => !done[s.key]);
     if (i === -1) {
@@ -187,6 +226,7 @@ export default function NextStepBar() {
         borderTop: '1px solid rgba(255,255,255,0.06)',
         borderBottom: `1px solid ${tone}33`,
         minWidth: 0,
+        minHeight: BAR_H, boxSizing: 'border-box',
       }}
     >
       <span style={{
@@ -212,7 +252,8 @@ export default function NextStepBar() {
       <span style={{
         flexShrink: 0, fontSize: 10, fontWeight: 800, letterSpacing: '0.06em',
         color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap',
-      }}>
+        maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis',
+      }} title={`${side} · ${position}`}>
         {side} · {position}
       </span>
 

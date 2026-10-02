@@ -62,14 +62,14 @@ import { useEntitlements } from '../lib/hooks/useEntitlements';
 import { moduleAccent } from '../lib/module-identity';
 import { Pill } from './ui/premium';
 import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
-import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { isCompanyToolVisible, hiddenCompanyToolCount, type CompanySignals } from '@/lib/company-tools';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import type { PermCategory } from '@/lib/permission-categories';
-import { normalisePhase, stepsForPhase, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
+import { normalisePhase, stepsForPhase, stepsDone, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
-import useSWR from 'swr';
+import useSWR, { mutate as swrMutate } from 'swr';
 import BrandMark from '@/components/BrandMark';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
@@ -637,22 +637,14 @@ export default function AppSidebar({
 
   /* Which steps are already behind you. Same signals the journey rail on the
      overview uses, so a tick in the menu and a tick on the page agree. */
-  const phaseDone: Record<string, boolean> = React.useMemo(() => {
-    const c = projectCtx as any;
-    const money = c?.money;
-    return {
-      takeoff:        Boolean(c?.takeoff?.completed),
-      estimate:       (Number(c?.takeoff?.totalCost) || 0) > 0 || (c?.budget?.lineCount || 0) > 0,
-      'bid-packages': (c?.bidPackages || []).length > 0,
-      proposal:       (Number(money?.originalContract) || 0) > 0,
-      budget:         (Number(money?.originalContract) || 0) > 0 || (c?.budget?.lineCount || 0) > 0,
-      subs:           (c?.subs || []).length > 0,
-      schedule:       (c?.counts?.scheduleTasks || 0) > 0,
-      'daily-logs':   c?.recent?.lastDailyLogDate != null,
-      'pay-apps':     (money?.payAppCount || 0) > 0,
-      closeout:       isClosedStatus(c?.project?.status),
-    };
-  }, [projectCtx]);
+  /* lib/project-phase stepsDone is the ONE definition of "done". This used to
+     be a private copy of the map, and the copy is how the rail ticked "Bill
+     the owner" on an auto-created $0 draft while nothing else could be fixed
+     in one place. */
+  const phaseDone: Record<string, boolean> = React.useMemo(
+    () => stepsDone(projectCtx as any, (projectCtx as any)?.money, isClosedStatus),
+    [projectCtx],
+  );
   const [showAllTools, setShowAllTools] = useState(false);
   const toolSignals = (projectCtx ?? null) as ToolSignals | null;
 
@@ -858,8 +850,22 @@ export default function AppSidebar({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phase: next }),
                   });
-                  if (r.ok) window.location.reload();
-                } catch { /* leave the rail as it is; the pill still reads true */ }
+                  /* Refresh the shared snapshot in place instead of a full
+                     reload. The reload raced the 30s browser cache on
+                     /api/project-context and the rail kept the BIDDING
+                     checklist until a hard refresh. Every subscriber (rail,
+                     phase bar, next-step bar, overview journey) re-renders
+                     from the one fresh copy. */
+                  if (r.ok && projectId) {
+                    await refreshProjectContext(projectId);
+                    void swrMutate('/api/projects/list');
+                  }
+                } catch (e) {
+                  /* The PUT may have landed even if the refresh failed; a
+                     reload is the honest fallback so the pill never lies. */
+                  console.error('[AppSidebar] phase change refresh failed', e);
+                  window.location.reload();
+                }
               }}
               title={projectPhase === 'building' ? 'Move this job back to the bidding phase' : 'Mark this job won and switch to the building phase'}
               className="pmBtn"

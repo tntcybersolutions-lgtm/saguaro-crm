@@ -12,6 +12,9 @@ import { requirePermission } from '@/lib/permissions';
  * Every section is failure-tolerant: a broken sub-query nulls its section
  * instead of failing the whole snapshot.
  */
+/** Pay-app statuses that mean the application left the building. */
+const SENT_PAY_APP_STATUSES = ['submitted', 'under_review', 'in_review', 'certified', 'approved', 'paid'];
+
 export async function GET(req: NextRequest) {
   const g = await requirePermission(req, 'Projects', 'View');
   if (!g.ok) return g.res;
@@ -43,7 +46,7 @@ export async function GET(req: NextRequest) {
     safe(db.from('rfis').select('id, status').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('submittals').select('id, status').eq('project_id', projectId).eq('tenant_id', t)),
     safe(db.from('schedule_tasks').select('id, name, start_date, end_date, status, is_critical, pct_complete, trade').eq('project_id', projectId).eq('tenant_id', t).order('start_date').limit(200)),
-    safe(db.from('daily_logs').select('log_date').eq('project_id', projectId).eq('tenant_id', t).order('log_date', { ascending: false }).limit(1)),
+    safe(db.from('daily_logs').select('log_date').eq('project_id', projectId).eq('tenant_id', t).order('log_date', { ascending: false }).limit(60)),
     safe(db.from('takeoffs').select('id, status, total_cost, page_count').eq('project_id', projectId).eq('tenant_id', t).order('created_at', { ascending: false }).limit(5)),
     safe(db.from('contacts').select('id').eq('project_id', projectId).eq('tenant_id', t)),
     /* COUNT THE PUNCH LIST, DO NOT ASK THE PROJECT ROW.
@@ -79,7 +82,24 @@ export async function GET(req: NextRequest) {
   const rfis      = ((rfisQ as any)?.data ?? []) as any[];
   const subm      = ((submittalsQ as any)?.data ?? []) as any[];
   const tasks     = ((tasksQ as any)?.data ?? []) as any[];
-  const lastLog   = (((logQ as any)?.data ?? []) as any[])[0] ?? null;
+  const logRows   = ((logQ as any)?.data ?? []) as Array<{ log_date: string | null }>;
+  const lastLog   = logRows[0] ?? null;
+  /* Distinct days with a daily log (of the most recent 60 logs). "Run the
+     field" is a sustained habit, not one entry — see lib/project-phase. */
+  const dailyLogDays = new Set(logRows.map((r) => String(r.log_date ?? '').slice(0, 10)).filter(Boolean)).size;
+
+  /* Bid invites per package. A package that exists but was never sent to a
+     single sub has not been "sent" — the journey's bid-packages step reads
+     this, not the package count. One follow-up query, keyed on the package
+     ids already loaded; failure leaves every count at 0 (step unticked). */
+  const invitesByPackage: Record<string, number> = {};
+  if (packages.length) {
+    const invQ = await safe(db.from('bid_package_invites').select('bid_package_id')
+      .eq('tenant_id', t).in('bid_package_id', packages.map((b) => b.id)));
+    for (const r of (((invQ as any)?.data ?? []) as Array<{ bid_package_id: string }>)) {
+      invitesByPackage[r.bid_package_id] = (invitesByPackage[r.bid_package_id] || 0) + 1;
+    }
+  }
 
   // ── Contract money: original + approved COs = revised ──
   const prime = contracts.find((c) => c.contract_type === 'prime') ?? null;
@@ -124,6 +144,9 @@ export async function GET(req: NextRequest) {
       paidToDate,
       retainagePct: N(lastPayApp?.retainage_percent) || N(p.retainage_pct) || 10,
       payAppCount: payApps.length,
+      /* Pay apps that actually went to the owner. A draft — including the
+         $0 one auto-created when a job is won — is not billing anyone. */
+      submittedPayAppCount: payApps.filter((a) => SENT_PAY_APP_STATUSES.includes(String(a.status ?? '').toLowerCase())).length,
       lastPayApp: lastPayApp ? {
         id: lastPayApp.id, appNumber: lastPayApp.app_number, periodFrom: lastPayApp.period_from,
         periodTo: lastPayApp.period_to, status: lastPayApp.status,
@@ -159,7 +182,7 @@ export async function GET(req: NextRequest) {
       trade: (r.subcontractors as any)?.trade ?? null,
       email: (r.subcontractors as any)?.contact_email ?? (r.subcontractors as any)?.email ?? null,
     })),
-    bidPackages: packages.map((b) => ({ id: b.id, name: b.name, trade: b.trade, status: b.status, awardedAmount: N(b.awarded_amount), awardedTo: b.awarded_to, budgetEstimate: N(b.budget_estimate), csiDivision: b.csi_division, csiCodes: b.csi_codes })),
+    bidPackages: packages.map((b) => ({ id: b.id, name: b.name, trade: b.trade, status: b.status, awardedAmount: N(b.awarded_amount), awardedTo: b.awarded_to, invitedCount: invitesByPackage[b.id] || 0, budgetEstimate: N(b.budget_estimate), csiDivision: b.csi_division, csiCodes: b.csi_codes })),
     vendors: vendorNames,
     costCodes: budget.map((b) => ({ division: b.division, costCode: b.cost_code, description: b.description })),
     counts: {
@@ -175,7 +198,7 @@ export async function GET(req: NextRequest) {
       criticalCount: tasks.filter((tk) => tk.is_critical && tk.status !== 'complete').length,
       nextTasks: upcoming.slice(0, 3).map((tk) => ({ id: tk.id, name: tk.name, startDate: tk.start_date, endDate: tk.end_date, trade: tk.trade, pctComplete: N(tk.pct_complete) })),
     },
-    recent: { lastDailyLogDate: lastLog?.log_date ?? null },
+    recent: { lastDailyLogDate: lastLog?.log_date ?? null, dailyLogDays },
     defaults: {
       retainagePct: N(lastPayApp?.retainage_percent) || N(p.retainage_pct) || 10,
       nextPayAppNumber: payApps.reduce((m, a) => Math.max(m, N(a.app_number)), 0) + 1,
