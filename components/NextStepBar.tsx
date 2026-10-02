@@ -178,7 +178,12 @@ export default function NextStepBar() {
       style={{
         display: 'flex', alignItems: 'center', gap: 14,
         padding: '9px 18px',
-        background: `linear-gradient(90deg, ${tone}1A, rgba(0,0,0,0) 65%)`,
+        /* The tone tint must sit on a SOLID base. It used to fade to
+           rgba(0,0,0,0), leaving the right ~65% of this fixed bar transparent,
+           so scrolled page content (hero titles, tables) bled straight through
+           it — the garbled overlap on every screen. Layer the gradient over the
+           page base so the bar is fully opaque and nothing shows through. */
+        background: `linear-gradient(90deg, ${tone}1A, rgba(0,0,0,0) 65%), var(--bg-base, #0a0a0a)`,
         borderTop: '1px solid rgba(255,255,255,0.06)',
         borderBottom: `1px solid ${tone}33`,
         minWidth: 0,
