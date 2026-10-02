@@ -8,13 +8,19 @@ import type { CapacitorConfig } from '@capacitor/cli';
  *
  * Build modes:
  *   Dev:   CAPACITOR_SERVER_URL=http://localhost:3000  (live reload)
- *   Prod:  uses PRODUCTION_URL constant below (update after each deploy)
+ *   Prod:  the canonical production domain below — the SAME origin desktop
+ *          uses, so iOS and web are the identical site, deploy and auth
+ *          domain. A custom domain auto-tracks the latest prod deploy, so
+ *          this needs no per-deploy update; web changes reach iOS live.
  *
- * After changing this file run: npx cap sync
+ * After changing this file run: npx cap sync (then rebuild/submit the iOS app
+ * once — the server URL is baked into the native shell).
  */
 
-// Override with env var for dev / CI; falls back to production URL
-const PRODUCTION_URL = 'https://saguaro-crm-rho.vercel.app';
+// Override with env var for dev / CI; falls back to the production domain.
+// Must match desktop exactly (saguarocontrol.net), NOT a *.vercel.app alias,
+// or iOS logs in against a different origin than the web app expects.
+const PRODUCTION_URL = 'https://www.saguarocontrol.net';
 const serverUrl = process.env.CAPACITOR_SERVER_URL ?? PRODUCTION_URL;
 
 const config: CapacitorConfig = {
