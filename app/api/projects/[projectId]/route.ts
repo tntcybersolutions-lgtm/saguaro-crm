@@ -4,7 +4,7 @@ import { requirePermission } from '@/lib/permissions';
 import { toCents, toDollars, sumCents, summarizeContract } from '@/lib/calc';
 import { PUNCH_DONE } from '@/lib/project-lifecycle';
 import { apiError } from '@/lib/api-error';
-import { assignProjectToUser } from '@/lib/project-assignment';
+import { assignProjectToUser, endProjectAssignment } from '@/lib/project-assignment';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -236,7 +236,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
 
     const { data: project, error: findErr } = await anyDb
       .from('projects')
-      .select('id, name, owner_name, owner_email')
+      .select('id, name, owner_name, owner_email, assigned_to')
       .eq('id', projectId)
       .eq('tenant_id', tenantId)
       .maybeSingle();
@@ -303,6 +303,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ pr
         .eq('id', projectId)
         .eq('tenant_id', tenantId);
       if (updErr) throw updErr;
+    }
+
+    // Unassigning: the job leaves the previous assignee's My Work hub too.
+    if (updates.assigned_to === null && project.assigned_to) {
+      await endProjectAssignment(db, { tenantId, projectId, userId: project.assigned_to });
     }
 
     if (body.assignedTo && UUID_RE.test(String(body.assignedTo).trim())) {

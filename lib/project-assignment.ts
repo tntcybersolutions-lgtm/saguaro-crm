@@ -14,7 +14,8 @@
  *   3. user_role_assignments — a project-scoped "Project Manager" grant, which
  *      is what getEffectivePermissions() reads (best effort: skipped when the
  *      tenant has no such role).
- * The assignee gets an in-app notification (no email).
+ * The assignee gets an in-app notification (no email). On a reassignment the
+ * previous assignee's work assignment is ended (see endProjectAssignment).
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
@@ -26,6 +27,37 @@ type Db = SupabaseClient<Database>;
 export type AssignResult =
   | { ok: true; assigneeName: string | null; documentsAccessGranted: boolean }
   | { ok: false; reason: 'not_member' };
+
+const ASSIGNMENT_ROLE = 'project_manager';
+
+/**
+ * Take a project back from its previous assignee: end their active
+ * project_manager work_assignments row for this project (status 'ended' +
+ * ended_at — the same way /api/work-assignments ends a row), so the job leaves
+ * their My Work hub.
+ *
+ * Role grants are deliberately NOT touched. user_role_assignments has no
+ * column recording who/what created a row, so the project-scoped "Project
+ * Manager" grant assignProjectToUser adds is indistinguishable from one an
+ * admin made on Roles & Access — revoking it could strip access somebody
+ * granted on purpose.
+ */
+export async function endProjectAssignment(
+  db: Db,
+  args: { tenantId: string; projectId: string; userId: string },
+): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const anyDb = db as any;
+  const { error } = await anyDb
+    .from('work_assignments')
+    .update({ status: 'ended', ended_at: new Date().toISOString() } as never)
+    .eq('tenant_id', args.tenantId)
+    .eq('project_id', args.projectId)
+    .eq('assignee_user_id', args.userId)
+    .eq('role', ASSIGNMENT_ROLE)
+    .eq('status', 'active');
+  if (error) throw error;
+}
 
 export async function assignProjectToUser(
   db: Db,
@@ -53,6 +85,16 @@ export async function assignProjectToUser(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const anyDb = db as any;
 
+  // Who holds the job now — a reassignment ends their work assignment below.
+  const { data: current, error: curErr } = await anyDb
+    .from('projects')
+    .select('assigned_to')
+    .eq('id', projectId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+  if (curErr) throw curErr;
+  const previousAssignee: string | null = (current as { assigned_to?: string | null } | null)?.assigned_to ?? null;
+
   // 1) Project's assignee of record.
   const { error: updErr } = await anyDb
     .from('projects')
@@ -61,9 +103,13 @@ export async function assignProjectToUser(
     .eq('tenant_id', tenantId);
   if (updErr) throw updErr;
 
+  if (previousAssignee && previousAssignee !== assigneeUserId) {
+    await endProjectAssignment(db, { tenantId, projectId, userId: previousAssignee });
+  }
+
   // 2) work_assignments — honor UNIQUE (tenant_id, project_id, assignee_user_id,
   //    role): reactivate an ended row rather than duplicate-key insert.
-  const ROLE = 'project_manager';
+  const ROLE = ASSIGNMENT_ROLE;
   const { data: existingWa, error: waFindErr } = await anyDb
     .from('work_assignments')
     .select('id')
