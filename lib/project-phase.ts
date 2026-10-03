@@ -157,6 +157,8 @@ export interface PhaseContextLike {
   subs?: unknown[] | null;
   counts?: { scheduleTasks?: number } | null;
   recent?: { lastDailyLogDate?: unknown; dailyLogDays?: unknown } | null;
+  /** From /api/project-context — proposal versions on the job. */
+  proposal?: { count?: number; accepted?: unknown; latest?: { status?: unknown } | null } | null;
 }
 
 export interface PhaseMoneyLike {
@@ -208,7 +210,13 @@ export function stepsDone(
     estimate:       (Number(ctx?.takeoff?.pricedTotal) || 0) > 0 || lineCount > 0,
     'bid-packages': packages.some((p) => (Number(p?.invitedCount) || 0) > 0),
     leveling:       packages.some((p) => Boolean(p?.awardedTo)),
-    proposal:       contract > 0,
+    /* A proposal step is done when a proposal actually went out (sent,
+       viewed, signed or accepted). A contract amount typed in when the job was
+       created used to tick it, so a job still bidding read "every stage done".
+       Callers without proposal data keep the old contract rule. */
+    proposal:       ctx?.proposal
+      ? Boolean(ctx.proposal.accepted) || ['sent', 'viewed', 'signed', 'accepted'].includes(String(ctx.proposal.latest?.status || '').toLowerCase())
+      : contract > 0,
     budget:         contract > 0 && lineCount > 0,
     subs:           (ctx?.subs || []).length > 0,
     schedule:       (Number(ctx?.counts?.scheduleTasks) || 0) > 0,
