@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Check, Lock, Warning } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#1a8a4a', RED = '#c03030', FIELD = '#1c1c1e';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#1a8a4a', RED = '#c03030', FIELD = '#1c1c1e';
 
 type Question = {
   id: string;
@@ -152,12 +152,12 @@ export default function PrequalPortal() {
   return (
     <div style={{ minHeight: '100vh', background: DARK, fontFamily: 'system-ui,sans-serif', color: TEXT }}>
       <div style={{ background: 'rgba(20,20,22,.96)', borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1 }}>SAGUARO</span>
+        <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: '-0.01em' }}>Saguaro</span>
         <span style={{ fontSize: 11, color: DIM, marginLeft: 8 }}>Subcontractor Prequalification Portal</span>
       </div>
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ background: 'rgba(245, 158, 11,.06)', border: `1px solid rgba(245, 158, 11,.2)`, borderRadius: 10, padding: '16px 20px', marginBottom: 28 }}>
+        <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 10, padding: '16px 20px', marginBottom: 28 }}>
           <div style={{ fontWeight: 800, fontSize: 18, color: GOLD, marginBottom: 4 }}>{template?.name || 'Prequalification Questionnaire'}</div>
           <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
             <strong style={{ color: TEXT }}>{info.companyName}</strong> has invited{info.subName ? <> <strong style={{ color: TEXT }}>{info.subName}</strong></> : ' you'} to complete this prequalification. All information is transmitted securely.
@@ -190,7 +190,7 @@ export default function PrequalPortal() {
             <button
               type="submit"
               disabled={saving}
-              style={{ width: '100%', padding: '14px', background: saving ? '#6E6E73' : `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 9, color: '#1C1C1E', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
+              style={{ width: '100%', padding: '14px', background: saving ? '#6E6E73' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 9, color: '#0A0A00', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
             >
               {saving ? 'Submitting…' : 'Submit Prequalification →'}
             </button>

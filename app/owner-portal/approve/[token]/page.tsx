@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, CheckCircle, X, XCircle } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22a85e',RED='#ff7070';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22a85e',RED='#ff7070';
 
 export default function OwnerApprovePage() {
   const params = useParams();
@@ -27,7 +27,7 @@ export default function OwnerApprovePage() {
     setSubmitting(false);
   }
 
-  if (loading) return <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',color:DIM}}>Loading approval request...</div>;
+  if (loading) return <div style={{minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',color:DIM}}>Loading approval request…</div>;
 
   if (done) return <div style={{minHeight:'100vh',background:DARK,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
     <div style={{marginBottom:16}}>{decision==='approved'?<CheckCircle size={52} weight="fill" color={GREEN} />:<XCircle size={52} weight="fill" color={RED} />}</div>
@@ -46,13 +46,13 @@ export default function OwnerApprovePage() {
         {/* Header */}
         <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:32}}>
           <Cactus size={24} weight="fill" color={GOLD} />
-          <span style={{fontWeight:900,fontSize:18,letterSpacing:2,color:GOLD}}>SAGUARO</span>
-          <span style={{fontSize:10,background:GOLD,color:'#1C1C1E',padding:'2px 8px',borderRadius:4,fontWeight:700}}>OWNER PORTAL</span>
+          <span style={{fontWeight:900,fontSize:18,color:GOLD}}>Saguaro</span>
+          <span style={{fontSize:10,background:GOLD,color:'#0A0A00',padding:'2px 8px',borderRadius:4,fontWeight:700}}>Owner Portal</span>
         </div>
 
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,overflow:'hidden',boxShadow:'0 20px 60px rgba(0,0,0,.5)'}}>
           <div style={{background:'#1c1c1e',padding:'20px 24px',borderBottom:`1px solid ${BORDER}`}}>
-            <div style={{fontSize:11,fontWeight:700,letterSpacing:2,textTransform:'uppercase' as const,color:DIM,marginBottom:6}}>Approval Required</div>
+            <div style={{fontSize:11,fontWeight:700,color:DIM,marginBottom:6}}>Approval Required</div>
             <h2 style={{fontSize:20,fontWeight:800,color:TEXT,margin:0}}>{title}</h2>
           </div>
 
@@ -60,19 +60,19 @@ export default function OwnerApprovePage() {
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
               {[['Project',project],['Contractor','Copper State Developments'],['Period','Feb 1 – Feb 28, 2026'],['Amount Due','$'+amount.toLocaleString()]].map(r=>(
                 <div key={r[0]} style={{background:'#1c1c1e',borderRadius:8,padding:'12px 16px'}}>
-                  <div style={{fontSize:11,color:DIM,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:4}}>{r[0]}</div>
+                  <div style={{fontSize:11,color:DIM,fontWeight:700,marginBottom:4}}>{r[0]}</div>
                   <div style={{fontSize:15,fontWeight:700,color:r[0]==='Amount Due'?GOLD:TEXT}}>{r[1]}</div>
                 </div>
               ))}
             </div>
 
-            <div style={{background:'rgba(245, 158, 11,.06)',border:'1px solid rgba(245, 158, 11,.2)',borderRadius:10,padding:'16px 20px',marginBottom:24,fontSize:13,color:DIM,lineHeight:1.7}}>
+            <div style={{background:'color-mix(in srgb, var(--brand-primary) 6%, transparent)',border:'1px solid var(--brand-primary-18)',borderRadius:10,padding:'16px 20px',marginBottom:24,fontSize:13,color:DIM,lineHeight:1.7}}>
               <strong style={{color:TEXT}}>What you&apos;re approving:</strong> Payment Application #2 for work completed through February 28, 2026. This represents 14.8% completion of the total contract value of $2,895,000. Conditional lien waivers from all 6 subcontractors are attached.
             </div>
 
             <div style={{marginBottom:24}}>
-              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:8}}>Notes (optional)</label>
-              <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} placeholder="Add any notes about this approval..." style={{width:'100%',padding:'10px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none',resize:'vertical' as const}}/>
+              <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,marginBottom:8}}>Notes (Optional)</label>
+              <textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} placeholder="Add any notes about this approval…" style={{width:'100%',padding:'10px 14px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none',resize:'vertical' as const}}/>
             </div>
 
             <div style={{display:'flex',gap:12}}>

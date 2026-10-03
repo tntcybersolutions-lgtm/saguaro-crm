@@ -2,25 +2,25 @@ import React from 'react';
 import Link from 'next/link';
 import { Cactus } from '@phosphor-icons/react/dist/ssr';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',RED='#ef4444';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',RED='#ef4444';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:100,height:56,background:'rgba(20,20,22,.96)',borderBottom:`1px solid ${BORDER}`,display:'flex',alignItems:'center',padding:'0 32px',gap:24,backdropFilter:'blur(12px)'}}>
     <Link href="/" style={{display:'flex',alignItems:'center',gap:8,textDecoration:'none'}}>
       <Cactus size={22} weight="fill" color={GOLD} />
-      <span style={{fontWeight:800,fontSize:16,letterSpacing:1,color:GOLD}}>SAGUARO</span>
-      <span style={{fontSize:10,background:GOLD,color:'#1C1C1E',padding:'1px 6px',borderRadius:4,fontWeight:700}}>PLATFORM</span>
+      <span style={{fontWeight:800,fontSize:16,color:GOLD}}>Saguaro</span>
+      <span style={{fontSize:10,background:GOLD,color:'#0A0A00',padding:'1px 6px',borderRadius:4,fontWeight:700}}>Platform</span>
     </Link>
     <div style={{flex:1}}/>
-    <Link href="/login" style={{padding:'7px 16px',background:'rgba(245, 158, 11,.12)',border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none'}}>Log In</Link>
-    <Link href="/signup" style={{padding:'7px 16px',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,borderRadius:7,color:'#1C1C1E',fontSize:13,fontWeight:800,textDecoration:'none'}}>Start Free</Link>
+    <Link href="/login" style={{padding:'7px 16px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none'}}>Log In</Link>
+    <Link href="/signup" style={{padding:'7px 16px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:7,color:'#0A0A00',fontSize:13,fontWeight:800,textDecoration:'none'}}>Start Free</Link>
   </nav>
 );
 
 const UPTIME_TIERS = [
   {plan:'Starter',uptime:'99.9%',desc:'Up to 8.7 hours downtime per year',color:'#6b7280'},
   {plan:'Professional',uptime:'99.95%',desc:'Up to 4.4 hours downtime per year',color:GOLD,popular:true},
-  {plan:'Enterprise',uptime:'99.99%',desc:'Up to 52 minutes downtime per year',color:'#FBBF24'},
+  {plan:'Enterprise',uptime:'99.99%',desc:'Up to 52 minutes downtime per year',color:'var(--brand-primary-strong)'},
 ];
 
 const SUPPORT_ROWS = [
@@ -52,7 +52,7 @@ export default function SLAPage() {
 
       {/* Hero */}
       <div style={{paddingTop:120,textAlign:'center',padding:'120px 24px 60px'}}>
-        <div style={{fontSize:12,fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:2,marginBottom:14}}>Service Level Agreement</div>
+        <div style={{fontSize:13,fontWeight:700,color:GOLD,marginBottom:14}}>Service Level Agreement</div>
         <h1 style={{fontSize:52,fontWeight:900,margin:'0 0 16px',lineHeight:1.1}}>Our Commitment to You</h1>
         <p style={{fontSize:18,color:DIM,maxWidth:560,margin:'0 auto',lineHeight:1.6}}>
           Uptime guarantees, support response times, and credit policies — clearly stated, no fine print.
@@ -67,9 +67,9 @@ export default function SLAPage() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20}}>
           {UPTIME_TIERS.map(t=>(
             <div key={t.plan} style={{background:RAISED,border:`2px solid ${t.popular?t.color:BORDER}`,borderRadius:14,padding:'28px 24px',textAlign:'center',position:'relative'}}>
-              {t.popular&&<div style={{position:'absolute',top:-1,left:0,right:0,background:`linear-gradient(135deg,${GOLD},#FBBF24)`,borderRadius:'12px 12px 0 0',padding:'5px 0',fontSize:10,fontWeight:800,color:'#1C1C1E',letterSpacing:1}}>MOST POPULAR</div>}
+              {t.popular&&<div style={{position:'absolute',top:-1,left:0,right:0,background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:'12px 12px 0 0',padding:'5px 0',fontSize:11,fontWeight:800,color:'#0A0A00'}}>Most Popular</div>}
               <div style={{marginTop:t.popular?12:0}}>
-                <div style={{fontSize:12,fontWeight:700,letterSpacing:1,textTransform:'uppercase',color:t.color,marginBottom:10}}>{t.plan}</div>
+                <div style={{fontSize:13,fontWeight:700,color:t.color,marginBottom:10}}>{t.plan}</div>
                 <div style={{fontSize:52,fontWeight:900,color:TEXT,lineHeight:1}}>{t.uptime}</div>
                 <div style={{fontSize:13,color:DIM,marginTop:10,lineHeight:1.5}}>{t.desc}</div>
               </div>
@@ -87,19 +87,19 @@ export default function SLAPage() {
             <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
               <thead>
                 <tr style={{background:'#1c1c1e'}}>
-                  <th style={{padding:'14px 20px',textAlign:'left',color:DIM,fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:.5}}>Priority</th>
-                  <th style={{padding:'14px 20px',textAlign:'left',color:DIM,fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:.5}}>Description</th>
-                  <th style={{padding:'14px 20px',textAlign:'center',color:'#FBBF24',fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:.5}}>Enterprise</th>
-                  <th style={{padding:'14px 20px',textAlign:'center',color:GOLD,fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:.5}}>Professional</th>
-                  <th style={{padding:'14px 20px',textAlign:'center',color:'#6b7280',fontWeight:700,fontSize:11,textTransform:'uppercase',letterSpacing:.5}}>Starter</th>
+                  <th style={{padding:'14px 20px',textAlign:'left',color:DIM,fontWeight:700,fontSize:12}}>Priority</th>
+                  <th style={{padding:'14px 20px',textAlign:'left',color:DIM,fontWeight:700,fontSize:12}}>Description</th>
+                  <th style={{padding:'14px 20px',textAlign:'center',color:'var(--brand-primary-strong)',fontWeight:700,fontSize:12}}>Enterprise</th>
+                  <th style={{padding:'14px 20px',textAlign:'center',color:GOLD,fontWeight:700,fontSize:12}}>Professional</th>
+                  <th style={{padding:'14px 20px',textAlign:'center',color:'#6b7280',fontWeight:700,fontSize:12}}>Starter</th>
                 </tr>
               </thead>
               <tbody>
                 {SUPPORT_ROWS.map((row,i)=>(
                   <tr key={row.priority} style={{borderTop:`1px solid ${BORDER}`,background:i%2===0?'transparent':'rgba(0,0,0,.01)'}}>
                     <td style={{padding:'14px 20px'}}>
-                      <span style={{fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:4,background:row.priority==='Critical'?'rgba(239,68,68,.15)':row.priority==='High'?'rgba(245, 158, 11,.12)':'rgba(0,0,0,.06)',color:row.priority==='Critical'?RED:row.priority==='High'?GOLD:DIM}}>
-                        {row.priority.toUpperCase()}
+                      <span style={{fontSize:11,fontWeight:800,padding:'3px 10px',borderRadius:4,background:row.priority==='Critical'?'rgba(239,68,68,.15)':row.priority==='High'?'var(--brand-primary-12)':'rgba(0,0,0,.06)',color:row.priority==='Critical'?RED:row.priority==='High'?GOLD:DIM}}>
+                        {row.priority}
                       </span>
                     </td>
                     <td style={{padding:'14px 20px',color:DIM,fontSize:12}}>{row.desc}</td>
@@ -124,7 +124,7 @@ export default function SLAPage() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
           {CREDITS.map(c=>(
             <div key={c.threshold} style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:12,padding:'24px 22px',textAlign:'center'}}>
-              <div style={{fontSize:13,color:DIM,marginBottom:8}}>Monthly uptime</div>
+              <div style={{fontSize:13,color:DIM,marginBottom:8}}>Monthly Uptime</div>
               <div style={{fontSize:26,fontWeight:900,color:RED,marginBottom:8}}>{c.threshold}</div>
               <div style={{fontSize:22,fontWeight:800,color:GOLD,marginBottom:8}}>{c.credit}</div>
               <div style={{fontSize:12,color:DIM}}>{c.desc}</div>
@@ -132,7 +132,7 @@ export default function SLAPage() {
           ))}
         </div>
         <div style={{marginTop:20,padding:'16px 20px',background:'rgba(239,68,68,.06)',border:'1px solid rgba(239,68,68,.2)',borderRadius:8,fontSize:13,color:DIM}}>
-          <strong style={{color:TEXT}}>Credit cap:</strong> Total credits in any calendar month shall not exceed 50% of your monthly fee. Credits are non-transferable and have no cash value. To request a review, email <a href="mailto:sla@saguarocontrol.net" style={{color:GOLD,textDecoration:'none'}}>sla@saguarocontrol.net</a> within 30 days of the incident.
+          <strong style={{color:TEXT}}>Credit Cap:</strong> Total credits in any calendar month shall not exceed 50% of your monthly fee. Credits are non-transferable and have no cash value. To request a review, email <a href="mailto:sla@saguarocontrol.net" style={{color:GOLD,textDecoration:'none'}}>sla@saguarocontrol.net</a> within 30 days of the incident.
         </div>
       </div>
 
@@ -170,9 +170,9 @@ export default function SLAPage() {
 
       {/* CTA */}
       <div style={{textAlign:'center',padding:'60px 24px',background:RAISED,borderTop:`1px solid ${BORDER}`}}>
-        <h2 style={{fontSize:26,fontWeight:900,marginBottom:10}}>SLA questions or incident reports?</h2>
+        <h2 style={{fontSize:26,fontWeight:900,marginBottom:10}}>SLA Questions or Incident Reports?</h2>
         <p style={{color:DIM,marginBottom:20,fontSize:15}}>We respond to SLA inquiries within one business day.</p>
-        <a href="mailto:sla@saguarocontrol.net" style={{display:'inline-block',padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,borderRadius:9,color:'#1C1C1E',fontWeight:800,fontSize:15,textDecoration:'none'}}>
+        <a href="mailto:sla@saguarocontrol.net" style={{display:'inline-block',padding:'13px 32px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:9,color:'#0A0A00',fontWeight:800,fontSize:15,textDecoration:'none'}}>
           sla@saguarocontrol.net
         </a>
         <div style={{marginTop:20,fontSize:13,color:DIM}}>

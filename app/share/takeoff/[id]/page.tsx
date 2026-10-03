@@ -7,8 +7,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 
-const GOLD = '#D4A017';
-const NAVY = '#0a0a0a';
+const GOLD = 'var(--brand-primary)';
+const NAVY = '#0A0A00'; // text on gold fills
 
 type Meta = { project: string; company: string; sell: number; lines: number; expiresAt: string; updatedAt: string | null; acceptedAt?: string | null; acceptedBy?: string | null; contractValue?: number | null };
 
@@ -61,7 +61,7 @@ export default function SharedEstimate() {
   if (err) return (
     <Shell>
       <div style={{ textAlign: 'center', maxWidth: 460 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#f0f3f8', marginBottom: 8 }}>Estimate unavailable</div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#f0f3f8', marginBottom: 8 }}>Estimate Unavailable</div>
         <p style={{ color: '#8b949e', margin: 0, fontSize: 14, lineHeight: 1.5 }}>{err}</p>
         <p style={{ color: '#6b7280', marginTop: 14, fontSize: 12.5 }}>Ask the sender for a fresh link.</p>
       </div>
@@ -71,11 +71,11 @@ export default function SharedEstimate() {
   const expLabel = meta?.expiresAt ? new Date(meta.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0b0e13', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', flexDirection: 'column' }}>
       {/* Branded toolbar */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 5, background: 'rgba(13,17,23,0.92)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(245,158,11,0.22)', padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 5, background: 'rgba(13,17,23,0.92)', backdropFilter: 'blur(8px)', borderBottom: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)', padding: '11px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-          <span aria-hidden style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg,${GOLD},#B8860B)`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: NAVY, fontWeight: 900, fontSize: 15, flexShrink: 0 }}>S</span>
+          <span aria-hidden style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: NAVY, fontWeight: 900, fontSize: 15, flexShrink: 0 }}>S</span>
           <div style={{ minWidth: 0 }}>
             <div style={{ color: '#f0f3f8', fontWeight: 800, fontSize: 14.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meta?.project || 'Estimate'}</div>
             <div style={{ color: '#8b949e', fontSize: 11.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meta?.company} · read-only estimate</div>
@@ -97,7 +97,7 @@ export default function SharedEstimate() {
               Accepted{meta.acceptedBy ? ` — ${meta.acceptedBy}` : ''}
             </span>
           ) : (
-            <button onClick={() => setAcceptOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 9, padding: '9px 18px', cursor: 'pointer', fontWeight: 800, fontSize: 13.5, color: NAVY, background: `linear-gradient(135deg,#F7C948,${GOLD})` }}>
+            <button onClick={() => setAcceptOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: 'none', borderRadius: 9, padding: '9px 18px', cursor: 'pointer', fontWeight: 800, fontSize: 13.5, color: NAVY, background: 'linear-gradient(135deg, var(--brand-primary-strong), var(--brand-primary))' }}>
               Accept Estimate
             </button>
           )}
@@ -106,10 +106,10 @@ export default function SharedEstimate() {
 
       {/* Accept flow — client e-signs (typed name) → promotes sell to contract value */}
       {acceptOpen && !meta?.acceptedAt && (
-        <div style={{ borderBottom: '1px solid rgba(245,158,11,0.25)', background: 'rgba(13,17,23,0.96)', padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ borderBottom: '1px solid var(--brand-primary-25)', background: 'rgba(13,17,23,0.96)', padding: '13px 18px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ color: '#e6edf3', fontSize: 13.5, fontWeight: 700 }}>Accept this estimate at <span style={{ color: GOLD }}>${(meta?.sell ?? 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>?</div>
           <input value={acceptName} onChange={(ev) => setAcceptName(ev.target.value)} placeholder="Type your full name to sign" style={{ flex: 1, minWidth: 200, background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.18)', borderRadius: 8, color: '#e6edf3', padding: '9px 12px', fontSize: 13.5 }} />
-          <button onClick={acceptEstimate} disabled={accepting || !acceptName.trim()} style={{ border: 'none', borderRadius: 8, padding: '9px 18px', cursor: accepting || !acceptName.trim() ? 'not-allowed' : 'pointer', opacity: accepting || !acceptName.trim() ? 0.6 : 1, fontWeight: 800, fontSize: 13.5, color: NAVY, background: `linear-gradient(135deg,#F7C948,${GOLD})` }}>{accepting ? 'Recording…' : 'Sign & Accept'}</button>
+          <button onClick={acceptEstimate} disabled={accepting || !acceptName.trim()} style={{ border: 'none', borderRadius: 8, padding: '9px 18px', cursor: accepting || !acceptName.trim() ? 'not-allowed' : 'pointer', opacity: accepting || !acceptName.trim() ? 0.6 : 1, fontWeight: 800, fontSize: 13.5, color: NAVY, background: 'linear-gradient(135deg, var(--brand-primary-strong), var(--brand-primary))' }}>{accepting ? 'Recording…' : 'Sign & Accept'}</button>
           <button onClick={() => { setAcceptOpen(false); setAcceptMsg(''); }} style={{ border: '1px solid rgba(255,255,255,0.16)', borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 700, fontSize: 13.5, color: '#9aa6b6', background: 'transparent' }}>Cancel</button>
           {acceptMsg && <div style={{ width: '100%', color: '#f0a24a', fontSize: 12.5 }}>{acceptMsg}</div>}
           <div style={{ width: '100%', color: '#6b7280', fontSize: 11.5 }}>Typing your name records a legally-meaningful acceptance (name, timestamp &amp; IP) and sets the contract value. This does not replace a signed contract.</div>
@@ -125,7 +125,7 @@ export default function SharedEstimate() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: '100vh', background: '#0b0e13', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       {children}
     </div>
   );

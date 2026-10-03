@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { CONTRACTOR_TRADES as TRADES } from '@/lib/contractor-trades';
 
-const DARK = '#0a0a0a';
-const GOLD = '#F59E0B';
+const DARK = 'var(--bg-base)';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
-const RAISED = '#141416';
+const RAISED = 'var(--bg-surface)';
 const GREEN = '#22c55e';
 
 const inputStyle: React.CSSProperties = {
@@ -29,8 +29,6 @@ const labelStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 700,
   color: DIM,
-  textTransform: 'uppercase',
-  letterSpacing: 0.6,
   marginBottom: 6,
 };
 
@@ -154,8 +152,8 @@ export default function SandboxPage() {
               borderTop: `3px solid ${GOLD}`, borderRadius: 10,
               padding: '20px 24px', marginBottom: 28, textAlign: 'left',
             }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: GOLD, marginBottom: 14 }}>
-                Pre-loaded in your sandbox
+              <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, marginBottom: 14 }}>
+                Pre-Loaded in Your Sandbox
               </div>
               {[
                 'Complete AI takeoff — 2,400 SF custom home (ran in 47 seconds)',
@@ -172,10 +170,10 @@ export default function SandboxPage() {
 
             <Link href="/app" style={{
               display: 'block', padding: '15px 32px',
-              background: `linear-gradient(135deg, ${GOLD}, #FBBF24)`,
-              color: '#1C1C1E', borderRadius: 9, fontWeight: 900,
+              background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`,
+              color: '#0A0A00', borderRadius: 9, fontWeight: 900,
               fontSize: 16, textDecoration: 'none', textAlign: 'center',
-              boxShadow: `0 4px 24px rgba(245,158,11,0.35)`,
+              boxShadow: `0 4px 24px var(--brand-primary-35)`,
               letterSpacing: 0.3,
             }}>
               Enter My Sandbox →
@@ -201,11 +199,11 @@ export default function SandboxPage() {
         }
         .sandbox-input:focus {
           border-color: ${GOLD} !important;
-          box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
+          box-shadow: 0 0 0 3px var(--brand-primary-12);
         }
         .sandbox-cta:hover {
           filter: brightness(1.07);
-          box-shadow: 0 6px 28px rgba(245,158,11,0.45) !important;
+          box-shadow: 0 6px 28px color-mix(in srgb, var(--brand-primary) 45%, transparent) !important;
         }
         .sandbox-cta:active {
           transform: translateY(1px);
@@ -263,14 +261,14 @@ export default function SandboxPage() {
               <path d="M7 9 C7 9 4 10 4 13 L4 16 L6 16 L6 13 C6 13 7 12 8 12" stroke={GOLD} strokeWidth="1.2" fill="none" strokeLinecap="round"/>
               <path d="M17 9 C17 9 20 10 20 13 L20 16 L18 16 L18 13 C18 13 17 12 16 12" stroke={GOLD} strokeWidth="1.2" fill="none" strokeLinecap="round"/>
             </svg>
-            <span style={{ fontWeight: 900, fontSize: 16, letterSpacing: 2.5, color: GOLD }}>SAGUARO</span>
+            <span style={{ fontWeight: 900, fontSize: 16, letterSpacing: '-0.01em', color: GOLD }}>Saguaro</span>
           </Link>
           <div style={{ flex: 1 }} />
           <span style={{ fontSize: 13, color: DIM }}>Already have an account?</span>
           <Link href="/login" style={{
             fontSize: 13, fontWeight: 700, color: GOLD,
             textDecoration: 'none', padding: '6px 14px',
-            border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 6,
+            border: `1px solid var(--brand-primary-35)`, borderRadius: 6,
           }}>
             Log In →
           </Link>
@@ -299,7 +297,7 @@ export default function SandboxPage() {
 
               {/* Header */}
               <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, marginBottom: 10 }}>
                   Free 14-Day Trial
                 </div>
                 <h1 style={{ fontSize: 26, fontWeight: 900, color: TEXT, lineHeight: 1.2, margin: 0 }}>
@@ -322,7 +320,7 @@ export default function SandboxPage() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 12, fontWeight: 700,
                       background: step >= s ? GOLD : 'rgba(0,0,0,0.06)',
-                      color: step >= s ? '#1C1C1E' : DIM,
+                      color: step >= s ? '#0A0A00' : DIM,
                       border: step >= s ? 'none' : `1px solid ${BORDER}`,
                       transition: 'all 0.2s',
                     }}>
@@ -409,10 +407,10 @@ export default function SandboxPage() {
                       style={{
                         width: '100%', padding: '14px 20px',
                         background: (!firstName || !lastName || !email || !company)
-                          ? 'rgba(245,158,11,0.4)'
-                          : `linear-gradient(135deg, ${GOLD}, #FBBF24)`,
+                          ? 'color-mix(in srgb, var(--brand-primary) 40%, transparent)'
+                          : `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`,
                         border: 'none', borderRadius: 9,
-                        color: '#1C1C1E', fontSize: 15, fontWeight: 900,
+                        color: '#0A0A00', fontSize: 15, fontWeight: 900,
                         cursor: (!firstName || !lastName || !email || !company) ? 'not-allowed' : 'pointer',
                         marginBottom: 0,
                         transition: 'all 0.15s',
@@ -426,7 +424,7 @@ export default function SandboxPage() {
                   <>
                     {/* Step 2: Phone + Trade + Submit */}
                     <div style={{ marginBottom: 14 }}>
-                      <label style={labelStyle}>Phone (optional)</label>
+                      <label style={labelStyle}>Phone (Optional)</label>
                       <input
                         className="sandbox-input"
                         type="tel" value={phone} onChange={e => setPhone(e.target.value)}
@@ -451,7 +449,7 @@ export default function SandboxPage() {
                           paddingRight: 36,
                         }}
                       >
-                        <option value="">Select your trade...</option>
+                        <option value="">Select your trade…</option>
                         {TRADES.map(t => <option key={t} value={t}>{t}</option>)}
                       </select>
                     </div>
@@ -463,12 +461,12 @@ export default function SandboxPage() {
                       style={{
                         width: '100%', padding: '15px 20px',
                         background: loading
-                          ? 'rgba(245,158,11,0.5)'
-                          : `linear-gradient(135deg, ${GOLD}, #FBBF24)`,
+                          ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)'
+                          : `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`,
                         border: 'none', borderRadius: 9,
-                        color: '#1C1C1E', fontSize: 16, fontWeight: 900,
+                        color: '#0A0A00', fontSize: 16, fontWeight: 900,
                         cursor: loading ? 'not-allowed' : 'pointer',
-                        boxShadow: loading ? 'none' : '0 4px 20px rgba(245,158,11,0.3)',
+                        boxShadow: loading ? 'none' : '0 4px 20px var(--brand-primary-35)',
                         marginBottom: 12,
                         transition: 'all 0.15s',
                         letterSpacing: 0.3,
@@ -511,20 +509,20 @@ export default function SandboxPage() {
                     <path d="M7 1L1 4v4c0 3.3 2.5 6.4 6 7 3.5-.6 6-3.7 6-7V4L7 1z" stroke={DIM} strokeWidth="1.2" fill="none" strokeLinejoin="round"/>
                     <polyline points="4,8 6,10 10,6" stroke={GREEN} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                ), text: '256-bit SSL' },
+                ), text: '256-Bit SSL' },
                 { icon: (
                   <svg width="13" height="16" viewBox="0 0 13 16" fill="none">
                     <rect x="1" y="6" width="11" height="9" rx="2" stroke={DIM} strokeWidth="1.2" fill="none"/>
                     <path d="M4 6V4a2.5 2.5 0 0 1 5 0v2" stroke={DIM} strokeWidth="1.2" strokeLinecap="round" fill="none"/>
                     <circle cx="6.5" cy="10.5" r="1.2" fill={GOLD}/>
                   </svg>
-                ), text: 'No CC required' },
+                ), text: 'No CC Required' },
                 { icon: (
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
                     <circle cx="7.5" cy="7.5" r="6.5" stroke={DIM} strokeWidth="1.2" fill="none"/>
                     <polyline points="4,7.5 6.5,10 11,5" stroke={GREEN} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                ), text: 'Cancel anytime' },
+                ), text: 'Cancel Anytime' },
               ].map(({ icon, text }) => (
                 <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: DIM }}>
                   {icon}
@@ -545,7 +543,7 @@ export default function SandboxPage() {
 
               {/* ── What's in Your Sandbox ── */}
               <div style={{ marginBottom: 32 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: GOLD, marginBottom: 14 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, marginBottom: 14 }}>
                   What's in Your Sandbox
                 </div>
                 <div style={{
@@ -574,7 +572,7 @@ export default function SandboxPage() {
               {/* ── Live Activity Feed ── */}
               <div style={{ marginBottom: 32 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: GOLD }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: GOLD }}>
                     Live Activity
                   </div>
                   <PulseDot />
@@ -611,28 +609,28 @@ export default function SandboxPage() {
 
               {/* ── Comparison Table ── */}
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: GOLD, marginBottom: 14 }}>
-                  Saguaro vs. The Old Way
+                <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, marginBottom: 14 }}>
+                  Saguaro vs. the Old Way
                 </div>
                 <div className="comparison-table" style={{
                   background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12,
                   overflow: 'hidden', fontSize: 13,
                 }}>
                   {/* Header */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: 'rgba(245,158,11,0.06)', borderBottom: `1px solid ${BORDER}` }}>
-                    <div style={{ padding: '10px 14px', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5 }}></div>
-                    <div style={{ padding: '10px 14px', fontSize: 11, fontWeight: 800, color: GOLD, textTransform: 'uppercase', letterSpacing: 0.5, borderLeft: `1px solid ${BORDER}` }}>Saguaro</div>
-                    <div style={{ padding: '10px 14px', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, borderLeft: `1px solid ${BORDER}` }}>Procore Demo</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', borderBottom: `1px solid ${BORDER}` }}>
+                    <div style={{ padding: '10px 14px', fontSize: 11, fontWeight: 700, color: DIM }}></div>
+                    <div style={{ padding: '10px 14px', fontSize: 11, fontWeight: 800, color: GOLD, borderLeft: `1px solid ${BORDER}` }}>Saguaro</div>
+                    <div style={{ padding: '10px 14px', fontSize: 11, fontWeight: 700, color: DIM, borderLeft: `1px solid ${BORDER}` }}>Procore Demo</div>
                   </div>
                   {/* Row 1 */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: `1px solid rgba(229,229,234,0.5)` }}>
-                    <div style={{ padding: '12px 14px', color: DIM, fontWeight: 600 }}>Setup time</div>
+                    <div style={{ padding: '12px 14px', color: DIM, fontWeight: 600 }}>Setup Time</div>
                     <div style={{ padding: '12px 14px', color: GREEN, fontWeight: 700, borderLeft: `1px solid rgba(229,229,234,0.5)` }}>60 seconds</div>
                     <div style={{ padding: '12px 14px', color: 'rgba(110,110,115,0.5)', borderLeft: `1px solid rgba(229,229,234,0.5)` }}>Schedule a call (2–5 days)</div>
                   </div>
                   {/* Row 2 */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
-                    <div style={{ padding: '12px 14px', color: DIM, fontWeight: 600 }}>What you get</div>
+                    <div style={{ padding: '12px 14px', color: DIM, fontWeight: 600 }}>What You Get</div>
                     <div style={{ padding: '12px 14px', color: GREEN, fontWeight: 700, borderLeft: `1px solid rgba(229,229,234,0.5)`, lineHeight: 1.4 }}>Full product, real AI, your data</div>
                     <div style={{ padding: '12px 14px', color: 'rgba(110,110,115,0.5)', borderLeft: `1px solid rgba(229,229,234,0.5)`, lineHeight: 1.4 }}>Guided tour with sales rep</div>
                   </div>

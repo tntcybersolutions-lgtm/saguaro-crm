@@ -5,7 +5,7 @@ import MarketingNav from '@/components/MarketingNav';
 import { CurrencyDollar, TrendUp, CalendarBlank, Receipt, FileLock, ShieldCheck, Warning, ClipboardText, ArrowsClockwise, HardHat, Hourglass, FilePdf, DownloadSimple } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DIM='#CBD5E1',TEXT='#FFFFFF',HAIR='rgba(255,255,255,0.08)';
+const GOLD='var(--brand-primary)',DIM='#CBD5E1',TEXT='#FFFFFF',HAIR='rgba(255,255,255,0.08)';
 
 const REPORTS: { icon: Icon; title: string; desc: string; reportType: string }[] = [
   { icon:CurrencyDollar, title:'Job Cost Report',          desc:'Budget vs actuals by cost code, variance analysis',              reportType:'job-cost' },
@@ -87,7 +87,7 @@ export default function ReportsPage() {
       <div style={{ maxWidth: 860, margin: '0 auto' }}>
       <div style={{ margin: '48px 0 32px' }}>
         <h1 style={{ fontWeight: 600, color: TEXT, margin: 0, letterSpacing: -0.4 }}>Reports</h1>
-        <div style={{ fontSize: 14, color: DIM, marginTop: 8 }}>Generate and download live project and portfolio reports — PDF or CSV</div>
+        <div style={{ fontSize: 14, color: DIM, marginTop: 8 }}>Generate and download live project and portfolio reports — PDF or CSV.</div>
       </div>
 
       <div style={{ borderTop: `1px solid ${HAIR}` }}>
@@ -108,16 +108,16 @@ export default function ReportsPage() {
                 <button
                   onClick={() => downloadReport(r.reportType, r.title, 'pdf')}
                   disabled={busy}
-                  style={{ padding: '7px 14px', background: GOLD, border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 12, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1, minWidth: 118 }}
+                  style={{ padding: '7px 14px', background: GOLD, border: 'none', borderRadius: 8, color: '#0A0A00', fontSize: 12, fontWeight: 600, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1, minWidth: 118 }}
                 >
-                  {pdfBusy ? <><Hourglass size={13} weight="duotone" style={{ verticalAlign: -2 }} /> Generating...</> : <><FilePdf size={13} weight="duotone" style={{ verticalAlign: -2 }} /> Download PDF</>}
+                  {pdfBusy ? <><Hourglass size={13} weight="duotone" style={{ verticalAlign: -2 }} /> Generating…</> : <><FilePdf size={13} weight="duotone" style={{ verticalAlign: -2 }} /> Download PDF</>}
                 </button>
                 <button
                   onClick={() => downloadReport(r.reportType, r.title, 'csv')}
                   disabled={busy}
                   style={{ padding: '7px 12px', background: 'transparent', border: `1px solid ${HAIR}`, borderRadius: 8, color: csvBusy ? TEXT : DIM, fontSize: 12, fontWeight: 500, cursor: busy ? 'wait' : 'pointer', opacity: busy ? 0.6 : 1 }}
                 >
-                  {csvBusy ? <><Hourglass size={13} weight="duotone" style={{ verticalAlign: -2 }} />...</> : <><DownloadSimple size={13} weight="duotone" style={{ verticalAlign: -2 }} /> CSV</>}
+                  {csvBusy ? <><Hourglass size={13} weight="duotone" style={{ verticalAlign: -2 }} />…</> : <><DownloadSimple size={13} weight="duotone" style={{ verticalAlign: -2 }} /> CSV</>}
                 </button>
               </div>
             </div>

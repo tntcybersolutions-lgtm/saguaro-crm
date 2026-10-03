@@ -5,10 +5,10 @@ import type { Icon } from '@phosphor-icons/react';
 import { BatteryHigh, Drop, Lightbulb, Plug, Shower, Sun, Thermometer, ThermometerHot, Wall } from '@phosphor-icons/react';
 
 /* ─── Palette — Premium Dark Glassmorphism ─── */
-const GOLD = '#F59E0B', GREEN = '#34C759';
+const GOLD = 'var(--brand-primary)', GREEN = '#34C759';
 const TEXT = '#FFFFFF', DIM = '#CBD5E1';
-const RED = '#FF3B30', BLUE = '#F59E0B';
-const BG = '#0a0a0a', CARD_BG = 'rgba(255,255,255,0.04)';
+const RED = '#FF3B30', BLUE = 'var(--brand-primary)';
+const BG = 'var(--bg-base)', CARD_BG = 'rgba(255,255,255,0.04)';
 const CARD_BORDER = 'rgba(255,255,255,0.12)', CARD_SHADOW = '0 8px 32px rgba(0,0,0,0.12)';
 
 /* ─── State Data ─── */
@@ -243,7 +243,7 @@ export default function ROICalculatorPage() {
         }
         .roi-toggle.active::after {
           transform: translateX(20px);
-          box-shadow: 0 1px 6px rgba(245, 158, 11,0.4);
+          box-shadow: 0 1px 6px color-mix(in srgb, var(--brand-primary) 40%, transparent);
         }
         .roi-slider {
           -webkit-appearance: none;
@@ -262,7 +262,7 @@ export default function ROICalculatorPage() {
           border-radius: 50%;
           background: ${GOLD};
           cursor: pointer;
-          box-shadow: 0 0 10px rgba(245, 158, 11,0.4);
+          box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 40%, transparent);
         }
         .roi-slider::-moz-range-thumb {
           width: 20px;
@@ -271,7 +271,7 @@ export default function ROICalculatorPage() {
           background: ${GOLD};
           cursor: pointer;
           border: none;
-          box-shadow: 0 0 10px rgba(245, 158, 11,0.4);
+          box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 40%, transparent);
         }
         .roi-dropdown-item {
           padding: 12px 16px;
@@ -280,7 +280,7 @@ export default function ROICalculatorPage() {
           border-bottom: 1px solid rgba(255,255,255,0.12);
         }
         .roi-dropdown-item:hover {
-          background: rgba(245, 158, 11,0.1);
+          background: var(--brand-primary-12);
         }
         .roi-dropdown-item:last-child {
           border-bottom: none;
@@ -315,7 +315,7 @@ export default function ROICalculatorPage() {
       <section style={{
         textAlign: 'center',
         padding: '100px 20px 60px',
-        background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(245, 158, 11,0.12) 0%, transparent 70%)',
+        background: 'transparent',
         animation: 'fadeInUp 0.8s ease-out',
       }}>
         <h1 style={{
@@ -327,7 +327,7 @@ export default function ROICalculatorPage() {
         }}>
           Smart Home{' '}
           <span style={{
-            background: `linear-gradient(135deg, ${GOLD}, #F5D060)`,
+            background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -341,7 +341,7 @@ export default function ROICalculatorPage() {
           margin: '0 auto',
           lineHeight: 1.6,
         }}>
-          See exactly how much you save — personalized to your state&#39;s utility rates
+          See exactly how much you save — personalized to your state&#39;s utility rates.
         </p>
       </section>
 
@@ -369,8 +369,6 @@ export default function ROICalculatorPage() {
               <label style={{
                 fontSize: 11,
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
                 color: DIM,
                 display: 'block',
                 marginBottom: 12,
@@ -436,11 +434,11 @@ export default function ROICalculatorPage() {
                   background: 'rgba(20,20,22,0.98)',
                   backdropFilter: 'blur(40px)',
                   WebkitBackdropFilter: 'blur(40px)',
-                  border: '1px solid rgba(245, 158, 11,0.2)',
+                  border: '1px solid var(--brand-primary-18)',
                   borderRadius: 12,
                   maxHeight: 400,
                   overflowY: 'auto' as const,
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 20px rgba(245, 158, 11,0.08)',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.7), 0 0 20px color-mix(in srgb, var(--brand-primary) 8%, transparent)',
                   padding: '4px 0',
                 }}>
                   {Object.entries(STATES).map(([code, s]) => (
@@ -457,7 +455,7 @@ export default function ROICalculatorPage() {
                         alignItems: 'center',
                         cursor: 'pointer',
                         borderLeft: code === state ? `3px solid ${GOLD}` : '3px solid transparent',
-                        background: code === state ? 'rgba(245, 158, 11,0.08)' : 'transparent',
+                        background: code === state ? 'color-mix(in srgb, var(--brand-primary) 8%, transparent)' : 'transparent',
                         transition: 'all 0.15s ease',
                       }}
                       onMouseEnter={(e) => { if (code !== state) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
@@ -481,8 +479,8 @@ export default function ROICalculatorPage() {
                     fontSize: 12,
                     padding: '5px 12px',
                     borderRadius: 20,
-                    background: 'rgba(245, 158, 11,0.08)',
-                    border: '1px solid rgba(245, 158, 11,0.15)',
+                    background: 'color-mix(in srgb, var(--brand-primary) 8%, transparent)',
+                    border: '1px solid var(--brand-primary-18)',
                     color: DIM,
                     display: 'inline-flex',
                     gap: 4,
@@ -506,8 +504,6 @@ export default function ROICalculatorPage() {
               <h3 style={{
                 fontSize: 11,
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
                 color: DIM,
                 marginBottom: 18,
               }}>Select Upgrades</h3>
@@ -535,7 +531,7 @@ export default function ROICalculatorPage() {
                         : 'rgba(255,255,255,0.02)',
                       borderLeft: isOn ? `3px solid ${GOLD}` : '3px solid transparent',
                       border: isOn
-                        ? `1px solid rgba(245, 158, 11,0.2)`
+                        ? '1px solid var(--brand-primary-18)'
                         : '1px solid rgba(255,255,255,0.12)',
                       borderLeftWidth: 3,
                       borderLeftColor: isOn ? GOLD : 'transparent',
@@ -547,7 +543,7 @@ export default function ROICalculatorPage() {
                           width: 38,
                           height: 38,
                           borderRadius: 10,
-                          background: `${iconColor}18`,
+                          background: `color-mix(in srgb, ${iconColor} 9%, transparent)`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -555,7 +551,7 @@ export default function ROICalculatorPage() {
                           fontWeight: 800,
                           color: iconColor,
                           flexShrink: 0,
-                          border: `1px solid ${iconColor}30`,
+                          border: `1px solid color-mix(in srgb, ${iconColor} 19%, transparent)`,
                         }}>
                           {firstLetter}
                         </div>
@@ -564,7 +560,7 @@ export default function ROICalculatorPage() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 600, fontSize: 14, color: TEXT }}>{u.name}</div>
                           <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>
-                            ${costLow.toLocaleString()} - ${costHigh.toLocaleString()}
+                            ${costLow.toLocaleString()} – ${costHigh.toLocaleString()}
                           </div>
                         </div>
 
@@ -586,7 +582,7 @@ export default function ROICalculatorPage() {
                           onClick={() => toggleUpgrade(u.id)}
                           style={{
                             background: isOn
-                              ? `linear-gradient(135deg, ${GOLD}, #B8860B)`
+                              ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))'
                               : 'rgba(255,255,255,0.12)',
                           }}
                           aria-label={`Toggle ${u.name}`}
@@ -641,8 +637,6 @@ export default function ROICalculatorPage() {
               <h3 style={{
                 fontSize: 11,
                 fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
                 color: DIM,
                 marginBottom: 24,
                 textAlign: 'center',
@@ -678,7 +672,7 @@ export default function ROICalculatorPage() {
                   {
                     label: 'Total Cost',
                     value: calculations.totalCostLow > 0
-                      ? `${fmt(calculations.totalCostLow)} - ${fmt(calculations.totalCostHigh)}`
+                      ? `${fmt(calculations.totalCostLow)} – ${fmt(calculations.totalCostHigh)}`
                       : '$0',
                     color: TEXT,
                     size: 13,
@@ -722,7 +716,7 @@ export default function ROICalculatorPage() {
               {/* ─── Bar Chart ─── */}
               {calculations.totalAnnual > 0 && (
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontSize: 11, color: DIM, marginBottom: 12, textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div style={{ fontSize: 11, color: DIM, marginBottom: 12, textAlign: 'center' }}>
                     Cumulative Savings vs. Investment Cost
                   </div>
                   <div style={{ display: 'flex', gap: 3, alignItems: 'flex-end', height: 150 }}>
@@ -750,8 +744,8 @@ export default function ROICalculatorPage() {
                               height: savH,
                               borderRadius: '6px 6px 0 0',
                               background: breakEven
-                                ? `linear-gradient(180deg, ${GOLD} 0%, rgba(245, 158, 11,0.6) 100%)`
-                                : `linear-gradient(180deg, ${GOLD}90 0%, rgba(245, 158, 11,0.3) 100%)`,
+                                ? `linear-gradient(180deg, ${GOLD} 0%, color-mix(in srgb, var(--brand-primary) 60%, transparent) 100%)`
+                                : `linear-gradient(180deg, color-mix(in srgb, ${GOLD} 56%, transparent) 0%, var(--brand-primary-35) 100%)`,
                               transition: 'height 0.5s ease',
                             }} />
                             <div style={{
@@ -773,7 +767,7 @@ export default function ROICalculatorPage() {
                         display: 'inline-block',
                         width: 10,
                         height: 10,
-                        background: `linear-gradient(135deg, ${GOLD}, rgba(245, 158, 11,0.6))`,
+                        background: `linear-gradient(135deg, ${GOLD}, color-mix(in srgb, var(--brand-primary) 60%, transparent))`,
                         borderRadius: 2,
                       }} />
                       Savings
@@ -797,8 +791,8 @@ export default function ROICalculatorPage() {
                 <button className="roi-cta-btn" style={{
                   width: '100%',
                   padding: '16px',
-                  background: `linear-gradient(135deg, ${GOLD}, #B8860B)`,
-                  color: '#000',
+                  background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
+                  color: '#0A0A00',
                   border: 'none',
                   borderRadius: 14,
                   fontWeight: 700,
@@ -806,7 +800,7 @@ export default function ROICalculatorPage() {
                   cursor: 'pointer',
                   letterSpacing: '0.01em',
                   transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                  boxShadow: '0 4px 20px rgba(245, 158, 11,0.3)',
+                  boxShadow: '0 4px 20px var(--brand-primary-35)',
                 }}>
                   Get a Custom Quote
                 </button>
@@ -829,8 +823,6 @@ export default function ROICalculatorPage() {
           <h3 style={{
             fontSize: 11,
             fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
             color: DIM,
             marginBottom: 8,
           }}>How You Compare</h3>
@@ -879,7 +871,7 @@ export default function ROICalculatorPage() {
                 width: `${avgHomeEnergy > 0 ? Math.max((smartHomeCost / avgHomeEnergy) * 100, 2) : 100}%`,
                 height: '100%',
                 borderRadius: 7,
-                background: `linear-gradient(90deg, ${GOLD}, rgba(245, 158, 11,0.5))`,
+                background: `linear-gradient(90deg, ${GOLD}, color-mix(in srgb, var(--brand-primary) 50%, transparent))`,
                 transition: 'width 0.5s ease',
               }} />
             </div>
@@ -889,8 +881,8 @@ export default function ROICalculatorPage() {
             <div style={{
               marginTop: 20,
               padding: '14px 20px',
-              background: 'rgba(245, 158, 11,0.06)',
-              border: '1px solid rgba(245, 158, 11,0.12)',
+              background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)',
+              border: '1px solid var(--brand-primary-12)',
               borderRadius: 12,
               textAlign: 'center',
             }}>
@@ -909,7 +901,7 @@ export default function ROICalculatorPage() {
           marginBottom: 40,
           textAlign: 'center',
           padding: '60px 20px',
-          background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(245, 158, 11,0.08) 0%, transparent 70%)',
+          background: 'transparent',
           borderRadius: 24,
           border: '1px solid rgba(255,255,255,0.12)',
           animation: 'fadeInUp 0.8s ease-out 0.4s both',
@@ -922,7 +914,7 @@ export default function ROICalculatorPage() {
           }}>
             Ready to Build Your{' '}
             <span style={{
-              background: `linear-gradient(135deg, ${GOLD}, #F5D060)`,
+              background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
@@ -934,8 +926,8 @@ export default function ROICalculatorPage() {
           <Link href="/design/discover" style={{ textDecoration: 'none' }}>
             <button className="roi-cta-btn" style={{
               padding: '16px 48px',
-              background: `linear-gradient(135deg, ${GOLD}, #B8860B)`,
-              color: '#000',
+              background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
+              color: '#0A0A00',
               border: 'none',
               borderRadius: 14,
               fontWeight: 700,
@@ -943,7 +935,7 @@ export default function ROICalculatorPage() {
               cursor: 'pointer',
               letterSpacing: '0.01em',
               transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              boxShadow: '0 4px 24px rgba(245, 158, 11,0.3)',
+              boxShadow: '0 4px 24px var(--brand-primary-35)',
             }}>
               Start Your Design
             </button>

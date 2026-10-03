@@ -7,16 +7,16 @@ import { PLANS, PLAN_ADDONS, ONE_TIME_SERVICES, FEATURE_MATRIX, TRIAL_DAYS, PRIC
 import { ScribbleNote } from '@/components/Scribble';
 
 const C = {
-  dark: '#0B0B0F',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
   dim: '#A1A1AA',
   border: 'rgba(255,255,255,0.10)',
   hairline: 'rgba(255,255,255,0.08)',
   cardBg: 'rgba(255,255,255,0.02)',
-  raised: '#131318',
-  raisedAlt: '#1A1A21',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface-2)',
   green: '#22C55E',
   blue: '#6366F1',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
@@ -60,7 +60,7 @@ const FAQS = [
 function CheckIcon({ size = 16, color = C.green }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-      <circle cx="8" cy="8" r="8" fill={`${color}22`} />
+      <circle cx="8" cy="8" r="8" fill={`color-mix(in srgb, ${color} 13%, transparent)`} />
       <path d="M4.5 8l2.5 2.5 4-5" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -99,12 +99,12 @@ export default function PricingPage() {
         <section style={{ textAlign: 'center', padding: 'clamp(48px, 8vh, 80px) 24px 56px', background: 'transparent' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim, letterSpacing: 0.3, marginBottom: 28 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
-            Free migration included on all plans
+            Free Migration Included on All Plans
           </div>
 
           <h1 className="landing-display" style={{ fontWeight: 800, lineHeight: 1.04, margin: '0 0 18px', letterSpacing: '-0.025em', textWrap: 'balance' as const }}>
             One platform.{' '}
-            <span style={{ background: 'linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
+            <span style={{ background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
               Your whole team.
             </span>
           </h1>
@@ -114,7 +114,7 @@ export default function PricingPage() {
 
           {/* Competitor savings callout */}
           <div style={{ display: 'inline-flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 32 }}>
-            {['Flat rate — never per-seat', 'Base Saguaro Radio free on every plan', 'Free migration from any platform'].map(item => (
+            {['Flat Rate — Never Per-Seat', 'Base Saguaro Radio Free on Every Plan', 'Free Migration from Any Platform'].map(item => (
               <div key={item} style={{ padding: '6px 14px', background: 'transparent', border: `1px solid ${C.hairline}`, borderRadius: 999, fontSize: 12, color: C.dim, fontWeight: 500 }}>
                 {item}
               </div>
@@ -142,18 +142,18 @@ export default function PricingPage() {
             {PLANS.map((plan) => (
               <div key={plan.name} style={{
                 background: C.cardBg,
-                border: plan.popular ? `1px solid rgba(245,158,11,0.45)` : `1px solid ${C.hairline}`,
+                border: plan.popular ? `1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)` : `1px solid ${C.hairline}`,
                 borderRadius: 14, overflow: 'hidden', position: 'relative',
                 marginTop: 0,
                 boxShadow: 'none',
               }}>
                 {plan.popular && (
-                  <div style={{ background: C.gold, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 600, color: '#0B0B0F', letterSpacing: 1.5, textTransform: 'uppercase' }}>
+                  <div style={{ background: C.gold, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 600, color: '#0A0A00' }}>
                     Most Popular
                   </div>
                 )}
                 <div style={{ padding: '30px 28px 28px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: 2, textTransform: 'uppercase', color: C.dim, marginBottom: 2 }}>{plan.name}</div>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 2 }}>{plan.name}</div>
                   <div style={{ fontSize: 13, color: C.dim, marginBottom: 6 }}>{plan.tagline}</div>
                   <div style={{ fontSize: 11, color: C.dim, background: 'transparent', border: `1px solid ${C.hairline}`, borderRadius: 999, padding: '3px 10px', display: 'inline-block', marginBottom: 20, fontWeight: 500 }}>
                     {plan.highlight}
@@ -182,7 +182,7 @@ export default function PricingPage() {
                     display: 'block', textAlign: 'center', padding: '12px 0',
                     background: plan.popular ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))' : 'transparent',
                     border: plan.popular ? '1px solid transparent' : `1px solid ${C.hairline}`,
-                    borderRadius: 8, color: plan.popular ? '#241500' : C.text,
+                    borderRadius: 8, color: plan.popular ? '#0A0A00' : C.text,
                     fontWeight: plan.popular ? 700 : 600, fontSize: 14, textDecoration: 'none', marginBottom: 28, letterSpacing: 0.2,
                     boxShadow: plan.popular ? '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
                   }}>
@@ -190,8 +190,8 @@ export default function PricingPage() {
                   </a>
 
                   <div style={{ borderTop: `1px solid ${C.hairline}`, paddingTop: 20 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 14 }}>
-                      {plan.name === 'Enterprise' ? "Everything in Professional, plus:" : "What's included:"}
+                    <div style={{ fontSize: 11, fontWeight: 600, color: C.dim, marginBottom: 14 }}>
+                      {plan.name === 'Enterprise' ? "Everything in Professional, Plus:" : "What's Included:"}
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
                       {plan.features.map(f => (
@@ -220,7 +220,7 @@ export default function PricingPage() {
             <div style={{ fontSize: 16, fontWeight: 600, color: C.text }}>Not sure? Every plan starts with a free trial — switch anytime.</div>
             <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.6, maxWidth: 560 }}>
               {TRIAL_DAYS} days free, no credit card. Upgrades take effect immediately with prorated credit; downgrades apply at the end of your billing cycle.{' '}
-              <Link href="/how-to-get-started" style={{ color: C.gold, textDecoration: 'none', fontWeight: 500 }}>See how to get started →</Link>
+              <Link href="/how-to-get-started" style={{ color: C.gold, textDecoration: 'none', fontWeight: 500 }}>See How to Get Started →</Link>
             </div>
           </div>
         </section>
@@ -229,7 +229,7 @@ export default function PricingPage() {
         <section style={{ padding: '0 24px 72px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap', boxShadow: 'none' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Free migration — every plan</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 12 }}>Free Migration — Every Plan</div>
               <h2 style={{ fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25 }}>We move you over. Free.</h2>
               <p style={{ fontSize: 15, color: C.dim, margin: '0 0 24px', lineHeight: 1.65 }}>
                 Coming from Procore, Buildertrend, CoConstruct, or a spreadsheet? Our team migrates all your projects, contacts, documents, and history. You do nothing. We handle everything.
@@ -245,8 +245,8 @@ export default function PricingPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
               <div style={{ fontSize: 44, fontWeight: 600, color: C.text, lineHeight: 1 }}>$0</div>
-              <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>Migration fee<br />(always free)</div>
-              <Link href="/signup" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+              <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>Migration Fee<br />(Always Free)</div>
+              <Link href="/signup" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
                 Start Free Migration
               </Link>
             </div>
@@ -256,10 +256,10 @@ export default function PricingPage() {
         {/* Add-ons */}
         <section style={{ padding: '0 24px 80px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>
               Add-Ons & Upgrades
             </div>
-            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Power up your plan</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Power Up Your Plan</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 480, margin: '0 auto' }}>Add only what you need. Cancel any add-on anytime.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
@@ -269,7 +269,7 @@ export default function PricingPage() {
                   <div style={{ fontSize: 16, fontWeight: 600, color: C.text, lineHeight: 1.35 }}>
                     {addon.name}
                     {addon.service && (
-                      <span style={{ fontSize: 10, fontWeight: 600, color: C.dim, border: `1px solid ${C.hairline}`, borderRadius: 999, padding: '2px 8px', marginLeft: 8, letterSpacing: 1, textTransform: 'uppercase', verticalAlign: 'middle' }}>Service</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: C.dim, border: `1px solid ${C.hairline}`, borderRadius: 999, padding: '2px 8px', marginLeft: 8, verticalAlign: 'middle' }}>Service</span>
                     )}
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -282,7 +282,7 @@ export default function PricingPage() {
                   Available for: {addon.available}
                 </div>
                 <a className="btn-gold" href={`mailto:${SALES_EMAIL}?subject=${encodeURIComponent(addon.mailSubject)}`} style={{ justifyContent: 'center', textDecoration: 'none', fontSize: 13, marginTop: 4 }}>
-                  Add to plan
+                  Add to Plan
                 </a>
               </div>
             ))}
@@ -292,10 +292,10 @@ export default function PricingPage() {
         {/* One-Time Services */}
         <section style={{ padding: '0 24px 80px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>
               One-Time Services
             </div>
-            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Get up and running fast</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Get Up and Running Fast</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 480, margin: '0 auto' }}>Optional professional services. Pay once, get set up right.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
@@ -313,7 +313,7 @@ export default function PricingPage() {
                 <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.6 }}>{service.description}</div>
                 {service.highlight && (
                   <div style={{ marginTop: 16 }}>
-                    <Link href="/signup" style={{ display: 'inline-block', padding: '10px 20px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
+                    <Link href="/signup" style={{ display: 'inline-block', padding: '10px 20px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 13, textDecoration: 'none' }}>
                       Start Free Migration
                     </Link>
                   </div>
@@ -326,10 +326,10 @@ export default function PricingPage() {
         {/* Competitor Price Comparison */}
         <section style={{ padding: '0 24px 80px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>
               How We Stack Up
             </div>
-            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>The construction software market — honestly</h2>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>The Construction Software Market — Honestly</h2>
           </div>
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, overflow: 'hidden', boxShadow: 'none' }}>
            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
@@ -337,7 +337,7 @@ export default function PricingPage() {
               <thead>
                 <tr style={{ borderBottom: `1px solid ${C.hairline}` }}>
                   {['Platform', 'Monthly Cost', 'Pricing Model', 'Free Migration', 'Flat Price'].map((col, i) => (
-                    <th key={col} style={{ padding: '16px 20px', textAlign: i === 0 ? 'left' : 'center', fontSize: 12, fontWeight: 600, color: C.dim, letterSpacing: 0.5, textTransform: 'uppercase' }}>{col}</th>
+                    <th key={col} style={{ padding: '16px 20px', textAlign: i === 0 ? 'left' : 'center', fontSize: 12, fontWeight: 600, color: C.dim }}>{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -350,7 +350,7 @@ export default function PricingPage() {
                     <td style={{ padding: '14px 20px' }}>
                       <span style={{ fontSize: 14, fontWeight: row.isSaguaro ? 600 : 500, color: C.text }}>
                         {row.name}
-                        {row.isSaguaro && <span style={{ fontSize: 10, background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 6, padding: '2px 6px', marginLeft: 8, color: C.dim, fontWeight: 500 }}>YOU</span>}
+                        {row.isSaguaro && <span style={{ fontSize: 10, background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 6, padding: '2px 6px', marginLeft: 8, color: C.dim, fontWeight: 500 }}>You</span>}
                       </span>
                     </td>
                     <td style={{ padding: '14px 20px', textAlign: 'center', fontSize: 13, color: C.text, fontWeight: row.isSaguaro ? 600 : 400 }}>{row.price}</td>
@@ -376,10 +376,10 @@ export default function PricingPage() {
         {/* Feature Comparison Table */}
         <section style={{ padding: '0 24px 80px', maxWidth: 1000, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>
               Full Comparison
             </div>
-            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Everything, side by side</h2>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Everything, Side by Side</h2>
           </div>
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, overflow: 'hidden', boxShadow: 'none' }}>
            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: '100%' }}>
@@ -416,8 +416,8 @@ export default function PricingPage() {
         {/* FAQ */}
         <section style={{ padding: '0 24px 80px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>FAQ</div>
-            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Frequently asked questions</h2>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>FAQ</div>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Frequently Asked Questions</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
@@ -443,8 +443,8 @@ export default function PricingPage() {
         <section style={{ padding: '72px 24px 80px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
-              Ready to stop paying{' '}
-              <span style={{ color: C.text }}>per-seat prices?</span>
+              Ready to Stop Paying{' '}
+              <span style={{ color: C.text }}>Per-Seat Prices?</span>
             </h2>
             <p style={{ fontSize: 16, color: C.dim, margin: '0 0 36px', lineHeight: 1.6 }}>
               {TRIAL_DAYS}-day free trial. Free migration. No credit card required. Your whole team, one flat rate.
@@ -458,7 +458,7 @@ export default function PricingPage() {
               </Link>
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {[`${TRIAL_DAYS} days free`, 'Free migration', 'Cancel anytime', 'No per-seat fees', 'Unlimited users'].map(pill => (
+              {[`${TRIAL_DAYS} Days Free`, 'Free Migration', 'Cancel Anytime', 'No Per-Seat Fees', 'Unlimited Users'].map(pill => (
                 <div key={pill} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim }}>
                   <CheckIcon size={12} color={C.dim} />
                   {pill}

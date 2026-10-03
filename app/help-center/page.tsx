@@ -3,14 +3,14 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 const C = {
-  dark: '#0B0B0F',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
   dim: '#A1A1AA',
   border: 'rgba(255,255,255,0.10)',
-  raised: '#131318',
-  raisedAlt: '#1A1A21',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface-2)',
   green: '#22C55E',
   blue: '#6366F1',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
@@ -104,94 +104,94 @@ const CATEGORIES: Cat[] = [
 
 const ARTICLES: Article[] = [
   // ---- Getting Started ----
-  { cat: 'getting-started', title: 'Create your company account in 5 minutes', body: 'Sign up at saguarocontrol.net, name your company, and pick your trade focus. Your first project workspace, cost-code list, and document folders are created automatically so you can start working within minutes.' },
-  { cat: 'getting-started', title: 'Invite your team and assign roles', body: 'From Settings → Team, add email addresses and assign a role: Admin, PM, Field, Accounting, or Read-Only. Every plan includes unlimited users, so there is never a per-seat charge for adding your whole crew.', tags: ['add teammate', 'add a teammate', 'invite', 'users', 'permissions', 'roles'] },
-  { cat: 'getting-started', title: 'Free migration from Procore, Buildertrend, or spreadsheets', body: 'Free guided migration is included on every plan. Tell us your current platform under Settings → Migration and our team imports your projects, contacts, vendors, documents, and pay-app history — most companies are fully live in one business day.', tags: ['migrate', 'migration', 'procore', 'buildertrend', 'import', 'switch platform', 'move data'] },
-  { cat: 'getting-started', title: 'Install the field app on iPhone & Android', body: 'Download Saguaro Control Systems from the App Store or Google Play, sign in with your account, and your assigned projects sync to the device. The app works offline and syncs the moment you regain signal.', tags: ['install', 'download', 'app store', 'google play', 'iphone', 'android'] },
-  { cat: 'getting-started', title: 'Set up approval chains for pay apps and change orders', body: 'Under Settings → Approvals, define who reviews and signs off on pay applications, change orders, and POs. You can require multiple approvers and set dollar thresholds that route larger items to ownership.' },
-  { cat: 'getting-started', title: 'Import your cost codes and CSI divisions', body: 'Upload your existing cost-code list as a CSV, or start from the built-in CSI MasterFormat divisions. Codes flow into budgets, takeoffs, commitments, and job-cost reports so everything reconciles.' },
+  { cat: 'getting-started', title: 'Create Your Company Account in 5 Minutes', body: 'Sign up at saguarocontrol.net, name your company, and pick your trade focus. Your first project workspace, cost-code list, and document folders are created automatically so you can start working within minutes.' },
+  { cat: 'getting-started', title: 'Invite Your Team and Assign Roles', body: 'From Settings → Team, add email addresses and assign a role: Admin, PM, Field, Accounting, or Read-Only. Every plan includes unlimited users, so there is never a per-seat charge for adding your whole crew.', tags: ['add teammate', 'add a teammate', 'invite', 'users', 'permissions', 'roles'] },
+  { cat: 'getting-started', title: 'Free Migration from Procore, Buildertrend, or Spreadsheets', body: 'Free guided migration is included on every plan. Tell us your current platform under Settings → Migration and our team imports your projects, contacts, vendors, documents, and pay-app history — most companies are fully live in one business day.', tags: ['migrate', 'migration', 'procore', 'buildertrend', 'import', 'switch platform', 'move data'] },
+  { cat: 'getting-started', title: 'Install the Field App on iPhone & Android', body: 'Download Saguaro Control Systems from the App Store or Google Play, sign in with your account, and your assigned projects sync to the device. The app works offline and syncs the moment you regain signal.', tags: ['install', 'download', 'app store', 'google play', 'iphone', 'android'] },
+  { cat: 'getting-started', title: 'Set Up Approval Chains for Pay Apps and Change Orders', body: 'Under Settings → Approvals, define who reviews and signs off on pay applications, change orders, and POs. You can require multiple approvers and set dollar thresholds that route larger items to ownership.' },
+  { cat: 'getting-started', title: 'Import Your Cost Codes and CSI Divisions', body: 'Upload your existing cost-code list as a CSV, or start from the built-in CSI MasterFormat divisions. Codes flow into budgets, takeoffs, commitments, and job-cost reports so everything reconciles.' },
   { cat: 'getting-started', title: 'Connect QuickBooks Online', body: 'Link QuickBooks Online under Settings → Integrations to sync customers, vendors, invoices, and bills. Job costs and pay-app billings post automatically, eliminating double entry for your accountant.', tags: ['quickbooks', 'qbo', 'accounting', 'sync'] },
 
   // ---- Projects & Field Ops ----
-  { cat: 'projects', title: 'Create a project and build the schedule of values', body: 'Start a project, enter the contract amount, and break it into a schedule of values (SOV). The SOV drives your G703, budget, and cost-to-complete so billing and costing stay in sync.', tags: ['sov', 'schedule of values', 'budget'] },
-  { cat: 'projects', title: 'Manage RFIs and route them with Autopilot', body: 'Create an RFI, attach drawings or photos, and Autopilot suggests the right recipient and due date. Track open, answered, and overdue RFIs in one log with the full ball-in-court history.', tags: ['rfi', 'request for information', 'autopilot'] },
-  { cat: 'projects', title: 'Submittals, transmittals & document control', body: 'Build submittal packages, route them for review, and track ball-in-court status. Every revision is versioned, and transmittals generate a stamped PDF record automatically.', tags: ['submittal', 'transmittal', 'documents'] },
-  { cat: 'projects', title: 'Change orders that tie to the budget', body: 'Log potential change orders (PCOs), price them, and promote approved ones to change orders that adjust the contract and budget instantly. The CO log shows pending, approved, and executed value at a glance.', tags: ['change order', 'pco', 'co log'] },
-  { cat: 'projects', title: 'Daily logs with photos, weather & manpower', body: 'Capture a daily log from the field with crew counts, equipment, notes, and photos. Weather is pulled automatically for the job-site location and stamped to the record for documentation and claims.', tags: ['daily log', 'daily report', 'weather', 'manpower'] },
-  { cat: 'projects', title: 'Build and manage the project schedule', body: 'Create milestones and tasks, set durations and dependencies, and track percent complete. The field team sees upcoming work, and slippage flags so you can re-sequence before it costs you.', tags: ['schedule', 'gantt', 'milestones'] },
-  { cat: 'projects', title: 'Punch lists and project closeout', body: 'Create punch-list items with photos and assign them to subs. Track open versus closed, then generate a closeout package with warranties and O&M manuals to hand the owner a complete record.', tags: ['punch list', 'closeout', 'warranty'] },
-  { cat: 'projects', title: 'Drawings & blueprint version control', body: 'Upload plan sets as PDFs; Saguaro keeps every version and shows the current set to the field. Markups, RFIs, and photos can be pinned to a sheet location so context travels with the drawing.', tags: ['drawings', 'blueprints', 'plans', 'sheets'] },
-  { cat: 'projects', title: 'Meeting minutes and action items', body: 'Record meeting minutes, assign action items with owners and due dates, and carry open items forward to the next meeting automatically so nothing gets dropped.', tags: ['meeting minutes', 'action items'] },
+  { cat: 'projects', title: 'Create a Project and Build the Schedule of Values', body: 'Start a project, enter the contract amount, and break it into a schedule of values (SOV). The SOV drives your G703, budget, and cost-to-complete so billing and costing stay in sync.', tags: ['sov', 'schedule of values', 'budget'] },
+  { cat: 'projects', title: 'Manage RFIs and Route Them with Autopilot', body: 'Create an RFI, attach drawings or photos, and Autopilot suggests the right recipient and due date. Track open, answered, and overdue RFIs in one log with the full ball-in-court history.', tags: ['rfi', 'request for information', 'autopilot'] },
+  { cat: 'projects', title: 'Submittals, Transmittals & Document Control', body: 'Build submittal packages, route them for review, and track ball-in-court status. Every revision is versioned, and transmittals generate a stamped PDF record automatically.', tags: ['submittal', 'transmittal', 'documents'] },
+  { cat: 'projects', title: 'Change Orders That Tie to the Budget', body: 'Log potential change orders (PCOs), price them, and promote approved ones to change orders that adjust the contract and budget instantly. The CO log shows pending, approved, and executed value at a glance.', tags: ['change order', 'pco', 'co log'] },
+  { cat: 'projects', title: 'Daily Logs with Photos, Weather & Manpower', body: 'Capture a daily log from the field with crew counts, equipment, notes, and photos. Weather is pulled automatically for the job-site location and stamped to the record for documentation and claims.', tags: ['daily log', 'daily report', 'weather', 'manpower'] },
+  { cat: 'projects', title: 'Build and Manage the Project Schedule', body: 'Create milestones and tasks, set durations and dependencies, and track percent complete. The field team sees upcoming work, and slippage flags so you can re-sequence before it costs you.', tags: ['schedule', 'gantt', 'milestones'] },
+  { cat: 'projects', title: 'Punch Lists and Project Closeout', body: 'Create punch-list items with photos and assign them to subs. Track open versus closed, then generate a closeout package with warranties and O&M manuals to hand the owner a complete record.', tags: ['punch list', 'closeout', 'warranty'] },
+  { cat: 'projects', title: 'Drawings & Blueprint Version Control', body: 'Upload plan sets as PDFs; Saguaro keeps every version and shows the current set to the field. Markups, RFIs, and photos can be pinned to a sheet location so context travels with the drawing.', tags: ['drawings', 'blueprints', 'plans', 'sheets'] },
+  { cat: 'projects', title: 'Meeting Minutes and Action Items', body: 'Record meeting minutes, assign action items with owners and due dates, and carry open items forward to the next meeting automatically so nothing gets dropped.', tags: ['meeting minutes', 'action items'] },
 
   // ---- Financials & Pay Apps ----
-  { cat: 'financials', title: 'Generate G702 / G703 pay applications', body: 'Build an AIA-style G702 application and G703 continuation sheet directly from your schedule of values. Enter this period of work and retention, stored materials, and totals calculate automatically.', tags: ['g702', 'g703', 'pay app', 'pay application', 'continuation sheet', 'billing'] },
-  { cat: 'financials', title: 'AIA documents: G702–G706, A310, A312', body: 'Generate the full AIA family — G702/G703 pay apps, G706/G706A/G707 closeout and lien releases, and A310/A312 bonds — pre-filled from your project data and ready to sign.', tags: ['aia', 'g706', 'g707', 'a310', 'a312', 'bond'] },
-  { cat: 'financials', title: 'Lien waivers — all 50 states, all four types', body: 'Produce conditional or unconditional, progress or final lien waivers for any state. Arizona, California, Texas, Nevada, Florida, and other statutory states use state-specific language; the rest use our attorney-reviewed form.', tags: ['lien waiver', 'lien release', 'conditional', 'unconditional', 'california', 'texas', 'arizona'] },
-  { cat: 'financials', title: 'Certified payroll WH-347 & Davis-Bacon', body: 'Run certified payroll on prevailing-wage jobs with the federal WH-347 form. Look up Davis-Bacon wage determinations by county and classification, and export the signed statement of compliance.', tags: ['certified payroll', 'wh-347', 'wh347', 'davis bacon', 'prevailing wage'] },
-  { cat: 'financials', title: 'Track budgets, commitments & cost-to-complete', body: 'See the budget, committed costs, actuals, and projected cost-to-complete on one page. Variances flag early so you can act before a line item goes underwater.', tags: ['budget', 'cost to complete', 'commitments', 'job cost'] },
-  { cat: 'financials', title: 'Retention / retainage tracking and release', body: 'Saguaro tracks retainage withheld on every pay app and accrues it across the job. When it is time to bill retention, generate the G703 retention release and final waiver in a couple of clicks.', tags: ['retention', 'retainage'] },
-  { cat: 'financials', title: 'Subcontractor invoices, COIs & W-9s', body: 'Collect sub invoices, certificates of insurance, and W-9s through the Sub Portal. Expired COIs flag automatically and can block payment until compliance is current.', tags: ['subcontractor', 'invoice', 'coi', 'certificate of insurance', 'w-9', 'w9'] },
-  { cat: 'financials', title: 'Job costing and WIP reports', body: 'Generate work-in-progress (WIP) and job-cost reports that reconcile billings to costs, calculate over/under billing, and give your CPA the schedule they need at period close.', tags: ['wip', 'job costing', 'over under billing'] },
+  { cat: 'financials', title: 'Generate G702 / G703 Pay Applications', body: 'Build an AIA-style G702 application and G703 continuation sheet directly from your schedule of values. Enter this period of work and retention, stored materials, and totals calculate automatically.', tags: ['g702', 'g703', 'pay app', 'pay application', 'continuation sheet', 'billing'] },
+  { cat: 'financials', title: 'AIA Documents: G702–G706, A310, A312', body: 'Generate the full AIA family — G702/G703 pay apps, G706/G706A/G707 closeout and lien releases, and A310/A312 bonds — pre-filled from your project data and ready to sign.', tags: ['aia', 'g706', 'g707', 'a310', 'a312', 'bond'] },
+  { cat: 'financials', title: 'Lien Waivers — All 50 States, All Four Types', body: 'Produce conditional or unconditional, progress or final lien waivers for any state. Arizona, California, Texas, Nevada, Florida, and other statutory states use state-specific language; the rest use our attorney-reviewed form.', tags: ['lien waiver', 'lien release', 'conditional', 'unconditional', 'california', 'texas', 'arizona'] },
+  { cat: 'financials', title: 'Certified Payroll WH-347 & Davis-Bacon', body: 'Run certified payroll on prevailing-wage jobs with the federal WH-347 form. Look up Davis-Bacon wage determinations by county and classification, and export the signed statement of compliance.', tags: ['certified payroll', 'wh-347', 'wh347', 'davis bacon', 'prevailing wage'] },
+  { cat: 'financials', title: 'Track Budgets, Commitments & Cost-to-Complete', body: 'See the budget, committed costs, actuals, and projected cost-to-complete on one page. Variances flag early so you can act before a line item goes underwater.', tags: ['budget', 'cost to complete', 'commitments', 'job cost'] },
+  { cat: 'financials', title: 'Retention / Retainage Tracking and Release', body: 'Saguaro tracks retainage withheld on every pay app and accrues it across the job. When it is time to bill retention, generate the G703 retention release and final waiver in a couple of clicks.', tags: ['retention', 'retainage'] },
+  { cat: 'financials', title: 'Subcontractor Invoices, COIs & W-9s', body: 'Collect sub invoices, certificates of insurance, and W-9s through the Sub Portal. Expired COIs flag automatically and can block payment until compliance is current.', tags: ['subcontractor', 'invoice', 'coi', 'certificate of insurance', 'w-9', 'w9'] },
+  { cat: 'financials', title: 'Job Costing and WIP Reports', body: 'Generate work-in-progress (WIP) and job-cost reports that reconcile billings to costs, calculate over/under billing, and give your CPA the schedule they need at period close.', tags: ['wip', 'job costing', 'over under billing'] },
 
   // ---- AI: Sage & Takeoff ----
-  { cat: 'ai', title: 'What is Sage, the AI assistant?', body: 'Sage is the built-in AI assistant. Ask it to draft an RFI, summarize a submittal, find which lien-waiver a state requires, or pull cost-to-complete — and because Sage reads your project context, answers are specific to your data.', tags: ['sage', 'ai assistant', 'chat'] },
-  { cat: 'ai', title: 'Draft an RFI or letter with Sage', body: 'Describe the issue in plain language and Sage writes a clear, professional RFI — subject, question, and suggested assignee — that you can edit and file. The same works for letters, scopes, and emails.', tags: ['draft rfi', 'sage', 'ai'] },
-  { cat: 'ai', title: 'Run an AI Takeoff from a PDF plan set', body: 'Upload a plan set, set a scale reference, and AI Takeoff measures linear feet, square footage, and counts automatically. Every measurement is editable, and quantities flow into your estimate and budget.', tags: ['ai takeoff', 'takeoff', 'measure', 'estimate', 'quantity'] },
-  { cat: 'ai', title: 'Summarize a long submittal or spec section', body: 'Open a long spec, submittal, or contract and Sage returns the key requirements, deadlines, and risks in seconds — so you catch the buried clause before it bites you.', tags: ['summarize', 'spec', 'sage'] },
-  { cat: 'ai', title: 'AI daily reports — speak it, Sage writes it', body: 'On the field app, tap the mic and describe your day. Sage turns your voice note into a structured daily report with work performed, manpower, and issues, ready to submit.', tags: ['voice', 'daily report', 'ai', 'dictate'] },
-  { cat: 'ai', title: 'Auto-generate scopes of work and bid packages', body: 'Give Sage a project and a trade and it drafts a scope of work and bid invitation you can send to subs, then helps you level the bids that come back.', tags: ['scope of work', 'bid package', 'ai'] },
+  { cat: 'ai', title: 'What Is Sage, the AI Assistant?', body: 'Sage is the built-in AI assistant. Ask it to draft an RFI, summarize a submittal, find which lien-waiver a state requires, or pull cost-to-complete — and because Sage reads your project context, answers are specific to your data.', tags: ['sage', 'ai assistant', 'chat'] },
+  { cat: 'ai', title: 'Draft an RFI or Letter with Sage', body: 'Describe the issue in plain language and Sage writes a clear, professional RFI — subject, question, and suggested assignee — that you can edit and file. The same works for letters, scopes, and emails.', tags: ['draft rfi', 'sage', 'ai'] },
+  { cat: 'ai', title: 'Run an AI Takeoff from a PDF Plan Set', body: 'Upload a plan set, set a scale reference, and AI Takeoff measures linear feet, square footage, and counts automatically. Every measurement is editable, and quantities flow into your estimate and budget.', tags: ['ai takeoff', 'takeoff', 'measure', 'estimate', 'quantity'] },
+  { cat: 'ai', title: 'Summarize a Long Submittal or Spec Section', body: 'Open a long spec, submittal, or contract and Sage returns the key requirements, deadlines, and risks in seconds — so you catch the buried clause before it bites you.', tags: ['summarize', 'spec', 'sage'] },
+  { cat: 'ai', title: 'AI Daily Reports — Speak It, Sage Writes It', body: 'On the field app, tap the mic and describe your day. Sage turns your voice note into a structured daily report with work performed, manpower, and issues, ready to submit.', tags: ['voice', 'daily report', 'ai', 'dictate'] },
+  { cat: 'ai', title: 'Auto-Generate Scopes of Work and Bid Packages', body: 'Give Sage a project and a trade and it drafts a scope of work and bid invitation you can send to subs, then helps you level the bids that come back.', tags: ['scope of work', 'bid package', 'ai'] },
 
   // ---- Trades, Takeoff & Cost Codes ----
-  { cat: 'trades', title: 'Set up cost codes for low-voltage, security & AV', body: 'Add a low-voltage division to your cost codes for structured cabling, access control, CCTV, fire alarm, and AV. Saguaro tracks device counts and cable footage so your bids, budgets, and pay apps line up with how low-voltage work is actually billed.', tags: ['low voltage', 'low volt', 'lv', 'structured cabling', 'security', 'access control', 'cctv', 'av', 'audio visual', 'fire alarm', 'data', 'cabling'] },
-  { cat: 'trades', title: 'AI takeoff for electrical devices & fixtures', body: 'Run an AI takeoff on the electrical plans to count receptacles, switches, fixtures, panels, and home runs, and to measure conduit and feeder lengths. Counts drop straight into your estimate by cost code.', tags: ['electrical', 'electric', 'devices', 'fixtures', 'conduit', 'panel', 'receptacle', 'lighting', 'wire'] },
-  { cat: 'trades', title: 'Plumbing takeoff: fixtures, waste & supply', body: 'Take off plumbing fixtures, then measure waste, vent, and supply runs by size and material. Saguaro totals fixture units and pipe footage so you can price the rough-in and trim-out accurately.', tags: ['plumbing', 'plumber', 'fixtures', 'pipe', 'waste', 'vent', 'supply'] },
-  { cat: 'trades', title: 'HVAC / mechanical: equipment & duct runs', body: 'Schedule HVAC equipment — RTUs, splits, VAV boxes — and measure duct runs and diffusers off the mechanical plans. Equipment schedules and linear footage roll up into the mechanical budget.', tags: ['hvac', 'mechanical', 'duct', 'ductwork', 'rtu', 'vav', 'tonnage'] },
-  { cat: 'trades', title: 'Concrete & flatwork takeoff by the cubic yard', body: 'Measure slabs, footings, and walls and Saguaro converts area and thickness to cubic yards, adds a waste factor, and totals rebar and forming. Pour quantities feed the budget and the supplier order.', tags: ['concrete', 'flatwork', 'slab', 'footing', 'rebar', 'cubic yard', 'foundation'] },
-  { cat: 'trades', title: 'Framing & carpentry: linear feet and sheet counts', body: 'Take off wall framing in linear feet, count studs and joists, and tally sheathing and decking by the sheet. It works for wood and light-gauge metal framing alike.', tags: ['framing', 'carpentry', 'wood', 'metal stud', 'lumber', 'sheathing', 'joist'] },
-  { cat: 'trades', title: 'Drywall & finishes: square-foot takeoff', body: 'Measure wall and ceiling board by the square foot, apply a waste factor, and total board, tape, mud, and corner bead. Finish schedules tie each room to its assembly.', tags: ['drywall', 'gypsum', 'finishes', 'tape', 'board', 'ceiling', 'paint', 'painting'] },
-  { cat: 'trades', title: 'Roofing: squares, membrane & tear-off', body: 'Take off roof area in squares, break out membrane, insulation, fasteners, and flashing, and add tear-off quantities for re-roofs. Pitch and detail allowances are built in.', tags: ['roofing', 'roof', 'membrane', 'tpo', 'epdm', 'shingle', 'tear off'] },
-  { cat: 'trades', title: 'Earthwork & grading: cut, fill & haul', body: 'Estimate cut and fill volumes, balance the site, and calculate haul-off or import by the cubic yard and truckload. Quantities feed your site-work budget and equipment plan.', tags: ['earthwork', 'grading', 'excavation', 'site work', 'dirt', 'cut', 'fill', 'haul'] },
-  { cat: 'trades', title: 'Masonry: CMU and brick counts', body: 'Measure masonry walls and Saguaro returns CMU or brick counts, mortar and grout quantities, and reinforcing — by wall type and size — ready for the budget and supplier takeoff.', tags: ['masonry', 'cmu', 'block', 'brick', 'mortar', 'grout'] },
-  { cat: 'trades', title: 'Fire protection & sprinkler heads', body: 'Count sprinkler heads, measure main and branch piping, and schedule risers and valves off the fire-protection plans, with quantities organized for design-build sub billing.', tags: ['fire protection', 'sprinkler', 'fire sprinkler', 'nfpa', 'heads', 'standpipe'] },
-  { cat: 'trades', title: 'Solar / PV: panel counts and racking', body: 'Take off module counts, racking footage, and inverter quantities from the PV layout, and roll DC and AC scope into separate cost codes for clean billing.', tags: ['solar', 'pv', 'photovoltaic', 'panel', 'racking', 'inverter'] },
-  { cat: 'trades', title: 'Create a bid package and invite subs by trade', body: 'Assemble a bid package with plans, specs, and a scope of work, then invite subs by trade. Track who viewed, downloaded, and bid, and level the responses side by side.', tags: ['bid package', 'bidding', 'invite subs', 'leveling', 'scope'] },
+  { cat: 'trades', title: 'Set Up Cost Codes for Low-Voltage, Security & AV', body: 'Add a low-voltage division to your cost codes for structured cabling, access control, CCTV, fire alarm, and AV. Saguaro tracks device counts and cable footage so your bids, budgets, and pay apps line up with how low-voltage work is actually billed.', tags: ['low voltage', 'low volt', 'lv', 'structured cabling', 'security', 'access control', 'cctv', 'av', 'audio visual', 'fire alarm', 'data', 'cabling'] },
+  { cat: 'trades', title: 'AI Takeoff for Electrical Devices & Fixtures', body: 'Run an AI takeoff on the electrical plans to count receptacles, switches, fixtures, panels, and home runs, and to measure conduit and feeder lengths. Counts drop straight into your estimate by cost code.', tags: ['electrical', 'electric', 'devices', 'fixtures', 'conduit', 'panel', 'receptacle', 'lighting', 'wire'] },
+  { cat: 'trades', title: 'Plumbing Takeoff: Fixtures, Waste & Supply', body: 'Take off plumbing fixtures, then measure waste, vent, and supply runs by size and material. Saguaro totals fixture units and pipe footage so you can price the rough-in and trim-out accurately.', tags: ['plumbing', 'plumber', 'fixtures', 'pipe', 'waste', 'vent', 'supply'] },
+  { cat: 'trades', title: 'HVAC / Mechanical: Equipment & Duct Runs', body: 'Schedule HVAC equipment — RTUs, splits, VAV boxes — and measure duct runs and diffusers off the mechanical plans. Equipment schedules and linear footage roll up into the mechanical budget.', tags: ['hvac', 'mechanical', 'duct', 'ductwork', 'rtu', 'vav', 'tonnage'] },
+  { cat: 'trades', title: 'Concrete & Flatwork Takeoff by the Cubic Yard', body: 'Measure slabs, footings, and walls and Saguaro converts area and thickness to cubic yards, adds a waste factor, and totals rebar and forming. Pour quantities feed the budget and the supplier order.', tags: ['concrete', 'flatwork', 'slab', 'footing', 'rebar', 'cubic yard', 'foundation'] },
+  { cat: 'trades', title: 'Framing & Carpentry: Linear Feet and Sheet Counts', body: 'Take off wall framing in linear feet, count studs and joists, and tally sheathing and decking by the sheet. It works for wood and light-gauge metal framing alike.', tags: ['framing', 'carpentry', 'wood', 'metal stud', 'lumber', 'sheathing', 'joist'] },
+  { cat: 'trades', title: 'Drywall & Finishes: Square-Foot Takeoff', body: 'Measure wall and ceiling board by the square foot, apply a waste factor, and total board, tape, mud, and corner bead. Finish schedules tie each room to its assembly.', tags: ['drywall', 'gypsum', 'finishes', 'tape', 'board', 'ceiling', 'paint', 'painting'] },
+  { cat: 'trades', title: 'Roofing: Squares, Membrane & Tear-Off', body: 'Take off roof area in squares, break out membrane, insulation, fasteners, and flashing, and add tear-off quantities for re-roofs. Pitch and detail allowances are built in.', tags: ['roofing', 'roof', 'membrane', 'tpo', 'epdm', 'shingle', 'tear off'] },
+  { cat: 'trades', title: 'Earthwork & Grading: Cut, Fill & Haul', body: 'Estimate cut and fill volumes, balance the site, and calculate haul-off or import by the cubic yard and truckload. Quantities feed your site-work budget and equipment plan.', tags: ['earthwork', 'grading', 'excavation', 'site work', 'dirt', 'cut', 'fill', 'haul'] },
+  { cat: 'trades', title: 'Masonry: CMU and Brick Counts', body: 'Measure masonry walls and Saguaro returns CMU or brick counts, mortar and grout quantities, and reinforcing — by wall type and size — ready for the budget and supplier takeoff.', tags: ['masonry', 'cmu', 'block', 'brick', 'mortar', 'grout'] },
+  { cat: 'trades', title: 'Fire Protection & Sprinkler Heads', body: 'Count sprinkler heads, measure main and branch piping, and schedule risers and valves off the fire-protection plans, with quantities organized for design-build sub billing.', tags: ['fire protection', 'sprinkler', 'fire sprinkler', 'nfpa', 'heads', 'standpipe'] },
+  { cat: 'trades', title: 'Solar / PV: Panel Counts and Racking', body: 'Take off module counts, racking footage, and inverter quantities from the PV layout, and roll DC and AC scope into separate cost codes for clean billing.', tags: ['solar', 'pv', 'photovoltaic', 'panel', 'racking', 'inverter'] },
+  { cat: 'trades', title: 'Create a Bid Package and Invite Subs by Trade', body: 'Assemble a bid package with plans, specs, and a scope of work, then invite subs by trade. Track who viewed, downloaded, and bid, and level the responses side by side.', tags: ['bid package', 'bidding', 'invite subs', 'leveling', 'scope'] },
 
   // ---- Field App ----
-  { cat: 'field-app', title: 'Download & log in to Saguaro Control Systems', body: 'Install Saguaro Control Systems from the App Store or Google Play and sign in with your Saguaro account — Face ID gets you in fast. Your assigned projects sync automatically.', tags: ['download', 'login', 'field app', 'install'] },
-  { cat: 'field-app', title: 'Capture punch-list items with photos', body: 'Walk the site, snap a photo, drop a punch item with a location and assignee, and it syncs to the office. Subs see their list and mark items done from their own device.', tags: ['punch list', 'photos', 'field'] },
-  { cat: 'field-app', title: 'Log time & track crews on site', body: 'Clock crews in and out, allocate hours to cost codes, and capture daily manpower. Time flows into job costing and certified payroll without re-keying.', tags: ['time', 'timesheet', 'crew', 'labor'] },
-  { cat: 'field-app', title: 'Work offline — automatic sync on reconnect', body: 'Saguaro Control Systems is offline-first. Daily logs, photos, punch items, and time entries queue locally with no signal and sync the moment you reconnect — nothing is lost in a dead zone.', tags: ['offline', 'sync', 'no signal'] },
-  { cat: 'field-app', title: 'Push notifications for RFIs & approvals', body: 'Get a push the instant an RFI is answered, a pay app needs your signature, or a change order is approved, so the field and office never wait on each other.', tags: ['notifications', 'push', 'alerts'] },
-  { cat: 'field-app', title: 'Scan blueprints and mark up in the field', body: 'Open the current plan set on your phone or tablet, zoom to a detail, and pin photos, RFIs, or notes to a location on the sheet.', tags: ['blueprints', 'markup', 'plans', 'scan'] },
+  { cat: 'field-app', title: 'Download & Log In to Saguaro Control Systems', body: 'Install Saguaro Control Systems from the App Store or Google Play and sign in with your Saguaro account — Face ID gets you in fast. Your assigned projects sync automatically.', tags: ['download', 'login', 'field app', 'install'] },
+  { cat: 'field-app', title: 'Capture Punch-List Items with Photos', body: 'Walk the site, snap a photo, drop a punch item with a location and assignee, and it syncs to the office. Subs see their list and mark items done from their own device.', tags: ['punch list', 'photos', 'field'] },
+  { cat: 'field-app', title: 'Log Time & Track Crews on Site', body: 'Clock crews in and out, allocate hours to cost codes, and capture daily manpower. Time flows into job costing and certified payroll without re-keying.', tags: ['time', 'timesheet', 'crew', 'labor'] },
+  { cat: 'field-app', title: 'Work Offline — Automatic Sync on Reconnect', body: 'Saguaro Control Systems is offline-first. Daily logs, photos, punch items, and time entries queue locally with no signal and sync the moment you reconnect — nothing is lost in a dead zone.', tags: ['offline', 'sync', 'no signal'] },
+  { cat: 'field-app', title: 'Push Notifications for RFIs & Approvals', body: 'Get a push the instant an RFI is answered, a pay app needs your signature, or a change order is approved, so the field and office never wait on each other.', tags: ['notifications', 'push', 'alerts'] },
+  { cat: 'field-app', title: 'Scan Blueprints and Mark Up in the Field', body: 'Open the current plan set on your phone or tablet, zoom to a detail, and pin photos, RFIs, or notes to a location on the sheet.', tags: ['blueprints', 'markup', 'plans', 'scan'] },
 
   // ---- Owner & Sub Portals ----
-  { cat: 'portals', title: 'Owner Portal: approve pay apps & change orders', body: 'Give owners a scoped login to review and approve pay applications and change orders, see progress photos, and track the schedule — without exposing your internal costs.', tags: ['owner portal', 'approve', 'owner'] },
-  { cat: 'portals', title: 'Sub Portal: invoices, COIs & lien waivers', body: 'Subs submit invoices, upload certificates of insurance, and sign lien waivers in their own portal. You approve and pay from one queue, and compliance is enforced automatically.', tags: ['sub portal', 'subcontractor', 'invoice', 'coi', 'lien waiver'] },
-  { cat: 'portals', title: 'Share documents with scoped access', body: 'Share drawings, specs, or a single folder with an owner, architect, or sub using a secure link. They see only what you grant, and access can be revoked any time.', tags: ['share', 'documents', 'access', 'link'] },
-  { cat: 'portals', title: 'Collect W-9s and insurance from subs', body: 'Request W-9s and COIs through the Sub Portal; Saguaro tracks expiration dates and flags lapses, and can hold payment until a sub insurance certificate is current.', tags: ['w-9', 'w9', 'coi', 'insurance', 'compliance'] },
+  { cat: 'portals', title: 'Owner Portal: Approve Pay Apps & Change Orders', body: 'Give owners a scoped login to review and approve pay applications and change orders, see progress photos, and track the schedule — without exposing your internal costs.', tags: ['owner portal', 'approve', 'owner'] },
+  { cat: 'portals', title: 'Sub Portal: Invoices, COIs & Lien Waivers', body: 'Subs submit invoices, upload certificates of insurance, and sign lien waivers in their own portal. You approve and pay from one queue, and compliance is enforced automatically.', tags: ['sub portal', 'subcontractor', 'invoice', 'coi', 'lien waiver'] },
+  { cat: 'portals', title: 'Share Documents with Scoped Access', body: 'Share drawings, specs, or a single folder with an owner, architect, or sub using a secure link. They see only what you grant, and access can be revoked any time.', tags: ['share', 'documents', 'access', 'link'] },
+  { cat: 'portals', title: 'Collect W-9s and Insurance from Subs', body: 'Request W-9s and COIs through the Sub Portal; Saguaro tracks expiration dates and flags lapses, and can hold payment until a sub’s insurance certificate is current.', tags: ['w-9', 'w9', 'coi', 'insurance', 'compliance'] },
 
   // ---- Billing & Plans ----
-  { cat: 'billing', title: 'Switch between monthly & annual billing', body: 'Change your billing cycle any time under Settings → Billing. Annual plans include a discount, and any proration is handled automatically on your next invoice.', tags: ['billing', 'monthly', 'annual', 'subscription'] },
-  { cat: 'billing', title: 'Upgrade, downgrade, or add an add-on', body: 'Move between Starter, Professional, and Enterprise instantly, or add an add-on like extra takeoff pages. Changes prorate, and you keep all your data when you switch.', tags: ['upgrade', 'downgrade', 'plan', 'add-on'] },
-  { cat: 'billing', title: 'Update payment method & download receipts', body: 'Update your card and download itemized receipts and invoices from Settings → Billing — handy for expense reports and your bookkeeper.', tags: ['payment', 'card', 'receipt', 'invoice'] },
-  { cat: 'billing', title: 'Flat pricing & unlimited users explained', body: 'Saguaro charges a flat plan price with unlimited users — no per-seat fees. Add your whole crew, your estimators, and the owner without watching the bill climb.', tags: ['pricing', 'unlimited users', 'flat'] },
-  { cat: 'billing', title: 'Cancel, pause & data retention', body: 'Cancel or pause from Settings → Billing. Your data is retained and exportable during any pause, and you can reactivate right where you left off.', tags: ['cancel', 'pause', 'data retention'] },
+  { cat: 'billing', title: 'Switch Between Monthly & Annual Billing', body: 'Change your billing cycle any time under Settings → Billing. Annual plans include a discount, and any proration is handled automatically on your next invoice.', tags: ['billing', 'monthly', 'annual', 'subscription'] },
+  { cat: 'billing', title: 'Upgrade, Downgrade, or Add an Add-On', body: 'Move between Starter, Professional, and Enterprise instantly, or add an add-on like extra takeoff pages. Changes prorate, and you keep all your data when you switch.', tags: ['upgrade', 'downgrade', 'plan', 'add-on'] },
+  { cat: 'billing', title: 'Update Payment Method & Download Receipts', body: 'Update your card and download itemized receipts and invoices from Settings → Billing — handy for expense reports and your bookkeeper.', tags: ['payment', 'card', 'receipt', 'invoice'] },
+  { cat: 'billing', title: 'Flat Pricing & Unlimited Users Explained', body: 'Saguaro charges a flat plan price with unlimited users — no per-seat fees. Add your whole crew, your estimators, and the owner without watching the bill climb.', tags: ['pricing', 'unlimited users', 'flat'] },
+  { cat: 'billing', title: 'Cancel, Pause & Data Retention', body: 'Cancel or pause from Settings → Billing. Your data is retained and exportable during any pause, and you can reactivate right where you left off.', tags: ['cancel', 'pause', 'data retention'] },
 
   // ---- Account & Security ----
-  { cat: 'account', title: 'Reset my password', body: 'On the login screen, click Forgot Password and enter your email to get a secure reset link within a minute. If it does not arrive, check spam or contact support to verify your identity.', tags: ['password', 'reset', 'forgot', 'login'] },
-  { cat: 'account', title: 'Set up two-factor authentication (2FA)', body: 'Enable 2FA under Settings → Security to require a one-time code at login. It is the single best way to keep a job financials and documents locked down.', tags: ['2fa', 'two factor', 'mfa', 'security'] },
-  { cat: 'account', title: 'Face ID / biometric sign-in', body: 'Turn on Face ID or fingerprint sign-in in the field app for fast, secure access without typing a password on a dusty job site.', tags: ['face id', 'biometric', 'fingerprint', 'touch id'] },
-  { cat: 'account', title: 'Manage notification preferences', body: 'Choose which events email or push you — RFIs, approvals, pay apps, daily logs — per project, so you get what matters and mute what does not.', tags: ['notifications', 'preferences', 'email'] },
-  { cat: 'account', title: 'Data security, backups & SOC 2', body: 'Your data is encrypted in transit and at rest, backed up continuously, and isolated per company. See our Security page for our SOC 2 posture and subprocessor list.', tags: ['security', 'backup', 'soc 2', 'encryption', 'privacy'] },
+  { cat: 'account', title: 'Reset My Password', body: 'On the login screen, click Forgot Password and enter your email to get a secure reset link within a minute. If it does not arrive, check spam or contact support to verify your identity.', tags: ['password', 'reset', 'forgot', 'login'] },
+  { cat: 'account', title: 'Set Up Two-Factor Authentication (2FA)', body: 'Enable 2FA under Settings → Security to require a one-time code at login. It is the single best way to keep a job’s financials and documents locked down.', tags: ['2fa', 'two factor', 'mfa', 'security'] },
+  { cat: 'account', title: 'Face ID / Biometric Sign-In', body: 'Turn on Face ID or fingerprint sign-in in the field app for fast, secure access without typing a password on a dusty job site.', tags: ['face id', 'biometric', 'fingerprint', 'touch id'] },
+  { cat: 'account', title: 'Manage Notification Preferences', body: 'Choose which events email or push you — RFIs, approvals, pay apps, daily logs — per project, so you get what matters and mute what does not.', tags: ['notifications', 'preferences', 'email'] },
+  { cat: 'account', title: 'Data Security, Backups & SOC 2', body: 'Your data is encrypted in transit and at rest, backed up continuously, and isolated per company. See our Security page for our SOC 2 posture and subprocessor list.', tags: ['security', 'backup', 'soc 2', 'encryption', 'privacy'] },
 ];
 
 const POPULAR = [
-  'AI takeoff for electrical',
-  'Low-voltage cost codes',
+  'AI Takeoff for Electrical',
+  'Low-Voltage Cost Codes',
   'Generate a G703',
-  'Lien waiver for California',
+  'Lien Waiver for California',
   'Migrate from Procore',
-  'Reset my password',
+  'Reset My Password',
 ];
 
 const FAQS = [
@@ -225,7 +225,7 @@ const FAQS = [
   },
   {
     q: 'I forgot my password — how do I reset it?',
-    a: 'On the login screen, click Forgot password and enter your email. You will get a secure reset link within a minute. If it does not arrive, check spam or contact support and we will verify your identity and reset it manually.',
+    a: 'On the login screen, click Forgot Password and enter your email. You will get a secure reset link within a minute. If it does not arrive, check spam or contact support and we will verify your identity and reset it manually.',
   },
 ];
 
@@ -288,7 +288,7 @@ export default function HelpCenterPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 16px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 16px', background: C.gold, borderRadius: 8, color: C.dark, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 16px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -296,14 +296,14 @@ export default function HelpCenterPage() {
 
         {/* Hero + Search */}
         <section style={{ textAlign: 'center', padding: '104px 24px 64px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 24 }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 24 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
             Help Center
           </div>
           <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 16px', letterSpacing: -0.5 }}>
-            How can we{' '}
+            How Can We{' '}
             <span style={{ color: C.text }}>
-              help you build?
+              Help You Build?
             </span>
           </h1>
           <p style={{ fontSize: 'clamp(15px, 1.6vw, 17px)', color: C.dim, maxWidth: 580, margin: '0 auto 32px', lineHeight: 1.6 }}>
@@ -330,7 +330,7 @@ export default function HelpCenterPage() {
                 background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 12,
                 color: C.text, fontSize: 15, fontFamily: C.font, outline: 'none',
               }}
-              onFocus={e => (e.currentTarget.style.border = `1px solid rgba(245, 158, 11,0.45)`)}
+              onFocus={e => (e.currentTarget.style.border = `1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)`)}
               onBlur={e => (e.currentTarget.style.border = `1px solid ${C.border}`)}
             />
             {query && (
@@ -380,7 +380,7 @@ export default function HelpCenterPage() {
                           <button onClick={() => setOpenArticle(open ? null : a.title)}
                             style={{ width: '100%', textAlign: 'left', padding: '18px 0', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, fontFamily: C.font }}>
                             <span style={{ minWidth: 0 }}>
-                              <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 4 }}>{catTitle(a.cat)}</span>
+                              <span style={{ display: 'block', fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 4 }}>{catTitle(a.cat)}</span>
                               <span style={{ display: 'block', fontSize: 15, fontWeight: 500, color: C.text, lineHeight: 1.35 }}>{a.title}</span>
                             </span>
                             <Chevron open={open} />
@@ -396,7 +396,7 @@ export default function HelpCenterPage() {
 
                 {matchedFaqs.length > 0 && (
                   <div>
-                    <h3 style={{ fontSize: 12, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', margin: '0 0 14px' }}>Related questions</h3>
+                    <h3 style={{ fontSize: 12, fontWeight: 500, color: C.dim, margin: '0 0 14px' }}>Related Questions</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                       {matchedFaqs.map((faq, i) => (
                         <div key={faq.q} style={{ borderBottom: i < matchedFaqs.length - 1 ? `1px solid ${C.border}` : 'none' }}>
@@ -422,7 +422,7 @@ export default function HelpCenterPage() {
           <>
             <section style={{ padding: '0 24px 88px', maxWidth: 1160, margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <h2 style={{ fontWeight: 600, margin: '0 0 8px', letterSpacing: -0.3 }}>Browse by category</h2>
+                <h2 style={{ fontWeight: 600, margin: '0 0 8px', letterSpacing: -0.3 }}>Browse by Category</h2>
                 <p style={{ fontSize: 15, color: C.dim, margin: 0 }}>Tap any article to read it — {ARTICLES.length} guides across {CATEGORIES.length} topics.</p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px 56px' }}>
@@ -468,11 +468,11 @@ export default function HelpCenterPage() {
             {/* FAQ */}
             <section style={{ padding: '0 24px 88px', maxWidth: 800, margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: 44 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 16 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>
                   <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
                   Common Questions
                 </div>
-                <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Frequently asked questions</h2>
+                <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Frequently Asked Questions</h2>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                 {FAQS.map((faq, i) => (
@@ -497,11 +497,11 @@ export default function HelpCenterPage() {
         <section style={{ padding: '24px 24px 96px', maxWidth: 980, margin: '0 auto' }}>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.border}`, borderRadius: 14, padding: '44px 48px', display: 'flex', gap: 40, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 12 }}>
                 <span style={{ width: 5, height: 5, borderRadius: '50%', background: C.gold }} />
-                Still need a hand?
+                Still Need a Hand?
               </div>
-              <h2 style={{ fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25, letterSpacing: -0.3 }}>Talk to a real human on our support team</h2>
+              <h2 style={{ fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25, letterSpacing: -0.3 }}>Talk to a Real Human on Our Support Team</h2>
               <p style={{ fontSize: 15, color: C.dim, margin: '0 0 24px', lineHeight: 1.65 }}>
                 Our support team is built from people who have actually run construction jobs. Reach out and we will help you set up your company, run your first pay app, or migrate from your old platform.
               </p>
@@ -522,7 +522,7 @@ export default function HelpCenterPage() {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'stretch', minWidth: 220 }}>
-              <Link href="/contact" style={{ padding: '13px 28px', background: C.gold, borderRadius: 8, color: C.dark, fontWeight: 600, fontSize: 15, textDecoration: 'none', textAlign: 'center' }}>
+              <Link href="/contact" style={{ padding: '13px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none', textAlign: 'center' }}>
                 Contact Support
               </Link>
               <Link href="/signup" style={{ padding: '13px 28px', background: 'transparent', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, fontWeight: 500, fontSize: 15, textDecoration: 'none', textAlign: 'center' }}>

@@ -15,7 +15,7 @@ import {
   ClockCountdown, SealCheck, SignIn, UserPlus, ArrowRight, ShieldCheck,
 } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416',
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)',
   BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF',
   RED = '#ef4444', GREEN = '#22c55e';
 
@@ -37,7 +37,7 @@ const card: React.CSSProperties = {
   padding: '32px 28px', boxShadow: '0 8px 32px rgba(0,0,0,.25)',
 };
 
-function Spinner({ size = 18, color = '#1C1C1E' }: { size?: number; color?: string }) {
+function Spinner({ size = 18, color = '#0A0A00' }: { size?: number; color?: string }) {
   return (
     <span style={{
       display: 'inline-block', width: size, height: size,
@@ -52,7 +52,7 @@ function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: strin
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
       <span style={{ color: GOLD, display: 'inline-flex', flexShrink: 0 }}>{icon}</span>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .6 }}>{label}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: DIM }}>{label}</div>
         <div style={{ fontSize: 14, fontWeight: 600, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{value}</div>
       </div>
     </div>
@@ -141,12 +141,12 @@ export default function AcceptInvitePage() {
         <Link href="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }} aria-label="Saguaro Control Systems — home">
           <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: 36, width: 'auto', objectFit: 'contain', borderRadius: 4 }} />
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-            <span style={{ fontWeight: 900, fontSize: 14, letterSpacing: 1, background: `linear-gradient(90deg,${GOLD},#FBBF24)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
+            <span style={{ fontWeight: 900, fontSize: 15, letterSpacing: '-0.01em', background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
             <span style={{ fontSize: 10, color: DIM, letterSpacing: .5, fontWeight: 600 }}>Control Systems</span>
           </span>
         </Link>
         <Link href="/login" style={{ fontSize: 13, color: DIM, textDecoration: 'none', fontWeight: 600 }}>
-          Have an account? <span style={{ color: GOLD }}>Sign in →</span>
+          Have an account? <span style={{ color: GOLD }}>Sign In →</span>
         </Link>
       </nav>
 
@@ -165,9 +165,9 @@ export default function AcceptInvitePage() {
           {!loading && invite && invite.reason === 'invalid' && (
             <StateCard
               icon={<WarningCircle size={48} weight="duotone" color={RED} />}
-              title="Invitation not found"
+              title="Invitation Not Found"
               body="This invitation link is invalid or has already been removed. Ask your teammate to send a fresh invite."
-              cta={<Link href="/login" style={ctaSecondary}>Go to sign in</Link>}
+              cta={<Link href="/login" style={ctaSecondary}>Go to Sign In</Link>}
             />
           )}
 
@@ -175,7 +175,7 @@ export default function AcceptInvitePage() {
           {!loading && invite && invite.reason === 'error' && (
             <StateCard
               icon={<WarningCircle size={48} weight="duotone" color={RED} />}
-              title="Something went wrong"
+              title="Something Went Wrong"
               body="We couldn't load this invitation right now. Please refresh the page or try again in a moment."
               cta={<button onClick={() => window.location.reload()} style={ctaSecondary}>Retry</button>}
             />
@@ -185,9 +185,9 @@ export default function AcceptInvitePage() {
           {!loading && invite && invite.reason === 'expired' && (
             <StateCard
               icon={<ClockCountdown size={48} weight="duotone" color={GOLD} />}
-              title="This invitation expired"
+              title="This Invitation Expired"
               body={`Invitations are valid for 7 days. Ask ${invite.inviterName || 'your teammate'} to send you a new invite to ${invite.company || 'the team'}.`}
-              cta={<Link href="/login" style={ctaSecondary}>Go to sign in</Link>}
+              cta={<Link href="/login" style={ctaSecondary}>Go to Sign In</Link>}
             />
           )}
 
@@ -195,9 +195,9 @@ export default function AcceptInvitePage() {
           {!loading && invite && invite.reason === 'accepted' && !accepted && (
             <StateCard
               icon={<SealCheck size={48} weight="duotone" color={GREEN} />}
-              title="Already accepted"
+              title="Already Accepted"
               body={`This invitation to join ${invite.company || 'the team'} has already been accepted. Sign in to get to work.`}
-              cta={<Link href="/login" style={ctaPrimary}>Sign in <ArrowRight size={16} weight="bold" /></Link>}
+              cta={<Link href="/login" style={ctaPrimary}>Sign In <ArrowRight size={16} weight="bold" /></Link>}
             />
           )}
 
@@ -205,7 +205,7 @@ export default function AcceptInvitePage() {
           {accepted && (
             <StateCard
               icon={<CheckCircle size={48} weight="fill" color={GREEN} />}
-              title="You're in!"
+              title="You're In"
               body={`Welcome to ${invite?.company || 'the team'}. Taking you to your dashboard…`}
               cta={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: DIM, fontSize: 13 }}><Spinner size={14} color={GOLD} /> Redirecting…</span>}
             />
@@ -215,7 +215,7 @@ export default function AcceptInvitePage() {
           {!loading && invite && invite.reason === 'pending' && !accepted && (
             <>
               <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <div style={{ display: 'inline-flex', width: 60, height: 60, borderRadius: 14, background: 'rgba(245,158,11,0.12)', border: `1px solid rgba(245,158,11,0.3)`, alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                <div style={{ display: 'inline-flex', width: 60, height: 60, borderRadius: 14, background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                   <Buildings size={30} weight="duotone" color={GOLD} />
                 </div>
                 <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 6px', color: TEXT }}>
@@ -234,7 +234,7 @@ export default function AcceptInvitePage() {
                   <DetailRow icon={<EnvelopeSimple size={20} weight="duotone" />} label="Invited Email" value={invite.email} />
                   <DetailRow icon={<UserCircle size={20} weight="duotone" />} label="Invited By" value={invite.inviterName} />
                   {invite.projectId && (
-                    <DetailRow icon={<Briefcase size={20} weight="duotone" />} label="Project" value={invite.projectName || 'Project team'} />
+                    <DetailRow icon={<Briefcase size={20} weight="duotone" />} label="Project" value={invite.projectName || 'Project Team'} />
                   )}
                 </div>
 
@@ -248,7 +248,7 @@ export default function AcceptInvitePage() {
                 {/* Logged in, email matches → accept */}
                 {emailMatches && (
                   <button onClick={handleAccept} disabled={accepting} style={{ ...ctaPrimary, width: '100%', justifyContent: 'center', opacity: accepting ? .7 : 1, cursor: accepting ? 'not-allowed' : 'pointer' }}>
-                    {accepting ? <><Spinner /> Accepting…</> : <>Accept invitation <ArrowRight size={16} weight="bold" /></>}
+                    {accepting ? <><Spinner /> Accepting…</> : <>Accept Invitation <ArrowRight size={16} weight="bold" /></>}
                   </button>
                 )}
 
@@ -259,7 +259,7 @@ export default function AcceptInvitePage() {
                       You're signed in as <strong style={{ color: TEXT }}>{me.email}</strong>, but this invite is for <strong style={{ color: TEXT }}>{invite.email}</strong>. Sign in with the invited email to accept.
                     </div>
                     <button onClick={() => switchAccount(invite.email)} style={{ ...ctaPrimary, width: '100%', justifyContent: 'center' }}>
-                      <SignIn size={16} weight="bold" /> Sign in as {invite.email}
+                      <SignIn size={16} weight="bold" /> Sign In as {invite.email}
                     </button>
                   </>
                 )}
@@ -271,10 +271,10 @@ export default function AcceptInvitePage() {
                       To accept, sign in or create your account using <strong style={{ color: TEXT }}>{invite.email}</strong>.
                     </p>
                     <a href={loginHref(invite.email)} style={{ ...ctaPrimary, width: '100%', justifyContent: 'center', marginBottom: 10 }}>
-                      <SignIn size={16} weight="bold" /> Sign in &amp; accept
+                      <SignIn size={16} weight="bold" /> Sign In &amp; Accept
                     </a>
                     <a href={signupHref} style={{ ...ctaSecondary, width: '100%', justifyContent: 'center' }}>
-                      <UserPlus size={16} weight="bold" /> Create a new account
+                      <UserPlus size={16} weight="bold" /> Create a New Account
                     </a>
                     <p style={{ fontSize: 11, color: 'rgba(203,213,225,0.6)', margin: '14px 0 0', textAlign: 'center', lineHeight: 1.5 }}>
                       New here? Create your account with <strong style={{ color: DIM }}>{invite.email}</strong>, then reopen this invitation link to finish joining.
@@ -288,8 +288,8 @@ export default function AcceptInvitePage() {
           {/* Trust footer */}
           <div style={{ marginTop: 20, textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>
             <ShieldCheck size={13} weight="duotone" color="rgba(203,213,225,0.6)" />
-            <span style={{ fontSize: 10, color: 'rgba(203,213,225,0.6)', fontWeight: 600, letterSpacing: .5, textTransform: 'uppercase' }}>
-              Secure invitation · Saguaro Control Systems
+            <span style={{ fontSize: 10, color: 'rgba(203,213,225,0.6)', fontWeight: 600 }}>
+              Secure Invitation · Saguaro Control Systems
             </span>
           </div>
         </div>
@@ -314,7 +314,7 @@ function StateCard({ icon, title, body, cta }: { icon: React.ReactNode; title: s
 
 const ctaPrimary: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px',
-  background: GOLD, border: 'none', borderRadius: 9, color: '#1C1C1E',
+  background: GOLD, border: 'none', borderRadius: 9, color: '#0A0A00',
   fontSize: 14, fontWeight: 700, textDecoration: 'none', cursor: 'pointer',
 };
 const ctaSecondary: React.CSSProperties = {
@@ -328,7 +328,7 @@ const errorBox: React.CSSProperties = {
   marginBottom: 16, fontSize: 13, color: RED, lineHeight: 1.45,
 };
 const noticeBox: React.CSSProperties = {
-  background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.25)',
+  background: 'color-mix(in srgb, var(--brand-primary) 8%, transparent)', border: '1px solid var(--brand-primary-25)',
   borderRadius: 8, padding: '11px 14px', marginBottom: 14, fontSize: 13,
   color: DIM, lineHeight: 1.5,
 };

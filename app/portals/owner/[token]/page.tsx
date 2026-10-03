@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, FilePdf, Warning, X } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
 const fmt=(n:number)=>'$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
 
 export default function OwnerApprovalPortal() {
@@ -38,7 +38,7 @@ export default function OwnerApprovalPortal() {
     setSaving(false);
   }
 
-  if (loading) return <div style={{ minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',color:DIM,fontFamily:'system-ui,sans-serif' }}>Loading...</div>;
+  if (loading) return <div style={{ minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',color:DIM,fontFamily:'system-ui,sans-serif' }}>Loading…</div>;
 
   if (!data?.payApp) return (
     <div style={{ minHeight:'100vh',background:DARK,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'system-ui,sans-serif' }}>
@@ -73,15 +73,15 @@ export default function OwnerApprovalPortal() {
 
   return (
     <div style={{ minHeight:'100vh',background:DARK,fontFamily:'system-ui,sans-serif',color:TEXT }}>
-      <div style={{ background:'#141416',borderBottom:`1px solid ${BORDER}`,padding:'16px 24px',display:'flex',alignItems:'center',gap:12 }}>
+      <div style={{ background:'var(--bg-surface)',borderBottom:`1px solid ${BORDER}`,padding:'16px 24px',display:'flex',alignItems:'center',gap:12 }}>
         <Cactus size={22} weight="fill" color={GOLD} />
-        <span style={{ fontWeight:800,fontSize:16,color:GOLD,letterSpacing:1 }}>SAGUARO CONTROL SYSTEMS</span>
+        <span style={{ fontWeight:800,fontSize:16,color:GOLD }}>Saguaro Control Systems</span>
         <span style={{ fontSize:11,color:DIM,marginLeft:8 }}>Owner Pay Application Review Portal</span>
       </div>
 
       <div style={{ maxWidth:900,margin:'0 auto',padding:'32px 24px' }}>
         {/* Banner */}
-        <div style={{ background:'rgba(245, 158, 11,.06)',border:`1px solid rgba(245, 158, 11,.2)`,borderRadius:10,padding:'16px 20px',marginBottom:24 }}>
+        <div style={{ background:'color-mix(in srgb, var(--brand-primary) 6%, transparent)',border:'1px solid var(--brand-primary-18)',borderRadius:10,padding:'16px 20px',marginBottom:24 }}>
           <div style={{ fontWeight:800,fontSize:18,color:GOLD,marginBottom:4 }}>
             Pay Application #{pa.app_number} — Review &amp; Approval
           </div>
@@ -100,7 +100,7 @@ export default function OwnerApprovalPortal() {
             ['Current Payment Due', fmt(pa.current_payment_due||0)],
           ].map(([l,v]:any)=>(
             <div key={l} style={{ background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px' }}>
-              <div style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1,color:DIM,marginBottom:5 }}>{l}</div>
+              <div style={{ fontSize:10,fontWeight:700,color:DIM,marginBottom:5 }}>{l}</div>
               <div style={{ fontSize:20,fontWeight:800,color:l==='Current Payment Due'?GOLD:TEXT }}>{v}</div>
             </div>
           ))}
@@ -137,7 +137,7 @@ export default function OwnerApprovalPortal() {
               <table style={{ width:'100%',borderCollapse:'collapse',fontSize:12 }}>
                 <thead>
                   <tr style={{ background:'#1c1c1e' }}>
-                    {['#','Description','Sched Value','From Prev','This Period','Materials Stored','Total Completed','%','Balance'].map(h=>(
+                    {['#','Description','Sched. Value','From Prev.','This Period','Materials Stored','Total Completed','%','Balance'].map(h=>(
                       <th key={h} style={{ padding:'8px 10px',textAlign:'right',color:DIM,fontWeight:700,whiteSpace:'nowrap',borderBottom:`1px solid ${BORDER}` }}>{h}</th>
                     ))}
                   </tr>
@@ -166,8 +166,8 @@ export default function OwnerApprovalPortal() {
         {(pa.g702_pdf_url||pa.g703_pdf_url) && (
           <div style={{ background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'16px 20px',marginBottom:20,display:'flex',gap:12,flexWrap:'wrap' }}>
             <div style={{ fontSize:13,fontWeight:700,color:TEXT,marginBottom:8,width:'100%' }}>Download Official AIA Documents</div>
-            {pa.g702_pdf_url && <a href={pa.g702_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'rgba(245, 158, 11,.12)',border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G702</a>}
-            {pa.g703_pdf_url && <a href={pa.g703_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'rgba(245, 158, 11,.12)',border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G703</a>}
+            {pa.g702_pdf_url && <a href={pa.g702_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G702</a>}
+            {pa.g703_pdf_url && <a href={pa.g703_pdf_url} target="_blank" rel="noreferrer" style={{ padding:'9px 18px',background:'var(--brand-primary-12)',border:'1px solid var(--brand-primary-35)',borderRadius:7,color:GOLD,fontSize:13,fontWeight:700,textDecoration:'none' }}><FilePdf size={14} weight="fill" /> Download G703</a>}
           </div>
         )}
 
@@ -176,8 +176,8 @@ export default function OwnerApprovalPortal() {
           <div style={{ padding:'12px 20px',borderBottom:`1px solid ${BORDER}`,fontWeight:700,fontSize:14 }}>Owner Action Required</div>
           <div style={{ padding:20 }}>
             <div style={{ marginBottom:16 }}>
-              <label style={{ display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5,textTransform:'uppercase',letterSpacing:.5 }}>Notes / Comments (optional)</label>
-              <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="Add any notes, conditions, or comments for the contractor..." rows={3}
+              <label style={{ display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:5 }}>Notes / Comments (Optional)</label>
+              <textarea value={note} onChange={e=>setNote(e.target.value)} placeholder="Add any notes, conditions, or comments for the contractor…" rows={3}
                 style={{ width:'100%',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:7,padding:'10px 14px',color:TEXT,fontSize:13,outline:'none',boxSizing:'border-box',resize:'vertical' }} />
             </div>
             <div style={{ display:'flex',gap:12 }}>

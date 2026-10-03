@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import SaguaroDatePicker from '../../../components/SaguaroDatePicker';
 import { Cactus, Check } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 
 const STEPS = [
   { num: 1, label: 'Welcome', done: true },
@@ -19,8 +19,8 @@ const inputStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  display:'block',fontSize:11,fontWeight:700,color:DIM,
-  textTransform:'uppercase',letterSpacing:.5,marginBottom:6,
+  display:'block',fontSize:12,fontWeight:700,color:DIM,
+  marginBottom:6,
 };
 
 export default function OnboardingStep3() {
@@ -75,7 +75,7 @@ export default function OnboardingStep3() {
         <div style={{textAlign:'center',marginBottom:36}}>
           <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
             <Cactus size={28} weight="fill" color={GOLD} />
-            <span style={{fontWeight:900,fontSize:20,color:GOLD,letterSpacing:1}}>SAGUARO</span>
+            <span style={{fontWeight:900,fontSize:20,color:GOLD}}>Saguaro</span>
           </a>
         </div>
 
@@ -88,7 +88,7 @@ export default function OnboardingStep3() {
                   width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
                   fontSize:14,fontWeight:800,
                   background: s.done ? GREEN : s.active ? GOLD : 'rgba(0,0,0,.06)',
-                  color: (s.done||s.active) ? '#1C1C1E' : DIM,
+                  color: (s.done||s.active) ? '#0A0A00' : DIM,
                   border:`2px solid ${s.done ? GREEN : s.active ? GOLD : BORDER}`,
                 }}>
                   {s.done ? <Check size={16} weight="bold" /> : s.num}
@@ -105,7 +105,7 @@ export default function OnboardingStep3() {
         {/* Card */}
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:16,padding:40}}>
           <div style={{marginBottom:28}}>
-            <div style={{fontSize:11,fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:1,marginBottom:8}}>Step 3 of 4</div>
+            <div style={{fontSize:12,fontWeight:700,color:GOLD,marginBottom:8}}>Step 3 of 4</div>
             <h1 style={{fontSize:26,fontWeight:900,margin:'0 0 6px',color:TEXT}}>Add Your First Project</h1>
             <p style={{color:DIM,fontSize:14,margin:0}}>This project will be your workspace for takeoffs, pay apps, and lien waivers.</p>
           </div>
@@ -144,9 +144,9 @@ export default function OnboardingStep3() {
             <button
               onClick={handleCreate}
               disabled={loading}
-              style={{marginTop:8,padding:'14px 0',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,border:'none',borderRadius:10,color:'#1C1C1E',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
+              style={{marginTop:8,padding:'14px 0',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:10,color:'#0A0A00',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
             >
-              {loading?'Creating Project...':'Add Project → Invite Team'}
+              {loading?'Creating Project…':'Add Project and Invite Team →'}
             </button>
 
             <a

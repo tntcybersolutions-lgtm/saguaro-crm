@@ -4,12 +4,12 @@ import type { Icon } from '@phosphor-icons/react';
 import { Bathtub, CookingPot, GridFour, Lightbulb, Log, Mountains, Nut, Palette } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = '#0a0a0a';
-const RED = '#FF3B30', BLUE = '#F59E0B';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#34C759';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
+const RED = '#FF3B30', BLUE = 'var(--brand-primary)';
 
 const glass: React.CSSProperties = {
-  background: `${CARD}CC`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+  background: `color-mix(in srgb, ${CARD} 80%, transparent)`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
   border: `1px solid ${BORDER}`, borderRadius: 16,
 };
 
@@ -180,7 +180,7 @@ export default function MaterialsPage() {
           {CATEGORIES.map(cat => (
             <button key={cat.id} onClick={() => { setActiveCategory(cat.id); setSearch(''); }} style={{
               padding: '10px 18px', borderRadius: 10, border: `1px solid ${activeCategory === cat.id ? GOLD : BORDER}`,
-              background: activeCategory === cat.id ? `${GOLD}18` : `${CARD}CC`,
+              background: activeCategory === cat.id ? `color-mix(in srgb, ${GOLD} 9%, transparent)` : `color-mix(in srgb, ${CARD} 80%, transparent)`,
               color: activeCategory === cat.id ? GOLD : TEXT, fontWeight: 600,
               fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .2s',
               backdropFilter: 'blur(8px)',
@@ -193,16 +193,16 @@ export default function MaterialsPage() {
         {/* Search + My Selections toggle */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
           <input
-            type="text" placeholder="Search materials..." value={search}
+            type="text" placeholder="Search materials…" value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
-              flex: 1, minWidth: 200, padding: '12px 16px', background: `${CARD}CC`,
+              flex: 1, minWidth: 200, padding: '12px 16px', background: `color-mix(in srgb, ${CARD} 80%, transparent)`,
               border: `1px solid ${BORDER}`, borderRadius: 12, color: TEXT,
               fontSize: 14, outline: 'none',
             }}
           />
           <button onClick={() => setDrawerOpen(!drawerOpen)} style={{
-            padding: '12px 20px', background: selections.length > 0 ? `${GREEN}20` : `${CARD}CC`,
+            padding: '12px 20px', background: selections.length > 0 ? `${GREEN}20` : `color-mix(in srgb, ${CARD} 80%, transparent)`,
             border: `1px solid ${selections.length > 0 ? GREEN : BORDER}`,
             borderRadius: 12, color: selections.length > 0 ? GREEN : DIM,
             fontWeight: 700, cursor: 'pointer', fontSize: 14, position: 'relative',
@@ -268,7 +268,7 @@ export default function MaterialsPage() {
                       </div>
                       <button onClick={() => addToSelection(product)} style={{
                         padding: '6px 14px', borderRadius: 8,
-                        background: isSelected ? `${GREEN}20` : `${GOLD}20`,
+                        background: isSelected ? `${GREEN}20` : `color-mix(in srgb, ${GOLD} 13%, transparent)`,
                         border: `1px solid ${isSelected ? GREEN : GOLD}`,
                         color: isSelected ? GREEN : GOLD, fontSize: 12,
                         fontWeight: 700, cursor: 'pointer',
@@ -307,7 +307,7 @@ export default function MaterialsPage() {
                   <div style={{ maxHeight: 400, overflowY: 'auto', marginBottom: 16 }}>
                     {selections.map(s => (
                       <div key={s.product.id} style={{
-                        padding: '12px', background: `${BG}60`, borderRadius: 10,
+                        padding: '12px', background: `color-mix(in srgb, ${BG} 38%, transparent)`, borderRadius: 10,
                         border: `1px solid ${BORDER}`, marginBottom: 8,
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -362,8 +362,8 @@ export default function MaterialsPage() {
                   </div>
 
                   <button onClick={exportToEstimate} style={{
-                    width: '100%', padding: '12px', background: `linear-gradient(135deg, ${GOLD}, #B8860B)`,
-                    color: '#000', border: 'none', borderRadius: 10, fontWeight: 700,
+                    width: '100%', padding: '12px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
+                    color: '#0A0A00', border: 'none', borderRadius: 10, fontWeight: 700,
                     fontSize: 14, cursor: 'pointer',
                   }}>
                     Export to Estimate

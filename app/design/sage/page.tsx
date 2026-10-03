@@ -4,12 +4,12 @@ import type { Icon } from '@phosphor-icons/react';
 import { Cactus, CookingPot, Eye, House, Lightning, Question, Smiley, SmileyAngry, Sun, Wrench } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = '#0a0a0a';
-const BLUE = '#F59E0B';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#34C759';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
+const BLUE = 'var(--brand-primary)';
 
 const glass: React.CSSProperties = {
-  background: `${CARD}CC`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+  background: `color-mix(in srgb, ${CARD} 80%, transparent)`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
   border: `1px solid ${BORDER}`, borderRadius: 16,
 };
 
@@ -49,12 +49,12 @@ const SUGGESTED_PROMPTS: { text: string; icon: Icon }[] = [
 /* ─── Upsell Extraction ─── */
 function extractUpsell(text: string): ChatMessage['upsell'] | undefined {
   const patterns = [
-    { match: /solar/i, title: 'Solar Panel Package', price: '$18,000 - $24,000', link: '/design/packages' },
-    { match: /kitchen/i, title: 'Kitchen Remodel Package', price: '$25,000 - $65,000', link: '/design/materials' },
-    { match: /smart.*home|automation/i, title: 'Smart Home Starter', price: '$2,800 - $5,200', link: '/design/packages' },
-    { match: /ev.*charg|electric.*vehicle/i, title: 'EV Charging Station', price: '$800 - $2,400', link: '/design/roi' },
-    { match: /pool|spa/i, title: 'Pool & Spa Package', price: '$35,000 - $75,000', link: '/design/discover' },
-    { match: /bathroom/i, title: 'Bathroom Renovation', price: '$15,000 - $40,000', link: '/design/materials' },
+    { match: /solar/i, title: 'Solar Panel Package', price: '$18,000–$24,000', link: '/design/packages' },
+    { match: /kitchen/i, title: 'Kitchen Remodel Package', price: '$25,000–$65,000', link: '/design/materials' },
+    { match: /smart.*home|automation/i, title: 'Smart Home Starter', price: '$2,800–$5,200', link: '/design/packages' },
+    { match: /ev.*charg|electric.*vehicle/i, title: 'EV Charging Station', price: '$800–$2,400', link: '/design/roi' },
+    { match: /pool|spa/i, title: 'Pool & Spa Package', price: '$35,000–$75,000', link: '/design/discover' },
+    { match: /bathroom/i, title: 'Bathroom Renovation', price: '$15,000–$40,000', link: '/design/materials' },
   ];
   for (const p of patterns) {
     if (p.match.test(text)) return p;
@@ -129,13 +129,13 @@ export default function SageChatPage() {
       {/* Header */}
       <div style={{
         padding: '16px 20px', borderBottom: `1px solid ${BORDER}`,
-        background: `${DARK}E0`, backdropFilter: 'blur(12px)',
+        background: `color-mix(in srgb, ${DARK} 88%, transparent)`, backdropFilter: 'blur(12px)',
         display: 'flex', alignItems: 'center', gap: 12,
         position: 'sticky', top: 0, zIndex: 50,
       }}>
         <div style={{
-          width: 40, height: 40, borderRadius: 12, background: `${GOLD}20`,
-          border: `1px solid ${GOLD}40`, display: 'flex', alignItems: 'center',
+          width: 40, height: 40, borderRadius: 12, background: `color-mix(in srgb, ${GOLD} 13%, transparent)`,
+          border: `1px solid color-mix(in srgb, ${GOLD} 25%, transparent)`, display: 'flex', alignItems: 'center',
           justifyContent: 'center', fontSize: 22,
         }}><Cactus size={22} weight="duotone" color={GREEN} /></div>
         <div>
@@ -199,8 +199,8 @@ export default function SageChatPage() {
             }}>
               {msg.role === 'assistant' && (
                 <div style={{
-                  width: 32, height: 32, borderRadius: 10, background: `${GOLD}20`,
-                  border: `1px solid ${GOLD}30`, display: 'flex', alignItems: 'center',
+                  width: 32, height: 32, borderRadius: 10, background: `color-mix(in srgb, ${GOLD} 13%, transparent)`,
+                  border: `1px solid color-mix(in srgb, ${GOLD} 19%, transparent)`, display: 'flex', alignItems: 'center',
                   justifyContent: 'center', fontSize: 16, flexShrink: 0,
                 }}><Cactus size={16} weight="duotone" color={GREEN} /></div>
               )}
@@ -209,9 +209,9 @@ export default function SageChatPage() {
                   ...(msg.role === 'assistant' ? glass : {}),
                   padding: '12px 16px', borderRadius: 14,
                   background: msg.role === 'user'
-                    ? `linear-gradient(135deg, ${GOLD}, #B8860B)`
-                    : `${CARD}CC`,
-                  color: msg.role === 'user' ? '#000' : TEXT,
+                    ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))'
+                    : `color-mix(in srgb, ${CARD} 80%, transparent)`,
+                  color: msg.role === 'user' ? '#0A0A00' : TEXT,
                   fontSize: 14, lineHeight: 1.6,
                   borderBottomRightRadius: msg.role === 'user' ? 4 : 14,
                   borderBottomLeftRadius: msg.role === 'assistant' ? 4 : 14,
@@ -224,12 +224,12 @@ export default function SageChatPage() {
                   <a href={msg.upsell.link} style={{ textDecoration: 'none', display: 'block', marginTop: 10 }}>
                     <div style={{
                       ...glass, padding: '14px 16px', cursor: 'pointer',
-                      borderColor: `${GOLD}40`, transition: 'border-color .2s',
+                      borderColor: `color-mix(in srgb, ${GOLD} 25%, transparent)`, transition: 'border-color .2s',
                       display: 'flex', alignItems: 'center', gap: 14,
                     }}>
                       <div style={{
                         width: 48, height: 48, borderRadius: 10,
-                        background: `linear-gradient(135deg, ${GOLD}30, ${CARD})`,
+                        background: `linear-gradient(135deg, color-mix(in srgb, ${GOLD} 19%, transparent), ${CARD})`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 24, flexShrink: 0,
                       }}>&#9733;</div>
@@ -250,8 +250,8 @@ export default function SageChatPage() {
         {loading && (
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 16 }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 10, background: `${GOLD}20`,
-              border: `1px solid ${GOLD}30`, display: 'flex', alignItems: 'center',
+              width: 32, height: 32, borderRadius: 10, background: `color-mix(in srgb, ${GOLD} 13%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${GOLD} 19%, transparent)`, display: 'flex', alignItems: 'center',
               justifyContent: 'center', fontSize: 16, flexShrink: 0,
             }}><Cactus size={16} weight="duotone" color={GREEN} /></div>
             <div style={{
@@ -270,7 +270,7 @@ export default function SageChatPage() {
       {/* Input Bar */}
       <div style={{
         padding: '16px 20px', borderTop: `1px solid ${BORDER}`,
-        background: `${DARK}E0`, backdropFilter: 'blur(12px)',
+        background: `color-mix(in srgb, ${DARK} 88%, transparent)`, backdropFilter: 'blur(12px)',
         position: 'sticky', bottom: 0,
       }}>
         <div style={{
@@ -282,9 +282,9 @@ export default function SageChatPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask Sage anything about your project..."
+            placeholder="Ask Sage anything about your project…"
             style={{
-              flex: 1, padding: '14px 18px', background: `${CARD}CC`,
+              flex: 1, padding: '14px 18px', background: `color-mix(in srgb, ${CARD} 80%, transparent)`,
               border: `1px solid ${BORDER}`, borderRadius: 14, color: TEXT,
               fontSize: 15, outline: 'none', fontFamily: 'inherit',
             }}
@@ -294,10 +294,10 @@ export default function SageChatPage() {
             disabled={!input.trim() || loading}
             style={{
               width: 48, height: 48, borderRadius: 14,
-              background: input.trim() ? `linear-gradient(135deg, ${GOLD}, #B8860B)` : `${CARD}CC`,
+              background: input.trim() ? 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))' : `color-mix(in srgb, ${CARD} 80%, transparent)`,
               border: 'none', cursor: input.trim() ? 'pointer' : 'default',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20, color: input.trim() ? '#000' : DIM,
+              fontSize: 20, color: input.trim() ? '#0A0A00' : DIM,
               transition: 'all .2s',
             }}
           >

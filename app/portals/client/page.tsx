@@ -38,17 +38,17 @@ export default function ClientPortalLanding() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ maxWidth: 440, width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ color: '#F59E0B', fontWeight: 800, fontSize: 24, letterSpacing: '0.12em', marginBottom: 8 }}>SAGUARO</div>
+          <div style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.01em', marginBottom: 8 }}>Saguaro</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>Owner / Client Portal</h1>
           <p style={{ color: '#CBD5E1', fontSize: 14, margin: 0 }}>View your project progress, budgets, photos, and documents in real time.</p>
         </div>
 
-        <div style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
           <div style={{ marginBottom: 24 }}>
-            <label style={{ color: '#CBD5E1', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Access with your email</label>
+            <label style={{ color: '#CBD5E1', fontSize: 12, display: 'block', marginBottom: 8 }}>Access With Your Email</label>
             <input
               type="email"
               value={email}
@@ -60,9 +60,9 @@ export default function ClientPortalLanding() {
             <button
               onClick={handleEmailAccess}
               disabled={loading || !email.trim()}
-              style={{ width: '100%', marginTop: 12, padding: '12px', background: 'linear-gradient(135deg, #F59E0B, #C8960F)', border: 'none', borderRadius: 10, color: '#000', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}
+              style={{ width: '100%', marginTop: 12, padding: '12px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))', border: 'none', borderRadius: 10, color: '#0A0A00', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}
             >
-              {loading ? 'Checking...' : 'Access My Project'}
+              {loading ? 'Checking…' : 'Access My Project'}
             </button>
           </div>
 
@@ -73,7 +73,7 @@ export default function ClientPortalLanding() {
           </div>
 
           <div>
-            <label style={{ color: '#CBD5E1', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Enter access token</label>
+            <label style={{ color: '#CBD5E1', fontSize: 12, display: 'block', marginBottom: 8 }}>Enter Access Token</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
                 type="text"
@@ -97,7 +97,7 @@ export default function ClientPortalLanding() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <a href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>Back to Saguaro</a>
+          <a href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a>
         </div>
       </div>
     </div>

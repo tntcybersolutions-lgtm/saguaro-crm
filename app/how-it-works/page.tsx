@@ -5,16 +5,16 @@ import MarketingNav from '@/components/MarketingNav';
 import { TRIAL_DAYS } from '@/lib/plans';
 
 const C = {
-  dark: '#0B0B0F',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
   dim: '#A1A1AA',
   border: 'rgba(255,255,255,0.10)',
   hairline: 'rgba(255,255,255,0.08)',
   cardBg: 'rgba(255,255,255,0.02)',
-  raised: '#131318',
-  raisedAlt: '#1A1A21',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface-2)',
   green: '#22C55E',
   blue: '#6366F1',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
@@ -29,7 +29,7 @@ const NAV_LINKS = [
 
 /* House display treatment — gold text-shine on ONE key word per heading. */
 const SHINE: React.CSSProperties = {
-  background: 'linear-gradient(100deg, #F59E0B 6%, #F5B84D 38%, #FDE68A 56%, #F59E0B 92%)',
+  background: 'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 50%, var(--brand-primary) 92%)',
   WebkitBackgroundClip: 'text',
   backgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
@@ -38,7 +38,7 @@ const SHINE: React.CSSProperties = {
 
 const STEPS = [
   {
-    title: 'Import your project & plans',
+    title: 'Import Your Project & Plans',
     lead: 'Spin up a new project in seconds, then drag in your plan sets. Saguaro AI Takeoff reads your PDFs page by page — measuring areas, counting fixtures, and pulling dimensions automatically.',
     points: [
       'Upload full plan sets (PDF, DWG) — no manual page splitting',
@@ -47,7 +47,7 @@ const STEPS = [
     ],
   },
   {
-    title: 'Build bids & estimates',
+    title: 'Build Bids & Estimates',
     lead: 'Turn takeoff quantities into a priced estimate without rekeying. Sage AI assembles line items from your cost catalog, and Bid Intelligence flags scope gaps and risky allowances before you send.',
     points: [
       'Sage AI drafts line items from takeoff quantities + your unit costs',
@@ -56,7 +56,7 @@ const STEPS = [
     ],
   },
   {
-    title: 'Run the field',
+    title: 'Run the Field',
     lead: 'Your crews carry the Saguaro Control Systems app on iPhone or Android. Daily logs, jobsite photos, punch lists, and safety inspections are captured on site — and it all works offline when signal drops.',
     points: [
       'Daily logs, photos, and weather captured from the jobsite',
@@ -65,7 +65,7 @@ const STEPS = [
     ],
   },
   {
-    title: 'Manage the money',
+    title: 'Manage the Money',
     lead: 'Run the financial side of every job from the same record. Generate AIA pay applications, route change orders and RFIs for approval, and track subcontractor compliance so nothing slips through the cracks.',
     points: [
       'AIA G702 / G703 pay applications with continuation sheets',
@@ -74,7 +74,7 @@ const STEPS = [
     ],
   },
   {
-    title: 'Collaborate through portals',
+    title: 'Collaborate Through Portals',
     lead: 'Give owners and subcontractors their own secure portal instead of an endless email thread. They see exactly what they need — approvals, draws, documents — and every action is logged against the project.',
     points: [
       'Owner portal for pay-app approvals and project visibility',
@@ -83,7 +83,7 @@ const STEPS = [
     ],
   },
   {
-    title: 'Close out & report',
+    title: 'Close Out & Report',
     lead: 'Wrap the job cleanly and keep the records. Assemble closeout packages, capture final lien waivers, and pull profitability and production reports across every project from one dashboard.',
     points: [
       'Closeout packages: warranties, O&M manuals, as-builts in one bundle',
@@ -122,7 +122,7 @@ const FAQS = [
 function CheckIcon({ size = 16, color = C.green }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-      <circle cx="8" cy="8" r="8" fill={`${color}22`} />
+      <circle cx="8" cy="8" r="8" fill={`color-mix(in srgb, ${color} 13%, transparent)`} />
       <path d="M4.5 8l2.5 2.5 4-5" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -145,17 +145,17 @@ export default function HowItWorksPage() {
         <section style={{ textAlign: 'center', padding: '120px 24px 72px', background: 'transparent' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim, letterSpacing: 0.3, marginBottom: 28 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
-            How it works
+            How It Works
           </div>
           <h1 style={{ fontWeight: 800, lineHeight: 1.12, margin: '0 0 18px', letterSpacing: '-0.02em' }}>
-            From blueprint to closeout{' '}
-            in <span style={SHINE}>one platform</span>.
+            From Blueprint to Closeout{' '}
+            in <span style={SHINE}>One Platform</span>
           </h1>
           <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', color: C.dim, maxWidth: 620, margin: '0 auto 36px', lineHeight: 1.65 }}>
             Saguaro Control Systems runs the whole job — AI takeoff, bidding, the field app, pay apps, owner and sub portals, and closeout — so your team works in one system instead of a dozen disconnected tools.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
               Start Free Trial — No Credit Card
             </Link>
             <Link href="/features" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>
@@ -167,10 +167,10 @@ export default function HowItWorksPage() {
         {/* Steps */}
         <section style={{ padding: '0 24px 96px', maxWidth: 860, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>
               The Workflow
             </div>
-            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Six steps, one source of truth</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Six Steps, One Source of Truth</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 540, margin: '0 auto', lineHeight: 1.6 }}>
               Every stage of the project hands off cleanly to the next — no exporting, no rekeying, no lost paperwork.
             </p>
@@ -183,7 +183,7 @@ export default function HowItWorksPage() {
                   {i + 1}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Step {i + 1}</div>
+                  <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 6 }}>Step {i + 1}</div>
                   <h3 style={{ fontSize: 18, fontWeight: 600, color: C.text, margin: '0 0 10px', letterSpacing: -0.2 }}>{step.title}</h3>
                   <p style={{ fontSize: 14.5, color: C.dim, lineHeight: 1.7, margin: '0 0 16px' }}>{step.lead}</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
@@ -204,7 +204,7 @@ export default function HowItWorksPage() {
         <section style={{ padding: '0 24px 96px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap', boxShadow: 'none' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Coming from Procore?</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 12 }}>Coming from Procore?</div>
               <h2 style={{ fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25 }}>We handle your migration. You do the heavy lifting on the job site.</h2>
               <p style={{ fontSize: 15, color: C.dim, margin: '0 0 24px', lineHeight: 1.65 }}>
                 Switching platforms shouldn&apos;t mean losing months of history. Our team migrates everything from Procore, Buildertrend, CoConstruct, or a stack of spreadsheets — and you keep working the entire time. You go live the next business day.
@@ -220,8 +220,8 @@ export default function HowItWorksPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
               <div style={{ fontSize: 44, fontWeight: 600, color: C.text, lineHeight: 1 }}>1</div>
-              <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>business day<br />to go live</div>
-              <Link href="/signup" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+              <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>Business Day<br />to Go Live</div>
+              <Link href="/signup" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
                 Start Your Migration
               </Link>
             </div>
@@ -231,8 +231,8 @@ export default function HowItWorksPage() {
         {/* FAQ */}
         <section style={{ padding: '0 24px 112px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>FAQ</div>
-            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Common questions</h2>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>FAQ</div>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Common Questions</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
@@ -255,14 +255,14 @@ export default function HowItWorksPage() {
         <section style={{ padding: '112px 24px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontWeight: 800, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>
-              See your <span style={SHINE}>whole job</span> in{' '}
-              one platform.
+              See Your <span style={SHINE}>Whole Job</span> in{' '}
+              One Platform
             </h2>
             <p style={{ fontSize: 16, color: C.dim, margin: '0 0 36px', lineHeight: 1.6 }}>
               {TRIAL_DAYS}-day free trial. Free migration. No credit card required. Your whole team, one flat rate.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
                 Start Free Trial — No CC Required
               </Link>
               <Link href="/pricing" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>
@@ -270,7 +270,7 @@ export default function HowItWorksPage() {
               </Link>
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {[`${TRIAL_DAYS} days free`, 'Free migration', 'Cancel anytime', 'No per-seat fees', 'Unlimited users'].map(pill => (
+              {[`${TRIAL_DAYS} Days Free`, 'Free Migration', 'Cancel Anytime', 'No Per-Seat Fees', 'Unlimited Users'].map(pill => (
                 <div key={pill} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim }}>
                   <CheckIcon size={12} color={C.dim} />
                   {pill}

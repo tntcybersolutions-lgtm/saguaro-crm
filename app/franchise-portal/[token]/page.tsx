@@ -4,8 +4,8 @@ import { useParams } from 'next/navigation';
 import { Check } from '@phosphor-icons/react';
 
 const C = {
-  gold: '#F59E0B', green: '#34C759', yellow: '#FF9500', red: '#FF3B30', blue: '#F59E0B',
-  bg: '#0a0a0a', card: '#141416', border: 'rgba(255,255,255,0.12)', dim: '#CBD5E1', text: '#FFFFFF', faint: '#8094B0',
+  gold: 'var(--brand-primary)', green: '#34C759', yellow: '#FF9500', red: '#FF3B30', blue: 'var(--brand-primary)',
+  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'rgba(255,255,255,0.12)', dim: '#CBD5E1', text: '#FFFFFF', faint: '#8094B0',
 };
 const font = "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
 const STATUS = { green: { c: C.green, l: 'On Track' }, yellow: { c: C.yellow, l: 'In Progress' }, red: { c: C.red, l: 'Needs Attention' } } as const;
@@ -29,8 +29,8 @@ export default function FranchisePortalPage() {
   }, [token]);
 
   if (state === 'loading') return <Shell><div style={{ padding: 60, textAlign: 'center', color: C.dim }}>Loading…</div></Shell>;
-  if (state === 'notfound') return <Shell><Center title="Portal not available" body="This owner link is no longer active. Please contact your Saguaro Control Systems coordinator for an updated link." /></Shell>;
-  if (state === 'error') return <Shell><Center title="Something went wrong" body="Please try again in a moment." /></Shell>;
+  if (state === 'notfound') return <Shell><Center title="Portal Not Available" body="This owner link is no longer active. Please contact your Saguaro Control Systems coordinator for an updated link." /></Shell>;
+  if (state === 'error') return <Shell><Center title="Something Went Wrong" body="Please try again in a moment." /></Shell>;
 
   const p = data.project; const st = STATUS[(p.status as keyof typeof STATUS)] || STATUS.yellow;
   const bud = BUDGET[(p.budgetStatus as keyof typeof BUDGET)] || BUDGET['on-budget'];
@@ -41,7 +41,7 @@ export default function FranchisePortalPage() {
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderTop: `5px solid ${st.c}`, borderRadius: 16, padding: '26px 28px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: C.gold }}>Owner Portal{data.owner?.company ? ` · ${data.owner.company}` : ''}</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: C.gold }}>Owner Portal{data.owner?.company ? ` · ${data.owner.company}` : ''}</div>
             <h1 style={{ fontSize: 30, fontWeight: 900, margin: '6px 0 4px', letterSpacing: -0.5 }}>{p.name}</h1>
             <div style={{ fontSize: 14, color: C.dim }}>{[p.city, p.state].filter(Boolean).join(', ') || ''}{p.stage ? ` · ${p.stage}` : ''}</div>
           </div>
@@ -51,7 +51,7 @@ export default function FranchisePortalPage() {
         </div>
         <div style={{ marginTop: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: C.dim, marginBottom: 6 }}>
-            <span>Overall progress</span><span style={{ fontWeight: 800, color: C.text }}>{p.percentComplete != null ? `${Math.round(p.percentComplete)}%` : '—'}</span>
+            <span>Overall Progress</span><span style={{ fontWeight: 800, color: C.text }}>{p.percentComplete != null ? `${Math.round(p.percentComplete)}%` : '—'}</span>
           </div>
           <div style={{ height: 10, borderRadius: 5, background: '#1c1c1e', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${Math.min(100, Math.max(0, p.percentComplete || 0))}%`, background: st.c, borderRadius: 5 }} />
@@ -113,13 +113,13 @@ function Center({ title, body }: { title: string; body: string }) {
 }
 function Tile({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
   return <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '16px 18px' }}>
-    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: C.dim }}>{label}</div>
+    <div style={{ fontSize: 11, fontWeight: 700, color: C.dim }}>{label}</div>
     <div style={{ fontSize: 20, fontWeight: 900, color: color || C.text, marginTop: 4 }}>{value}</div>
   </div>;
 }
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '18px 20px', marginTop: 16 }}>
-    <div style={{ fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: C.dim, marginBottom: 12 }}>{title}</div>
+    <div style={{ fontSize: 13, fontWeight: 800, color: C.dim, marginBottom: 12 }}>{title}</div>
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>
   </div>;
 }

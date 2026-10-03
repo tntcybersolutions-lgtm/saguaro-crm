@@ -5,16 +5,16 @@ import { ChatCircleDots, Lifebuoy, LockKey } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
 const C = {
-  dark: '#0B0B0F',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
   dim: '#A1A1AA',
   border: 'rgba(255,255,255,0.10)',
   hairline: 'rgba(255,255,255,0.08)',
   cardBg: 'rgba(255,255,255,0.02)',
-  raised: '#131318',
-  raisedAlt: '#1A1A21',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface-2)',
   green: '#22C55E',
   blue: '#6366F1',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
@@ -59,12 +59,12 @@ const CHANNELS: { icon: Icon; title: string; desc: string; line: string; href: s
 ];
 
 const REASONS = [
-  { label: 'I want a product demo', value: 'Demo request' },
-  { label: 'Pricing & plans', value: 'Pricing question' },
+  { label: 'I Want a Product Demo', value: 'Demo request' },
+  { label: 'Pricing & Plans', value: 'Pricing question' },
   { label: 'Migrating from Procore / Buildertrend', value: 'Migration help' },
-  { label: 'Technical support', value: 'Support request' },
-  { label: 'Partnership / reseller / white label', value: 'Partnership' },
-  { label: 'Something else', value: 'General inquiry' },
+  { label: 'Technical Support', value: 'Support request' },
+  { label: 'Partnership / Reseller / White Label', value: 'Partnership' },
+  { label: 'Something Else', value: 'General inquiry' },
 ];
 
 const FAQS = [
@@ -74,7 +74,7 @@ const FAQS = [
   },
   {
     q: 'Do you offer live demos?',
-    a: 'Yes. Pick "I want a product demo" below and we will schedule a 30-minute screen share where we run an AI takeoff on your real plans, generate a G702/G703 pay app, and answer every question.',
+    a: 'Yes. Pick "I Want a Product Demo" below and we will schedule a 30-minute screen share where we run an AI takeoff on your real plans, generate a G702/G703 pay app, and answer every question.',
   },
   {
     q: 'I am switching from another platform. Can you help?',
@@ -100,8 +100,6 @@ const labelStyle: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 500,
   color: C.dim,
-  letterSpacing: 0.5,
-  textTransform: 'uppercase',
   marginBottom: 7,
 };
 
@@ -202,7 +200,7 @@ export default function ContactPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 16px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -212,12 +210,12 @@ export default function ContactPage() {
         <section style={{ textAlign: 'center', padding: '120px 24px 72px', background: 'transparent' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim, letterSpacing: 0.3, marginBottom: 28 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
-            Real humans · 1-hour sales response
+            Real Humans · 1-Hour Sales Response
           </div>
           <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
             Talk to the{' '}
             <span style={{ color: C.text }}>
-              Saguaro team.
+              Saguaro Team
             </span>
           </h1>
           <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', color: C.dim, maxWidth: 600, margin: '0 auto', lineHeight: 1.65 }}>
@@ -254,36 +252,36 @@ export default function ContactPage() {
                       <path d="M5 12.5l4.5 4.5L19 7" stroke={C.green} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 10px' }}>Message on its way</h2>
+                  <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 10px' }}>Message on Its Way</h2>
                   <p style={{ fontSize: 15, color: C.dim, lineHeight: 1.65, maxWidth: 380, margin: '0 auto 24px' }}>
                     Thanks{form.name ? `, ${form.name.split(' ')[0]}` : ''}. We received your note and a real person from our team will reply shortly. If your mail client opened, just hit send to confirm.
                   </p>
                   <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+                    <Link href="/signup" style={{ display: 'inline-block', padding: '12px 26px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
                       Start Free Trial &rarr;
                     </Link>
                     <button onClick={() => { setForm({ name: '', email: '', company: '', reason: REASONS[0].value, message: '' }); setStatus('idle'); }} style={{ padding: '12px 26px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 14, cursor: 'pointer', fontFamily: C.font }}>
-                      Send another
+                      Send Another
                     </button>
                   </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit}>
-                  <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>Send us a message</h2>
+                  <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 6px' }}>Send Us a Message</h2>
                   <p style={{ fontSize: 14, color: C.dim, margin: '0 0 28px', lineHeight: 1.6 }}>
                     Fill this out and we will route it to the right person. No bots, no phone tree.
                   </p>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
                     <div>
-                      <label style={labelStyle} htmlFor="name">Full name</label>
+                      <label style={labelStyle} htmlFor="name">Full Name</label>
                       <input id="name" required value={form.name} onChange={update('name')}
                         onFocus={() => setFocused('name')} onBlur={() => setFocused(null)}
                         placeholder="Jordan Vega" autoComplete="name"
                         style={{ ...fieldStyle, borderColor: focused === 'name' ? C.gold : C.border }} />
                     </div>
                     <div>
-                      <label style={labelStyle} htmlFor="email">Work email</label>
+                      <label style={labelStyle} htmlFor="email">Work Email</label>
                       <input id="email" type="email" required value={form.email} onChange={update('email')}
                         onFocus={() => setFocused('email')} onBlur={() => setFocused(null)}
                         placeholder="you@yourcompany.com" autoComplete="email"
@@ -300,7 +298,7 @@ export default function ContactPage() {
                         style={{ ...fieldStyle, borderColor: focused === 'company' ? C.gold : C.border }} />
                     </div>
                     <div>
-                      <label style={labelStyle} htmlFor="reason">How can we help?</label>
+                      <label style={labelStyle} htmlFor="reason">How Can We Help?</label>
                       <select id="reason" value={form.reason} onChange={update('reason')}
                         onFocus={() => setFocused('reason')} onBlur={() => setFocused(null)}
                         style={{ ...fieldStyle, borderColor: focused === 'reason' ? C.gold : C.border, appearance: 'none', cursor: 'pointer' }}>
@@ -323,12 +321,12 @@ export default function ContactPage() {
                   <button type="submit" disabled={status === 'sending'} style={{
                     width: '100%', padding: '14px 0',
                     background: C.gold,
-                    border: 'none', borderRadius: 8, color: '#0B0B0F',
+                    border: 'none', borderRadius: 8, color: '#0A0A00',
                     fontWeight: 600, fontSize: 15, cursor: status === 'sending' ? 'default' : 'pointer',
                     opacity: status === 'sending' ? 0.7 : 1, fontFamily: C.font,
                     boxShadow: 'none', letterSpacing: 0.2,
                   }}>
-                    {status === 'sending' ? 'Sending…' : 'Send message'}
+                    {status === 'sending' ? 'Sending…' : 'Send Message'}
                   </button>
 
                   <p style={{ fontSize: 12, color: C.dim, textAlign: 'center', margin: '14px 0 0', lineHeight: 1.6 }}>
@@ -343,18 +341,18 @@ export default function ContactPage() {
             {/* Side info */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '28px 26px' }}>
-                <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Skip the wait</div>
-                <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 10px', lineHeight: 1.25 }}>Start free, no sales call required</h3>
+                <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 12 }}>Skip the Wait</div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, margin: '0 0 10px', lineHeight: 1.25 }}>Start Free, No Sales Call Required</h3>
                 <p style={{ fontSize: 14, color: C.dim, lineHeight: 1.65, margin: '0 0 20px' }}>
                   You do not have to talk to anyone to try Saguaro. Spin up your account, run an AI takeoff, and invite your whole team — free for 30 days, no credit card.
                 </p>
-                <Link href="/signup" style={{ display: 'inline-block', padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
-                  Create your account &rarr;
+                <Link href="/signup" style={{ display: 'inline-block', padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
+                  Create Your Account &rarr;
                 </Link>
               </div>
 
               <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '26px 26px' }}>
-                <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>What to expect</div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>What to Expect</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   {[
                     'Sales & demos: reply within 1 business hour',
@@ -374,7 +372,7 @@ export default function ContactPage() {
               </div>
 
               <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '24px 26px' }}>
-                <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Headquarters</div>
+                <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 8 }}>Headquarters</div>
                 <div style={{ fontSize: 14, color: C.text, fontWeight: 600, marginBottom: 4 }}>Saguaro Control Systems</div>
                 <div style={{ fontSize: 13, color: C.dim, lineHeight: 1.6 }}>Phoenix, Arizona · Remote-first team<br />Serving general contractors across all 50 states</div>
               </div>
@@ -385,8 +383,8 @@ export default function ContactPage() {
         {/* FAQ */}
         <section style={{ padding: '0 24px 112px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>Before you write</div>
-            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Quick answers</h2>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>Before You Write</div>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Quick Answers</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
@@ -402,14 +400,14 @@ export default function ContactPage() {
         <section style={{ padding: '112px 24px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
-              Don&rsquo;t wait on us to{' '}
-              <span style={{ color: C.text }}>get started.</span>
+              Don&rsquo;t Wait on Us to{' '}
+              <span style={{ color: C.text }}>Get Started</span>
             </h2>
             <p style={{ fontSize: 16, color: C.dim, margin: '0 0 36px', lineHeight: 1.6 }}>
               30-day free trial. Free migration from any platform. No credit card. Your whole team, one flat rate.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
                 Start Free Trial &rarr;
               </Link>
               <Link href="/pricing" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>
@@ -417,7 +415,7 @@ export default function ContactPage() {
               </Link>
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {['30 days free', 'Free migration', 'No credit card', 'Unlimited users'].map(pill => (
+              {['30 Days Free', 'Free Migration', 'No Credit Card', 'Unlimited Users'].map(pill => (
                 <div key={pill} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim }}>
                   <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                     <circle cx="8" cy="8" r="8" fill="rgba(255,255,255,0.08)" />

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Cactus, Check } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 
 const STEPS = [
   { num: 1, label: 'Welcome', done: true },
@@ -28,8 +28,8 @@ const selectStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  display:'block',fontSize:11,fontWeight:700,color:DIM,
-  textTransform:'uppercase',letterSpacing:.5,marginBottom:6,
+  display:'block',fontSize:12,fontWeight:700,color:DIM,
+  marginBottom:6,
 };
 
 export default function OnboardingStep2() {
@@ -87,7 +87,7 @@ export default function OnboardingStep2() {
         <div style={{textAlign:'center',marginBottom:36}}>
           <Link href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
             <Cactus size={28} weight="fill" color={GOLD} />
-            <span style={{fontWeight:900,fontSize:20,color:GOLD,letterSpacing:1}}>SAGUARO</span>
+            <span style={{fontWeight:900,fontSize:20,color:GOLD}}>Saguaro</span>
           </Link>
         </div>
 
@@ -100,7 +100,7 @@ export default function OnboardingStep2() {
                   width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
                   fontSize:14,fontWeight:800,
                   background: s.done ? GREEN : s.active ? GOLD : 'rgba(255,255,255,.08)',
-                  color: (s.done||s.active) ? '#1C1C1E' : DIM,
+                  color: (s.done||s.active) ? '#0A0A00' : DIM,
                   border:`2px solid ${s.done ? GREEN : s.active ? GOLD : BORDER}`,
                 }}>
                   {s.done ? <Check size={16} weight="bold" /> : s.num}
@@ -117,7 +117,7 @@ export default function OnboardingStep2() {
         {/* Card */}
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:16,padding:40}}>
           <div style={{marginBottom:28}}>
-            <div style={{fontSize:11,fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:1,marginBottom:8}}>Step 2 of 4</div>
+            <div style={{fontSize:12,fontWeight:700,color:GOLD,marginBottom:8}}>Step 2 of 4</div>
             <h1 style={{fontSize:26,fontWeight:900,margin:'0 0 6px',color:TEXT}}>Set Up Your Company</h1>
             <p style={{color:DIM,fontSize:14,margin:0}}>This information personalizes your documents and reports.</p>
           </div>
@@ -140,7 +140,7 @@ export default function OnboardingStep2() {
               <div>
                 <label style={labelStyle}>State *</label>
                 <select value={form.state} onChange={set('state')} style={selectStyle}>
-                  <option value="">Select state...</option>
+                  <option value="">Select state…</option>
                   {US_STATES.map(s=><option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -153,7 +153,7 @@ export default function OnboardingStep2() {
                   <button
                     key={type}
                     onClick={()=>setForm(p=>({...p,companyType:type}))}
-                    style={{padding:'10px 8px',background:form.companyType===type?'rgba(245, 158, 11,.15)':'#1c1c1e',border:`1px solid ${form.companyType===type?'rgba(245, 158, 11,.5)':BORDER}`,borderRadius:8,color:form.companyType===type?GOLD:DIM,fontSize:11,fontWeight:form.companyType===type?700:400,cursor:'pointer',textAlign:'center',lineHeight:1.4}}
+                    style={{padding:'10px 8px',background:form.companyType===type?'var(--brand-primary-18)':'#1c1c1e',border:`1px solid ${form.companyType===type?'color-mix(in srgb, var(--brand-primary) 50%, transparent)':BORDER}`,borderRadius:8,color:form.companyType===type?GOLD:DIM,fontSize:11,fontWeight:form.companyType===type?700:400,cursor:'pointer',textAlign:'center',lineHeight:1.4}}
                   >
                     {type}
                   </button>
@@ -165,7 +165,7 @@ export default function OnboardingStep2() {
               <div>
                 <label style={labelStyle}>Number of Employees</label>
                 <select value={form.employees} onChange={set('employees')} style={selectStyle}>
-                  <option value="">Select...</option>
+                  <option value="">Select…</option>
                   <option value="1-10">1–10</option>
                   <option value="11-50">11–50</option>
                   <option value="51-200">51–200</option>
@@ -175,7 +175,7 @@ export default function OnboardingStep2() {
               <div>
                 <label style={labelStyle}>Annual Volume</label>
                 <select value={form.annualVolume} onChange={set('annualVolume')} style={selectStyle}>
-                  <option value="">Select...</option>
+                  <option value="">Select…</option>
                   <option value="0-1M">Under $1M</option>
                   <option value="1M-10M">$1M – $10M</option>
                   <option value="10M+">$10M+</option>
@@ -186,15 +186,15 @@ export default function OnboardingStep2() {
             <button
               onClick={handleNext}
               disabled={loading}
-              style={{marginTop:8,padding:'14px 0',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,border:'none',borderRadius:10,color:'#1C1C1E',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
+              style={{marginTop:8,padding:'14px 0',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:10,color:'#0A0A00',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
             >
-              {loading?'Saving...':'Continue → First Project'}
+              {loading?'Saving…':'Continue to First Project →'}
             </button>
           </div>
         </div>
 
         <div style={{textAlign:'center',marginTop:20,fontSize:12,color:'#CBD5E1'}}>
-          <Link href="/app" style={{color:DIM,textDecoration:'none'}}>Skip setup — go to dashboard</Link>
+          <Link href="/app" style={{color:DIM,textDecoration:'none'}}>Skip Setup — Go to Dashboard</Link>
         </div>
       </div>
     </div>

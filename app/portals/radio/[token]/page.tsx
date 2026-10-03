@@ -12,11 +12,11 @@ import { useParams } from 'next/navigation';
  */
 
 /* ── Design tokens (gold-on-black, matches the portal family) ── */
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
 const GREEN = '#22c55e', RED = '#ef4444', AMBER = '#f59e0b';
 
 const card = (extra?: React.CSSProperties): React.CSSProperties => ({ background: RAISED, backgroundImage: 'linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.015))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 16, boxShadow: '0 4px 14px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06)', ...extra });
-const btnS = (color: string): React.CSSProperties => ({ background: color, backgroundImage: color === GOLD ? 'linear-gradient(180deg,#FFC14D,#F59E0B 60%,#E08A00)' : 'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)', color: color === GOLD ? '#241500' : '#fff', border: 'none', borderRadius: 9, padding: '11px 20px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: color === GOLD ? '0 4px 14px rgba(245,158,11,0.28), inset 0 1px 0 rgba(255,255,255,0.35)' : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' });
+const btnS = (color: string): React.CSSProperties => ({ background: color, backgroundImage: color === GOLD ? 'linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover))' : 'linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0) 55%)', color: color === GOLD ? '#0A0A00' : '#fff', border: 'none', borderRadius: 9, padding: '11px 20px', fontWeight: 800, fontSize: 14, cursor: 'pointer', boxShadow: color === GOLD ? '0 4px 14px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)' : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' });
 const inputS: React.CSSProperties = { width: '100%', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, padding: '10px 14px', color: TEXT, fontSize: 14, outline: 'none', boxSizing: 'border-box' };
 
 /* Pseudo-waveform for voice rows: deterministic bars seeded by message id. */
@@ -150,8 +150,8 @@ export default function RadioGuestPage() {
         if (d.message.id) { idsRef.current.add(d.message.id); sentIdsRef.current.add(d.message.id); }
         setMsgs(prev => [...prev, d.message]);
         setText('');
-      } else showToast(d.error || 'Failed to send');
-    } catch { showToast('Network error'); }
+      } else showToast(d.error || 'Failed to send.');
+    } catch { showToast('Network error.'); }
     setSending(false);
   };
 
@@ -182,13 +182,13 @@ export default function RadioGuestPage() {
           if (d.message) {
             if (d.message.id) { idsRef.current.add(d.message.id); sentIdsRef.current.add(d.message.id); }
             setMsgs(prev => [...prev, d.message]);
-          } else showToast(d.error || 'Voice message failed');
-        } catch { showToast('Network error'); }
+          } else showToast(d.error || 'Voice message failed.');
+        } catch { showToast('Network error.'); }
       };
       recRef.current = rec;
       rec.start();
       setRecording(true);
-    } catch { showToast('Microphone unavailable -- check permissions'); }
+    } catch { showToast('Microphone unavailable — check permissions.'); }
   };
 
   const stopRec = () => {
@@ -201,9 +201,9 @@ export default function RadioGuestPage() {
   if (denied) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif', padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 440 }}>
-        <div style={{ color: GOLD, fontWeight: 800, fontSize: 22, letterSpacing: '0.12em', marginBottom: 6 }}>SAGUARO</div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 22 }}>Radio</div>
-        <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>This radio link is no longer active</div>
+        <div style={{ color: GOLD, fontWeight: 800, fontSize: 22, letterSpacing: '-0.01em', marginBottom: 6 }}>Saguaro</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 22 }}>Radio</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>This Radio Link Is No Longer Active</div>
         <div style={{ fontSize: 14, color: DIM, marginTop: 10, lineHeight: 1.6 }}>The invitation has expired or was revoked by the project team. Ask your contact at the general contractor for a fresh link.</div>
       </div>
     </div>
@@ -214,7 +214,7 @@ export default function RadioGuestPage() {
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ width: 48, height: 48, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'sgSpin 1s linear infinite', margin: '0 auto 16px' }} />
-        <div style={{ color: DIM, fontSize: 14 }}>Tuning in...</div>
+        <div style={{ color: DIM, fontSize: 14 }}>Tuning in…</div>
         <style>{`@keyframes sgSpin{to{transform:rotate(360deg)}}`}</style>
       </div>
     </div>
@@ -224,14 +224,14 @@ export default function RadioGuestPage() {
 
   return (
     <div style={{ minHeight: '100vh', background: DARK, fontFamily: 'system-ui,sans-serif', display: 'flex', flexDirection: 'column' }}>
-      <style>{`@keyframes sgRadioFlash{0%{background:rgba(245,158,11,0.16)}100%{background:rgba(245,158,11,0)}}@keyframes sgRadioRing{0%{box-shadow:0 0 0 3px rgba(245,158,11,0.45)}100%{box-shadow:0 0 0 0 rgba(245,158,11,0)}}@keyframes sgLivePulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.55)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}`}</style>
+      <style>{`@keyframes sgRadioFlash{0%{background:color-mix(in srgb, var(--brand-primary) 16%, transparent)}100%{background:transparent}}@keyframes sgRadioRing{0%{box-shadow:0 0 0 3px color-mix(in srgb, var(--brand-primary) 45%, transparent)}100%{box-shadow:0 0 0 0 transparent}}@keyframes sgLivePulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.55)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}`}</style>
 
       {/* ── Branded header ── */}
       <header style={{ position: 'sticky', top: 0, zIndex: 10, background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${BORDER}`, padding: '12px 16px' }}>
         <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexShrink: 0 }}>
-            <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1 }}>SAGUARO</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 1.5 }}>Radio</span>
+            <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: '-0.01em' }}>Saguaro</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: DIM }}>Radio</span>
           </div>
           <div style={{ flex: 1, minWidth: 140 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{channel?.name || 'Project Channel'}</div>
@@ -239,7 +239,7 @@ export default function RadioGuestPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: GREEN + '14', border: `1px solid ${GREEN}44`, borderRadius: 20, padding: '5px 12px', flexShrink: 0 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN, animation: 'sgLivePulse 1.8s ease-out infinite' }} />
-            <span style={{ fontSize: 11, fontWeight: 800, color: GREEN, letterSpacing: 1.2 }}>LIVE</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: GREEN }}>Live</span>
           </div>
         </div>
       </header>
@@ -251,7 +251,7 @@ export default function RadioGuestPage() {
             <div style={{ fontSize: 12, color: DIM }}>Live channel traffic updates every few seconds.</div>
             <div style={{ display: 'flex', border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden' }}>
               {(['en', 'es'] as const).map(l => (
-                <button key={l} onClick={() => setLang(l)} style={{ padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800, letterSpacing: .6, background: lang === l ? GOLD : 'transparent', color: lang === l ? '#241500' : DIM }}>{l.toUpperCase()}</button>
+                <button key={l} onClick={() => setLang(l)} style={{ padding: '6px 14px', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800, letterSpacing: .6, background: lang === l ? GOLD : 'transparent', color: lang === l ? '#0A0A00' : DIM }}>{l.toUpperCase()}</button>
               ))}
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function RadioGuestPage() {
                 const c = m.kind === 'panic' ? RED : AMBER;
                 return (
                   <div key={m.id} style={{ padding: '10px 14px', background: c + '11', border: `1px solid ${c}55`, borderRadius: 8, marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioRing 2.4s ease-out' } : {}) }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: c, textTransform: 'uppercase', letterSpacing: .6, marginBottom: 4 }}>{'\u26A0'} {m.kind === 'panic' ? 'Panic' : 'Alert'} &middot; {m.sender_name || 'Unknown'}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: GOLD, background: GOLD + '14', border: `1px solid ${GOLD}44`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, textTransform: 'none', verticalAlign: 'middle' }}>via patched channel</span> : null}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: c, marginBottom: 4 }}>{'\u26A0'} {m.kind === 'panic' ? 'Panic' : 'Alert'} &middot; {m.sender_name || 'Unknown'}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: GOLD, background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, verticalAlign: 'middle' }}>Via Patched Channel</span> : null}</div>
                     {shown && <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>{shown}</div>}
                     <div style={{ fontSize: 10, color: DIM, marginTop: 4 }}>{new Date(m.created_at).toLocaleTimeString()}</div>
                   </div>
@@ -275,22 +275,22 @@ export default function RadioGuestPage() {
               if (m.kind === 'tone') {
                 const tone = String(m.body || '');
                 const tc = tone === 'negative' ? RED : tone === 'comein' ? AMBER : GREEN;
-                const tl = tone === 'negative' ? 'NEGATIVE' : tone === 'comein' ? 'COME IN' : 'ACK';
+                const tl = tone === 'negative' ? 'Negative' : tone === 'comein' ? 'Come In' : 'Ack';
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioFlash 2.4s ease-out', borderRadius: 10 } : {}) }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: tc + '14', border: `1px solid ${tc}55`, borderRadius: 20, flexWrap: 'wrap' }}>
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: tc, flexShrink: 0 }} />
-                      <span style={{ fontSize: 11, fontWeight: 800, color: tc, letterSpacing: 1 }}>{tl}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: tc }}>{tl}</span>
                       <span style={{ fontSize: 10, color: DIM }}>{mine ? 'You' : (m.sender_name || 'Unknown')} &middot; {new Date(m.created_at).toLocaleTimeString()}</span>
-                      {m.patched_from && <span style={{ fontSize: 9, fontWeight: 700, color: GOLD, background: GOLD + '14', border: `1px solid ${GOLD}44`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5 }}>via patched channel</span>}
+                      {m.patched_from && <span style={{ fontSize: 9, fontWeight: 700, color: GOLD, background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5 }}>Via Patched Channel</span>}
                     </div>
                   </div>
                 );
               }
               return (
                 <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 10, ...(flashIds.has(m.id) ? { animation: 'sgRadioFlash 2.4s ease-out', borderRadius: 10 } : {}) }}>
-                  <div style={{ maxWidth: '82%', padding: '10px 14px', borderRadius: 12, background: mine ? GOLD + '1a' : DARK, border: `1px solid ${mine ? GOLD + '44' : BORDER}`, borderBottomRightRadius: mine ? 2 : 12, borderBottomLeftRadius: mine ? 12 : 2 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: mine ? GOLD : DIM, marginBottom: 4 }}>{mine ? 'You' : (m.sender_name || 'Unknown')}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: GOLD, background: GOLD + '14', border: `1px solid ${GOLD}44`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, verticalAlign: 'middle' }}>via patched channel</span> : null}</div>
+                  <div style={{ maxWidth: '82%', padding: '10px 14px', borderRadius: 12, background: mine ? `color-mix(in srgb, ${GOLD} 10%, transparent)` : DARK, border: `1px solid ${mine ? `color-mix(in srgb, ${GOLD} 27%, transparent)` : BORDER}`, borderBottomRightRadius: mine ? 2 : 12, borderBottomLeftRadius: mine ? 12 : 2 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: mine ? GOLD : DIM, marginBottom: 4 }}>{mine ? 'You' : (m.sender_name || 'Unknown')}{m.patched_from ? <span style={{ marginLeft: 6, fontSize: 9, fontWeight: 700, color: GOLD, background: `color-mix(in srgb, ${GOLD} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${GOLD} 27%, transparent)`, borderRadius: 10, padding: '1px 7px', letterSpacing: .5, verticalAlign: 'middle' }}>Via Patched Channel</span> : null}</div>
                     {m.kind === 'voice' ? (
                       <div>
                         <RadioWave seed={String(m.id || '')} color={mine ? GOLD : DIM} />
@@ -322,15 +322,15 @@ export default function RadioGuestPage() {
           {canTalk ? (
             <div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); } }} placeholder="Message the channel..." style={{ ...inputS, flex: 1 }} />
-                <button onClick={sendText} disabled={sending} style={btnS(GOLD)}>{sending ? '...' : 'Send'}</button>
+                <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendText(); } }} placeholder="Message the channel…" style={{ ...inputS, flex: 1 }} />
+                <button onClick={sendText} disabled={sending} style={btnS(GOLD)}>{sending ? '…' : 'Send'}</button>
               </div>
               {voiceSupported && (
                 <button
                   onMouseDown={startRec} onMouseUp={stopRec} onMouseLeave={stopRec}
                   onTouchStart={e => { e.preventDefault(); startRec(); }} onTouchEnd={e => { e.preventDefault(); stopRec(); }} onContextMenu={e => e.preventDefault()}
                   style={{ ...btnS(recording ? RED : GOLD), width: '100%', marginTop: 12, userSelect: 'none', touchAction: 'none' }}>
-                  {recording ? '● Recording -- release to send' : '≋ Hold to Talk'}
+                  {recording ? '● Recording — Release to Send' : '≋ Hold to Talk'}
                 </button>
               )}
             </div>
@@ -349,7 +349,7 @@ export default function RadioGuestPage() {
 
       {/* ── Toast ── */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: RAISED, border: `1px solid ${GOLD}55`, color: TEXT, padding: '10px 20px', borderRadius: 9, fontSize: 13, fontWeight: 600, zIndex: 100, boxShadow: '0 6px 20px rgba(0,0,0,0.5)', maxWidth: '90vw' }}>{toast}</div>
+        <div style={{ position: 'fixed', bottom: 20, left: '50%', transform: 'translateX(-50%)', background: RAISED, border: `1px solid color-mix(in srgb, ${GOLD} 33%, transparent)`, color: TEXT, padding: '10px 20px', borderRadius: 9, fontSize: 13, fontWeight: 600, zIndex: 100, boxShadow: '0 6px 20px rgba(0,0,0,0.5)', maxWidth: '90vw' }}>{toast}</div>
       )}
     </div>
   );

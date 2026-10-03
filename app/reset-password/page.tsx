@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Cactus, CheckCircle, Warning } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 
 function getSupabase() {
   return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
@@ -38,7 +38,7 @@ export default function ResetPasswordPage(){
       <nav style={{padding:'0 24px',height:56,display:'flex',alignItems:'center',borderBottom:`1px solid ${BORDER}`}}>
         <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
           <Cactus size={22} weight="fill" color={GOLD} />
-          <span style={{fontWeight:900,fontSize:16,color:GOLD,letterSpacing:1}}>SAGUARO</span>
+          <span style={{fontWeight:900,fontSize:16,color:GOLD}}>Saguaro</span>
         </a>
       </nav>
       <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'32px 24px'}}>
@@ -46,27 +46,27 @@ export default function ResetPasswordPage(){
           {done ? (
             <div style={{textAlign:'center'}}>
               <div style={{marginBottom:16}}><CheckCircle size={52} weight="fill" color={GREEN} /></div>
-              <h1 style={{fontSize:22,fontWeight:800,color:TEXT,marginBottom:10}}>Password updated</h1>
+              <h1 style={{fontSize:22,fontWeight:800,color:TEXT,marginBottom:10}}>Password Updated</h1>
               <p style={{color:DIM,fontSize:14}}>Redirecting you to the app…</p>
             </div>
           ) : (
             <>
               <div style={{textAlign:'center',marginBottom:28}}>
-                <h1 style={{fontSize:24,fontWeight:800,margin:'0 0 8px',color:TEXT}}>Set new password</h1>
-                <p style={{color:DIM,fontSize:14,margin:0}}>Choose a strong password for your account</p>
+                <h1 style={{fontSize:24,fontWeight:800,margin:'0 0 8px',color:TEXT}}>Set New Password</h1>
+                <p style={{color:DIM,fontSize:14,margin:0}}>Choose a strong password for your account.</p>
               </div>
               <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:14,padding:32}}>
                 {error&&<div style={{background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.3)',borderRadius:8,padding:'10px 14px',marginBottom:20,fontSize:13,color:RED}}><Warning size={14} weight="fill" style={{verticalAlign:'middle'}} /> {error}</div>}
                 <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:14}}>
                   <div>
-                    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:6}}>New Password</label>
+                    <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>New Password</label>
                     <input type="password" placeholder="8+ characters" value={password} onChange={e=>setPassword(e.target.value)} required autoComplete="new-password" style={inputStyle}/>
                   </div>
                   <div>
-                    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:6}}>Confirm Password</label>
+                    <label style={{display:'block',fontSize:12,fontWeight:700,color:DIM,marginBottom:6}}>Confirm Password</label>
                     <input type="password" placeholder="Repeat password" value={confirm} onChange={e=>setConfirm(e.target.value)} required autoComplete="new-password" style={inputStyle}/>
                   </div>
-                  <button type="submit" disabled={loading} style={{padding:'13px',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,border:'none',borderRadius:9,color:'#1C1C1E',fontSize:15,fontWeight:800,cursor:loading?'not-allowed':'pointer'}}>
+                  <button type="submit" disabled={loading} style={{padding:'13px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:9,color:'#0A0A00',fontSize:15,fontWeight:800,cursor:loading?'not-allowed':'pointer'}}>
                     {loading?'Updating…':'Update Password →'}
                   </button>
                 </form>
