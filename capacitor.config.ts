@@ -20,7 +20,10 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // Override with env var for dev / CI; falls back to the production domain.
 // Must match desktop exactly (saguarocontrol.net), NOT a *.vercel.app alias,
 // or iOS logs in against a different origin than the web app expects.
-const PRODUCTION_URL = 'https://www.saguarocontrol.net';
+// Starts at /app, not the marketing homepage: a signed-in device lands in the
+// app and a signed-out one is sent to /login by middleware. Same origin, so
+// auth and navigation are unchanged.
+const PRODUCTION_URL = 'https://www.saguarocontrol.net/app';
 const serverUrl = process.env.CAPACITOR_SERVER_URL ?? PRODUCTION_URL;
 
 const config: CapacitorConfig = {
@@ -34,6 +37,10 @@ const config: CapacitorConfig = {
   server: {
     url: serverUrl,
     cleartext: serverUrl.startsWith('http://'),
+    // Keep every page of the site inside the app. Capacitor otherwise treats a
+    // URL as "in app" only if it starts with server.url — with the /app start
+    // path, the redirect to /login opened in Safari (seen on the simulator).
+    allowNavigation: ['www.saguarocontrol.net', 'saguarocontrol.net'],
     androidScheme: 'https',
   },
 
@@ -41,21 +48,24 @@ const config: CapacitorConfig = {
     // ── Splash Screen ──────────────────────────────────────────────
     SplashScreen: {
       launchShowDuration: 2000,
-      launchAutoHide: false,
-      backgroundColor: '#07101C',
+      // Native hides it after launchShowDuration. It was false while nothing on
+      // the web side ever called SplashScreen.hide(), so the app stayed on the
+      // splash forever (seen on the iPhone simulator in CI).
+      launchAutoHide: true,
+      backgroundColor: '#000000',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,
       iosSpinnerStyle: 'small',
-      spinnerColor: '#D4A017',
+      spinnerColor: '#FFE600',
     },
 
     // ── Status Bar ────────────────────────────────────────────────
     StatusBar: {
       style: 'Dark',
-      backgroundColor: '#060C15',
+      backgroundColor: '#000000',
       overlaysWebView: false,
     },
 
@@ -67,7 +77,7 @@ const config: CapacitorConfig = {
     // ── Local Notifications ───────────────────────────────────────
     LocalNotifications: {
       smallIcon: 'ic_stat_saguaro',
-      iconColor: '#D4A017',
+      iconColor: '#FFE600',
       sound: 'default',
     },
 
@@ -86,7 +96,7 @@ const config: CapacitorConfig = {
     limitsNavigationsToAppBoundDomains: false,
     // Scroll elastic behaviour matches native feel
     scrollEnabled: true,
-    backgroundColor: '#07101C',
+    backgroundColor: '#000000',
     // Required capability entries go in ios/App/App/Info.plist
     infoPlist: {
       NSCameraUsageDescription:
@@ -107,7 +117,7 @@ const config: CapacitorConfig = {
     // Debug only — set false before App Store submission
     webContentsDebuggingEnabled: process.env.NODE_ENV !== 'production',
     appendUserAgent: 'SaguaroField/1.0',
-    backgroundColor: '#07101C',
+    backgroundColor: '#000000',
     // Edge-to-edge with safe area insets
     initialFocus: false,
   },

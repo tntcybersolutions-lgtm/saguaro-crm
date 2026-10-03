@@ -288,7 +288,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           where they belong. HeaderMessages had the same latent problem and was
           only ever invisible because it renders nothing when there is nothing
           to say. */}
-      <div className="topbar-area" style={{ position: 'fixed', top: 0, left: sidebarWidth, right: 0, zIndex: z.topbar, transition: 'left .2s ease', paddingTop: sidebarTokens.headerHeight }}>
+      <div className="topbar-area" style={{ position: 'fixed', top: 0, left: sidebarWidth, right: 0, zIndex: z.topbar, transition: 'left .2s ease', paddingTop: `calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px))` }}>
         <AppTopBar
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setMobileSidebarOpen(v => !v)}
@@ -436,7 +436,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         className="main-content-area"
         style={{
           marginLeft: sidebarWidth,
-          paddingTop: `calc(${sidebarTokens.headerHeight}px + var(--sag-header-msg-h, 0px) + var(--sag-nextstep-h, 0px))`,
+          paddingTop: `calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px) + var(--sag-header-msg-h, 0px) + var(--sag-nextstep-h, 0px))`,
           minHeight: '100vh',
           transition: 'margin-left .2s ease',
         }}

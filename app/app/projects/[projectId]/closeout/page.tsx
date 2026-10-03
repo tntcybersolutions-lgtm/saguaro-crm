@@ -18,6 +18,12 @@ import { CheckCircle, Hourglass, ChartBar, Check, Package, ListChecks } from '@p
 import { ListToolbar } from '@/components/ui/ListToolbar';
 import { openPdf } from '@/components/PdfViewer';
 
+/** YYYY-MM-DD on the user's device clock. */
+const localYmd = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 interface ChecklistItem {
   id: string;
   label: string;
@@ -110,7 +116,9 @@ export default function CloseoutPage() {
       const res = await fetch(`/api/projects/${projectId}/close`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ force }),
+        // The user's own calendar day. The server runs in UTC, so its "today"
+        // is tomorrow for anyone closing a job on a US evening.
+        body: JSON.stringify({ force, closeout_date: localYmd() }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 409 && data.needsConfirmation) {

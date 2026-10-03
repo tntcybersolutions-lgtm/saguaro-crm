@@ -135,7 +135,11 @@ export default function AppTopBar({
         top: 0,
         left: sidebarWidth,
         right: 0,
-        height: sidebarTokens.headerHeight,
+        /* The iOS app draws under the status bar (viewport-fit=cover); the
+           inset is 0 everywhere else. */
+        height: `calc(${sidebarTokens.headerHeight}px + env(safe-area-inset-top, 0px))`,
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        boxSizing: 'border-box',
         background: 'rgba(0,0,0,0.72)',
         borderBottom: '1px solid rgba(255,255,255,0.12)',
         backdropFilter: 'blur(16px) saturate(140%)',

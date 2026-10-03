@@ -661,6 +661,10 @@ export default function TakeoffPage() {
   // Honest hand-off: the newest takeoff on this project is a MEASURED one (Takeoff
   // Studio owns its condition-based detail) — link there instead of blanking to upload.
   const [measuredHandoff, setMeasuredHandoff] = useState<{ id: string; name: string; total: number } | null>(null);
+  /* True until the mount lookup below finishes. Without it the upload hero
+     ("Drop a plan") showed for several seconds on a job that already had a
+     finished takeoff, then snapped to the results. */
+  const [checkingExisting, setCheckingExisting] = useState(true);
 
   // Load latest completed takeoff on mount
   useEffect(() => {
@@ -748,7 +752,9 @@ export default function TakeoffPage() {
       setTakeoffId(String(data.id));
       setState('results');
     };
-    load().catch(() => {});
+    load()
+      .catch((e) => console.error('[takeoff] could not load the existing takeoff', e))
+      .finally(() => { if (!cancelled) setCheckingExisting(false); });
     return () => { cancelled = true; };
   }, [projectId]);
 
@@ -1675,6 +1681,19 @@ export default function TakeoffPage() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── STATE A-: STILL LOOKING FOR AN EXISTING TAKEOFF ─────────────────────────
+  if (state === 'upload' && checkingExisting && !selectedFile) {
+    return (
+      <div className="tkRoot" style={{ position: 'relative', minHeight: 'calc(100vh - 56px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div role="status" aria-live="polite" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.62)', fontSize: 14, fontWeight: 600 }}>
+          <span aria-hidden style={{ width: 16, height: 16, borderRadius: 999, border: '2px solid rgba(255,255,255,0.18)', borderTopColor: GOLD, animation: 'tkSpin .8s linear infinite' }} />
+          Loading this job's takeoff…
+          <style>{'@keyframes tkSpin{to{transform:rotate(360deg)}}'}</style>
         </div>
       </div>
     );
