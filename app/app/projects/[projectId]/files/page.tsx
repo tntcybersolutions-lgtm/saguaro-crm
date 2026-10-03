@@ -250,7 +250,7 @@ export default function FilesPage() {
       {/* preview + actions */}
       {sel && (
         <div onClick={() => setSel(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, width: 'min(820px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, width: 'min(820px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 17, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sel.file_name}</div>
@@ -302,7 +302,7 @@ function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void
   };
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Export to Cloud</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} color={T.muted} /></button></div>
         {connectors.length === 0 ? <div style={{ color: T.muted, fontSize: 13 }}>No connected storage. Add one in <a href="/app/settings/storage" style={{ color: T.gold }}>Settings → External Storage</a>.</div>
           : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{connectors.map((c) => <button key={c.id} disabled={!!busy} onClick={() => exportTo(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}><Folder size={16} color={T.gold} />{busy === c.id ? 'Uploading…' : c.display_name}</button>)}</div>}
@@ -339,7 +339,7 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
   ];
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-elevated)', backdropFilter: 'var(--glass-blur)', WebkitBackdropFilter: 'var(--glass-blur)', border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Share File</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} color={T.muted} /></button></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {opts.map((o) => (

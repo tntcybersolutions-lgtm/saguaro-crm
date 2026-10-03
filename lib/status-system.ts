@@ -66,13 +66,13 @@ export interface ToneStyle {
 }
 
 export const TONES: Record<Tone, ToneStyle> = {
-  draft:   { fg: '#93A4BC', bg: 'rgba(147,164,188,0.12)', border: 'rgba(147,164,188,0.32)', meaning: 'Not sent yet — nobody is waiting on this' },
-  active:  { fg: '#FBBF24', bg: 'rgba(245,158,11,0.14)',  border: 'rgba(245,158,11,0.45)',  meaning: 'Waiting on you' },
-  waiting: { fg: '#60A5FA', bg: 'rgba(59,130,246,0.14)',  border: 'rgba(59,130,246,0.45)',  meaning: 'Waiting on someone else' },
-  good:    { fg: '#4ADE80', bg: 'rgba(34,197,94,0.13)',   border: 'rgba(34,197,94,0.42)',   meaning: 'Approved' },
-  warn:    { fg: '#FB923C', bg: 'rgba(249,115,22,0.14)',  border: 'rgba(249,115,22,0.45)',  meaning: 'Came back needing changes' },
-  bad:     { fg: '#F87171', bg: 'rgba(239,68,68,0.14)',   border: 'rgba(239,68,68,0.45)',   meaning: 'Rejected or failed' },
-  done:    { fg: '#6EE7B7', bg: 'rgba(16,185,129,0.10)',  border: 'rgba(16,185,129,0.30)',  meaning: 'Closed — nothing left to do' },
+  draft:   { fg: '#A3ACBB', bg: 'rgba(163,172,187,0.14)', border: 'rgba(163,172,187,0.40)', meaning: 'Not sent yet — nobody is waiting on this' },
+  active:  { fg: '#FFC53D', bg: 'rgba(255,197,61,0.16)',  border: 'rgba(255,197,61,0.50)',  meaning: 'Waiting on you' },
+  waiting: { fg: '#3DA9FF', bg: 'rgba(61,169,255,0.16)',  border: 'rgba(61,169,255,0.50)',  meaning: 'Waiting on someone else' },
+  good:    { fg: '#2EE59D', bg: 'rgba(46,229,157,0.16)',  border: 'rgba(46,229,157,0.50)',  meaning: 'Approved' },
+  warn:    { fg: '#FF8A3D', bg: 'rgba(255,138,61,0.16)',  border: 'rgba(255,138,61,0.50)',  meaning: 'Came back needing changes' },
+  bad:     { fg: '#FF4D5E', bg: 'rgba(255,77,94,0.16)',   border: 'rgba(255,77,94,0.50)',   meaning: 'Rejected or failed' },
+  done:    { fg: '#8FF5CB', bg: 'rgba(46,229,157,0.10)',  border: 'rgba(46,229,157,0.32)',  meaning: 'Closed — nothing left to do' },
 };
 
 /* ── modules ────────────────────────────────────────────────────────────── */
