@@ -32,7 +32,7 @@ function layout(body: string): string {
   <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
     &copy; ${new Date().getFullYear()} Saguaro Control Systems &mdash; All rights reserved.<br>
     <a href="${APP_URL}/unsubscribe" style="color:#9ca3af;">Unsubscribe</a> &middot;
-    <a href="${APP_URL}" style="color:#9ca3af;">saguarocrm.com</a>
+    <a href="${APP_URL}" style="color:#9ca3af;">saguarocontrol.net</a>
   </p>
 </td></tr>
 </table>

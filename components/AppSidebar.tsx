@@ -652,7 +652,11 @@ export default function AppSidebar({
      lib/project-phase, so the menu and the guidance cannot drift apart —
      which is exactly how users ended up asking where to start. */
   const projectPhase = normalisePhase((projectCtx as any)?.project?.phase);
-  const phaseTone = projectPhase === 'building' ? STATUS_COLORS.ongoing : STATUS_COLORS.lead;
+  /* A closed job is neither being chased nor run. It used to read "Building ·
+     You won it — running the job" (or "Bidding · Chasing this job" for a lost
+     bid) with a phase toggle that made no sense on finished work. */
+  const jobClosed = isClosedStatus((projectCtx as any)?.project?.status);
+  const phaseTone = jobClosed ? STATUS_COLORS.closed : projectPhase === 'building' ? STATUS_COLORS.ongoing : STATUS_COLORS.lead;
   const phaseSteps = stepsForPhase(projectPhase);
 
   /* Which steps are already behind you. Same signals the journey rail on the
@@ -864,12 +868,30 @@ export default function AppSidebar({
                 whiteSpace: 'nowrap',
               }}>
                 <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: phaseTone.color, flexShrink: 0 }} />
-                {PHASE_LABEL[projectPhase]}
+                {jobClosed ? 'Closed' : PHASE_LABEL[projectPhase]}
               </span>
               <span style={{ fontSize: 11.5, fontWeight: 600, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {projectPhase === 'building' ? 'You won it — running the job' : 'Chasing this job — not won yet'}
+                {jobClosed
+                  ? (projectPhase === 'bidding' ? 'Bid closed — not won' : 'Job finished and closed out')
+                  : projectPhase === 'building' ? 'You won it — running the job' : 'Chasing this job — not won yet'}
               </span>
             </div>
+            {jobClosed ? (
+              <Link
+                href={`/app/projects/${projectId}/closeout`}
+                className="pmBtn"
+                title="See the closeout record, or reopen the job from there"
+                style={{
+                  flexShrink: 0, whiteSpace: 'nowrap', textDecoration: 'none',
+                  background: 'rgba(255,255,255,0.07)',
+                  border: '1px solid rgba(255,255,255,0.16)',
+                  borderRadius: 8, padding: '6px 11px',
+                  fontSize: 12, fontWeight: 800, color: colors.text,
+                }}
+              >
+                Open Closeout →
+              </Link>
+            ) : (
             <button
               type="button"
               onClick={async () => {
@@ -910,6 +932,7 @@ export default function AppSidebar({
             >
               {projectPhase === 'building' ? '← Back to Bidding' : 'We Won It →'}
             </button>
+            )}
           </div>
         )}
         {/* THE SEQUENCE, AS A SEQUENCE.

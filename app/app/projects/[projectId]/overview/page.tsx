@@ -20,6 +20,8 @@ import {
 import GettingStartedRail from '@/components/GettingStartedRail';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { StatStrip } from '@/components/ui/premium';
+import { normalisePhase } from '@/lib/project-phase';
+import { isClosedStatus } from '@/lib/project-lifecycle';
 
 const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22C55E',RED='#EF4444';
 const fmt = (n:number|null|undefined) => '$'+((n ?? 0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
@@ -213,9 +215,21 @@ export default function OverviewPage(){
         title={p.name}
         subtitle={[p.address,p.city,p.state].filter(Boolean).join(', ') || 'Command center for this project — financials, schedule, and field health at a glance.'}
         actions={<>
-          <HeroButton href={'/app/projects/'+projectId+'/pay-apps/new'} icon={<Plus size={15} weight="bold" color="#0A0A00" />}>
-            New Pay App
-          </HeroButton>
+          {/* The one primary action follows where the job is. A pay app is
+              meaningless on a bid nobody has won yet or a job already closed. */}
+          {isClosedStatus(p.status) ? (
+            <HeroButton href={'/app/projects/'+projectId+'/closeout'} icon={<ArrowRight size={15} weight="bold" color="#0A0A00" />}>
+              Open Closeout
+            </HeroButton>
+          ) : normalisePhase(p.phase) === 'bidding' ? (
+            <HeroButton href={'/app/projects/'+projectId+'/takeoff'} icon={<ArrowRight size={15} weight="bold" color="#0A0A00" />}>
+              Open Takeoff
+            </HeroButton>
+          ) : (
+            <HeroButton href={'/app/projects/'+projectId+'/pay-apps/new'} icon={<Plus size={15} weight="bold" color="#0A0A00" />}>
+              New Pay App
+            </HeroButton>
+          )}
         </>}
       />
 

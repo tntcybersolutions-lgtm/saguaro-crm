@@ -34,8 +34,9 @@ const REOPENED_PHASE = 'building';
  *  job is still being advertised on the company Bid Board as open. */
 const BID_PACKAGE_TERMINAL = ['awarded', 'closed', 'cancelled', 'canceled'];
 
-/** YYYY-MM-DD in the server's local date, never `new Date().toISOString()`
- *  which shifts the day for anyone west of UTC. */
+/** Fallback only: YYYY-MM-DD on the server clock, which is UTC on Vercel.
+ *  The closeout screen sends the user's own date as `closeout_date`, so a job
+ *  closed on an Arizona evening is not recorded as tomorrow. */
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
