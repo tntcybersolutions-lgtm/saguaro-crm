@@ -225,13 +225,6 @@ export default function PunchListPage(){
   }
   function viewItem(item:any){
     setSelected(item);setMode('view');
-    // Stacked layouts: bring the detail into view instead of leaving it below the fold.
-    requestAnimationFrame(() => {
-      const el = detailRef.current;
-      if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
   }
   function closePanel(){setSelected(null);setMode(null);}
 
@@ -458,6 +451,15 @@ export default function PunchListPage(){
 
   // ── Detail workspace ──
   const detailOpen = !!selected && mode!=='create';
+  // Stacked layouts: once the record is in the DOM, bring it into view instead of leaving it below the fold.
+  useEffect(()=>{
+    if(!detailOpen) return;
+    const el = detailRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[detailOpen, selected?.id]);
   const detailWorkspace = detailOpen && (
     <div ref={detailRef} className="plDetailCq">
       <div className="plDetail">

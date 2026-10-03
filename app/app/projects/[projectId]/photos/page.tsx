@@ -261,13 +261,6 @@ export default function PhotosPage(){
   }
   function viewPhoto(photo:any){
     setSelected(photo);setMode('view');
-    // Stacked layouts: bring the viewer into view instead of leaving it below the fold.
-    requestAnimationFrame(() => {
-      const el = detailRef.current;
-      if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
   }
   function closePanel(){setSelected(null);setMode(null);clearUpload();}
   /** Abandoning an edit keeps the photo in the viewer. */
@@ -470,6 +463,15 @@ export default function PhotosPage(){
       ];
 
   const detailOpen = !!selected && mode!=='create';
+  // Stacked layouts: once the record is in the DOM, bring it into view instead of leaving it below the fold.
+  useEffect(()=>{
+    if(!detailOpen) return;
+    const el = detailRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[detailOpen, selected?.id]);
   const selectedFromFiles = selected ? isFromFiles(selected) : false;
 
   const card = (photo:any) => (

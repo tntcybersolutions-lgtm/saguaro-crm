@@ -386,13 +386,6 @@ export default function DailyLogsPage(){
   }
   function viewLog(log:any){
     setSelected(log); setMode('view');
-    // Stacked layouts: bring the detail into view instead of leaving it below the fold.
-    requestAnimationFrame(() => {
-      const el = detailRef.current;
-      if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    });
   }
   function closePanel(){ setSelected(null); setMode(null); }
   /** The composer's close paths (X, Cancel, Esc, backdrop) keep the day's
@@ -566,6 +559,15 @@ export default function DailyLogsPage(){
 
   // ── Day's record (detail workspace) ──
   const detailOpen = !!selected && mode!=='create';
+  // Stacked layouts: once the record is in the DOM, bring it into view instead of leaving it below the fold.
+  useEffect(()=>{
+    if(!detailOpen) return;
+    const el = detailRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[detailOpen, selected?.id]);
   const chips = (items:any[], withCount=false) => (
     <div className="pdlChips">
       {items.map((it:any,i:number)=>(
