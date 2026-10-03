@@ -58,6 +58,11 @@ const nextConfig = {
       // AI Design Studio retired — not an offering. Send any old/indexed links home.
       { source: '/design', destination: '/', permanent: false },
       { source: '/design/:path*', destination: '/', permanent: false },
+      // The legacy static marketing page quoted a different pricing model
+      // ($449 "monthly", a 14-day trial, an annual license + 18% renewal).
+      // Nothing links to it; send it to the one real price list.
+      { source: '/marketing.html', destination: '/pricing', permanent: false },
+      { source: '/api/marketing', destination: '/pricing', permanent: false },
       /* The project index used to redirect() inside a server component, which
          answered HTTP 200 carrying <meta http-equiv="refresh" content="1;...">
          — a one-second blank frame on every entry into a job. Next degrades

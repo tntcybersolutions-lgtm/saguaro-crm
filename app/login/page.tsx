@@ -261,7 +261,7 @@ export default function LoginPage(){
 
           {/* Trust badges */}
           <div style={{marginTop:20,textAlign:'center',display:'flex',justifyContent:'center',gap:20,flexWrap:'wrap'}}>
-            {['256-Bit SSL','SOC 2','99.9% Uptime'].map(badge => (
+            {['256-Bit SSL','Encrypted at Rest','99.9% Uptime'].map(badge => (
               <span key={badge} style={{fontSize:10,color:'rgba(203,213,225,0.6)',fontWeight:600}}>
                 <Lock size={10} weight="fill" style={{verticalAlign:-1,marginRight:4}} />{badge}
               </span>

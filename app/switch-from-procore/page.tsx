@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { STARTER, STARTING_PRICE_FLAT } from '@/lib/plans';
 import { Money, CalendarBlank, Robot, DeviceMobile, FileText, HardHat } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 
@@ -22,7 +23,7 @@ export default function SwitchFromProcorePage() {
   const [teamSize, setTeamSize] = useState(15);
   const [procoreMonthly, setProcoreMonthly] = useState(1850);
 
-  const saguaroMonthlyCost = 299;
+  const saguaroMonthlyCost = STARTER.priceMo;
   const savings = procoreMonthly - saguaroMonthlyCost;
   const annualSavings = savings * 12;
   const fiveYearSavings = savings * 60;
@@ -336,7 +337,7 @@ export default function SwitchFromProcorePage() {
               </thead>
               <tbody>
                 {[
-                  ['Monthly Cost', '$299 flat (whole team)', '$1,850+ per seat', true, false],
+                  ['Monthly Cost', `${STARTING_PRICE_FLAT} (whole team)`, '$1,850+ per seat', true, false],
                   ['Setup Time', '1 business day', '4–6 months', true, false],
                   ['AI Blueprint Takeoff', 'Included', 'Not available', true, false],
                   ['Field App', 'Free native iOS app', 'Paid add-on + IT setup', true, false],
