@@ -323,7 +323,7 @@ function QuickCreate({ view, projectId }: { view: HomeView; projectId: string | 
     { label: 'Punch Item', href: p && `${p}/punch-list` },
     { label: 'Change Order', href: p && `${p}/change-orders` },
     ...(view === 'sales' || view === 'owner' ? [{ label: 'Lead', href: '/app/leads' }] : []),
-    ...(view === 'service' ? [{ label: 'Warranty Claim', href: '/app/warranty-claims' }] : []),
+    ...(view === 'service' ? [{ label: 'Service Call', href: '/app/service?new=1' }, { label: 'Warranty Claim', href: '/app/warranty-claims' }] : []),
     { label: 'Project', href: '/app/projects/new' },
   ];
   return (

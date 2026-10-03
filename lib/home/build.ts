@@ -620,9 +620,9 @@ export async function buildService(ctx: BuildCtx, errors: Record<string, string>
       if (!tech) unassigned++;
       if (win === today) visitsToday++;
       const tier: Tier = breach ? 0 : !tech ? 3 : tierForDue(win, today);
-      items.push({ id: `ticket:${x.id}`, sourceType: 'service_ticket', sourceId: x.id, title: `${x.ticket_number ? x.ticket_number + ' ' : ''}${x.title || x.category || 'Service call'}`, projectId: x.project_id, projectName: pname(x.project_id), owner: tech, dueAt: win, tier, reason: breach ? `SLA of ${x.sla_hours}h passed with no visit scheduled` : !tech ? `Unassigned${x.priority ? ' · ' + x.priority + ' priority' : ''}` : win ? `Visit ${dueReason(win, today).toLowerCase()}` : 'No visit window set', actionLabel: 'No Screen Yet', href: '', updatedAt: x.updated_at || null });
-      if (win && win >= today && win <= addDays(today, 7)) schedule.push({ id: `ticket-s:${x.id}`, kind: 'Service Visit', title: x.title || 'Service visit', date: win, time: String(x.scheduled_window_start).slice(11, 16) || null, projectId: x.project_id, projectName: pname(x.project_id), who: tech, href: '' });
-      tableRows.push({ id: `t-${x.id}`, href: '', item: `${x.ticket_number || 'Ticket'} — ${x.title || x.category || 'Service call'}`, job: pname(x.project_id) || '—', type: 'Service call', priority: x.priority || '—', status: x.status || '—', assigned: tech || 'Unassigned', when: win });
+      items.push({ id: `ticket:${x.id}`, sourceType: 'service_ticket', sourceId: x.id, title: `${x.ticket_number ? x.ticket_number + ' ' : ''}${x.title || x.category || 'Service call'}`, projectId: x.project_id, projectName: pname(x.project_id), owner: tech, dueAt: win, tier, reason: breach ? `SLA of ${x.sla_hours}h passed with no visit scheduled` : !tech ? `Unassigned${x.priority ? ' · ' + x.priority + ' priority' : ''}` : win ? `Visit ${dueReason(win, today).toLowerCase()}` : 'No visit window set', actionLabel: tech ? 'Open Ticket' : 'Assign Tech', href: `/app/service?ticket=${x.id}`, updatedAt: x.updated_at || null });
+      if (win && win >= today && win <= addDays(today, 7)) schedule.push({ id: `ticket-s:${x.id}`, kind: 'Service Visit', title: x.title || 'Service visit', date: win, time: String(x.scheduled_window_start).slice(11, 16) || null, projectId: x.project_id, projectName: pname(x.project_id), who: tech, href: `/app/service?ticket=${x.id}` });
+      tableRows.push({ id: `t-${x.id}`, href: `/app/service?ticket=${x.id}`, item: `${x.ticket_number || 'Ticket'} — ${x.title || x.category || 'Service call'}`, job: pname(x.project_id) || '—', type: 'Service call', priority: x.priority || '—', status: x.status || '—', assigned: tech || 'Unassigned', when: win });
     }
   });
 
@@ -645,7 +645,7 @@ export async function buildService(ctx: BuildCtx, errors: Record<string, string>
   const queue = rankQueue(items);
   return {
     metrics: [
-      { key: 'unassigned', label: 'Unassigned Calls', value: String(unassigned), basis: 'Open service tickets + warranty claims with no one assigned', href: '/app/warranty-claims', state: unassigned ? 'ok' : 'empty' },
+      { key: 'unassigned', label: 'Unassigned Calls', value: String(unassigned), basis: 'Open service tickets + warranty claims with no one assigned', href: '/app/service?filter=unassigned', state: unassigned ? 'ok' : 'empty' },
       { key: 'today', label: 'Visits Today', value: String(visitsToday), basis: 'Service windows and warranty visits dated today', href: null, state: visitsToday ? 'ok' : 'empty' },
       slaConfigured
         ? { key: 'sla', label: 'SLA Breached', value: String(slaBreached), basis: `${plural(slaConfigured, 'ticket')} with an SLA · past it with no visit scheduled`, href: null, state: slaBreached ? 'ok' : 'empty' }
