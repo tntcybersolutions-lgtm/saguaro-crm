@@ -602,11 +602,12 @@ export async function buildService(ctx: BuildCtx, errors: Record<string, string>
   const items: QueueItem[] = [];
   const schedule: ScheduleEntry[] = [];
   const tableRows: WorkTable['rows'] = [];
-  let unassigned = 0, visitsToday = 0, slaBreached = 0, slaConfigured = 0;
+  let unassigned = 0, visitsToday = 0, slaBreached = 0, slaConfigured = 0, completedOpen = 0;
 
   await safe('serviceTickets', errors, async () => {
     const tk = await rows(scoped(db.from('service_tickets').select('id, ticket_number, project_id, title, category, priority, status, sla_hours, scheduled_window_start, scheduled_window_end, assigned_tech_id, created_at, updated_at').eq('tenant_id', t), ctx).limit(1000));
     for (const x of tk) {
+      if (String(x.status || '').toLowerCase() === 'completed') completedOpen++;
       if (TICKET_CLOSED.includes(String(x.status || '').toLowerCase())) continue;
       if (ctx.scope === 'mine' && x.assigned_tech_id && x.assigned_tech_id !== ctx.me.id) continue;
       const tech = x.assigned_tech_id ? (people.get(x.assigned_tech_id) || 'Assigned') : null;
@@ -650,7 +651,9 @@ export async function buildService(ctx: BuildCtx, errors: Record<string, string>
       slaConfigured
         ? { key: 'sla', label: 'SLA Breached', value: String(slaBreached), basis: `${plural(slaConfigured, 'ticket')} with an SLA · past it with no visit scheduled`, href: null, state: slaBreached ? 'ok' : 'empty' }
         : { key: 'sla', label: 'SLA Breached', value: null, basis: '', href: null, state: 'unavailable', note: 'No SLA policies configured on any open ticket' },
-      { key: 'invoice', label: 'Ready to Invoice', value: null, basis: '', href: null, state: 'unavailable', note: 'Service work is not linked to invoicing yet' },
+      errors.serviceTickets
+        ? { key: 'invoice', label: 'Completed, Not Closed', value: null, basis: '', href: null, state: 'failed', note: errors.serviceTickets }
+        : { key: 'invoice', label: 'Completed, Not Closed', value: String(completedOpen), basis: 'Visits marked Completed, not yet Closed · invoices aren\'t linked to tickets, so close a call once it\'s billed', href: '/app/service?filter=completed', state: completedOpen ? 'ok' : 'empty' },
     ],
     queue: { items: queue.slice(0, 50), total: queue.length, state: queue.length ? 'ok' : 'empty' },
     schedule: { entries: windowFilter(schedule, ctx), state: 'ok' },
