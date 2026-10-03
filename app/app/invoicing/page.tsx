@@ -4,6 +4,7 @@
  * Uses DataTable with sorting, filtering, pagination.
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -270,7 +271,7 @@ export default function InvoicingPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this invoice?')) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: 'Delete this invoice?', danger: true }))) return;
     setError('');
     try {
       const res = await fetch(`/api/invoices/${id}/delete`, { method: 'DELETE' });

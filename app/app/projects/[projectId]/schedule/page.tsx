@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
@@ -339,7 +340,7 @@ export default function SchedulePage(){
   }
 
   async function deleteTask(task:any){
-    if(!confirm(`Delete task "${task.name}"?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete task "${task.name}"?`, danger: true }))) return;
     // Optimistic remove — the task leaves and the panel closes instantly;
     // rollback restores the exact list on failure.
     const prevTasks=tasks;

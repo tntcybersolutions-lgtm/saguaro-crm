@@ -14,6 +14,7 @@
  * /api/photos/upload, then attaches the typed details to the row it created.
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
@@ -289,7 +290,7 @@ export default function PhotosPage(){
   }
 
   async function deletePhoto(photo:any){
-    if(!confirm(`Delete "${photo.title}"?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete "${photo.title}"?`, danger: true }))) return;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();

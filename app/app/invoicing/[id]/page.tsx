@@ -11,6 +11,7 @@
  *   DELETE /api/invoices/[id]/delete   -> { success }
  */
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -300,7 +301,7 @@ export default function InvoiceDetailPage() {
   }
 
   async function handleDelete() {
-    if (!confirm('Delete this invoice? This cannot be undone.')) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: 'Delete this invoice? This cannot be undone.', danger: true }))) return;
     setBusy('delete');
     try {
       const res = await fetch(`/api/invoices/${id}/delete`, { method: 'DELETE' });

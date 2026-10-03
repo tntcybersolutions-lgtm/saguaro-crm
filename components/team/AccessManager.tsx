@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { textPrompt } from '@/lib/ui/async-dialog';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { CATEGORIES } from '@/lib/permission-categories';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 
@@ -525,7 +527,7 @@ export function AccessManager() {
   const deleteRole = async (id: string) => {
     const r = roles.find(x => x.id === id);
     if (!r || r.isBuiltIn) return;
-    if (!confirm(`Delete role "${r.name}"? Users will be unassigned.`)) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Delete role "${r.name}"? Users will be unassigned.`, danger: true }))) return;
     const headers = await getAuthHeaders();
     try {
       const res = await fetch(`/api/roles/${id}`, { method: 'DELETE', headers });
@@ -665,12 +667,10 @@ export function AccessManager() {
      Monday. Confirmation is typed, not a dialog button, because this ends
      someone's access to a live job. */
   const removeUser = async (userId: string, userName: string, email: string) => {
-    const typed = window.prompt(
-      `Remove ${userName} from this account?\n\n` +
+    const typed = (await textPrompt({ title: 'Enter a value', label: `Remove ${userName} from this account?\n\n` +
       `Their sign-in is deleted and they lose access immediately. The daily logs, ` +
       `photos and records they wrote stay with the company.\n\n` +
-      `Type REMOVE to confirm.`,
-    );
+      `Type REMOVE to confirm.` }));
     if (typed?.trim().toUpperCase() !== 'REMOVE') return;
     const headers = await getAuthHeaders();
     try {

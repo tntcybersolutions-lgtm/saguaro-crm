@@ -12,6 +12,8 @@
  * above it, so it works under the /app topbar without field-shell CSS coupling.
  */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { textPrompt } from '@/lib/ui/async-dialog';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { ArrowClockwise, ArrowCounterClockwise, ArrowsClockwise, ArrowUpRight, Check, CheckCircle, Cursor, DownloadSimple, Lightning, LineSegments, Minus, Plus, Ruler, Sparkle, Trash, UploadSimple } from '@phosphor-icons/react';
 import type { Pt } from '@/lib/heatmap/geometry';
 import { angleDeg, dist } from '@/lib/heatmap/geometry';
@@ -784,7 +786,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
   const redo = useCallback(() => { setFuture((f) => { if (!f.length) return f; setPast((h) => (project ? [...h, project] : h)); setProject(f[0]); return f.slice(1); }); }, [project, setProject]);
 
   /* ── a "click" (no drag) dispatches the active tool ── */
-  const clickAt = (pt: Pt) => {
+  const clickAt = async (pt: Pt) => {
     if (!project) return;
     if (tool === 'scale') {
       const pts = [...pendingScale, pt];
@@ -808,7 +810,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           }
           setPendingScale([]);
         } else {
-          const ans = window.prompt('Real-world length of this line, in feet:', '20');
+          const ans = (await textPrompt({ title: 'Enter a value', label: 'Real-world length of this line, in feet:', defaultValue: '20' }));
           const ft = ans ? parseFloat(ans) : NaN;
           if (ft > 0) {
             const pxPerFt = px / ft;
@@ -1180,9 +1182,9 @@ export default function Designer({ projectId }: { projectId: string | null }) {
   //    corrective button. Confirm-first, then strip EVERY AP (manual + auto — this is the one
   //    action allowed to) and run the corrected engine design: place → close dead zones (capped)
   //    → plan channels → recompute. Everything that is not a wifi_ap is untouched. ──
-  const redesignCoverage = () => {
+  const redesignCoverage = async () => {
     if (!project || !project.scale || !densityFlag) return;
-    const ok = window.confirm(`Re-design coverage?\n\nThis REPLACES ALL ${densityFlag.apCount} access points with a fresh engine design (cap ${densityFlag.capAps} AP${densityFlag.capAps === 1 ? '' : 's'} for ${densityFlag.areaFt2.toLocaleString()} ft²). Cameras, sensors and everything else stay. Undo reverts.`);
+    const ok = (await confirmDialog({ title: 'Please confirm', message: `Re-design coverage?\n\nThis REPLACES ALL ${densityFlag.apCount} access points with a fresh engine design (cap ${densityFlag.capAps} AP${densityFlag.capAps === 1 ? '' : 's'} for ${densityFlag.areaFt2.toLocaleString()} ft²). Cameras, sensors and everything else stay. Undo reverts.`, danger: true }));
     if (!ok) return;
     const radio = apCat ? toDeviceRadio(apCat, autoBand) : null;
     const apLabel = apCat ? apCat.model : apModel.replace('UniFi ', '');
@@ -1960,14 +1962,14 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     setPast([]); setFuture([]); setCoverage(null); setSelId(null); setPdfDoc(null); setTool('scale');
     setFieldStepPin(null); setScaleDoor(false); setPendingScale([]); setPendingWall([]);
   };
-  const renameFloor = (id: string) => {
+  const renameFloor = async (id: string) => {
     const cur = floors.find((f) => f.id === id);
-    const name = window.prompt('Floor name:', cur?.name || '');
+    const name = (await textPrompt({ title: 'Enter a value', label: 'Floor name:', defaultValue: cur?.name || '' }));
     if (name != null && name.trim()) setFloors((fs) => fs.map((f) => (f.id === id ? { ...f, name: name.trim() } : f)));
   };
-  const removeFloor = (id: string) => {
+  const removeFloor = async (id: string) => {
     if (floors.length <= 1) return;
-    if (!window.confirm('Remove this floor and everything on it?')) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: 'Remove this floor and everything on it?', danger: true }))) return;
     const remaining = floors.filter((f) => f.id !== id);
     setFloors(remaining);
     if (activeFloorRef.current === id) switchFloor(remaining[0].id);
@@ -1975,9 +1977,9 @@ export default function Designer({ projectId }: { projectId: string | null }) {
 
   /* ── pull real adopted devices/status from a UniFi controller ── */
   const pullUnifi = async () => {
-    const host = window.prompt('UniFi controller URL (e.g. https://192.168.1.1):', '');
+    const host = (await textPrompt({ title: 'Enter a value', label: 'UniFi controller URL (e.g. https://192.168.1.1):', defaultValue: '' }));
     if (!host) return;
-    const key = window.prompt('UniFi API key (Settings → Control Plane → Integrations):', '');
+    const key = (await textPrompt({ title: 'Enter a value', label: 'UniFi API key (Settings → Control Plane → Integrations):', defaultValue: '' }));
     if (!key) return;
     setUnifiMsg('Connecting to controller…');
     try {
@@ -1995,7 +1997,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     if (!project) return;
     const pid = saveProj || projectId || ''; // shell prop — never a localStorage guess
     if (!pid) { setAiNotes(['Save this design to a project first (Save button) so the bid package can attach to it.']); return; }
-    if (!window.confirm('Create a low-voltage bid package from this design (materials + cabling + labor)?')) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: 'Create a low-voltage bid package from this design (materials + cabling + labor)?', danger: false }))) return;
     setBusy('Building bid package…');
     try {
       const r = await fetch('/api/heatmap/to-bid-package', {
@@ -2809,7 +2811,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                       <button
                         className="hm-tool"
                         style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.3)', fontSize: 11, padding: '3px 8px' }}
-                        onClick={() => { if (confirm(`Remove all ${project.devices.length} devices from this plan? Walls & scale stay.`)) { snapshot(); patch({ devices: [] }); setSelId(null); } }}
+                        onClick={async () => { if ((await confirmDialog({ title: 'Please confirm', message: `Remove all ${project.devices.length} devices from this plan? Walls & scale stay.`, danger: true }))) { snapshot(); patch({ devices: [] }); setSelId(null); } }}
                       >
                         <Trash size={12} weight="regular" style={{ verticalAlign: 'middle', marginRight: 4 }} />Clear all
                       </button>

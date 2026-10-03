@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useParams } from 'next/navigation';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
 import { laborAllocation, lineDirectCost, lineLabor, type LaborAllocation } from '@/lib/takeoff-line-cost';
@@ -2490,7 +2491,7 @@ export default function TakeoffPage() {
               style={{ display: 'none' }}
               onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) addSheets(f); }}
             />
-            <button onClick={() => { if (confirm('Start a new takeoff? Previous results are saved.')) { setAutoSummary(null); setState('upload'); setSelectedFile(null); setResult(null); setTakeoffId(null); } }} style={{ padding: '11px 18px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 13, cursor: 'pointer', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={async () => { if ((await confirmDialog({ title: 'Please confirm', message: 'Start a new takeoff? Previous results are saved.', danger: false }))) { setAutoSummary(null); setState('upload'); setSelectedFile(null); setResult(null); setTakeoffId(null); } }} style={{ padding: '11px 18px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 13, cursor: 'pointer', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Plus size={13} weight="bold" color="rgba(255,255,255,0.4)" /> New Analysis
             </button>
           </div>
@@ -2584,8 +2585,8 @@ export default function TakeoffPage() {
             {generating === 'lien-waivers' ? 'Creating…' : <><Blueprint size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Lien Waivers</>}
           </button>
           <button
-            onClick={() => {
-              if (confirm('Start a new takeoff? Previous results are saved.')) {
+            onClick={async () => {
+              if ((await confirmDialog({ title: 'Please confirm', message: 'Start a new takeoff? Previous results are saved.', danger: false }))) {
                 setState('upload'); setSelectedFile(null); setResult(null); setTakeoffId(null);
               }
             }}

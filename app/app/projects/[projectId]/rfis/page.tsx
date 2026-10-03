@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
@@ -684,7 +685,7 @@ export default function RFIsPage() {
                     </Btn>
                     <button onClick={async (e) => {
                       e.stopPropagation();
-                      if (!confirm('Delete this RFI?')) return;
+                      if (!(await confirmDialog({ title: 'Please confirm', message: 'Delete this RFI?', danger: true }))) return;
                       setRfis(prev => prev.filter(r => r.id !== rfi.id));
                       try {
                         const res = await fetch(`/api/rfis/${rfi.id}`, { method: 'DELETE' });

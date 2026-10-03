@@ -1,5 +1,6 @@
 'use client';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
@@ -190,7 +191,7 @@ export default function SelectionsPage(){
   }
 
   async function deleteItem(item:any){
-    if(!confirm(`Delete "${item.item}"?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete "${item.item}"?`, danger: true }))) return;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();

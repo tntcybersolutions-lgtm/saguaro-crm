@@ -1,5 +1,6 @@
 'use client';
 import { Skeleton, SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -236,7 +237,7 @@ export default function BidPackageDetailPage() {
    * carries the override and the request beside it until it is dealt with.
    */
   async function awardBid(submissionId: string, subName: string, opts?: { override?: boolean }) {
-    if (!opts?.override && !confirm(`Award bid to ${subName}?`)) return;
+    if (!opts?.override && !(await confirmDialog({ title: 'Please confirm', message: `Award bid to ${subName}?`, danger: false }))) return;
     setAwarding(submissionId);
     setComplianceHold(null);
     try {
@@ -279,7 +280,7 @@ export default function BidPackageDetailPage() {
   }
 
   async function closeBids() {
-    if (!confirm('Close this bid package? No more bids will be accepted.')) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: 'Close this bid package? No more bids will be accepted.', danger: true }))) return;
     setClosing(true);
     try {
       const r = await fetch(`/api/bid-packages/${id}/close`, {

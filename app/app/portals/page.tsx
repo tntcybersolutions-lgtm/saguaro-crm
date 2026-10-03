@@ -1,5 +1,6 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { CheckCircle, XCircle, X, ArrowRight, Plus, House, HardHat, Copy, ShareNetwork, ListNumbers } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatStrip, AutoChip, goldButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
@@ -133,7 +134,7 @@ export default function PortalsPage() {
   }
 
   async function revoke(sessionId: string, type: Tab) {
-    if (!confirm('Revoke this portal access? The link will stop working immediately.')) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: 'Revoke this portal access? The link will stop working immediately.', danger: true }))) return;
     setRevoking(sessionId);
     try {
       await fetch('/api/portal/revoke', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId, type }) });

@@ -9,6 +9,7 @@
  * the API), SectionCard list, skeletons, honest states.
  */
 import React, { useEffect, useState, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import {
   PremiumSurface, ModuleHero, SectionCard, StatStrip, IconChip, Pill,
@@ -66,7 +67,7 @@ export default function PlatformIntegrationsPage() {
     } catch (e: any) { console.error(e); flash(humanError(e, 'Something went wrong. Please try again.'), false); }
     setBusy(false);
   };
-  const remove = async (app: any) => { if (!confirm(`Remove ${app.label} credentials? Tenants can't connect it until re-added.`)) return; await fetch(`/api/platform/integrations/${app.app}`, { method: 'DELETE' }); flash('Removed'); load(); };
+  const remove = async (app: any) => { if (!(await confirmDialog({ title: 'Please confirm', message: `Remove ${app.label} credentials? Tenants can't connect it until re-added.`, danger: true }))) return; await fetch(`/api/platform/integrations/${app.app}`, { method: 'DELETE' }); flash('Removed'); load(); };
   const copy = async (text: string, key: string) => { try { await navigator.clipboard.writeText(text); setCopied(key); setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500); } catch { /* */ } };
 
   if (denied) {

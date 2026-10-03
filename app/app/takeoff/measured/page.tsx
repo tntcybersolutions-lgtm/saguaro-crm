@@ -5,6 +5,7 @@
  * bill and rolls up LIVE — same engine + byte-identical numbers as iOS.
  */
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useSearchParams } from 'next/navigation';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { explodeTakeoff, rollupTakeoff, ASSEMBLIES, type Condition, type MeasureKind, type Pt, type RateOverrides } from '@/lib/takeoff';
@@ -273,8 +274,8 @@ function MeasuredTakeoffInner() {
     if (t && name === 'Measured takeoff') setName(t.name);
     setMsg(`+ ${t?.name}: ${drop.length} conditions added — trace each on the plan to price it.`);
   };
-  const chooseBlank = () => {
-    if (conditions.length && !confirm('Clear all current conditions and start blank?')) return;
+  const chooseBlank = async () => {
+    if (conditions.length && !(await confirmDialog({ title: 'Please confirm', message: 'Clear all current conditions and start blank?', danger: true }))) return;
     setConditions([]); setActiveTemplate('blank'); setMsg('Blank takeoff — add conditions or open the Plan Tracer.');
   };
 
@@ -544,7 +545,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
   const [reading, setReading] = useState(false);
   const readBlueprint = async (f: File | undefined) => {
     if (!f || !projectId) { setMsg('Pick a project first'); return; }
-    if (conditions.length && !confirm(`Replaces your ${conditions.length} current condition${conditions.length === 1 ? '' : 's'} — continue?`)) return;
+    if (conditions.length && !(await confirmDialog({ title: 'Please confirm', message: `Replaces your ${conditions.length} current condition${conditions.length === 1 ? '' : 's'} — continue?`, danger: true }))) return;
     setReading(true); setMsg('Reading every sheet…');
     try {
       const b64: string = await new Promise((res, rej) => { const rd = new FileReader(); rd.onload = () => res((rd.result as string).split(',')[1]); rd.onerror = rej; rd.readAsDataURL(f); });

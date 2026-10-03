@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
@@ -396,7 +397,7 @@ export default function DailyLogsPage(){
   }
 
   async function deleteLog(log:any){
-    if(!confirm(`Delete log for ${log.log_date}?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete log for ${log.log_date}?`, danger: true }))) return;
     // Optimistic remove — the log leaves and the panel closes instantly;
     // rollback restores the exact list on failure.
     const prevLogs = logs;

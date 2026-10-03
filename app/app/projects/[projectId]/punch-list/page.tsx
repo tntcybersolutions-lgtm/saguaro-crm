@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
@@ -248,7 +249,7 @@ export default function PunchListPage(){
   }
 
   async function deleteItem(item:any){
-    if(!confirm(`Delete "${item.title||item.description}"?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete "${item.title||item.description}"?`, danger: true }))) return;
     // Optimistic remove — the row leaves and the panel closes instantly;
     // rollback restores the exact list on failure.
     const prevItems=items;

@@ -1,5 +1,6 @@
 'use client';
 import React, { useMemo, useState } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import useSWR from 'swr';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
@@ -230,7 +231,7 @@ export default function CrewsPage() {
   }
 
   async function archiveCrew(c: Crew, restore: boolean) {
-    if (!restore && !confirm(`Archive ${c.name}? The roster is kept and the crew can be restored.`)) return;
+    if (!restore && !(await confirmDialog({ title: 'Please confirm', message: `Archive ${c.name}? The roster is kept and the crew can be restored.`, danger: true }))) return;
     mutate((d) => d && ({ crews: d.crews.filter((x) => x.id !== c.id) }), false);
     closePanel(); showToast(restore ? 'Crew restored.' : 'Crew archived.');
     try {

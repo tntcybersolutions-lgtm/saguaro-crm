@@ -1,5 +1,6 @@
 'use client';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
@@ -214,7 +215,7 @@ export default function SubmittalsPage(){
   }
 
   async function deleteSub(sub:any){
-    if(!confirm(`Delete submittal "${sub.submittal_number} — ${sub.title}"?`)) return;
+    if(!(await confirmDialog({ title: 'Please confirm', message: `Delete submittal "${sub.submittal_number} — ${sub.title}"?`, danger: true }))) return;
     setDeleting(true);
     try{
       const h=await getAuthHeaders();

@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import Link from 'next/link';
 import { IntegrationStrip } from '@/components/Integrations';
@@ -181,7 +182,7 @@ export default function IntegrationsPage() {
   }
 
   async function handleDisconnect(intg: Integration) {
-    if (!confirm(`Disconnect ${intg.name}? This will stop all syncing.`)) return;
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Disconnect ${intg.name}? This will stop all syncing.`, danger: true }))) return;
     try {
       const endpoint = intg.key === 'sage300' ? '/api/integrations/sage300'
         : intg.key === 'xero' ? '/api/integrations/xero'
