@@ -41,7 +41,7 @@ const EVENT = 'saguaro-open-pdf';
 const TEXT = '#F0F4FF';
 const DIM = '#93A9C4';
 const HAIR = 'rgba(255,255,255,0.10)';
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 
 export interface OpenPdfRequest {
   url: string;
@@ -130,8 +130,8 @@ function Pane({
     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
       {label && (
         <div style={{
-          padding: '8px 14px', fontSize: 11, fontWeight: 800, letterSpacing: '0.09em',
-          textTransform: 'uppercase', color: DIM, whiteSpace: 'nowrap', overflow: 'hidden',
+          padding: '8px 14px', fontSize: 11, fontWeight: 800,
+          color: DIM, whiteSpace: 'nowrap', overflow: 'hidden',
           textOverflow: 'ellipsis', flexShrink: 0,
           background: 'rgba(255,255,255,0.03)',
           borderBottom: `1px solid ${HAIR}`,
@@ -153,7 +153,7 @@ function Pane({
             {err}
             <div style={{ marginTop: 14 }}>
               <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: DIM, fontSize: 12.5 }}>
-                Try opening it directly
+                Try Opening It Directly
               </a>
             </div>
           </div>
@@ -261,8 +261,8 @@ export default function PdfViewer() {
     transition: 'background .14s ease, border-color .14s ease',
   };
   const active: React.CSSProperties = {
-    background: 'rgba(245,158,11,0.18)',
-    borderColor: 'rgba(245,158,11,0.55)',
+    background: 'var(--brand-primary-18)',
+    borderColor: 'color-mix(in srgb, var(--brand-primary) 55%, transparent)',
     color: '#FDE68A',
   };
 
@@ -339,7 +339,7 @@ export default function PdfViewer() {
             {compare && (
               <button style={chip} onClick={() => setStacked((v) => !v)} title={stacked ? 'Side by side' : 'Stacked'}>
                 {stacked ? <Columns size={14} weight="bold" /> : <Rows size={14} weight="bold" />}
-                {stacked ? 'Side by side' : 'Stacked'}
+                {stacked ? 'Side by Side' : 'Stacked'}
               </button>
             )}
           </>
@@ -348,7 +348,7 @@ export default function PdfViewer() {
         <span style={{ marginLeft: 'auto', display: 'flex', gap: 9, alignItems: 'center' }}>
           {req.editHref && (
             <a href={req.editHref} style={{ ...chip, ...active, textDecoration: 'none' }}>
-              <PencilSimple size={14} weight="bold" /> Mark up
+              <PencilSimple size={14} weight="bold" /> Mark Up
             </a>
           )}
           <a href={req.url} download style={{ ...chip, textDecoration: 'none' }} title="Download">
@@ -374,7 +374,7 @@ export default function PdfViewer() {
         {compare && req.compareUrl && (
           <>
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, minHeight: 0, flex: stacked ? 1 : `0 0 ${split}%` }}>
-              <Pane url={req.compareUrl} label={req.compareTitle || 'Previous revision'} zoom={zoom} page={page} fit={fit} />
+              <Pane url={req.compareUrl} label={req.compareTitle || 'Previous Revision'} zoom={zoom} page={page} fit={fit} />
             </div>
 
             {/* Draggable divider. Wide enough to grab, thin enough to ignore. */}

@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { Industry } from '@/lib/industries';
 
-const DARK = '#0a0a0a';
-const GOLD = '#F59E0B';
-const GOLD_DARK = '#F59E0B';
+const DARK = 'var(--bg-base)';
+const GOLD = 'var(--brand-primary)';
+const GOLD_DARK = 'var(--brand-primary-hover)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
@@ -72,9 +72,9 @@ export default function IndustryLandingPage({ industry }: Props) {
             />
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
               <span style={{
-                fontWeight: 600, fontSize: '14px', letterSpacing: '0.1em', color: TEXT,
-              }}>SAGUARO</span>
-              <span style={{ fontSize: '7px', color: DIM, letterSpacing: '0.25em', fontWeight: 500, textTransform: 'uppercase' }}>Control Systems</span>
+                fontWeight: 600, fontSize: '14px', color: TEXT,
+              }}>Saguaro</span>
+              <span style={{ fontSize: '7px', color: DIM, fontWeight: 500 }}>Control Systems</span>
             </span>
           </Link>
 
@@ -86,7 +86,7 @@ export default function IndustryLandingPage({ industry }: Props) {
             }}>Log In</Link>
             <Link href="/signup" style={{
               padding: '7px 18px', background: GOLD_DARK, border: 'none', borderRadius: '6px',
-              color: '#000', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none',
+              color: '#0A0A00', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none',
             }}>Free Trial</Link>
           </div>
 
@@ -103,7 +103,7 @@ export default function IndustryLandingPage({ industry }: Props) {
         <div style={{ position: 'fixed', top: '58px', left: 0, right: 0, zIndex: 9998, background: 'rgba(20,20,22,0.99)', borderBottom: `1px solid ${BORDER}`, padding: '16px', backdropFilter: 'blur(12px)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <Link href="/login" onClick={() => setMobileOpen(false)} style={{ padding: '13px', textAlign: 'center', border: `1px solid ${BORDER}`, borderRadius: '8px', color: TEXT, textDecoration: 'none', fontWeight: 500 }}>Log In</Link>
-            <Link href="/signup" onClick={() => setMobileOpen(false)} style={{ padding: '13px', textAlign: 'center', background: GOLD_DARK, borderRadius: '8px', color: '#000', textDecoration: 'none', fontWeight: 600 }}>Start Free Trial</Link>
+            <Link href="/signup" onClick={() => setMobileOpen(false)} style={{ padding: '13px', textAlign: 'center', background: GOLD_DARK, borderRadius: '8px', color: '#0A0A00', textDecoration: 'none', fontWeight: 600 }}>Start Free Trial</Link>
           </div>
         </div>
       )}
@@ -124,8 +124,7 @@ export default function IndustryLandingPage({ industry }: Props) {
               display: 'inline-flex', alignItems: 'center', gap: '7px',
               padding: '5px 14px', background: 'transparent',
               border: '1px solid rgba(255,255,255,0.14)', borderRadius: '100px',
-              fontSize: '12px', fontWeight: 500, letterSpacing: '0.06em', color: DIM,
-              textTransform: 'uppercase',
+              fontSize: '12px', fontWeight: 500, color: DIM,
             }}>
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: GOLD }} />
               {industry.name}
@@ -148,7 +147,7 @@ export default function IndustryLandingPage({ industry }: Props) {
             <Link href="/signup" style={{
               padding: '10px 22px',
               background: GOLD,
-              borderRadius: '8px', color: DARK, fontWeight: 600, fontSize: '15px',
+              borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '15px',
               textDecoration: 'none', letterSpacing: '0.01em',
             }}>
               Start Free Trial
@@ -291,7 +290,7 @@ export default function IndustryLandingPage({ industry }: Props) {
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
             <h2 style={{ fontSize: 'clamp(20px, 3vw, 22px)', fontWeight: 600, margin: '0 0 12px', color: TEXT }}>
-              The old way vs. with Saguaro
+              The Old Way vs. with Saguaro
             </h2>
             <p style={{ color: DIM, fontSize: '15px', margin: 0 }}>
               See what changes when you run your business on one platform.
@@ -302,13 +301,13 @@ export default function IndustryLandingPage({ industry }: Props) {
           <div className="comp-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '4px', padding: '0 4px' }}>
             <div style={{
               paddingBottom: '10px',
-              fontWeight: 500, fontSize: '12px', color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase',
+              fontWeight: 500, fontSize: '12px', color: DIM,
             }}>
-              The old way
+              The Old Way
             </div>
             <div style={{
               paddingBottom: '10px',
-              fontWeight: 500, fontSize: '12px', color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase',
+              fontWeight: 500, fontSize: '12px', color: DIM,
             }}>
               With Saguaro
             </div>
@@ -359,7 +358,7 @@ export default function IndustryLandingPage({ industry }: Props) {
             <Link href="/signup" style={{
               padding: '10px 22px',
               background: GOLD,
-              borderRadius: '8px', color: DARK, fontWeight: 600, fontSize: '15px',
+              borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '15px',
               textDecoration: 'none', letterSpacing: '0.01em',
             }}>
               Start Free Trial

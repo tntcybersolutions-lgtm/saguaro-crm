@@ -32,7 +32,7 @@ export type ScribbleProps = {
 
 export function ScribbleNote({
   children,
-  color = '#FBBF24',
+  color = 'var(--brand-primary-strong)',
   size = 15,
   rotate = -4,
   className,
@@ -86,7 +86,7 @@ const ROTATION: Record<NonNullable<ScribbleArrowProps['direction']>, number> = {
 
 export function ScribbleArrow({
   direction = 'right',
-  color = '#FBBF24',
+  color = 'var(--brand-primary-strong)',
   width = 96,
   rotate = 0,
   className,
@@ -147,7 +147,7 @@ export function ScribbleArrow({
 /** Note and arrow together, positioned absolutely over whatever it annotates. */
 export function Scribble({
   children,
-  color = '#FBBF24',
+  color = 'var(--brand-primary-strong)',
   size = 15,
   rotate = -4,
   direction = 'down',

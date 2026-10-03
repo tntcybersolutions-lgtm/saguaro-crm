@@ -2,9 +2,9 @@
 
 import { useMemo } from 'react';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -189,7 +189,7 @@ export default function BulkActionBar({
               borderRadius: 8,
               border: action.primary ? 'none' : `1px solid ${BORDER}`,
               background: action.primary ? GOLD : 'transparent',
-              color: action.primary ? DARK : DIM,
+              color: action.primary ? '#0A0A00' : DIM,
               fontSize: 13,
               fontWeight: action.primary ? 700 : 500,
               cursor: action.onClick ? 'pointer' : 'not-allowed',

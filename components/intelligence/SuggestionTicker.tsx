@@ -28,10 +28,10 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import type { Suggestion, SuggestionFeed, SuggestionSeverity } from '@/lib/suggestions';
 
-const GOLD_HI = 'var(--brand-primary-strong)'; // #FBBF24 default (white-label aware)
+const GOLD_HI = 'var(--brand-primary-strong)'; // white-label aware
 // Desert-dusk severity palette — matches the dashboard + intelligence pages.
 const RED = '#E0644E';
-const AMBER = '#F0A63C';
+const AMBER = 'var(--warning)';
 const INFO = 'rgba(255,255,255,0.45)';
 const BORDER = 'rgba(255,255,255,0.08)';
 const DIM = 'rgba(255,255,255,0.55)';
@@ -173,8 +173,8 @@ function TickerItem({
         }}
       />
       <span style={{
-        fontSize: 9.5, fontWeight: 900, color: c, textTransform: 'uppercase',
-        letterSpacing: '0.08em', flexShrink: 0,
+        fontSize: 9.5, fontWeight: 900, color: c,
+        flexShrink: 0,
       }}>
         {s.moduleLabel}
       </span>
@@ -247,7 +247,7 @@ export default function SuggestionTicker({ style }: { style?: React.CSSPropertie
         }} />
         <span style={{
           fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.8)',
-          textTransform: 'uppercase', letterSpacing: '0.12em', whiteSpace: 'nowrap',
+          whiteSpace: 'nowrap',
         }}>
           Live Signals
         </span>

@@ -5,16 +5,17 @@ import { CATEGORIES } from '@/lib/permission-categories';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
 
 /* ── palette ── */
-const GOLD = '#F59E0B';
-const BG = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const BG = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const GREEN = '#22C55E';
 const RED = '#EF4444';
-const AMBER = '#F59E0B';
-const BLUE = '#F59E0B';
+const AMBER = 'var(--warning)';
+const BLUE = 'var(--brand-primary)';
+const ROLE_HEX = '#F59E0B'; // stored role color value (sent to the API) — must stay hex
 const PURPLE = '#8B5CF6';
 
 /* ── types ── */
@@ -62,9 +63,9 @@ const PERM_LEVELS: PermLevel[] = ['None', 'View', 'Edit', 'Full'];
    imports precisely so this client component can read it. */
 
 const ROLE_PRESETS: { name: string; desc: string; color: string; perms: PermissionMap }[] = [
-  { name: 'Admin', desc: 'Full system access across all modules.', color: GOLD,
+  { name: 'Admin', desc: 'Full system access across all modules.', color: ROLE_HEX,
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'Full' as PermLevel])) },
-  { name: 'Project Manager', desc: 'Manage projects end-to-end, approve COs and pay apps.', color: BLUE,
+  { name: 'Project Manager', desc: 'Manage projects end-to-end, approve COs and pay apps.', color: ROLE_HEX,
     perms: Object.fromEntries(CATEGORIES.map(c => [c, c === 'Admin' ? 'View' as PermLevel : 'Full' as PermLevel])) },
   { name: 'Superintendent', desc: 'Field operations — schedule, safety, daily reporting.', color: GREEN,
     perms: Object.fromEntries(CATEGORIES.map(c => {
@@ -88,7 +89,7 @@ const ROLE_PRESETS: { name: string; desc: string; color: string; perms: Permissi
     perms: Object.fromEntries(CATEGORIES.map(c => [c, 'View' as PermLevel])) },
 ];
 
-const ROLE_COLORS = [GOLD, BLUE, GREEN, RED, AMBER, PURPLE, '#EC4899', '#14B8A6', '#F97316'];
+const ROLE_COLORS = [ROLE_HEX, ROLE_HEX, GREEN, RED, ROLE_HEX, PURPLE, '#EC4899', '#14B8A6', '#F97316'];
 
 /* ── view types for the two lightweight lookup lists ── */
 interface TenantUser {
@@ -221,7 +222,7 @@ function mapRole(row: any): Role {
     id: String(row.id),
     name: row.name ?? 'Untitled Role',
     description: row.description ?? '',
-    color: row.color || GOLD,
+    color: row.color || ROLE_HEX,
     isBuiltIn: !!row.is_builtin,
     permissions,
     createdAt: row.created_at ?? new Date().toISOString(),
@@ -793,7 +794,7 @@ export function AccessManager() {
       <h1 style={{ color: GOLD, fontSize: 26, margin: 0, marginBottom: 8 }}>Roles & Permissions</h1>
       <div style={{ ...card(), borderColor: RED }}>
         <p style={{ color: RED, margin: 0, marginBottom: 12 }}>Error: {error}</p>
-        <button onClick={loadData} style={btn(GOLD, BG)}>Retry</button>
+        <button onClick={loadData} style={btn(GOLD, '#0A0A00')}>Retry</button>
       </div>
     </div>
   );
@@ -808,7 +809,7 @@ export function AccessManager() {
             Manage access levels across {CATEGORIES.length} categories — {roles.length} roles configured
           </p>
         </div>
-        <button onClick={openCreateRole} style={{ ...btn(GOLD, '#241500'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px rgba(245,158,11,0.28)' }}>+ New Role</button>
+        <button onClick={openCreateRole} style={{ ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ New Role</button>
       </div>
 
       {/* tab bar */}
@@ -827,14 +828,14 @@ export function AccessManager() {
       {tab === 'team' && (
         <div>
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-            <input placeholder="Search people..." value={teamSearch} onChange={e => setTeamSearch(e.target.value)}
+            <input placeholder="Search people…" value={teamSearch} onChange={e => setTeamSearch(e.target.value)}
               style={{ ...inputStyle(), maxWidth: 280 }} />
             <span style={{ color: DIM, fontSize: 12 }}>
               {teamRows.length} {teamRows.length === 1 ? 'person' : 'people'} · {teamRows.filter(r => r.status === 'active').length} sign-ins · {teamRows.filter(r => r.status === 'invited').length} invited · {teamRows.filter(r => r.status === 'contact').length} project contacts
             </span>
             <div style={{ flex: 1 }} />
             <button onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, '#241500'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px rgba(245,158,11,0.28)' }}>+ Assign Role</button>
+            <button onClick={() => { setAssignUserId(''); setAssignRoleId(''); setAssignProjectId(''); setShowAssign(true); }} style={{ ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
           </div>
 
           <div style={{ ...card(), overflowX: 'auto' }}>
@@ -865,7 +866,7 @@ export function AccessManager() {
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={r.avatarUrl} alt="" style={{ width: 32, height: 32, borderRadius: 16, objectFit: 'cover', flexShrink: 0 }} />
                           ) : (
-                            <span style={{ width: 32, height: 32, borderRadius: 16, background: 'rgba(245,158,11,0.16)', color: GOLD,
+                            <span style={{ width: 32, height: 32, borderRadius: 16, background: 'var(--brand-primary-18)', color: GOLD,
                               display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, flexShrink: 0 }}>{ini}</span>
                           )}
                           <span style={{ display: 'inline-flex', flexDirection: 'column', lineHeight: 1.3 }}>
@@ -877,8 +878,8 @@ export function AccessManager() {
                       {/* Base role */}
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-                          color: isBypass ? '#241500' : DIM,
-                          background: isBypass ? `linear-gradient(135deg, ${GOLD}, #FBBF24)` : 'rgba(255,255,255,0.05)',
+                          color: isBypass ? '#0A0A00' : DIM,
+                          background: isBypass ? `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))` : 'rgba(255,255,255,0.05)',
                           border: isBypass ? 'none' : `1px solid ${BORDER}`, textTransform: 'capitalize' }}>
                           {r.baseRole || 'member'}
                         </span>
@@ -890,7 +891,7 @@ export function AccessManager() {
                         ) : r.status !== 'active' ? (
                           <span style={{ color: DIM, fontSize: 12 }}>{r.status === 'invited' ? 'No access until the invite is accepted' : 'No sign-in — project contact only'}</span>
                         ) : r.globalGrants.length === 0 && r.projectGrants.length === 0 ? (
-                          <span style={{ color: DIM, fontSize: 12 }}>Member default — View-only, Admin locked</span>
+                          <span style={{ color: DIM, fontSize: 12 }}>Member default — view-only, admin locked</span>
                         ) : (
                           <span style={{ display: 'inline-flex', gap: 6, flexWrap: 'wrap' }}>
                             {r.globalGrants.map(g => {
@@ -907,7 +908,7 @@ export function AccessManager() {
                             })}
                             {r.projectGrants.length > 0 && (
                               <span title={r.projectGrants.map(g => `${roles.find(x => x.id === g.roleId)?.name ?? 'Role'} @ ${g.projectName ?? 'Project'}`).join('\n')}
-                                style={{ display: 'inline-flex', alignItems: 'center', background: 'rgba(245,158,11,0.10)', border: `1px solid rgba(245,158,11,0.35)`,
+                                style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-35)`,
                                   borderRadius: 999, padding: '2px 9px', fontSize: 11, fontWeight: 700, color: AMBER }}>
                                 {r.projectGrants.length} project-scoped
                               </span>
@@ -930,13 +931,13 @@ export function AccessManager() {
                             color: GREEN, background: `${GREEN}18`, border: `1px solid ${GREEN}` }}>Active</span>
                         ) : r.status === 'invited' ? (
                           <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
-                            color: inviteExp?.expired ? RED : AMBER, background: inviteExp?.expired ? `${RED}18` : `${AMBER}18`,
+                            color: inviteExp?.expired ? RED : AMBER, background: inviteExp?.expired ? `${RED}18` : 'color-mix(in srgb, var(--warning) 9%, transparent)',
                             border: `1px solid ${inviteExp?.expired ? RED : AMBER}` }}>
-                            {inviteExp?.expired ? 'Invite expired' : `Invited · expires ${inviteExp?.label ?? ''}`}
+                            {inviteExp?.expired ? 'Invite Expired' : `Invited · Expires ${inviteExp?.label ?? ''}`}
                           </span>
                         ) : (
                           <span style={{ display: 'inline-block', padding: '2px 10px', borderRadius: 4, fontSize: 11, fontWeight: 700,
-                            color: DIM, background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}` }}>Project contact</span>
+                            color: DIM, background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}` }}>Project Contact</span>
                         )}
                       </td>
                       {/* Actions */}
@@ -946,7 +947,7 @@ export function AccessManager() {
                             <button onClick={() => openAssignFor(r.userId!)}
                               style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Assign Role</button>
                             <button onClick={() => resetUserPassword(r.userId!, r.name)}
-                              style={{ ...btn('transparent', DIM), padding: '6px 12px', marginLeft: 4 }}>Reset PW</button>
+                              style={{ ...btn('transparent', DIM), padding: '6px 12px', marginLeft: 4 }}>Reset Password</button>
                             {/* Destructive action last, and only for someone who
                                 is neither you nor the account owner — the server
                                 refuses both, so offering the button would only
@@ -964,7 +965,7 @@ export function AccessManager() {
                               style={{ ...btn('transparent', RED), padding: '6px 12px', marginLeft: 4 }}>Cancel</button>
                           </>
                         ) : (
-                          <span style={{ color: DIM, fontSize: 11.5 }}>no sign-in</span>
+                          <span style={{ color: DIM, fontSize: 11.5 }}>No sign-in</span>
                         )}
                       </td>
                     </tr>
@@ -1007,12 +1008,12 @@ export function AccessManager() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       {r.isBuiltIn && (
-                        <span style={{ background: `${BLUE}22`, color: BLUE, fontSize: 10, fontWeight: 700,
-                          padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase' }}>Built-in</span>
+                        <span style={{ background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)', color: BLUE, fontSize: 10, fontWeight: 700,
+                          padding: '2px 8px', borderRadius: 4 }}>Built-In</span>
                       )}
                       {!r.isBuiltIn && (
                         <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 10, fontWeight: 700,
-                          padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase' }}>Custom</span>
+                          padding: '2px 8px', borderRadius: 4 }}>Custom</span>
                       )}
                       <span style={{ color: DIM, fontSize: 11 }}>{count} user{count !== 1 ? 's' : ''}</span>
                     </div>
@@ -1033,8 +1034,8 @@ export function AccessManager() {
                       <div style={{ width: 16, height: 16, borderRadius: '50%', background: selectedRole.color }} />
                       <h2 style={{ color: TEXT, margin: 0, fontSize: 20 }}>{selectedRole.name}</h2>
                       {selectedRole.isBuiltIn ? (
-                        <span style={{ background: `${BLUE}22`, color: BLUE, fontSize: 10, fontWeight: 700,
-                          padding: '2px 8px', borderRadius: 4 }}>BUILT-IN</span>
+                        <span style={{ background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)', color: BLUE, fontSize: 10, fontWeight: 700,
+                          padding: '2px 8px', borderRadius: 4 }}>Built-In</span>
                       ) : (
                         <span style={{ background: `${PURPLE}22`, color: PURPLE, fontSize: 10, fontWeight: 700,
                           padding: '2px 8px', borderRadius: 4 }}>CUSTOM</span>
@@ -1138,7 +1139,7 @@ export function AccessManager() {
                       <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color }} />
                       <span style={{ color: TEXT, fontWeight: 600, fontSize: 11 }}>{r.name}</span>
                       {r.isBuiltIn ? (
-                        <span style={{ color: BLUE, fontSize: 9, fontWeight: 700 }}>BUILT-IN</span>
+                        <span style={{ color: BLUE, fontSize: 9, fontWeight: 700 }}>Built-In</span>
                       ) : (
                         <span style={{ color: PURPLE, fontSize: 9, fontWeight: 700 }}>CUSTOM</span>
                       )}
@@ -1161,7 +1162,7 @@ export function AccessManager() {
                         <span style={{
                           display: 'inline-block', padding: '3px 10px', borderRadius: 4, fontSize: 11,
                           fontWeight: 600, color: level === 'None' ? DIM : '#fff',
-                          background: level === 'None' ? `${DIM}15` : `${permLevelColor(level)}22`,
+                          background: level === 'None' ? `${DIM}15` : `color-mix(in srgb, ${permLevelColor(level)} 13%, transparent)`,
                           border: `1px solid ${level === 'None' ? 'transparent' : permLevelColor(level)}`,
                         }}>{level === 'Full' ? 'Full' : level}</span>
                       </td>
@@ -1184,7 +1185,7 @@ export function AccessManager() {
       {tab === 'users' && (
         <div>
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
-            <input placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)}
+            <input placeholder="Search users…" value={userSearch} onChange={e => setUserSearch(e.target.value)}
               style={{ ...inputStyle(), maxWidth: 260 }} />
             <select value={filterRoleId} onChange={e => setFilterRoleId(e.target.value)}
               style={{ ...inputStyle(), maxWidth: 200 }}>
@@ -1193,7 +1194,7 @@ export function AccessManager() {
             </select>
             <div style={{ flex: 1 }} />
             <button onClick={() => setShowInvite(true)} style={{ ...btn('transparent', GOLD), background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))', border: `1px solid ${BORDER}` }}>+ Invite User</button>
-            <button onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, '#241500'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px rgba(245,158,11,0.28)' }}>+ Assign Role</button>
+            <button onClick={() => setShowAssign(true)} style={{ ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)' }}>+ Assign Role</button>
           </div>
 
           {/* ── Pending sent invites (expiry countdown + cancel / resend) ── */}
@@ -1282,7 +1283,7 @@ export function AccessManager() {
                       <td style={{ padding: '10px 12px', color: DIM, fontSize: 12 }}>{a.assignedBy}</td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <button onClick={() => resetUserPassword(a.userId, a.userName)}
-                          style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Reset PW</button>
+                          style={{ ...btn('transparent', GOLD), padding: '6px 12px' }}>Reset Password</button>
                         <button onClick={() => removeAssignment(a.id)}
                           style={{ ...btn('transparent', RED), padding: '6px 12px', marginLeft: 8 }}>Remove</button>
                       </td>
@@ -1302,7 +1303,7 @@ export function AccessManager() {
             <div style={{ flex: 1 }}>
               <label style={labelStyle()}>Role A</label>
               <select value={compareA} onChange={e => setCompareA(e.target.value)} style={inputStyle()}>
-                <option value="">Select role...</option>
+                <option value="">Select role…</option>
                 {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
@@ -1310,7 +1311,7 @@ export function AccessManager() {
             <div style={{ flex: 1 }}>
               <label style={labelStyle()}>Role B</label>
               <select value={compareB} onChange={e => setCompareB(e.target.value)} style={inputStyle()}>
-                <option value="">Select role...</option>
+                <option value="">Select role…</option>
                 {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
@@ -1349,7 +1350,7 @@ export function AccessManager() {
                         <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500, borderBottom: `1px solid ${BORDER}15` }}>{cat}</td>
                         <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid ${BORDER}15` }}>
                           <span style={{ padding: '3px 12px', borderRadius: 4, fontSize: 12, fontWeight: 600,
-                            color: lA === 'None' ? DIM : '#fff', background: `${permLevelColor(lA)}22`,
+                            color: lA === 'None' ? DIM : '#fff', background: `color-mix(in srgb, ${permLevelColor(lA)} 13%, transparent)`,
                             border: `1px solid ${permLevelColor(lA)}` }}>{lA}</span>
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid ${BORDER}15` }}>
@@ -1361,7 +1362,7 @@ export function AccessManager() {
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid ${BORDER}15` }}>
                           <span style={{ padding: '3px 12px', borderRadius: 4, fontSize: 12, fontWeight: 600,
-                            color: lB === 'None' ? DIM : '#fff', background: `${permLevelColor(lB)}22`,
+                            color: lB === 'None' ? DIM : '#fff', background: `color-mix(in srgb, ${permLevelColor(lB)} 13%, transparent)`,
                             border: `1px solid ${permLevelColor(lB)}` }}>{lB}</span>
                         </td>
                       </tr>
@@ -1453,7 +1454,7 @@ export function AccessManager() {
         <div style={{ marginBottom: 18 }}>
           <label style={labelStyle()}>Description</label>
           <textarea value={formDesc} onChange={e => setFormDesc(e.target.value)}
-            placeholder="Describe what this role is for..." rows={2}
+            placeholder="Describe what this role is for…" rows={2}
             style={{ ...inputStyle(), resize: 'vertical' }} />
         </div>
 
@@ -1505,7 +1506,7 @@ export function AccessManager() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowRoleModal(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={saveRole} disabled={!formName.trim()} style={{
-            ...btn(GOLD, '#241500'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px rgba(245,158,11,0.28)', opacity: formName.trim() ? 1 : 0.5,
+            ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: formName.trim() ? 1 : 0.5,
           }}>{editRoleId ? 'Save Changes' : 'Create Role'}</button>
         </div>
       </Modal>
@@ -1515,7 +1516,7 @@ export function AccessManager() {
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle()}>User</label>
           <select value={assignUserId} onChange={e => setAssignUserId(e.target.value)} style={inputStyle()}>
-            <option value="">Select user...</option>
+            <option value="">Select user…</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.name}{u.email ? ` (${u.email})` : ''}</option>)}
           </select>
           {users.length === 0 && (
@@ -1525,14 +1526,14 @@ export function AccessManager() {
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle()}>Role</label>
           <select value={assignRoleId} onChange={e => setAssignRoleId(e.target.value)} style={inputStyle()}>
-            <option value="">Select role...</option>
+            <option value="">Select role…</option>
             {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div style={{ marginBottom: 20 }}>
-          <label style={labelStyle()}>Project Scope (optional)</label>
+          <label style={labelStyle()}>Project Scope (Optional)</label>
           <select value={assignProjectId} onChange={e => setAssignProjectId(e.target.value)} style={inputStyle()}>
-            <option value="">Global (all projects)</option>
+            <option value="">Global (All Projects)</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <p style={{ color: DIM, fontSize: 11, marginTop: 4 }}>Leave as Global to apply this role across all projects.</p>
@@ -1540,7 +1541,7 @@ export function AccessManager() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowAssign(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={assignRole} disabled={!assignUserId || !assignRoleId} style={{
-            ...btn(GOLD, '#241500'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px rgba(245,158,11,0.28)', opacity: assignUserId && assignRoleId ? 1 : 0.5,
+            ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: assignUserId && assignRoleId ? 1 : 0.5,
           }}>Assign</button>
         </div>
       </Modal>
@@ -1569,7 +1570,7 @@ export function AccessManager() {
         <div style={{ marginBottom: 20 }}>
           <label style={labelStyle()}>Role</label>
           <select value={inviteRole} onChange={e => setInviteRole(e.target.value)} style={inputStyle()}>
-            <option value="">Member (default)</option>
+            <option value="">Member (Default)</option>
             {roles.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
           </select>
           {/* Role clarity — what the selected role can actually do, before sending */}
@@ -1578,7 +1579,7 @@ export function AccessManager() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <span style={{ width: 8, height: 8, borderRadius: 4, background: inviteRoleObj.color, flexShrink: 0 }} />
                 <span style={{ color: TEXT, fontSize: 12.5, fontWeight: 700 }}>{inviteRoleObj.name}</span>
-                {inviteRoleObj.isBuiltIn && <span style={{ color: DIM, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Built-in</span>}
+                {inviteRoleObj.isBuiltIn && <span style={{ color: DIM, fontSize: 10, fontWeight: 700 }}>Built-In</span>}
               </div>
               {inviteRoleObj.description && <p style={{ color: DIM, fontSize: 11.5, margin: '0 0 6px', lineHeight: 1.45 }}>{inviteRoleObj.description}</p>}
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -1601,7 +1602,7 @@ export function AccessManager() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
           <button onClick={() => setShowInvite(false)} style={btn(RAISED, DIM)}>Cancel</button>
           <button onClick={sendInvite} disabled={!inviteEmailValid} style={{
-            ...btn(GOLD, '#241500'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px rgba(245,158,11,0.28)', opacity: inviteEmailValid ? 1 : 0.5, cursor: inviteEmailValid ? 'pointer' : 'not-allowed',
+            ...btn(GOLD, '#0A0A00'), background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 10px var(--brand-primary-25)', opacity: inviteEmailValid ? 1 : 0.5, cursor: inviteEmailValid ? 'pointer' : 'not-allowed',
           }}>Send Invite</button>
         </div>
       </Modal>

@@ -3,12 +3,12 @@ import Link from 'next/link';
 import { City } from '@/lib/cities';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const DARK = '#0a0a0a';
-const GOLD = '#F59E0B';
+const DARK = 'var(--bg-base)';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
-const RAISED = '#141416';
+const RAISED = 'var(--bg-surface)';
 const GREEN = '#22c55e';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -21,14 +21,14 @@ function isCA(city: City) { return city.stateAbbr === 'CA'; }
 function isTX(city: City) { return city.stateAbbr === 'TX'; }
 
 function getLienStat(city: City): string {
-  if (isCA(city)) return 'CA-compliant lien waivers built in';
-  if (isTX(city)) return 'TX statutory lien waivers in seconds';
-  return 'All 50-state lien waivers included';
+  if (isCA(city)) return 'CA-Compliant Lien Waivers Built In';
+  if (isTX(city)) return 'TX Statutory Lien Waivers in Seconds';
+  return 'All 50-State Lien Waivers Included';
 }
 
 function getUnionStat(city: City): string {
-  if (isUnionHeavy(city)) return 'Certified payroll for union projects';
-  return 'Certified payroll WH-347 included';
+  if (isUnionHeavy(city)) return 'Certified Payroll for Union Projects';
+  return 'Certified Payroll WH-347 Included';
 }
 
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ const FEATURES: Feature[] = [
     icon: <IconBlueprint />,
     title: () => 'AI Blueprint Takeoff',
     desc: (city) => `Upload any PDF blueprint. Sage reads every dimension, calculates all materials, and generates a full bid estimate in under 60 seconds — faster than any ${city.name} estimator working by hand.`,
-    pill: 'AI-powered',
+    pill: 'AI-Powered',
   },
   {
     icon: <IconDollar />,
@@ -100,7 +100,7 @@ const FEATURES: Feature[] = [
     icon: <IconLock />,
     title: (city) => `Lien Waivers — ${city.state}-Compliant`,
     desc: (city) => `Conditional & unconditional, partial & final. ${city.state} statutory language baked in. Send, sign, and track — no paper, no fax, no compliance gaps.`,
-    pill: 'All 50 states',
+    pill: 'All 50 States',
   },
   {
     icon: <IconPayroll />,
@@ -118,18 +118,18 @@ const FEATURES: Feature[] = [
     icon: <IconChart />,
     title: () => 'Bid Intelligence AI',
     desc: (city) => `AI scores every bid opportunity 0–100 based on your win history, ${city.name} market conditions, and margin targets. Stop chasing bad bids.`,
-    pill: 'Win rate AI',
+    pill: 'Win Rate AI',
   },
 ];
 
 // ── Comparison rows ───────────────────────────────────────────────────────────
 
 const COMPARISON_ROWS = (city: City) => [
-  { feature: 'Blueprint takeoff', manual: '4–8 hours', saguaro: '41 seconds' },
-  { feature: 'Lien waivers', manual: 'Word/PDF manual', saguaro: `Digital, ${city.state}-compliant` },
-  { feature: 'AIA pay apps', manual: '1–2 hours per app', saguaro: '60 seconds' },
-  { feature: 'Field logs', manual: 'Paper forms', saguaro: 'Mobile app, offline-capable' },
-  { feature: 'Bid tracking', manual: 'Spreadsheet', saguaro: 'AI win-rate scoring' },
+  { feature: 'Blueprint Takeoff', manual: '4–8 hours', saguaro: '41 seconds' },
+  { feature: 'Lien Waivers', manual: 'Word/PDF manual', saguaro: `Digital, ${city.state}-compliant` },
+  { feature: 'AIA Pay Apps', manual: '1–2 hours per app', saguaro: '60 seconds' },
+  { feature: 'Field Logs', manual: 'Paper forms', saguaro: 'Mobile app, offline-capable' },
+  { feature: 'Bid Tracking', manual: 'Spreadsheet', saguaro: 'AI win-rate scoring' },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -217,15 +217,15 @@ export default function CityLandingPage({ city }: { city: City }) {
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }} aria-label="Saguaro Control Systems — home">
               <img src="/logo-full.jpg" alt="Saguaro Control Systems" style={{ height: '34px', width: 'auto', objectFit: 'contain', borderRadius: '4px' }} />
               <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                <span style={{ fontWeight: 600, fontSize: '14px', letterSpacing: '0.1em', color: TEXT }}>SAGUARO</span>
-                <span style={{ fontSize: '7px', color: '#CBD5E1', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
+                <span style={{ fontWeight: 600, fontSize: '14px', color: TEXT }}>Saguaro</span>
+                <span style={{ fontSize: '7px', color: '#CBD5E1', fontWeight: 600 }}>Control Systems</span>
               </span>
             </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Link href="/login" style={{ padding: '7px 16px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 400, textDecoration: 'none' }}>
                 Log In
               </Link>
-              <Link href="/signup" style={{ padding: '7px 16px', background: GOLD, border: 'none', borderRadius: '6px', color: DARK, fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>
+              <Link href="/signup" style={{ padding: '7px 16px', background: GOLD, border: 'none', borderRadius: '6px', color: '#0A0A00', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>
                 Free Trial
               </Link>
             </div>
@@ -240,7 +240,7 @@ export default function CityLandingPage({ city }: { city: City }) {
               display: 'inline-flex', alignItems: 'center', gap: '8px',
               background: 'transparent', border: '1px solid rgba(255,255,255,0.14)',
               borderRadius: '999px', padding: '6px 16px',
-              fontSize: '11px', fontWeight: 600, letterSpacing: '0.12em', color: DIM, textTransform: 'uppercase',
+              fontSize: '11px', fontWeight: 600, color: DIM,
             }}>
               <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: GOLD, display: 'inline-block', flexShrink: 0 }} />
               Serving {city.name.toUpperCase()}, {city.stateAbbr} Contractors
@@ -266,7 +266,7 @@ export default function CityLandingPage({ city }: { city: City }) {
             <Link href="/signup" style={{
               display: 'inline-flex', alignItems: 'center', gap: '8px',
               padding: '11px 24px', background: GOLD,
-              borderRadius: '8px', color: DARK, fontWeight: 600, fontSize: '14px',
+              borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '14px',
               textDecoration: 'none', letterSpacing: '0.01em',
             }}>
               Start Free Trial
@@ -304,15 +304,15 @@ export default function CityLandingPage({ city }: { city: City }) {
         {/* ── Local context bar ────────────────────────────────────────────── */}
         <section style={{ background: RAISED, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 24px' }}>
-            <h2 style={{ textAlign: 'center', fontSize: '13px', fontWeight: 600, letterSpacing: '0.12em', color: DIM, textTransform: 'uppercase', marginBottom: '40px' }}>
+            <h2 style={{ textAlign: 'center', fontSize: '13px', fontWeight: 600, color: DIM, marginBottom: '40px' }}>
               Why {city.name} GCs Choose Saguaro
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
               {[
                 { label: lienStat, sub: `Built for ${city.state} statutory requirements` },
-                { label: `AI Takeoff in 41 seconds`, sub: 'Any PDF — floor plan, structural, MEP' },
-                { label: `Flat pricing — your whole ${city.name} team`, sub: 'No per-seat fees, no surprises' },
-                { label: `Mobile field app works on ${city.name} job sites offline`, sub: 'GPS clock-in, daily logs, no signal needed' },
+                { label: `AI Takeoff in 41 Seconds`, sub: 'Any PDF — floor plan, structural, MEP' },
+                { label: `Flat Pricing — Your Whole ${city.name} Team`, sub: 'No per-seat fees, no surprises' },
+                { label: `Mobile Field App Works on ${city.name} Job Sites Offline`, sub: 'GPS clock-in, daily logs, no signal needed' },
                 { label: unionStat, sub: 'DOL WH-347, Davis-Bacon wage rates' },
               ].map((item, i) => (
                 <div key={i} style={{
@@ -332,7 +332,7 @@ export default function CityLandingPage({ city }: { city: City }) {
         {/* ── Features ─────────────────────────────────────────────────────── */}
         <section id="features" style={{ maxWidth: '1100px', margin: '0 auto', padding: '72px 24px' }}>
           <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <p style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.12em', color: DIM, textTransform: 'uppercase', marginBottom: '12px' }}>
+            <p style={{ fontSize: '12px', fontWeight: 600, color: DIM, marginBottom: '12px' }}>
               Everything in one platform
             </p>
             <h2 style={{ fontSize: 'clamp(19px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: '-0.02em' }}>
@@ -377,7 +377,7 @@ export default function CityLandingPage({ city }: { city: City }) {
         <section style={{ background: RAISED, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
           <div style={{ maxWidth: '860px', margin: '0 auto', padding: '72px 24px' }}>
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-              <p style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.12em', color: DIM, textTransform: 'uppercase', marginBottom: '12px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 600, color: DIM, marginBottom: '12px' }}>
                 The honest comparison
               </p>
               <h2 style={{ fontSize: 'clamp(19px, 3vw, 22px)', fontWeight: 600, margin: 0, letterSpacing: '-0.02em' }}>
@@ -387,10 +387,10 @@ export default function CityLandingPage({ city }: { city: City }) {
 
             <div style={{ borderRadius: '12px', border: `1px solid ${BORDER}`, overflow: 'hidden' }}>
               {/* Header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: '#1c1c1e', padding: '14px 20px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Feature</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1', letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>Manual / Excel</span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: TEXT, letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>Saguaro Control Systems</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', background: 'var(--bg-surface-2)', padding: '14px 20px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1' }}>Feature</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#CBD5E1', textAlign: 'center' }}>Manual / Excel</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: TEXT, textAlign: 'center' }}>Saguaro Control Systems</span>
               </div>
 
               {COMPARISON_ROWS(city).map((row, i) => (
@@ -418,7 +418,7 @@ export default function CityLandingPage({ city }: { city: City }) {
 
         {/* ── Final CTA ────────────────────────────────────────────────────── */}
         <section style={{ maxWidth: '860px', margin: '0 auto', padding: '80px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.12em', color: DIM, textTransform: 'uppercase', marginBottom: '16px' }}>
+          <p style={{ fontSize: '12px', fontWeight: 600, color: DIM, marginBottom: '16px' }}>
             Ready to get started?
           </p>
           <h2 style={{ fontSize: 'clamp(22px, 4vw, 30px)', fontWeight: 600, margin: '0 0 16px', letterSpacing: '-0.02em', lineHeight: 1.15 }}>
@@ -431,7 +431,7 @@ export default function CityLandingPage({ city }: { city: City }) {
             <Link href="/signup" style={{
               display: 'inline-flex', alignItems: 'center', gap: '8px',
               padding: '11px 24px', background: GOLD,
-              borderRadius: '8px', color: DARK, fontWeight: 600, fontSize: '14px',
+              borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '14px',
               textDecoration: 'none', letterSpacing: '0.01em',
             }}>
               Start Free Trial
@@ -451,11 +451,11 @@ export default function CityLandingPage({ city }: { city: City }) {
         </section>
 
         {/* ── Footer ───────────────────────────────────────────────────────── */}
-        <footer style={{ borderTop: `1px solid ${BORDER}`, background: '#141416' }}>
+        <footer style={{ borderTop: `1px solid ${BORDER}`, background: 'var(--bg-surface)' }}>
           <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '32px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
               <img src="/logo-full.jpg" alt="Saguaro" style={{ height: '28px', width: 'auto', borderRadius: '3px' }} />
-              <span style={{ fontWeight: 600, fontSize: '13px', letterSpacing: '0.1em', color: TEXT }}>SAGUARO</span>
+              <span style={{ fontWeight: 600, fontSize: '13px', letterSpacing: '0.1em', color: TEXT }}>Saguaro</span>
             </Link>
             <nav style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
               {[

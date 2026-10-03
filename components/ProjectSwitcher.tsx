@@ -4,9 +4,9 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 import { useProjects } from '@/lib/hooks/useProjects';
 
-const GOLD = '#F59E0B';
-const DARK = '#141416';
-const RAISED = '#1c1c1e';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-surface)';
+const RAISED = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -220,7 +220,7 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
             <input
               ref={inputRef}
               type="text"
-              placeholder="Search projects..."
+              placeholder="Search projects…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               style={{
@@ -264,7 +264,7 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
         >
           {loading && (
             <div style={{ padding: '24px 16px', textAlign: 'center', color: DIM, fontSize: 14 }}>
-              Loading projects...
+              Loading projects…
             </div>
           )}
 
@@ -317,7 +317,7 @@ export default function ProjectSwitcher({ open, onClose }: ProjectSwitcherProps)
                             fontSize: 11,
                             fontWeight: 600,
                             color: statusColor(project.status),
-                            background: `${statusColor(project.status)}18`,
+                            background: `color-mix(in srgb, ${statusColor(project.status)} 9%, transparent)`,
                             padding: '1px 7px',
                             borderRadius: 4,
                             textTransform: 'capitalize',

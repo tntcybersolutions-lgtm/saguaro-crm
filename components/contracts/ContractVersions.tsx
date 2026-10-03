@@ -14,11 +14,11 @@ import { ClockCounterClockwise, ArrowRight, FileText } from '@phosphor-icons/rea
  * real documents — but say so instead of showing a diff that would be wrong.
  */
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
-const CARD = '#0D1D2E';
+const CARD = 'var(--bg-surface)';
 const GREEN = '#22C55E';
 const RED = '#EF4444';
 
@@ -90,7 +90,7 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: GOLD, fontSize: 11, fontWeight: 800 }}>
         <ClockCounterClockwise size={14} weight="bold" color={GOLD} />
         History
       </div>
@@ -128,7 +128,7 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {v.changes.map((c) => (
                       <div key={c.key} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: 8, fontSize: 13 }}>
-                        <span style={{ color: DIM, minWidth: 150, fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <span style={{ color: DIM, minWidth: 150, fontSize: 11.5, fontWeight: 700 }}>
                           {c.label}
                         </span>
                         <span style={{ color: c.kind === 'added' ? DIM : RED, textDecoration: c.kind === 'added' ? 'none' : 'line-through', maxWidth: 320, wordBreak: 'break-word' }}>
@@ -157,7 +157,7 @@ export default function ContractVersions({ projectId, kind, refreshKey = 0 }: Co
                   rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 40, color: GOLD, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
                 >
-                  <FileText size={14} weight="duotone" color={GOLD} /> Open version {v.version}
+                  <FileText size={14} weight="duotone" color={GOLD} /> Open Version {v.version}
                 </a>
               </div>
             )}

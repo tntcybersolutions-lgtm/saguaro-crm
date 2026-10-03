@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-const GOLD = '#F59E0B';
-const DARK = '#1c1c1e';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-surface-2)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -43,7 +43,7 @@ function uid(): string {
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>
+    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>
       {children}
     </label>
   );
@@ -59,8 +59,8 @@ function inputStyle(extra?: React.CSSProperties): React.CSSProperties {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
-    pending: { bg: 'rgba(245, 158, 11,.12)', color: GOLD, label: 'Pending' },
-    viewed: { bg: 'rgba(245,158,11,.12)', color: '#F59E0B', label: 'Viewed' },
+    pending: { bg: 'var(--brand-primary-12)', color: GOLD, label: 'Pending' },
+    viewed: { bg: 'var(--brand-primary-12)', color: 'var(--brand-primary)', label: 'Viewed' },
     signed: { bg: 'rgba(61,214,140,.12)', color: GREEN, label: 'Signed' },
   };
   const s = map[status] || map.pending;
@@ -198,7 +198,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         + Add Another Signer
       </button>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button type="button" disabled={!canProceedStep1} onClick={() => setStep(2)} style={{ background: canProceedStep1 ? GOLD : BORDER, border: 'none', borderRadius: 8, padding: '10px 28px', color: canProceedStep1 ? '#000' : DIM, fontSize: 13, fontWeight: 800, cursor: canProceedStep1 ? 'pointer' : 'not-allowed' }}>
+        <button type="button" disabled={!canProceedStep1} onClick={() => setStep(2)} style={{ background: canProceedStep1 ? GOLD : BORDER, border: 'none', borderRadius: 8, padding: '10px 28px', color: canProceedStep1 ? '#0A0A00' : DIM, fontSize: 13, fontWeight: 800, cursor: canProceedStep1 ? 'pointer' : 'not-allowed' }}>
           Next: Add Message
         </button>
       </div>
@@ -209,7 +209,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
   const renderStep2 = () => (
     <div>
       <p style={{ margin: '0 0 16px', fontSize: 14, color: TEXT, fontWeight: 600 }}>Add Message (Optional)</p>
-      <Label>Message to signers</Label>
+      <Label>Message to Signers</Label>
       <textarea
         value={message}
         onChange={e => setMessage(e.target.value)}
@@ -221,7 +221,7 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         <button type="button" onClick={() => setStep(1)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 20px', color: DIM, fontSize: 13, cursor: 'pointer' }}>
           Back
         </button>
-        <button type="button" onClick={() => setStep(3)} style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 28px', color: '#000', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
+        <button type="button" onClick={() => setStep(3)} style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 28px', color: '#0A0A00', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
           Next: Review & Send
         </button>
       </div>
@@ -256,8 +256,8 @@ export default function ESignatureFlow({ projectId, docType, docTitle, pdfUrl, o
         <button type="button" onClick={() => setStep(2)} style={{ background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 20px', color: DIM, fontSize: 13, cursor: 'pointer' }}>
           Back
         </button>
-        <button type="button" disabled={sending} onClick={handleSend} style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 28px', color: '#000', fontSize: 13, fontWeight: 800, cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.6 : 1 }}>
-          {sending ? 'Sending...' : 'Send for Signature'}
+        <button type="button" disabled={sending} onClick={handleSend} style={{ background: GOLD, border: 'none', borderRadius: 8, padding: '10px 28px', color: '#0A0A00', fontSize: 13, fontWeight: 800, cursor: sending ? 'not-allowed' : 'pointer', opacity: sending ? 0.6 : 1 }}>
+          {sending ? 'Sending…' : 'Send for Signature'}
         </button>
       </div>
     </div>

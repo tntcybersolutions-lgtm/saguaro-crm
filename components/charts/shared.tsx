@@ -5,7 +5,7 @@
  *
  * Every chart in this folder draws its colors, card chrome, number formatting
  * and tooltip from here so the set reads as ONE system and matches the premium
- * surface (components/ui/premium.tsx): the same gold (#F59E0B brand) / blue
+ * surface (components/ui/premium.tsx): the same gold (var(--brand-primary) brand) / blue
  * (#3B82F6 sales) accents, the same milled-plate card, tabular-nums, uppercase
  * micro-labels, and the readability tokens from globals.css (--text-*,
  * --brand-primary, --bg-surface, --border-*). Colors resolve through the CSS
@@ -19,8 +19,8 @@ import React from 'react';
 
 // ─── Color tokens (resolve through globals.css :root, with safe fallbacks) ──
 export const CHART = {
-  gold: 'var(--brand-primary, #F59E0B)',
-  goldStrong: 'var(--brand-primary-strong, #FBBF24)',
+  gold: 'var(--brand-primary)',
+  goldStrong: 'var(--brand-primary-strong)',
   blue: '#3B82F6',
   blueStrong: '#60A5FA',
   green: 'var(--success, #22C55E)',
@@ -54,7 +54,7 @@ export function accentColors(accent: ChartAccent): AccentPair {
  *  Ordered gold → blue → green → violet → cyan → orange → pink → slate, so a
  *  money chart leads with the brand hue and never collides series on hue. */
 export const CATEGORICAL: readonly string[] = [
-  'var(--brand-primary, #F59E0B)',
+  'var(--brand-primary)',
   '#3B82F6',
   '#22C55E',
   '#A78BFA',
@@ -70,14 +70,12 @@ export const CARD_SURFACE =
 
 /** Milled-plate card — drop + top light + inset perimeter ring, as StatCard. */
 export const cardShadow =
-  '0 14px 34px -24px rgba(245,158,11,0.30), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03)';
+  '0 14px 34px -24px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03)';
 
 /** Uppercase micro-label used across the premium surface. */
 export const microLabel: React.CSSProperties = {
   fontSize: 11,
   fontWeight: 700,
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase',
   color: CHART.textTertiary,
 };
 

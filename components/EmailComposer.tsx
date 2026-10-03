@@ -7,14 +7,14 @@
 import React, { useState, useEffect } from 'react';
 import { enqueue } from '@/lib/field-db';
 
-const GOLD = '#F59E0B';
-const RAISED = '#0D1D2E';
+const GOLD = 'var(--brand-primary)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = '#1E3A5F';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const GREEN = '#22C55E';
 const RED = '#EF4444';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 
 interface EmailComposerProps {
   projectId: string;
@@ -176,7 +176,7 @@ export default function EmailComposer({
         </div>
 
         {!online && (
-          <div style={{ background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.3)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#F59E0B', fontWeight: 600, textAlign: 'center' }}>
+          <div style={{ background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: 'var(--brand-primary)', fontWeight: 600, textAlign: 'center' }}>
             Offline — email will be queued and sent when connected
           </div>
         )}
@@ -193,7 +193,7 @@ export default function EmailComposer({
               style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
             />
             <button onClick={addToRecipient} style={{
-              background: 'rgba(245,158,11,.12)', border: `1px solid rgba(245,158,11,.3)`,
+              background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-25)`,
               borderRadius: 8, padding: '0 14px', color: BLUE, fontSize: 13, fontWeight: 700,
               cursor: 'pointer', flexShrink: 0,
             }}>
@@ -204,7 +204,7 @@ export default function EmailComposer({
             <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
               {to.split(',').map((email, i) => email.trim() && (
                 <span key={i} style={{
-                  background: 'rgba(245, 158, 11,.1)', border: '1px solid rgba(245, 158, 11,.25)',
+                  background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)',
                   borderRadius: 6, padding: '3px 8px', fontSize: 12, color: GOLD, fontWeight: 600,
                   display: 'inline-flex', alignItems: 'center', gap: 4,
                 }}>
@@ -259,7 +259,7 @@ export default function EmailComposer({
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            placeholder="Email body..."
+            placeholder="Email body…"
             rows={8}
             style={{ ...inputStyle, resize: 'vertical' }}
           />
@@ -269,7 +269,7 @@ export default function EmailComposer({
         {module && itemId && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
-            background: 'rgba(245,158,11,.06)', border: `1px solid rgba(245,158,11,.2)`,
+            background: 'var(--brand-primary-08)', border: `1px solid var(--brand-primary-18)`,
             borderRadius: 8, marginBottom: 14, fontSize: 12, color: BLUE,
           }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={14} height={14}>
@@ -311,7 +311,7 @@ export default function EmailComposer({
             }}
           >
             {status === 'sending' ? (
-              'Sending...'
+              'Sending…'
             ) : (
               <>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={18} height={18}>

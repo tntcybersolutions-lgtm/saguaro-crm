@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 
-const GOLD = '#F59E0B', DARK = '#141416', RAISED = '#1c1c1e', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
-const RED = '#c03030', AMBER = '#f59e0b';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface)', RAISED = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
+const RED = '#c03030', AMBER = 'var(--warning)';
 
 interface Notification {
   id: string;
@@ -63,9 +63,9 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 const SNOOZE_OPTIONS = [
-  { label: '1 hour', getTime: () => new Date(Date.now() + 60 * 60 * 1000).toISOString() },
+  { label: '1 Hour', getTime: () => new Date(Date.now() + 60 * 60 * 1000).toISOString() },
   { label: 'Tomorrow', getTime: () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); return d.toISOString(); } },
-  { label: 'Next week', getTime: () => { const d = new Date(); d.setDate(d.getDate() + 7); d.setHours(9, 0, 0, 0); return d.toISOString(); } },
+  { label: 'Next Week', getTime: () => { const d = new Date(); d.setDate(d.getDate() + 7); d.setHours(9, 0, 0, 0); return d.toISOString(); } },
 ];
 
 function timeAgo(dateStr: string): string {
@@ -311,7 +311,7 @@ export default function NotificationCenter() {
               {/* Focus Mode Toggle */}
               <button
                 onClick={toggleFocusMode}
-                title={focusMode ? 'Focus Mode ON - only high urgency' : 'Focus Mode OFF - showing all'}
+                title={focusMode ? 'Focus mode on — only high urgency' : 'Focus mode off — showing all'}
                 style={{
                   background: focusMode ? GOLD : 'transparent',
                   border: `1px solid ${focusMode ? GOLD : BORDER}`,
@@ -319,7 +319,7 @@ export default function NotificationCenter() {
                   padding: '3px 8px',
                   fontSize: 11,
                   fontWeight: 600,
-                  color: focusMode ? DARK : DIM,
+                  color: focusMode ? '#0A0A00' : DIM,
                   cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}
@@ -381,14 +381,14 @@ export default function NotificationCenter() {
           {/* Notification List */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
             {loading && (
-              <div style={{ padding: 24, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading...</div>
+              <div style={{ padding: 24, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading…</div>
             )}
 
             {!loading && filtered.length === 0 && (
               <div style={{ padding: 40, textAlign: 'center' }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>{'\u2705'}</div>
-                <div style={{ color: DIM, fontSize: 14, fontWeight: 600 }}>All caught up!</div>
-                <div style={{ color: BORDER, fontSize: 12, marginTop: 4 }}>No notifications to show</div>
+                <div style={{ color: DIM, fontSize: 14, fontWeight: 600 }}>All caught up.</div>
+                <div style={{ color: BORDER, fontSize: 12, marginTop: 4 }}>No notifications to show.</div>
               </div>
             )}
 
@@ -401,14 +401,14 @@ export default function NotificationCenter() {
                   gap: 10,
                   padding: '10px 16px',
                   borderBottom: `1px solid ${BORDER}`,
-                  backgroundColor: n.read ? 'transparent' : 'rgba(245, 158, 11,0.04)',
+                  backgroundColor: n.read ? 'transparent' : 'color-mix(in srgb, var(--brand-primary) 4%, transparent)',
                   cursor: n.link ? 'pointer' : 'default',
                   transition: 'background 0.15s',
                   position: 'relative',
                 }}
                 onClick={() => handleClick(n)}
                 onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = RAISED; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = n.read ? 'transparent' : 'rgba(245, 158, 11,0.04)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.backgroundColor = n.read ? 'transparent' : 'color-mix(in srgb, var(--brand-primary) 4%, transparent)'; }}
               >
                 {/* Urgency dot */}
                 {n.urgency === 'high' && (

@@ -146,7 +146,7 @@ export function WinLossBar({
           >
             {winRate == null ? '—' : `${winRate.toFixed(winRate % 1 === 0 ? 0 : 1)}%`}
           </div>
-          <div style={{ ...microLabel, marginTop: 4 }}>Win rate</div>
+          <div style={{ ...microLabel, marginTop: 4 }}>Win Rate</div>
         </div>
       </div>
 

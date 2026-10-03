@@ -55,7 +55,7 @@ const toPersistedSort = (s: SortingState): PersistedSort =>
 export default function DataTable<T extends Record<string, any>>({
   data,
   columns,
-  searchPlaceholder = 'Search...',
+  searchPlaceholder = 'Search…',
   searchKey,
   loading = false,
   emptyMessage = 'No records found',
@@ -202,8 +202,6 @@ export default function DataTable<T extends Record<string, any>>({
                           fontSize: 10.5,
                           fontWeight: font.weight.bold,
                           color: colors.textDim,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.09em',
                           cursor: canSort ? 'pointer' : 'default',
                           userSelect: 'none',
                           whiteSpace: 'nowrap',

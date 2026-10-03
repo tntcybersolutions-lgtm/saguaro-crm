@@ -100,14 +100,14 @@ export default function ProjectOwnershipCard({
   }
   const customerOptions = (customers ?? []).map((c) => ({ value: c.id, label: c.email ? `${c.name || 'Unnamed'} — ${c.email}` : (c.name || 'Unnamed') }));
   if (project.customer_id && customers && !customers.some((c) => c.id === project.customer_id)) {
-    customerOptions.unshift({ value: project.customer_id, label: 'Linked customer' });
+    customerOptions.unshift({ value: project.customer_id, label: 'Linked Customer' });
   }
 
   return (
     <Card title="Ownership" subtitle="Who runs this job, and whose job it is">
       <FormGrid cols={2}>
         <Field
-          label="Assigned to"
+          label="Assigned To"
           hint={users && users.length === 0 ? <>No team members yet — <Link href="/app/people?tab=access">invite your team</Link>.</> : 'Anyone who can sign in. They get it in My Work and a notification.'}
         >
           <Select

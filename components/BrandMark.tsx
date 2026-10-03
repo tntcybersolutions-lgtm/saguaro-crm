@@ -62,7 +62,7 @@ export default function BrandMark({
               fontWeight: 800,
               fontSize: s.name,
               letterSpacing: '0.11em',
-              background: 'linear-gradient(90deg,#F59E0B,#FBBF24)',
+              background: 'linear-gradient(90deg,var(--brand-primary),var(--brand-primary-strong))',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
@@ -76,9 +76,7 @@ export default function BrandMark({
             style={{
               fontSize: s.sub,
               color: '#CBD5E1',
-              letterSpacing: '0.2em',
               fontWeight: 700,
-              textTransform: 'uppercase',
               whiteSpace: 'nowrap',
             }}
           >

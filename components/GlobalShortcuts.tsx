@@ -3,9 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -204,7 +204,7 @@ export default function GlobalShortcuts({ onProjectSwitch }: GlobalShortcutsProp
             textAlign: 'center',
           }}
         >
-          Press <strong style={{ color: GOLD }}>Esc</strong> or click outside to close
+          Press <strong style={{ color: GOLD }}>Esc</strong> or click outside to close.
         </p>
       </div>
     </div>

@@ -35,7 +35,7 @@ export default function MarketingNav() {
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
         background: scrolled ? 'rgba(20,20,22,0.97)' : 'rgba(20,20,22,0.85)',
         backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-        borderBottom: scrolled ? '1px solid rgba(245, 158, 11,0.25)' : '1px solid rgba(255,255,255,0.12)',
+        borderBottom: scrolled ? '1px solid var(--brand-primary-25)' : '1px solid rgba(255,255,255,0.12)',
         transition: 'all 0.3s ease', height: '58px',
         display: 'flex', alignItems: 'center',
       }}>
@@ -51,7 +51,7 @@ export default function MarketingNav() {
             {navLinks.map(link => (
               <button key={link.label} onClick={() => scrollTo(link.href)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.65)', fontSize: '13px', fontWeight: 400, letterSpacing: '0.04em', padding: 0, transition: 'color 0.2s' }}
-                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = '#F59E0B'}
+                onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = 'var(--brand-primary)'}
                 onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.65)'}
               >{link.label}</button>
             ))}
@@ -59,7 +59,7 @@ export default function MarketingNav() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="mn-desktop">
             <Link href="/login" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 400, textDecoration: 'none' }}>Log In</Link>
-            <Link href="/signup" style={{ padding: '7px 18px', background: '#F59E0B', border: 'none', borderRadius: '6px', color: '#000', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
+            <Link href="/signup" style={{ padding: '7px 18px', background: 'var(--brand-primary)', border: 'none', borderRadius: '6px', color: '#0A0A00', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="mn-mobile"
@@ -78,7 +78,7 @@ export default function MarketingNav() {
           ))}
           <div style={{ padding: '16px' }}>
             <Link href="/signup" onClick={() => setMobileOpen(false)}
-              style={{ display: 'block', textAlign: 'center', padding: '13px', background: '#F59E0B', borderRadius: '9px', color: '#000', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
+              style={{ display: 'block', textAlign: 'center', padding: '13px', background: 'var(--brand-primary)', borderRadius: '9px', color: '#0A0A00', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
               Start Free Trial →
             </Link>
           </div>

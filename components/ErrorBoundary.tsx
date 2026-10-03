@@ -23,7 +23,7 @@ import { Component, ErrorInfo, ReactNode } from 'react';
 interface Props { children: ReactNode; fallback?: ReactNode; }
 interface State { hasError: boolean; error: Error | null; }
 
-const GOLD = '#C8960F';
+const GOLD = 'var(--brand-primary)';
 const DIM = '#8BAAC8';
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -46,9 +46,9 @@ export default class ErrorBoundary extends Component<Props, State> {
       const msg = this.state.error?.message;
       return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 260, padding: '40px 24px' }}>
-          <div style={{ width: '100%', maxWidth: 560, background: '#161b22', border: '1px solid rgba(200,150,15,0.24)', borderRadius: 16, padding: 28 }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>
-              Something broke on this screen
+          <div style={{ width: '100%', maxWidth: 560, background: 'var(--bg-surface)', border: '1px solid var(--brand-primary-25)', borderRadius: 16, padding: 28 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 10 }}>
+              Something Broke on This Screen
             </div>
             <div style={{ color: '#F0F4FF', fontWeight: 700, fontSize: 19, marginBottom: 10, letterSpacing: '-0.01em' }}>
               This section could not load.
@@ -61,8 +61,8 @@ export default class ErrorBoundary extends Component<Props, State> {
             {/* The message itself — without it a client crash leaves no trace
                 anywhere, since nothing about it reaches the server. */}
             <div style={{ background: 'rgba(0,0,0,0.42)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
-              <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: DIM, marginBottom: 6 }}>
-                What went wrong
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: DIM, marginBottom: 6 }}>
+                What Went Wrong
               </div>
               <code style={{ display: 'block', fontSize: 12.5, lineHeight: 1.5, color: '#F4F4F5', wordBreak: 'break-word', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
                 {msg || 'No error message was provided.'}
@@ -74,9 +74,9 @@ export default class ErrorBoundary extends Component<Props, State> {
                   re-runs the same render and throws again. */}
               <button
                 onClick={() => this.setState({ hasError: false, error: null })}
-                style={{ height: 40, padding: '0 20px', background: GOLD, border: `1px solid ${GOLD}`, borderRadius: 10, color: '#1A1205', fontWeight: 700, cursor: 'pointer', fontSize: 13.5 }}
+                style={{ height: 40, padding: '0 20px', background: GOLD, border: `1px solid ${GOLD}`, borderRadius: 10, color: '#0A0A00', fontWeight: 700, cursor: 'pointer', fontSize: 13.5 }}
               >
-                Try again
+                Try Again
               </button>
               <a
                 href="/app"

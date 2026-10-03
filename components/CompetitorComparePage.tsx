@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import type { Competitor } from '@/lib/competitors';
 
-const DARK = '#0a0a0a';
-const GOLD = '#F59E0B';
+const DARK = 'var(--bg-base)';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
-const RAISED = '#141416';
+const RAISED = 'var(--bg-surface)';
 const GREEN = '#22c55e';
 const RED = '#ef4444';
 
@@ -46,14 +46,14 @@ function Nav() {
               style={{ height: '36px', width: 'auto', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }}
             />
             <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-              <span style={{ fontWeight: 600, fontSize: '14px', letterSpacing: '0.1em', color: TEXT }}>SAGUARO</span>
-              <span style={{ fontSize: '7px', color: '#CBD5E1', letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
+              <span style={{ fontWeight: 600, fontSize: '14px', color: TEXT }}>Saguaro</span>
+              <span style={{ fontSize: '7px', color: '#CBD5E1', fontWeight: 600 }}>Control Systems</span>
             </span>
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} className="ccp-desktop">
             <Link href="/login" style={{ padding: '7px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '6px', color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: 400, textDecoration: 'none' }}>Log In</Link>
-            <Link href="/signup" style={{ padding: '7px 18px', background: '#F59E0B', border: 'none', borderRadius: '6px', color: '#000', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
+            <Link href="/signup" style={{ padding: '7px 18px', background: 'var(--brand-primary)', border: 'none', borderRadius: '6px', color: '#0A0A00', fontSize: '13px', fontWeight: 600, letterSpacing: '0.03em', textDecoration: 'none' }}>Free Trial</Link>
           </div>
 
           <button
@@ -75,7 +75,7 @@ function Nav() {
               Log In
             </Link>
             <Link href="/signup" onClick={() => setMobileOpen(false)}
-              style={{ display: 'block', textAlign: 'center', padding: '13px', background: '#F59E0B', borderRadius: '9px', color: '#000', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
+              style={{ display: 'block', textAlign: 'center', padding: '13px', background: 'var(--brand-primary)', borderRadius: '9px', color: '#0A0A00', fontWeight: 600, textDecoration: 'none', fontSize: '15px' }}>
               Start Free Trial
             </Link>
           </div>
@@ -203,7 +203,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
           display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '24px',
           padding: '5px 14px', borderRadius: '99px',
           background: 'transparent', border: '1px solid rgba(255,255,255,0.14)',
-          fontSize: '11px', fontWeight: 600, color: DIM, letterSpacing: '0.1em', textTransform: 'uppercase',
+          fontSize: '11px', fontWeight: 600, color: DIM,
         }}>
           <span style={{ width: '5px', height: '5px', borderRadius: '99px', background: GOLD }} />
           Saguaro vs {competitor.name}
@@ -228,7 +228,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/signup" style={{
             padding: '11px 24px', background: GOLD,
-            borderRadius: '8px', color: DARK, fontWeight: 600, fontSize: '14px',
+            borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '14px',
             textDecoration: 'none',
           }}>
             Start Free Trial
@@ -266,7 +266,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
       {/* ── Feature comparison table ───────────────────────────────────────── */}
       <section id="comparison" style={{ maxWidth: '1040px', margin: '0 auto', padding: '88px 24px' }}>
         <h2 style={{ fontSize: 'clamp(20px,3vw,24px)', fontWeight: 600, textAlign: 'center', marginBottom: '10px', letterSpacing: '-0.01em' }}>
-          Saguaro vs {competitor.name}: feature by feature
+          Saguaro vs {competitor.name}: Feature by Feature
         </h2>
         <p style={{ color: DIM, textAlign: 'center', marginBottom: '40px', fontSize: '15px' }}>
           {competitor.saguaroAdvantage}
@@ -276,16 +276,16 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
           {/* Table header */}
           <div style={{
             display: 'grid', gridTemplateColumns: '1.8fr 1fr 1fr',
-            background: '#1c1c1e', borderBottom: `1px solid ${BORDER}`,
+            background: 'var(--bg-surface-2)', borderBottom: `1px solid ${BORDER}`,
           }}>
-            <div style={{ padding: '18px 24px', fontSize: '12px', fontWeight: 600, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div style={{ padding: '18px 24px', fontSize: '12px', fontWeight: 600, color: DIM }}>
               Feature
             </div>
             <div style={{
               padding: '18px 24px', borderLeft: `1px solid ${BORDER}`, textAlign: 'center',
               background: 'rgba(255,255,255,0.03)',
             }}>
-              <div style={{ fontWeight: 600, fontSize: '15px', color: TEXT, letterSpacing: '0.04em' }}>SAGUARO</div>
+              <div style={{ fontWeight: 600, fontSize: '15px', color: TEXT, letterSpacing: '0.04em' }}>Saguaro</div>
             </div>
             <div style={{ padding: '18px 24px', borderLeft: `1px solid ${BORDER}`, textAlign: 'center' }}>
               <div style={{ fontWeight: 600, fontSize: '15px', color: DIM }}>{competitor.name}</div>
@@ -344,7 +344,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
       <section style={{ background: RAISED, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: '88px 24px' }}>
         <div style={{ maxWidth: '760px', margin: '0 auto' }}>
           <h2 style={{ fontSize: 'clamp(20px,3vw,22px)', fontWeight: 600, textAlign: 'center', marginBottom: '10px' }}>
-            Where {competitor.name} falls short
+            Where {competitor.name} Falls Short
           </h2>
           <p style={{ color: DIM, textAlign: 'center', marginBottom: '40px', fontSize: '15px' }}>
             {competitor.name} is best for: {competitor.bestFor}
@@ -388,7 +388,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
           <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href={migrationLink} style={{
               padding: '11px 24px', background: GOLD,
-              borderRadius: '8px', color: DARK, fontWeight: 600, fontSize: '14px',
+              borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '14px',
               textDecoration: 'none',
             }}>
               Start Free Migration
@@ -422,7 +422,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
           <Link href="/signup" style={{
             display: 'inline-block', padding: '12px 28px',
             background: GOLD,
-            borderRadius: '8px', color: DARK, fontWeight: 600, fontSize: '15px',
+            borderRadius: '8px', color: '#0A0A00', fontWeight: 600, fontSize: '15px',
             textDecoration: 'none',
           }}>
             Start Free Trial — No CC Required
@@ -444,7 +444,7 @@ export default function CompetitorComparePage({ competitor }: { competitor: Comp
       <footer style={{ background: DARK, borderTop: `1px solid ${BORDER}`, padding: '32px 24px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-            <span style={{ fontWeight: 600, fontSize: '14px', color: TEXT, letterSpacing: '0.08em' }}>SAGUARO</span>
+            <span style={{ fontWeight: 600, fontSize: '14px', color: TEXT, letterSpacing: '0.08em' }}>Saguaro</span>
             <span style={{ fontSize: '11px', color: DIM }}>Control Systems</span>
           </Link>
           <div style={{ fontSize: '12px', color: DIM }}>

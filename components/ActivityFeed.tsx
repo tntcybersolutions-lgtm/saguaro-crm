@@ -20,7 +20,7 @@ import {
 } from '@phosphor-icons/react';
 import { SectionCard, PremiumEmpty } from '@/components/ui/premium';
 
-const GOLD = '#F59E0B', DIM = 'rgba(255,255,255,0.62)', TEXT = '#FFFFFF';
+const GOLD = 'var(--brand-primary)', DIM = 'rgba(255,255,255,0.62)', TEXT = '#FFFFFF';
 const BORDER = 'rgba(255,255,255,0.10)', RED = '#FF3B30', GREEN = '#34C759';
 
 interface Activity {
@@ -146,7 +146,7 @@ export default function ActivityFeed({
               <span style={{
                 flexShrink: 0, width: 28, height: 28, borderRadius: 8, marginTop: 1,
                 display: 'grid', placeItems: 'center',
-                background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.22)',
+                background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)',
               }}>
                 {iconFor(a.entity_type, a.action)}
               </span>
