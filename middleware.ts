@@ -99,9 +99,8 @@ export async function middleware(request: NextRequest) {
   // logged-in rep opens the app onto "Start free trial / Pricing" and is lost —
   // the #1 "confused on open" complaint. Logged-out visitors still get
   // marketing; redirecting to /app sends a logged-out device to /login via the
-  // /app guard below. (Pointing the native server.url at /app is the follow-up
-  // for the logged-out-on-device case; this fixes the common signed-in case
-  // without a native rebuild.)
+  // /app guard below. The native server.url now starts at /app as well, which
+  // covers a logged-out device; this still covers older installed builds.
   if (pathname === '/') {
     const at = request.cookies.get('sb-access-token')?.value;
     const rt = request.cookies.get('sb-refresh-token')?.value;

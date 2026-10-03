@@ -20,7 +20,10 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // Override with env var for dev / CI; falls back to the production domain.
 // Must match desktop exactly (saguarocontrol.net), NOT a *.vercel.app alias,
 // or iOS logs in against a different origin than the web app expects.
-const PRODUCTION_URL = 'https://www.saguarocontrol.net';
+// Starts at /app, not the marketing homepage: a signed-in device lands in the
+// app and a signed-out one is sent to /login by middleware. Same origin, so
+// auth and navigation are unchanged.
+const PRODUCTION_URL = 'https://www.saguarocontrol.net/app';
 const serverUrl = process.env.CAPACITOR_SERVER_URL ?? PRODUCTION_URL;
 
 const config: CapacitorConfig = {
