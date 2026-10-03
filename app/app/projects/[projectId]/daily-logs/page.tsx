@@ -14,8 +14,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',BLUE='#F59E0B';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GREEN='#1a8a4a',RED='#c03030',BLUE='var(--brand-primary)';
 
 const WEATHER_OPTS = ['Clear','Partly Cloudy','Overcast','Rain','Thunderstorm','Snow','Fog','Windy'];
 
@@ -40,7 +40,7 @@ const EMPTY: Record<string,any> = {
 };
 
 const inp: React.CSSProperties = {
-  width:'100%', padding:'9px 12px', background:'#1c1c1e',
+  width:'100%', padding:'9px 12px', background:'var(--bg-surface-2)',
   border:'1px solid rgba(255,255,255,0.12)', borderRadius:7, color:'#FFFFFF',
   fontSize:13, outline:'none', boxSizing:'border-box',
 };
@@ -48,8 +48,7 @@ const inp: React.CSSProperties = {
 function Field({label,hint,children}:{label:React.ReactNode;hint?:React.ReactNode;children:React.ReactNode}){
   return (
     <div>
-      <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
-        textTransform:'uppercase',letterSpacing:.5,marginBottom:5}}>{label}</label>
+      <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM, marginBottom:5}}>{label}</label>
       {children}
       {hint && <div style={{fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:4,lineHeight:1.45}}>{hint}</div>}
     </div>
@@ -59,11 +58,10 @@ function Field({label,hint,children}:{label:React.ReactNode;hint?:React.ReactNod
 function Section({label,value,warn}:{label:string;value?:string;warn?:boolean}){
   if(!value?.trim()) return null;
   return (
-    <div style={{background:warn?'rgba(192,48,48,.07)':'#141416',
+    <div style={{background:warn?'rgba(192,48,48,.07)':'var(--bg-surface)',
       border:`1px solid ${warn?'rgba(192,48,48,.25)':'rgba(255,255,255,0.12)'}`,
       borderRadius:8,padding:'12px 14px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:warn?'#f87171':DIM,
-        textTransform:'uppercase',letterSpacing:.5,marginBottom:6}}>{label}</div>
+      <div style={{fontSize:10,fontWeight:700,color:warn?'#f87171':DIM, marginBottom:6}}>{label}</div>
       <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{value}</div>
     </div>
   );
@@ -95,9 +93,9 @@ function ChipEditor({items,onChange,placeholder}:{items:string[];onChange:(v:str
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
           style={{...inp,flex:1}} placeholder={placeholder}/>
         <button onClick={add} disabled={!draft.trim()}
-          style={{padding:'0 14px',background:draft.trim()?'rgba(245,158,11,.14)':'rgba(255,255,255,0.05)',
-            border:`1px solid ${draft.trim()?'rgba(245,158,11,.4)':'rgba(255,255,255,0.12)'}`,borderRadius:7,
-            color:draft.trim()?'#FBBF24':'rgba(255,255,255,0.35)',fontSize:12.5,fontWeight:700,
+          style={{padding:'0 14px',background:draft.trim()?'var(--brand-primary-12)':'rgba(255,255,255,0.05)',
+            border:`1px solid ${draft.trim()?'color-mix(in srgb, var(--brand-primary) 40%, transparent)':'rgba(255,255,255,0.12)'}`,borderRadius:7,
+            color:draft.trim()?'var(--brand-primary-strong)':'rgba(255,255,255,0.35)',fontSize:12.5,fontWeight:700,
             cursor:draft.trim()?'pointer':'default'}}>
           Add
         </button>
@@ -158,9 +156,9 @@ function ManpowerEditor({rows,onChange}:{rows:any[];onChange:(v:any[])=>void}){
           onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();add();}}}
           style={{...inp,width:70,textAlign:'center'}} placeholder="0"/>
         <button onClick={add} disabled={!trade.trim()}
-          style={{padding:'0 14px',background:trade.trim()?'rgba(245,158,11,.14)':'rgba(255,255,255,0.05)',
-            border:`1px solid ${trade.trim()?'rgba(245,158,11,.4)':'rgba(255,255,255,0.12)'}`,borderRadius:7,
-            color:trade.trim()?'#FBBF24':'rgba(255,255,255,0.35)',fontSize:12.5,fontWeight:700,
+          style={{padding:'0 14px',background:trade.trim()?'var(--brand-primary-12)':'rgba(255,255,255,0.05)',
+            border:`1px solid ${trade.trim()?'color-mix(in srgb, var(--brand-primary) 40%, transparent)':'rgba(255,255,255,0.12)'}`,borderRadius:7,
+            color:trade.trim()?'var(--brand-primary-strong)':'rgba(255,255,255,0.35)',fontSize:12.5,fontWeight:700,
             cursor:trade.trim()?'pointer':'default'}}>
           Add
         </button>
@@ -358,7 +356,7 @@ export default function DailyLogsPage(){
         setLogs(prev=>[{id:tempId,...payload,project_id:projectId},...prev]
           .sort((a:any,b:any)=>(b.log_date||'').localeCompare(a.log_date||'')));
         closePanel();
-        showToast('Daily log created');
+        showToast('Daily log created.');
         const r = await fetch('/api/daily-logs/create',{
           method:'POST',
           headers:{...h,'Content-Type':'application/json'},
@@ -377,7 +375,7 @@ export default function DailyLogsPage(){
         const prevLog = selected;
         setLogs(prev=>prev.map((l:any)=>l.id===prevLog.id?{...l,...payload}:l));
         closePanel();
-        showToast('Log updated');
+        showToast('Log updated.');
         const r = await fetch(`/api/daily-logs/${prevLog.id}`,{
           method:'PUT',
           headers:{...h,'Content-Type':'application/json'},
@@ -403,7 +401,7 @@ export default function DailyLogsPage(){
     // rollback restores the exact list on failure.
     const prevLogs = logs;
     setLogs(prev=>prev.filter((l:any)=>l.id!==log.id));
-    showToast('Log deleted');
+    showToast('Log deleted.');
     closePanel();
     setDeleting(true);
     try{
@@ -411,7 +409,7 @@ export default function DailyLogsPage(){
       const dr = await fetch(`/api/daily-logs/${log.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
       revalidate();
-    }catch{setLogs(prevLogs);showToast('Delete failed','error');}
+    }catch{setLogs(prevLogs);showToast('Delete failed. Please try again.','error');}
     finally{setDeleting(false);}
   }
 
@@ -448,7 +446,7 @@ export default function DailyLogsPage(){
         <PremiumSurface maxWidth={2200}>
           {/* Header */}
           <ModuleHero
-            eyebrow="FIELD REPORTS"
+            eyebrow="Field Reports"
             eyebrowIcon={<ClipboardText size={13} weight="fill" color={moduleAccent('daily').hex}/>}
             title="Daily"
             accent="Logs"
@@ -469,7 +467,7 @@ export default function DailyLogsPage(){
                 <button onClick={openAutoFill} disabled={prefilling}
                   style={{...goldButtonStyle,padding:'13px 24px',fontSize:14.5,opacity:prefilling?.7:1}}
                   className="pmBtn">
-                  <Sparkle size={17} weight="fill"/> {prefilling?'Assembling draft…':'Auto-fill Today'}
+                  <Sparkle size={17} weight="fill"/> {prefilling?'Assembling draft…':'Auto-Fill Today'}
                 </button>
               </>
             }
@@ -478,14 +476,14 @@ export default function DailyLogsPage(){
           {/* KPIs */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
             <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="Total Logs" value={String(logs.length)} accent={GOLD} sub="all field reports" delay={0.02} href={`/app/projects/${projectId}/daily-logs`}/>
+              label="Total Logs" value={String(logs.length)} accent={GOLD} sub="All field reports" delay={0.02} href={`/app/projects/${projectId}/daily-logs`}/>
             <StatCard icon={<CalendarBlank size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="This Month" value={String(thisMonth)} sub="logged this month" delay={0.06} href={`/app/projects/${projectId}/daily-logs`}/>
+              label="This Month" value={String(thisMonth)} sub="Logged this month" delay={0.06} href={`/app/projects/${projectId}/daily-logs`}/>
             <StatCard icon={<HardHat size={19} weight="duotone" color={moduleAccent('daily').hex}/>}
-              label="Avg Crew / Day" value={String(avgCrew)} accent={GOLD} sub="workers on site" delay={0.10} href={`/app/projects/${projectId}/crews`}/>
+              label="Avg Crew / Day" value={String(avgCrew)} accent={GOLD} sub="Workers on site" delay={0.10} href={`/app/projects/${projectId}/crews`}/>
             <StatCard icon={<WarningCircle size={19} weight="duotone" color={delayDays>0?RED:DIM}/>}
               label="Days w/ Delays" value={String(delayDays)} accent={delayDays>0?RED:undefined}
-              sub={delayDays>0?'flagged delays':'none flagged'} delay={0.14} href={`/app/projects/${projectId}/daily-logs`}/>
+              sub={delayDays>0?'Flagged delays':'None flagged'} delay={0.14} href={`/app/projects/${projectId}/daily-logs`}/>
           </div>
 
           {/* What the system already knows about this job */}
@@ -496,12 +494,12 @@ export default function DailyLogsPage(){
               <StatStrip items={[
                 {href: `/app/projects/${projectId}/daily-logs`, label:'Last Log', value: lastLog ? fmtDay(lastLog) : 'None yet',
                   accent: gap>0 ? '#f87171' : (lastLog ? '#3dd68c' : undefined),
-                  sub: lastLog ? (gap>0 ? `${gap} workday${gap===1?'':'s'} unlogged` : 'record is current') : 'start the record'},
-                {href: `/app/projects/${projectId}/daily-logs`, label:'% Complete', value:`${Number(ctx.project?.percentComplete)||0}%`, sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g,' ') : 'project status'},
-                {href: `/app/projects/${projectId}/schedule`, label:'Schedule Tasks', value:String(ctx.counts?.scheduleTasks??0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'on the schedule'},
-                {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs', value:String(ctx.counts?.openRfis??0), accent:(Number(ctx.counts?.openRfis)||0)>0?'#FBBF24':undefined, sub:'awaiting answers'},
-                {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals', value:String(ctx.counts?.openSubmittals??0), sub:'in review'},
-                {href: `/app/projects/${projectId}/punch-list`, label:'Open Punch', value:String(ctx.counts?.openPunch??0), accent:(Number(ctx.counts?.openPunch)||0)>0?'#f87171':undefined, sub:'items to close'},
+                  sub: lastLog ? (gap>0 ? `${gap} workday${gap===1?'':'s'} unlogged` : 'Record is current') : 'Start the record'},
+                {href: `/app/projects/${projectId}/daily-logs`, label:'% Complete', value:`${Number(ctx.project?.percentComplete)||0}%`, sub: ctx.project?.status ? String(ctx.project.status).replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase()) : 'Project status'},
+                {href: `/app/projects/${projectId}/schedule`, label:'Schedule Tasks', value:String(ctx.counts?.scheduleTasks??0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'On the schedule'},
+                {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs', value:String(ctx.counts?.openRfis??0), accent:(Number(ctx.counts?.openRfis)||0)>0?'var(--brand-primary-strong)':undefined, sub:'Awaiting answers'},
+                {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals', value:String(ctx.counts?.openSubmittals??0), sub:'In review'},
+                {href: `/app/projects/${projectId}/punch-list`, label:'Open Punch', value:String(ctx.counts?.openPunch??0), accent:(Number(ctx.counts?.openPunch)||0)>0?'#f87171':undefined, sub:'Items to close'},
               ]}/>
             );
           })()}
@@ -522,7 +520,7 @@ export default function DailyLogsPage(){
                 searchPlaceholder="Search logs by work, notes, or date…"
                 filters={[
                   {key:'month',label:'Month',value:monthFilter,onChange:setMonthFilter,
-                    allValue:'',allLabel:'All months',options:months},
+                    allValue:'',allLabel:'All Months',options:months},
                 ]}
                 count={{shown:filtered.length,total:logs.length}}
               />
@@ -540,7 +538,7 @@ export default function DailyLogsPage(){
               <div style={{padding:'8px 8px 20px'}}>
                 <PremiumEmpty
                   icon={<Clipboard size={30} weight="duotone" color={GOLD}/>}
-                  title={logs.length===0?'No daily logs yet':'No logs match your filters'}
+                  title={logs.length===0?'No Daily Logs Yet':'No Logs Match Your Filters'}
                   description={logs.length===0
                     ?'Start documenting your daily field activity.'
                     :'Try adjusting your search or month filter.'}
@@ -560,10 +558,10 @@ export default function DailyLogsPage(){
                   const isSel = selected?.id===log.id && mode==='view';
                   return (
                     <div key={log.id} onClick={()=>viewLog(log)}
-                      style={{background:isSel?'rgba(245, 158, 11,.08)':RAISED,
+                      style={{background:isSel?'var(--brand-primary-08)':RAISED,
                         border:`1px solid ${isSel?GOLD:BORDER}`,borderRadius:10,
                         padding:'14px 18px',cursor:'pointer',transition:'all .15s'}}
-                      onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='rgba(245, 158, 11,.4)';}}
+                      onMouseEnter={e=>{if(!isSel)e.currentTarget.style.borderColor='color-mix(in srgb, var(--brand-primary) 40%, transparent)';}}
                       onMouseLeave={e=>{if(!isSel)e.currentTarget.style.borderColor=BORDER;}}>
                       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
                         <div>
@@ -581,13 +579,13 @@ export default function DailyLogsPage(){
                         <div style={{display:'flex',gap:6,flexShrink:0}}>
                           {log.delays?.trim()&&(
                             <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:4,
-                              background:'rgba(192,48,48,.15)',color:'#f87171',textTransform:'uppercase',letterSpacing:.3}}>
+                              background:'rgba(192,48,48,.15)',color:'#f87171',letterSpacing:.3}}>
                               Delays
                             </span>
                           )}
                           {log.safety_notes?.trim()&&(
                             <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:4,
-                              background:'rgba(245, 158, 11,.15)',color:GOLD,textTransform:'uppercase',letterSpacing:.3}}>
+                              background:'color-mix(in srgb, var(--brand-primary) 15%, transparent)',color:GOLD,letterSpacing:.3}}>
                               Safety
                             </span>
                           )}
@@ -623,9 +621,9 @@ export default function DailyLogsPage(){
               {mode==='view'&&selected&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'rgba(245,158,11,.12)',
-                      border:`1px solid ${BLUE}44`,borderRadius:6,
-                      color:'#FBBF24',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',
+                      border:'1px solid var(--brand-primary-25)',borderRadius:6,
+                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deleteLog(selected)} disabled={deleting}
@@ -665,9 +663,9 @@ export default function DailyLogsPage(){
                       </div>
                       {prev && (
                         <div style={{marginTop:8,paddingTop:8,borderTop:`1px solid rgba(255,255,255,0.08)`}}>
-                          <InsightRow label="Prev crew" value={`${prev.crew_count||0} on site`}/>
-                          {prev.weather ? <InsightRow label="Prev weather" value={`${prev.weather}${prev.high_temp!=null?` · ${prev.high_temp}°/${prev.low_temp??'—'}°F`:''}`}/> : null}
-                          {prev.superintendent ? <InsightRow label="Prev super" value={prev.superintendent}/> : null}
+                          <InsightRow label="Prev Crew" value={`${prev.crew_count||0} on site`}/>
+                          {prev.weather ? <InsightRow label="Prev Weather" value={`${prev.weather}${prev.high_temp!=null?` · ${prev.high_temp}°/${prev.low_temp??'—'}°F`:''}`}/> : null}
+                          {prev.superintendent ? <InsightRow label="Prev Super" value={prev.superintendent}/> : null}
                         </div>
                       )}
                     </div>
@@ -692,7 +690,7 @@ export default function DailyLogsPage(){
                     whenever the fields are left blank. Say so, visibly. */}
                 {mode==='create'&&(
                   <div style={{display:'flex',gap:10,alignItems:'flex-start',
-                    background:'rgba(245,158,11,.07)',border:'1px solid rgba(245,158,11,.25)',
+                    background:'var(--brand-primary-08)',border:'1px solid var(--brand-primary-25)',
                     borderRadius:9,padding:'11px 13px'}}>
                     <CloudSun size={18} weight="fill" color={GOLD} style={{flexShrink:0,marginTop:1}}/>
                     <div style={{fontSize:12.5,color:TEXT,lineHeight:1.55}}>
@@ -707,7 +705,7 @@ export default function DailyLogsPage(){
                   <Field label="Weather">
                     <Suggest value={form.weather}
                       onChange={e=>setForm(f=>({...f,weather:e.target.value}))}
-                      style={inp} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty...'} options={['w']} />
+                      style={inp} placeholder={mode==='create'?'Auto (NWS)':'Clear, 10 mph W, dusty…'} options={['w']} />
                     </Field>
                   <Field label="High °F">
                     <input type="number" value={form.high_temp}
@@ -753,12 +751,12 @@ export default function DailyLogsPage(){
                 </Field>
 
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                  <Field label={<>Phase of Work{mode==='create'&&auto.carry&&!!form.phase_of_work&&<AutoChip label="CARRIED"/>}</>}>
+                  <Field label={<>Phase of Work{mode==='create'&&auto.carry&&!!form.phase_of_work&&<AutoChip label="Carried"/>}</>}>
                     <input value={form.phase_of_work}
                       onChange={e=>setForm(f=>({...f,phase_of_work:e.target.value}))}
                       style={inp} placeholder="Foundations, framing, MEP rough-in…"/>
                   </Field>
-                  <Field label={<>Equipment Notes{mode==='create'&&auto.carry&&!!form.equipment&&<AutoChip label="CARRIED"/>}</>}>
+                  <Field label={<>Equipment Notes{mode==='create'&&auto.carry&&!!form.equipment&&<AutoChip label="Carried"/>}</>}>
                     <input value={form.equipment}
                       onChange={e=>setForm(f=>({...f,equipment:e.target.value}))}
                       style={inp} placeholder="Hours, downtime, rentals…"/>
@@ -809,8 +807,8 @@ export default function DailyLogsPage(){
                 <div style={{display:'flex',gap:10,paddingTop:4}}>
                   <button onClick={save} disabled={saving}
                     style={{flex:1,padding:'11px 0',
-                      background:`linear-gradient(135deg,${GOLD},#FBBF24)`,
-                      border:'none',borderRadius:8,color:'#1C1C1E',
+                      background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
+                      border:'none',borderRadius:8,color:'#0A0A00',
                       fontSize:14,fontWeight:800,cursor:'pointer',opacity:saving?.6:1}}>
                     {saving?'Saving…':mode==='create'?'Create Log':'Save Changes'}
                   </button>
@@ -841,7 +839,7 @@ export default function DailyLogsPage(){
                 </div>
                 {Array.isArray(selected.manpower_by_trade)&&selected.manpower_by_trade.length>0&&(
                   <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:8}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:8}}>
                       Manpower by Trade
                     </div>
                     <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
@@ -858,7 +856,7 @@ export default function DailyLogsPage(){
                 )}
                 {Array.isArray(selected.subcontractors_on_site)&&selected.subcontractors_on_site.length>0&&(
                   <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:8}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:8}}>
                       Subcontractors On Site
                     </div>
                     <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
@@ -873,7 +871,7 @@ export default function DailyLogsPage(){
                 )}
                 {Array.isArray(selected.equipment_on_site)&&selected.equipment_on_site.length>0&&(
                   <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:8}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:8}}>
                       Equipment On Site
                     </div>
                     <div style={{display:'flex',flexWrap:'wrap',gap:6}}>

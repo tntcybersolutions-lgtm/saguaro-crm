@@ -15,7 +15,7 @@ import { ANCHOR_BID_DECISION } from '@/lib/suggestions';
 import { StatusPill } from '@/components/ui/Status';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -241,7 +241,7 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>Trade Name *</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Trade Name *</label>
                 <select value={w.trade} onChange={e => setField('trade', e.target.value)} style={{ ...inp, cursor: 'pointer' }}>
                   <option value="">— Select Trade —</option>
                   {w.trade && !SUB_TRADES.includes(w.trade) && <option value={w.trade}>{w.trade}</option>}
@@ -276,13 +276,13 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
                 })()}
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>Scope Summary</label>
-                <textarea value={w.scope} onChange={e => setField('scope', e.target.value)} placeholder="Describe the work scope..." rows={4} style={{ ...inp, resize: 'vertical' as const }} />
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Scope Summary</label>
+                <textarea value={w.scope} onChange={e => setField('scope', e.target.value)} placeholder="Describe the work scope…" rows={4} style={{ ...inp, resize: 'vertical' as const }} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>Bid Due Date{w.dueDate === defaultDue() && <AutoChip />}</label>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Bid Due Date{w.dueDate === defaultDue() && <AutoChip />}</label>
                 <SaguaroDatePicker value={w.dueDate} onChange={v => setField('dueDate', v)} style={inp} />
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>Defaulted two weeks out — subs typically need 10-15 business days to price a scope. Adjust freely.</div>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 }}>Defaulted two weeks out — subs typically need 10–15 business days to price a scope. Adjust freely.</div>
               </div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                 <input type="checkbox" checked={w.requiresBond} onChange={e => setField('requiresBond', e.target.checked)} style={{ width: 16, height: 16, accentColor: GOLD }} />
@@ -299,7 +299,7 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
                 <thead>
                   <tr style={{ background: DARK }}>
                     {['Description', 'Qty', 'Unit', 'Unit Price', ''].map(h => (
-                      <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
+                      <th key={h} style={{ padding: '8px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -341,23 +341,23 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
               )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
                 {w.suggestedSubs.map(sub => (
-                  <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: sub.checked ? 'rgba(245, 158, 11,.05)' : 'rgba(0,0,0,.02)', border: `1px solid ${sub.checked ? 'rgba(245, 158, 11,.3)' : BORDER}`, borderRadius: 8, cursor: 'pointer' }}>
+                  <label key={sub.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: sub.checked ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'rgba(0,0,0,.02)', border: `1px solid ${sub.checked ? 'color-mix(in srgb, var(--brand-primary) 30%, transparent)' : BORDER}`, borderRadius: 8, cursor: 'pointer' }}>
                     <input type="checkbox" checked={sub.checked} onChange={e => setW(prev => ({ ...prev, suggestedSubs: prev.suggestedSubs.map(s => s.id === sub.id ? { ...s, checked: e.target.checked } : s) }))} style={{ accentColor: GOLD, width: 16, height: 16 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: TEXT }}>{sub.name}</div>
                       {sub.email && <div style={{ fontSize: 11, color: DIM }}>{sub.email}</div>}
                     </div>
-                    {sub.recommended && <span style={{ fontSize: 10, background: 'rgba(245, 158, 11,.12)', color: GOLD, padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>RECOMMENDED</span>}
+                    {sub.recommended && <span style={{ fontSize: 10, background: 'var(--brand-primary-12)', color: GOLD, padding: '2px 7px', borderRadius: 4, fontWeight: 700 }}>Recommended</span>}
                   </label>
                 ))}
               </div>
 
               <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>Add by Email</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 10 }}>Add by Email</div>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                   <input value={w.addName} onChange={e => setField('addName', e.target.value)} placeholder="Name" style={{ ...inp, flex: 1 }} />
                   <input value={w.addEmail} onChange={e => setField('addEmail', e.target.value)} placeholder="email@company.com" style={{ ...inp, flex: 2 }} />
-                  <button onClick={addExtra} style={{ padding: '8px 14px', background: 'rgba(245, 158, 11,.1)', border: `1px solid rgba(245, 158, 11,.3)`, borderRadius: 7, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Add</button>
+                  <button onClick={addExtra} style={{ padding: '8px 14px', background: 'var(--brand-primary-08)', border: `1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)`, borderRadius: 7, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Add</button>
                 </div>
                 {w.extraInvites.map((ei, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'rgba(0,0,0,.02)', borderRadius: 6, marginBottom: 4, fontSize: 12, color: TEXT }}>
@@ -373,7 +373,7 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
           {step === 4 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '14px 18px' }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>Package Summary</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 10 }}>Package Summary</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
                   <div><span style={{ color: DIM }}>Trade: </span><span style={{ color: TEXT, fontWeight: 600 }}>{w.trade}</span></div>
                   <div><span style={{ color: DIM }}>Due: </span><span style={{ color: TEXT, fontWeight: 600 }}>{w.dueDate || 'TBD'}</span></div>
@@ -385,7 +385,7 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
               </div>
               {w.scope && (
                 <div style={{ background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '14px 18px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6 }}>Scope</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>Scope</div>
                   <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.6 }}>{w.scope}</div>
                 </div>
               )}
@@ -411,8 +411,8 @@ function WizardModal({ projectId, ctx, onClose, onCreated }: { projectId: string
               else handleSubmit();
             }}
             disabled={w.submitting}
-            style={{ padding: '9px 24px', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 8, color: '#1C1C1E', fontSize: 14, fontWeight: 800, cursor: w.submitting ? 'wait' : 'pointer', opacity: w.submitting ? 0.7 : 1 }}>
-            {step < 4 ? <>Next <ArrowRight size={14} weight="regular" color="#1C1C1E" style={{ verticalAlign: 'middle' }} /></> : w.submitting ? 'Creating...' : 'Create Bid Package'}
+            style={{ padding: '9px 24px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 8, color: '#0A0A00', fontSize: 14, fontWeight: 800, cursor: w.submitting ? 'wait' : 'pointer', opacity: w.submitting ? 0.7 : 1 }}>
+            {step < 4 ? <>Next <ArrowRight size={14} weight="regular" color="#0A0A00" style={{ verticalAlign: 'middle' }} /></> : w.submitting ? 'Creating…' : 'Create Bid Package'}
           </button>
         </div>
       </div>
@@ -498,11 +498,11 @@ export default function BidPackagesPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Procurement'}
-        eyebrowIcon={<Package size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<Package size={13} weight="fill" color={GOLD} />}
         title="Bid"
         accent="Packages"
         subtitle="Solicit, level, and award sub bids. Awards are W-9 and COI gated."
-        note="same scope, same page"
+        note="Same scope, same page"
         actions={
           <button onClick={() => setShowWizard(true)} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> Create Bid Package
@@ -516,8 +516,8 @@ export default function BidPackagesPage() {
           {href: `/app/projects/${projectId}/budget`,  label: 'Budget', value: fmt(budgetOriginal), sub: `${Number(ctx?.budget?.lineCount) || 0} budget lines` },
           {href: `/app/projects/${projectId}/bid-packages`,  label: 'Committed', value: fmt(budgetCommitted), sub: budgetOriginal > 0 ? `${Math.round((budgetCommitted / budgetOriginal) * 100)}% of budget` : 'POs + subcontracts' },
           {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded via Bids', value: fmt(awardedTotal), accent: awardedTotal > 0 ? GOLD : undefined, sub: `${totalAwarded} package${totalAwarded === 1 ? '' : 's'} placed` },
-          {href: `/app/projects/${projectId}/subs`,  label: 'Sub Roster', value: String(rosterCount), sub: rosterCount > 0 ? 'ready to invite' : 'invite by email works too' },
-          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Responses', value: `${totalSubmissions} / ${totalInvited}`, accent: totalSubmissions > 0 ? '#3dd68c' : undefined, sub: 'bids in vs invites out' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Sub Roster', value: String(rosterCount), sub: rosterCount > 0 ? 'Ready to invite' : 'Invite by email works too' },
+          {href: `/app/projects/${projectId}/bid-packages`,  label: 'Responses', value: `${totalSubmissions} / ${totalInvited}`, accent: totalSubmissions > 0 ? '#3dd68c' : undefined, sub: 'Bids in vs invites out' },
         ]} />
       )}
 
@@ -526,22 +526,22 @@ export default function BidPackagesPage() {
         <StatCard
           icon={<Package size={19} weight="duotone" color={GOLD} />}
           label="Total Packages" value={String(packages.length)} accent={GOLD}
-          sub="all statuses" delay={0.02}
+          sub="All statuses" delay={0.02}
          href={`/app/projects/${projectId}/bid-packages`}/>
         <StatCard
           icon={<Trophy size={19} weight="duotone" color="#45B37D" />}
           label="Awarded" value={String(totalAwarded)} accent="#45B37D"
-          sub="contracts placed" delay={0.06}
+          sub="Contracts placed" delay={0.06}
          href={`/app/projects/${projectId}/bid-packages`}/>
         <StatCard
           icon={<UsersThree size={19} weight="duotone" color={GOLD} />}
           label="Subs Invited" value={String(totalInvited)} accent={GOLD}
-          sub="across packages" delay={0.10}
+          sub="Across packages" delay={0.10}
          href={`/app/projects/${projectId}/bid-packages`}/>
         <StatCard
           icon={<Tray size={19} weight="duotone" color="#F0A63C" />}
           label="Bids Received" value={String(totalSubmissions)} accent={totalSubmissions > 0 ? '#F0A63C' : undefined}
-          sub="submitted" delay={0.14}
+          sub="Submitted" delay={0.14}
          href={`/app/projects/${projectId}/bid-packages`}/>
       </div>
 
@@ -561,7 +561,7 @@ export default function BidPackagesPage() {
                 <Skeleton width="55%" height={12} style={{ marginBottom: 12 }} />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
                   {[0, 1, 2, 3].map(j => (
-                    <div key={j} style={{ background: '#101011', padding: '9px 12px' }}>
+                    <div key={j} style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
                       <Skeleton width="80%" height={9} style={{ marginBottom: 6 }} />
                       <Skeleton width="50%" height={14} />
                     </div>
@@ -576,7 +576,7 @@ export default function BidPackagesPage() {
         <SectionCard flush>
           <PremiumEmpty
             icon={<Package size={30} weight="duotone" color={GOLD} />}
-            title="No bid packages yet"
+            title="No Bid Packages Yet"
             description={`A bid package sends one trade's scope to ${rosterCount > 0 ? `your ${rosterCount}-sub roster` : 'your subs'} with a portal link. Bids come back priced against your line items, leveling flags the spread, and the award is compliance-gated (W-9 + COI) before it books committed cost as a draft subcontract PO.`}
             action={
               <button onClick={() => setShowWizard(true)} style={goldButtonStyle} className="pmBtn">
@@ -608,35 +608,35 @@ export default function BidPackagesPage() {
                 <div className="pmHover" style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '16px 18px', boxShadow: '0 10px 30px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)', cursor: 'pointer' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, textTransform: 'uppercase', letterSpacing: 0.5 }}>{pkg.trade || 'General'}</div>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: GOLD }}>{pkg.trade || 'General'}</div>
                       <div style={{ fontSize: 15, fontWeight: 800, color: TEXT, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pkg.name || 'Untitled Package'}</div>
                     </div>
                     <StatusBadge status={pkg.status} />
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: DIM, marginBottom: 12, flexWrap: 'wrap' }}>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><CalendarBlank size={13} weight="regular" color={DIM} />{fmtDue(pkg.bid_due_date || (pkg as any).due_date)}</span>
-                    {due != null && !isAwarded && <span style={{ fontWeight: 700, color: due < 0 ? '#ff7070' : due <= 3 ? GOLD : DIM }}>{due < 0 ? `${Math.abs(due)}d overdue` : due === 0 ? 'due today' : `${due}d left`}</span>}
+                    {due != null && !isAwarded && <span style={{ fontWeight: 700, color: due < 0 ? '#ff7070' : due <= 3 ? GOLD : DIM }}>{due < 0 ? `${Math.abs(due)}d overdue` : due === 0 ? 'Due today' : `${due}d left`}</span>}
                     {pkg.jacket_pdf_url && <button type="button" onClick={e => { e.stopPropagation(); e.preventDefault(); openPdf({ url: pkg.jacket_pdf_url! }); }} style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', cursor: 'pointer', color: GOLD, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><FileText size={12} weight="regular" color={GOLD} />Jacket</button>}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
-                    <div style={{ background: '#101011', padding: '9px 12px' }}>
-                      <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>Invited / Responded</div>
+                    <div style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
+                      <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', marginBottom: 3 }}>Invited / Responded</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{invited} / <span style={{ color: responded > 0 ? '#3dd68c' : DIM }}>{responded}</span></div>
                     </div>
-                    <div style={{ background: '#101011', padding: '9px 12px' }}>
-                      <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>{isAwarded ? 'Awarded' : 'Low Bid'}</div>
+                    <div style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
+                      <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', marginBottom: 3 }}>{isAwarded ? 'Awarded' : 'Low Bid'}</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: isAwarded ? '#1db954' : low != null ? TEXT : DIM, fontVariantNumeric: 'tabular-nums', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isAwarded && awardedAmt > 0 ? fmt(awardedAmt) : low != null ? fmt(low) : '—'}</div>
                       {(isAwarded ? (cp?.awardedTo || (pkg as any).awarded_to) : det?.lowWho) && <div style={{ fontSize: 10.5, color: DIM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{isAwarded ? (cp?.awardedTo || (pkg as any).awarded_to) : det?.lowWho}</div>}
                     </div>
-                    <div style={{ background: '#101011', padding: '9px 12px' }}>
-                      <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>Spread</div>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: spread != null ? spreadColor(spread) : DIM }}>{spread != null ? `${Math.round(spread)}%` : responded === 1 ? 'needs 2 bids' : '—'}</div>
-                      {spread != null && <div style={{ fontSize: 10.5, color: DIM }}>{spread <= 10 ? 'tight — market agrees' : spread <= 25 ? 'level scope before award' : 'wide — check scope gaps'}</div>}
+                    <div style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
+                      <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', marginBottom: 3 }}>Spread</div>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: spread != null ? spreadColor(spread) : DIM }}>{spread != null ? `${Math.round(spread)}%` : responded === 1 ? 'Needs 2 bids' : '—'}</div>
+                      {spread != null && <div style={{ fontSize: 10.5, color: DIM }}>{spread <= 10 ? 'Tight — market agrees' : spread <= 25 ? 'Level scope before award' : 'Wide — check scope gaps'}</div>}
                     </div>
-                    <div style={{ background: '#101011', padding: '9px 12px' }}>
-                      <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>vs Budget</div>
+                    <div style={{ background: 'var(--bg-base)', padding: '9px 12px' }}>
+                      <div style={{ fontSize: 9.5, fontWeight: 800, color: 'rgba(255,255,255,0.42)', marginBottom: 3 }}>vs Budget</div>
                       <div style={{ fontSize: 14, fontWeight: 800, color: budgetEst > 0 && low != null ? (low <= budgetEst ? '#3dd68c' : '#ff7070') : DIM, fontVariantNumeric: 'tabular-nums' }}>{budgetEst > 0 && low != null ? `${low <= budgetEst ? '' : '+'}${fmt(low - budgetEst)}` : budgetEst > 0 ? fmt(budgetEst) : '—'}</div>
-                      {budgetEst > 0 && <div style={{ fontSize: 10.5, color: DIM }}>{low != null ? (low <= budgetEst ? 'low bid under budget' : 'low bid over budget') : 'budget estimate'}</div>}
+                      {budgetEst > 0 && <div style={{ fontSize: 10.5, color: DIM }}>{low != null ? (low <= budgetEst ? 'Low bid under budget' : 'Low bid over budget') : 'Budget estimate'}</div>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
@@ -653,21 +653,21 @@ export default function BidPackagesPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <SectionCard flat title="Award Pipeline" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
-                { title: 'Package out to subs', desc: rosterCount > 0 ? `Invites go to your roster (${rosterCount} subs) or any email — each gets a portal link.` : 'Invites go out by email — each sub gets a portal link.', done: totalInvited > 0 || packages.length > 0 },
-                { title: 'Bids come back priced', desc: 'Subs price your line items in the portal; responses land here in real time.', done: totalSubmissions > 0 },
-                { title: 'Level the spread', desc: 'Side-by-side leveling flags scope gaps — a wide spread usually means someone missed scope.', done: Object.values(detail).some(d => d.spread != null) },
-                { title: 'Compliance gate at award', desc: 'Award is blocked if the winning sub has no W-9 on file or an expired COI — proceeding anyway requires an explicit override.', done: totalAwarded > 0 },
-                { title: 'Award writes committed cost', desc: 'The winning amount books as a draft subcontract PO automatically — no re-keying into the budget.', done: totalAwarded > 0 },
+                { title: 'Package Out to Subs', desc: rosterCount > 0 ? `Invites go to your roster (${rosterCount} subs) or any email — each gets a portal link.` : 'Invites go out by email — each sub gets a portal link.', done: totalInvited > 0 || packages.length > 0 },
+                { title: 'Bids Come Back Priced', desc: 'Subs price your line items in the portal; responses land here in real time.', done: totalSubmissions > 0 },
+                { title: 'Level the Spread', desc: 'Side-by-side leveling flags scope gaps — a wide spread usually means someone missed scope.', done: Object.values(detail).some(d => d.spread != null) },
+                { title: 'Compliance Gate at Award', desc: 'Award is blocked if the winning sub has no W-9 on file or an expired COI — proceeding anyway requires an explicit override.', done: totalAwarded > 0 },
+                { title: 'Award Writes Committed Cost', desc: 'The winning amount books as a draft subcontract PO automatically — no re-keying into the budget.', done: totalAwarded > 0 },
               ]} />
             </SectionCard>
             {ctx && (
               <SectionCard flat title="Procurement Snapshot" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Project budget" value={fmt(budgetOriginal)} />
-                <InsightRow label="Committed to date" value={fmt(budgetCommitted)} />
-                <InsightRow label="Awarded via bids" value={fmt(awardedTotal)} accent={awardedTotal > 0 ? GOLD : undefined} strong />
-                <InsightRow label="Open packages" value={String(packages.filter(p => p.status === 'open').length)} />
-                <InsightRow label="Bids received" value={String(totalSubmissions)} accent={totalSubmissions > 0 ? '#3dd68c' : undefined} />
-                {rosterCount > 0 && <InsightRow label="Subs on roster" value={String(rosterCount)} />}
+                <InsightRow label="Project Budget" value={fmt(budgetOriginal)} />
+                <InsightRow label="Committed to Date" value={fmt(budgetCommitted)} />
+                <InsightRow label="Awarded via Bids" value={fmt(awardedTotal)} accent={awardedTotal > 0 ? GOLD : undefined} strong />
+                <InsightRow label="Open Packages" value={String(packages.filter(p => p.status === 'open').length)} />
+                <InsightRow label="Bids Received" value={String(totalSubmissions)} accent={totalSubmissions > 0 ? '#3dd68c' : undefined} />
+                {rosterCount > 0 && <InsightRow label="Subs on Roster" value={String(rosterCount)} />}
               </SectionCard>
             )}
           </div>

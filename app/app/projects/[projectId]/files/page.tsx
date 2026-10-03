@@ -101,10 +101,10 @@ export default function FilesPage() {
   });
 
   const patchFile = (row: any) => { setFiles((prev) => prev.map((f) => (f.id === row.id ? { ...f, ...row } : f))); setSel((s: any) => (s && s.id === row.id ? { ...s, ...row } : s)); };
-  const rename = async (f: any) => { const name = prompt('Rename file', f.file_name); if (!name || name === f.file_name) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_name: name }) })).json(); if (r.file) { patchFile(r.file); flash('Renamed'); } };
-  const move = async (f: any) => { const dest = prompt('Move to folder (blank = root)', f.folder || ''); if (dest === null) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: dest }) })).json(); if (r.file) { patchFile(r.file); flash(dest ? `Moved to ${dest}` : 'Moved to root'); } };
-  const del = async (f: any, hard = false) => { if (hard && !confirm(`Permanently delete "${f.file_name}"? This cannot be undone.`)) return; await fetch(`/api/files/${f.id}${hard ? '?hard=1' : ''}`, { method: 'DELETE' }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); setSel(null); flash(hard ? 'Deleted permanently' : 'Moved to trash'); };
-  const restore = async (f: any) => { await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restore: true }) }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); flash('Restored'); };
+  const rename = async (f: any) => { const name = prompt('Rename file', f.file_name); if (!name || name === f.file_name) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_name: name }) })).json(); if (r.file) { patchFile(r.file); flash('Renamed.'); } };
+  const move = async (f: any) => { const dest = prompt('Move to folder (blank = root)', f.folder || ''); if (dest === null) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: dest }) })).json(); if (r.file) { patchFile(r.file); flash(dest ? `Moved to ${dest}.` : 'Moved to root.'); } };
+  const del = async (f: any, hard = false) => { if (hard && !confirm(`Permanently delete "${f.file_name}"? This cannot be undone.`)) return; await fetch(`/api/files/${f.id}${hard ? '?hard=1' : ''}`, { method: 'DELETE' }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); setSel(null); flash(hard ? 'Deleted permanently.' : 'Moved to trash.'); };
+  const restore = async (f: any) => { await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restore: true }) }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); flash('Restored.'); };
 
   const kinds: { k: string; label: string }[] = [{ k: 'all', label: 'All' }, ...(['image', 'video', 'pdf', 'doc', 'sheet', 'audio', 'cad', 'other'] as FileKind[]).map((k) => ({ k, label: KIND_LABEL[k] }))];
   const counts = { total: files.length, video: files.filter((f) => kindOf(f) === 'video').length, image: files.filter((f) => kindOf(f) === 'image').length };
@@ -120,13 +120,13 @@ export default function FilesPage() {
         {/* Header */}
         <ModuleHero
           eyebrow={ctx?.project?.name || 'Media Library'}
-          eyebrowIcon={<Folder size={13} weight="fill" color="#F59E0B" />}
+          eyebrowIcon={<Folder size={13} weight="fill" color="var(--brand-primary)" />}
           title="Files &"
           accent="Media"
           subtitle="Upload, preview, edit, and share any file."
           actions={
             <button onClick={() => setShowImport(true)} style={ghostButtonStyle} className="pmBtn">
-              <CloudArrowDown size={15} weight="bold" /> Import from cloud
+              <CloudArrowDown size={15} weight="bold" /> Import from Cloud
             </button>
           }
         />
@@ -134,12 +134,12 @@ export default function FilesPage() {
         {/* Library intelligence — what the system already knows */}
         {!loading && (
           <StatStrip items={[
-            {href: `/app/projects/${projectId}/files`,  label: 'Library', value: String(counts.total), sub: bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored` : 'no storage used yet' },
-            {href: `/app/projects/${projectId}/files`,  label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? '#3dd68c' : undefined, sub: lastUpload ? `last upload ${fmtDate(lastUpload)}` : 'nothing uploaded yet' },
-            {href: `/app/projects/${projectId}/photos`,  label: 'Photos', value: String(counts.image), sub: 'site + progress shots' },
-            {href: `/app/projects/${projectId}/files`,  label: 'Videos', value: String(counts.video), sub: 'walkthroughs, site video' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Library', value: String(counts.total), sub: bytesTotal > 0 ? `${fmtSize(bytesTotal)} stored` : 'No storage used yet' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Added This Week', value: String(addedThisWeek), accent: addedThisWeek > 0 ? '#3dd68c' : undefined, sub: lastUpload ? `Last upload ${fmtDate(lastUpload)}` : 'Nothing uploaded yet' },
+            {href: `/app/projects/${projectId}/photos`,  label: 'Photos', value: String(counts.image), sub: 'Site + progress shots' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Videos', value: String(counts.video), sub: 'Walkthroughs, site video' },
             {href: `/app/projects/${projectId}/drawings`,  label: 'Docs & Drawings', value: String(docCount), sub: 'PDFs, sheets, CAD, docs' },
-            {href: `/app/projects/${projectId}/files`,  label: 'Folders', value: String(folders.length), sub: folders.length > 0 ? folders.slice(0, 2).join(', ') + (folders.length > 2 ? '…' : '') : 'organize with Move' },
+            {href: `/app/projects/${projectId}/files`,  label: 'Folders', value: String(folders.length), sub: folders.length > 0 ? folders.slice(0, 2).join(', ') + (folders.length > 2 ? '…' : '') : 'Organize with Move' },
           ]} />
         )}
 
@@ -152,9 +152,9 @@ export default function FilesPage() {
 
         {!trash && (
           <div style={{ marginBottom: 16 }}>
-            <FileDropzone projectId={projectId} folder={folder !== 'all' ? folder : null} onUploaded={(rows) => { if (rows?.length) { setFiles((prev) => [...rows, ...prev]); flash(`${rows.length} uploaded`); } }} />
+            <FileDropzone projectId={projectId} folder={folder !== 'all' ? folder : null} onUploaded={(rows) => { if (rows?.length) { setFiles((prev) => [...rows, ...prev]); flash(`${rows.length} uploaded.`); } }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', marginTop: 8, fontSize: 11.5, color: 'rgba(255,255,255,0.45)' }}>
-              <span>Uploads land in {folder !== 'all' ? <b style={{ color: '#FBBF24' }}>{folder}</b> : 'the library root'}</span><AutoChip label={folder !== 'all' ? 'FOLDER' : 'AUTO'} />
+              <span>Uploads land in {folder !== 'all' ? <b style={{ color: 'var(--brand-primary-strong)' }}>{folder}</b> : 'the library root'}</span><AutoChip label={folder !== 'all' ? 'Folder' : 'Auto'} />
               <span style={{ marginLeft: 6 }}>· dated {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span><AutoChip />
               <span style={{ marginLeft: 6 }}>· any format, video up to 500MB</span>
             </div>
@@ -168,7 +168,7 @@ export default function FilesPage() {
           icon={<Folder size={17} weight="duotone" color={T.gold} />}
           title={trash ? 'Trash' : 'Library'}
           subtitle={`${filtered.length} ${filtered.length === 1 ? 'file' : 'files'}${!trash && folder !== 'all' ? ` · ${folder}` : ''}`}
-          action={<Btn size="sm" variant={trash ? 'primary' : 'ghost'} onClick={() => setTrash((t) => !t)}><Trash size={14} />{trash ? 'Viewing trash' : 'Trash'}</Btn>}
+          action={<Btn size="sm" variant={trash ? 'primary' : 'ghost'} onClick={() => setTrash((t) => !t)}><Trash size={14} />{trash ? 'Viewing Trash' : 'Trash'}</Btn>}
         >
           {/* Toolbar */}
           <ListToolbar
@@ -177,9 +177,9 @@ export default function FilesPage() {
             onSearch={setSearch}
             searchPlaceholder="Search files…"
             filters={[
-              { key: 'kind', label: 'Type', value: kindFilter, onChange: setKindFilter, allLabel: 'All types',
+              { key: 'kind', label: 'Type', value: kindFilter, onChange: setKindFilter, allLabel: 'All Types',
                 options: kinds.filter((k) => k.k !== 'all').map((k) => ({ value: k.k, label: k.label })) },
-              { key: 'folder', label: 'Folder', value: folder, onChange: setFolder, allLabel: 'All folders',
+              { key: 'folder', label: 'Folder', value: folder, onChange: setFolder, allLabel: 'All Folders',
                 options: folders },
             ]}
             count={{ shown: filtered.length, total: files.length }}
@@ -192,7 +192,7 @@ export default function FilesPage() {
               trash || files.length > 0 ? (
                 <PremiumEmpty
                   icon={trash ? <Trash size={30} weight="duotone" color={T.gold} /> : <MagnifyingGlass size={30} weight="duotone" color={T.gold} />}
-                  title={trash ? 'Trash is empty' : 'No files match'}
+                  title={trash ? 'Trash Is Empty' : 'No Files Match'}
                   description={trash ? 'Deleted files show up here and can be restored before permanent removal.' : 'Try a different search term or filter to find what you’re looking for.'}
                   compact
                 />
@@ -200,21 +200,21 @@ export default function FilesPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', alignItems: 'stretch' }}>
                   <PremiumEmpty
                     icon={<Folder size={30} weight="duotone" color={T.gold} />}
-                    title="The project file room, empty for now"
+                    title="The Project File Room, Empty for Now"
                     description="Drop files above — plans, permits, contracts, submittal PDFs, site photos and video all live here, previewable and shareable from one place."
                     compact
                   />
                   {ctx && (
                     <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '20px 22px' }}>
-                      <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>What Belongs Here</div>
-                      <InsightRow label="Drawings & specs" value="PDF · CAD" />
-                      <InsightRow label="Contracts & permits" value="PDF · DOC" />
-                      <InsightRow label="Site photos & video" value="up to 500MB" />
-                      <InsightRow label="Submittal & RFI backup" value="any format" />
+                      <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>What Belongs Here</div>
+                      <InsightRow label="Drawings & Specs" value="PDF · CAD" />
+                      <InsightRow label="Contracts & Permits" value="PDF · DOC" />
+                      <InsightRow label="Site Photos & Video" value="Up to 500MB" />
+                      <InsightRow label="Submittal & RFI Backup" value="Any format" />
                       <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '10px 0' }} />
-                      {ctx?.recent?.lastDailyLogDate && <InsightRow label="Last daily log" value={fmtDate(ctx.recent.lastDailyLogDate)} />}
-                      {Number(ctx?.counts?.openRfis) > 0 && <InsightRow label="Open RFIs" value={String(ctx.counts.openRfis)} accent="#FBBF24" />}
-                      {Number(ctx?.counts?.openSubmittals) > 0 && <InsightRow label="Open submittals" value={String(ctx.counts.openSubmittals)} accent="#FBBF24" />}
+                      {ctx?.recent?.lastDailyLogDate && <InsightRow label="Last Daily Log" value={fmtDate(ctx.recent.lastDailyLogDate)} />}
+                      {Number(ctx?.counts?.openRfis) > 0 && <InsightRow label="Open RFIs" value={String(ctx.counts.openRfis)} accent="var(--brand-primary-strong)" />}
+                      {Number(ctx?.counts?.openSubmittals) > 0 && <InsightRow label="Open Submittals" value={String(ctx.counts.openSubmittals)} accent="var(--brand-primary-strong)" />}
                       <div style={{ marginTop: 12, fontSize: 12, color: T.muted, lineHeight: 1.55 }}>
                         Photos and attachments captured in the field land alongside what you drop here — everything previews inline and shares by link, email, or SMS.
                       </div>
@@ -228,12 +228,12 @@ export default function FilesPage() {
                   const k = kindOf(f);
                   return (
                     <div key={f.id} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden', cursor: 'pointer', position: 'relative' }} onClick={() => (trash ? null : setSel(f))}>
-                      {isLinked(f) && <span style={{ position: 'absolute', top: 6, left: 6, zIndex: 1, fontSize: 9.5, fontWeight: 800, letterSpacing: '.04em', textTransform: 'uppercase', padding: '2px 7px', borderRadius: 20, background: 'rgba(13,17,23,.85)', border: `1px solid ${T.border}`, color: '#FBBF24' }}>{SOURCE_LABEL[f.source] || 'Linked'}</span>}
+                      {isLinked(f) && <span style={{ position: 'absolute', top: 6, left: 6, zIndex: 1, fontSize: 9.5, fontWeight: 800, padding: '2px 7px', borderRadius: 20, background: 'rgba(13,17,23,.85)', border: `1px solid ${T.border}`, color: 'var(--brand-primary-strong)' }}>{SOURCE_LABEL[f.source] || 'Linked'}</span>}
                       <FileThumb kind={k} url={f.file_url} poster={f.poster_url} />
                       <div style={{ padding: '9px 11px' }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: T.white, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={f.file_name}>{f.file_name}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                          <span style={{ fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', color: KIND_TINT[k] }}>{KIND_LABEL[k]}</span>
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: KIND_TINT[k] }}>{KIND_LABEL[k]}</span>
                           {f.file_size ? <span style={{ fontSize: 11.5, color: T.muted }}>· {fmtSize(f.file_size)}</span> : null}
                           {f.folder && <span style={{ fontSize: 11, color: T.muted, marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 3 }}><FolderOpen size={11} />{f.folder}</span>}
                         </div>
@@ -273,7 +273,7 @@ export default function FilesPage() {
               <Btn size="sm" variant="ghost" onClick={() => move(sel)}><FolderSimplePlus size={14} />Move</Btn>
               {kindOf(sel) === 'image' && <Btn size="sm" variant="ghost" onClick={() => setCropping(sel)}><Crop size={14} />Edit / Crop</Btn>}
               <Btn size="sm" variant="ghost" onClick={() => setShareFor(sel)}><ShareNetwork size={14} />Share</Btn>
-              <Btn size="sm" variant="ghost" onClick={() => setExportFor(sel)}><CloudArrowUp size={14} />Export to cloud</Btn>
+              <Btn size="sm" variant="ghost" onClick={() => setExportFor(sel)}><CloudArrowUp size={14} />Export to Cloud</Btn>
               <div style={{ flex: 1 }} />
               <Btn size="sm" variant="danger" onClick={() => del(sel)}><Trash size={14} />Delete</Btn>
               </>)}
@@ -282,10 +282,10 @@ export default function FilesPage() {
         </div>
       )}
 
-      {cropping && <FileCropper fileId={cropping.id} url={cropping.file_url} name={cropping.file_name} onClose={() => setCropping(null)} onDone={(row) => { patchFile(row); setCropping(null); flash('Image updated'); }} />}
+      {cropping && <FileCropper fileId={cropping.id} url={cropping.file_url} name={cropping.file_name} onClose={() => setCropping(null)} onDone={(row) => { patchFile(row); setCropping(null); flash('Image updated.'); }} />}
       {shareFor && <ShareMenu file={shareFor} onClose={() => setShareFor(null)} onToast={flash} />}
       {exportFor && <ExportMenu file={exportFor} onClose={() => setExportFor(null)} onToast={flash} />}
-      {showImport && <ExternalBrowser projectId={projectId} onImported={(row) => { if (row) { setFiles((prev) => [row, ...prev]); flash(`Imported ${row.file_name}`); } }} onClose={() => setShowImport(false)} />}
+      {showImport && <ExternalBrowser projectId={projectId} onImported={(row) => { if (row) { setFiles((prev) => [row, ...prev]); flash(`Imported ${row.file_name}.`); } }} onClose={() => setShowImport(false)} />}
     </>
   );
 }
@@ -296,14 +296,14 @@ function ExportMenu({ file, onClose, onToast }: { file: any; onClose: () => void
   useEffect(() => { fetch('/api/storage/connectors').then((r) => r.json()).then((j) => setConnectors((j.connectors || []).filter((c: any) => c.connected))); }, []);
   const exportTo = async (c: any) => {
     setBusy(c.id);
-    try { const j = await (await fetch(`/api/storage/connectors/${c.id}/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: file.id }) })).json(); if (j.error) throw new Error(j.error); onToast(`Exported to ${c.display_name}`); onClose(); }
+    try { const j = await (await fetch(`/api/storage/connectors/${c.id}/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: file.id }) })).json(); if (j.error) throw new Error(j.error); onToast(`Exported to ${c.display_name}.`); onClose(); }
     catch (e: any) { console.error(e); onToast(humanError(e, 'Export failed. Please try again.')); }
     setBusy('');
   };
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Export to cloud</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} color={T.muted} /></button></div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><CloudArrowUp size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Export to Cloud</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} color={T.muted} /></button></div>
         {connectors.length === 0 ? <div style={{ color: T.muted, fontSize: 13 }}>No connected storage. Add one in <a href="/app/settings/storage" style={{ color: T.gold }}>Settings → External Storage</a>.</div>
           : <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{connectors.map((c) => <button key={c.id} disabled={!!busy} onClick={() => exportTo(c)} style={{ display: 'flex', alignItems: 'center', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}><Folder size={16} color={T.gold} />{busy === c.id ? 'Uploading…' : c.display_name}</button>)}</div>}
       </div>
@@ -322,16 +322,16 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
       const res = await fetch('/api/files/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: file.id, channel, to }) });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
-      if (channel === 'link' && json.url) { await navigator.clipboard.writeText(json.url).catch(() => {}); onToast('Share link copied'); }
+      if (channel === 'link' && json.url) { await navigator.clipboard.writeText(json.url).catch(() => {}); onToast('Share link copied.'); }
       else if (channel === 'sms' && json.smsUrl) { window.location.href = json.smsUrl; onToast('Opening Messages…'); }
-      else if (channel === 'email') onToast(json.attached ? 'Emailed (file attached)' : 'Emailed with link');
-      else if (channel === 'slack' || channel === 'teams') onToast(`Posted to ${channel}`);
+      else if (channel === 'email') onToast(json.attached ? 'Emailed with the file attached.' : 'Emailed with a link.');
+      else if (channel === 'slack' || channel === 'teams') onToast(`Posted to ${channel === 'slack' ? 'Slack' : 'Teams'}.`);
       onClose();
-    } catch (e: any) { onToast(e?.message || 'Share failed'); }
+    } catch (e: any) { onToast(e?.message || 'Share failed. Please try again.'); }
     setBusy('');
   };
   const opts: { c: string; label: string; icon: React.ReactNode }[] = [
-    { c: 'link', label: 'Copy link', icon: <LinkSimple size={16} /> },
+    { c: 'link', label: 'Copy Link', icon: <LinkSimple size={16} /> },
     { c: 'email', label: 'Email', icon: <EnvelopeSimple size={16} /> },
     { c: 'sms', label: 'Text (SMS)', icon: <ChatText size={16} /> },
     { c: 'slack', label: 'Slack', icon: <SlackLogo size={16} /> },
@@ -340,7 +340,7 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: T.surface2, border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, width: 'min(360px,100%)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Share file</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} color={T.muted} /></button></div>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}><ShareNetwork size={18} color={T.gold} weight="fill" /><div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: T.white }}>Share File</div><button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} color={T.muted} /></button></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {opts.map((o) => (
             <button key={o.c} disabled={!!busy} onClick={() => share(o.c)} style={{ display: 'flex', alignItems: 'center', gap: 11, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '11px 14px', cursor: 'pointer', color: T.white, fontSize: 14, textAlign: 'left' }}>

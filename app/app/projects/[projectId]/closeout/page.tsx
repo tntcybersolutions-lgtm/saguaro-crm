@@ -182,8 +182,8 @@ export default function CloseoutPage() {
   // "Fully billed" only when there is a contract and it has been billed out —
   // $0 billed against a $0 contract is "no contract sum", not done.
   const fullyBilled = revised > 0 && billed >= revised;
-  const balanceSub = revised <= 0 ? 'no contract sum set' : fullyBilled ? 'fully billed' : 'still to bill';
-  const balanceAccent = fullyBilled ? T.green : revised > 0 ? '#FBBF24' : undefined;
+  const balanceSub = revised <= 0 ? 'No contract sum set' : fullyBilled ? 'Fully billed' : 'Still to bill';
+  const balanceAccent = fullyBilled ? T.green : revised > 0 ? 'var(--brand-primary-strong)' : undefined;
   // Unsigned waivers that actually block the close (placeholders excluded),
   // so the checklist and the gate count the same thing.
   const waiverBlockers = Number(gate?.blockers?.find(b => b.key === 'lien_waivers')?.count) || 0;
@@ -296,7 +296,7 @@ export default function CloseoutPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Closeout'}
-        eyebrowIcon={<Package size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<Package size={13} weight="fill" color="var(--brand-primary)" />}
         title="Project"
         accent="Closeout"
         subtitle={`${completed} of ${total} items complete — ${pct}% ready for handover.`}
@@ -324,7 +324,7 @@ export default function CloseoutPage() {
               className="pmBtn"
               style={{ ...goldButtonStyle, opacity: exportDisabled ? 0.5 : 1, cursor: exportDisabled ? 'not-allowed' : 'pointer' }}
             >
-              {exporting ? 'Generating...' : 'Export Closeout Package'}
+              {exporting ? 'Generating…' : 'Export Closeout Package'}
             </button>
           </>
         }
@@ -339,7 +339,7 @@ export default function CloseoutPage() {
            and overriding them takes a second, separate click. ── */}
       {gate && (
         <SectionCard
-          title={gate.closed ? 'This project is closed' : 'Close out this project'}
+          title={gate.closed ? 'This Project Is Closed' : 'Close Out This Project'}
           subtitle={
             gate.closed
               ? `Closed ${gate.project?.closeout_date || '—'} — it no longer counts as active work.`
@@ -349,7 +349,7 @@ export default function CloseoutPage() {
           }
           icon={gate.closed
             ? <CheckCircle size={17} weight="duotone" color={T.green} />
-            : <ListChecks size={17} weight="duotone" color="#F59E0B" />}
+            : <ListChecks size={17} weight="duotone" color="var(--brand-primary)" />}
         >
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
@@ -373,8 +373,8 @@ export default function CloseoutPage() {
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         padding: '5px 10px', borderRadius: 8, textDecoration: 'none',
-                        border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.10)',
-                        color: '#FBBF24', fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
+                        border: '1px solid var(--brand-primary-35)', background: 'var(--brand-primary-08)',
+                        color: 'var(--brand-primary-strong)', fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
                       }}
                     >
                       {b.label}
@@ -411,7 +411,7 @@ export default function CloseoutPage() {
                     className="pmBtn"
                     style={{ ...goldButtonStyle, opacity: closing ? 0.5 : 1, cursor: closing ? 'not-allowed' : 'pointer' }}
                   >
-                    {closing ? 'Closing…' : 'Close anyway'}
+                    {closing ? 'Closing…' : 'Close Anyway'}
                   </button>
                   <button onClick={() => setConfirmOverride(false)} className="pmBtn" style={{ ...ghostButtonStyle }}>
                     Cancel
@@ -439,8 +439,8 @@ export default function CloseoutPage() {
           {href: `/app/projects/${projectId}/closeout`,  label: 'Billed to Date', value: fmtM(billed), sub: `${billedPct}% of revised` },
           {href: `/app/projects/${projectId}/closeout`,  label: 'Balance to Finish', value: fmtM(balanceToFinish), accent: balanceAccent, sub: balanceSub },
           {href: `/app/projects/${projectId}/closeout`,  label: 'Retainage Held', value: `≈${fmtM(retainageHeld)}`, sub: `${Number(money?.retainagePct) || 0}% — releases at closeout` },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? '#ef4444' : T.green, sub: openPunch > 0 ? 'blocks final inspection' : 'list is clear' },
-          {href: `/app/projects/${projectId}/closeout`,  label: 'Subs to Clear', value: String(subCount), sub: 'final waivers + W-9s' },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(openPunch), accent: openPunch > 0 ? '#ef4444' : T.green, sub: openPunch > 0 ? 'Blocks final inspection' : 'List is clear' },
+          {href: `/app/projects/${projectId}/closeout`,  label: 'Subs to Clear', value: String(subCount), sub: 'Final waivers + W-9s' },
         ]} />
       )}
 
@@ -450,23 +450,23 @@ export default function CloseoutPage() {
           icon={<CheckCircle size={19} weight="duotone" color={T.green} />}
           label="Completed"
           value={String(completed)}
-          sub={`of ${total} items`}
+          sub={`Of ${total} items`}
           accent={completed > 0 ? T.green : undefined}
           delay={0.02}
          href={`/app/projects/${projectId}/closeout`}/>
         <StatCard
-          icon={<Hourglass size={19} weight="duotone" color="#F59E0B" />}
+          icon={<Hourglass size={19} weight="duotone" color="var(--brand-primary)" />}
           label="Remaining"
           value={String(total - completed)}
-          sub={total - completed === 0 ? 'all complete' : 'still outstanding'}
+          sub={total - completed === 0 ? 'All complete' : 'Still outstanding'}
           delay={0.06}
          href={`/app/projects/${projectId}/closeout`}/>
         <StatCard
-          icon={<ChartBar size={19} weight="duotone" color="#F59E0B" />}
+          icon={<ChartBar size={19} weight="duotone" color="var(--brand-primary)" />}
           label="Progress"
           value={`${pct}%`}
-          sub={pct === 100 ? 'ready to export' : 'to handover'}
-          accent={pct === 100 ? T.green : '#F59E0B'}
+          sub={pct === 100 ? 'Ready to export' : 'To handover'}
+          accent={pct === 100 ? T.green : 'var(--brand-primary)'}
           delay={0.10}
          href={`/app/projects/${projectId}/closeout`}/>
       </div>
@@ -483,13 +483,13 @@ export default function CloseoutPage() {
       {/* Progress Bar */}
       <SectionCard flat
         title="Closeout Progress"
-        icon={<ChartBar size={17} weight="duotone" color="#F59E0B" />}
-        action={<span style={{ fontSize: 14, fontWeight: 800, color: pct === 100 ? T.green : '#FBBF24', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>}
+        icon={<ChartBar size={17} weight="duotone" color="var(--brand-primary)" />}
+        action={<span style={{ fontSize: 14, fontWeight: 800, color: pct === 100 ? T.green : 'var(--brand-primary-strong)', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>}
         style={{ marginBottom: 24 }}
       >
         <ProgressBar pct={pct} color={pct === 100 ? T.green : T.gold} height={10} />
         <div style={{ marginTop: 10, fontSize: 12, color: 'rgba(255,255,255,0.62)' }}>
-          {pct === 100 ? 'Ready to export closeout package' : `${total - completed} items remaining`}
+          {pct === 100 ? 'Ready to export the closeout package.' : `${total - completed} items remaining`}
         </div>
       </SectionCard>
 
@@ -498,7 +498,7 @@ export default function CloseoutPage() {
         module="closeout"
         search={search}
         onSearch={setSearch}
-        searchPlaceholder="Search closeout items..."
+        searchPlaceholder="Search closeout items…"
         filters={[{ key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter, allLabel: 'All Items', options: [
           { value: 'incomplete', label: 'Incomplete' },
           { value: 'complete', label: 'Complete' },
@@ -511,7 +511,7 @@ export default function CloseoutPage() {
       <SectionCard
         title="Closeout Checklist"
         subtitle={`${completed}/${total} complete`}
-        icon={<ListChecks size={17} weight="duotone" color="#F59E0B" />}
+        icon={<ListChecks size={17} weight="duotone" color="var(--brand-primary)" />}
         flush
       >
         {visibleItems.length === 0 ? (
@@ -538,7 +538,7 @@ export default function CloseoutPage() {
                 {item.label}
               </span>
               {sig?.hint && item.status !== 'complete' && (
-                <div style={{ fontSize: 11.5, color: sig.warn ? '#FBBF24' : sig.ready ? T.green : 'rgba(255,255,255,0.5)', marginTop: 3, lineHeight: 1.45 }}>{sig.hint}</div>
+                <div style={{ fontSize: 11.5, color: sig.warn ? 'var(--brand-primary-strong)' : sig.ready ? T.green : 'rgba(255,255,255,0.5)', marginTop: 3, lineHeight: 1.45 }}>{sig.hint}</div>
               )}
             </div>
             {sig?.ready && item.status !== 'complete' && <Badge label="Ready" color="green" />}
@@ -551,7 +551,7 @@ export default function CloseoutPage() {
                 className="pmBtn"
                 style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 12.5, opacity: generating === item.id ? 0.5 : 1, cursor: generating === item.id ? 'not-allowed' : 'pointer' }}
               >
-                {generating === item.id ? 'Generating...' : item.generateLabel}
+                {generating === item.id ? 'Generating…' : item.generateLabel}
               </button>
             )}
           </div>
@@ -561,25 +561,25 @@ export default function CloseoutPage() {
 
       {/* Context rail — the path to handover, from live project data */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <SectionCard flat title="Path to Handover" icon={<Package size={17} weight="duotone" color="#F59E0B" />}>
+        <SectionCard flat title="Path to Handover" icon={<Package size={17} weight="duotone" color="var(--brand-primary)" />}>
           <FlowSteps title="" steps={[
-            { title: 'Clear the punch list', done: !!ctx && openPunch === 0, desc: openPunch > 0 ? `${openPunch} item${openPunch === 1 ? '' : 's'} still open.` : 'No open punch items on record.' },
-            { title: 'Bill the contract out', done: fullyBilled, desc: revised > 0 ? `${fmtM(billed)} of ${fmtM(revised)} billed (${billedPct}%).` : 'Contract money flows in from pay applications.' },
-            { title: 'Collect final waivers', done: items.find(i => i.id === 'all_lien_waivers')?.status === 'complete', desc: subCount > 0 ? `Unconditional finals from all ${subCount} subs release retainage cleanly.` : 'Your own final waiver clears the owner.' },
-            { title: 'Assemble turnover docs', done: docsDone, desc: 'As-builts, O&M manuals, warranties, and W-9s in one binder.' },
-            { title: 'Inspect and certify', done: inspectDone, desc: 'Final inspection, then the certificate of occupancy.' },
-            { title: 'Export the package', done: pct === 100, desc: pct === 100 ? 'All items complete — export the closeout package above.' : `Unlocks at 100% — ${total - completed} item${total - completed === 1 ? '' : 's'} to go.` },
+            { title: 'Clear the Punch List', done: !!ctx && openPunch === 0, desc: openPunch > 0 ? `${openPunch} item${openPunch === 1 ? '' : 's'} still open.` : 'No open punch items on record.' },
+            { title: 'Bill the Contract Out', done: fullyBilled, desc: revised > 0 ? `${fmtM(billed)} of ${fmtM(revised)} billed (${billedPct}%).` : 'Contract money flows in from pay applications.' },
+            { title: 'Collect Final Waivers', done: items.find(i => i.id === 'all_lien_waivers')?.status === 'complete', desc: subCount > 0 ? `Unconditional finals from all ${subCount} subs release retainage cleanly.` : 'Your own final waiver clears the owner.' },
+            { title: 'Assemble Turnover Docs', done: docsDone, desc: 'As-builts, O&M manuals, warranties, and W-9s in one binder.' },
+            { title: 'Inspect and Certify', done: inspectDone, desc: 'Final inspection, then the certificate of occupancy.' },
+            { title: 'Export the Package', done: pct === 100, desc: pct === 100 ? 'All items complete — export the closeout package above.' : `Unlocks at 100% — ${total - completed} item${total - completed === 1 ? '' : 's'} to go.` },
           ]} />
         </SectionCard>
         {ctx && (
-          <SectionCard flat title="What Saguaro Knows" icon={<ChartBar size={17} weight="duotone" color="#F59E0B" />}>
-            <InsightRow label="Revised contract" value={fmtM(revised)} strong />
-            <InsightRow label="Billed to date" value={`${fmtM(billed)} · ${billedPct}%`} />
-            <InsightRow label="Balance to finish" value={fmtM(balanceToFinish)} accent={balanceAccent} />
-            <InsightRow label="Retainage held" value={`≈${fmtM(retainageHeld)}`} />
-            <InsightRow label="Open punch items" value={String(openPunch)} accent={openPunch > 0 ? '#ef4444' : T.green} />
-            <InsightRow label="Subs to clear" value={String(subCount)} />
-            {lastApp && <InsightRow label={`Pay App #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ')} />}
+          <SectionCard flat title="What Saguaro Knows" icon={<ChartBar size={17} weight="duotone" color="var(--brand-primary)" />}>
+            <InsightRow label="Revised Contract" value={fmtM(revised)} strong />
+            <InsightRow label="Billed to Date" value={`${fmtM(billed)} · ${billedPct}%`} />
+            <InsightRow label="Balance to Finish" value={fmtM(balanceToFinish)} accent={balanceAccent} />
+            <InsightRow label="Retainage Held" value={`≈${fmtM(retainageHeld)}`} />
+            <InsightRow label="Open Punch Items" value={String(openPunch)} accent={openPunch > 0 ? '#ef4444' : T.green} />
+            <InsightRow label="Subs to Clear" value={String(subCount)} />
+            {lastApp && <InsightRow label={`Pay App #${lastApp.appNumber}`} value={String(lastApp.status || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} />}
           </SectionCard>
         )}
       </div>

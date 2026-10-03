@@ -20,7 +20,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
 const fmt = (n: number | null | undefined) => '$' + (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = (a: number | null | undefined, b: number | null | undefined) => (b ?? 0) > 0 ? (((a ?? 0) / (b as number)) * 100).toFixed(1) + '%' : '0%';
 
@@ -196,7 +196,7 @@ export default function BudgetPage() {
     try {
       const r = await fetch(`/api/projects/${projectId}/budget`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, original_budget: newAmt }) });
       if (!r.ok) throw new Error('update failed');
-      showToast(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`);
+      showToast(`Adjusted ${pct > 0 ? '+' : ''}${pct}%.`);
     } catch { showToast('Could not adjust the budget line. Please try again.', false); load(); }
   }
 
@@ -248,7 +248,7 @@ export default function BudgetPage() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      showToast('Exported');
+      showToast('Exported.');
     } catch {
       showToast('Export failed.', false);
     } finally {
@@ -304,12 +304,12 @@ export default function BudgetPage() {
     const actual = l.actual_cost ?? 0;
     const revised = l.revised_budget ?? 0;
     if (actual > revised) return 'rgba(239,68,68,.08)';
-    if (revised > 0 && actual / revised > 0.9) return 'rgba(245, 158, 11,.06)';
+    if (revised > 0 && actual / revised > 0.9) return 'var(--brand-primary-08)';
     return 'transparent';
   }
 
   const inputStyle: React.CSSProperties = {
-    padding: '9px 11px', background: '#1c1c1e', border: `1px solid ${BORDER}`,
+    padding: '9px 11px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`,
     borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box', width: '100%',
   };
 
@@ -320,10 +320,10 @@ export default function BudgetPage() {
       icon={<Wallet size={26} weight="duotone" color={moduleAccent('budget').hex} />}
       title="Project Budget"
       subtitle="Committed, actual, and forecast by CSI cost code."
-      note="this is where the money truth lives"
+      note="This is where the money truth lives"
       actions={<>
         <HeroButton variant="ghost" onClick={() => setShowAddForm(v => !v)} icon={<Plus size={15} weight="bold" color={CIN.goldHi} />}>Add Line</HeroButton>
-        <HeroButton onClick={exportReport} disabled={exporting} icon={<DownloadSimple size={15} weight="bold" color="#241a05" />}>{exporting ? 'Exporting…' : 'Export'}</HeroButton>
+        <HeroButton onClick={exportReport} disabled={exporting} icon={<DownloadSimple size={15} weight="bold" color="#0A0A00" />}>{exporting ? 'Exporting…' : 'Export'}</HeroButton>
       </>}
     />
   );
@@ -368,7 +368,7 @@ export default function BudgetPage() {
         </div>
         <EmptyStatePremium
           icon={<WarningCircle size={38} weight="duotone" color="#ff7070" />}
-          title="Couldn't load budget"
+          title="Couldn't Load Budget"
           description="Something went wrong while loading the job-cost budget. Your data is safe — this is a loading error, not an empty project."
           actionLabel="Retry"
           onAction={load}
@@ -407,19 +407,19 @@ export default function BudgetPage() {
       {showAddForm && (
         <div style={{ marginBottom: 20 }}>
           <StatStrip items={[
-            {href: `/app/projects/${projectId}/budget`,  label: 'Budget Lines', value: String(lines.length), sub: lines.length > 0 ? `across ${divisionsUsed} CSI division${divisionsUsed === 1 ? '' : 's'}` : 'first line on this project' },
-            {href: `/app/projects/${projectId}/budget`,  label: 'Original Budget', value: fmt(Number(totalOriginal) || 0), sub: 'sum of all lines' },
-            {href: `/app/projects/${projectId}/budget`,  label: 'Committed', value: fmt(Number(totalCommitted) || 0), accent: '#4a9de8', sub: 'subcontracts + POs' },
-            {href: `/app/projects/${projectId}/budget`,  label: 'Actual to Date', value: fmt(Number(totalActual) || 0), accent: '#f97316', sub: 'approved bills' },
-            {href: `/app/projects/${projectId}/budget`,  label: 'Variance', value: ((Number(totalVariance) || 0) >= 0 ? '+' : '') + fmt(Number(totalVariance) || 0), accent: (Number(totalVariance) || 0) >= 0 ? '#3dd68c' : '#ff7070', sub: 'revised vs forecast' },
-            ...(primeContract > 0 ? [{href: `/app/projects/${projectId}/contracts`,  label: 'Prime Contract', value: fmt(primeContract), sub: `incl. ${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` }] : []),
+            {href: `/app/projects/${projectId}/budget`,  label: 'Budget Lines', value: String(lines.length), sub: lines.length > 0 ? `Across ${divisionsUsed} CSI division${divisionsUsed === 1 ? '' : 's'}` : 'First line on this project' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Original Budget', value: fmt(Number(totalOriginal) || 0), sub: 'Sum of all lines' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Committed', value: fmt(Number(totalCommitted) || 0), accent: '#4a9de8', sub: 'Subcontracts + POs' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Actual to Date', value: fmt(Number(totalActual) || 0), accent: '#f97316', sub: 'Approved bills' },
+            {href: `/app/projects/${projectId}/budget`,  label: 'Variance', value: ((Number(totalVariance) || 0) >= 0 ? '+' : '') + fmt(Number(totalVariance) || 0), accent: (Number(totalVariance) || 0) >= 0 ? '#3dd68c' : '#ff7070', sub: 'Revised vs forecast' },
+            ...(primeContract > 0 ? [{href: `/app/projects/${projectId}/contracts`,  label: 'Prime Contract', value: fmt(primeContract), sub: `Incl. ${approvedCoCount} approved CO${approvedCoCount === 1 ? '' : 's'}` }] : []),
           ]} />
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 16, alignItems: 'start' }}>
           <SectionCard title="Add Budget Line" subtitle="Pick the CSI division — code and description fill themselves" icon={<Plus size={18} weight="bold" color={CIN.goldHi} />}>
             <form onSubmit={addLine}>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(170px,1.2fr) minmax(120px,0.9fr) minmax(200px,1.6fr) minmax(130px,0.9fr) auto', gap: 12, alignItems: 'start' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: CIN.faint, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.06em' }}>CSI Division</label>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: CIN.faint, marginBottom: 6 }}>CSI Division</label>
                   <select value={csiDiv} onChange={e => pickDivision(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
                     <option value="">Select division…</option>
                     {Object.entries(CSI_DIVISIONS).map(([code, d]) => (
@@ -429,32 +429,32 @@ export default function BudgetPage() {
                   <div style={hintStyle}>MasterFormat — the same canonical list bid packages use.</div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: CIN.faint, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.06em' }}>CSI Code{autoFill.code && <AutoChip />}</label>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: CIN.faint, marginBottom: 6 }}>CSI Code{autoFill.code && <AutoChip />}</label>
                   <input value={addForm.cost_code} onChange={e => { setAddForm(f => ({ ...f, cost_code: e.target.value })); setAutoFill(a => ({ ...a, code: false })); }} placeholder="e.g. 03 30 00" required style={inputStyle} />
                   <div style={hintStyle}>{autoFill.code ? `Division ${csiDiv} default — refine to a section code anytime.` : 'Pick a division to fill this automatically.'}</div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: CIN.faint, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.06em' }}>Description{autoFill.desc && <AutoChip />}</label>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: CIN.faint, marginBottom: 6 }}>Description{autoFill.desc && <AutoChip />}</label>
                   <input value={addForm.description} onChange={e => { setAddForm(f => ({ ...f, description: e.target.value })); setAutoFill(a => ({ ...a, desc: false })); }} placeholder="e.g. Cast-in-Place Concrete" required style={inputStyle} />
                   <div style={hintStyle}>{autoFill.desc ? 'Division name — rename to the actual scope of work.' : 'What this line pays for.'}</div>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: CIN.faint, textTransform: 'uppercase', marginBottom: 6, letterSpacing: '0.06em' }}>Budget Amount ($){autoFill.amount && <AutoChip />}</label>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: CIN.faint, marginBottom: 6 }}>Budget Amount ($){autoFill.amount && <AutoChip />}</label>
                   <input value={addForm.original_budget} onChange={e => { setAddForm(f => ({ ...f, original_budget: e.target.value })); setAutoFill(a => ({ ...a, amount: false })); }} placeholder="0" type="number" min="0" required style={inputStyle} />
                   <div style={hintStyle}>{autoFill.amount ? 'Pulled from the bid package pricing.' : 'Original budget — approved COs revise it, never overwrite it.'}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 23 }}>
-                  <button type="submit" style={{ padding: '10px 18px', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 10, color: '#241a05', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Add</button>
+                  <button type="submit" style={{ padding: '10px 18px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 10, color: '#0A0A00', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>Add</button>
                   <button type="button" onClick={() => setShowAddForm(false)} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${CIN.border}`, borderRadius: 10, color: CIN.faint, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
                 </div>
               </div>
-              <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.22)' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: CIN.faint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Live Totals Preview</div>
+              <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)' }}>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: CIN.faint, marginBottom: 4 }}>Live Totals Preview</div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0 24px' }}>
-                  <InsightRow label="Original budget today" value={fmt(Number(totalOriginal) || 0)} />
-                  <InsightRow label="This line" value={'+' + fmt(pendingAmt)} accent={CIN.goldHi} />
-                  <InsightRow label="New original budget" value={fmt(newOriginalTotal)} strong />
-                  {primeContract > 0 && <InsightRow label="Contract allocated" value={`${budgetVsContract}%`} accent={budgetVsContract > 100 ? '#ff7070' : '#3dd68c'} />}
+                  <InsightRow label="Original Budget Today" value={fmt(Number(totalOriginal) || 0)} />
+                  <InsightRow label="This Line" value={'+' + fmt(pendingAmt)} accent={CIN.goldHi} />
+                  <InsightRow label="New Original Budget" value={fmt(newOriginalTotal)} strong />
+                  {primeContract > 0 && <InsightRow label="Contract Allocated" value={`${budgetVsContract}%`} accent={budgetVsContract > 100 ? '#ff7070' : '#3dd68c'} />}
                 </div>
               </div>
             </form>
@@ -464,8 +464,8 @@ export default function BudgetPage() {
               <SectionCard flat title={`Division ${csiDiv} — ${CSI_DIVISIONS[csiDiv]?.name || ''}`} icon={<Stack size={16} weight="duotone" color={CIN.goldHi} />}>
                 {divLines.length > 0 ? (
                   <>
-                    <InsightRow label="Existing lines" value={String(divLines.length)} />
-                    <InsightRow label="Budgeted so far" value={fmt(Number(divLinesTotal) || 0)} strong />
+                    <InsightRow label="Existing Lines" value={String(divLines.length)} />
+                    <InsightRow label="Budgeted So Far" value={fmt(Number(divLinesTotal) || 0)} strong />
                     <div style={{ fontSize: 11.5, color: CIN.muted, lineHeight: 1.5, marginTop: 8 }}>This line joins {divLines.length} existing line{divLines.length === 1 ? '' : 's'} coded to Division {csiDiv}.</div>
                   </>
                 ) : (
@@ -475,10 +475,10 @@ export default function BudgetPage() {
             )}
             <SectionCard flat title="After You Add" icon={<Lightning size={16} weight="duotone" color={CIN.goldHi} />}>
               <FlowSteps title="" steps={[
-                { title: 'Committed fills itself', desc: 'Awarded subcontracts and POs coded to this line book as committed cost.' },
-                { title: 'Actuals flow from bills', desc: 'Approved invoices land on the line — nothing re-typed.' },
-                { title: 'COs revise, never overwrite', desc: 'Approved change orders adjust the revised budget; the original stays.' },
-                { title: 'Forecast rolls up live', desc: 'EAC and variance update here and on the command center.' },
+                { title: 'Committed Fills Itself', desc: 'Awarded subcontracts and POs coded to this line book as committed cost.' },
+                { title: 'Actuals Flow from Bills', desc: 'Approved invoices land on the line — nothing re-typed.' },
+                { title: 'COs Revise, Never Overwrite', desc: 'Approved change orders adjust the revised budget; the original stays.' },
+                { title: 'Forecast Rolls Up Live', desc: 'EAC and variance update here and on the command center.' },
               ]} />
             </SectionCard>
           </div>
@@ -504,7 +504,7 @@ export default function BudgetPage() {
                   const awarded = (Number(p?.awardedAmount) || 0) > 0;
                   return (
                     <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 0', borderBottom: `1px solid ${CIN.border}` }}>
-                      <span style={{ flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: CIN.goldHi, background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.30)', borderRadius: 6, padding: '3px 7px', fontFamily: 'monospace' }}>{div ? `DIV ${div}` : 'CSI —'}</span>
+                      <span style={{ flexShrink: 0, fontSize: 10.5, fontWeight: 800, color: CIN.goldHi, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 6, padding: '3px 7px', fontFamily: 'monospace' }}>{div ? `Div ${div}` : 'CSI —'}</span>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name || p.trade}</div>
                         <div style={{ fontSize: 11.5, color: CIN.faint }}>{awarded ? `Awarded${p.awardedTo ? ` — ${p.awardedTo}` : ''}` : 'Budget estimate'}{p.trade ? ` · ${p.trade}` : ''}</div>
@@ -534,20 +534,20 @@ export default function BudgetPage() {
           </SectionCard>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <SectionCard flat title="What the System Knows" icon={<Wallet size={16} weight="duotone" color={CIN.goldHi} />}>
-              <InsightRow label="Prime contract" value={primeContract > 0 ? fmt(primeContract) : '—'} strong />
-              <InsightRow label="Approved COs" value={approvedCoCount > 0 ? `${approvedCoCount} · +${fmt(approvedCoTotal)}` : 'none yet'} accent={approvedCoCount > 0 ? '#3dd68c' : undefined} />
-              <InsightRow label="Bid packages" value={String(bidPackages.length)} />
-              <InsightRow label="Subs on the job" value={String(subsOnJob)} />
+              <InsightRow label="Prime Contract" value={primeContract > 0 ? fmt(primeContract) : '—'} strong />
+              <InsightRow label="Approved COs" value={approvedCoCount > 0 ? `${approvedCoCount} · +${fmt(approvedCoTotal)}` : 'None yet'} accent={approvedCoCount > 0 ? '#3dd68c' : undefined} />
+              <InsightRow label="Bid Packages" value={String(bidPackages.length)} />
+              <InsightRow label="Subs on the Job" value={String(subsOnJob)} />
               {primeContract > 0 && (
                 <div style={{ fontSize: 11.5, color: CIN.muted, lineHeight: 1.55, marginTop: 8 }}>A complete budget allocates the full {fmt(primeContract)} contract across divisions.</div>
               )}
             </SectionCard>
             <SectionCard flat title="How Money Flows In" icon={<Lightning size={16} weight="duotone" color={CIN.goldHi} />}>
               <FlowSteps title="" steps={[
-                { title: 'Seed lines by division', desc: 'From bid-package pricing or a blank line — CSI-coded either way.' },
-                { title: 'Committed books automatically', desc: 'Awarded subcontracts and POs land on their coded lines.' },
-                { title: 'Actuals flow from bills', desc: 'Approved invoices hit the line — never re-typed.' },
-                { title: 'Variance rolls up live', desc: 'EAC and variance feed this page and the command center.' },
+                { title: 'Seed Lines by Division', desc: 'From bid-package pricing or a blank line — CSI-coded either way.' },
+                { title: 'Committed Books Automatically', desc: 'Awarded subcontracts and POs land on their coded lines.' },
+                { title: 'Actuals Flow from Bills', desc: 'Approved invoices hit the line — never re-typed.' },
+                { title: 'Variance Rolls Up Live', desc: 'EAC and variance feed this page and the command center.' },
               ]} />
             </SectionCard>
           </div>
@@ -555,7 +555,7 @@ export default function BudgetPage() {
       ) : (
         <EmptyStatePremium
           icon={<Wallet size={38} weight="duotone" color={CIN.goldHi} />}
-          title="No budget lines yet"
+          title="No Budget Lines Yet"
           description="Add your first budget line to start job costing by CSI cost code for this project."
           actionLabel="Add Budget Line"
           onAction={() => setShowAddForm(true)}
@@ -568,7 +568,7 @@ export default function BudgetPage() {
             <thead>
               <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
                 {['Cost Code', 'Description', 'Orig. Budget', 'Approved COs', 'Revised Budget', 'Committed', 'Actual Cost', '% Complete', 'Remaining', 'Cost to Complete', 'Forecast (EAC)', 'Variance', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '11px 14px', textAlign: h === 'Cost Code' || h === 'Description' || h === 'Actions' ? 'left' : 'right', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: CIN.faint, borderBottom: `1px solid ${CIN.border}`, whiteSpace: 'nowrap' }}>{h}</th>
+                  <th key={h} style={{ padding: '11px 14px', textAlign: h === 'Cost Code' || h === 'Description' || h === 'Actions' ? 'left' : 'right', fontSize: 10.5, fontWeight: 800, color: CIN.faint, borderBottom: `1px solid ${CIN.border}`, whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -590,7 +590,7 @@ export default function BudgetPage() {
                           value={editAmount}
                           onChange={e => setEditAmount(e.target.value)}
                           type="number"
-                          style={{ width: 110, padding: '4px 8px', background: '#1c1c1e', border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }}
+                          style={{ width: 110, padding: '4px 8px', background: 'var(--bg-surface-2)', border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }}
                           autoFocus
                         />
                       ) : fmt(l.original_budget)}
@@ -614,7 +614,7 @@ export default function BudgetPage() {
                     <td style={{ padding: '11px 14px', whiteSpace: 'nowrap', position: 'relative' as const }}>
                       {isEditing ? (
                         <div style={{ display: 'flex', gap: 5 }}>
-                          <button onClick={() => saveEdit(l.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 4, color: '#241a05', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                          <button onClick={() => saveEdit(l.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 4, color: '#0A0A00', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                           <button onClick={() => setEditingId(null)} style={{ padding: '3px 8px', background: 'none', border: `1px solid ${CIN.border}`, borderRadius: 4, color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                         </div>
                       ) : adjustId === l.id ? (
@@ -635,7 +635,7 @@ export default function BudgetPage() {
                           {copiedId === l.id && <span style={{ fontSize: 10, color: '#3dd68c', fontWeight: 600 }}>Copied!</span>}
                           <button onClick={() => openMenu(l.id)} style={{ padding: '3px 8px', background: 'rgba(255,255,255,0.04)', border: `1px solid ${CIN.border}`, borderRadius: 6, color: CIN.faint, fontSize: 11, cursor: 'pointer' }}>Actions &#9662;</button>
                           {menuId === l.id && (
-                            <div style={{ position: 'absolute', top: 36, right: 14, background: '#101826', border: `1px solid ${CIN.border}`, borderRadius: 10, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 16px 44px rgba(0,0,0,.6)' }}>
+                            <div style={{ position: 'absolute', top: 36, right: 14, background: 'var(--bg-surface-2)', border: `1px solid ${CIN.border}`, borderRadius: 10, padding: 4, zIndex: 100, minWidth: 150, boxShadow: '0 16px 44px rgba(0,0,0,.6)' }}>
                               {([
                                 { label: 'Edit Amount', icon: PencilSimple, action: () => { setMenuId(null); setEditingId(l.id); setEditAmount(String(l.original_budget)); } },
                                 { label: 'Adjust %', icon: ChartBar, action: () => { setMenuId(null); setAdjustId(l.id); } },
@@ -659,8 +659,8 @@ export default function BudgetPage() {
               })}
             </tbody>
             <tfoot>
-              <tr style={{ background: 'rgba(245,158,11,0.06)', fontWeight: 800 }}>
-                <td colSpan={2} style={{ padding: '13px 14px', color: TEXT, fontWeight: 800 }}>TOTALS</td>
+              <tr style={{ background: 'var(--brand-primary-08)', fontWeight: 800 }}>
+                <td colSpan={2} style={{ padding: '13px 14px', color: TEXT, fontWeight: 800 }}>Totals</td>
                 <td style={{ padding: '13px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalOriginal)}</td>
                 <td style={{ padding: '13px 14px', textAlign: 'right', color: totalApprovedCOs > 0 ? '#4a9de8' : CIN.faint }}>{totalApprovedCOs > 0 ? '+' + fmt(totalApprovedCOs) : '—'}</td>
                 <td style={{ padding: '13px 14px', textAlign: 'right', color: TEXT }}>{fmt(totalRevised)}</td>

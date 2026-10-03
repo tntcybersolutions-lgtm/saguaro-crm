@@ -26,18 +26,18 @@ const SEVERITY_BADGE: Record<string, 'red' | 'amber' | 'gold' | 'blue' | 'muted'
 };
 
 // Palette aligned with the dashboard kit (desert-dusk semantic accents).
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const RED = '#E0644E';
-const AMBER = '#F0A63C';
+const AMBER = 'var(--warning)';
 const GREEN = '#45B37D';
 
 // The four deterministic checks the project-scoped engine runs
 // (lib/autopilot/scan, via /api/autopilot/run), in execution order — rendered as the pipeline rail.
 const SCAN_RULES = [
-  { title: 'Overdue RFIs',         desc: 'Open RFIs past their response-due date.',       match: (a: Alert) => /rfi/i.test(a.alert_type) },
-  { title: 'Expiring insurance',   desc: 'Active certificates expiring within 30 days.',  match: (a: Alert) => /insurance/i.test(a.alert_type) },
-  { title: 'Pending lien waivers', desc: 'Waivers still awaiting signature.',             match: (a: Alert) => /waiver/i.test(a.alert_type) },
-  { title: 'Stale change orders',  desc: 'COs sitting in pending for more than 14 days.', match: (a: Alert) => /change order/i.test(a.alert_type) },
+  { title: 'Overdue RFIs', desc: 'Open RFIs past their response-due date.', match: (a: Alert) => /rfi/i.test(a.alert_type) },
+  { title: 'Expiring Insurance', desc: 'Active certificates expiring within 30 days.', match: (a: Alert) => /insurance/i.test(a.alert_type) },
+  { title: 'Pending Lien Waivers', desc: 'Waivers still awaiting signature.', match: (a: Alert) => /waiver/i.test(a.alert_type) },
+  { title: 'Stale Change Orders', desc: 'COs sitting in pending for more than 14 days.', match: (a: Alert) => /change order/i.test(a.alert_type) },
 ];
 const fmtD = (d?: string | null) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—';
 const fmtM = (n: unknown) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
@@ -158,12 +158,12 @@ export default function AutopilotPage() {
       {/* What Autopilot is watching — the live surface area of this project */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), accent: Number(counts?.openRfis) ? GOLD : undefined, sub: 'checked for overdue responses' },
-          {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(pendingCos), accent: pendingCos ? AMBER : undefined, sub: 'flagged when stale > 14 days' },
-          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'insurance + waivers tracked' },
-          {href: `/app/projects/${projectId}/invoices`,  label: 'Invoices', value: String(Number(counts?.invoices) || 0), sub: 'due dates watched' },
-          {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(Number(counts?.openSubmittals) || 0), sub: 'in review' },
-          {href: `/app/projects/${projectId}/daily-logs`,  label: 'Last Daily Log', value: fmtD(ctx?.recent?.lastDailyLogDate), sub: ctx?.recent?.lastDailyLogDate ? 'field reporting active' : 'no logs yet' },
+          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(Number(counts?.openRfis) || 0), accent: Number(counts?.openRfis) ? GOLD : undefined, sub: 'Checked for overdue responses' },
+          {href: `/app/projects/${projectId}/change-orders`,  label: 'Pending COs', value: String(pendingCos), accent: pendingCos ? AMBER : undefined, sub: 'Flagged when stale > 14 days' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on the Job', value: String((ctx?.subs || []).length), sub: 'Insurance + waivers tracked' },
+          {href: `/app/projects/${projectId}/invoices`,  label: 'Invoices', value: String(Number(counts?.invoices) || 0), sub: 'Due dates watched' },
+          {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(Number(counts?.openSubmittals) || 0), sub: 'In review' },
+          {href: `/app/projects/${projectId}/daily-logs`,  label: 'Last Daily Log', value: fmtD(ctx?.recent?.lastDailyLogDate), sub: ctx?.recent?.lastDailyLogDate ? 'Field reporting active' : 'No logs yet' },
         ]} />
       )}
 
@@ -182,7 +182,7 @@ export default function AutopilotPage() {
           label="Critical"
           value={String(criticalCount)}
           accent={criticalCount ? RED : undefined}
-          sub="need immediate action"
+          sub="Need immediate action"
           delay={0.06}
          href={`/app/projects/${projectId}/autopilot`}/>
         <StatCard
@@ -190,7 +190,7 @@ export default function AutopilotPage() {
           label="High"
           value={String(highCount)}
           accent={highCount ? AMBER : undefined}
-          sub="review soon"
+          sub="Review soon"
           delay={0.10}
          href={`/app/projects/${projectId}/autopilot`}/>
         <StatCard
@@ -225,7 +225,7 @@ export default function AutopilotPage() {
         ) : activeAlerts.length === 0 ? (
           <PremiumEmpty
             icon={<CheckCircle size={30} weight="duotone" color={GREEN} />}
-            title="No active alerts on this project"
+            title="No Active Alerts on This Project"
             description="All four checks came back clean — RFIs answered on time, insurance current, lien waivers signed, and change orders moving. Autopilot re-scans automatically every 6 hours; run one now after any big change."
             action={scanButton}
           />
@@ -236,10 +236,10 @@ export default function AutopilotPage() {
               <Badge key="sev" label={a.severity} color={SEVERITY_BADGE[a.severity] || 'muted'} />,
               <span key="type" style={{ fontWeight: 600 }}>{a.alert_type}</span>,
               <span key="msg" style={{ fontSize: 13 }}>{a.message}</span>,
-              <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{a.date ? new Date(a.date).toLocaleDateString() : '---'}</span>,
+              <span key="dt" style={{ color: T.muted, whiteSpace: 'nowrap' }}>{a.date ? new Date(a.date).toLocaleDateString() : '—'}</span>,
               <Badge key="st" label={a.status || 'active'} color={a.status === 'resolved' ? 'green' : 'amber'} />,
               <Btn key="act" size="sm" variant="ghost" onClick={() => dismissAlert(a.id)} disabled={dismissingId === a.id}>
-                {dismissingId === a.id ? '...' : 'Dismiss'}
+                {dismissingId === a.id ? '…' : 'Dismiss'}
               </Btn>,
             ])}
           />
@@ -254,19 +254,19 @@ export default function AutopilotPage() {
           icon={<ListChecks size={17} weight="duotone" color={GOLD} />}
         >
           <FlowSteps title="" steps={SCAN_RULES.map((r, i) => ({
-            title: r.title + (running ? '' : ruleCounts[i] > 0 ? ` — ${ruleCounts[i]} alert${ruleCounts[i] === 1 ? '' : 's'}` : ' — clear'),
+            title: r.title + (running ? '' : ruleCounts[i] > 0 ? ` — ${ruleCounts[i]} alert${ruleCounts[i] === 1 ? '' : 's'}` : ' — Clear'),
             desc: running && scanStage === i ? 'Checking now…' : r.desc,
             done: running ? scanStage > i : true,
           }))} />
         </SectionCard>
         {ctx && (
           <SectionCard flat title="What These Checks Guard" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
-            <InsightRow label="Revised contract" value={fmtM(money?.revisedContract)} strong />
-            <InsightRow label="Billed to date" value={`${fmtM(money?.billedToDate)} · ${Number(money?.billedPct) || 0}%`} />
-            <InsightRow label="Paid to date" value={fmtM(money?.paidToDate)} accent={GREEN} />
+            <InsightRow label="Revised Contract" value={fmtM(money?.revisedContract)} strong />
+            <InsightRow label="Billed to Date" value={`${fmtM(money?.billedToDate)} · ${Number(money?.billedPct) || 0}%`} />
+            <InsightRow label="Paid to Date" value={fmtM(money?.paidToDate)} accent={GREEN} />
             {pendingCos > 0 && <InsightRow label="Pending COs" value={String(pendingCos)} accent={AMBER} />}
-            {Number(counts?.openPunch) > 0 && <InsightRow label="Open punch" value={String(Number(counts?.openPunch) || 0)} />}
-            {Number(ctx?.schedule?.criticalCount) > 0 && <InsightRow label="Critical-path tasks" value={String(Number(ctx?.schedule?.criticalCount) || 0)} accent={RED} />}
+            {Number(counts?.openPunch) > 0 && <InsightRow label="Open Punch" value={String(Number(counts?.openPunch) || 0)} />}
+            {Number(ctx?.schedule?.criticalCount) > 0 && <InsightRow label="Critical-Path Tasks" value={String(Number(ctx?.schedule?.criticalCount) || 0)} accent={RED} />}
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 8, lineHeight: 1.5 }}>
               An unanswered RFI, a lapsed cert, or a stale CO puts this money at risk — that is what the alerts on the left protect.
             </div>

@@ -13,7 +13,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='#F59E0B', DARK='#0a0a0a', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
 interface Bill {
   id: string;
@@ -32,8 +32,8 @@ const EMPTY_FORM = { invoice_num: '', vendor: '', description: '', amount: 0, ta
 
 function statusBadge(status: string) {
   const map: Record<string, { bg: string; color: string }> = {
-    Pending: { bg: 'rgba(245,158,11,.2)', color: '#f59e0b' },
-    Approved: { bg: 'rgba(245,158,11,.2)', color: '#FBBF24' },
+    Pending: { bg: 'color-mix(in srgb, var(--warning) 18%, transparent)', color: 'var(--warning)' },
+    Approved: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)' },
     Paid: { bg: 'rgba(61,214,140,.2)', color: GREEN },
     Overdue: { bg: 'rgba(239,68,68,.2)', color: RED },
   };
@@ -216,7 +216,7 @@ export default function BillsPage() {
     try {
       const res = await fetch(`/api/bills/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ amount: newAmt }) });
       if (!res.ok) throw new Error('update failed');
-      setSuccessMsg(`Adjusted ${pct > 0 ? '+' : ''}${pct}%`); setTimeout(() => setSuccessMsg(''), 3000);
+      setSuccessMsg(`Adjusted ${pct > 0 ? '+' : ''}${pct}%.`); setTimeout(() => setSuccessMsg(''), 3000);
     } catch {
       setErrorMsg('Could not adjust the amount. Please try again.'); setTimeout(() => setErrorMsg(''), 4000);
       fetchBills();
@@ -274,7 +274,7 @@ export default function BillsPage() {
   });
   const pendingTotal = toDollars(sumCents(bills.filter(b => b.status === 'Pending' || b.status === 'Approved').map(b => toCents(b.amount || 0))));
   const paidCount = bills.filter(b => b.status === 'Paid').length;
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#1c1c1e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
@@ -345,9 +345,9 @@ export default function BillsPage() {
         <StatStrip items={[
           {href: `/app/projects/${projectId}/budget`,  label: 'Budget', value: fmt(bOriginal), sub: `${Number(budget?.lineCount) || budgetLines.length} cost-coded lines` },
           {href: `/app/projects/${projectId}/bills`,  label: 'Committed', value: fmt(bCommitted), sub: 'POs + subcontracts' },
-          {href: `/app/projects/${projectId}/bills`,  label: 'Actual to Date', value: fmt(bActual), sub: 'bills + invoices posted' },
-          {href: `/app/projects/${projectId}/bills`,  label: 'Remaining', value: fmt(bRemaining), accent: bRemaining < 0 ? RED : GREEN, sub: 'original less actual' },
-          {href: `/app/projects/${projectId}/bills`,  label: 'Known Vendors', value: String(vendors.length), sub: 'autocomplete in the form' },
+          {href: `/app/projects/${projectId}/bills`,  label: 'Actual to Date', value: fmt(bActual), sub: 'Bills + invoices posted' },
+          {href: `/app/projects/${projectId}/bills`,  label: 'Remaining', value: fmt(bRemaining), accent: bRemaining < 0 ? RED : GREEN, sub: 'Original less actual' },
+          {href: `/app/projects/${projectId}/bills`,  label: 'Known Vendors', value: String(vendors.length), sub: 'Autocomplete in the form' },
         ]} />
       )}
 
@@ -407,7 +407,7 @@ export default function BillsPage() {
                 <input type="text" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} style={inp} />
               </div>
               {selLine && (
-                <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.3)', fontSize: 12.5, color: DIM, lineHeight: 1.55 }}>
+                <div style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', fontSize: 12.5, color: DIM, lineHeight: 1.55 }}>
                   <Wallet size={16} weight="duotone" color={GOLD} style={{ flexShrink: 0, marginTop: 1 }} />
                   <span>
                     Posts <b style={{ color: TEXT }}>{fmt(grandTotal)}</b> actual against <b style={{ color: GOLD }}>{selLine.costCode || selLine.division}</b>{selLine.description ? ` (${selLine.description})` : ''} — budget <b style={{ color: TEXT }}>{fmt(lineBudget)}</b>, actual to date <b style={{ color: TEXT }}>{fmt(lineActual)}</b>, remaining <b style={{ color: lineRemaining < 0 ? RED : GREEN }}>{fmt(lineRemaining)}</b> after this bill.
@@ -422,7 +422,7 @@ export default function BillsPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1 }} className="pmBtn">
-                {saving ? 'Saving...' : 'Save Bill'}
+                {saving ? 'Saving…' : 'Save Bill'}
               </button>
               <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
@@ -432,18 +432,18 @@ export default function BillsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {selLine && (
               <SectionCard flat title={`Cost Code ${selLine.costCode || selLine.division}`} icon={<Wallet size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Line budget" value={fmt(lineBudget)} />
-                <InsightRow label="Actual to date" value={fmt(lineActual)} />
-                <InsightRow label="This bill" value={fmt(grandTotal)} accent={GOLD} />
-                <InsightRow label="Remaining after" value={fmt(lineRemaining)} accent={lineRemaining < 0 ? RED : GREEN} strong />
+                <InsightRow label="Line Budget" value={fmt(lineBudget)} />
+                <InsightRow label="Actual to Date" value={fmt(lineActual)} />
+                <InsightRow label="This Bill" value={fmt(grandTotal)} accent={GOLD} />
+                <InsightRow label="Remaining After" value={fmt(lineRemaining)} accent={lineRemaining < 0 ? RED : GREEN} strong />
               </SectionCard>
             )}
             <SectionCard flat title="After You Save" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
-                { title: 'Bill lands as Pending', desc: 'Queued in payables with overdue tracking off the due date — no follow-up spreadsheet.' },
-                { title: 'Budget actual rolls up server-side', desc: form.cost_code ? `${fmt(grandTotal)} posts to ${form.cost_code} actual the moment you save.` : 'Pick a cost code and the total posts to that budget line automatically.' },
-                { title: 'Approve to clear for payment', desc: 'Approval moves the bill into the payment queue and pending-payables totals.' },
-                { title: 'Mark Paid closes the loop', desc: 'Paid bills drop out of pending totals; the project cost ledger stays current.' },
+                { title: 'Bill Lands as Pending', desc: 'Queued in payables with overdue tracking off the due date — no follow-up spreadsheet.' },
+                { title: 'Budget Actual Rolls Up Server-Side', desc: form.cost_code ? `${fmt(grandTotal)} posts to ${form.cost_code} actual the moment you save.` : 'Pick a cost code and the total posts to that budget line automatically.' },
+                { title: 'Approve to Clear for Payment', desc: 'Approval moves the bill into the payment queue and pending-payables totals.' },
+                { title: 'Mark Paid Closes the Loop', desc: 'Paid bills drop out of pending totals; the project cost ledger stays current.' },
               ]} />
             </SectionCard>
           </div>
@@ -454,7 +454,7 @@ export default function BillsPage() {
         module="bills"
         search={search}
         onSearch={setSearch}
-        searchPlaceholder="Search bills..."
+        searchPlaceholder="Search bills…"
         filters={[{
           key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter,
           allLabel: 'All Statuses',
@@ -463,9 +463,9 @@ export default function BillsPage() {
         sort={sortBy}
         onSort={setSortBy}
         sortOptions={[
-          { value: 'due', label: 'Due date' },
-          { value: 'amount', label: 'Amount (high first)' },
-          { value: 'vendor', label: 'Vendor A-Z' },
+          { value: 'due', label: 'Due Date' },
+          { value: 'amount', label: 'Amount (High First)' },
+          { value: 'vendor', label: 'Vendor A–Z' },
         ]}
         count={{ shown: filteredBills.length, total: bills.length }}
         style={{ marginBottom: 16 }}
@@ -473,13 +473,13 @@ export default function BillsPage() {
 
       <SectionCard title="All Bills" icon={<Receipt size={17} weight="duotone" color={GOLD} />} flush>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
         ) : bills.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
                 <Receipt size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
-                No bills yet
+                No Bills Yet
                 <span style={{ fontWeight: 400, color: DIM }}>{showForm ? ' — log the first one in the form above; it lands here as Pending.' : ' — log the first vendor invoice to start the payables ledger.'}</span>
               </div>
               {!showForm && (
@@ -487,10 +487,10 @@ export default function BillsPage() {
               )}
             </div>
             <FlowStrip steps={[
-              { title: 'Log the bill', desc: 'vendor, amount, cost code' },
-              { title: 'Budget actual posts', desc: 'to that line automatically' },
-              { title: 'Approve', desc: 'clears it for payment' },
-              { title: 'Mark Paid', desc: 'closes the loop' },
+              { title: 'Log the Bill', desc: 'Vendor, amount, cost code' },
+              { title: 'Budget Actual Posts', desc: 'To that line automatically' },
+              { title: 'Approve', desc: 'Clears it for payment' },
+              { title: 'Mark Paid', desc: 'Closes the loop' },
             ]} />
           </div>
         ) : (
@@ -524,7 +524,7 @@ export default function BillsPage() {
                         ) : editId === b.id ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <input value={editVal} onChange={e => setEditVal(e.target.value)} type="number" autoFocus onKeyDown={e => { if (e.key === 'Enter') handleEditBill(b.id); if (e.key === 'Escape') setEditId(null); }} style={{ width: 100, padding: '4px 8px', background: DARK, border: `1px solid ${GOLD}`, borderRadius: 5, color: TEXT, fontSize: 12, outline: 'none', textAlign: 'right' }} />
-                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 5, color: '#1C1C1E', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                            <button onClick={() => handleEditBill(b.id)} style={{ padding: '3px 8px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 5, color: '#0A0A00', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                             <button onClick={() => setEditId(null)} style={{ padding: '3px 8px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 5, color: DIM, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                           </div>
                         ) : adjustId === b.id ? (
@@ -563,13 +563,13 @@ export default function BillsPage() {
                       <td style={{ padding: '10px 14px' }}>{statusBadge(overdue && b.status !== 'Paid' ? 'Overdue' : b.status)}</td>
                       <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                         {b.status === 'Pending' && (
-                          <button onClick={() => handleApprove(b.id)} disabled={actionLoading === b.id + '-approve'} style={{ padding: '4px 10px', background: 'rgba(245,158,11,.2)', border: '1px solid rgba(245,158,11,.4)', borderRadius: 5, color: '#FBBF24', fontSize: 12, cursor: 'pointer', marginRight: 6 }}>
-                            {actionLoading === b.id + '-approve' ? '...' : 'Approve'}
+                          <button onClick={() => handleApprove(b.id)} disabled={actionLoading === b.id + '-approve'} style={{ padding: '4px 10px', background: 'var(--brand-primary-18)', border: '1px solid color-mix(in srgb, var(--brand-primary) 40%, transparent)', borderRadius: 5, color: 'var(--brand-primary-strong)', fontSize: 12, cursor: 'pointer', marginRight: 6 }}>
+                            {actionLoading === b.id + '-approve' ? '…' : 'Approve'}
                           </button>
                         )}
                         {(b.status === 'Pending' || b.status === 'Approved') && (
                           <button onClick={() => handlePay(b.id)} disabled={actionLoading === b.id + '-pay'} style={{ padding: '4px 10px', background: 'rgba(61,214,140,.2)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 5, color: GREEN, fontSize: 12, cursor: 'pointer' }}>
-                            {actionLoading === b.id + '-pay' ? '...' : 'Mark Paid'}
+                            {actionLoading === b.id + '-pay' ? '…' : 'Mark Paid'}
                           </button>
                         )}
                         {b.status === 'Paid' && <span style={{ color: GREEN, fontSize: 12 }}>Paid</span>}
@@ -596,7 +596,7 @@ export default function BillsPage() {
             label="Pending + Approved"
             value={'$' + pendingTotal.toLocaleString()}
             accent={GOLD}
-            sub="awaiting payment"
+            sub="Awaiting payment"
            href={`/app/projects/${projectId}/bills`}/>
         </div>
       )}
