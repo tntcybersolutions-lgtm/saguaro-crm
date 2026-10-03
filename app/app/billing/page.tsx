@@ -1,34 +1,31 @@
 'use client';
+/**
+ * Billing & Subscription — Pass 4, on the kit (PageShell + StatRow + Cards).
+ *
+ * Anatomy: title + one primary action (Manage Payment & Invoices → the Stripe
+ * billing portal; Update Payment Method when past due) → StatRow (plan /
+ * status / price / AI pages / renewal — real account totals) → Current Plan →
+ * Plans (monthly / annual tabs) → Plan & Add-ons → the app → FAQ. Every number
+ * is Number()-coerced because price / usage columns can round-trip as strings.
+ * No fake toggles: every add-on action hits the real request route and the
+ * copy says exactly what happens.
+ *
+ * Every read / write is the one this screen already used:
+ *   GET  /api/billing/subscription   (nested envelope, flattened below)
+ *   GET  /api/entitlements
+ *   POST /api/billing/addon-request  { featureKey, action }
+ *   POST /api/billing/checkout       { planId, interval, successUrl, cancelUrl }
+ *   POST /api/billing/portal         { returnUrl }
+ *   POST /api/billing/cancel
+ */
 import React, { useState, useEffect, useCallback } from 'react';
 import { safeJsonParse } from '@/lib/safe-json';
-import Link from 'next/link';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { CheckCircle, Warning, CreditCard, DeviceMobile, Question, Lightning, PuzzlePiece } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
+import { CheckCircle, Warning, CreditCard, DeviceMobile, ArrowSquareOut } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Tabs, EmptyState, FormModal, Toast, useToast,
+  type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
 import { ADDONS, type AddonDef } from '@/lib/addons';
-
-const GOLD   = 'var(--brand-primary)';
-const RAISED = 'var(--bg-surface)';
-const BORDER = 'rgba(255,255,255,0.12)';
-const DIM    = '#D4D4D8';
-const TEXT   = '#FFFFFF';
-const GREEN  = '#2CFF7A';
-const RED    = '#FF3B30';
-
-// Semantic (destructive) button presets — kit-shaped but intentionally red,
-// so the Cancel / Update-Payment actions stay meaningful instead of gold.
-const dangerGhostStyle: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-  padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
-  background: 'rgba(255,59,48,0.10)', color: RED, border: '1px solid rgba(255,59,48,0.32)',
-  fontWeight: 700, fontSize: 13.5,
-};
-const dangerSolidStyle: React.CSSProperties = {
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-  padding: '11px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
-  background: `linear-gradient(135deg, ${RED}, #FF3B30)`, color: '#fff',
-  fontWeight: 800, fontSize: 13.5, boxShadow: '0 10px 26px -10px rgba(255,59,48,0.6)',
-};
 
 interface Subscription {
   plan_id: string | null;
@@ -69,21 +66,79 @@ const PLANS = [
   },
 ];
 
-function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; bg: string; color: string }> = {
-    trialing:  { label: 'Free Trial',  bg: 'var(--brand-primary-12)', color: GOLD },
-    active:    { label: 'Active',      bg: 'rgba(44,255,122,0.12)',  color: GREEN },
-    past_due:  { label: 'Past Due',    bg: 'rgba(255,59,48,0.12)',  color: RED },
-    canceled:  { label: 'Canceled',    bg: 'rgba(110,110,115,0.1)', color: DIM },
-    paused:    { label: 'Paused',      bg: 'rgba(110,110,115,0.1)', color: DIM },
+/** One status → one badge. Trial amber (a decision is coming), Active green,
+ *  Past Due red, Canceled / Paused grey — from lib/status-colors. */
+function statusBadge(status: string): { label: string; tone: BadgeTone } {
+  const map: Record<string, { label: string; tone: BadgeTone }> = {
+    trialing:  { label: 'Free Trial',  tone: 'under_contract' },
+    active:    { label: 'Active',      tone: 'ongoing' },
+    past_due:  { label: 'Past Due',    tone: 'overdue' },
+    canceled:  { label: 'Canceled',    tone: 'closed' },
+    paused:    { label: 'Paused',      tone: 'closed' },
   };
-  const s = map[status] ?? map.active;
-  return (
-    <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 6, background: s.bg, color: s.color }}>
-      {s.label}
-    </span>
-  );
+  return map[status] ?? map.active;
 }
+
+const CSS = `
+.blWs > .k-page { max-width: none; }
+.blStack { display: flex; flex-direction: column; gap: 16px; }
+.blSuccess { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid rgba(46,229,157,.35); background: rgba(46,229,157,.08); color: var(--text-primary); font-size: var(--fs-sm); }
+.blSuccess > svg { color: var(--status-ongoing); flex-shrink: 0; }
+.blSuccess b { display: block; color: var(--status-ongoing); }
+.blPlanHead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.blPlanName { font-size: var(--fs-xl); font-weight: 800; color: var(--text-primary); }
+.blNote { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.6; margin-top: 6px; }
+.blNote[data-tone="bad"] { color: var(--status-overdue); font-weight: 600; }
+.blNote[data-tone="warn"] { color: var(--status-under-contract); font-weight: 600; }
+.blTrack { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 16px; }
+.blFill { height: 100%; border-radius: 3px; background: var(--status-under-contract); }
+.blTrackLabel { display: flex; justify-content: space-between; margin-top: 6px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.blPlans { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.blPlan { position: relative; display: flex; flex-direction: column; border-radius: var(--radius-md); border: 1px solid var(--border-default); background: var(--bg-surface-2); overflow: hidden; }
+.blPlan[data-popular="true"] { border-color: var(--brand-primary-35); }
+.blPlan[data-current="true"] { border-color: rgba(46,229,157,.5); }
+.blPlanRibbon { text-align: center; padding: 5px 0; font-size: var(--fs-xs); font-weight: 800; background: var(--brand-primary); color: var(--on-brand); }
+.blPlanRibbon[data-current="true"] { background: rgba(46,229,157,.15); color: var(--status-ongoing); border-bottom: 1px solid rgba(46,229,157,.25); }
+.blPlanBody { padding: 22px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.blPlanTitle { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); }
+.blPlanTag { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
+.blPrice { display: flex; align-items: flex-end; gap: 3px; }
+.blPrice > b { font-size: 36px; font-weight: 900; color: var(--text-primary); line-height: 1; font-variant-numeric: tabular-nums; }
+.blPrice > span { font-size: var(--fs-sm); color: var(--text-tertiary); padding-bottom: 5px; }
+.blSave { font-size: var(--fs-xs); color: var(--status-ongoing); margin-top: 4px; }
+.blContact { font-size: var(--fs-lg); font-weight: 900; color: var(--text-primary); }
+.blFeatures { display: flex; flex-direction: column; gap: 7px; }
+.blFeature { display: flex; gap: 8px; align-items: flex-start; font-size: var(--fs-xs); color: var(--text-secondary); }
+.blFeature > svg { color: var(--status-ongoing); flex-shrink: 0; margin-top: 1px; }
+.blPlan .k-btn { width: 100%; justify-content: center; }
+.blSummary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); background: var(--bg-surface-2); margin-bottom: 16px; }
+.blSummary > div:first-child { flex: 1; min-width: 220px; }
+.blLabel { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 4px; }
+.blAddons { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.blAddon { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); background: var(--bg-surface-2); }
+.blAddon[data-on="true"] { border-color: rgba(46,229,157,.35); }
+.blAddonHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.blAddonName { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); line-height: 1.3; }
+.blAddonMeta { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
+.blAddonMeta > small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); text-transform: capitalize; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border-subtle); background: var(--bg-surface); }
+.blAddonDesc { font-size: var(--fs-xs); color: var(--text-tertiary); line-height: 1.55; flex: 1; }
+.blAddonState { font-size: var(--fs-xs); color: var(--text-secondary); font-weight: 600; line-height: 1.5; }
+.blSkel { height: 14px; border-radius: 4px; background: var(--border-subtle); }
+.blInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); margin-top: 12px; }
+.blDowngrade { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 16px; padding: 14px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-default); background: var(--bg-surface-2); }
+.blDowngrade > div:first-child { flex: 1; min-width: 240px; }
+.blDowngrade b { display: block; font-size: var(--fs-sm); color: var(--text-primary); margin-bottom: 3px; }
+.blFaq { display: flex; flex-direction: column; }
+.blFaqItem { padding: 16px 0; border-bottom: 1px solid var(--border-subtle); }
+.blFaqItem:last-child { border-bottom: 0; }
+.blFaqQ { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.blFaqA { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.65; }
+.blOffer { padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--brand-primary-18); background: var(--brand-primary-08); font-size: var(--fs-sm); color: var(--text-primary); }
+.blProse { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.65; }
+@media (max-width: 640px) {
+  .blWs .k-btn, .blWs .k-stat { min-height: 44px; }
+}
+`;
 
 export default function BillingPage() {
   const [sub, setSub] = useState<Subscription | null>(null);
@@ -97,7 +152,12 @@ export default function BillingPage() {
   const [canceling, setCanceling] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const { toast, show } = useToast(8000);
+  const setActionError = (msg: string | null) => { if (msg) show(msg, 'bad'); };
+  const [success, setSuccess] = useState(false);
+  useEffect(() => {
+    try { setSuccess(new URLSearchParams(window.location.search).get('success') === '1'); } catch { /* ignore */ }
+  }, []);
 
   // ── Plan & Add-ons ─────────────────────────────────────────────────────────
   // Entitlement rows for this tenant (GET /api/entitlements). A row with
@@ -192,7 +252,6 @@ export default function BillingPage() {
   };
 
   const requestAddon = async (addon: AddonDef, action: 'enable' | 'disable') => {
-    setActionError(null);
     setRequesting(addon.key);
     try {
       const res = await fetch('/api/billing/addon-request', {
@@ -207,6 +266,7 @@ export default function BillingPage() {
           setDisableReqs(next);
           try { window.localStorage.setItem('saguaro_addon_disable_requests', JSON.stringify(next)); } catch { /* non-fatal */ }
         }
+        show(action === 'enable' ? `${addon.name} requested — we enable it within 1 business day.` : `${addon.name} disable requested.`);
         await loadEntitlements();
       } else {
         setActionError(data.error || `Could not submit the ${addon.name} request. Please try again or email support@saguarocontrol.net.`);
@@ -228,7 +288,6 @@ export default function BillingPage() {
       window.location.href = 'mailto:sales@saguarocontrol.net?subject=Enterprise Inquiry';
       return;
     }
-    setActionError(null);
     setUpgrading(planId);
     try {
       const res = await fetch('/api/billing/checkout', {
@@ -249,7 +308,6 @@ export default function BillingPage() {
   };
 
   const handlePortal = async () => {
-    setActionError(null);
     setPortalLoading(true);
     try {
       const res = await fetch('/api/billing/portal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ returnUrl: `${window.location.origin}/app/billing` }) });
@@ -266,7 +324,6 @@ export default function BillingPage() {
   };
 
   const handleCancel = async () => {
-    setActionError(null);
     setCanceling(true);
     try {
       const res = await fetch('/api/billing/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
@@ -299,399 +356,288 @@ export default function BillingPage() {
   const aiLimit = unlimitedAi ? null : (Number(planInfo?.ai_takeoffs_per_month) || null);
   const aiUsed = Number(usageRow?.ai_takeoffs_used) || 0;
   const renewDays = envelope?.daysUntilRenewal ?? (sub?.current_period_end ? daysLeft(sub.current_period_end) : null);
-  const fmtC = (cents: number) => '$' + ((Number(cents) || 0) / 100).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const fmtC = (cents: number) => '$' + ((Number(cents) || 0) / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const fmtDate = (d: string | null | undefined) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+  const canPortal = !!sub && (sub.status === 'active' || sub.status === 'past_due');
+
+  const stats: StatItem[] = loading
+    ? [
+        { label: 'Plan', value: '—', sub: 'Loading…' },
+        { label: 'Status', value: '—', sub: 'Loading…' },
+        { label: 'Price', value: '—', sub: 'Loading…' },
+        { label: 'AI Takeoff Pages', value: '—', sub: 'Loading…' },
+        { label: 'Renews In', value: '—', sub: 'Loading…' },
+      ]
+    : sub
+      ? [
+          { label: 'Plan', value: sub.plan_name || 'Subscription', sub: sub.billing_interval === 'annual' ? 'Annual billing' : 'Monthly billing' },
+          { label: 'Status', value: sub.status === 'trialing' ? `${trialDays ?? 0} trial days left` : statusBadge(sub.status).label, tone: sub.status === 'past_due' ? 'bad' : sub.status === 'active' ? 'good' : 'warn', sub: sub.cancel_at ? `Cancels ${fmtDate(sub.cancel_at)}` : sub.status === 'trialing' ? 'Full access during trial' : 'Subscription' },
+          { label: 'Price', value: priceCents > 0 ? fmtC(priceCents) : '—', sub: priceCents > 0 ? `Billed ${sub.billing_interval === 'annual' ? 'annually' : 'monthly'}` : 'No charge on file' },
+          { label: 'AI Takeoff Pages', value: unlimitedAi ? 'Unlimited' : aiLimit != null ? `${aiUsed} / ${aiLimit}` : String(aiUsed), tone: !unlimitedAi && aiLimit != null && aiUsed >= aiLimit ? 'bad' : 'default', sub: unlimitedAi ? `${aiUsed} used this period` : aiLimit != null ? `${Math.max(0, aiLimit - aiUsed)} left this period` : 'This billing period' },
+          { label: 'Renews In', value: renewDays != null ? `${renewDays} days` : '—', sub: sub.current_period_end ? fmtDate(sub.current_period_end) : 'No period on file' },
+        ]
+      : [];
 
   return (
-    <>
-      <PremiumSurface maxWidth={2200}>
+    <div className="blWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Billing' }]}
+        title="Billing & Subscription"
+        subtitle="Your plan, payment method, and invoices. Plan changes run in the secure Stripe billing portal."
+        actions={canPortal ? (
+          sub!.status === 'past_due'
+            ? <Button variant="danger" icon={<CreditCard size={15} />} onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Update Payment Method'}</Button>
+            : <Button variant="primary" icon={<ArrowSquareOut size={15} />} onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Manage Payment & Invoices'}</Button>
+        ) : undefined}
+      >
+        {stats.length > 0 && <StatRow items={stats} />}
 
-        {/* Header */}
-        <ModuleHero
-          eyebrow="Account"
-          eyebrowIcon={<CreditCard size={13} weight="fill" color={GOLD} />}
-          title="Billing &"
-          accent="Subscription"
-          subtitle="Manage your plan, payment method, and invoices."
-        />
-
-        {/* Account intelligence strip — live plan, usage, and renewal totals */}
-        {sub && (
-          <StatStrip items={[
-            {href: '/app/billing',  label: 'Plan', value: sub.plan_name || 'Subscription', sub: sub.billing_interval === 'annual' ? 'Annual billing' : 'Monthly billing' },
-            {href: '/app/billing',  label: 'Status', value: sub.status === 'trialing' ? (trialDays ?? 0) + ' trial days left' : (sub.status || '').replace(/_/g, ' '), accent: sub.status === 'past_due' ? RED : sub.status === 'active' ? GREEN : GOLD, sub: sub.cancel_at ? 'Cancels ' + new Date(sub.cancel_at).toLocaleDateString() : sub.status === 'trialing' ? 'Full access during trial' : undefined },
-            {href: '/app/billing',  label: 'Price', value: priceCents > 0 ? fmtC(priceCents) : '—', sub: priceCents > 0 ? 'Billed ' + (sub.billing_interval === 'annual' ? 'annually' : 'monthly') : 'No charge on file' },
-            {href: '/app/billing',  label: 'AI Takeoff Pages', value: unlimitedAi ? 'Unlimited' : aiLimit != null ? aiUsed + ' / ' + aiLimit : String(aiUsed), accent: !unlimitedAi && aiLimit != null && aiUsed >= aiLimit ? RED : undefined, sub: unlimitedAi ? aiUsed + ' used this period' : aiLimit != null ? Math.max(0, aiLimit - aiUsed) + ' left this period' : 'This billing period' },
-            {href: '/app/billing',  label: 'Renews In', value: renewDays != null ? renewDays + ' days' : '—', sub: sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : 'No period on file' },
-          ]} />
-        )}
-
-        {/* URL success message */}
-        {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('success') === '1' && (
-          <div style={{ background: 'rgba(44,255,122,0.1)', border: `1px solid rgba(44,255,122,0.3)`, borderRadius: 12, padding: '16px 20px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 20, display: 'inline-flex', alignItems: 'center' }}><CheckCircle size={22} weight="fill" color={GREEN} /></span>
-            <div>
-              <div style={{ fontWeight: 700, color: GREEN, marginBottom: 2 }}>Payment successful — you're all set!</div>
-              <div style={{ fontSize: 13, color: DIM }}>Your subscription is now active. All features are unlocked.</div>
-            </div>
+        {success && (
+          <div className="blSuccess" role="status">
+            <CheckCircle size={22} weight="fill" />
+            <div><b>Payment successful — you are all set.</b>Your subscription is now active. All features are unlocked.</div>
           </div>
         )}
 
-        {/* Current Plan Card */}
-        {loading ? (
-          <SectionCard flat style={{ marginBottom: 28 }}>
-            <Skeleton width={110} height={11} style={{ marginBottom: 12 }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-              <Skeleton width={180} height={26} />
-              <Skeleton width={80} height={22} borderRadius={6} />
-            </div>
-            <Skeleton width={220} height={14} style={{ marginBottom: 20 }} />
-            <Skeleton width="100%" height={6} borderRadius={3} />
-          </SectionCard>
-        ) : error ? (
-          <SectionCard style={{ marginBottom: 28 }}>
-            <PremiumEmpty
-              tone="error"
-              icon={<Warning size={30} weight="fill" color={RED} />}
-              title="Couldn't load your subscription"
-              description="We hit a problem fetching your current plan. Your subscription is safe — please try again."
-              action={<button onClick={loadSubscription} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-              compact
-            />
-          </SectionCard>
-        ) : sub ? (
-          <SectionCard flat
-            icon={<CreditCard size={17} weight="duotone" color={GOLD} />}
-            title="Current Plan"
-            accent={sub.status === 'past_due' ? RED : GOLD}
-            style={{ marginBottom: 28 }}
-            action={(sub.status === 'active' || sub.status === 'past_due') ? (
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {sub.status === 'active' && (
-                  <button onClick={handlePortal} disabled={portalLoading} style={ghostButtonStyle} className="pmBtn">
-                    {portalLoading ? 'Loading…' : 'Manage Payment & Invoices'}
-                  </button>
-                )}
-                {sub.status === 'active' && !sub.cancel_at && (
-                  <button onClick={() => setShowCancel(true)} style={dangerGhostStyle} className="pmBtn">
-                    Cancel Plan
-                  </button>
-                )}
-                {sub.status === 'past_due' && (
-                  <button onClick={handlePortal} style={dangerSolidStyle} className="pmBtn">
-                    Update Payment Method
-                  </button>
-                )}
+        <div className="blStack">
+          {/* Current Plan */}
+          {loading ? (
+            <Card title="Current Plan">
+              <div aria-busy="true" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className="blSkel" style={{ width: 180, height: 26 }} />
+                <div className="blSkel" style={{ width: 220 }} />
+                <div className="blSkel" style={{ width: '100%', height: 6 }} />
               </div>
-            ) : undefined}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 24, fontWeight: 900, color: TEXT }}>{sub.plan_name ?? 'Free Trial'}</span>
-              <StatusBadge status={sub.status} />
-            </div>
-            {sub.status === 'trialing' && trialDays !== null && (
-              <div style={{ fontSize: 14, color: trialDays <= 5 ? RED : GOLD, fontWeight: 600 }}>
-                {trialDays > 0 ? `${trialDays} days left in free trial` : 'Trial expired — upgrade to continue'}
+            </Card>
+          ) : error ? (
+            <Card flush>
+              <EmptyState
+                icon={<Warning size={22} />}
+                title="Couldn't load your subscription"
+                text="We hit a problem fetching your current plan. Your subscription is safe — please try again."
+                action={<Button onClick={loadSubscription}>Retry</Button>}
+              />
+            </Card>
+          ) : sub ? (
+            <Card
+              title="Current Plan"
+              actions={sub.status === 'active' && !sub.cancel_at ? <Button variant="danger" size="sm" onClick={() => setShowCancel(true)}>Cancel Plan</Button> : undefined}
+            >
+              <div className="blPlanHead">
+                <span className="blPlanName">{sub.plan_name ?? 'Free Trial'}</span>
+                <Badge tone={statusBadge(sub.status).tone} dot>{statusBadge(sub.status).label}</Badge>
               </div>
-            )}
-            {sub.status === 'active' && periodDays !== null && (
-              <div style={{ fontSize: 13, color: DIM }}>Renews in {periodDays} days · {sub.billing_interval === 'annual' ? 'Annual' : 'Monthly'} billing</div>
-            )}
-            {sub.status === 'past_due' && (
-              <div style={{ fontSize: 14, color: RED, fontWeight: 600 }}>Payment failed — please update your payment method.</div>
-            )}
-            {sub.cancel_at && (
-              <div style={{ fontSize: 13, color: RED }}>Cancels on {new Date(sub.cancel_at).toLocaleDateString()}</div>
-            )}
-
-            {/* Trial progress bar */}
-            {sub.status === 'trialing' && trialDays !== null && (
-              <div style={{ marginTop: 20 }}>
-                <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, ((30 - trialDays) / 30) * 100))}%`, background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`, borderRadius: 3 }} />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: DIM }}>
-                  <span>Trial started</span>
-                  <span>{trialDays} days remaining</span>
-                </div>
-              </div>
-            )}
-          </SectionCard>
-        ) : (
-          <SectionCard flat style={{ marginBottom: 28 }}>
-            <PremiumEmpty
-              icon={<CreditCard size={30} weight="duotone" color={GOLD} />}
-              title="No active subscription"
-              description="Choose a plan below to get started."
-              compact
-            />
-          </SectionCard>
-        )}
-
-        {/* Plan Selection */}
-        <SectionCard
-          icon={<Lightning size={17} weight="duotone" color={GOLD} />}
-          title={sub?.status === 'trialing' ? 'Upgrade Your Plan' : 'Change Plan'}
-          style={{ marginBottom: 28 }}
-          action={
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '3px', border: `1px solid ${BORDER}` }}>
-              <button onClick={() => setAnnual(false)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: !annual ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'transparent', color: !annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Monthly</button>
-              <button onClick={() => setAnnual(true)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: annual ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'transparent', color: annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-                Annual
-                <span style={{ fontSize: 10, fontWeight: 800, color: GREEN, background: 'rgba(44,255,122,0.12)', border: '1px solid rgba(44,255,122,0.25)', padding: '1px 6px', borderRadius: 8 }}>-17%</span>
-              </button>
-            </div>
-          }
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-            {PLANS.map(plan => {
-              const isCurrent = currentPlanName.includes(plan.id) && sub?.status === 'active';
-              const isUpgrade = plan.id === 'professional' && currentPlanName.includes('starter');
-              return (
-                <div key={plan.id} style={{
-                  background: RAISED,
-                  border: `1.5px solid ${isCurrent ? GREEN : plan.popular ? GOLD : BORDER}`,
-                  borderRadius: 14, overflow: 'hidden', position: 'relative',
-                  boxShadow: 'none',
-                }}>
-                  {plan.popular && !isCurrent && (
-                    <div style={{ background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: '#0A0A00' }}>Most Popular</div>
-                  )}
-                  {isCurrent && (
-                    <div style={{ background: 'rgba(44,255,122,0.15)', borderBottom: `1px solid rgba(44,255,122,0.25)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: GREEN }}>Current Plan</div>
-                  )}
-                  <div style={{ padding: '24px 22px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: plan.popular ? GOLD : DIM, marginBottom: 4 }}>{plan.name}</div>
-                    <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>{plan.tagline}</div>
-
-                    {plan.price_mo > 0 ? (
-                      <div style={{ marginBottom: 20 }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3 }}>
-                          <span style={{ fontSize: 40, fontWeight: 900, color: TEXT, lineHeight: 1 }}>${annual ? (plan.price_yr ?? 0) : (plan.price_mo ?? 0)}</span>
-                          <span style={{ fontSize: 13, color: DIM, paddingBottom: 6 }}>/mo</span>
-                        </div>
-                        {annual && <div style={{ fontSize: 11, color: GREEN, marginTop: 2 }}>Save ${((plan.price_mo ?? 0) - (plan.price_yr ?? 0)) * 12}/yr</div>}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 22, fontWeight: 900, color: TEXT, marginBottom: 20 }}>Contact Sales</div>
-                    )}
-
-                    <button
-                      onClick={() => !isCurrent && handleUpgrade(plan.id)}
-                      disabled={isCurrent || upgrading === plan.id}
-                      style={{
-                        width: '100%', padding: '11px 0', borderRadius: 8, border: isCurrent ? `1px solid rgba(44,255,122,0.3)` : plan.popular ? 'none' : `1px solid ${BORDER}`,
-                        background: isCurrent ? 'rgba(44,255,122,0.08)' : plan.popular ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))' : 'rgba(255,255,255,0.06)',
-                        color: isCurrent ? GREEN : plan.popular ? '#0A0A00' : TEXT,
-                        fontWeight: 800, fontSize: 13, cursor: isCurrent ? 'default' : 'pointer', marginBottom: 20,
-                        boxShadow: plan.popular && !isCurrent ? '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
-                      }}
-                    >
-                      {isCurrent ? 'Current Plan' : upgrading === plan.id ? 'Loading…' : plan.id === 'enterprise' ? 'Contact Sales' : isUpgrade ? 'Upgrade Now' : 'Select Plan'}
-                    </button>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                      {plan.features.map(f => (
-                        <div key={f} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 2 }}>
-                            <circle cx="8" cy="8" r="8" fill="rgba(44,255,122,0.15)" />
-                            <path d="M4.5 8l2.5 2.5 4-5" stroke={GREEN} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          <span style={{ fontSize: 12, color: DIM }}>{f}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </SectionCard>
-
-        {/* Plan & Add-ons — tenant self-service. No fake toggles: every action
-            hits the real request route, and copy says exactly what happens. */}
-        <SectionCard
-          icon={<PuzzlePiece size={17} weight="duotone" color={GOLD} />}
-          title="Plan & Add-ons"
-          subtitle="Company-wide add-ons. Nothing is billed without confirmation."
-          style={{ marginBottom: 28 }}
-        >
-          {/* Current plan summary + Change plan via the Stripe billing portal */}
-          <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 220 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: DIM, marginBottom: 4 }}>Current Plan</div>
-              {sub ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 18, fontWeight: 900, color: TEXT }}>{sub.plan_name}</span>
-                  <StatusBadge status={sub.status} />
-                  <span style={{ fontSize: 13, fontWeight: 800, color: GOLD }}>
-                    {priceCents > 0 ? `${fmtC(priceCents)} / ${sub.billing_interval === 'annual' ? 'yr' : 'mo'}` : 'No charge on file'}
-                  </span>
-                </div>
-              ) : (
-                <div style={{ fontSize: 14, color: DIM }}>{loading ? 'Loading your plan…' : 'No active subscription — choose a plan above.'}</div>
+              {sub.status === 'trialing' && trialDays !== null && (
+                <div className="blNote" data-tone={trialDays <= 5 ? 'bad' : 'warn'}>{trialDays > 0 ? `${trialDays} days left in your free trial.` : 'Trial expired — upgrade to continue.'}</div>
               )}
-              <div style={{ fontSize: 12, color: DIM, marginTop: 6 }}>
-                {sub && (sub.status === 'active' || sub.status === 'past_due')
-                  ? 'Plan up/downgrades run in the secure Stripe billing portal — changes take effect via Stripe.'
-                  : 'Once you subscribe, plan changes run in the secure Stripe billing portal.'}
-              </div>
-            </div>
-            {sub && (sub.status === 'active' || sub.status === 'past_due') && (
-              <button onClick={handlePortal} disabled={portalLoading} style={goldOutlineButtonStyle} className="pmBtn">
-                {portalLoading ? 'Loading…' : 'Change Plan'}
-              </button>
-            )}
-          </div>
-
-          {/* Add-ons grid — ONE typed list (lib/addons.ts), live status from GET /api/entitlements */}
-          {ents === null && !entError ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14 }}>
-              {ADDONS.map(a => (
-                <div key={a.key} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18 }}>
-                  <Skeleton width={150} height={14} style={{ marginBottom: 10 }} />
-                  <Skeleton width={90} height={11} style={{ marginBottom: 12 }} />
-                  <Skeleton width="100%" height={10} />
-                </div>
-              ))}
-            </div>
+              {sub.status === 'active' && periodDays !== null && (
+                <div className="blNote">Renews in {periodDays} days · {sub.billing_interval === 'annual' ? 'Annual' : 'Monthly'} billing.</div>
+              )}
+              {sub.status === 'past_due' && (
+                <div className="blNote" data-tone="bad">Payment failed — please update your payment method.</div>
+              )}
+              {sub.cancel_at && (
+                <div className="blNote" data-tone="bad">Cancels on {fmtDate(sub.cancel_at)}.</div>
+              )}
+              {sub.status === 'trialing' && trialDays !== null && (
+                <>
+                  <div className="blTrack"><div className="blFill" style={{ width: `${Math.max(0, Math.min(100, ((30 - trialDays) / 30) * 100))}%` }} /></div>
+                  <div className="blTrackLabel"><span>Trial started</span><span>{trialDays} days remaining</span></div>
+                </>
+              )}
+            </Card>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14 }}>
-              {ADDONS.map(addon => {
-                const { state, expiresAt } = addonState(addon.key);
-                const trialLeft = state === 'trial' && expiresAt ? daysLeft(expiresAt) : null;
-                const pendingDisable = state === 'active' && !!disableReqs[addon.key];
-                const busy = requesting === addon.key;
-                const chip =
-                  state === 'active' ? { label: pendingDisable ? 'Active · Disable Requested' : 'Active', bg: 'rgba(44,255,122,0.12)', color: GREEN } :
-                  state === 'trial' ? { label: trialLeft != null ? `Trial · ${trialLeft}d Left` : 'Trial', bg: 'var(--brand-primary-12)', color: GOLD } :
-                  state === 'requested' ? { label: 'Requested', bg: 'var(--brand-primary-12)', color: GOLD } :
-                  { label: 'Not Enabled', bg: 'rgba(255,255,255,0.06)', color: DIM };
+            <Card flush>
+              <EmptyState icon={<CreditCard size={22} />} title="No active subscription" text="Choose a plan below to get started." />
+            </Card>
+          )}
+
+          {/* Plan Selection */}
+          <Card
+            title={sub?.status === 'trialing' ? 'Upgrade Your Plan' : 'Change Plan'}
+            subtitle={annual ? 'Annual billing — about 17% less than monthly.' : 'Monthly billing. Switch to annual to save about 17%.'}
+            actions={
+              <Tabs value={annual ? 'annual' : 'monthly'} onChange={k => setAnnual(k === 'annual')} tabs={[{ key: 'monthly', label: 'Monthly' }, { key: 'annual', label: 'Annual' }]} />
+            }
+          >
+            <div className="blPlans">
+              {PLANS.map(plan => {
+                const isCurrent = currentPlanName.includes(plan.id) && sub?.status === 'active';
+                const isUpgrade = plan.id === 'professional' && currentPlanName.includes('starter');
                 return (
-                  <div key={addon.key} style={{ background: RAISED, border: `1px solid ${state === 'active' || state === 'trial' ? 'rgba(44,255,122,0.3)' : BORDER}`, borderRadius: 14, padding: '18px 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: TEXT, lineHeight: 1.3 }}>{addon.name}</div>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: chip.bg, color: chip.color, whiteSpace: 'nowrap', flexShrink: 0 }}>{chip.label}</span>
+                  <div key={plan.id} className="blPlan" data-popular={plan.popular ? 'true' : undefined} data-current={isCurrent ? 'true' : undefined}>
+                    {plan.popular && !isCurrent && <div className="blPlanRibbon">Most Popular</div>}
+                    {isCurrent && <div className="blPlanRibbon" data-current="true">Current Plan</div>}
+                    <div className="blPlanBody">
+                      <div>
+                        <div className="blPlanTitle">{plan.name}</div>
+                        <div className="blPlanTag">{plan.tagline}</div>
+                      </div>
+                      {plan.price_mo > 0 ? (
+                        <div>
+                          <div className="blPrice"><b>${annual ? (plan.price_yr ?? 0) : (plan.price_mo ?? 0)}</b><span>/mo</span></div>
+                          {annual && <div className="blSave">Save ${((plan.price_mo ?? 0) - (plan.price_yr ?? 0)) * 12}/yr</div>}
+                        </div>
+                      ) : (
+                        <div className="blContact">Contact Sales</div>
+                      )}
+                      <Button
+                        variant={isCurrent ? 'secondary' : plan.popular ? 'primary' : 'secondary'}
+                        onClick={() => !isCurrent && handleUpgrade(plan.id)}
+                        disabled={isCurrent || upgrading === plan.id}
+                      >
+                        {isCurrent ? 'Current Plan' : upgrading === plan.id ? 'Opening checkout…' : plan.id === 'enterprise' ? 'Contact Sales' : isUpgrade ? 'Upgrade Now' : 'Select Plan'}
+                      </Button>
+                      <div className="blFeatures">
+                        {plan.features.map(f => (
+                          <div key={f} className="blFeature"><CheckCircle size={14} weight="fill" /><span>{f}</span></div>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 800, color: GOLD }}>{addon.price}</span>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: DIM, textTransform: 'capitalize', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, padding: '1px 7px', borderRadius: 6 }}>{addon.kind}</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: DIM, lineHeight: 1.55, flex: 1 }}>{addon.desc}</div>
-                    {state === 'requested' ? (
-                      <div style={{ fontSize: 12, color: GOLD, fontWeight: 600, lineHeight: 1.5 }}>Requested — we enable it within 1 business day.</div>
-                    ) : pendingDisable ? (
-                      <div style={{ fontSize: 12, color: DIM, fontWeight: 600, lineHeight: 1.5 }}>Disable requested — stays on until our team processes it (within 1 business day).</div>
-                    ) : state === 'active' || state === 'trial' ? (
-                      <button onClick={() => requestAddon(addon, 'disable')} disabled={busy} style={{ ...dangerGhostStyle, padding: '8px 14px', fontSize: 12.5, alignSelf: 'flex-start' }} className="pmBtn">
-                        {busy ? 'Submitting…' : 'Request Disable'}
-                      </button>
-                    ) : (
-                      <button onClick={() => requestAddon(addon, 'enable')} disabled={busy} style={{ ...goldOutlineButtonStyle, padding: '8px 14px', fontSize: 12.5, alignSelf: 'flex-start' }} className="pmBtn">
-                        {busy ? 'Submitting…' : 'Enable'}
-                      </button>
-                    )}
                   </div>
                 );
               })}
             </div>
-          )}
-          {entError && (
-            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: RED, flexWrap: 'wrap' }}>
-              <Warning size={16} weight="fill" color={RED} />
-              <span>Couldn't load add-on status — cards may show "Not Enabled" for add-ons you already have.</span>
-              <button onClick={loadEntitlements} style={{ background: 'none', border: 'none', color: GOLD, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>Retry</button>
-            </div>
-          )}
-          <div style={{ marginTop: 14, fontSize: 12, color: DIM, lineHeight: 1.6 }}>
-            Requesting an add-on never charges your card. Our team confirms pricing with you first, then enables it within 1 business day — every account admin is notified either way.
-          </div>
+          </Card>
 
-          {/* Downgrade guidance */}
-          <div style={{ marginTop: 16, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: 240 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: TEXT, marginBottom: 3 }}>Thinking about downgrading?</div>
-              <div style={{ fontSize: 12.5, color: DIM, lineHeight: 1.6 }}>
-                Downgrades run through the Stripe billing portal and take effect at your next billing cycle — your projects, documents, and history are never deleted.
+          {/* Plan & Add-ons — tenant self-service. No fake toggles: every action
+              hits the real request route, and copy says exactly what happens. */}
+          <Card title="Plan & Add-ons" subtitle="Company-wide add-ons. Nothing is billed without confirmation.">
+            <div className="blSummary">
+              <div>
+                <div className="blLabel">Current Plan</div>
+                {sub ? (
+                  <div className="blPlanHead">
+                    <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 900, color: 'var(--text-primary)' }}>{sub.plan_name}</span>
+                    <Badge tone={statusBadge(sub.status).tone}>{statusBadge(sub.status).label}</Badge>
+                    <span style={{ fontSize: 'var(--fs-sm)', fontWeight: 800, color: 'var(--text-primary)' }}>{priceCents > 0 ? `${fmtC(priceCents)} / ${sub.billing_interval === 'annual' ? 'yr' : 'mo'}` : 'No charge on file'}</span>
+                  </div>
+                ) : (
+                  <div className="blProse">{loading ? 'Loading your plan…' : 'No active subscription — choose a plan above.'}</div>
+                )}
+                <div className="blNote">{canPortal ? 'Plan up/downgrades run in the secure Stripe billing portal — changes take effect via Stripe.' : 'Once you subscribe, plan changes run in the secure Stripe billing portal.'}</div>
               </div>
+              {canPortal && <Button icon={<ArrowSquareOut size={15} />} onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Change Plan'}</Button>}
             </div>
-            {sub && (sub.status === 'active' || sub.status === 'past_due') && (
-              <button onClick={handlePortal} disabled={portalLoading} style={ghostButtonStyle} className="pmBtn">
-                {portalLoading ? 'Loading…' : 'Open Billing Portal'}
-              </button>
+
+            {ents === null && !entError ? (
+              <div className="blAddons" aria-busy="true">
+                {ADDONS.map(a => (
+                  <div key={a.key} className="blAddon">
+                    <div className="blSkel" style={{ width: 150 }} />
+                    <div className="blSkel" style={{ width: 90 }} />
+                    <div className="blSkel" style={{ width: '100%' }} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="blAddons">
+                {ADDONS.map(addon => {
+                  const { state, expiresAt } = addonState(addon.key);
+                  const trialLeft = state === 'trial' && expiresAt ? daysLeft(expiresAt) : null;
+                  const pendingDisable = state === 'active' && !!disableReqs[addon.key];
+                  const busy = requesting === addon.key;
+                  const chip: { label: string; tone: BadgeTone } =
+                    state === 'active' ? { label: pendingDisable ? 'Active · Disable Requested' : 'Active', tone: 'ongoing' } :
+                    state === 'trial' ? { label: trialLeft != null ? `Trial · ${trialLeft}d Left` : 'Trial', tone: 'under_contract' } :
+                    state === 'requested' ? { label: 'Requested', tone: 'under_contract' } :
+                    { label: 'Not Enabled', tone: 'neutral' };
+                  return (
+                    <div key={addon.key} className="blAddon" data-on={state === 'active' || state === 'trial' ? 'true' : undefined}>
+                      <div className="blAddonHead">
+                        <div className="blAddonName">{addon.name}</div>
+                        <Badge tone={chip.tone}>{chip.label}</Badge>
+                      </div>
+                      <div className="blAddonMeta"><span>{addon.price}</span><small>{addon.kind}</small></div>
+                      <div className="blAddonDesc">{addon.desc}</div>
+                      {state === 'requested' ? (
+                        <div className="blAddonState">Requested — we enable it within 1 business day.</div>
+                      ) : pendingDisable ? (
+                        <div className="blAddonState">Disable requested — stays on until our team processes it (within 1 business day).</div>
+                      ) : state === 'active' || state === 'trial' ? (
+                        <div><Button variant="danger" size="sm" onClick={() => requestAddon(addon, 'disable')} disabled={busy}>{busy ? 'Submitting…' : 'Request Disable'}</Button></div>
+                      ) : (
+                        <div><Button size="sm" onClick={() => requestAddon(addon, 'enable')} disabled={busy}>{busy ? 'Submitting…' : 'Enable'}</Button></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
-          </div>
-        </SectionCard>
-
-        {/* Install App Section */}
-        <SectionCard flat
-          icon={<DeviceMobile size={17} weight="duotone" color={GOLD} />}
-          title="Get the App for iPhone & iPad"
-          subtitle="Saguaro Control Systems App"
-          style={{ marginBottom: 28 }}
-          action={
-            <Link href="/get-the-app" style={{ ...goldButtonStyle, whiteSpace: 'nowrap' }} className="pmBtn">
-              Get Install Instructions
-            </Link>
-          }
-        >
-          <div style={{ fontSize: 13, color: DIM, maxWidth: 560, lineHeight: 1.6 }}>
-            Native iOS app, free on Apple TestFlight for every team member on your plan (App Store &amp; Android coming soon). The full platform also runs in any browser.
-          </div>
-        </SectionCard>
-
-        {/* FAQ */}
-        <SectionCard flat
-          icon={<Question size={17} weight="duotone" color={GOLD} />}
-          title="Billing FAQ"
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            {[
-              { q: 'When does my free trial end?', a: 'Your 30-day free trial gives you full access to all Professional features. No credit card is required until you decide to subscribe.' },
-              { q: 'Can I switch plans anytime?', a: 'Yes. Upgrades take effect immediately with prorated billing. Downgrades take effect at the next billing cycle.' },
-              { q: 'How do I update my payment method?', a: 'Click "Manage Payment & Invoices" above. You\'ll be taken to the Stripe customer portal where you can update your card, download invoices, and manage your subscription.' },
-              { q: 'What happens if my payment fails?', a: 'We\'ll retry your card 3 times over 7 days and email you each time. If payment still fails, your account is paused but your data is preserved for 30 days.' },
-              { q: 'Do you offer refunds?', a: 'We offer a full refund within 7 days of your first payment. After that, we don\'t offer refunds but you can cancel anytime and retain access until your period ends.' },
-            ].map((faq, i, arr) => (
-              <div key={i} style={{ padding: '18px 0', borderBottom: i < arr.length - 1 ? `1px solid rgba(255,255,255,0.08)` : 'none' }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: TEXT, marginBottom: 6 }}>{faq.q}</div>
-                <div style={{ fontSize: 13, color: DIM, lineHeight: 1.65 }}>{faq.a}</div>
+            {entError && (
+              <div className="blInlineErr" role="alert">
+                <Warning size={16} weight="fill" />
+                <span>Couldn&apos;t load add-on status — cards may show &ldquo;Not Enabled&rdquo; for add-ons you already have.</span>
+                <Button size="sm" variant="ghost" onClick={loadEntitlements}>Retry</Button>
               </div>
-            ))}
-          </div>
-        </SectionCard>
+            )}
+            <div className="blNote" style={{ marginTop: 14 }}>
+              Requesting an add-on never charges your card. Our team confirms pricing with you first, then enables it within 1 business day — every account admin is notified either way.
+            </div>
+            <div className="blDowngrade">
+              <div>
+                <b>Thinking about downgrading?</b>
+                <div className="blProse">Downgrades run through the Stripe billing portal and take effect at your next billing cycle — your projects, documents, and history are never deleted.</div>
+              </div>
+              {canPortal && <Button onClick={handlePortal} disabled={portalLoading}>{portalLoading ? 'Opening…' : 'Open Billing Portal'}</Button>}
+            </div>
+          </Card>
 
-      </PremiumSurface>
+          {/* Install App */}
+          <Card
+            title="Get the App for iPhone & iPad"
+            subtitle="Saguaro Control Systems App"
+            actions={<Button icon={<DeviceMobile size={15} />} href="/get-the-app">Get Install Instructions</Button>}
+          >
+            <div className="blProse" style={{ maxWidth: 560 }}>
+              Native iOS app, free on Apple TestFlight for every team member on your plan (App Store &amp; Android coming soon). The full platform also runs in any browser.
+            </div>
+          </Card>
 
-      {/* Action error banner — fixed + above the cancel modal (z 500) so failures are never invisible */}
-      {actionError && (
-        <div role="alert" style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 600, width: 'calc(100% - 48px)', maxWidth: 480, background: 'rgba(255,59,48,0.14)', border: `1px solid rgba(255,59,48,0.45)`, borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.45)' }}>
-          <Warning size={20} weight="fill" color={RED} />
-          <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: TEXT }}>{actionError}</span>
-          <button onClick={() => setActionError(null)} aria-label="Dismiss" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 4px' }}>&times;</button>
+          {/* FAQ */}
+          <Card title="Billing FAQ">
+            <div className="blFaq">
+              {[
+                { q: 'When does my free trial end?', a: 'Your 30-day free trial gives you full access to all Professional features. No credit card is required until you decide to subscribe.' },
+                { q: 'Can I switch plans anytime?', a: 'Yes. Upgrades take effect immediately with prorated billing. Downgrades take effect at the next billing cycle.' },
+                { q: 'How do I update my payment method?', a: 'Click "Manage Payment & Invoices" above. You\'ll be taken to the Stripe customer portal where you can update your card, download invoices, and manage your subscription.' },
+                { q: 'What happens if my payment fails?', a: 'We\'ll retry your card 3 times over 7 days and email you each time. If payment still fails, your account is paused but your data is preserved for 30 days.' },
+                { q: 'Do you offer refunds?', a: 'We offer a full refund within 7 days of your first payment. After that, we don\'t offer refunds but you can cancel anytime and retain access until your period ends.' },
+              ].map((faq, i) => (
+                <div key={i} className="blFaqItem">
+                  <div className="blFaqQ">{faq.q}</div>
+                  <div className="blFaqA">{faq.a}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
-      )}
+      </PageShell>
 
-      {/* Cancel Confirmation Modal */}
-      {showCancel && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '36px 32px', maxWidth: 440, width: '100%', boxShadow: 'var(--shadow-lg)' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, color: TEXT }}>Cancel Your Subscription?</div>
-            <div style={{ fontSize: 14, color: DIM, lineHeight: 1.65, marginBottom: 28 }}>
-              You'll retain access until the end of your current billing period. Your data will be preserved for 30 days after that. You can reactivate anytime.
-            </div>
-            <div style={{ background: 'var(--brand-primary-08)', border: `1px solid var(--brand-primary-18)`, borderRadius: 8, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: GOLD }}>
-              Before you go — email us at <strong>support@saguarocontrol.net</strong> and we'll give you 20% off your next 3 months.
-            </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowCancel(false)} style={{ flex: 1, padding: '12px 0', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Keep My Plan</button>
-              <button onClick={handleCancel} disabled={canceling} style={{ flex: 1, padding: '12px 0', background: 'rgba(255,59,48,0.1)', border: `1px solid rgba(255,59,48,0.3)`, borderRadius: 8, color: RED, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-                {canceling ? 'Canceling…' : 'Yes, Cancel'}
-              </button>
-            </div>
-          </div>
+      {/* Cancel confirmation */}
+      <FormModal
+        open={showCancel}
+        onClose={() => { if (!canceling) setShowCancel(false); }}
+        title="Cancel Your Subscription?"
+        size="sm"
+        busy={canceling}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowCancel(false)} disabled={canceling}>Keep My Plan</Button>
+            <Button variant="danger" onClick={handleCancel} disabled={canceling}>{canceling ? 'Canceling…' : 'Yes, Cancel'}</Button>
+          </>
+        }
+      >
+        <div className="blProse" style={{ marginBottom: 16 }}>
+          You&apos;ll retain access until the end of your current billing period. Your data will be preserved for 30 days after that. You can reactivate anytime.
         </div>
-      )}
+        <div className="blOffer">
+          Before you go — email us at <strong>support@saguarocontrol.net</strong> and we&apos;ll give you 20% off your next 3 months.
+        </div>
+      </FormModal>
 
-    </>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
