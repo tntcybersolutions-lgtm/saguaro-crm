@@ -1,17 +1,29 @@
 'use client';
 /**
- * Project Photos (web app shell).
+ * Project Photos — Pass 4, on the RFIs reference layout (gallery + detail).
  *
  * The project is taken from the ROUTE (`/app/projects/[projectId]/photos`), never from a
  * global "active project" — so every read and every write on this screen is addressed to
  * the project named in the URL bar. It cannot drift.
  *
- * WHAT WAS BROKEN: "Add Photo" had no way to add a photo. The panel offered a "Photo URL"
- * text box and expected a GC to paste an `https://...` image link by hand; there was no
- * file input, no camera, no upload call anywhere on the page. A record could be saved with
- * a title and no image at all. That is the "nowhere to type / stubbed knock-off" complaint.
- * The panel now takes a real file, uploads it to storage against this project's id via
- * /api/photos/upload, then attaches the typed details to the row it created.
+ * Anatomy: title + one primary action (Add Photo) → StatRow (each tile filters
+ * the gallery) → Toolbar (search, album, group by) → workspace split: the
+ * thumbnail gallery on the left (real thumbnails, one aspect ratio, grouped by
+ * date or album), and when a photo is selected, the viewer beside a 320–384px
+ * details + action rail. Phone: gallery, then viewer, stacked. ← / → step
+ * through the visible photos, Esc closes the viewer. Create / edit open the
+ * composer in a FormModal with a real file input.
+ *
+ * Every read / write is the one this screen already used:
+ *   list      GET    /api/photos/list?projectId=&include=files
+ *   upload    POST   /api/photos/upload            (multipart, new photo)
+ *   create    POST   /api/photos/create            (URL-only photo)
+ *   details   PUT    /api/photos/[id]
+ *   replace   POST   /api/photos/[id]/upload       (multipart, replace image / crop save)
+ *   delete    DELETE /api/photos/[id]
+ * Thumbnails come from the list route's thumbnail_url; the full original is
+ * only ever drawn in the viewer. URLs are whatever the authorized list route
+ * returned — nothing here publishes private media.
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
@@ -21,15 +33,19 @@ import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
 import { getAuthHeaders } from '@/lib/supabase-browser';
 import PhotoEditor from '../../../../../components/PhotoEditor';
-import { Camera, X, PencilSimple, Plus, Images, CalendarBlank, FolderSimple, WarningCircle } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, InsightRow, AutoChip, IconChip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
-import { moduleAccent } from '@/lib/module-identity';
+import {
+  Camera, X, PencilSimple, Plus, Images, WarningCircle, ArrowClockwise, ArrowSquareOut, Trash,
+  Crop, CaretLeft, CaretRight, FolderSimple,
+} from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, Tabs, EmptyState, RowActions,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-
-const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#D4D4D8',TEXT='#FFFFFF';
-const GREEN='#2CFF7A',RED='#FF3B30';
+import { layout } from '@/lib/design-tokens';
 
 const ALBUMS=['General','Progress','Inspections','Closeout','Issues','Other'];
 /* Images that live in the project's Files & Media library. /api/photos/list
@@ -39,52 +55,103 @@ const FILES_ALBUM='From Files';
 const isFromFiles=(p:any)=>p?.source==='files'||p?.read_only===true;
 /** "ZZ-AUDIT_jobsite-photo-1.jpg" -> "ZZ AUDIT jobsite photo 1" */
 const titleFromFileName=(name:string)=>name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim();
-const ALBUM_COLORS:Record<string,string>={
-  General:DIM,
-  Progress:'var(--brand-primary-strong)',
-  Inspections:GOLD,
-  Closeout:GREEN,
-  Issues:RED,
-  Other:'#FF8A00',
-  [FILES_ALBUM]:'#FF8A00',
-};
 
-const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
-  border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,
-  fontSize:13,outline:'none',boxSizing:'border-box',
-};
+/** Albums are categories, not statuses — only Issues carries a hue (red) so a
+ *  defect reads at a glance; library images read grey. */
+function albumBadge(album:string|null|undefined): { label:string; tone:BadgeTone } {
+  const a = album || 'General';
+  if (a==='Issues') return { label:a, tone:'overdue' };
+  if (a===FILES_ALBUM) return { label:a, tone:'closed' };
+  return { label:a, tone:'neutral' };
+}
 
 const EMPTY_FORM={
   title:'',description:'',album:'General',location:'',
   taken_at:'',url:'',taken_by:'',tags:'',
 };
 
-function Pill({label,color}:{label:string;color:string}){
-  return(
-    <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
-      {label}
-    </span>
-  );
+function fmtDate(iso:string|null|undefined){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 }
 
-function FieldLabel({label,auto}:{label:string;auto?:boolean}){
-  return(
-    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
-      marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
-  );
+const CSS = `
+.phWs > .k-page { max-width: none; }
+.phCq { container: phws / inline-size; min-width: 0; }
+.phSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.phSplit > * { min-width: 0; }
+@container phws (min-width: 1080px) {
+  .phSplit[data-open="true"] { grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.5fr); }
 }
+.phDetailCq { container: phdetail / inline-size; min-width: 0; }
+.phDetail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.phDetail > * { min-width: 0; }
+.phRail { order: -1; }
+@container phdetail (min-width: 720px) {
+  .phDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
+  .phRail { order: 0; position: sticky; top: 16px; }
+}
+.phGallery { display: flex; flex-direction: column; gap: 24px; padding: 16px; }
+.phGroupHead { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); }
+.phGroupHead small { color: var(--text-tertiary); font-weight: 600; }
+.phGroupHead::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+.phGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.phCard { position: relative; display: flex; flex-direction: column; min-width: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-surface-2); border: 1px solid var(--border-default); cursor: pointer; transition: border-color .15s, box-shadow .15s; text-align: left; padding: 0; color: inherit; font: inherit; }
+.phCard:hover { border-color: var(--border-strong); }
+.phCard:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.phCard[data-sel="true"] { border-color: var(--brand-primary); box-shadow: 0 0 0 1px var(--brand-primary), var(--glass-highlight); }
+.phThumb { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--bg-solid); overflow: hidden; }
+.phThumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.phThumb[data-missing="true"] { display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); font-size: var(--fs-xs); }
+.phCardBody { padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.phCardTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phCardMeta { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.phCardMeta > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phCardEdit { position: absolute; top: 6px; right: 6px; opacity: 0; transition: opacity .15s; }
+.phCard:hover .phCardEdit, .phCard:focus-within .phCardEdit, .phCard[data-sel="true"] .phCardEdit { opacity: 1; }
+.phCardEdit .k-btn { background: rgba(14,15,18,0.85); }
+.phViewer { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-height: min(70vh, 720px); min-height: 220px; background: var(--bg-solid); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); overflow: hidden; }
+.phViewer img { max-width: 100%; max-height: min(70vh, 720px); width: auto; height: auto; display: block; object-fit: contain; }
+.phViewer[data-missing="true"] { color: var(--text-tertiary); font-size: var(--fs-sm); }
+.phNav { position: absolute; top: 50%; transform: translateY(-50%); }
+.phNav[data-side="left"] { left: 8px; }
+.phNav[data-side="right"] { right: 8px; }
+.phNav .k-btn { background: rgba(14,15,18,0.8); }
+.phSection { display: flex; flex-direction: column; gap: 8px; }
+.phSection + .phSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.phSectionTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
+.phProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; max-width: ${layout.readingMaxWidth}; }
+.phMuted { color: var(--text-tertiary); }
+.phBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.phActions { display: flex; flex-direction: column; gap: 8px; }
+.phActions .k-btn { width: 100%; justify-content: flex-start; }
+.phActionsRow { display: flex; gap: 8px; align-items: center; }
+.phActionsRow > .k-btn { flex: 1 1 auto; }
+.phNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
+.phNext a { color: var(--brand-primary); font-weight: 700; }
+.phDrop { width: 100%; min-height: 96px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 12px; border-radius: var(--radius-sm); border: 1px dashed var(--brand-primary-35); background: var(--brand-primary-08); color: var(--text-primary); font-weight: 700; font-size: var(--fs-md); cursor: pointer; }
+.phDrop:hover { background: var(--brand-primary-12); }
+.phDrop:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
+.phPreview { border: 1px solid var(--border-default); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-solid); }
+.phPreview img { width: 100%; max-height: 240px; object-fit: contain; display: block; background: var(--bg-solid); }
+.phPreviewBar { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.phPreviewBar > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.phDateInput { width: 100%; }
+.phTabs .k-tabs { margin: 0; }
+@media (max-width: 640px) {
+  .phWs .k-btn, .phWs .k-stat, .phWs select.k-select, .phWs .k-input { min-height: 44px; }
+  .phGrid, .phSplit[data-open="true"] .phGrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .phCardEdit { opacity: 1; }
+}
+`;
 
-function InfoCard({label,value}:{label:string;value:string|undefined|null}){
-  if(!value) return null;
-  return(
-    <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'10px 12px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:4}}>{label}</div>
-      <div style={{fontSize:13,color:TEXT}}>{value}</div>
-    </div>
-  );
-}
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width:'100%', minHeight:40, padding:'8px 12px', fontSize:14,
+  background:'var(--bg-surface-2)', border:'1px solid var(--border-default)',
+  borderRadius:'var(--radius-sm)', color:'var(--text-primary)',
+};
 
 export default function PhotosPage(){
   const {projectId}=useParams() as {projectId:string};
@@ -94,6 +161,7 @@ export default function PhotosPage(){
   const [selected,setSelected]=useState<any>(null);
   const [mode,setMode]=useState<'view'|'edit'|'create'|null>(null);
   const [form,setForm]=useState({...EMPTY_FORM});
+  const detailRef = useRef<HTMLDivElement>(null);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving this
    *    module (sidebar, field nav, ⌘K, breadcrumb, back) confirms first, and
@@ -108,9 +176,10 @@ export default function PhotosPage(){
   });
   const [saving,setSaving]=useState(false);
   const [deleting,setDeleting]=useState(false);
-  const [toast,setToast]=useState<{msg:string;type:'success'|'error'}|null>(null);
+  const { toast, show: showToast } = useToast(4000);
   const [search,setSearch]=useState('');
   const [filterAlbum,setFilterAlbum]=useState('All');
+  const [periodFilter,setPeriodFilter]=useState<'all'|'month'>('all');
   const [editingPhoto, setEditingPhoto] = useState<{id:string;url:string}|null>(null);
 
   // Real file upload — the thing this panel was missing entirely.
@@ -118,10 +187,6 @@ export default function PhotosPage(){
   const [uploadPreview,setUploadPreview]=useState('');
   const [formError,setFormError]=useState('');
   const fileRef=useRef<HTMLInputElement>(null);
-
-  const showToast=(msg:string,type:'success'|'error'='success')=>{
-    setToast({msg,type}); setTimeout(()=>setToast(null),4000);
-  };
 
   const clearUpload=useCallback(()=>{
     setUploadFile(null);setUploadPreview('');setFormError('');
@@ -158,6 +223,14 @@ export default function PhotosPage(){
 
   useEffect(()=>{load();},[load]);
 
+  // Keep the selected photo pointed at the live record once a reload swaps rows in.
+  useEffect(()=>{
+    if(!selected) return;
+    const live = photos.find((p:any)=>p.id===selected.id);
+    if(live && live!==selected) setSelected(live);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[photos]);
+
   // Project intelligence — one snapshot; the gallery walks in knowing the job.
   const { ctx } = useProjectContext(projectId);
   const [auto,setAuto]=useState<{date?:boolean;album?:boolean}>({});
@@ -166,8 +239,8 @@ export default function PhotosPage(){
     // Prefill what the system already knows: today's date, and the album in view.
     const d=new Date();
     const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    setForm({...EMPTY_FORM,taken_at:iso,album:filterAlbum!=='All'?filterAlbum:'General'});
-    setAuto({date:true,album:filterAlbum!=='All'});
+    setForm({...EMPTY_FORM,taken_at:iso,album:filterAlbum!=='All'&&filterAlbum!==FILES_ALBUM?filterAlbum:'General'});
+    setAuto({date:true,album:filterAlbum!=='All'&&filterAlbum!==FILES_ALBUM});
     clearUpload();
     setMode('create');setSelected(null);
   }
@@ -186,8 +259,22 @@ export default function PhotosPage(){
     clearUpload();
     setSelected(photo);setMode('edit');
   }
-  function viewPhoto(photo:any){setSelected(photo);setMode('view');}
+  function viewPhoto(photo:any){
+    setSelected(photo);setMode('view');
+    // Stacked layouts: bring the viewer into view instead of leaving it below the fold.
+    requestAnimationFrame(() => {
+      const el = detailRef.current;
+      if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
   function closePanel(){setSelected(null);setMode(null);clearUpload();}
+  /** Abandoning an edit keeps the photo in the viewer. */
+  function closeComposer(){
+    if(mode==='edit'&&selected){ clearUpload(); setFormError(''); setMode('view'); return; }
+    closePanel();
+  }
 
   /** Read a route's error body without leaking raw JSON into the UI. */
   async function errorFrom(r:Response,fallback:string):Promise<Error>{
@@ -197,10 +284,10 @@ export default function PhotosPage(){
 
   async function save(): Promise<boolean> {
     setFormError('');
-    if(!form.title.trim()){setFormError('Give the photo a title first.');showToast('Title is required.','error');return false;}
+    if(!form.title.trim()){setFormError('Give the photo a title first.');showToast('Title is required.','bad');return false;}
     if(mode==='create'&&!uploadFile&&!form.url.trim()){
       setFormError('Choose a photo file to upload, or paste an image URL.');
-      showToast('No photo attached.','error');
+      showToast('No photo attached.','bad');
       return false;
     }
     setSaving(true);
@@ -240,7 +327,7 @@ export default function PhotosPage(){
               }),
             });
             if(!meta.ok){
-              showToast('Photo uploaded, but the details did not save — reopen it to re-enter them.','error');
+              showToast('Photo uploaded, but the details did not save — reopen it to re-enter them.','bad');
             }else{
               showToast('Photo added.');
             }
@@ -283,7 +370,7 @@ export default function PhotosPage(){
       console.error(e);
       const msg=humanError(e,'Save failed. Please try again.');
       setFormError(msg);
-      showToast(msg,'error');
+      showToast(msg,'bad');
     }
     finally{setSaving(false);}
     return false;
@@ -297,30 +384,34 @@ export default function PhotosPage(){
       const dr=await fetch(`/api/photos/${photo.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
       showToast('Photo deleted.');closePanel();await load();
-    }catch{showToast('Delete failed.','error');}
+    }catch{showToast('Delete failed.','bad');}
     finally{setDeleting(false);}
   }
 
   const today=new Date();
-  const thisMonth=photos.filter(p=>{
+  const inThisMonth=(p:any)=>{
     if(!p.taken_at) return false;
     const d=new Date(p.taken_at);
     return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth();
-  }).length;
-  const albums=Array.from(new Set(photos.map((p:any)=>p.album).filter(Boolean)));
+  };
+  const thisMonth=photos.filter(inThisMonth).length;
+  const albums=Array.from(new Set(photos.map((p:any)=>p.album).filter(Boolean))) as string[];
   const issueCount=photos.filter((p:any)=>p.album==='Issues'||(Array.isArray(p.tags)&&p.tags.some((t:string)=>t.toLowerCase().includes('issue')))).length;
-  const lastPhotoAt=photos.reduce<string|null>((m,p)=>(p.taken_at&&(!m||p.taken_at>m)?p.taken_at:m),null);
+  const lastPhoto=photos.reduce<any>((m,p)=>(p.taken_at&&(!m||p.taken_at>m.taken_at)?p:m),null);
 
   const filtered=photos.filter((p:any)=>{
     const ms=!search||(p.title||'').toLowerCase().includes(search.toLowerCase())
+      ||(p.location||'').toLowerCase().includes(search.toLowerCase())
       ||(Array.isArray(p.tags)&&p.tags.some((t:string)=>t.toLowerCase().includes(search.toLowerCase())));
     const ma=filterAlbum==='All'||p.album===filterAlbum;
-    return ms&&ma;
+    const mp=periodFilter==='all'||inThisMonth(p);
+    return ms&&ma&&mp;
   });
 
   // Group by date (default) or album for display
   const [groupBy,setGroupBy]=useState<'date'|'album'>('date');
   const grouped:Record<string,any[]>={};
+  const ordered:any[]=[]; // the visible order — what ← / → step through
   if(filterAlbum==='All'){
     const src=groupBy==='date'
       ?[...filtered].sort((a,b)=>String(b.taken_at||'').localeCompare(String(a.taken_at||'')))
@@ -332,22 +423,232 @@ export default function PhotosPage(){
       if(!grouped[key]) grouped[key]=[];
       grouped[key].push(p);
     }
+    for(const k of Object.keys(grouped)) ordered.push(...grouped[k]);
+  } else {
+    ordered.push(...filtered);
   }
 
-  function fmtDate(iso:string|null|undefined){
-    if(!iso) return '—';
-    return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const filtersActive = !!search || filterAlbum!=='All' || periodFilter!=='all';
+  const clearFilters = () => { setSearch(''); setFilterAlbum('All'); setPeriodFilter('all'); };
+
+  // ← / → step through the visible photos; Esc closes the viewer. Ignored while
+  // typing, while the composer is open, and while the crop editor is up.
+  const selIndex = selected ? ordered.findIndex(p=>p.id===selected.id) : -1;
+  const stepTo = useCallback((dir:1|-1)=>{
+    if(selIndex<0) return;
+    const next = ordered[selIndex+dir];
+    if(next) viewPhoto(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[selIndex, ordered]);
+  useEffect(()=>{
+    if(mode!=='view'||!selected||editingPhoto) return;
+    const onKey=(e:KeyboardEvent)=>{
+      const t=e.target as HTMLElement|null;
+      if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)) return;
+      if(e.key==='Escape'){ e.preventDefault(); closePanel(); }
+      else if(e.key==='ArrowRight'){ e.preventDefault(); stepTo(1); }
+      else if(e.key==='ArrowLeft'){ e.preventDefault(); stepTo(-1); }
+    };
+    window.addEventListener('keydown',onKey);
+    return ()=>window.removeEventListener('keydown',onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[mode, selected, editingPhoto, stepTo]);
+
+  // ── Stat tiles: each opens the gallery filtered to that slice ──
+  const stats: StatItem[] = loading
+    ? [
+        { label:'Photos', value:'—', sub:'Loading…' },
+        { label:'This Month', value:'—', sub:'Loading…' },
+        { label:'Issues Tagged', value:'—', sub:'Loading…' },
+        { label:'Last Photo', value:'—', sub:'Loading…' },
+      ]
+    : [
+        { label:'Photos', value:photos.length, sub: filtersActive ? 'Click to show everything' : albums.length>0 ? `${albums.length} album${albums.length===1?'':'s'} in use` : 'No albums yet', onClick: clearFilters },
+        { label:'This Month', value:thisMonth, tone: thisMonth>0 ? 'good' : 'default', sub: periodFilter==='month' ? 'Filtered — click to clear' : 'Added since the 1st', onClick: () => setPeriodFilter(p => (p==='month' ? 'all' : 'month')) },
+        { label:'Issues Tagged', value:issueCount, tone: issueCount>0 ? 'bad' : 'default', sub: filterAlbum==='Issues' ? 'Filtered — click to clear' : issueCount>0 ? 'Flagged for follow-up' : 'Clean so far', onClick: () => setFilterAlbum(a => (a==='Issues' ? 'All' : 'Issues')) },
+        { label:'Last Photo', value: lastPhoto ? fmtDate(lastPhoto.taken_at) : '—', sub: lastPhoto ? (lastPhoto.title || 'Most recent capture') : 'Nothing documented yet', onClick: lastPhoto ? () => viewPhoto(lastPhoto) : undefined },
+      ];
+
+  const detailOpen = !!selected && mode!=='create';
+  const selectedFromFiles = selected ? isFromFiles(selected) : false;
+
+  const card = (photo:any) => (
+    <PhotoCard
+      key={photo.id}
+      photo={photo}
+      selected={selected?.id===photo.id&&mode!=='create'}
+      onClick={()=>viewPhoto(photo)}
+      onEdit={(id,url)=>setEditingPhoto({id,url})}
+    />
+  );
+
+  // ── Gallery body: loading / error / empty / no-match / tiles — each distinct ──
+  let galleryBody: React.ReactNode;
+  if (loading) {
+    galleryBody = (
+      <div className="phGallery" aria-busy="true">
+        <div className="phGrid">
+          {Array.from({length:8}).map((_,i)=>(
+            <div key={i} className="phCard" aria-hidden style={{cursor:'default'}}>
+              <div className="phThumb" />
+              <div className="phCardBody"><div style={{height:12,width:'70%',borderRadius:4,background:'var(--border-subtle)'}}/><div style={{height:10,width:'40%',borderRadius:4,background:'var(--border-subtle)'}}/></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  } else if (loadError) {
+    galleryBody = (
+      <EmptyState
+        icon={<WarningCircle size={22}/>}
+        title="Couldn't load photos"
+        text={`${loadError} Nothing has been lost — try again.`}
+        action={<Button icon={<ArrowClockwise size={15}/>} onClick={()=>load()}>Retry</Button>}
+      />
+    );
+  } else if (photos.length===0) {
+    galleryBody = (
+      <EmptyState
+        icon={<Camera size={22}/>}
+        title="No photos yet"
+        text="Photos are the project record — progress proof, inspection evidence, punch documentation, closeout backup. Add the first one to start the timeline."
+        action={<Button icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>Add First Photo</Button>}
+      />
+    );
+  } else if (filtered.length===0) {
+    galleryBody = (
+      <EmptyState
+        icon={<Camera size={22}/>}
+        title="No photos match these filters"
+        text="Clear the search, album, or month filter to see more."
+        action={<Button onClick={clearFilters}>Clear Filters</Button>}
+      />
+    );
+  } else if (filterAlbum==='All') {
+    galleryBody = (
+      <div className="phGallery">
+        {Object.entries(grouped).map(([group,groupPhotos])=>(
+          <div key={group}>
+            <div className="phGroupHead">
+              {groupBy==='album' ? <Badge tone={albumBadge(group).tone}>{group}</Badge> : <span>{group}</span>}
+              <small>{groupPhotos.length}</small>
+            </div>
+            <div className="phGrid">{groupPhotos.map(card)}</div>
+          </div>
+        ))}
+      </div>
+    );
+  } else {
+    galleryBody = (
+      <div className="phGallery">
+        <div className="phGrid">{filtered.map(card)}</div>
+      </div>
+    );
   }
+
+  const detailWorkspace = detailOpen && (
+    <div ref={detailRef} className="phDetailCq">
+      <div className="phDetail">
+        <Card
+          title={selected.title||'Untitled'}
+          subtitle={[fmtDate(selected.taken_at)!=='—'?fmtDate(selected.taken_at):null, selected.location].filter(Boolean).join(' · ') || undefined}
+          actions={<Button variant="ghost" size="sm" icon={<X size={16}/>} aria-label="Close viewer" title="Close viewer (Esc)" onClick={closePanel}/>}
+        >
+          <div className="phViewer" data-missing={selected.url?undefined:'true'}>
+            {selected.url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={selected.url} alt={selected.title||'Photo'} onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
+            ) : 'No image on this record.'}
+            {ordered.length>1 && (
+              <>
+                <div className="phNav" data-side="left"><Button variant="ghost" size="sm" icon={<CaretLeft size={18}/>} aria-label="Previous photo" title="Previous (←)" onClick={()=>stepTo(-1)} disabled={selIndex<=0}/></div>
+                <div className="phNav" data-side="right"><Button variant="ghost" size="sm" icon={<CaretRight size={18}/>} aria-label="Next photo" title="Next (→)" onClick={()=>stepTo(1)} disabled={selIndex<0||selIndex>=ordered.length-1}/></div>
+              </>
+            )}
+          </div>
+          {ordered.length>1 && selIndex>=0 && (
+            <div className="phMuted" style={{fontSize:'var(--fs-xs)',marginTop:8}}>{selIndex+1} of {ordered.length} in view · ← → to step, Esc to close</div>
+          )}
+
+          {selected.description && (
+            <div className="phSection" style={{marginTop:16}}>
+              <div className="phSectionTitle">Description</div>
+              <div className="phProse">{selected.description}</div>
+            </div>
+          )}
+
+          {Array.isArray(selected.tags)&&selected.tags.length>0&&(
+            <div className="phSection" style={{marginTop: selected.description ? undefined : 16}}>
+              <div className="phSectionTitle">Tags</div>
+              <div className="phBadges">
+                {selected.tags.map((tag:string)=>(
+                  <Badge key={tag} tone={tag.toLowerCase().includes('issue')?'overdue':'neutral'}>{tag}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <aside className="phRail" aria-label="Photo details and actions">
+          <Card title="Details">
+            <div className="phSection">
+              <div className="phBadges">
+                <Badge tone={albumBadge(selected.album).tone} dot>{albumBadge(selected.album).label}</Badge>
+                {selectedFromFiles && <Badge tone="closed">Read-Only</Badge>}
+              </div>
+              {selectedFromFiles && (
+                <div className="phNext">
+                  This image lives in the project&apos;s Files &amp; Media library. Rename, move or delete it there.{' '}
+                  <a href={`/app/projects/${projectId}/files`}>Open Files &amp; Media</a>
+                </div>
+              )}
+            </div>
+            <div className="phSection">
+              <DetailList items={[
+                ['Date Taken', fmtDate(selected.taken_at)],
+                ['Location', selected.location || ''],
+                ['Taken By', selected.taken_by || ''],
+                ['Album', selected.album || 'General'],
+                ['Source', selectedFromFiles ? 'Files & Media' : 'Site Photos'],
+              ]}/>
+            </div>
+            <div className="phSection">
+              <div className="phActions">
+                {!selectedFromFiles && (
+                  <Button icon={<PencilSimple size={16}/>} onClick={()=>openEdit(selected)} disabled={mode==='edit'}>
+                    Edit Details
+                  </Button>
+                )}
+                {!selectedFromFiles && selected.url && (
+                  <Button icon={<Crop size={16}/>} onClick={()=>setEditingPhoto({id:selected.id,url:selected.url})}>
+                    Edit / Crop / Rotate
+                  </Button>
+                )}
+                <div className="phActionsRow">
+                  {selected.url && (
+                    <a className="k-btn k-btn-secondary" href={selected.url} target="_blank" rel="noreferrer" style={{flex:'1 1 auto'}}>
+                      <ArrowSquareOut size={16}/> View Full Image
+                    </a>
+                  )}
+                  {!selectedFromFiles && (
+                    <RowActions actions={[
+                      { label:'Delete', icon:<Trash size={15}/>, onClick:()=>deletePhoto(selected), tone:'danger', disabled:deleting },
+                    ]}/>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </aside>
+      </div>
+    </div>
+  );
+
+  const composerOpen = mode==='create'||mode==='edit';
 
   return(
-    <div style={{display:'flex',height:'100%',minHeight:0,position:'relative',background:DARK}}>
-      {toast&&(
-        <div style={{position:'fixed',bottom:24,left:'50%',transform:'translateX(-50%)',zIndex:99999,
-          padding:'12px 20px',borderRadius:8,color:'#fff',fontWeight:700,fontSize:14,pointerEvents:'none',
-          background:toast.type==='success'?'rgba(26,138,74,.92)':'rgba(192,48,48,.92)'}}>
-          {toast.msg}
-        </div>
-      )}
+    <div className="phWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
       {/* Photo Editor Modal */}
       {editingPhoto && (
@@ -362,8 +663,8 @@ export default function PhotosPage(){
               const headers = await getAuthHeaders();
               const r = await fetch(`/api/photos/${id}/upload`, { method: 'POST', headers, body: formData });
               if (r.ok) { showToast('Photo saved.'); load(); }
-              else showToast('Save failed.', 'error');
-            } catch { showToast('Save failed.', 'error'); }
+              else showToast('Save failed.', 'bad');
+            } catch { showToast('Save failed.', 'bad'); }
             setEditingPhoto(null);
           }}
           onDelete={async (id) => {
@@ -372,449 +673,190 @@ export default function PhotosPage(){
               const r = await fetch(`/api/photos/${id}`, { method: 'DELETE', headers: { ...headers, 'Content-Type': 'application/json' } });
               if (!r.ok) throw new Error('delete failed');
               setPhotos(prev => prev.filter(p => p.id !== id));
+              if (selected?.id === id) closePanel();
               showToast('Photo deleted.');
-            } catch { showToast('Delete failed.', 'error'); }
+            } catch { showToast('Delete failed.', 'bad'); }
             setEditingPhoto(null);
           }}
         />
       )}
 
-      {/* Main */}
-      <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface maxWidth={2200}>
-          {/* Header */}
-          <ModuleHero
-            /* Always name the job on screen — never a bare "Photos" that leaves a GC
-               guessing which project they are filing into. */
-            eyebrow={ctx?.project?.name||(loading?'Loading project…':'This Project')}
-            eyebrowIcon={<IconChip size={24} vivid={moduleAccent('photos').vivid ?? moduleAccent('photos').hex}><Camera size={13} weight="fill" color="#F8FAFC" /></IconChip>}
-            accentColor={moduleAccent('photos').hex}
-            title="Site"
-            accent="Photos"
-            subtitle="Site progress photos and documentation."
-            actions={
-              <button onClick={openCreate} style={goldButtonStyle} className="pmBtn">
-                <Plus size={15} weight="bold" /> Add Photo
-              </button>
-            }
-          />
+      <PageShell
+        crumbs={[
+          { label:'Projects', href:'/app/projects' },
+          { label: ctx?.project?.name || 'Project', href:`/app/projects/${projectId}/overview` },
+          { label:'Photos' },
+        ]}
+        title="Site Photos"
+        /* Always name the job on screen — never a bare "Photos" that leaves a GC
+           guessing which project they are filing into. */
+        subtitle={ctx?.project?.name ? `${ctx.project.name} — progress photos and documentation.` : (loading ? 'Loading project…' : 'Progress photos and documentation for this project.')}
+        actions={
+          <Button variant="primary" icon={<Plus size={15} weight="bold"/>} onClick={openCreate}>
+            Add Photo
+          </Button>
+        }
+      >
+        {!loadError && <StatRow items={stats}/>}
 
-          {/* Project intelligence strip — what the system already knows */}
-          {ctx&&(
-            <StatStrip items={[
-              {href: `/app/projects/${projectId}/photos`, label:'Project',value:`${Number(ctx?.project?.percentComplete)||0}%`,sub:'Complete — the gallery is the proof'},
-              {href: `/app/projects/${projectId}/photos`, label:'Photos',value:String(photos.length),sub:albums.length>0?`${albums.length} album${albums.length===1?'':'s'} in use`:'No albums yet'},
-              {href: `/app/projects/${projectId}/photos`, label:'This Month',value:String(thisMonth),accent:thisMonth>0?'#2CFF7A':undefined,sub:'Added since the 1st'},
-              {href: `/app/projects/${projectId}/photos`, label:'Last Photo',value:lastPhotoAt?fmtDate(lastPhotoAt):'—',sub:lastPhotoAt?'Most recent capture':'Nothing documented yet'},
-              {href: `/app/projects/${projectId}/photos`, label:'Issues Tagged',value:String(issueCount),accent:issueCount>0?RED:undefined,sub:issueCount>0?'Flagged for follow-up':'Clean so far'},
-              {href: `/app/projects/${projectId}/daily-logs`, label:'Last Daily Log',value:ctx?.recent?.lastDailyLogDate?fmtDate(ctx.recent.lastDailyLogDate):'—',sub:Number(ctx?.counts?.openPunch)>0?`${ctx.counts.openPunch} open punch`:'Field activity'},
-            ]}/>
-          )}
-
-          {/* KPIs */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-            <StatCard icon={<Images size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="Total Photos" value={String(photos.length)} accent="var(--brand-primary-strong)" sub="All albums" delay={0.02}  href={`/app/projects/${projectId}/photos`}/>
-            <StatCard icon={<CalendarBlank size={19} weight="duotone" color={moduleAccent('photos').hex} />} label="This Month" value={String(thisMonth)} accent={GOLD} sub="Added this month" delay={0.06}  href={`/app/projects/${projectId}/photos`}/>
-            <StatCard icon={<FolderSimple size={19} weight="duotone" color={GREEN} />} label="Albums" value={String(albums.length||ALBUMS.length)} accent={GREEN} sub="In use" delay={0.10}  href={`/app/projects/${projectId}/photos`}/>
-            <StatCard icon={<WarningCircle size={19} weight="duotone" color={RED} />} label="Issues Tagged" value={String(issueCount)} accent={RED} sub="Flagged" delay={0.14}  href={`/app/projects/${projectId}/photos`}/>
-          </div>
-
-          {/* Toolbar */}
-          <ListToolbar
-            module="photos"
+        {!loading && !loadError && photos.length>0 && (
+          <Toolbar
             search={search}
             onSearch={setSearch}
-            searchPlaceholder="Search by title or tag…"
-            filters={[
-              {key:'album',label:'Album',value:filterAlbum,onChange:setFilterAlbum,
-                allValue:'All',allLabel:'All Albums',options:albums.includes(FILES_ALBUM)?[...ALBUMS,FILES_ALBUM]:ALBUMS},
-            ]}
-            count={{shown:filtered.length,total:photos.length}}
-            extra={filterAlbum==='All'?(
-              <div style={{display:'flex',background:'rgba(255,255,255,0.04)',borderRadius:10,padding:3,border:'1px solid rgba(255,255,255,0.10)'}}>
-                {(['date','album'] as const).map(g=>(
-                  <button key={g} onClick={()=>setGroupBy(g)}
-                    style={{padding:'7px 14px',borderRadius:8,border:'none',fontWeight:700,fontSize:12,cursor:'pointer',
-                      background:groupBy===g?'color-mix(in srgb, var(--brand-primary) 15%, transparent)':'transparent',color:groupBy===g?'var(--brand-primary-strong)':DIM,transition:'all .15s'}}>
-                    {g==='date'?'By Date':'By Album'}
-                  </button>
-                ))}
-              </div>
-            ):undefined}
-            style={{marginBottom:18}}
-          />
-
-          {/* Gallery */}
-          <SectionCard
-            title="Gallery"
-            icon={<Images size={17} weight="duotone" color={moduleAccent('photos').hex} />}
-            action={<span style={{fontSize:12,color:'rgba(255,255,255,0.62)',fontWeight:600}}>{filtered.length} {filtered.length===1?'photo':'photos'}</span>}
-          >
-            {loading&&<div style={{padding:40,textAlign:'center',color:DIM}}>Loading photos…</div>}
-
-            {!loading&&loadError&&(
-              <PremiumEmpty
-                tone="error"
-                icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-                title="Couldn't load photos"
-                description={loadError}
-                action={<button onClick={()=>load()} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-                compact
-              />
-            )}
-
-            {!loading&&!loadError&&filtered.length===0&&(
-              photos.length===0?(
-                <div style={{display:'grid',gridTemplateColumns:ctx?'minmax(0,1fr) 320px':'1fr',alignItems:'stretch'}}>
-                  <PremiumEmpty
-                    icon={<Camera size={30} weight="duotone" color={GOLD} />}
-                    title="No photos yet"
-                    description="Photos are the project record — progress proof, inspection evidence, punch documentation, closeout backup. Add the first one to start the timeline."
-                    action={<button onClick={openCreate} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add First Photo</button>}
-                  />
-                  {ctx&&(
-                    <div style={{borderLeft:'1px solid rgba(255,255,255,0.08)',padding:'22px 24px'}}>
-                      <div style={{fontSize:10.5,fontWeight:900,color:'rgba(255,255,255,0.45)',marginBottom:10}}>What Belongs Here</div>
-                      <InsightRow label="Progress" value="Weekly site walks"/>
-                      <InsightRow label="Inspections" value="Pass/fail evidence"/>
-                      <InsightRow label="Issues" value="Defects to chase"/>
-                      <InsightRow label="Closeout" value="Final condition"/>
-                      <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'10px 0'}}/>
-                      <InsightRow label="Project" value={`${Number(ctx?.project?.percentComplete)||0}% complete`}/>
-                      {ctx?.recent?.lastDailyLogDate&&<InsightRow label="Last Daily Log" value={fmtDate(ctx.recent.lastDailyLogDate)}/>}
-                      {Number(ctx?.counts?.openPunch)>0&&<InsightRow label="Open Punch" value={String(ctx.counts.openPunch)} accent="var(--brand-primary-strong)"/>}
-                      <div style={{marginTop:12,fontSize:12,color:DIM,lineHeight:1.55}}>
-                        Field photos from daily logs and punch items document the same work — album them here by phase and closeout builds itself.
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ):(
-                <PremiumEmpty
-                  icon={<Camera size={30} weight="duotone" color={GOLD} />}
-                  title="No photos match your filters"
-                  description="Try adjusting your search or album filter."
+            placeholder="Search by title, location, or tag…"
+            filters={
+              <>
+                <Select
+                  aria-label="Album"
+                  value={filterAlbum}
+                  onChange={e=>setFilterAlbum(e.target.value)}
+                  style={{ width:'auto', minWidth:150 }}
+                  options={[{ value:'All', label:'All Albums' }, ...(albums.includes(FILES_ALBUM)?[...ALBUMS,FILES_ALBUM]:ALBUMS)]}
                 />
-              )
-            )}
-
-            {/* Album-grouped grid */}
-            {!loading&&!loadError&&filtered.length>0&&filterAlbum==='All'&&(
-              <div style={{display:'flex',flexDirection:'column',gap:28}}>
-                {Object.entries(grouped).map(([album,albumPhotos])=>(
-                  <div key={album}>
-                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-                      <span style={{fontSize:13,fontWeight:700,color:groupBy==='album'?(ALBUM_COLORS[album]||DIM):'var(--brand-primary-strong)'}}>{album}</span>
-                      <span style={{fontSize:11,color:DIM}}>({albumPhotos.length})</span>
-                      <div style={{flex:1,height:1,background:BORDER}}/>
-                    </div>
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:14}}>
-                      {albumPhotos.map((photo:any)=>(
-                        <PhotoCard key={photo.id} photo={photo} selected={selected?.id===photo.id&&mode==='view'}
-                          onClick={()=>viewPhoto(photo)} albumColor={ALBUM_COLORS[photo.album]||DIM} onEdit={(id,url)=>setEditingPhoto({id,url})}/>
-                      ))}
-                    </div>
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={
+              <>
+                {filterAlbum==='All' && (
+                  <div className="phTabs">
+                    <Tabs
+                      value={groupBy}
+                      onChange={k=>setGroupBy(k as 'date'|'album')}
+                      tabs={[{ key:'date', label:'By Date' }, { key:'album', label:'By Album' }]}
+                    />
                   </div>
-                ))}
-              </div>
-            )}
+                )}
+                <span className="phMuted" style={{ fontSize:'var(--fs-sm)' }}>{filtered.length} of {photos.length}</span>
+              </>
+            }
+          />
+        )}
 
-            {/* Flat grid when filtered by album */}
-            {!loading&&!loadError&&filtered.length>0&&filterAlbum!=='All'&&(
-              <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:14}}>
-                {filtered.map((photo:any)=>(
-                  <PhotoCard key={photo.id} photo={photo} selected={selected?.id===photo.id&&mode==='view'}
-                    onClick={()=>viewPhoto(photo)} albumColor={ALBUM_COLORS[photo.album]||DIM} onEdit={(id,url)=>setEditingPhoto({id,url})}/>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-        </PremiumSurface>
-      </div>
-
-      {/* Side Panel */}
-      {mode!==null&&(
-        <div style={{width:460,borderLeft:`1px solid ${BORDER}`,background:DARK,
-          overflow:'auto',flexShrink:0,display:'flex',flexDirection:'column'}}>
-          <div style={{padding:'16px 20px',borderBottom:`1px solid ${BORDER}`,
-            display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
-              {mode==='create'?'Add Photo':mode==='edit'?'Edit Photo':'Photo Detail'}
+        <div className="phCq">
+          <div className="phSplit" data-open={detailOpen?'true':'false'}>
+            <div className="phList">
+              <Card flush>{galleryBody}</Card>
             </div>
-            <div style={{display:'flex',gap:8}}>
-              {mode==='view'&&selected&&!isFromFiles(selected)&&(
-                <>
-                  <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
-                      border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:6,
-                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    Edit
-                  </button>
-                  <button onClick={()=>deletePhoto(selected)} disabled={deleting}
-                    style={{padding:'6px 14px',background:'rgba(192,48,48,.1)',
-                      border:`1px solid ${RED}44`,borderRadius:6,
-                      color:RED,fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'…':'Delete'}
-                  </button>
-                </>
-              )}
-              <button onClick={closePanel}
-                style={{padding:'6px 10px',background:'rgba(143,163,192,.1)',
-                  border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer',display:'inline-flex',alignItems:'center'}}>
-                <X size={14} weight="regular" color={DIM} />
-              </button>
-            </div>
-          </div>
-
-          <div style={{flex:1,overflow:'auto',padding:20}}>
-            {(mode==='create'||mode==='edit')?(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                {/* ── The photo itself. A real file, not a URL a GC has to hand-type. ── */}
-                <div>
-                  <FieldLabel label={mode==='create'?'Photo *':'Replace Photo'}/>
-                  <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} style={{display:'none'}}/>
-                  {uploadPreview?(
-                    <div style={{border:`1px solid ${BORDER}`,borderRadius:8,overflow:'hidden',background:RAISED}}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={uploadPreview} alt="Selected" style={{width:'100%',maxHeight:200,objectFit:'cover',display:'block'}}/>
-                      <div style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px'}}>
-                        <span style={{fontSize:11.5,color:DIM,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-                          {uploadFile?.name||'Selected photo'}
-                        </span>
-                        <button onClick={()=>fileRef.current?.click()}
-                          style={{background:'transparent',border:'none',color:'var(--brand-primary-strong)',fontSize:11.5,fontWeight:700,cursor:'pointer',padding:0}}>
-                          Replace
-                        </button>
-                        <button onClick={clearUpload}
-                          style={{background:'transparent',border:'none',color:RED,fontSize:11.5,fontWeight:700,cursor:'pointer',padding:0}}>
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ):(
-                    <button onClick={()=>fileRef.current?.click()}
-                      style={{width:'100%',padding:'16px 12px',background:RAISED,
-                        border:`1px dashed color-mix(in srgb, var(--brand-primary) 45%, transparent)`,borderRadius:8,color:'var(--brand-primary-strong)',
-                        fontSize:13,fontWeight:700,cursor:'pointer',
-                        display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
-                      <Camera size={17} weight="duotone" color={GOLD}/>
-                      {mode==='create'?'Choose a Photo from This Computer':'Upload a Replacement Image'}
-                    </button>
-                  )}
-                  <div style={{fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45}}>
-                    {mode==='create'
-                      ? 'Uploads straight into this project. No link to paste.'
-                      : 'Leave empty to keep the current image and just edit the details.'}
-                  </div>
-                </div>
-
-                {formError&&(
-                  <div style={{background:'rgba(192,48,48,.12)',border:`1px solid ${RED}55`,borderRadius:8,
-                    padding:'10px 12px',color:'#f3b8b8',fontSize:12.5,lineHeight:1.45}}>
-                    {formError}
-                  </div>
-                )}
-
-                <div>
-                  <FieldLabel label="Title *"/>
-                  <input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))}
-                    style={inp} placeholder="e.g. Foundation pour complete"/>
-                </div>
-                <div>
-                  <FieldLabel label="Album" auto={mode==='create'&&auto.album}/>
-                  <select value={form.album} onChange={e=>setForm(f=>({...f,album:e.target.value}))}
-                    style={{...inp,padding:'9px 10px'}}>
-                    {ALBUMS.map(a=><option key={a} value={a}>{a}</option>)}
-                  </select>
-                  {mode==='create'&&auto.album&&(
-                    <div style={{fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45}}>Matched your current album filter — change freely.</div>
-                  )}
-                </div>
-                <div>
-                  <FieldLabel label="Description"/>
-                  <textarea value={form.description}
-                    onChange={e=>setForm(f=>({...f,description:e.target.value}))}
-                    rows={3} style={{...inp,resize:'vertical',lineHeight:1.5}}
-                    placeholder="What does this photo show?"/>
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-                  <div>
-                    <FieldLabel label="Location"/>
-                    <input value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))}
-                      style={inp} placeholder="e.g. Level 2, North"/>
-                  </div>
-                  <div>
-                    <FieldLabel label="Date Taken" auto={mode==='create'&&auto.date}/>
-                    <SaguaroDatePicker value={form.taken_at}
-                      onChange={v=>setForm(f=>({...f,taken_at:v}))}
-                      style={inp}/>
-                    {mode==='create'&&auto.date&&(
-                      <div style={{fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45}}>Defaulted to today — adjust freely.</div>
-                    )}
-                  </div>
-                </div>
-                {/* Pasting a link stays available for photos that already live somewhere
-                    else, but it is no longer the only way in. */}
-                {!uploadFile&&(
-                  <div>
-                    <FieldLabel label={mode==='create'?'…or Paste an Image URL':'Photo URL'}/>
-                    <input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))}
-                      style={inp} placeholder="https://…"/>
-                  </div>
-                )}
-                <div>
-                  <FieldLabel label="Taken By"/>
-                  <input value={form.taken_by} onChange={e=>setForm(f=>({...f,taken_by:e.target.value}))}
-                    style={inp} placeholder="Name or initials"/>
-                </div>
-                <div>
-                  <FieldLabel label="Tags (comma-separated)"/>
-                  <input value={form.tags} onChange={e=>setForm(f=>({...f,tags:e.target.value}))}
-                    style={inp} placeholder="e.g. concrete, footing, issue"/>
-                </div>
-                <div style={{display:'flex',gap:10,paddingTop:4}}>
-                  <button onClick={save} disabled={saving} className="pmBtn"
-                    style={{...goldButtonStyle,flex:1,opacity:saving?0.6:1}}>
-                    {saving?'Saving…':mode==='create'?'Add Photo':'Save Changes'}
-                  </button>
-                  <button onClick={closePanel} className="pmBtn"
-                    style={ghostButtonStyle}>
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ):selected?(
-              <div style={{display:'flex',flexDirection:'column',gap:14}}>
-                {/* Large image */}
-                {selected.url?(
-                  <div style={{borderRadius:10,overflow:'hidden',border:`1px solid ${BORDER}`}}>
-                    <img src={selected.url} alt={selected.title}
-                      style={{width:'100%',maxHeight:280,objectFit:'cover',display:'block'}}
-                      onError={e=>{(e.target as HTMLImageElement).style.display='none';}}/>
-                  </div>
-                ):(
-                  <div style={{height:160,background:RAISED,borderRadius:10,border:`1px solid ${BORDER}`,
-                    display:'flex',alignItems:'center',justifyContent:'center',
-                    color:DIM,fontSize:13}}>No image URL</div>
-                )}
-
-                {/* Title + album */}
-                <div>
-                  <div style={{fontSize:16,fontWeight:800,color:TEXT,marginBottom:8}}>{selected.title}</div>
-                  <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                    <Pill label={selected.album||'General'} color={ALBUM_COLORS[selected.album]||DIM}/>
-                  </div>
-                  {isFromFiles(selected)&&(
-                    <div style={{marginTop:10,fontSize:12,color:DIM,lineHeight:1.5}}>
-                      This image lives in the project&apos;s Files &amp; Media library. Rename, move or delete it there.{' '}
-                      <a href={`/app/projects/${projectId}/files`} style={{color:'var(--brand-primary-strong)',fontWeight:700}}>Open Files &amp; Media</a>
-                    </div>
-                  )}
-                </div>
-
-                {/* Description */}
-                {selected.description&&(
-                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Description</div>
-                    <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.description}</div>
-                  </div>
-                )}
-
-                {/* Metadata grid */}
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                  <InfoCard label="Date Taken" value={fmtDate(selected.taken_at)}/>
-                  <InfoCard label="Location" value={selected.location}/>
-                  <InfoCard label="Taken By" value={selected.taken_by}/>
-                </div>
-
-                {/* Tags */}
-                {Array.isArray(selected.tags)&&selected.tags.length>0&&(
-                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:8}}>Tags</div>
-                    <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                      {selected.tags.map((tag:string)=>(
-                        <span key={tag} style={{padding:'3px 10px',borderRadius:20,background:'color-mix(in srgb, var(--brand-primary) 13%, transparent)',
-                          color:GOLD,fontSize:11,fontWeight:600}}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* URL link */}
-                {selected.url&&(
-                  <a href={selected.url} target="_blank" rel="noreferrer"
-                    style={{display:'block',padding:'10px 14px',background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
-                      border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:8,
-                      color:'var(--brand-primary-strong)',fontSize:13,fontWeight:700,textDecoration:'none',textAlign:'center'}}>
-                    View Full Image
-                  </a>
-                )}
-              </div>
-            ):null}
+            {detailWorkspace}
           </div>
         </div>
-      )}
-      <UnsavedGuardModal guard={guard} />
+      </PageShell>
+
+      {/* ── Composer: add / edit ─────────────────────────────────── */}
+      <FormModal
+        open={composerOpen}
+        onClose={closeComposer}
+        title={mode==='create' ? 'Add Photo' : 'Edit Photo'}
+        subtitle={ctx?.project?.name ? `Filed to ${ctx.project.name}.` : undefined}
+        onSubmit={async()=>{ await save(); }}
+        submitLabel={mode==='create'?'Add Photo':'Save Changes'}
+        busy={saving}
+        error={formError||null}
+      >
+        {/* ── The photo itself. A real file, not a URL a GC has to hand-type. ── */}
+        <Field
+          label={mode==='create'?'Photo':'Replace Photo'}
+          required={mode==='create'}
+          hint={mode==='create' ? 'Uploads straight into this project. No link to paste.' : 'Leave empty to keep the current image and just edit the details.'}
+        >
+          <div>
+            <input ref={fileRef} type="file" accept="image/*" onChange={onPickFile} style={{display:'none'}} aria-hidden tabIndex={-1}/>
+            {uploadPreview?(
+              <div className="phPreview">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={uploadPreview} alt="Selected"/>
+                <div className="phPreviewBar">
+                  <span>{uploadFile?.name||'Selected photo'}</span>
+                  <Button size="sm" variant="ghost" onClick={()=>fileRef.current?.click()}>Replace</Button>
+                  <Button size="sm" variant="ghost" onClick={clearUpload}>Remove</Button>
+                </div>
+              </div>
+            ):(
+              <button type="button" className="phDrop" onClick={()=>fileRef.current?.click()}>
+                <Camera size={18} weight="duotone"/>
+                {mode==='create'?'Choose a Photo from This Computer':'Upload a Replacement Image'}
+              </button>
+            )}
+          </div>
+        </Field>
+
+        <FormGrid cols={2}>
+          <Field label="Title" required span>
+            <Input value={form.title} onChange={e=>setForm(f=>({...f,title:e.target.value}))} placeholder="e.g. Foundation pour complete"/>
+          </Field>
+          <Field label="Album" hint={mode==='create'&&auto.album ? <><AutoChip/> Matched your current album filter — change freely.</> : undefined}>
+            <Select value={form.album} onChange={e=>setForm(f=>({...f,album:e.target.value}))} options={ALBUMS}/>
+          </Field>
+          <Field label="Date Taken" hint={mode==='create'&&auto.date ? <><AutoChip/> Defaulted to today — adjust freely.</> : undefined}>
+            <div className="phDateInput"><SaguaroDatePicker value={form.taken_at} onChange={v=>setForm(f=>({...f,taken_at:v}))} style={DATE_INPUT_STYLE}/></div>
+          </Field>
+          <Field label="Description" span>
+            <Textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} rows={3} placeholder="What does this photo show?"/>
+          </Field>
+          <Field label="Location">
+            <Input value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))} placeholder="e.g. Level 2, North"/>
+          </Field>
+          <Field label="Taken By">
+            <Input value={form.taken_by} onChange={e=>setForm(f=>({...f,taken_by:e.target.value}))} placeholder="Name or initials"/>
+          </Field>
+          {/* Pasting a link stays available for photos that already live somewhere
+              else, but it is no longer the only way in. */}
+          {!uploadFile&&(
+            <Field label={mode==='create'?'…or Paste an Image URL':'Photo URL'} span>
+              <Input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))} placeholder="https://…"/>
+            </Field>
+          )}
+          <Field label="Tags" span hint="Comma-separated — e.g. concrete, footing, issue.">
+            <Input value={form.tags} onChange={e=>setForm(f=>({...f,tags:e.target.value}))} placeholder="concrete, footing, issue"/>
+          </Field>
+        </FormGrid>
+      </FormModal>
+
+      {/* Above the FormModal overlay so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position:'relative', zIndex:10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
     </div>
   );
 }
 
-function PhotoCard({photo,selected,onClick,albumColor,onEdit}:{
-  photo:any;selected:boolean;onClick:()=>void;albumColor:string;onEdit?:(id:string,url:string)=>void;
+function PhotoCard({photo,selected,onClick,onEdit}:{
+  photo:any;selected:boolean;onClick:()=>void;onEdit?:(id:string,url:string)=>void;
 }){
-  const BORDER_C='rgba(255,255,255,0.12)';
-  const RAISED_C='var(--bg-surface)';
-  const DIM_C='#D4D4D8';
-  const TEXT_C='#FFFFFF';
+  const [missing,setMissing]=useState(!photo.url);
+  const badge=albumBadge(photo.album);
   return(
-    <div onClick={onClick}
-      style={{background:selected?'color-mix(in srgb, var(--brand-primary) 7%, transparent)':RAISED_C,
-        border:`1px solid ${selected?'var(--brand-primary)':BORDER_C}`,borderRadius:10,
-        overflow:'hidden',cursor:'pointer',transition:'border-color .15s'}}
-      onMouseEnter={e=>{if(!selected)e.currentTarget.style.borderColor='color-mix(in srgb, var(--brand-primary) 40%, transparent)';}}
-      onMouseLeave={e=>{if(!selected)e.currentTarget.style.borderColor=BORDER_C;}}>
-      {photo.url?(
-        /* Grid tiles render the ~400px thumbnail; the full original is for the
-           detail panel only (see THUMBNAIL CONTRACT in /api/photos/list). */
-        <img src={photo.thumbnail_url||photo.url} alt={photo.title} loading="lazy" decoding="async"
-          style={{width:'100%',height:140,objectFit:'cover',display:'block'}}
-          onError={e=>{(e.target as HTMLImageElement).parentElement!.style.background='var(--bg-surface-2)';(e.target as HTMLImageElement).style.display='none';}}/>
-      ):(
-        <div style={{width:'100%',height:140,background:'var(--bg-surface-2)',display:'flex',
-          alignItems:'center',justifyContent:'center',color:DIM_C,fontSize:12}}>
-          No image
-        </div>
-      )}
-      <div style={{padding:'10px 12px'}}>
-        <div style={{fontWeight:700,fontSize:13,color:TEXT_C,marginBottom:6,
-          overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-          {photo.title||'Untitled'}
-        </div>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,
-            background:`color-mix(in srgb, ${albumColor} 13%, transparent)`,color:albumColor}}>
-            {photo.album||'General'}
-          </span>
-          {photo.taken_at&&(
-            <span style={{fontSize:11,color:DIM_C}}>
-              {new Date(photo.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}
-            </span>
-          )}
-        </div>
-        {photo.location&&(
-          <div style={{fontSize:11,color:DIM_C,marginTop:5,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
-            {photo.location}
-          </div>
-        )}
-        {photo.url && onEdit && !isFromFiles(photo) && (
-          <button onClick={(e)=>{e.stopPropagation();onEdit(photo.id,photo.url);}}
-            style={{marginTop:8,width:'100%',padding:'6px',background:'var(--brand-primary-08)',border:`1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent)`,borderRadius:6,color:'var(--brand-primary)',fontSize:11,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4}}>
-            <PencilSimple size={13} weight="regular" color="var(--brand-primary)" /> Edit / Crop / Rotate
-          </button>
+    <div className="phCard" data-sel={selected?'true':undefined} role="button" tabIndex={0}
+      onClick={onClick}
+      onKeyDown={e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); onClick(); } }}
+      aria-label={`Open ${photo.title||'photo'}`}
+      aria-pressed={selected}>
+      <div className="phThumb" data-missing={missing?'true':undefined}>
+        {!missing ? (
+          /* Grid tiles render the ~400px thumbnail; the full original is for the
+             viewer only (see THUMBNAIL CONTRACT in /api/photos/list). */
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo.thumbnail_url||photo.url} alt={photo.title||'Photo'} loading="lazy" decoding="async" onError={()=>setMissing(true)}/>
+        ) : (
+          <span><Images size={18}/> No image</span>
         )}
       </div>
+      <div className="phCardBody">
+        <div className="phCardTitle" title={photo.title||'Untitled'}>{photo.title||'Untitled'}</div>
+        <div className="phCardMeta">
+          <Badge tone={badge.tone}>{badge.label}</Badge>
+          {photo.taken_at && <span>{new Date(photo.taken_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>}
+        </div>
+        {photo.location && <div className="phCardMeta"><span>{photo.location}</span></div>}
+      </div>
+      {photo.url && onEdit && !isFromFiles(photo) && (
+        <div className="phCardEdit">
+          <Button size="sm" variant="ghost" icon={<Crop size={14}/>} aria-label={`Edit, crop or rotate ${photo.title||'photo'}`} title="Edit / Crop / Rotate"
+            onClick={(e)=>{e.stopPropagation();onEdit(photo.id,photo.url);}}/>
+        </div>
+      )}
     </div>
   );
 }
