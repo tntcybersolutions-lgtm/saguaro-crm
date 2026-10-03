@@ -218,7 +218,7 @@ function BidLevelingBoard() {
      anyone who still arrives the old way. */
   if (!packageId) {
     return (
-      <PremiumSurface maxWidth={1240}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleHero
           eyebrow="Bid Tabulation · Deterministic"
           eyebrowIcon={<Scales size={13} weight="fill" color={BIDS.hex} />}
@@ -241,7 +241,7 @@ function BidLevelingBoard() {
   }
 
   return (
-    <PremiumSurface maxWidth={1240}>
+    <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Bid Tabulation · Deterministic"
         eyebrowIcon={<Scales size={13} weight="fill" color={BIDS.hex} />}

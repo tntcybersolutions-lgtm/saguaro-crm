@@ -185,7 +185,7 @@ export default function QuickBooksPage() {
 
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <div style={{ color: DIM, fontSize: 14 }}>Loading QuickBooks integration…</div>
       </PremiumSurface>
     );
@@ -194,7 +194,7 @@ export default function QuickBooksPage() {
   const connected = !!integration?.connected;
 
   return (
-    <PremiumSurface maxWidth={1100}>
+    <PremiumSurface maxWidth={2200}>
       {/* Notification */}
       {notification && (
         <div style={{

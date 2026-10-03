@@ -148,7 +148,7 @@ export default function CostControlPage() {
   const GRID = '1.5fr 0.9fr 0.8fr 1.05fr 1.05fr 1fr 1fr 26px';
 
   return (
-    <PremiumSurface maxWidth={1240} pad="40px 24px 90px">
+    <PremiumSurface maxWidth={2200} pad="40px 24px 90px">
       {/* Header */}
       <ModuleHero
         eyebrow="Cost Control · Budget vs. Committed vs. Actual"

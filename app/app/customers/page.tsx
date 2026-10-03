@@ -610,7 +610,7 @@ export default function CustomersPage() {
 
   /* ─── Main Table View ─── */
   return (
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
         eyebrow="Customer Relationships"

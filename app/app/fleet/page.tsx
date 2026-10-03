@@ -152,7 +152,7 @@ export default function FleetPage() {
 
   return (
     <>
-      <PremiumSurface maxWidth={1180}>
+      <PremiumSurface maxWidth={2200}>
 
         {/* Header */}
         <ModuleHero

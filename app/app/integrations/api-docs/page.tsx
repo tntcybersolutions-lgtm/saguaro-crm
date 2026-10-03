@@ -211,7 +211,7 @@ export default function ApiDocsPage() {
   const soonCount = totalEndpoints - liveCount;
 
   return (
-    <PremiumSurface maxWidth={1300}>
+    <PremiumSurface maxWidth={2200}>
       <style>{`@media (max-width: 760px){ .ad-stack{ grid-template-columns: 1fr !important } }`}</style>
 
       {/* Breadcrumb */}

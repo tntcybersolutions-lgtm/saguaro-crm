@@ -185,7 +185,7 @@ export default function MyWorkPage() {
   );
 
   return (
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="My Work"
         eyebrowIcon={<IconChip size={24} vivid={moduleAccent('work').vivid ?? moduleAccent('work').hex}><Briefcase size={13} weight="fill" color="#F8FAFC" /></IconChip>}

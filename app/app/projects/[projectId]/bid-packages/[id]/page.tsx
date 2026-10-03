@@ -338,7 +338,7 @@ export default function BidPackageDetailPage() {
   // ── Loading / Not Found ──────────────────────────────────────────────────
 
   if (loading) return (
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
       {/* Layout-true shell — back stays live; hero, stats and the invite list
           paint as skeletons shaped like the real content (house pattern: rfis). */}
       <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} className="pmBtn" style={{ background: 'none', border: 'none', color: MUTED, fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
@@ -363,7 +363,7 @@ export default function BidPackageDetailPage() {
   );
 
   if (!pkg) return (
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
       <SectionCard>
         <PremiumEmpty
           tone="error"
@@ -447,7 +447,7 @@ export default function BidPackageDetailPage() {
         </div>
       )}
 
-      <PremiumSurface maxWidth={1200}>
+      <PremiumSurface maxWidth={2200}>
 
         {/* Back to list */}
         <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} className="pmBtn" style={{ background: 'none', border: 'none', color: MUTED, fontSize: 13, cursor: 'pointer', padding: 0, marginBottom: 14, display: 'inline-flex', alignItems: 'center', gap: 5 }}>

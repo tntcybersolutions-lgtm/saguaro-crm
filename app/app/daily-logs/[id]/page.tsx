@@ -221,7 +221,7 @@ export default function DailyLogDetailPage() {
   // ── Loading / Not found / Error ──────────────────────────────────────────
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleSkeleton kpis={0} rows={6} />
       </PremiumSurface>
     );
@@ -229,7 +229,7 @@ export default function DailyLogDetailPage() {
 
   if (notFound || (!log && !error)) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <SectionCard flat flush>
           <PremiumEmpty
             icon={<ClipboardText size={30} weight="duotone" color={ACCENT.hex} />}
@@ -244,7 +244,7 @@ export default function DailyLogDetailPage() {
 
   if (error && !log) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <SectionCard flat flush>
           <PremiumEmpty
             tone="error"
@@ -359,7 +359,7 @@ export default function DailyLogDetailPage() {
   if (!l.notes && editKey !== 'notes') composerTargets.push({ k: 'notes', label: 'Add General Notes', icon: <NotePencil size={13} /> });
 
   return (
-    <PremiumSurface maxWidth={1100}>
+    <PremiumSurface maxWidth={2200}>
       {/* Toast — optimistic save confirmations + rollback errors */}
       {toast && (
         <div style={{

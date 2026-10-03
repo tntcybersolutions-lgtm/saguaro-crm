@@ -248,7 +248,7 @@ export default function PortalsPage() {
 
   return (
     <>
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
 
       {/* Header */}
       <ModuleHero

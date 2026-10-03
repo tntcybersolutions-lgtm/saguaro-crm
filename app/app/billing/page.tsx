@@ -302,7 +302,7 @@ export default function BillingPage() {
 
   return (
     <>
-      <PremiumSurface maxWidth={1080}>
+      <PremiumSurface maxWidth={2200}>
 
         {/* Header */}
         <ModuleHero

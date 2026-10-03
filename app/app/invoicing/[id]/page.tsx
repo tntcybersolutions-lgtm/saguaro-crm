@@ -326,7 +326,7 @@ export default function InvoiceDetailPage() {
   // ── Loading / Error / Not found ──────────────────────────────────────────
   if (loading) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <ModuleSkeleton kpis={4} rows={5} />
       </PremiumSurface>
     );
@@ -334,7 +334,7 @@ export default function InvoiceDetailPage() {
 
   if (notFound || (!invoice && !error)) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <PremiumEmpty
           icon={<Receipt size={34} weight="duotone" color={GOLD} />}
           title="Invoice not found"
@@ -351,7 +351,7 @@ export default function InvoiceDetailPage() {
 
   if (error && !invoice) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <PremiumEmpty
           tone="error"
           icon={<Warning size={34} weight="duotone" color={colors.red} />}
@@ -382,7 +382,7 @@ export default function InvoiceDetailPage() {
         </div>
       )}
 
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
       {/* Back link */}
       <button
         onClick={() => guard.requestLeave('/app/invoicing')}

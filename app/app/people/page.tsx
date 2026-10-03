@@ -101,7 +101,7 @@ export default function PeopleAccessHub() {
   };
 
   return (
-    <PremiumSurface maxWidth={1180} pad="40px 20px 0">
+    <PremiumSurface maxWidth={2200} pad="40px 20px 0">
       {/* ── cinematic header ── */}
       <ModuleHero
         eyebrow="Team"

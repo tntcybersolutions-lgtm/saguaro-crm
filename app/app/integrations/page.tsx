@@ -282,7 +282,7 @@ export default function IntegrationsPage() {
     .sort((a, b) => new Date(b.last_sync_at as string).getTime() - new Date(a.last_sync_at as string).getTime())[0] || null;
 
   return (
-    <PremiumSurface maxWidth={1400}>
+    <PremiumSurface maxWidth={2200}>
       {/* Notification Banner */}
       {notification && (
         <div style={{

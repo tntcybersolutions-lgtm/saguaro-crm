@@ -479,7 +479,7 @@ export default function ReportBuilderPage() {
   };
 
   return (
-    <PremiumSurface maxWidth={1500}>
+    <PremiumSurface maxWidth={2200}>
       <style>{`
         @media print {
           body { background: #fff !important; }

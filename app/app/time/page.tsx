@@ -304,7 +304,7 @@ export default function TimeClockPage() {
   const clockedIn = !!openShift;
 
   return (
-    <PremiumSurface maxWidth={1140}>
+    <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Field Workforce"
         eyebrowIcon={<IconChip size={24} vivid={moduleAccent('time').vivid ?? moduleAccent('time').hex}><Clock size={13} weight="fill" color="#F8FAFC" /></IconChip>}

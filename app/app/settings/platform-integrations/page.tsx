@@ -71,7 +71,7 @@ export default function PlatformIntegrationsPage() {
 
   if (denied) {
     return (
-      <PremiumSurface maxWidth={1100}>
+      <PremiumSurface maxWidth={2200}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '72px 24px' }}>
           <IconChip size={64}><ShieldCheck size={30} weight="duotone" color={GOLD} /></IconChip>
           <div style={{ fontSize: 18, fontWeight: 800, color: WHITE, margin: '18px 0 8px' }}>Platform Owners Only</div>
@@ -87,7 +87,7 @@ export default function PlatformIntegrationsPage() {
   const pending = (apps ?? []).filter((a) => !a.configured);
 
   return (
-    <PremiumSurface maxWidth={1100}>
+    <PremiumSurface maxWidth={2200}>
       <ModuleHero
         eyebrow="Platform"
         eyebrowIcon={<ShieldCheck size={13} weight="fill" color={GOLD} />}

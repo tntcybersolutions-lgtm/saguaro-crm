@@ -1149,7 +1149,7 @@ export default function ClientPortalPage() {
   /* ── RENDER ─────────────────────────────────────────── */
   /* ══════════════════════════════════════════════════════ */
   return (
-    <PremiumSurface maxWidth={1440}>
+    <PremiumSurface maxWidth={2200}>
       {/* header */}
       <ModuleHero
         eyebrow="Client Experience"

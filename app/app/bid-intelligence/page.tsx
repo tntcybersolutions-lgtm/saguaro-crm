@@ -124,7 +124,7 @@ export default function IntelligencePage() {
   const worst = ranked[ranked.length - 1];
 
   return (
-    <PremiumSurface maxWidth={1200}>
+    <PremiumSurface maxWidth={2200}>
       <style>{`@media (max-width: 640px){ .pg-stack-1{ grid-template-columns: 1fr !important } }`}</style>
 
       <ModuleHero

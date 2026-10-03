@@ -235,7 +235,7 @@ export default function SelectionsPage(){
       )}
 
       <div style={{flex:1,overflow:'auto',minWidth:0}}>
-        <PremiumSurface maxWidth={1200}>
+        <PremiumSurface maxWidth={2200}>
 
           {/* Header */}
           <ModuleHero

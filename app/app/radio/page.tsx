@@ -3327,7 +3327,7 @@ export default function RadioDispatchPage() {
    * hero and the console plate are sized to fit one viewport so the feed
    * inside the plate stays the only thing that scrolls. */
   return (
-    <PremiumSurface maxWidth={1500} pad="26px 24px 26px">
+    <PremiumSurface maxWidth={2200} pad="26px 24px 26px">
       <style>{`
         @keyframes sagRadioEq { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
         .sagRadioRow .sagRowActions { opacity: 0; pointer-events: none; transition: opacity .15s ease; }
