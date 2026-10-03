@@ -36,6 +36,19 @@ function relDay(d: string | null): string {
   if (days < 7) return `${days} days ago`;
   return fmtDay(d);
 }
+/** The distinguishing part of a title: drop a leading "<Type Label> — " that the
+ *  second line already shows, so "Insurance Certificate Request — Roofing…"
+ *  reads "Roofing…" instead of truncating before the useful words. */
+function shortTitle(d: { title: string | null; doc_type: string | null }): { main: string; dupType: boolean } {
+  const label = docTypeLabel(d.doc_type);
+  const t = (d.title || '').trim();
+  if (!t || t === label) return { main: label, dupType: true };
+  for (const sep of [' — ', ' - ', ': ']) {
+    if (t.toLowerCase().startsWith((label + sep).toLowerCase())) return { main: t.slice(label.length + sep.length), dupType: false };
+  }
+  return { main: t, dupType: false };
+}
+
 const safeName = (s: string) => s.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) || 'document';
 
 export default function DocumentLibrary({ externalQuery = '' }: { externalQuery?: string }) {
@@ -152,6 +165,7 @@ export default function DocumentLibrary({ externalQuery = '' }: { externalQuery?
   const Row = ({ d }: { d: LibDoc }) => {
     const c = docCategory(d.doc_type);
     const href = docSourceHref(d);
+    const st = shortTitle(d);
     return (
       <div role="row" className={`dl-row ${selected.has(d.id) ? 'sel' : ''}`}>
         <span role="cell" className="dl-check">
@@ -161,11 +175,11 @@ export default function DocumentLibrary({ externalQuery = '' }: { externalQuery?
           <DocKindTile docType={d.doc_type} size={38} />
           <span className="dl-docText">
             <button type="button" className="dl-title" onClick={() => preview(d)} title={d.title || docTypeLabel(d.doc_type)}>
-              {d.title || docTypeLabel(d.doc_type)}
+              {st.main}
             </button>
             <span className="dl-meta">
               <span className="dl-cat" style={{ color: DOC_CATEGORY_COLOR[c] }}>{DOC_CATEGORY_LABEL[c]}</span>
-              <span>{docTypeLabel(d.doc_type)}</span>
+              {!st.dupType && <span>{docTypeLabel(d.doc_type)}</span>}
             </span>
           </span>
         </span>
@@ -308,7 +322,7 @@ const CSS = `
 .dl-check input { width: 18px; height: 18px; accent-color: var(--brand-primary); cursor: pointer; }
 .dl-doc { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .dl-docText { display: flex; flex-direction: column; min-width: 0; }
-.dl-title { all: unset; cursor: pointer; font-size: 14.5px; font-weight: 750; color: var(--title-color, #FFE600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-title { all: unset; cursor: pointer; font-size: 14.5px; font-weight: 750; line-height: 1.3; color: var(--title-color, #FFE600); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .dl-title:hover { text-decoration: underline; }
 .dl-title:focus-visible, .dl-btn:focus-visible, .dl-chips button:focus-visible, .dl-viewtoggle button:focus-visible, .dl-ghead:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: 2px; }
 .dl-meta { display: flex; gap: 10px; font-size: 12.5px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
