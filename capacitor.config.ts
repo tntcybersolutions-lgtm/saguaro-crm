@@ -41,7 +41,10 @@ const config: CapacitorConfig = {
     // ── Splash Screen ──────────────────────────────────────────────
     SplashScreen: {
       launchShowDuration: 2000,
-      launchAutoHide: false,
+      // Native hides it after launchShowDuration. It was false while nothing on
+      // the web side ever called SplashScreen.hide(), so the app stayed on the
+      // splash forever (seen on the iPhone simulator in CI).
+      launchAutoHide: true,
       backgroundColor: '#000000',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
