@@ -59,3 +59,14 @@ converge. One line each, newest at the bottom.
   "New Pay App" on a closed job and while bidding.
 - (2 Oct, audit verify) `app/app/projects/[projectId]/takeoff/page.tsx` — on load the upload hero
   ("Drop a plan") shows for ~3–5 s before a completed takeoff's results replace it.
+- (3 Oct, Pass 4 drive) `app/app/invoicing/[id]/page.tsx` — the project name never resolves
+  (lookup via `/api/projects?limit=200&fields=id,name` predates the rewrite); the header
+  falls back to "· Project" and the Details rail prints the raw project UUID.
+- (3 Oct, Pass 4 drive) Pima change orders carry `cost_impact` 0 on every row while the
+  project context reports +$127,650 in approved COs — the two numbers disagree on screen.
+- (3 Oct, Pass 4 drive) Pay apps store `contract_sum` 0 (`contract_sum_to_date` is right), and
+  the rolled-forward SOV rows 7 and 9 on Mesa Flex have blank descriptions.
+- (3 Oct, Pass 4 drive) Project Daily Logs "Last Log" tile reads "11 workdays unlogged" on a
+  closed job — the unlogged count should stop at closeout.
+- (3 Oct, Pass 4 drive) Preview session expires mid-walk (~30–40 min): /app/billing bounced to
+  /login?next= seconds after /app/invoicing rendered; on-device QA has to re-sign-in each pass.
