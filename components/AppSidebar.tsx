@@ -177,6 +177,9 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
       <div
         style={{
           height: sidebarTokens.headerHeight,
+          // Below the status bar in the iOS app; 0 elsewhere.
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          boxSizing: 'content-box',
           display: 'flex',
           alignItems: 'center',
           justifyContent: collapsed ? 'center' : 'flex-start',
