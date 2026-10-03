@@ -110,7 +110,7 @@ const STEPS: Step[] = [
     title: "You're Running",
     plain:
       'That is the setup done. Upload a blueprint and the takeoff prices the job; open the radio and talk to the crew. Everything after this is the actual work.',
-    screen: 'app.saguaro.build',
+    screen: 'saguarocontrol.net/app',
     chips: [
       'Takeoff Studio',
       'Bid Jackets',

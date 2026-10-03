@@ -194,7 +194,7 @@ export default function LandingPage() {
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#EF4444' }} />
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#F59E0B' }} />
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: GREEN }} />
-            <span style={{ flex: 1, background: 'rgba(0,0,0,0.06)', borderRadius: 6, padding: '4px 12px', fontSize: 11, color: DIM, marginLeft: 8 }}>app.saguaro.build/takeoff</span>
+            <span style={{ flex: 1, background: 'rgba(0,0,0,0.06)', borderRadius: 6, padding: '4px 12px', fontSize: 11, color: DIM, marginLeft: 8 }}>saguarocontrol.net/app/takeoff</span>
           </div>
           {/* mockup content */}
           <div style={{ padding: 20, background: `linear-gradient(135deg, ${BG} 0%, rgba(20,20,22,0.95) 50%, rgba(20,20,22,0.98) 100%)` }}>
