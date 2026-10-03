@@ -454,6 +454,7 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Schedule',          href: '/app/schedule',          icon: CalendarBlank, accentKey: 'schedule', core: true },
       { label: 'Daily Logs',        href: '/app/daily-logs',        icon: ClipboardText, accentKey: 'daily' },
       { label: 'Resource Planning', href: '/app/resource-planning', icon: HardHat, accentKey: 'team' },
+      { label: 'Service & Dispatch', href: '/app/service',          icon: Wrench, accentKey: 'team' },
       { label: 'Warranty Claims',   href: '/app/warranty-claims',   icon: Wrench, accentKey: 'compliance' },
       { label: 'Signal Studio',     href: '/app/signal-studio',     icon: WifiHigh, accentKey: 'signal' },
       { label: 'Saguaro Radio',     href: '/app/radio',             icon: Broadcast, accentKey: 'radio' },
