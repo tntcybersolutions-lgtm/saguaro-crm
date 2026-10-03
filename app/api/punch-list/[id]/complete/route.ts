@@ -23,7 +23,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const newStatus = (body.status as string) || 'complete';
 
   const updateData: Record<string, unknown> = { status: newStatus };
-  if (newStatus.toLowerCase() === 'complete') {
+  // 'completed' is the value lib/project-lifecycle PUNCH_DONE counts as done;
+  // stamp completed_at for it too, not only for the legacy 'complete'.
+  if (['complete', 'completed'].includes(newStatus.toLowerCase())) {
     updateData.completed_at = new Date().toISOString();
   }
 

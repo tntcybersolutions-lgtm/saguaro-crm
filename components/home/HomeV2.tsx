@@ -24,7 +24,7 @@ interface HomePayload {
     view: HomeView; viewLabel: string; defaultView: HomeView; savedView: HomeView | null;
     views: Array<{ key: HomeView; label: string }>;
     scope: 'mine' | 'team'; window: 'today' | '7d'; projectId: string | null;
-    today: string; timeZone: string; firstName: string | null; classicHome: boolean;
+    today: string; timeZone: string; firstName: string | null; classicHome: boolean; canEditWork?: boolean;
   };
   metrics: Metric[];
   queue: { items: QueueItem[]; total: number; state: DataState; note?: string };
@@ -119,8 +119,33 @@ const DECISION_TYPES = ['change_order', 'pay_app', 'purchase_order', 'invoice'];
  *  either "Unassigned" read as a problem that wasn't there. */
 const ownerless = (it: QueueItem) => it.id.startsWith('group:') || DECISION_TYPES.includes(it.sourceType);
 
-function QueueRow({ it, today }: { it: QueueItem; today: string }) {
+/** Inline completion, only where an existing route already owns the write:
+ *  to-dos and punch items. Approvals always open the record first. */
+const COMPLETABLE: Record<string, (id: string) => { url: string; body?: unknown }> = {
+  todo: id => ({ url: `/api/todos/${id}/complete` }),
+  punch: id => ({ url: `/api/punch-list/${id}/complete`, body: { status: 'completed' } }),
+};
+
+function QueueRow({ it, today, canEdit, onChanged }: { it: QueueItem; today: string; canEdit: boolean; onChanged: () => Promise<unknown> }) {
   const tone = TIER_TONE[it.tier];
+  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+  const [err, setErr] = useState('');
+  const complete: ((id: string) => { url: string; body?: unknown }) | undefined = COMPLETABLE[it.sourceType];
+  const markDone = async () => {
+    if (!complete || state === 'busy') return;
+    setState('busy'); setErr('');
+    try {
+      const { url, body } = complete(it.sourceId);
+      const r = await fetch(url, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `Could not mark done (${r.status})`);
+      setState('done');
+      await onChanged();
+    } catch (e) {
+      setState('error');
+      setErr((e as Error).message);
+    }
+  };
   const ownerCell = DECISION_TYPES.includes(it.sourceType)
     ? <span>Your decision</span>
     : it.id.startsWith('group:') ? null
@@ -136,19 +161,28 @@ function QueueRow({ it, today }: { it: QueueItem; today: string }) {
           <span>{it.reason}</span>
           {it.dueAt ? <span>Due {fmtDay(it.dueAt, today)}</span> : null}
         </div>
+        {state === 'error' && <div className="hv2-qerr" role="alert">{err}</div>}
+        {state === 'done' && <div className="hv2-qok" role="status">Marked done.</div>}
       </div>
-      {it.href ? (
-        <Link href={it.href} className="hv2-btn hv2-btn-ghost">{it.actionLabel} <ArrowRight size={14} weight="bold" /></Link>
-      ) : (
-        <span className="hv2-btn hv2-btn-disabled" title="This record type has no screen yet">{it.actionLabel}</span>
-      )}
+      <div className="hv2-qactions">
+        {complete && canEdit && state !== 'done' && (
+          <button type="button" className="hv2-btn hv2-btn-ghost" onClick={markDone} disabled={state === 'busy'} aria-label={`Mark done: ${it.title}`}>
+            {state === 'busy' ? 'Saving…' : 'Mark Done'}
+          </button>
+        )}
+        {it.href ? (
+          <Link href={it.href} className="hv2-btn hv2-btn-ghost">{it.actionLabel} <ArrowRight size={14} weight="bold" /></Link>
+        ) : (
+          <span className="hv2-btn hv2-btn-disabled" title="This record type has no screen yet">{it.actionLabel}</span>
+        )}
+      </div>
     </li>
   );
 }
 
 type QFilter = 'all' | 'critical' | 'overdue' | 'today' | 'unassigned';
 
-function NeedsAttention({ data }: { data: HomePayload }) {
+function NeedsAttention({ data, onChanged }: { data: HomePayload; onChanged: () => Promise<unknown> }) {
   const [filter, setFilter] = useState<QFilter>('all');
   const [expanded, setExpanded] = useState(false);
   const items = data.queue.items;
@@ -180,7 +214,7 @@ function NeedsAttention({ data }: { data: HomePayload }) {
       ) : shown.length === 0 ? (
         <p className="hv2-empty">{filter === 'all' ? 'Nothing needs your attention in this view.' : 'Nothing in this filter.'}</p>
       ) : (
-        <ul className="hv2-qlist">{shown.map(it => <QueueRow key={it.id} it={it} today={today} />)}</ul>
+        <ul className="hv2-qlist">{shown.map(it => <QueueRow key={it.id} it={it} today={today} canEdit={!!data.context.canEditWork} onChanged={onChanged} />)}</ul>
       )}
       {filtered.length > 6 && (
         <button type="button" className="hv2-more" onClick={() => setExpanded(e => !e)}>
@@ -405,7 +439,7 @@ function HomeInner() {
           )}
           <div className="hv2-metrics hv2-order-3">{data.metrics.map(m => <MetricCard key={m.key} m={m} />)}</div>
           <div className="hv2-primary hv2-order-1">
-            <NeedsAttention data={data} />
+            <NeedsAttention data={data} onChanged={() => mutate()} />
             <Schedule data={data} />
           </div>
           <div className="hv2-order-4"><WorkTable data={data} /></div>
@@ -481,6 +515,9 @@ const CSS = `
 .hv2-count { margin-left: 8px; font-size: 12px; font-weight: 750; padding: 1px 7px; border-radius: 999px; background: var(--bg-surface-2); color: var(--text-secondary); }
 .hv2-qmeta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 3px; font-size: 13px; color: var(--text-tertiary); }
 .hv2-unassigned { color: #FFC53D; font-style: normal; font-weight: 700; }
+.hv2-qactions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.hv2-qerr { margin-top: 6px; font-size: 13px; color: #FF4D5E; }
+.hv2-qok { margin-top: 6px; font-size: 13px; color: #2EE59D; }
 .hv2-more { margin-top: 10px; background: none; border: 0; color: var(--brand-primary); font-weight: 700; font-size: 14px; cursor: pointer; min-height: 36px; }
 .hv2-sched { display: flex; flex-direction: column; gap: 14px; }
 .hv2-sday { font-size: 12.5px; font-weight: 750; color: var(--text-secondary); margin-bottom: 6px; }
@@ -520,7 +557,8 @@ const CSS = `
   .hv2-metrics { gap: 12px; }
   .hv2-metric { min-height: 0; padding: 12px 14px; }
   .hv2-qrow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .hv2-qrow .hv2-btn { justify-self: start; min-height: 44px; }
+  .hv2-qrow .hv2-btn { min-height: 44px; }
+  .hv2-qactions { justify-content: flex-start; }
   .hv2-seg button { min-height: 40px; }
   .hv2-hide-sm { display: none; }
   .hv2-select select { max-width: 100%; }

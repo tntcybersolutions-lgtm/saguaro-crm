@@ -100,6 +100,8 @@ export async function GET(req: NextRequest) {
         views: HOME_VIEWS.filter(v => available.includes(v)).map(v => ({ key: v, label: VIEW_LABEL[v] })),
         scope, window, projectId, today: ctx.today, timeZone,
         firstName: (profile.full_name || '').split(' ')[0] || null,
+        // Which inline queue actions to offer. The mutation routes check again.
+        canEditWork: hasPermission(perms, 'Projects', 'Edit'),
         classicHome: features.classic_home === true,
       },
       ...sections,
