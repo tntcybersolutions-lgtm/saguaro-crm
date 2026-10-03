@@ -1,18 +1,37 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * Inspections — Pass 4, on the RFIs reference layout (dense table + detail).
+ *
+ * Anatomy: title + one primary action (Schedule Inspection) → StatRow (pass
+ * rate / re-inspections due / scheduled / deficiencies / next up — each tile
+ * filters the log) → Toolbar → workspace split: the inspection log on the
+ * left and, when a row is selected, the record beside a 320–384px details
+ * rail. Phone: stacked. The scheduling composer opens in a FormModal.
+ *
+ * Results are the data model's: scheduled / passed / failed / conditional
+ * pass / pending. Nothing here auto-marks a pass — a failed type stays flagged
+ * until a later inspection of that type passes.
+ *
+ * Every read / write is the one this screen already used:
+ *   list    GET  /api/projects/[id]/inspections
+ *   create  POST /api/inspections/create   (409 requiresQcOverride → confirm → override)
+ */
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { ClipboardText, CheckCircle, XCircle, CalendarCheck, Plus, Warning, ClockCounterClockwise, ArrowsClockwise } from '@phosphor-icons/react';
-import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, StatStrip, FlowSteps, InsightRow, AutoChip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-import { ListToolbar } from '@/components/ui/ListToolbar';
+import { ClipboardText, Plus, Warning, ArrowsClockwise, X } from '@phosphor-icons/react';
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState,
+  FormModal, Field, Input, Select, FormGrid, DetailList, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { FlowSteps, InsightRow, AutoChip } from '@/components/ui/premium';
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
-import { StatusPill } from '@/components/ui/Status';
-
-const GOLD='var(--brand-primary)', BORDER='rgba(255,255,255,0.12)', DIM='#D4D4D8', TEXT='#FFFFFF', GREEN='#2CFF7A', RED='#FF3B30';
+import { layout } from '@/lib/design-tokens';
 
 interface Inspection {
   id: string;
@@ -34,7 +53,8 @@ const INSPECTION_TYPES = ['Foundation','Framing','Rough Electrical','Rough Plumb
 const EMPTY_FORM = { type: 'Framing', date: '', inspector: '', agency: '', notes: '' };
 
 const localIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const fmtDate = (d?: string | null) => d ? new Date(String(d).slice(0, 10) + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+const fmtDate = (d?: string | null) => d ? new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 // Results arrive in two dialects: the web form writes 'Passed'/'Failed'/'Pending'
 // while the wizard/mobile route writes 'passed'/'conditional_pass'. Canonicalize
 // before comparing so stats and re-inspection tracking see both.
@@ -61,24 +81,89 @@ function normalizeInspection(r: Record<string, unknown>): Inspection {
   };
 }
 
-function resultBadge(result: string) {
-  const map: Record<string, { bg: string; color: string; label: string }> = {
-    'passed': { bg: 'rgba(44,255,122,.2)', color: GREEN, label: 'Passed' },
-    'failed': { bg: 'rgba(255,59,48,.2)', color: RED, label: 'Failed' },
-    'pending': { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
-    'conditional pass': { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Conditional Pass' },
-  };
-  const s = map[canonResult(result)] || { bg: 'rgba(143,163,192,.2)', color: DIM, label: result || '—' };
-  return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{s.label}</span>;
+/** One result → one badge. Passed green, Failed red, Conditional Pass amber,
+ *  Pending neutral — from lib/status-colors. */
+function resultBadge(result: string): { label: string; tone: BadgeTone } {
+  const k = canonResult(result);
+  if (k === 'passed') return { label: 'Passed', tone: 'ongoing' };
+  if (k === 'failed') return { label: 'Failed', tone: 'overdue' };
+  if (k === 'conditional pass') return { label: 'Conditional Pass', tone: 'under_contract' };
+  if (k === 'pending' || !k) return { label: 'Pending', tone: 'neutral' };
+  return { label: result, tone: 'neutral' };
 }
+const RESULT_RANK: Record<string, number> = { failed: 0, pending: 1, 'conditional pass': 2, passed: 3 };
+/** Status is booked (Scheduled) or resulted — blue while it is on the calendar. */
+function statusBadge(status: string): { label: string; tone: BadgeTone } {
+  const k = String(status || '').toLowerCase();
+  if (/sched/.test(k)) return { label: 'Scheduled', tone: 'lead' };
+  if (/pass/.test(k)) return { label: 'Passed', tone: 'ongoing' };
+  if (/fail/.test(k)) return { label: 'Failed', tone: 'overdue' };
+  if (/complete/.test(k)) return { label: 'Completed', tone: 'completed' };
+  return { label: k ? k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—', tone: 'neutral' };
+}
+type ResultFilter = 'all' | 'passed' | 'failed' | 'pending' | 'conditional pass' | 'scheduled' | 'reinspect';
+
+const CSS = `
+.inWs > .k-page { max-width: none; }
+.inCq { container: inws / inline-size; min-width: 0; }
+.inSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.inSplit > * { min-width: 0; }
+@container inws (min-width: 1080px) {
+  .inSplit[data-open="true"] { grid-template-columns: minmax(340px, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
+}
+.inList .k-table th:first-child, .inList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.inList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.inList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
+.inList .k-table tbody tr:has([data-sel="true"]) td { background: var(--brand-primary-08); }
+.inList .k-table tbody tr:has([data-sel="true"]) td:first-child { background: linear-gradient(var(--brand-primary-08), var(--brand-primary-08)), var(--bg-solid); box-shadow: inset 3px 0 0 var(--brand-primary); }
+.inType { color: var(--text-primary); font-weight: 700; white-space: nowrap; }
+.inMuted { color: var(--text-tertiary); }
+.inClamp { display: inline-block; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.inBadges { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.inSection { display: flex; flex-direction: column; gap: 8px; }
+.inSection + .inSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.inSectionTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
+.inProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; }
+.inNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
+.inActions { display: flex; flex-direction: column; gap: 8px; }
+.inActions .k-btn { width: 100%; justify-content: flex-start; }
+.inRail { position: sticky; top: 16px; }
+.inLadder { border: 1px solid var(--border-default); border-radius: var(--radius-sm); padding: 12px 14px; background: var(--bg-surface-2); margin-bottom: 16px; }
+.inWarn { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,77,94,.35); background: rgba(255,77,94,.08); margin-bottom: 16px; }
+.inWarn > svg { color: var(--status-overdue); flex-shrink: 0; margin-top: 2px; }
+.inWarn button { background: none; border: 0; padding: 0; color: var(--brand-primary); font-weight: 700; cursor: pointer; font: inherit; margin-right: 10px; }
+.inSeq { display: flex; flex-direction: column; gap: 4px; }
+.inSeqItem { display: flex; align-items: center; gap: 9px; font-size: var(--fs-sm); color: var(--text-tertiary); }
+.inSeqItem[data-next="true"] { color: var(--brand-primary); font-weight: 700; }
+.inSeqNum { width: 18px; height: 18px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border: 1px solid var(--border-default); color: var(--text-tertiary); }
+.inSeqItem[data-next="true"] .inSeqNum { border-color: var(--brand-primary-35); background: var(--brand-primary-12); color: var(--brand-primary); }
+.inEmptyGrid { display: grid; grid-template-columns: minmax(0, 1fr); }
+@container inws (min-width: 900px) { .inEmptyGrid[data-ctx="true"] { grid-template-columns: minmax(0, 1fr) 320px; } .inEmptyRail { border-left: 1px solid var(--border-subtle); border-top: 0; } }
+.inEmptyRail { padding: 22px 24px; border-top: 1px solid var(--border-subtle); }
+.inDateInput { width: 100%; }
+@media (max-width: 640px) {
+  .inWs .k-btn, .inWs .k-stat, .inWs select.k-select, .inWs .k-input { min-height: 44px; }
+  .inWs .k-table td { height: 48px; }
+  .inClamp { max-width: 180px; }
+}
+`;
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
+};
 
 export default function InspectionsPage() {
   const params = useParams();
   const projectId = params.projectId as string;
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const detailRef = useRef<HTMLDivElement>(null);
 
   /* ── Unsaved-work guard: the composer holds real typing, so leaving the
    *    page (sidebar, field nav, ⌘K, back) confirms first and the draft is
@@ -92,20 +177,23 @@ export default function InspectionsPage() {
     onSave: () => handleSave(),
   });
   const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const { toast, show } = useToast(4000);
   const [errorMsg, setErrorMsg] = useState('');
   const [search, setSearch] = useState('');
-  const [filterResult, setFilterResult] = useState('all');
+  const [filterResult, setFilterResult] = useState<ResultFilter>('all');
   const [filterType, setFilterType] = useState('all');
 
   const fetchInspections = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const res = await fetch(`/api/projects/${projectId}/inspections`);
+      if (!res.ok) throw new Error('Failed to load');
       const json = await res.json();
       setInspections((json.inspections ?? []).map(normalizeInspection));
     } catch {
       setInspections([]);
+      setLoadError('Failed to load inspections.');
     } finally {
       setLoading(false);
     }
@@ -135,6 +223,7 @@ export default function InspectionsPage() {
       (p.date || '') >= (f.date || '')
     )
   );
+  const needsReinspect = (i: Inspection) => awaitingReinspection.some(f => f.id === i.id);
 
   const todayIso = localIso(new Date());
   const upcoming = inspections
@@ -158,10 +247,15 @@ export default function InspectionsPage() {
         || (i.notes || '').toLowerCase().includes(q);
       if (!hit) return false;
     }
-    if (filterResult !== 'all' && canonResult(i.result) !== filterResult) return false;
+    if (filterResult === 'scheduled') { if (!/sched/i.test(i.status)) return false; }
+    else if (filterResult === 'reinspect') { if (!needsReinspect(i)) return false; }
+    else if (filterResult !== 'all' && canonResult(i.result) !== filterResult) return false;
     if (filterType !== 'all' && i.type !== filterType) return false;
     return true;
   });
+  const filtersActive = !!search || filterResult !== 'all' || filterType !== 'all';
+  const clearFilters = () => { setSearch(''); setFilterResult('all'); setFilterType('all'); };
+  const toggleResult = (r: ResultFilter) => setFilterResult(prev => (prev === r ? 'all' : r));
 
   // Prefilled schedule flow: date today, the last inspector/agency of record,
   // and the next milestone type (or the failed type for a re-inspection).
@@ -179,6 +273,7 @@ export default function InspectionsPage() {
     setShowForm(true);
     setErrorMsg('');
   }
+  function closeComposer() { guard.requestClose(() => { setShowForm(false); setErrorMsg(''); }); }
 
   async function handleSave(): Promise<boolean> {
     if (!form.type || !form.date || !form.inspector) { setErrorMsg('Type, date, and inspector are required.'); return false; }
@@ -202,8 +297,7 @@ export default function InspectionsPage() {
       setInspections(prev => [...prev, normalizeInspection(json.inspection)]);
       setShowForm(false);
       setForm(EMPTY_FORM);
-      setSuccessMsg('Inspection scheduled.');
-      setTimeout(() => setSuccessMsg(''), 4000);
+      show('Inspection scheduled.');
       guard.clearDraft();
       return true;
     } catch {
@@ -214,216 +308,242 @@ export default function InspectionsPage() {
     }
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
-  const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
+  const selected = selectedId ? inspections.find(i => i.id === selectedId) || null : null;
+  const detailOpen = !!selected;
+  useEffect(() => {
+    if (!detailOpen) return;
+    const el = detailRef.current;
+    if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [detailOpen, selectedId]);
 
-  return (
-    <PremiumSurface maxWidth={2200}>
-      {/* Header */}
-      <ModuleHero
-        eyebrow={ctx?.project?.name || 'Quality Assurance'}
-        eyebrowIcon={<ClipboardText size={13} weight="fill" style={{ color: GOLD }} />}
-        title="Inspections"
-        subtitle="Building inspections and approval records."
-        actions={
-          <button onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openCreate(); } }} style={goldButtonStyle} className="pmBtn">
-            <Plus size={15} weight="bold" /> Schedule Inspection
-          </button>
-        }
-      />
+  // ── Stat tiles — each filters the log ──
+  const stats: StatItem[] = loading
+    ? [
+        { label: 'Pass Rate', value: '—', sub: 'Loading…' },
+        { label: 'Re-Inspections Due', value: '—', sub: 'Loading…' },
+        { label: 'Scheduled', value: '—', sub: 'Loading…' },
+        { label: 'Deficiencies', value: '—', sub: 'Loading…' },
+        { label: 'Next Scheduled', value: '—', sub: 'Loading…' },
+      ]
+    : [
+        { label: 'Pass Rate', value: resulted > 0 ? `${passRate}%` : '—', tone: resulted > 0 ? (passRate >= 80 ? 'good' : passRate >= 60 ? 'warn' : 'bad') : 'default', sub: filterResult === 'passed' ? 'Filtered — click to clear' : resulted > 0 ? `${passed} passed of ${resulted} resulted` : 'No results recorded yet', onClick: () => toggleResult('passed') },
+        { label: 'Re-Inspections Due', value: awaitingReinspection.length, tone: awaitingReinspection.length > 0 ? 'bad' : 'default', sub: filterResult === 'reinspect' ? 'Filtered — click to clear' : awaitingReinspection.length > 0 ? awaitingReinspection.slice(0, 2).map(f => f.type).join(', ') : failed > 0 ? 'Every failure re-passed' : 'No failures on record', onClick: () => toggleResult('reinspect') },
+        { label: 'Scheduled', value: scheduled, tone: scheduled > 0 ? 'warn' : 'default', sub: filterResult === 'scheduled' ? 'Filtered — click to clear' : nextUp ? `Next ${fmtDate(nextUp.date)}` : 'Nothing on the calendar', onClick: () => toggleResult('scheduled') },
+        { label: 'Deficiencies', value: deficiencies, tone: deficiencies > 0 ? 'warn' : 'default', sub: deficiencies > 0 ? 'Flagged on inspection checklists' : 'None flagged' },
+        { label: 'Next Milestone', value: suggestedType, sub: openPunch > 0 ? `${openPunch} open punch item${openPunch === 1 ? '' : 's'} before finals` : `${passedTypes.size} of ${INSPECTION_TYPES.length} milestone types passed` },
+      ];
 
-      {/* Inspection intelligence strip — what the record already shows */}
-      {!loading && (ctx || inspections.length > 0) && (
-        <StatStrip items={[
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Pass Rate', value: resulted > 0 ? `${passRate}%` : '—', accent: resulted > 0 ? (passRate >= 80 ? GREEN : passRate >= 60 ? GOLD : RED) : undefined, sub: resulted > 0 ? `${passed} passed of ${resulted} resulted` : 'No results recorded yet' },
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Deficiencies', value: String(deficiencies), accent: deficiencies > 0 ? 'var(--warning)' : undefined, sub: deficiencies > 0 ? 'Flagged on inspection checklists' : 'None flagged' },
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Re-Inspections Due', value: String(awaitingReinspection.length), accent: awaitingReinspection.length > 0 ? RED : GREEN, sub: awaitingReinspection.length > 0 ? awaitingReinspection.slice(0, 2).map(f => f.type).join(', ') : 'Every failure re-passed' },
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Next Scheduled', value: nextUp ? fmtDate(nextUp.date) : '—', sub: nextUp ? nextUp.type : 'Nothing on the calendar' },
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Project Progress', value: `${pctComplete}%`, sub: `Next milestone: ${suggestedType}` },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch Items', value: String(openPunch), accent: openPunch > 0 ? GOLD : undefined, sub: openPunch > 0 ? 'Clear before final inspections' : 'Nothing blocking finals' },
-        ]} />
-      )}
+  // ── Log columns ──
+  const isSel = (i: Inspection) => i.id === selectedId;
+  const typeCol: Column<Inspection> = { key: 'type', header: 'Type', accessor: i => i.type || '', render: i => <span className="inType" data-sel={isSel(i) ? 'true' : undefined}>{i.type || '—'}</span> };
+  const dateCol: Column<Inspection> = { key: 'date', header: 'Date', accessor: i => i.date || '', render: i => <span className="inMuted">{fmtDate(i.date)}</span> };
+  const inspectorCol: Column<Inspection> = { key: 'inspector', header: 'Inspector', accessor: i => (i.inspector || '').toLowerCase(), render: i => i.inspector || <span className="inMuted">—</span> };
+  const agencyCol: Column<Inspection> = { key: 'agency', header: 'Agency', accessor: i => (i.agency || '').toLowerCase(), render: i => i.agency || <span className="inMuted">—</span> };
+  const resultCol: Column<Inspection> = { key: 'result', header: 'Result', accessor: i => RESULT_RANK[canonResult(i.result)] ?? 9, render: i => { const b = resultBadge(i.result); return <span className="inBadges"><Badge tone={b.tone}>{b.label}</Badge>{needsReinspect(i) && <Badge tone="overdue"><ArrowsClockwise size={11} /> Re-Inspect</Badge>}</span>; } };
+  const defCol: Column<Inspection> = { key: 'deficiency_count', header: 'Deficiencies', accessor: i => Number(i.deficiency_count) || 0, align: 'right', render: i => (Number(i.deficiency_count) || 0) > 0 ? <span style={{ color: 'var(--status-under-contract)', fontWeight: 700 }}>{i.deficiency_count}</span> : <span className="inMuted">—</span> };
+  const notesCol: Column<Inspection> = { key: 'notes', header: 'Notes', accessor: i => (i.notes || '').toLowerCase(), render: i => i.notes ? <span className="inClamp" title={i.notes}>{i.notes}</span> : <span className="inMuted">—</span> };
+  const statusCol: Column<Inspection> = { key: 'status', header: 'Status', accessor: i => (i.status || '').toLowerCase(), render: i => { const b = statusBadge(i.status); return <Badge tone={b.tone}>{b.label}</Badge>; } };
+  const columns: Column<Inspection>[] = detailOpen ? [typeCol, dateCol, resultCol, statusCol] : [typeCol, dateCol, inspectorCol, agencyCol, resultCol, defCol, notesCol, statusCol];
+  const rowActions = (i: Inspection): Action[] => [
+    { label: 'Open Record', icon: <ClipboardText size={15} />, onClick: () => setSelectedId(i.id) },
+    { label: 'Schedule Re-Inspection', icon: <ArrowsClockwise size={15} />, onClick: () => openCreate(i.type), hidden: !needsReinspect(i) },
+  ];
 
-      {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" style={{ color: GREEN }} />} label="Passed" value={String(passed)} accent={GREEN} sub={resulted > 0 ? `${passRate}% pass rate` : undefined} delay={0.02}  href={`/app/projects/${projectId}/inspections`}/>
-        <StatCard icon={<XCircle size={19} weight="duotone" style={{ color: RED }} />} label="Failed" value={String(failed)} accent={failed > 0 ? RED : undefined} sub={awaitingReinspection.length > 0 ? `${awaitingReinspection.length} awaiting re-inspection` : undefined} delay={0.06}  href={`/app/projects/${projectId}/inspections`}/>
-        <StatCard icon={<Warning size={19} weight="duotone" style={{ color: deficiencies > 0 ? 'var(--warning)' : GOLD }} />} label="Deficiencies" value={String(deficiencies)} accent={deficiencies > 0 ? 'var(--warning)' : undefined} sub="Checklist items flagged" delay={0.10}  href={`/app/projects/${projectId}/inspections`}/>
-        <StatCard icon={<CalendarCheck size={19} weight="duotone" style={{ color: GOLD }} />} label="Scheduled" value={String(scheduled)} accent={GOLD} sub={nextUp ? `Next: ${fmtDate(nextUp.date)}` : undefined} delay={0.14}  href={`/app/projects/${projectId}/inspections`}/>
-        <StatCard icon={<ClipboardText size={19} weight="duotone" style={{ color: GOLD }} />} label="Total" value={String(inspections.length)} sub={lastRecord ? `Last: ${fmtDate(lastRecord.date)}` : undefined} delay={0.18}  href={`/app/projects/${projectId}/inspections`}/>
-      </div>
-
-      {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(44,255,122,.15)', border: '1px solid rgba(44,255,122,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
-      {errorMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,59,48,.15)', border: '1px solid rgba(255,59,48,.4)', borderRadius: 10, color: RED, fontSize: 13 }}>{errorMsg}</div>}
-
-      {showForm && (
-        <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
-          <SectionCard title="Schedule Inspection" icon={<CalendarCheck size={17} weight="duotone" style={{ color: GOLD }} />}>
-            {awaitingReinspection.length > 0 && (
-              <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.3)', fontSize: 12, color: '#fca5a5', lineHeight: 1.6 }}>
-                <ArrowsClockwise size={13} weight="bold" color="#fca5a5" style={{ verticalAlign: 'middle', marginRight: 6 }} />
-                {awaitingReinspection.length} failed inspection{awaitingReinspection.length === 1 ? '' : 's'} awaiting re-inspection:{' '}
-                {awaitingReinspection.slice(0, 3).map(f => (
-                  <span key={f.id} onClick={() => openCreate(f.type)} style={{ color: 'var(--brand-primary-strong)', fontWeight: 700, cursor: 'pointer', marginRight: 10 }}>
-                    {f.type} (failed {fmtDate(f.date)})
-                  </span>
-                ))}
-              </div>
-            )}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-              <div><label style={label}>Inspection Type *{auto.type && <AutoChip />}</label>
-                <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={inp}>
-                  {INSPECTION_TYPES.map(t => <option key={t}>{t}</option>)}
-                </select>
-                <div style={hint}>{passedTypes.size > 0 ? `${passedTypes.size} of ${INSPECTION_TYPES.length} milestone types passed — ${suggestedType} is next.` : 'Typical sequence runs Foundation through Final Building.'}</div>
-              </div>
-              <div><label style={label}>Date *{auto.date && <AutoChip />}</label>
-                <SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} />
-                <div style={hint}>Defaulted to today — most agencies need 24–48h notice.</div>
-              </div>
-              <div><label style={label}>Inspector *{auto.insp && <AutoChip />}</label>
-                <Suggest type="text" value={form.inspector} onChange={e => setForm(p => ({ ...p, inspector: e.target.value }))} style={inp} options={['n']} />
-                <div style={hint}>{auto.insp ? `Carried from the last inspection (${fmtDate(lastRecord?.date)}).` : 'Who performs the inspection.'}</div>
-              </div>
-              <div><label style={label}>Agency{auto.agency && <AutoChip />}</label>
-                <Suggest type="text" value={form.agency} onChange={e => setForm(p => ({ ...p, agency: e.target.value }))} placeholder="e.g. City of Phoenix" style={inp} options={['n']} />
-                <div style={hint}>{auto.agency ? 'Same authority as the last inspection.' : 'The authority having jurisdiction.'}</div>
-              </div>
-              <div style={{ gridColumn: 'span 2' }}><label style={label}>Notes</label>
-                <input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Gate code, area under inspection, permit reference…" style={inp} />
-                <div style={hint}>Anything the inspector needs on arrival.</div>
-              </div>
+  // ── Detail workspace ──
+  const detailWorkspace = selected && (() => {
+    const rb = resultBadge(selected.result); const sb = statusBadge(selected.status);
+    return (
+      <aside ref={detailRef} className="inRail" aria-label="Inspection details">
+        <Card
+          title={selected.type || 'Inspection'}
+          subtitle={`${fmtDate(selected.date)}${selected.agency ? ` · ${selected.agency}` : ''}`}
+          actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close record" title="Close record" onClick={() => setSelectedId(null)} />}
+        >
+          <div className="inSection">
+            <div className="inBadges">
+              <Badge tone={rb.tone} dot>{rb.label}</Badge>
+              <Badge tone={sb.tone}>{sb.label}</Badge>
+              {needsReinspect(selected) && <Badge tone="overdue">Re-Inspect</Badge>}
             </div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} className="pmBtn">
-                {saving ? 'Saving…' : 'Schedule Inspection'}
-              </button>
-              <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
+            <div className="inNext">
+              {needsReinspect(selected) ? `Failed — stays flagged until a later ${selected.type} inspection passes.` : canonResult(selected.result) === 'passed' ? 'Passed — part of the permanent project record.' : /sched/i.test(selected.status) ? 'Booked — waiting on the inspector. Record the result once it is held.' : 'Result recorded on the inspection checklist.'}
             </div>
-          </SectionCard>
-          {ctx && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: GOLD }} />}>
-                <InsightRow label="Project" value={`${pctComplete}% complete`} />
-                <InsightRow label="Inspections Held" value={String(inspections.length)} />
-                <InsightRow label="Pass Rate" value={resulted > 0 ? `${passRate}%` : '—'} accent={resulted > 0 && passRate >= 80 ? GREEN : undefined} />
-                <InsightRow label="Open Punch Items" value={String(openPunch)} accent={openPunch > 0 ? GOLD : undefined} />
-                <InsightRow label="Subs on the Job" value={String((ctx?.subs || []).length)} />
-                {lastRecord && (
-                  <>
-                    <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                    <InsightRow label="Last Inspection" value={lastRecord.type} />
-                    <InsightRow label="Held" value={fmtDate(lastRecord.date)} />
-                    <InsightRow label="Result" value={lastRecord.result || 'Pending'} strong />
-                  </>
-                )}
-              </SectionCard>
-              <SectionCard flat title="After You Schedule" icon={<CalendarCheck size={17} weight="duotone" style={{ color: GOLD }} />}>
-                <FlowSteps title="" steps={[
-                  { title: 'Inspection Is on the Calendar', desc: 'Saved as Scheduled with the inspector and agency of record.' },
-                  { title: 'Record the Result', desc: 'Pass, fail, or conditional — checklist deficiencies are counted per inspection.' },
-                  { title: 'Failures Queue a Re-Inspection', desc: 'A failed type stays flagged here until a later inspection of that type passes.' },
-                  { title: 'Records Feed Closeout', desc: 'Passed finals roll into the project closeout package.' },
-                ]} />
-              </SectionCard>
+          </div>
+          <div className="inSection">
+            <DetailList items={[
+              ['Inspector', selected.inspector || ''],
+              ['Agency', selected.agency || ''],
+              ['Date', fmtDate(selected.date)],
+              ['Re-Inspection', fmtDate(selected.re_inspection_date)],
+              ['Deficiencies', String(Number(selected.deficiency_count) || 0)],
+              ['Checklist', selected.checklist_total > 0 ? `${selected.checklist_passed} of ${selected.checklist_total} passed` : '—'],
+            ]} />
+          </div>
+          {selected.notes && (
+            <div className="inSection">
+              <div className="inSectionTitle">Notes</div>
+              <div className="inProse">{selected.notes}</div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Toolbar */}
-      {!loading && inspections.length > 0 && (
-        <ListToolbar
-          module="inspections"
-          search={search}
-          onSearch={setSearch}
-          searchPlaceholder="Search by type, inspector, agency, or notes…"
-          filters={[
-            {key:'result',label:'Result',value:filterResult,onChange:setFilterResult,allLabel:'All Results',
-              options:[
-                {value:'passed',label:'Passed'},
-                {value:'failed',label:'Failed'},
-                {value:'pending',label:'Pending'},
-                {value:'conditional pass',label:'Conditional Pass'},
-              ]},
-            {key:'type',label:'Type',value:filterType,onChange:setFilterType,allLabel:'All Types',
-              options:INSPECTION_TYPES},
-          ]}
-          count={{shown:filteredInspections.length,total:inspections.length}}
-          style={{marginBottom:14}}
-        />
-      )}
-
-      {/* Records */}
-      <SectionCard title="Inspection Records" icon={<ClipboardText size={17} weight="duotone" style={{ color: GOLD }} />} flush>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
-        ) : inspections.length === 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 360px' : '1fr', alignItems: 'stretch' }}>
-            <PremiumEmpty
-              icon={<ClipboardText size={30} weight="duotone" style={{ color: GOLD }} />}
-              title="No Inspections on Record"
-              description={pctComplete > 0
-                ? `${ctx?.project?.name || 'This project'} is ${pctComplete}% complete — inspection records are how the work gets signed off. ${suggestedType} is the next milestone in a typical sequence.`
-                : 'Every passed inspection becomes part of the permanent project record — and failed ones are tracked until they re-pass. Schedule the first one to start the log.'}
-              action={<button onClick={() => openCreate()} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Schedule {suggestedType}</button>}
-            />
-            {ctx && (
-              <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>The Typical Sequence</div>
-                {INSPECTION_TYPES.map((t, idx) => (
-                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '3.5px 0', fontSize: 12.5, color: t === suggestedType ? 'var(--brand-primary-strong)' : DIM, fontWeight: t === suggestedType ? 700 : 400 }}>
-                    <span style={{ width: 17, height: 17, borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, background: t === suggestedType ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${t === suggestedType ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : 'rgba(255,255,255,0.12)'}`, color: t === suggestedType ? 'var(--brand-primary-strong)' : 'rgba(255,255,255,0.45)' }}>{idx + 1}</span>
-                    {t}
-                  </div>
-                ))}
-                <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '10px 0' }} />
-                <InsightRow label="Project Progress" value={`${pctComplete}%`} />
-                <InsightRow label="Open Punch Items" value={String(openPunch)} accent={openPunch > 0 ? GOLD : undefined} />
-                <InsightRow label="Subs on the Job" value={String((ctx?.subs || []).length)} />
+          {needsReinspect(selected) && (
+            <div className="inSection">
+              <div className="inActions">
+                <Button icon={<ArrowsClockwise size={16} />} onClick={() => openCreate(selected.type)}>Schedule Re-Inspection</Button>
               </div>
-            )}
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                  {['Type','Date','Inspector','Agency','Result','Deficiencies','Notes','Status'].map(h => (
-                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredInspections.length === 0 && (
-                  <tr><td colSpan={8} style={{ padding: '26px 14px', textAlign: 'center', color: DIM, fontSize: 13 }}>No inspections match your search or filters.</td></tr>
-                )}
-                {filteredInspections.map(i => (
-                  <tr key={i.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                    <td style={{ padding: '10px 14px', color: TEXT, fontWeight: 600 }}>{i.type}</td>
-                    <td style={{ padding: '10px 14px', color: DIM, whiteSpace: 'nowrap' }}>{i.date ? fmtDate(i.date) : '—'}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{i.inspector}</td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{i.agency}</td>
-                    <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                      {resultBadge(i.result)}
-                      {awaitingReinspection.some(f => f.id === i.id) && (
-                        <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, color: '#fca5a5' }}>Re-Inspect</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '10px 14px', color: (Number(i.deficiency_count) || 0) > 0 ? 'var(--warning)' : DIM, fontWeight: (Number(i.deficiency_count) || 0) > 0 ? 700 : 400 }}>
-                      {(Number(i.deficiency_count) || 0) > 0 ? i.deficiency_count : '—'}
-                    </td>
-                    <td style={{ padding: '10px 14px', color: DIM }}>{i.notes || '—'}</td>
-                    <td style={{ padding: '10px 14px' }}><StatusPill module="inspections" status={i.status} size="sm" /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            </div>
+          )}
+        </Card>
+      </aside>
+    );
+  })();
+
+  // ── Log body ──
+  let listBody: React.ReactNode;
+  if (!loading && loadError) {
+    listBody = <EmptyState icon={<Warning size={22} />} title="Couldn't load inspections" text={`${loadError} Nothing has been lost — try again.`} action={<Button onClick={fetchInspections}>Retry</Button>} />;
+  } else if (!loading && inspections.length === 0) {
+    listBody = (
+      <div className="inEmptyGrid" data-ctx={ctx ? 'true' : 'false'}>
+        <EmptyState
+          icon={<ClipboardText size={22} />}
+          title="No inspections on record"
+          text={pctComplete > 0
+            ? `${ctx?.project?.name || 'This project'} is ${pctComplete}% complete — inspection records are how the work gets signed off. ${suggestedType} is the next milestone in a typical sequence.`
+            : 'Every passed inspection becomes part of the permanent project record — and failed ones are tracked until they re-pass. Schedule the first one to start the log.'}
+          action={<Button icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule {suggestedType}</Button>}
+        />
+        {ctx && (
+          <div className="inEmptyRail">
+            <div className="inSectionTitle" style={{ marginBottom: 10 }}>The Typical Sequence</div>
+            <div className="inSeq">
+              {INSPECTION_TYPES.map((t, idx) => (
+                <div key={t} className="inSeqItem" data-next={t === suggestedType ? 'true' : undefined}><span className="inSeqNum">{idx + 1}</span>{t}</div>
+              ))}
+            </div>
+            <div style={{ height: 1, background: 'var(--border-subtle)', margin: '12px 0 8px' }} />
+            <InsightRow label="Project Progress" value={`${pctComplete}%`} />
+            <InsightRow label="Open Punch Items" value={String(openPunch)} />
+            <InsightRow label="Subs on the Job" value={String((ctx?.subs || []).length)} />
           </div>
         )}
-      </SectionCard>
-    <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+      </div>
+    );
+  } else {
+    listBody = (
+      <DataTable
+        columns={columns}
+        rows={filteredInspections}
+        rowKey={i => i.id}
+        loading={loading}
+        defaultSort={{ key: 'date', dir: 'desc' }}
+        onRowClick={i => setSelectedId(i.id)}
+        rowActions={rowActions}
+        empty={<EmptyState icon={<ClipboardText size={22} />} title="No inspections match these filters" text="Clear the search, result, or type filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+      />
+    );
+  }
+
+  return (
+    <div className="inWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `/app/projects/${projectId}/overview` },
+          { label: 'Inspections' },
+        ]}
+        title="Inspections"
+        subtitle="Building inspections and approval records — failures stay flagged until they re-pass."
+        actions={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openCreate()}>Schedule Inspection</Button>}
+      >
+        {!loadError && <StatRow items={stats} />}
+
+        {!loading && !loadError && inspections.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by type, inspector, agency, or notes…"
+            filters={
+              <>
+                <Select aria-label="Result" value={filterResult} onChange={e => setFilterResult(e.target.value as ResultFilter)} style={{ width: 'auto', minWidth: 160 }} options={[
+                  { value: 'all', label: 'All Results' }, { value: 'scheduled', label: 'Scheduled' }, { value: 'passed', label: 'Passed' }, { value: 'failed', label: 'Failed' }, { value: 'pending', label: 'Pending' }, { value: 'conditional pass', label: 'Conditional Pass' }, { value: 'reinspect', label: 'Re-Inspection Due' },
+                ]} />
+                <Select aria-label="Type" value={filterType} onChange={e => setFilterType(e.target.value)} style={{ width: 'auto', minWidth: 150 }} options={[{ value: 'all', label: 'All Types' }, ...INSPECTION_TYPES]} />
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={<span className="inMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredInspections.length} of {inspections.length}</span>}
+          />
+        )}
+
+        <div className="inCq">
+          <div className="inSplit" data-open={detailOpen ? 'true' : 'false'}>
+            <div className="inList"><Card flush>{listBody}</Card></div>
+            {detailWorkspace}
+          </div>
+        </div>
+      </PageShell>
+
+      {/* ── Composer ── */}
+      <FormModal
+        open={showForm}
+        onClose={closeComposer}
+        title="Schedule Inspection"
+        subtitle={ctx?.project?.name ? `${ctx.project.name} · saved as Scheduled with the inspector and agency of record.` : 'Saved as Scheduled with the inspector and agency of record.'}
+        onSubmit={async () => { await handleSave(); }}
+        submitLabel="Schedule Inspection"
+        busy={saving}
+        error={errorMsg || null}
+      >
+        {awaitingReinspection.length > 0 && (
+          <div className="inWarn" role="status">
+            <ArrowsClockwise size={16} weight="bold" />
+            <div>
+              {awaitingReinspection.length} failed inspection{awaitingReinspection.length === 1 ? '' : 's'} awaiting re-inspection:{' '}
+              {awaitingReinspection.slice(0, 3).map(f => (
+                <button key={f.id} type="button" onClick={() => openCreate(f.type)}>{f.type} (failed {fmtDate(f.date)})</button>
+              ))}
+            </div>
+          </div>
+        )}
+        {ctx && (
+          <div className="inLadder">
+            <InsightRow label="Project" value={`${pctComplete}% complete`} />
+            <InsightRow label="Inspections Held" value={String(inspections.length)} />
+            <InsightRow label="Pass Rate" value={resulted > 0 ? `${passRate}%` : '—'} />
+            <InsightRow label="Open Punch Items" value={String(openPunch)} />
+            {lastRecord && <InsightRow label="Last Inspection" value={`${lastRecord.type} · ${fmtDate(lastRecord.date)} · ${resultBadge(lastRecord.result).label}`} />}
+          </div>
+        )}
+        <FormGrid cols={2}>
+          <Field label="Inspection Type" required hint={<>{auto.type && <AutoChip />} {passedTypes.size > 0 ? `${passedTypes.size} of ${INSPECTION_TYPES.length} milestone types passed — ${suggestedType} is next.` : 'Typical sequence runs Foundation through Final Building.'}</>}>
+            <Select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} options={INSPECTION_TYPES} />
+          </Field>
+          <Field label="Date" required hint={<>{auto.date && <AutoChip />} Defaulted to today — most agencies need 24–48h notice.</>}>
+            <div className="inDateInput"><SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Inspector" required hint={<>{auto.insp && <AutoChip />} {auto.insp ? `Carried from the last inspection (${fmtDate(lastRecord?.date)}).` : 'Who performs the inspection.'}</>}>
+            <Suggest className="k-input" type="text" value={form.inspector} onChange={e => { setForm(p => ({ ...p, inspector: e.target.value })); if (errorMsg) setErrorMsg(''); }} options={['n']} placeholder="Inspector name" />
+          </Field>
+          <Field label="Agency" hint={<>{auto.agency && <AutoChip />} {auto.agency ? 'Same authority as the last inspection.' : 'The authority having jurisdiction.'}</>}>
+            <Suggest className="k-input" type="text" value={form.agency} onChange={e => setForm(p => ({ ...p, agency: e.target.value }))} placeholder="e.g. City of Phoenix" options={['n']} />
+          </Field>
+          <Field label="Notes" span hint="Anything the inspector needs on arrival.">
+            <Input value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Gate code, area under inspection, permit reference…" />
+          </Field>
+        </FormGrid>
+        <div style={{ marginTop: 16 }}>
+          <FlowSteps title="After You Schedule" steps={[
+            { title: 'Inspection Is on the Calendar', desc: 'Saved as Scheduled with the inspector and agency of record.' },
+            { title: 'Record the Result', desc: 'Pass, fail, or conditional — checklist deficiencies are counted per inspection.' },
+            { title: 'Failures Queue a Re-Inspection', desc: 'A failed type stays flagged here until a later inspection of that type passes.' },
+            { title: 'Records Feed Closeout', desc: 'Passed finals roll into the project closeout package.' },
+          ]} />
+        </div>
+      </FormModal>
+
+      <div style={{ position: 'relative', zIndex: 10001 }}><UnsavedGuardModal guard={guard} /></div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
