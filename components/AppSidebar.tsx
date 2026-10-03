@@ -844,8 +844,10 @@ export default function AppSidebar({
             move needs somewhere to live, and it belongs next to the phase it
             changes rather than buried in project settings. */}
         {inProject && !collapsed && (
-          <div style={{ padding: '0 16px 14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
+          <div style={{ padding: '0 16px 14px 20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
+            {/* Stacked, not side by side: the big pill and the button do not
+                both fit in the rail width and overlapped. */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, maxWidth: '100%' }}>
               {/* The phase pill reads the status palette: Bidding = Lead blue,
                   Building = Ongoing green (COPY-STYLE §5). Title Case, big and
                   bright — it is the one thing on the rail that says where the
