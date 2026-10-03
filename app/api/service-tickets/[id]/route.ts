@@ -69,7 +69,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const start = (startIn !== undefined ? startIn : t.scheduled_window_start) as string | null;
     const end = (endIn !== undefined ? endIn : t.scheduled_window_end) as string | null;
     if (start && end && Date.parse(end) <= Date.parse(start)) return NextResponse.json({ error: 'scheduled_window_end must be after the start' }, { status: 400 });
-    if (startIn !== undefined) notes.push(start ? `Visit window set ${start.slice(0, 16).replace('T', ' ')}${end ? '–' + end.slice(11, 16) : ''}` : 'Visit window cleared');
+    // Times are stored as UTC instants; the trail says so rather than passing
+    // a UTC clock off as the reader's local time.
+    if (startIn !== undefined) notes.push(start ? `Visit window set ${new Date(start).toISOString().slice(0, 16).replace('T', ' ')}${end ? '–' + new Date(end).toISOString().slice(11, 16) : ''} UTC` : 'Visit window cleared');
 
     // Conflict check for the tech's other open tickets
     const tech = techId !== undefined ? techId : t.assigned_tech_id;
