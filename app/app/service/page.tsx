@@ -366,5 +366,5 @@ const CSS = `
 .sv-notes { list-style: none; margin: 10px 0 0; padding: 0; font-size: 13px; color: var(--text-tertiary); display: flex; flex-direction: column; gap: 6px; }
 .sv-res { font-size: 14px; margin: 10px 0 0; }
 @media (max-width: 1100px) { .sv-layout.with-side { grid-template-columns: minmax(0, 1fr); } .sv-detail { order: -1; } }
-@media (max-width: 640px) { .sv { padding: 16px; } .sv-grid { grid-template-columns: minmax(0, 1fr); } .sv-span2 { grid-column: auto; } .sv-dl div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+@media (max-width: 640px) { .sv { padding: 16px; } .sv-seg button, .sv-linkbtn { min-height: 44px; } .sv-grid { grid-template-columns: minmax(0, 1fr); } .sv-span2 { grid-column: auto; } .sv-dl div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
 `;

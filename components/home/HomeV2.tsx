@@ -83,6 +83,19 @@ function fmtTime(hhmm: string | null): string | null {
 
 /* ── Small pieces ─────────────────────────────────────────────────────── */
 
+/** A failing secondary section must not take the whole home down (spec §14:
+ *  partial outage keeps the rest usable). SalesOverview, for one, reads nested
+ *  fields without guards and threw on an error payload. */
+class SectionBoundary extends React.Component<{ name: string; children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { console.error(`[home] ${this.props.name} failed to render`, e); }
+  render() {
+    if (this.state.failed) return <p className="hv2-empty" role="status">Couldn&apos;t load {this.props.name}. The rest of your home is current.</p>;
+    return this.props.children;
+  }
+}
+
 function Segmented<T extends string>({ value, options, onChange, label }: { value: T; options: Array<{ key: T; label: string }>; onChange: (v: T) => void; label: string }) {
   return (
     <div role="group" aria-label={label} className="hv2-seg">
@@ -446,12 +459,12 @@ function HomeInner() {
           {(data.context.view === 'sales' || data.context.view === 'owner') && (
             <div className="hv2-order-5">
               <h2 className="hv2-lower-h">Pipeline &amp; Win Rate</h2>
-              <SalesOverview />
+              <SectionBoundary name="the pipeline"><SalesOverview /></SectionBoundary>
             </div>
           )}
           <section className="hv2-card hv2-pad hv2-order-6" aria-labelledby="hv2-activity">
             <div className="hv2-sechead"><h2 id="hv2-activity">Recent Activity</h2></div>
-            <ActivityFeed limit={8} />
+            <SectionBoundary name="recent activity"><ActivityFeed limit={8} /></SectionBoundary>
           </section>
           <footer className="hv2-foot hv2-order-7">
             <span><CalendarBlank size={13} /> Updated {new Date(data.generatedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} · {data.context.timeZone.replace('_', ' ')}</span>
@@ -559,7 +572,8 @@ const CSS = `
   .hv2-qrow { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .hv2-qrow .hv2-btn { min-height: 44px; }
   .hv2-qactions { justify-content: flex-start; }
-  .hv2-seg button { min-height: 40px; }
+  .hv2-seg button { min-height: 44px; }
+  .hv2-linkbtn, .hv2-more { min-height: 44px; display: inline-flex; align-items: center; }
   .hv2-hide-sm { display: none; }
   .hv2-select select { max-width: 100%; }
   .hv2-order-1 { order: 1; } .hv2-order-3 { order: 3; } .hv2-order-4 { order: 4; } .hv2-order-5 { order: 5; } .hv2-order-6 { order: 6; } .hv2-order-7 { order: 7; }
