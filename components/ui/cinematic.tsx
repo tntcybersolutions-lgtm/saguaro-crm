@@ -3,36 +3,38 @@
 /**
  * components/ui/cinematic.tsx — the premium "cinematic" presentational kit.
  *
- * Modeled on the gold-standard AI Blueprint Takeoff page: aurora / radial-gradient
- * backdrop, soft ambient glow, big gradient headline, premium cards with an icon
- * chip + inner glow + hover lift, tasteful motion, generous spacing and depth.
+ * Jet black page, glass cards, neon-yellow brand accent (docs/COPY-STYLE.md
+ * §6–§7): big gradient headline, glass cards with an icon chip + hover lift,
+ * tasteful motion, generous spacing. No warm glows or blobs behind text.
  *
  * PURELY PRESENTATIONAL. No data, no logic, no routing — drop these around existing
- * content to lift a flat #0a0a0a workspace page to the cinematic bar. Reuses the
- * Sonoran gold-on-navy palette from lib/design-tokens.ts.
+ * content to lift a flat workspace page to the cinematic bar. Reads the brand and
+ * surface tokens from app/globals.css and the status family from
+ * lib/status-colors.ts.
  *
  * All animation is disabled under prefers-reduced-motion.
  */
 import React from 'react';
 import { ScribbleNote } from '@/components/Scribble';
 
-/* ── Palette (matches the takeoff gold-standard + design-tokens dark ramp) ── */
+/* ── Palette — jet black + glass + neon yellow (COPY-STYLE §7) ── */
 export const CIN = {
-  gold: '#F59E0B',
-  goldHi: '#FBBF24',
-  goldSoft: '#FDE68A',
-  amber: '#D97706',
-  green: '#22C55E',
-  red: '#EF4444',
-  blue: '#F59E0B',
-  bg: '#0a0a0a',
+  gold: 'var(--brand-primary)',
+  goldHi: 'var(--brand-primary-strong)',
+  goldSoft: '#FFF7A8',
+  amber: '#FFC53D',
+  green: '#2EE59D',
+  red: '#FF4D5E',
+  blue: '#3DA9FF',
+  bg: 'var(--bg-base)',
   text: '#FFFFFF',
-  muted: 'rgba(255,255,255,0.62)',
-  faint: 'rgba(255,255,255,0.42)',
-  border: 'rgba(255,255,255,0.08)',
-  borderGold: 'rgba(245,158,11,0.30)',
-  surface: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))',
+  muted: '#D7DEE8',
+  faint: '#A9B4C4',
+  border: 'rgba(255,255,255,0.09)',
+  borderGold: 'var(--brand-primary-25)',
+  surface: 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))',
 } as const;
+const GLASS_BLUR = 'blur(16px) saturate(140%)';
 
 /* ── Cinematic FX — keyframes + interaction classes, injected once per page ── */
 const FX = `
@@ -46,8 +48,8 @@ const FX = `
 @keyframes sgShimmer{from{background-position:180% 0}to{background-position:-180% 0}}
 .sgShine{background-size:200% 100%;animation:sgShimmer 3.6s linear infinite}
 .sgLift{transition:transform .2s cubic-bezier(.2,.7,.3,1),box-shadow .2s ease,border-color .2s ease,background .2s ease}
-.sgLift:hover{transform:translateY(-4px);border-color:rgba(245,158,11,.42)}
-.sgLift:hover .sgIcon{box-shadow:0 0 22px rgba(245,158,11,.34)}
+.sgLift:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.22)}
+.sgLift:hover .sgIcon{box-shadow:0 0 0 3px var(--brand-primary-12)}
 .sgBtn{transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
 .sgBtn:hover{transform:translateY(-2px);filter:brightness(1.06)}
 /* Beat the global h1/h2 !important size caps (globals.css) with higher specificity */
@@ -59,22 +61,13 @@ h2.sgSectionTitle{font-size:clamp(16px,1.7vw,19px)!important;font-weight:800!imp
 }
 `;
 
-/* ── Aurora — scoped animated backdrop (gold blobs + blueprint grid + vignette).
- * position:absolute fills only the page's content column; pointer-events:none
- * keeps everything beneath it clickable. Purely decorative. ─────────────────── */
+/* ── Aurora — jet black (COPY-STYLE §6). The animated gold blobs, blueprint grid
+ * and vignette sat behind text; all that remains is one faint, static, COOL
+ * sheen at the top. Name and props kept so callers keep compiling. ─────────── */
 export function Aurora({ soft = false }: { soft?: boolean }) {
-  const grid =
-    'linear-gradient(rgba(245,158,11,0.05) 1px, transparent 1px),' +
-    'linear-gradient(90deg, rgba(245,158,11,0.05) 1px, transparent 1px)';
-  const gridMask = 'radial-gradient(120% 78% at 50% 8%, #000 22%, transparent 74%)';
   return (
     <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% -10%, rgba(245,158,11,0.10), transparent 55%)' }} />
-      <div style={{ position: 'absolute', width: 640, height: 640, left: '-16%', top: '-28%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.18), transparent 62%)', filter: 'blur(32px)', animation: 'sgAur1 18s ease-in-out infinite', opacity: soft ? 0.5 : 0.9 }} />
-      <div style={{ position: 'absolute', width: 540, height: 540, right: '-12%', top: '-6%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,119,6,0.15), transparent 60%)', filter: 'blur(40px)', animation: 'sgAur2 22s ease-in-out infinite', opacity: soft ? 0.42 : 0.85 }} />
-      <div style={{ position: 'absolute', width: 520, height: 520, left: '30%', bottom: '-30%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(251,191,36,0.10), transparent 60%)', filter: 'blur(44px)', animation: 'sgAur3 25s ease-in-out infinite', opacity: soft ? 0.4 : 0.8 }} />
-      <div style={{ position: 'absolute', inset: -24, backgroundImage: grid, backgroundSize: '34px 34px', animation: 'sgGridPan 9s linear infinite', maskImage: gridMask, WebkitMaskImage: gridMask, opacity: soft ? 0.3 : 0.55 }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(130% 100% at 50% -6%, transparent 52%, rgba(2,4,8,0.55))' }} />
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 60% at 50% -12%, rgba(170,195,255,${soft ? 0.035 : 0.05}), transparent 60%)` }} />
     </div>
   );
 }
@@ -103,7 +96,7 @@ export function CinematicPage({
   );
 }
 
-/* ── HeroBadge — the little uppercase pill above a hero headline ─────────────── */
+/* ── HeroBadge — the little Title Case pill above a hero headline ────────────── */
 export function HeroBadge({ icon, children }: { icon?: React.ReactNode; children: React.ReactNode }) {
   return (
     <span
@@ -111,11 +104,10 @@ export function HeroBadge({ icon, children }: { icon?: React.ReactNode; children
         animation: 'sgRise .5s ease both',
         display: 'inline-flex', alignItems: 'center', gap: 7,
         padding: '6px 14px', borderRadius: 999,
-        background: 'linear-gradient(90deg, rgba(245,158,11,0.18), rgba(245,158,11,0.06))',
-        border: '1px solid rgba(245,158,11,0.42)',
-        color: CIN.goldHi, fontSize: 10.5, fontWeight: 800,
-        letterSpacing: '0.16em', textTransform: 'uppercase',
-        boxShadow: '0 0 30px -10px rgba(245,158,11,0.55)',
+        background: 'var(--brand-primary-12)',
+        border: '1px solid var(--brand-primary-35)',
+        color: CIN.gold, fontSize: 12.5, fontWeight: 700,
+        letterSpacing: 'normal',
       }}
     >
       {icon}
@@ -160,9 +152,8 @@ export function ModuleHero({
                 style={{
                   flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   width: 52, height: 52, borderRadius: 15,
-                  background: 'linear-gradient(150deg, rgba(245,158,11,0.20), rgba(245,158,11,0.05))',
-                  border: '1px solid rgba(245,158,11,0.34)',
-                  boxShadow: '0 0 34px -12px rgba(245,158,11,0.6)',
+                  background: 'linear-gradient(150deg, var(--brand-primary-18), var(--brand-primary-08))',
+                  border: '1px solid var(--brand-primary-35)',
                   transition: 'box-shadow .2s',
                 }}
               >
@@ -237,8 +228,8 @@ export function HeroButton({
   };
   const skin: React.CSSProperties =
     variant === 'primary'
-      ? { background: `linear-gradient(135deg, ${CIN.gold}, ${CIN.goldHi})`, color: '#241a05', boxShadow: '0 10px 30px -12px rgba(245,158,11,0.7)' }
-      : { background: 'rgba(255,255,255,0.05)', color: CIN.text, border: '1px solid rgba(245,158,11,0.28)' };
+      ? { background: `linear-gradient(135deg, ${CIN.gold}, ${CIN.goldHi})`, color: 'var(--on-brand)', boxShadow: '0 10px 30px -12px var(--brand-primary-35)' }
+      : { background: 'rgba(255,255,255,0.07)', backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR, color: CIN.text, border: '1px solid rgba(255,255,255,0.14)' };
   const style = { ...base, ...skin };
   if (href && !disabled) {
     return <a href={href} className="sgBtn" style={style}>{icon}{children}</a>;
@@ -250,8 +241,8 @@ export function HeroButton({
   );
 }
 
-/* ── StatCard — premium metric tile: icon chip, uppercase label, big value,
- * subline, a gold left-edge accent bar and a hover lift. ─────────────────────── */
+/* ── StatCard — glass metric tile: icon chip, Title Case label, big value,
+ * subline, a brand left-edge accent bar and a hover lift. ──────────────────── */
 export function StatCard({
   icon,
   label,
@@ -282,10 +273,11 @@ export function StatCard({
         position: 'relative', overflow: 'hidden',
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
         background: CIN.surface,
+        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
         border: `1px solid ${CIN.border}`,
         borderRadius: 16,
         padding: '16px 18px',
-        boxShadow: '0 12px 34px -22px rgba(0,0,0,0.7)',
+        boxShadow: '0 12px 34px -22px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
         cursor: interactive ? 'pointer' : 'default',
         height: '100%',
       }}
@@ -298,15 +290,15 @@ export function StatCard({
             style={{
               flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 34, height: 34, borderRadius: 10,
-              background: 'linear-gradient(150deg, rgba(245,158,11,0.16), rgba(245,158,11,0.04))',
-              border: '1px solid rgba(245,158,11,0.26)',
+              background: 'linear-gradient(150deg, var(--brand-primary-18), var(--brand-primary-08))',
+              border: '1px solid var(--brand-primary-25)',
               transition: 'box-shadow .2s',
             }}
           >
             {icon}
           </span>
         )}
-        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: CIN.muted }}>{label}</span>
+        <span style={{ fontSize: 12.5, fontWeight: 700, color: CIN.muted }}>{label}</span>
       </div>
       <div style={{ fontSize: 25, fontWeight: 900, color: valueColor || CIN.text, letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: CIN.faint, marginTop: 6 }}>{sub}</div>}
@@ -362,7 +354,7 @@ export function SectionCard({
             {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.85 }}>{icon}</span>}
             <div style={{ minWidth: 0, flex: 1 }}>
               {title && (
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: CIN.faint, lineHeight: 1.3 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: CIN.muted, lineHeight: 1.3 }}>
                   {title}
                 </div>
               )}
@@ -382,12 +374,13 @@ export function SectionCard({
         position: 'relative', overflow: 'hidden',
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
         background: CIN.surface,
+        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
         border: `1px solid ${CIN.border}`,
         /* 16 and this shadow are the platform's card, shared with premium.tsx.
            Three implementations each picked their own radius and drop, which is
            the main reason two screens side by side did not look like one app. */
         borderRadius: 16,
-        boxShadow: '0 24px 48px -32px rgba(245,158,11,0.22), inset 0 1px 0 rgba(255,255,255,0.06)',
+        boxShadow: '0 24px 48px -32px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
         ...style,
       }}
     >
@@ -398,8 +391,8 @@ export function SectionCard({
               style={{
                 flex: '0 0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 width: 34, height: 34, borderRadius: 10,
-                background: 'linear-gradient(150deg, rgba(245,158,11,0.16), rgba(245,158,11,0.04))',
-                border: '1px solid rgba(245,158,11,0.26)',
+                background: 'linear-gradient(150deg, var(--brand-primary-18), var(--brand-primary-08))',
+                border: '1px solid var(--brand-primary-25)',
               }}
             >
               {icon}
@@ -417,7 +410,7 @@ export function SectionCard({
   );
 }
 
-/* ── SectionLink — the small gold "View all →" link used in section headers ──── */
+/* ── SectionLink — the small brand "View All →" link used in section headers ─── */
 export function SectionLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a href={href} style={{ fontSize: 12, fontWeight: 700, color: CIN.goldHi, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -426,8 +419,8 @@ export function SectionLink({ href, children }: { href: string; children: React.
   );
 }
 
-/* ── EmptyStatePremium — cinematic empty/error state: glowing gold icon halo,
- * gradient surface. Drop-in compatible with the shared EmptyState API. ───────── */
+/* ── EmptyStatePremium — cinematic empty/error state: brand icon halo on a
+ * glass surface. Drop-in compatible with the shared EmptyState API. ───────── */
 export function EmptyStatePremium({
   icon,
   title,
@@ -454,7 +447,8 @@ export function EmptyStatePremium({
         animation: 'sgPop .5s ease both',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         textAlign: 'center', padding: '52px 32px',
-        background: 'radial-gradient(120% 90% at 50% 0%, rgba(245,158,11,0.06), rgba(255,255,255,0.015) 60%)',
+        background: CIN.surface,
+        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
         border: `1px solid ${CIN.border}`,
         borderRadius: 20,
         boxShadow: '0 20px 50px -30px rgba(0,0,0,0.8)',
@@ -464,9 +458,8 @@ export function EmptyStatePremium({
         style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           width: 84, height: 84, borderRadius: '50%', marginBottom: 20,
-          background: 'radial-gradient(circle, rgba(245,158,11,0.22), rgba(245,158,11,0.04))',
-          border: '1px solid rgba(245,158,11,0.4)',
-          boxShadow: '0 0 44px -10px rgba(245,158,11,0.6)',
+          background: 'radial-gradient(circle, var(--brand-primary-18), var(--brand-primary-08))',
+          border: '1px solid var(--brand-primary-35)',
           animation: 'sgFloat 5s ease-in-out infinite',
         }}
       >
@@ -481,9 +474,9 @@ export function EmptyStatePremium({
           style={{
             marginTop: 22, display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer',
-            background: `linear-gradient(135deg, ${CIN.gold}, ${CIN.goldHi})`, color: '#241a05',
+            background: `linear-gradient(135deg, ${CIN.gold}, ${CIN.goldHi})`, color: 'var(--on-brand)',
             fontSize: 13, fontWeight: 800, fontFamily: 'inherit',
-            boxShadow: '0 10px 30px -12px rgba(245,158,11,0.7)',
+            boxShadow: '0 10px 30px -12px var(--brand-primary-35)',
           }}
         >
           {actionLabel}

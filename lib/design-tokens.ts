@@ -5,8 +5,9 @@
 
 /* ── Colors ────────────────────────────────────────────────────────── */
 export const colors = {
-  // Brand gold — resolves through the --brand-primary CSS variable (defined in
-  // globals.css, default = Saguaro #C8881C) so a tenant's white-label color
+  // Brand accent (historically "gold", now NEON YELLOW #FFE600 — owner decision
+  // 2026-10-02) — resolves through the --brand-primary CSS variable defined in
+  // globals.css, so a tenant's white-label color
   // override reskins every component that uses these tokens. Used only in CSS
   // contexts (style props / template strings), never as SVG fill/stroke attrs.
   gold:       'var(--brand-primary)',
@@ -15,29 +16,37 @@ export const colors = {
   goldBorder: 'var(--brand-primary-25)',
   goldHover:  'var(--brand-primary-18)',
   goldActive: 'var(--brand-primary-25)',
+  // Text / icons drawn ON a brand-yellow fill.
+  onGold:     'var(--on-brand)',
 
-  // Sonoran DARK ramp (Rob's direction 2026-07-22) — matches the dark mobile
-  // field app: navy page background #0a0a0a with slate cards/panels. Naming kept
-  // (`dark` = page bg, `surface`/`raised` = cards) so existing token consumers
-  // re-theme without renames.
-  dark:       '#0d1117', // page background — matches --bg-base
-  darkAlt:    '#151b23', // card / panel — matches --bg-surface
-  raised:     '#151b23', // raised card
-  raisedAlt:  '#1c232d', // grouped inset / input — matches --bg-surface-2
-  surface:    '#151b23', // surface / card
+  // JET BLACK + GLASS (owner decision 2026-10-02, docs/COPY-STYLE.md §6).
+  // `dark` is the page; the card tokens are SOLID fallbacks that read the same
+  // as the glass tokens (--bg-surface / --bg-surface-2) over a black page, for
+  // consumers that cannot take a translucent value. Naming kept (`dark` = page
+  // bg, `surface`/`raised` = cards) so consumers re-theme without renames.
+  dark:       '#000000', // page background — matches --bg-base
+  darkAlt:    '#0E0F12', // card / panel — solid stand-in for --bg-surface
+  raised:     '#0E0F12', // raised card
+  raisedAlt:  '#15171C', // grouped inset / input — solid stand-in for --bg-surface-2
+  surface:    '#0E0F12', // surface / card
+  glass:      'var(--bg-surface)',   // translucent card (use with backdropFilter)
+  glass2:     'var(--bg-surface-2)', // translucent raised (inputs, headers)
+  glassBlur:  'blur(16px) saturate(140%)',
 
   border:     'rgba(255,255,255,0.12)',
-  borderDim:  'rgba(255,255,255,0.06)',
+  borderDim:  'rgba(255,255,255,0.08)',
 
   text:       '#FFFFFF',
-  textMuted:  '#CBD5E1',
-  textDim:    '#8094B0',
-  textFaint:  '#5B677A',
+  textMuted:  '#D7DEE8',
+  textDim:    '#A9B4C4',
+  textFaint:  '#7A8597',
 
-  green:      '#22C55E',
-  red:        '#EF4444',
-  orange:     '#F59E0B',
-  blue:       '#F59E0B',
+  // Semantic — the same neon-on-black family as lib/status-colors.ts.
+  green:      '#2EE59D',
+  red:        '#FF4D5E',
+  orange:     '#FF8A3D',
+  amber:      '#FFC53D',
+  blue:       '#3DA9FF',
 
   white:      '#ffffff',
   black:      '#000000',
@@ -48,13 +57,13 @@ export const colors = {
  * letterheads, section dividers, the dark field-app surfaces). The neutral
  * UI chrome stays on `colors` above; `brand` is the desert identity layer. */
 export const brand = {
-  gold:       '#E8B84B', // wordmark / primary highlight
+  gold:       '#FFE600', // brand neon yellow (was the wordmark gold)
   sunset:     '#F2A93B', // bright sun
   ember:      '#E8732B', // sunset orange
   terracotta: '#A8431C', // canyon rock
   canyon:     '#4A1E08', // deep shadow / dark text on warm fills
   cactus:     '#2E8B3D', // saguaro green (positive / accent, sparing)
-  night:      '#0a0a0a', // field-app dark surface
+  night:      '#000000', // jet-black app surface
   sand:       '#F7F2E8', // warm light surface
 } as const;
 
@@ -111,7 +120,7 @@ export const shadow = {
   md:   '0 4px 14px rgba(0,0,0,.08)',
   lg:   '0 16px 44px rgba(0,0,0,.10)',
   xl:   '0 24px 60px rgba(0,0,0,.12)',
-  glow: `0 0 20px rgba(200,136,28,.15)`,
+  glow: `0 0 20px rgba(255,230,0,.15)`,
 } as const;
 
 /* ── Sidebar ───────────────────────────────────────────────────────── */

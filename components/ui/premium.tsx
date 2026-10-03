@@ -9,30 +9,36 @@
  * cards with depth + glow, section cards with an icon chip, and cinematic
  * empty/error states.
  *
- * Everything themes through --brand-primary (white-label aware) with warm
- * amber glows to match Takeoff. No data, no fetching, no routing here.
+ * Everything themes through --brand-primary (white-label aware). The look is
+ * jet black + glass + neon yellow (docs/COPY-STYLE.md §6–§7): no warm glows
+ * behind text. No data, no fetching, no routing here.
  */
 
 import React from 'react';
 import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/module-identity';
 import { ScribbleNote } from '@/components/Scribble';
+import { STATUS_COLORS } from '@/lib/status-colors';
 
 // Brand hooks (white-label re-themes these via WhiteLabelProvider) ------------
-const GOLD = 'var(--brand-primary)';        // #F59E0B default
-const GOLD_HI = 'var(--brand-primary-strong)'; // #FBBF24 default
-// Warm amber glow literals (match Takeoff; intentionally not re-themed) --------
-const A08 = 'rgba(245,158,11,0.08)';
-const A12 = 'rgba(245,158,11,0.12)';
-const A18 = 'rgba(245,158,11,0.18)';
-const A22 = 'rgba(245,158,11,0.22)';
-const A30 = 'rgba(245,158,11,0.30)';
-const A45 = 'rgba(245,158,11,0.45)';
-const BORDER = 'rgba(255,255,255,0.08)';
-const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
+const GOLD = 'var(--brand-primary)';        // #FFE600 neon yellow default
+const GOLD_HI = 'var(--brand-primary-strong)'; // #FFF04A default
+const ON_GOLD = 'var(--on-brand)';             // #0A0A00 — text/icons on a yellow fill
+// Brand alpha steps — tokens, so a white-label override re-themes them too.
+const A08 = 'var(--brand-primary-08)';
+const A12 = 'var(--brand-primary-12)';
+const A18 = 'var(--brand-primary-18)';
+const A22 = 'var(--brand-primary-18)';
+const A30 = 'var(--brand-primary-25)';
+const A45 = 'var(--brand-primary-35)';
+const BORDER = 'rgba(255,255,255,0.09)';
+// Glass (COPY-STYLE §6): translucent white over jet black, blurred.
+const SURFACE = 'linear-gradient(160deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))';
+const GLASS_BLUR = 'blur(16px) saturate(140%)';
 const WHITE = '#FFFFFF';
-const MUTED = 'rgba(255,255,255,0.62)';
-const FAINT = 'rgba(255,255,255,0.42)';
+const MUTED = '#D7DEE8';
+const FAINT = '#A9B4C4';
+const RED = STATUS_COLORS.overdue;
 
 // ─── FX keyframes + interaction classes ──────────────────────────────────────
 // Rendered once per page. All motion is disabled under prefers-reduced-motion.
@@ -57,15 +63,15 @@ export const PREMIUM_FX = `
 /* Machined button material (mobile MAT port — lib/theme goldGrad/ghostGrad/dangerGrad).
    Class-based so :active gets REAL pressed depth: a full-step darker gradient with the
    glow tucked in, not just a scale. Disabled: dimmed, glow off, faint top edge only. */
-.pmGold{background:linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover));color:#241500;border:none;box-shadow:0 4px 14px var(--brand-primary-25),inset 0 1px 0 rgba(255,255,255,0.35);transition:transform .16s ease,box-shadow .16s ease,filter .16s ease,background .16s ease}
+.pmGold{background:linear-gradient(180deg,var(--brand-primary-strong),var(--brand-primary) 60%,var(--brand-primary-hover));color:var(--on-brand);border:none;box-shadow:0 4px 14px var(--brand-primary-25),inset 0 1px 0 rgba(255,255,255,0.35);transition:transform .16s ease,box-shadow .16s ease,filter .16s ease,background .16s ease}
 .pmGold:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 8px 22px var(--brand-primary-35),inset 0 1px 0 rgba(255,255,255,0.35)}
-.pmGold:active{transform:translateY(0.5px) scale(.985);filter:none;background:linear-gradient(180deg,var(--brand-primary) 0%,var(--brand-primary-hover) 55%,#B45309 100%);box-shadow:0 2px 8px var(--brand-primary-25),inset 0 1px 3px rgba(0,0,0,0.2)}
-.pmGhost{background:linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));color:rgba(255,255,255,0.82);border:1px solid ${BORDER};box-shadow:0 2px 10px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.07);transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
+.pmGold:active{transform:translateY(0.5px) scale(.985);filter:none;background:linear-gradient(180deg,var(--brand-primary) 0%,var(--brand-primary-hover) 55%,#CCB800 100%);box-shadow:0 2px 8px var(--brand-primary-25),inset 0 1px 3px rgba(0,0,0,0.2)}
+.pmGhost{background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04));backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);color:#FFFFFF;border:1px solid ${BORDER};box-shadow:0 2px 10px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.07);transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
 .pmGhost:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.16)}
 .pmGhost:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));box-shadow:inset 0 1px 3px rgba(0,0,0,0.25)}
-.pmDanger{background:linear-gradient(180deg,rgba(239,68,68,0.20),rgba(239,68,68,0.09));color:#EF4444;border:1px solid rgba(239,68,68,0.45);box-shadow:0 2px 10px rgba(239,68,68,0.18),inset 0 1px 0 rgba(255,255,255,0.10);transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
-.pmDanger:hover{transform:translateY(-1px);background:linear-gradient(180deg,rgba(239,68,68,0.26),rgba(239,68,68,0.12))}
-.pmDanger:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(239,68,68,0.30),rgba(239,68,68,0.16));box-shadow:0 1px 6px rgba(239,68,68,0.15),inset 0 1px 3px rgba(0,0,0,0.25)}
+.pmDanger{background:linear-gradient(180deg,rgba(255,77,94,0.20),rgba(255,77,94,0.09));color:#FF4D5E;border:1px solid rgba(255,77,94,0.50);box-shadow:0 2px 10px rgba(255,77,94,0.18),inset 0 1px 0 rgba(255,255,255,0.10);transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
+.pmDanger:hover{transform:translateY(-1px);background:linear-gradient(180deg,rgba(255,77,94,0.26),rgba(255,77,94,0.12))}
+.pmDanger:active{transform:translateY(0.5px) scale(.985);background:linear-gradient(180deg,rgba(255,77,94,0.30),rgba(255,77,94,0.16));box-shadow:0 1px 6px rgba(255,77,94,0.15),inset 0 1px 3px rgba(0,0,0,0.25)}
 .pmGold:disabled,.pmGhost:disabled,.pmDanger:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;box-shadow:inset 0 1px 0 rgba(255,255,255,0.06)}
 /* Interactive milled plates press in slightly (pairs with .pmHover lift). !important
    outranks pmRise's held fill value, same as the :hover rule above. */
@@ -118,22 +124,15 @@ export function PremiumFX() {
 }
 
 // ─── Aurora backdrop ─────────────────────────────────────────────────────────
-// Scoped animated backdrop — aurora amber blobs + drifting blueprint grid +
-// vignette. position:absolute so it fills only the page's content column and
-// never bleeds under the app sidebar. Purely decorative; pointer-events:none.
+// Jet black (COPY-STYLE §6). The warm amber blobs, drifting blueprint grid and
+// vignette that used to live here sat behind text and made it hard to read;
+// the backdrop is now one faint, static, COOL sheen at the top of the column
+// and nothing else. Name and props kept so every caller keeps compiling.
+// position:absolute so it fills only the content column; pointer-events:none.
 export function Aurora({ soft = true }: { soft?: boolean }) {
-  const grid =
-    'linear-gradient(rgba(245,158,11,0.05) 1px, transparent 1px),' +
-    'linear-gradient(90deg, rgba(245,158,11,0.05) 1px, transparent 1px)';
-  const gridMask = 'radial-gradient(120% 78% at 50% 10%, #000 22%, transparent 74%)';
   return (
     <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 80% at 50% -10%, rgba(245,158,11,0.09), transparent 55%)' }} />
-      <div style={{ position: 'absolute', width: 640, height: 640, left: '-18%', top: '-28%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.17), transparent 62%)', filter: 'blur(34px)', animation: 'pmAur1 18s ease-in-out infinite', opacity: soft ? 0.5 : 0.85 }} />
-      <div style={{ position: 'absolute', width: 540, height: 540, right: '-12%', top: '-4%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,119,6,0.15), transparent 60%)', filter: 'blur(40px)', animation: 'pmAur2 22s ease-in-out infinite', opacity: soft ? 0.42 : 0.75 }} />
-      <div style={{ position: 'absolute', width: 520, height: 520, left: '30%', bottom: '-30%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(251,191,36,0.10), transparent 60%)', filter: 'blur(44px)', animation: 'pmAur3 25s ease-in-out infinite', opacity: soft ? 0.38 : 0.6 }} />
-      <div style={{ position: 'absolute', inset: -24, backgroundImage: grid, backgroundSize: '34px 34px', animation: 'pmGridPan 10s linear infinite', maskImage: gridMask, WebkitMaskImage: gridMask, opacity: soft ? 0.3 : 0.5 }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(130% 100% at 50% -6%, transparent 52%, rgba(2,4,8,0.55))' }} />
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 60% at 50% -12%, rgba(170,195,255,${soft ? 0.035 : 0.05}), transparent 60%)` }} />
     </div>
   );
 }
@@ -224,12 +223,9 @@ export function ModuleHero({
                   animation: 'pmRise .5s ease both',
                   display: 'inline-flex', alignItems: 'center', gap: 7,
                   padding: '6px 14px', borderRadius: 999,
-                  background: ac
-                    ? `linear-gradient(90deg, ${ac}29, ${ac}0D)`
-                    : 'linear-gradient(90deg, rgba(245,158,11,0.16), rgba(245,158,11,0.05))',
-                  border: `1px solid ${ac ? ac + '73' : A45}`, color: ac || GOLD_HI,
-                  fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase',
-                  boxShadow: ac ? `0 0 30px -10px ${ac}80` : '0 0 30px -10px rgba(245,158,11,0.5)',
+                  background: ac ? `${ac}24` : A12,
+                  border: `1px solid ${ac ? ac + '73' : A45}`, color: ac || GOLD,
+                  fontSize: 12.5, fontWeight: 700, letterSpacing: 'normal',
                 }}
               >
                 {eyebrowIcon}{eyebrow}
@@ -248,7 +244,7 @@ export function ModuleHero({
                 style={{
                   background: ac
                     ? `linear-gradient(100deg, ${ac} 6%, color-mix(in srgb, ${ac} 70%, #FFFFFF) 38%, color-mix(in srgb, ${ac} 42%, #FFFFFF) 56%, ${ac} 92%)`
-                    : `linear-gradient(100deg, ${GOLD} 6%, ${GOLD_HI} 38%, #FDE68A 56%, ${GOLD} 92%)`,
+                    : `linear-gradient(100deg, ${GOLD} 6%, ${GOLD_HI} 38%, #FFF7A8 56%, ${GOLD} 92%)`,
                   WebkitBackgroundClip: 'text', backgroundClip: 'text',
                   WebkitTextFillColor: 'transparent', color: 'transparent',
                 }}
@@ -259,7 +255,7 @@ export function ModuleHero({
           )}
         </h1>
         {subtitle && (
-          <p style={{ animation: 'pmRise .6s ease .1s both', color: 'rgba(255,255,255,0.66)', fontSize: 15, margin: '12px 0 0', maxWidth: 620, lineHeight: 1.6, marginInline: centered ? 'auto' : undefined }}>
+          <p style={{ animation: 'pmRise .6s ease .1s both', color: MUTED, fontSize: 15, margin: '12px 0 0', maxWidth: 620, lineHeight: 1.6, marginInline: centered ? 'auto' : undefined }}>
             {subtitle}
           </p>
         )}
@@ -283,8 +279,7 @@ export function ModuleHero({
 }
 
 // ─── IconChip ────────────────────────────────────────────────────────────────
-// Default (no `vivid`): the classic low-alpha gold chip — byte-for-byte the
-// same treatment as before. With `vivid` (a module-identity vivid hex) the
+// Default (no `vivid`): the classic low-alpha brand-yellow chip. With `vivid` (a module-identity vivid hex) the
 // chip goes chip-loud: saturated gradient ground (vivid -> ~20% darker), a
 // 1px vivid ring at 55%, and a soft outer glow at 25% — built for a WHITE
 // (#F8FAFC) glyph sitting ON the color. Never hue-on-hue.
@@ -297,7 +292,7 @@ export function IconChip({ children, size = 40, vivid }: { children: React.React
         width: size, height: size, borderRadius: Math.round(size * 0.28),
         background: vivid
           ? `linear-gradient(150deg, ${vivid}, color-mix(in srgb, ${vivid} 80%, #000000))`
-          : 'linear-gradient(150deg, rgba(245,158,11,0.18), rgba(245,158,11,0.05))',
+          : `linear-gradient(150deg, ${A18}, ${A08})`,
         border: `1px solid ${vivid ? vivid + '8C' : A30}`,
         boxShadow: vivid
           ? `0 0 0 3px ${vivid}1F, 0 6px 20px -6px ${vivid}40, inset 0 1px 0 rgba(255,255,255,0.25)`
@@ -355,12 +350,13 @@ export function StatCard({
         background: ring
           ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 16%, transparent), color-mix(in srgb, ${ring} 5%, transparent)), ${SURFACE}`
           : SURFACE,
+        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
         border: `1px solid ${ring || BORDER}`, borderRadius: 12,
         padding: '11px 14px',
         // compact plate — tight, not fat (Procore/JobTread density)
         boxShadow: ring
           ? `0 0 0 1px ${ring}, 0 8px 20px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
-          : `0 8px 20px -18px ${A30}, inset 0 1px 0 rgba(255,255,255,0.05), inset 0 0 0 1px rgba(255,255,255,0.03)`,
+          : `0 8px 20px -18px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)`,
         cursor: interactive ? 'pointer' : 'default',
         animation: `pmRise .5s ease ${delay.toFixed(2)}s both`,
         height: '100%',
@@ -368,15 +364,15 @@ export function StatCard({
       }}
     >
       {interactive && (
-        <span aria-hidden style={{ position: 'absolute', top: 10, right: 12, fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: ring || 'rgba(255,255,255,0.28)', textTransform: 'uppercase' }}>
-          {active ? '● filtering' : 'view ›'}
+        <span aria-hidden style={{ position: 'absolute', top: 10, right: 12, fontSize: 10.5, fontWeight: 700, color: ring || FAINT }}>
+          {active ? '● Filtering' : 'View →'}
         </span>
       )}
       {/* left accent bar */}
       <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${numberColor}, transparent)`, opacity: 0.85 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         <IconChip size={26}>{icon}</IconChip>
-        <span style={{ fontSize: 10.5, color: MUTED, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase' }}>{label}</span>
+        <span style={{ fontSize: 12, color: MUTED, fontWeight: 700 }}>{label}</span>
       </div>
       <div style={{ fontSize: 20, fontWeight: 800, color: numberColor, letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub != null && <div style={{ fontSize: 11.5, color: FAINT, marginTop: 2 }}>{sub}</div>}
@@ -418,7 +414,7 @@ export function SectionCard({
    * nothing is. Elevation stops meaning "this is a thing you act on" and
    * becomes wallpaper.
    *
-   * flat keeps the header — the small uppercase label is still how you find
+   * flat keeps the header — the small Title Case label is still how you find
    * your way down a page — and drops the tray: no fill, no border, no shadow,
    * a hairline rule instead. Reserve the raised form for objects you would
    * point at and name: the line-item table, the takeoff result, a form.
@@ -435,11 +431,11 @@ export function SectionCard({
             {icon && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9 }}>{icon}</span>}
             <div style={{ minWidth: 0, flex: 1 }}>
               {title && (
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: MUTED, lineHeight: 1.3 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: MUTED, lineHeight: 1.3 }}>
                   {title}
                 </div>
               )}
-              {subtitle && <div style={{ fontSize: 12.5, color: MUTED, marginTop: 3, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>{subtitle}</div>}
+              {subtitle && <div style={{ fontSize: 12.5, color: FAINT, marginTop: 3, fontWeight: 400 }}>{subtitle}</div>}
             </div>
             {action && <div style={{ flex: '0 0 auto' }}>{action}</div>}
           </div>
@@ -458,9 +454,10 @@ export function SectionCard({
            slightly saturated pane with a lit top edge reads as something
            sitting ABOVE it — which is what "raised" was supposed to mean, and
            what makes the flat/raised distinction do any work. */
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))',
-        border: '1px solid rgba(255,255,255,0.10)', borderRadius: 16,
-        boxShadow: `0 26px 54px -34px ${A22}, inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 1px rgba(255,255,255,0.02)`,
+        background: 'rgba(255,255,255,0.045)',
+        backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
+        border: `1px solid ${BORDER}`, borderRadius: 16,
+        boxShadow: '0 26px 54px -34px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
         ...style,
       }}
     >
@@ -497,9 +494,9 @@ export function PremiumEmpty({
   tone?: 'default' | 'error';
   compact?: boolean;
 }) {
-  const ring = tone === 'error' ? 'rgba(239,68,68,0.5)' : A45;
-  const halo = tone === 'error' ? 'rgba(239,68,68,0.22)' : A22;
-  const glow = tone === 'error' ? 'rgba(239,68,68,0.35)' : 'rgba(245,158,11,0.35)';
+  const ring = tone === 'error' ? RED.border : A45;
+  const halo = tone === 'error' ? RED.bg : A12;
+  const glow = tone === 'error' ? 'rgba(255,77,94,0.35)' : A30;
   return (
     <div
       style={{
@@ -511,9 +508,9 @@ export function PremiumEmpty({
         style={{
           position: 'relative', display: 'inline-flex', width: compact ? 66 : 84, height: compact ? 66 : 84,
           borderRadius: '50%', alignItems: 'center', justifyContent: 'center', marginBottom: 18,
-          background: `radial-gradient(circle, ${halo}, rgba(245,158,11,0.02))`,
+          background: `radial-gradient(circle, ${halo}, transparent)`,
           border: `1px solid ${ring}`,
-          boxShadow: `0 0 0 6px ${tone === 'error' ? 'rgba(239,68,68,0.07)' : A08}, 0 0 44px -10px ${glow}`,
+          boxShadow: `0 0 0 6px ${tone === 'error' ? 'rgba(255,77,94,0.07)' : A08}, 0 0 44px -10px ${glow}`,
         }}
       >
         <span aria-hidden style={{ position: 'absolute', inset: -1, borderRadius: '50%', border: `1px solid ${ring}`, animation: 'pmRing 3s ease-out infinite' }} />
@@ -527,12 +524,12 @@ export function PremiumEmpty({
 }
 
 // ─── PremiumButton (link-agnostic) ───────────────────────────────────────────
-// A gold gradient CTA styled to match Takeoff. Renders as a <button> unless the
+// The neon-yellow primary CTA. Renders as a <button> unless the
 // caller wraps it. Kept here so pages don't re-derive the same gradient.
 export const goldButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   padding: '11px 20px', borderRadius: 12, border: 'none', cursor: 'pointer',
-  background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`, color: '#241500',
+  background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`, color: ON_GOLD,
   fontWeight: 800, fontSize: 13.5, letterSpacing: '0.01em', textDecoration: 'none',
   boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
 };
@@ -542,8 +539,9 @@ export const ghostButtonStyle: React.CSSProperties = {
   padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
   /* The quietest tier, still glass so it reads as the same material as the
      cards and the outlined button rather than a flat grey chip. */
-  background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))',
-  color: 'rgba(255,255,255,0.78)',
+  background: 'rgba(255,255,255,0.06)',
+  backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
+  color: '#FFFFFF',
   border: '1px solid rgba(255,255,255,0.11)',
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
   fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
@@ -571,8 +569,9 @@ export const ghostButtonStyle: React.CSSProperties = {
 export const goldOutlineButtonStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
   padding: '11px 18px', borderRadius: 12, cursor: 'pointer',
-  background: 'linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.025))',
-  color: 'rgba(255,255,255,0.88)',
+  background: 'rgba(255,255,255,0.07)',
+  backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
+  color: '#FFFFFF',
   border: '1px solid rgba(255,255,255,0.16)',
   boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
   fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
@@ -637,8 +636,10 @@ export function DangerButton(props: MachinedButtonProps) {
 }
 
 // ─── Pill (mobile port) ──────────────────────────────────────────────────────
-/** Ringed status pill: fg-hue-derived 12% fill + 25% hairline ring, so every
- *  tone reads as one machined material. `caps` = small-caps eyebrow voice. */
+/** Ringed status pill. Tones read the ONE status palette (lib/status-colors):
+ *  green = Ongoing, amber = Under Contract, red = Overdue; gold = the brand.
+ *  `caps` is kept for callers but no longer forces capitals (COPY-STYLE §2) —
+ *  it only selects the slightly smaller eyebrow size. */
 export function Pill({ children, tone = 'neutral', caps, style }: {
   children: React.ReactNode;
   tone?: 'neutral' | 'green' | 'amber' | 'red' | 'gold';
@@ -646,11 +647,11 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
   style?: React.CSSProperties;
 }) {
   const map = {
-    neutral: { bg: 'rgba(255,255,255,0.06)', fg: 'rgba(255,255,255,0.72)', bd: 'rgba(255,255,255,0.10)' },
-    green:   { bg: '#22C55E1F', fg: '#22C55E', bd: '#22C55E40' },
-    amber:   { bg: '#F59E0B1F', fg: '#F59E0B', bd: '#F59E0B40' },
-    red:     { bg: '#EF44441F', fg: '#EF4444', bd: '#EF444440' },
-    gold:    { bg: A12, fg: GOLD_HI, bd: A45 },
+    neutral: { bg: STATUS_COLORS.closed.bg, fg: '#D7DEE8', bd: 'rgba(255,255,255,0.16)' },
+    green:   { bg: STATUS_COLORS.ongoing.bg, fg: STATUS_COLORS.ongoing.color, bd: STATUS_COLORS.ongoing.border },
+    amber:   { bg: STATUS_COLORS.under_contract.bg, fg: STATUS_COLORS.under_contract.color, bd: STATUS_COLORS.under_contract.border },
+    red:     { bg: STATUS_COLORS.overdue.bg, fg: STATUS_COLORS.overdue.color, bd: STATUS_COLORS.overdue.border },
+    gold:    { bg: A12, fg: GOLD, bd: A45 },
   } as const;
   const t = map[tone];
   return (
@@ -658,9 +659,8 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
       display: 'inline-flex', alignItems: 'center', gap: 5,
       padding: '3px 10px', borderRadius: 999,
       background: t.bg, border: `1px solid ${t.bd}`, color: t.fg,
-      fontSize: caps ? 10 : 11, fontWeight: 800,
-      letterSpacing: caps ? '0.08em' : '0.02em',
-      textTransform: caps ? 'uppercase' : undefined,
+      fontSize: caps ? 11 : 12, fontWeight: 700,
+      letterSpacing: 'normal',
       whiteSpace: 'nowrap', lineHeight: 1.5,
       ...style,
     }}>{children}</span>
@@ -672,13 +672,13 @@ export function Pill({ children, tone = 'neutral', caps, style }: {
 // the project (contract, COs, prior records) and shows the user what the system
 // pre-filled and what happens after submit. No create screen ships a bare form.
 
-/** Tiny gold pill marking a field the system filled from live project data. */
-export function AutoChip({ label = 'AUTO' }: { label?: string }) {
+/** Tiny brand pill marking a field the system filled from live project data. */
+export function AutoChip({ label = 'Auto' }: { label?: string }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center', marginLeft: 8, padding: '1.5px 7px',
       borderRadius: 999, background: `linear-gradient(180deg, ${A22}, ${A08})`, border: `1px solid ${A45}`,
-      color: GOLD_HI, fontSize: 8.5, fontWeight: 900, letterSpacing: '0.09em',
+      color: GOLD, fontSize: 10, fontWeight: 800, letterSpacing: 'normal',
       verticalAlign: 'middle', lineHeight: 1.6,
       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
     }}>{label}</span>
@@ -694,6 +694,7 @@ export function StatStrip({ items }: {
     <div style={{
       display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(150px, 1fr))`, gap: 1,
       background: BORDER, border: `1px solid ${BORDER}`, borderRadius: 14, overflow: 'hidden',
+      backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
       marginBottom: 20,
     }}>
       {items.map((it, i) => {
@@ -702,11 +703,11 @@ export function StatStrip({ items }: {
           <div
             className="pmTile"
             onClick={it.onClick}
-            style={{ position: 'relative', background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015)), #101011', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
+            style={{ position: 'relative', background: 'linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.035)), rgba(0,0,0,0.88)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)', padding: '13px 16px', minWidth: 0, cursor: clickable ? 'pointer' : 'default', height: '100%' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: FAINT, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 5, whiteSpace: 'nowrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: FAINT, marginBottom: 5, whiteSpace: 'nowrap' }}>
               {it.icon}{it.label}
-              {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.3)', fontWeight: 900 }}>›</span>}
+              {clickable && <span aria-hidden style={{ marginLeft: 'auto', color: FAINT, fontWeight: 700 }}>→</span>}
             </div>
             <div style={{ fontSize: 17, fontWeight: 800, color: it.accent || WHITE, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', textShadow: it.accent ? '0 0 20px currentColor' : undefined, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.value}</div>
             {it.sub && <div style={{ fontSize: 11, color: MUTED, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.sub}</div>}
@@ -724,13 +725,13 @@ export function StatStrip({ items }: {
 /** Vertical "what happens next" pipeline for the create-screen context rail:
  *  numbered gold nodes with a connector line, so the user sees the downstream
  *  automation (approvals, waivers, budget sync) before they ever submit. */
-export function FlowSteps({ title = 'What happens next', steps }: {
+export function FlowSteps({ title = 'What Happens Next', steps }: {
   title?: string;
   steps: { title: string; desc?: string; done?: boolean }[];
 }) {
   return (
     <div>
-      <div style={{ fontSize: 10.5, fontWeight: 900, color: FAINT, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 14 }}>{title}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: MUTED, marginBottom: 14 }}>{title}</div>
       <div style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', left: 10, top: 8, bottom: 14, width: 1, background: `linear-gradient(180deg, ${A45}, ${A18} 55%, transparent)` }} />
         {steps.map((s, i) => (
@@ -738,10 +739,10 @@ export function FlowSteps({ title = 'What happens next', steps }: {
             <div style={{
               width: 21, height: 21, borderRadius: 999, flexShrink: 0, zIndex: 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: s.done ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 62%, var(--brand-primary-hover))` : '#101011',
+              background: s.done ? `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 62%, var(--brand-primary-hover))` : '#0E0F12',
               border: s.done ? 'none' : `1px solid ${A45}`,
               boxShadow: s.done ? `inset 0 1px 0 rgba(255,255,255,0.35), 0 0 14px -2px ${A45}` : `0 0 0 3px ${A08}`,
-              color: s.done ? '#241500' : GOLD_HI, fontSize: 10, fontWeight: 900,
+              color: s.done ? ON_GOLD : GOLD, fontSize: 10, fontWeight: 900,
             }}>{s.done ? <Check size={11} weight="bold" /> : i + 1}</div>
             <div style={{ minWidth: 0, paddingTop: 1 }}>
               <div style={{ fontSize: 12.5, fontWeight: 800, color: WHITE, lineHeight: 1.35 }}>{s.title}</div>
@@ -777,7 +778,7 @@ export function FlowStrip({ steps, style }: {
             <span style={{
               width: 17, height: 17, borderRadius: 999, flexShrink: 0,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              background: A12, border: `1px solid ${A45}`, color: GOLD_HI,
+              background: A12, border: `1px solid ${A45}`, color: GOLD,
               fontSize: 9, fontWeight: 900,
             }}>{i + 1}</span>
             <span style={{ fontSize: 12, fontWeight: 800, color: WHITE, whiteSpace: 'nowrap' }}>{s.title}</span>
@@ -982,15 +983,14 @@ export function DataTable<T>({
                     onClick={sortable ? () => cycleSort(col.key) : undefined}
                     style={{
                       padding: `9px ${i === columns.length - 1 ? 16 : 12}px 9px ${i === 0 ? 16 : 12}px`,
-                      background: 'linear-gradient(180deg, #17181b 0%, #101114 100%)',
+                      background: 'rgba(255,255,255,0.05)',
                       borderBottom: `1px solid ${BORDER}`,
                       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
                       textAlign: col.align || 'left',
-                      fontSize: 10.5,
-                      fontWeight: 800,
+                      fontSize: 12,
+                      fontWeight: 700,
                       color: FAINT,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.09em',
+                      letterSpacing: 'normal',
                       userSelect: 'none',
                       whiteSpace: 'nowrap',
                       width: col.width,
@@ -1053,7 +1053,7 @@ export function DataTable<T>({
                           padding: `9px ${cIdx === columns.length - 1 ? 16 : 12}px 9px ${cIdx === 0 ? 16 : 12}px`,
                           borderBottom: isLast ? 'none' : `1px solid rgba(255,255,255,0.05)`,
                           fontSize: 13,
-                          color: 'rgba(255,255,255,0.88)',
+                          color: '#FFFFFF',
                           whiteSpace: 'nowrap',
                           fontVariantNumeric: 'tabular-nums',
                           textAlign: col.align || 'left',

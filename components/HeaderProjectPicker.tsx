@@ -22,11 +22,11 @@ import { CaretUpDown, MagnifyingGlass, Buildings, Check } from '@phosphor-icons/
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 
-const GOLD = '#F59E0B';
-const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
+const GOLD = 'var(--brand-primary)';
+const TEXT = '#FFFFFF';
+const DIM = '#A9B4C4';
 const BORDER = 'rgba(255,255,255,0.12)';
-const PANEL = '#12161C';
+const PANEL = 'rgba(22,24,29,0.94)'; // floating glass over the jet-black page
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -148,12 +148,12 @@ export default function HeaderProjectPicker() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        title={currentName ? `${currentName} — switch job` : 'Choose a job'}
+        title={currentName ? `${currentName} — switch job` : 'Choose a Job'}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           height: 34, maxWidth: 260, padding: '0 10px',
-          background: currentName ? 'rgba(245,158,11,0.10)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${currentName ? 'rgba(245,158,11,0.38)' : BORDER}`,
+          background: currentName ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.06)',
+          border: `1px solid ${currentName ? 'var(--brand-primary-35)' : BORDER}`,
           borderRadius: 9, cursor: 'pointer',
           color: currentName ? TEXT : DIM,
           fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
@@ -161,7 +161,7 @@ export default function HeaderProjectPicker() {
       >
         <Buildings size={15} weight="duotone" color={currentName ? GOLD : DIM} />
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
-          {currentName ?? 'Choose a job'}
+          {currentName ?? 'Choose a Job'}
         </span>
         <CaretUpDown size={13} weight="bold" color={DIM} />
       </button>
@@ -174,7 +174,8 @@ export default function HeaderProjectPicker() {
             width: 340, maxHeight: 420, overflow: 'hidden',
             display: 'flex', flexDirection: 'column',
             background: PANEL, border: `1px solid ${BORDER}`, borderRadius: 12,
-            boxShadow: '0 26px 60px -20px rgba(0,0,0,0.92)',
+            backdropFilter: 'blur(20px) saturate(150%)', WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+            boxShadow: '0 26px 60px -20px rgba(0,0,0,0.92), inset 0 1px 0 rgba(255,255,255,0.06)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>
@@ -191,7 +192,7 @@ export default function HeaderProjectPicker() {
 
           {tail && (
             <div style={{ padding: '7px 12px', fontSize: 11, color: DIM, borderBottom: `1px solid ${BORDER}` }}>
-              Switching keeps you on this screen
+              Switching keeps you on this screen.
             </div>
           )}
 
@@ -213,7 +214,7 @@ export default function HeaderProjectPicker() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 9, width: '100%', textAlign: 'left',
                     padding: '9px 10px', borderRadius: 8, cursor: 'pointer', border: 'none',
-                    background: i === active ? 'rgba(245,158,11,0.12)' : 'transparent',
+                    background: i === active ? 'rgba(255,255,255,0.08)' : 'transparent',
                     color: TEXT, fontSize: 13.5, fontWeight: isCurrent ? 800 : 600,
                   }}
                 >
@@ -237,7 +238,7 @@ export default function HeaderProjectPicker() {
               fontWeight: 700, cursor: 'pointer',
             }}
           >
-            See all jobs →
+            See All Jobs →
           </button>
         </div>
       )}

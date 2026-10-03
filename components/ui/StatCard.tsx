@@ -31,8 +31,8 @@ export interface StatCardProps {
   style?: React.CSSProperties;
 }
 
-const GREEN = '#22C55E';
-const RED = '#EF4444';
+const GREEN = '#2EE59D'; // status Ongoing green (lib/status-colors)
+const RED = '#FF4D5E';   // status Overdue red
 
 export function StatCard({ icon, label, value, sub, trend, accent, onClick, href, index = 0, style }: StatCardProps) {
   const [hover, setHover] = useState(false);
@@ -66,7 +66,7 @@ export function StatCard({ icon, label, value, sub, trend, accent, onClick, href
               background: `linear-gradient(150deg, ${gold(18)}, ${gold(5)})`,
               border: `1px solid ${gold(30)}`,
               color: GOLD,
-              boxShadow: hover ? `0 0 22px ${gold(34)}` : 'none',
+              boxShadow: hover ? `0 0 0 3px ${gold(12)}` : 'none',
               transition: 'box-shadow .2s',
             }}
           >
@@ -76,10 +76,8 @@ export function StatCard({ icon, label, value, sub, trend, accent, onClick, href
         <div
           style={{
             color: 'var(--sg-text-2)',
-            fontSize: 10.5,
+            fontSize: 12.5,
             fontWeight: 700,
-            letterSpacing: '0.8px',
-            textTransform: 'uppercase',
             minWidth: 0,
           }}
         >
@@ -128,8 +126,10 @@ export function StatCard({ icon, label, value, sub, trend, accent, onClick, href
     borderRadius: 16,
     border: `1px solid ${hover ? gold(45) : 'var(--sg-border)'}`,
     background: 'linear-gradient(160deg, var(--sg-surface-from), var(--sg-surface-to))',
+    backdropFilter: 'blur(16px) saturate(140%)',
+    WebkitBackdropFilter: 'blur(16px) saturate(140%)',
     boxShadow: hover
-      ? `0 22px 50px -22px rgba(0,0,0,0.5), inset 0 0 50px ${gold(5)}`
+      ? `0 22px 50px -22px rgba(0,0,0,0.6), inset 0 1px 0 var(--sg-inner-glow)`
       : `var(--sg-shadow), inset 0 1px 0 var(--sg-inner-glow)`,
     cursor: onClick || href ? 'pointer' : 'default',
     transform: hover && (onClick || href) ? 'translateY(-5px)' : 'none',

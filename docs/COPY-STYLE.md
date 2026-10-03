@@ -66,8 +66,78 @@ glows, gold-tinted page gradients) made words hard to read. The look is now:
   menus) a step brighter: `rgba(255,255,255,0.07)`.
 - **Text stays high-contrast:** primary `#FFFFFF`, secondary `#D7DEE8`,
   tertiary `#A9B4C4`. Never put body text directly on a colored glow.
-- **Gold is for the one primary action and the brand mark only**, not for
+- **Brand neon yellow (formerly gold) is for the one primary action and the brand mark only**, not for
   backgrounds, borders of every card, or glows.
 - Pages must not hard-code their own page background (`#0a0a0a`, `#0d1117`,
   `#141416`, amber gradients…). Use the tokens (`var(--bg-base)`,
   `var(--bg-surface)`, `var(--bg-surface-2)`) or the kit `Card` / `.k-card`.
+
+## 7. Palette — jet black + glass + neon yellow (owner decision 2026-10-02)
+One palette, uniform end to end. The values live in `app/globals.css` `:root`
+(CSS), `lib/design-tokens.ts` (`colors`) and `lib/status-colors.ts` (status).
+Pages reference the TOKEN, never the hex. Neon yellow **replaces gold** everywhere.
+
+### Brand (white-label override point — `--gold*` aliases track these)
+| Token | Value | Use |
+|---|---|---|
+| `--brand-primary` | `#FFE600` | The one primary action, active nav, focus ring, brand mark |
+| `--brand-primary-strong` | `#FFF04A` | Top of the primary-button gradient, hover |
+| `--brand-primary-hover` | `#E6CF00` | Bottom of the gradient, pressed |
+| `--brand-primary-08` / `-12` / `-18` / `-25` / `-35` | `rgba(255,230,0,.08/.12/.18/.25/.35)` | Tints, rings, active-row wash |
+| `--on-brand` | `#0A0A00` | Text and icons drawn ON a yellow fill — never white |
+
+### Surfaces (§6)
+| Token | Value | Use |
+|---|---|---|
+| `--bg-base` | `#000000` | Page background (jet black) |
+| `--bg-surface` | `rgba(255,255,255,0.045)` | Glass card / panel / modal (with `--glass-blur`) |
+| `--bg-surface-2` | `rgba(255,255,255,0.07)` | Raised glass: inputs, table header, secondary buttons |
+| `--bg-elevated` | `rgba(22,24,29,0.92)` | Floating menus, popovers, toasts (near-opaque glass) |
+| `--bg-solid` / `--bg-solid-2` | `#0E0F12` / `#15171C` | Opaque stand-ins where glass cannot show through (sticky cells, native `<select>` lists, canvas) |
+| `--glass-blur` | `blur(16px) saturate(140%)` | `backdrop-filter` for every glass surface |
+| `--glass-border` | `rgba(255,255,255,0.09)` | Glass edge |
+| `--glass-highlight` | `inset 0 1px 0 rgba(255,255,255,0.06)` | 1px lit top edge |
+| `--border-subtle` / `-default` / `-strong` | `rgba(255,255,255,.08/.12/.22)` | Hairlines |
+
+`lib/design-tokens.ts`: `colors.dark #000000`, `darkAlt / raised / surface #0E0F12`,
+`raisedAlt #15171C`, `glass var(--bg-surface)`, `glass2 var(--bg-surface-2)`,
+`onGold var(--on-brand)`.
+
+### Text
+| Token | Value |
+|---|---|
+| `--text-primary` | `#FFFFFF` |
+| `--text-secondary` | `#D7DEE8` |
+| `--text-tertiary` | `#A9B4C4` |
+| `--text-disabled` | `#7A8597` |
+
+### Status — six meanings, one bright neon-on-black family (`lib/status-colors.ts`)
+Every pill/badge: fill = hue at 16%, border = hue at 50%, text = the hue.
+| Kind | Label | Color | CSS |
+|---|---|---|---|
+| `overdue` | Overdue | `#FF4D5E` red | `--status-overdue` |
+| `lead` | Lead | `#3DA9FF` blue | `--status-lead` |
+| `under_contract` | Under Contract | `#FFC53D` amber (deliberately not the lemon brand yellow) | `--status-under-contract` |
+| `ongoing` | Ongoing | `#2EE59D` green | `--status-ongoing` |
+| `completed` | Completed | `#FF8A3D` orange | `--status-completed` |
+| `closed` | Closed | `#A3ACBB` grey | `--status-closed` |
+
+Phase pill: **Bidding** = `lead` blue, **Building** = `ongoing` green.
+
+### Semantic (same family)
+| Token | Value |
+|---|---|
+| `--success` | `#2EE59D` |
+| `--danger` | `#FF4D5E` |
+| `--warning` | `#FFC53D` |
+| `--info` | `#3DA9FF` (blue — never the brand yellow) |
+
+### Buttons
+- **Primary**: neon yellow fill (`--brand-primary`, gradient `-strong → base → -hover`), text `--on-brand`. One per screen.
+- **Secondary / ghost**: glass (`--bg-surface-2` + `--glass-blur`), white text, `--glass-border`.
+- **Danger**: status red — fill `rgba(255,77,94,.14)`, border `rgba(255,77,94,.45)`, text `#FF4D5E`.
+
+Kit classes (`.k-btn-*`, `.k-badge`), the premium `Pill` / `GoldButton` /
+`GhostButton` / `DangerButton`, and `components/ui/shell.tsx` `T` all read
+this palette. No warm radial glows, animated aurora blobs or blueprint grids
+behind text: the shared `Aurora` is now a single faint cool sheen.

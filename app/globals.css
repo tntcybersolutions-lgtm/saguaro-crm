@@ -6,48 +6,63 @@
      Auto Dark Mode, which otherwise force-inverts pages that never declared a
      scheme — on an already-dark site that turns the inputs pale. */
   color-scheme: dark;
-  /* Surfaces — Sonoran DARK (Rob's direction 2026-07-22): navy page + slate cards */
-  /* Layered professional dark (Design System Phase 0, 2026-10-02): lifted off
-     pure #0a0a0a so cards, inputs and modals separate from the page by tone,
-     not by heavy borders. Cool blue-grey, four clear steps. */
-  --bg-base: #0d1117;
-  --bg-surface: #151b23;
-  --bg-surface-2: #1c232d;
-  --bg-elevated: #232c38;
-  /* Hairlines — white-alpha on dark */
-  --border-subtle: rgba(255,255,255,0.06);
+  /* Surfaces — JET BLACK + GLASS (owner decision 2026-10-02, docs/COPY-STYLE.md §6).
+     The page is pure black; every card, panel and modal is translucent white
+     glass over it with a blur. Token NAMES are unchanged so every consumer
+     re-themes without edits. --bg-solid* are opaque fallbacks for the few
+     places that must not show what is underneath (sticky cells, popups). */
+  --bg-base: #000000;
+  --bg-surface: rgba(255,255,255,0.045);
+  --bg-surface-2: rgba(255,255,255,0.07);
+  --bg-elevated: rgba(22,24,29,0.92);
+  --bg-solid: #0E0F12;
+  --bg-solid-2: #15171C;
+  /* Glass recipe — one blur, one edge, one top highlight. */
+  --glass-blur: blur(16px) saturate(140%);
+  --glass-border: rgba(255,255,255,0.09);
+  --glass-highlight: inset 0 1px 0 rgba(255,255,255,0.06);
+  /* Hairlines — white-alpha on black */
+  --border-subtle: rgba(255,255,255,0.08);
   --border-default: rgba(255,255,255,0.12);
-  --border-strong: rgba(255,255,255,0.20);
-  /* Text — bright on dark. Lifted 2026-10-02 for legibility: secondary/tertiary
-     grey read too dim on the near-black surfaces (owner feedback). Brighter
-     steps, still a clear hierarchy. */
+  --border-strong: rgba(255,255,255,0.22);
+  /* Text — high contrast on jet black (§6). */
   --text-primary: #FFFFFF;
-  --text-secondary: #E3E9F2;
-  --text-tertiary: #AEBBCE;
-  --text-disabled: #7E8CA1;
+  --text-secondary: #D7DEE8;
+  --text-tertiary: #A9B4C4;
+  --text-disabled: #7A8597;
   /* ── Brand primary — the single white-label override point. Defaults to
-     Saguaro gold; WhiteLabelProvider overrides --brand-primary (+ the derived
-     vars) per tenant on the white-label tier. The --gold* aliases below AND
+     Saguaro NEON YELLOW (owner decision 2026-10-02, replaces gold);
+     WhiteLabelProvider overrides --brand-primary (+ the derived vars) per
+     tenant on the white-label tier. The --gold* aliases below AND
      design-tokens.ts `colors.gold` all resolve through it, so one override
-     reskins the whole app. ── */
-  --brand-primary: #F59E0B;
-  --brand-primary-strong: #FBBF24;
-  --brand-primary-hover: #D97706;
-  --brand-primary-12: rgba(245,158,11,0.12);
-  --brand-primary-18: rgba(245,158,11,0.18);
-  --brand-primary-25: rgba(245,158,11,0.25);
-  --brand-primary-35: rgba(245,158,11,0.35);
+     reskins the whole app. Text/icons ON a yellow fill use --on-brand. ── */
+  --brand-primary: #FFE600;
+  --brand-primary-strong: #FFF04A;
+  --brand-primary-hover: #E6CF00;
+  --brand-primary-08: rgba(255,230,0,0.08);
+  --brand-primary-12: rgba(255,230,0,0.12);
+  --brand-primary-18: rgba(255,230,0,0.18);
+  --brand-primary-25: rgba(255,230,0,0.25);
+  --brand-primary-35: rgba(255,230,0,0.35);
+  --on-brand: #0A0A00;
   /* Brand gold aliases — track --brand-primary */
   --gold: var(--brand-primary);
   --gold-bright: var(--brand-primary-strong);
   --gold-hover: var(--brand-primary-hover);
   --gold-soft: var(--brand-primary-12);
   --gold-ring: var(--brand-primary-35);
-  /* Status — brightened for dark surfaces */
-  --info: #F59E0B;
-  --success: #22C55E;
-  --danger: #EF4444;
-  --warning: #F59E0B;
+  /* Status palette — one bright neon-on-black family (lib/status-colors.ts). */
+  --status-overdue: #FF4D5E;
+  --status-lead: #3DA9FF;
+  --status-under-contract: #FFC53D;
+  --status-ongoing: #2EE59D;
+  --status-completed: #FF8A3D;
+  --status-closed: #A3ACBB;
+  /* Semantic — same family. Info is blue, never the brand yellow. */
+  --info: #3DA9FF;
+  --success: #2EE59D;
+  --danger: #FF4D5E;
+  --warning: #FFC53D;
   /* Elevation — deeper shadows read on dark */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.30);
   --shadow-md: 0 4px 14px rgba(0,0,0,0.38);
@@ -101,8 +116,8 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-text-fill-color: #FFFFFF !important;
-  -webkit-box-shadow: 0 0 0 1000px #1c1c1e inset !important;
-  box-shadow: 0 0 0 1000px #1c1c1e inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #15171C inset !important;
+  box-shadow: 0 0 0 1000px #15171C inset !important;
   caret-color: #FFFFFF !important;
   transition: background-color 9999s ease-out 0s;
 }
@@ -117,7 +132,7 @@ a, button, input, textarea, select, [role="button"] { transition: color .18s eas
 .glass-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
 /* ── Table row hover: subtle neutral ── */
-tr:hover td, [data-row]:hover { background: rgba(0,0,0,0.03); }
+tr:hover td, [data-row]:hover { background: rgba(255,255,255,0.03); }
 
 /* ── Nav link gold on hover (gold belongs on nav) ── */
 nav a:hover { color: var(--gold); }
@@ -127,7 +142,7 @@ nav a:hover { color: var(--gold); }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-@keyframes goldGlow { 0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11,0.2); } 50% { box-shadow: 0 0 40px rgba(245, 158, 11,0.4); } }
+@keyframes goldGlow { 0%, 100% { box-shadow: 0 0 20px var(--brand-primary-18); } 50% { box-shadow: 0 0 40px var(--brand-primary-35); } }
 
 /* ── System-wide dropdown — high-contrast, touch-sized, clearly visible ──
    The old control was near-black (#141416) on a near-black page, so a dropdown
@@ -139,7 +154,7 @@ nav a:hover { color: var(--gold); }
 select {
   appearance: none;
   -webkit-appearance: none;
-  background-color: #26262B;
+  background-color: #15171C;
   color: #F4F7FB;
   border: 1px solid rgba(255,255,255,0.22);
   border-radius: 10px;
@@ -152,24 +167,24 @@ select {
   cursor: pointer;
   outline: none;
   transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23FBBF24' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23FFE600' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
 }
-select:hover { border-color: rgba(255,255,255,0.34); background-color: #2E2E34; }
-select:focus { border-color: #F59E0B; box-shadow: 0 0 0 3px rgba(245, 158, 11,0.22); color: #FFFFFF; }
+select:hover { border-color: rgba(255,255,255,0.34); background-color: #1C1F25; }
+select:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-18); color: #FFFFFF; }
 /* The open list — Windows/Linux Chromium honour these; a solid lighter panel
    with bold near-white text, and a clear brand-tinted highlight on the row. */
-select option { background-color: #26262B; color: #F4F7FB; font-size: 15px; font-weight: 600; padding: 12px 14px; }
+select option { background-color: #15171C; color: #F4F7FB; font-size: 15px; font-weight: 600; padding: 12px 14px; }
 select option:checked, select option:hover, select option:focus {
-  background: linear-gradient(0deg, rgba(245,158,11,0.9), rgba(245,158,11,0.9)); /* solid for OS lists */
-  background-color: #F59E0B;
-  color: #1A1206;
+  background: linear-gradient(0deg, rgba(255,230,0,0.9), rgba(255,230,0,0.9)); /* solid for OS lists */
+  background-color: #FFE600;
+  color: #0A0A00;
 }
 
 /* ── react-datepicker dark theme (Saguaro) ── */
 .saguaro-calendar {
-  background: #141416 !important;
+  background: rgba(14,15,18,0.94) !important;
   backdrop-filter: blur(40px) !important;
   -webkit-backdrop-filter: blur(40px) !important;
   border: 1px solid var(--border-default) !important;
@@ -180,7 +195,7 @@ select option:checked, select option:hover, select option:focus {
   box-shadow: var(--shadow-lg), 0 0 0 1px rgba(255,255,255,0.04) !important;
 }
 .saguaro-calendar .react-datepicker__header {
-  background: #1c1c1e !important;
+  background: rgba(255,255,255,0.05) !important;
   border-bottom: 1px solid var(--border-subtle) !important;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
 }
@@ -201,7 +216,7 @@ select option:checked, select option:hover, select option:focus {
 .saguaro-calendar .react-datepicker__day--selected,
 .saguaro-calendar .react-datepicker__day--keyboard-selected {
   background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)) !important;
-  color: #241500 !important;
+  color: var(--on-brand) !important;
   font-weight: 700 !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.35) !important;
 }
@@ -255,7 +270,7 @@ button {
 
 /* Tables: tight professional rows (R10 density: one notch tighter row rhythm) */
 table { font-size: 13px; border-collapse: collapse; }
-th { font-size: 10.5px !important; font-weight: 700 !important; text-transform: uppercase; letter-spacing: 0.06em; padding: 7px 12px; }
+th { font-size: 12px !important; font-weight: 700 !important; letter-spacing: normal; padding: 7px 12px; }
 td { font-size: 13px !important; padding: 6px 12px; }
 
 /* Cards: reduce padding bloat */
@@ -263,12 +278,11 @@ td { font-size: 13px !important; padding: 6px 12px; }
   /* Handled by inline — this is a hint for dev */
 }
 
-/* Labels: small caps style */
+/* Labels: Title Case as written (COPY-STYLE §2 — no forced caps). */
 label {
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: normal;
   color: var(--text-secondary);
 }
 
@@ -337,28 +351,28 @@ body, button, input, textarea, select {
 
 /* ── Apple-grade Glassmorphism ── */
 .glass {
-  background: #141416;
+  background: var(--bg-surface);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-md), var(--glass-highlight);
 }
 .glass-sm {
-  background: #141416;
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
 }
 .glass-elevated {
-  background: #141416;
+  background: var(--bg-surface-2);
   backdrop-filter: blur(24px) saturate(150%);
   -webkit-backdrop-filter: blur(24px) saturate(150%);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), var(--glass-highlight);
 }
 .glass-hover {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -367,7 +381,7 @@ body, button, input, textarea, select {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
-  background: var(--bg-elevated);
+  background: var(--bg-surface-2);
 }
 
 /* Page transition — fade in on mount */
@@ -394,7 +408,7 @@ body, button, input, textarea, select {
   100% { background-position: 200% 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, rgba(0,0,0,0.04) 25%, rgba(0,0,0,0.07) 50%, rgba(0,0,0,0.04) 75%);
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
@@ -421,46 +435,46 @@ body, button, input, textarea, select {
 .tap-scale:active { transform: scale(0.97); }
 .tap-scale { transition: transform 0.1s ease; }
 
-/* Gold glow on focus */
+/* Brand glow on focus */
 input:focus, textarea:focus, select:focus {
-  border-color: #F59E0B !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+  border-color: var(--brand-primary) !important;
+  box-shadow: 0 0 0 3px var(--brand-primary-12);
   outline: none;
 }
 /* Apple-grade input styling */
 input, textarea {
-  background: #141416;
+  background: var(--bg-surface-2);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 10px;
   color: #FFFFFF;
   transition: all 0.2s ease;
 }
 input:hover, textarea:hover {
-  border-color: rgba(0,0,0,0.14);
-  background: #141416;
+  border-color: var(--border-strong);
+  background: var(--bg-surface-2);
 }
 input::placeholder, textarea::placeholder {
   color: var(--text-disabled);
 }
 
-/* Status badge colors — iOS system hues on light tints */
-.badge-green { background: rgba(52, 199, 89, 0.14); color: #248A3D; border: 1px solid rgba(52, 199, 89, 0.30); }
-.badge-gold { background: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.28); }
-.badge-red { background: rgba(255, 59, 48, 0.12); color: #D70015; border: 1px solid rgba(255, 59, 48, 0.28); }
-.badge-blue { background: rgba(245, 158, 11, 0.12); color: #0066CC; border: 1px solid rgba(245, 158, 11, 0.28); }
-.badge-purple { background: rgba(175, 82, 222, 0.12); color: #9A3CCB; border: 1px solid rgba(175, 82, 222, 0.28); }
-.badge-gray { background: rgba(142, 142, 147, 0.12); color: #CBD5E1; border: 1px solid rgba(142, 142, 147, 0.28); }
+/* Status badge colors — the one neon-on-black status family (lib/status-colors.ts). */
+.badge-green { background: rgba(46,229,157,0.16); color: #2EE59D; border: 1px solid rgba(46,229,157,0.50); }
+.badge-gold { background: rgba(255,197,61,0.16); color: #FFC53D; border: 1px solid rgba(255,197,61,0.50); }
+.badge-red { background: rgba(255,77,94,0.16); color: #FF4D5E; border: 1px solid rgba(255,77,94,0.50); }
+.badge-blue { background: rgba(61,169,255,0.16); color: #3DA9FF; border: 1px solid rgba(61,169,255,0.50); }
+.badge-purple { background: rgba(176,140,255,0.16); color: #B08CFF; border: 1px solid rgba(176,140,255,0.50); }
+.badge-gray { background: rgba(163,172,187,0.16); color: #A3ACBB; border: 1px solid rgba(163,172,187,0.45); }
 [class^="badge-"] {
   display: inline-flex; align-items: center; padding: 2px 10px;
-  border-radius: 20px; font-size: 11px; font-weight: 600;
-  letter-spacing: 0.02em; white-space: nowrap;
+  border-radius: 20px; font-size: 11.5px; font-weight: 700;
+  letter-spacing: normal; white-space: nowrap;
 }
 
 /* Tooltip */
 .tooltip { position: relative; }
 .tooltip::after {
   content: attr(data-tip); position: absolute; bottom: 100%; left: 50%;
-  transform: translateX(-50%); background: rgba(20,20,22,0.98); color: #FFFFFF;
+  transform: translateX(-50%); background: rgba(14,15,18,0.96); color: #FFFFFF;
   padding: 6px 12px; border-radius: 8px; font-size: 11px; white-space: nowrap;
   opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
   border: 1px solid rgba(255,255,255,0.12); margin-bottom: 6px;
@@ -471,16 +485,16 @@ input::placeholder, textarea::placeholder {
 
 /* Progress bar */
 .progress-bar {
-  height: 6px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden;
+  height: 6px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden;
 }
 .progress-bar-fill {
   height: 100%; border-radius: 4px; transition: width 0.5s ease;
-  background: linear-gradient(90deg, #F59E0B, #E0A82E);
+  background: linear-gradient(90deg, var(--brand-primary-hover), var(--brand-primary));
 }
 
 /* Divider */
 .divider {
-  height: 1px; background: rgba(0,0,0,0.08); margin: 16px 0;
+  height: 1px; background: var(--border-subtle); margin: 16px 0;
 }
 
 /* Scrollbar for light glass containers */
@@ -500,21 +514,22 @@ a, button, input, select, textarea {
 
 /* Apple-grade table rows */
 tr { transition: background 0.15s ease; }
-tr:hover td { background: rgba(0, 0, 0, 0.03) !important; }
-thead th { background: #1c1c1e !important; border-bottom: 1px solid rgba(255,255,255,0.12) !important; }
-tbody td { border-bottom: 1px solid rgba(255,255,255,0.12) !important; }
+tr:hover td { background: rgba(255,255,255,0.03) !important; }
+thead th { background: #15171C !important; border-bottom: 1px solid rgba(255,255,255,0.12) !important; }
+tbody td { border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
 
 /* Gold accent button utility — superseded by the MATERIAL LAYER .btn-gold recipe below */
 
-/* Ghost button */
+/* Ghost button — glass + white text */
 .btn-ghost {
-  background: #141416; color: #FFFFFF;
-  border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+  background: var(--bg-surface-2); color: #FFFFFF;
+  border: 1px solid var(--glass-border); border-radius: 10px;
   padding: 10px 24px; cursor: pointer; transition: all 0.2s ease;
+  backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
 }
 .btn-ghost:hover {
-  background: #1c1c1e;
-  border-color: rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.11);
+  border-color: var(--border-strong);
 }
 
 /* Gradient mesh background utility */
@@ -526,9 +541,8 @@ tbody td { border-bottom: 1px solid rgba(255,255,255,0.12) !important; }
   content: '';
   position: absolute;
   top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(ellipse at 20% 50%, rgba(245, 158, 11,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 20%, rgba(245,158,11,0.04) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 80%, rgba(175,82,222,0.03) 0%, transparent 50%);
+  /* Jet black + a faint cool sheen only (§6) — no warm glows behind text. */
+  background: radial-gradient(ellipse at 50% 0%, rgba(160,190,255,0.035) 0%, transparent 55%);
   pointer-events: none;
   z-index: 0;
 }
@@ -581,26 +595,26 @@ tbody td { border-bottom: 1px solid rgba(255,255,255,0.12) !important; }
 /* The heat gradient used on "Sonoran", as a class so any headline fragment can
    carry it. background-clip:text needs a transparent fill to show through. */
 .heat-shine {
-  background: linear-gradient(100deg, #E0644E 4%, #F59E0B 42%, #FDE68A 60%, #E0644E 96%);
+  background: linear-gradient(100deg, #E6CF00 4%, #FFE600 42%, #FFF7A8 60%, #E6CF00 96%);
   -webkit-background-clip: text;
           background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
 }
 
-/* Form fields sit on a RAISED surface (#26262B), not one shade off the page
+/* Form fields sit on a RAISED surface (#15171C), not one shade off the page
    (#141416) — the old value barely separated a field from the #0a0a0a
    background, which read as "floaty / hard to see". A lighter solid face with
    bright text makes every input, textarea and select clearly a field. One
    authoritative rule so the whole app's forms are uniform. (Pure colour — no
    padding/size here, so checkboxes, radios and inline inputs are untouched.) */
 input, textarea, select {
-  background-color: #26262B !important;
+  background-color: #15171C !important;
   color: #FFFFFF !important;
   -webkit-text-fill-color: #FFFFFF !important;
-  caret-color: #FBBF24;
+  caret-color: var(--brand-primary);
 }
-input::placeholder, textarea::placeholder { color: #AEBBCE !important; opacity: 1; }
+input::placeholder, textarea::placeholder { color: #A9B4C4 !important; opacity: 1; }
 /* FIX: Chrome/Safari autofill paints its OWN light background that background-color
    can't override — only an inset box-shadow can. Without this, autofilled email/
    password text is white-on-light = invisible (reported on the client portal). */
@@ -610,8 +624,8 @@ input:-webkit-autofill:focus,
 input:-webkit-autofill:active,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 1000px #26262B inset !important;
-  box-shadow: 0 0 0 1000px #26262B inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #15171C inset !important;
+  box-shadow: 0 0 0 1000px #15171C inset !important;
   -webkit-text-fill-color: #FFFFFF !important;
   caret-color: #FFFFFF !important;
   transition: background-color 600000s 0s, color 600000s 0s;
@@ -637,9 +651,9 @@ input:autofill:focus,
 input:autofill:active,
 textarea:autofill,
 select:autofill {
-  background-color: #26262B !important;
+  background-color: #15171C !important;
   background-image: none !important;
-  box-shadow: 0 0 0 1000px #26262B inset !important;
+  box-shadow: 0 0 0 1000px #15171C inset !important;
   color: #FFFFFF !important;
   -webkit-text-fill-color: #FFFFFF !important;
   caret-color: #FFFFFF !important;
@@ -702,7 +716,7 @@ button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 select {
   -webkit-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23F59E0B' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23FFE600' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
   background-position: right 9px center !important;
   background-size: 10px 6px !important;
@@ -715,8 +729,8 @@ input:focus, textarea:focus, select:focus {
 }
 /* keep the autofill fix's inset shadow winning on autofilled fields */
 input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0 1000px #26262B inset, 0 0 0 3px var(--brand-primary-12) !important;
-  box-shadow: 0 0 0 1000px #26262B inset, 0 0 0 3px var(--brand-primary-12) !important;
+  -webkit-box-shadow: 0 0 0 1000px #15171C inset, 0 0 0 3px var(--brand-primary-12) !important;
+  box-shadow: 0 0 0 1000px #15171C inset, 0 0 0 3px var(--brand-primary-12) !important;
 }
 
 /* Scrollbars: thin white-alpha pill thumb; track disappears into the page. */
@@ -728,21 +742,20 @@ input:-webkit-autofill:focus {
 ::selection { background: var(--brand-primary-25); color: #FFFFFF; }
 
 /* ── Tables: machined panel material (2026-08-22) ──────────────────────────
-   Zebra-free milled rows: chrome header band + letterspaced micro-caps,
+   Zebra-free milled rows: solid header band + Title Case labels,
    1px hairline body rows with a brand hover wash, tabular-nums numerics,
    first/last cell padding rhythm, and a .pmTable milled-plate wrapper so
    any table (DataTable included) reads as one machined panel.
    All :where() → zero specificity: any authored/inline style still wins. */
-:root { --brand-primary-08: rgba(245,158,11,0.08); }
+/* --brand-primary-08 lives in :root at the top of this file. */
 :where(table) th {
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  letter-spacing: normal;
   color: var(--text-tertiary);
 }
 :where(table) thead th {
-  background: linear-gradient(180deg, #17181b 0%, #101114 100%);
+  background: #15171C;
   border-bottom: 1px solid var(--border-default);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
 }
@@ -772,7 +785,7 @@ input:-webkit-autofill:focus {
 .btn-gold {
   display: inline-flex; align-items: center; gap: 8px;
   background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover));
-  color: #241500; font-weight: 800; border: none; border-radius: var(--radius-md);
+  color: var(--on-brand); font-weight: 800; border: none; border-radius: var(--radius-md);
   padding: 10px 18px; cursor: pointer;
   box-shadow: 0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35);
   transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
@@ -861,13 +874,13 @@ input:-webkit-autofill:focus {
    through at the fold and six more destinations below it. The global thumb is
    rgba(255,255,255,0.14), which disappears against the rail's own gradient, so
    seven of twenty-two destinations were effectively invisible.
-   Gold at 32% reads on this surface without shouting, and the track stays
-   transparent so the rail keeps its material. */
-.sidebarNav { scrollbar-width: thin; scrollbar-color: rgba(245,158,11,0.32) transparent; }
+   A brighter white-alpha thumb reads on the black rail and turns neon yellow
+   on hover; the track stays transparent so the rail keeps its glass. */
+.sidebarNav { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.18) transparent; }
 .sidebarNav::-webkit-scrollbar { width: 6px; }
 .sidebarNav::-webkit-scrollbar-track { background: transparent; }
-.sidebarNav::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.32); border-radius: 999px; }
-.sidebarNav::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.58); }
+.sidebarNav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 999px; }
+.sidebarNav::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
 
 /* ══════════════════════════════════════════════════════════════════════════
    SAGUARO KIT — the one shared UI (components/ui/kit.tsx). Every class here
@@ -889,18 +902,18 @@ input:-webkit-autofill:focus {
 .k-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid transparent; font-size: var(--fs-sm); font-weight: 700; line-height: 1; white-space: nowrap; text-decoration: none; cursor: pointer; }
 .k-btn:disabled, .k-btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; pointer-events: none; }
 .k-btn-sm { height: 30px; padding: 0 10px; font-size: var(--fs-xs); }
-.k-btn-primary { background: var(--brand-primary); color: #1d1300; border-color: var(--brand-primary); }
-.k-btn-primary:hover { background: var(--brand-primary-strong); border-color: var(--brand-primary-strong); color: #1d1300; }
-.k-btn-secondary { background: var(--bg-surface-2); color: var(--text-primary); border-color: var(--border-default); }
-.k-btn-secondary:hover { background: var(--bg-elevated); border-color: var(--border-strong); color: var(--text-primary); }
-.k-btn-ghost { background: transparent; color: var(--text-secondary); }
+.k-btn-primary { background: var(--brand-primary); color: var(--on-brand); border-color: var(--brand-primary); }
+.k-btn-primary:hover { background: var(--brand-primary-strong); border-color: var(--brand-primary-strong); color: var(--on-brand); }
+.k-btn-secondary { background: var(--bg-surface-2); color: var(--text-primary); border-color: var(--glass-border); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
+.k-btn-secondary:hover { background: rgba(255,255,255,0.11); border-color: var(--border-strong); color: var(--text-primary); }
+.k-btn-ghost { background: transparent; color: var(--text-primary); }
 .k-btn-ghost:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); border-color: transparent; }
-.k-btn-danger { background: rgba(239,68,68,0.12); color: #FCA5A5; border-color: rgba(239,68,68,0.35); }
-.k-btn-danger:hover { background: rgba(239,68,68,0.22); border-color: rgba(239,68,68,0.55); color: #FECACA; }
+.k-btn-danger { background: rgba(255,77,94,0.14); color: #FF4D5E; border-color: rgba(255,77,94,0.45); }
+.k-btn-danger:hover { background: rgba(255,77,94,0.24); border-color: rgba(255,77,94,0.65); color: #FF7A87; }
 .k-icon-btn { width: 30px; padding: 0; }
 
 /* Card */
-.k-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); min-width: 0; }
+.k-card { background: var(--bg-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); box-shadow: var(--glass-highlight); border-radius: var(--radius-md); min-width: 0; }
 .k-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border-subtle); }
 .k-card-title { font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); }
 .k-card-sub { font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; }
@@ -909,7 +922,7 @@ input:-webkit-autofill:focus {
 
 /* Stat tiles — one compact KPI tile, laid out in a StatRow */
 .k-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--sp-3); }
-.k-stat { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: 2px; min-width: 0; text-decoration: none; color: inherit; }
+.k-stat { background: var(--bg-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: var(--sp-3) var(--sp-4); display: flex; flex-direction: column; gap: 2px; min-width: 0; text-decoration: none; color: inherit; }
 a.k-stat:hover, button.k-stat:hover { border-color: var(--border-strong); background: var(--bg-surface-2); }
 button.k-stat { text-align: left; font: inherit; }
 .k-stat-label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -917,7 +930,7 @@ button.k-stat { text-align: left; font: inherit; }
 .k-stat-sub { font-size: var(--fs-xs); color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Badge */
-.k-badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11.5px; font-weight: 700; white-space: nowrap; border: 1px solid; line-height: 1; }
+.k-badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: normal; white-space: nowrap; border: 1px solid; line-height: 1; }
 .k-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
 /* Toolbar (search + filters + right-side actions above a table) */
@@ -937,7 +950,7 @@ button.k-stat { text-align: left; font: inherit; }
 /* Data table — dense rows, sticky header, row actions on the right */
 .k-table-wrap { overflow-x: auto; }
 .k-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
-.k-table th { position: sticky; top: 0; z-index: 1; background: var(--bg-surface-2); text-align: left; padding: 8px 12px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
+.k-table th { position: sticky; top: 0; z-index: 1; background: rgba(21,23,28,0.88); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--glass-highlight); text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 700; letter-spacing: normal; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; user-select: none; }
 .k-table th[data-sortable="true"] { cursor: pointer; }
 .k-table th[data-sortable="true"]:hover, .k-table th[aria-sort="ascending"], .k-table th[aria-sort="descending"] { color: var(--text-primary); }
 .k-table td { padding: 0 12px; height: 44px; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -953,51 +966,51 @@ button.k-stat { text-align: left; font: inherit; }
 /* Row actions — inline buttons + an overflow menu */
 .k-row-actions { display: inline-flex; align-items: center; gap: 4px; justify-content: flex-end; }
 .k-menu { position: relative; display: inline-flex; }
-.k-menu-list { position: fixed; z-index: 10002; /* portal'd to body — above modals and the chat widget */ min-width: 180px; padding: 4px; background: var(--bg-elevated); border: 1px solid var(--border-default); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); }
+.k-menu-list { position: fixed; z-index: 10002; /* portal'd to body — above modals and the chat widget */ min-width: 180px; padding: 4px; background: var(--bg-elevated); backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); }
 .k-menu-item { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 6px; font-size: var(--fs-sm); color: var(--text-secondary); cursor: pointer; white-space: nowrap; }
 .k-menu-item:hover, .k-menu-item:focus-visible { background: rgba(255,255,255,0.07); color: var(--text-primary); }
-.k-menu-item[data-tone="danger"] { color: #FCA5A5; }
-.k-menu-item[data-tone="danger"]:hover { background: rgba(239,68,68,0.14); }
+.k-menu-item[data-tone="danger"] { color: #FF4D5E; }
+.k-menu-item[data-tone="danger"]:hover { background: rgba(255,77,94,0.14); }
 .k-menu-sep { height: 1px; margin: 4px 2px; background: var(--border-subtle); }
 
 /* Action bar — the detail-page counterpart of RowActions */
-.k-actionbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+.k-actionbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); background: var(--bg-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: var(--radius-md); }
 
 /* Form fields */
 .k-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .k-label { font-size: var(--fs-xs); font-weight: 700; color: var(--text-secondary); }
 .k-label .k-req { color: var(--brand-primary); margin-left: 2px; }
 .k-hint { font-size: var(--fs-xs); color: var(--text-tertiary); }
-.k-error { font-size: var(--fs-xs); color: #FCA5A5; }
-.k-input, .k-textarea, select.k-select { width: 100%; min-height: 40px; padding: 8px 12px; font-size: var(--fs-md); font-weight: 500; color: var(--text-primary); background-color: var(--bg-surface-2); border: 1px solid var(--border-default); border-radius: var(--radius-sm); }
+.k-error { font-size: var(--fs-xs); color: #FF4D5E; }
+.k-input, .k-textarea, select.k-select { width: 100%; min-height: 40px; padding: 8px 12px; font-size: var(--fs-md); font-weight: 500; color: var(--text-primary); background-color: var(--bg-surface-2); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--border-default); border-radius: var(--radius-sm); }
 select.k-select { padding-right: 36px; }
 .k-textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
-/* The app-wide input rules above use !important (13px, #26262B). Kit fields
+/* The app-wide input rules above use !important (13px, solid #15171C). Kit fields
    sit on the token surfaces instead, so they must out-rank them the same way. */
 .k-input, .k-textarea, select.k-select { background-color: var(--bg-surface-2) !important; font-size: var(--fs-md) !important; }
 /* Placeholder must read as a hint, not as a typed value. */
 .k-input::placeholder, .k-textarea::placeholder { color: var(--text-disabled) !important; -webkit-text-fill-color: var(--text-disabled) !important; font-weight: 400; }
-.k-input[aria-invalid="true"], .k-textarea[aria-invalid="true"], select.k-select[aria-invalid="true"] { border-color: rgba(239,68,68,0.6); }
+.k-input[aria-invalid="true"], .k-textarea[aria-invalid="true"], select.k-select[aria-invalid="true"] { border-color: rgba(255,77,94,0.7); }
 .k-form-grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(var(--k-cols, 2), minmax(0, 1fr)); }
 .k-form-grid > .k-span-all { grid-column: 1 / -1; }
-.k-form-section { font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--text-tertiary); padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle); grid-column: 1 / -1; }
+.k-form-section { font-size: 13px; font-weight: 700; letter-spacing: normal; color: var(--text-secondary); padding-bottom: 6px; border-bottom: 1px solid var(--border-subtle); grid-column: 1 / -1; }
 
 /* Modal — ONE size family, sticky header/footer, scrolling body */
-.k-overlay { position: fixed; inset: 0; z-index: 10000; /* above the chat widget (9999) */ background: rgba(3,6,10,0.72); backdrop-filter: blur(2px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 12px 12px; overflow-y: auto; }
-.k-modal { width: var(--modal-w); max-height: 88vh; display: flex; flex-direction: column; background: var(--bg-surface); border: 1px solid var(--border-default); border-radius: var(--radius-lg); box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+.k-overlay { position: fixed; inset: 0; z-index: 10000; /* above the chat widget (9999) */ background: rgba(0,0,0,0.72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; align-items: flex-start; justify-content: center; padding: 6vh 12px 12px; overflow-y: auto; }
+.k-modal { width: var(--modal-w); max-height: 88vh; display: flex; flex-direction: column; background: rgba(18,20,24,0.86); backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); box-shadow: 0 30px 80px rgba(0,0,0,0.6), var(--glass-highlight); }
 .k-modal[data-size="sm"] { width: var(--modal-w-sm); }
 .k-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-6); border-bottom: 1px solid var(--border-subtle); }
 .k-modal-title { font-size: var(--fs-lg); font-weight: 800; color: var(--text-primary); }
 .k-modal-body { padding: var(--sp-6); overflow-y: auto; flex: 1 1 auto; }
-.k-modal-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3) var(--sp-6); border-top: 1px solid var(--border-subtle); background: var(--bg-surface); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.k-modal-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-3) var(--sp-6); border-top: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 
 /* Board (kanban) — columns scroll sideways inside their own container,
    never the page. */
 .k-board { display: flex; gap: var(--sp-3); overflow-x: auto; padding-bottom: var(--sp-2); }
 .k-board-col { flex: 1 0 248px; min-width: 248px; max-width: 320px; display: flex; flex-direction: column; gap: var(--sp-2); }
-.k-board-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); padding: 8px 12px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+.k-board-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); padding: 8px 12px; background: var(--bg-surface-2); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-md); }
 .k-board-list { display: flex; flex-direction: column; gap: var(--sp-2); max-height: 62vh; overflow-y: auto; }
-.k-board-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.k-board-card { background: var(--bg-surface); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); box-shadow: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .k-board-card:hover { border-color: var(--border-strong); background: var(--bg-surface-2); }
 .k-board-empty { padding: 16px; text-align: center; border: 1px dashed var(--border-default); border-radius: var(--radius-sm); color: var(--text-tertiary); font-size: var(--fs-xs); }
 
@@ -1010,8 +1023,8 @@ select.k-select { padding-right: 36px; }
 
 /* Loading placeholder + toast */
 .k-skel { display: inline-block; height: 10px; border-radius: 4px; background: rgba(255,255,255,0.07); animation: pulse 1.4s ease-in-out infinite; }
-.k-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10001; max-width: min(520px, calc(100vw - 32px)); padding: 10px 16px; border-radius: var(--radius-sm); background: var(--bg-elevated); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); font-size: var(--fs-sm); font-weight: 600; color: #6EE7B7; }
-.k-toast[data-tone="bad"] { color: #FCA5A5; }
+.k-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10001; max-width: min(520px, calc(100vw - 32px)); padding: 10px 16px; border-radius: var(--radius-sm); background: var(--bg-elevated); border: 1px solid var(--border-default); box-shadow: var(--shadow-lg); font-size: var(--fs-sm); font-weight: 600; color: var(--success); backdrop-filter: blur(20px) saturate(150%); -webkit-backdrop-filter: blur(20px) saturate(150%); }
+.k-toast[data-tone="bad"] { color: var(--danger); }
 
 /* Empty state */
 .k-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--sp-2); padding: 48px var(--sp-4); }
@@ -1025,8 +1038,8 @@ select.k-select { padding-right: 36px; }
   .k-form-grid { grid-template-columns: minmax(0, 1fr); }
   .k-search { flex: 1 1 100%; }
   /* Row actions stay reachable while the rest of the row scrolls sideways. */
-  .k-table td.k-td-actions, .k-table th:last-child { position: sticky; right: 0; background: var(--bg-surface); box-shadow: -8px 0 12px -8px rgba(0,0,0,0.6); }
-  .k-table th:last-child { background: var(--bg-surface-2); z-index: 2; }
+  .k-table td.k-td-actions, .k-table th:last-child { position: sticky; right: 0; background: var(--bg-solid); box-shadow: -8px 0 12px -8px rgba(0,0,0,0.6); }
+  .k-table th:last-child { background: var(--bg-solid-2); z-index: 2; }
   .k-modal-head, .k-modal-body, .k-modal-foot { padding-left: var(--sp-4); padding-right: var(--sp-4); }
   .k-overlay { padding: 0; align-items: stretch; }
   .k-modal { width: 100%; max-height: none; border-radius: 0; }

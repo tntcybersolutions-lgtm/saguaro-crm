@@ -38,7 +38,7 @@ export interface StatusPillProps {
 export function StatusPill({ module, status, size = 'md', changed, style }: StatusPillProps) {
   const r = resolveStatus(module, status);
   const pad = size === 'sm' ? '2px 7px' : '3px 9px';
-  const fs = size === 'sm' ? 10 : 10.5;
+  const fs = size === 'sm' ? 11 : 12;
 
   return (
     <span
@@ -46,7 +46,7 @@ export function StatusPill({ module, status, size = 'md', changed, style }: Stat
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 5,
         padding: pad, borderRadius: 999,
-        fontSize: fs, fontWeight: 800, letterSpacing: '0.045em', textTransform: 'uppercase',
+        fontSize: fs, fontWeight: 700, letterSpacing: 'normal',
         whiteSpace: 'nowrap',
         color: r.style.fg,
         background: r.style.bg,
@@ -150,7 +150,7 @@ export function LifecycleRail({
             title={`No movement for ${stale} days`}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4,
-              fontSize: 10, fontWeight: 800, letterSpacing: '0.04em',
+              fontSize: 11, fontWeight: 700,
               color: TONES.warn.fg, whiteSpace: 'nowrap',
             }}
           >
@@ -161,7 +161,7 @@ export function LifecycleRail({
       </div>
 
       {showAction && r.action && !compact && (
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.48)', marginTop: 3, lineHeight: 1.35 }}>
+        <div style={{ fontSize: 11.5, color: '#A9B4C4', marginTop: 3, lineHeight: 1.35 }}>
           {r.action}
         </div>
       )}

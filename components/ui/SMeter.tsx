@@ -31,12 +31,12 @@ export interface SMeterProps {
   width?: number;
 }
 
-/* ── Palette (dark shell: white/gold alphas, kit gold, signal red/green) ── */
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
-const RED = '#EF4444';
-const RED_SOFT = '#F87171';
-const GREEN = '#45B37D';
+/* ── Palette (jet black shell: white alphas, brand neon yellow, status red/green). SVG attributes cannot read CSS vars, so these are literal hexes of the tokens. ── */
+const GOLD = '#FFE600';
+const GOLD_HI = '#FFF04A';
+const RED = '#FF4D5E';
+const RED_SOFT = '#FF7A87';
+const GREEN = '#2EE59D';
 const TICK_WHITE = 'rgba(255,255,255,0.72)';
 const TICK_FAINT = 'rgba(255,255,255,0.40)';
 const LABEL_WHITE = 'rgba(255,255,255,0.62)';

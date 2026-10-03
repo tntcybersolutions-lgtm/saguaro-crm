@@ -20,19 +20,20 @@ import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { normalisePhase, stepsDone } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 
-const BORDER = 'rgba(255,255,255,0.10)';
+const BORDER = 'rgba(255,255,255,0.09)';
 
 /* Each phase its own color so the section tabs read as a colorful headline row
    you can scan at a glance — the one you're in is filled and lit, the rest
-   carry a tint of their color so every section still stands out. */
+   carry a tint of their color so every section still stands out. Same bright
+   neon-on-black family as lib/status-colors (docs/COPY-STYLE.md §7). */
 const PHASE_COLORS: Record<string, string> = {
-  overview:  '#94A3B8', // slate
-  precon:    '#60A5FA', // blue
-  execution: '#FBBF24', // gold
-  field:     '#34D399', // green
-  financial: '#FB923C', // orange
-  docs:      '#C084FC', // purple
-  closeout:  '#2DD4BF', // teal
+  overview:  '#A3ACBB', // grey
+  precon:    '#3DA9FF', // blue
+  execution: '#FFC53D', // amber
+  field:     '#2EE59D', // green
+  financial: '#FF8A3D', // orange
+  docs:      '#B08CFF', // violet
+  closeout:  '#2EDBD0', // teal
 };
 
 type PhaseProgress = 'done' | 'progress' | 'todo';
@@ -97,7 +98,9 @@ export default function ProjectPhaseBar() {
       style={{
         display: 'flex', alignItems: 'stretch', gap: 6,
         padding: '10px 14px',
-        background: 'linear-gradient(180deg, #121214, #0c0c0d)',
+        background: 'rgba(255,255,255,0.035)',
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         borderBottom: `1px solid ${BORDER}`,
         overflowX: 'auto',
         WebkitOverflowScrolling: 'touch',
@@ -115,12 +118,12 @@ export default function ProjectPhaseBar() {
         const isDone = state === 'done';
         const inProgress = state === 'progress';
         const href = base + ph.href;
-        const c = PHASE_COLORS[ph.key] || '#94A3B8';
+        const c = PHASE_COLORS[ph.key] || '#A3ACBB';
         const tintBg = `color-mix(in srgb, ${c} 14%, transparent)`;
         return (
           <React.Fragment key={ph.key}>
             {i > 0 && (
-              <span aria-hidden style={{ alignSelf: 'center', color: 'rgba(255,255,255,0.18)', fontWeight: 900, fontSize: 13, flexShrink: 0 }}>›</span>
+              <span aria-hidden style={{ alignSelf: 'center', color: 'rgba(255,255,255,0.28)', fontWeight: 700, fontSize: 13, flexShrink: 0 }}>→</span>
             )}
             <Link
               href={href}
@@ -149,10 +152,10 @@ export default function ProjectPhaseBar() {
               </span>
               <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15, minWidth: 0 }}>
                 <span style={{
-                  fontSize: 9, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  color: isActive ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap',
+                  fontSize: 10.5, fontWeight: 700,
+                  color: isActive ? 'rgba(0,0,0,0.68)' : '#A9B4C4', whiteSpace: 'nowrap',
                 }}>
-                  {isActive ? 'You are here' : isDone ? 'Done' : inProgress ? 'In progress' : `Step ${i + 1}`}
+                  {isActive ? 'You Are Here' : isDone ? 'Done' : inProgress ? 'In Progress' : `Step ${i + 1}`}
                 </span>
                 <span style={{
                   fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap',

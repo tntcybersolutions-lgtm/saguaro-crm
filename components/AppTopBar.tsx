@@ -107,7 +107,7 @@ export default function AppTopBar({
       (UUID_RE.test(seg)
         ? projectNames[seg] || 'Project'
         : seg.length > 20
-        ? seg.slice(0, 12) + '...'
+        ? seg.slice(0, 12) + '…'
         : seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())),
     href: '/' + segments.slice(0, i + 1).join('/'),
     isLast: i === segments.length - 1,
@@ -136,7 +136,7 @@ export default function AppTopBar({
         left: sidebarWidth,
         right: 0,
         height: sidebarTokens.headerHeight,
-        background: 'rgba(20,20,22,0.8)',
+        background: 'rgba(0,0,0,0.72)',
         borderBottom: '1px solid rgba(255,255,255,0.12)',
         backdropFilter: 'blur(16px) saturate(140%)',
         WebkitBackdropFilter: 'blur(16px) saturate(140%)',
@@ -160,17 +160,17 @@ export default function AppTopBar({
           height: 36,
           background: 'none',
           border: 'none',
-          color: '#CBD5E1',
+          color: '#D7DEE8',
           cursor: 'pointer',
           borderRadius: radius.xl,
           transition: 'color .15s, background .15s',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.color = '#FFFFFF';
-          e.currentTarget.style.background = 'rgba(0,0,0,0.04)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#CBD5E1';
+          e.currentTarget.style.color = '#D7DEE8';
           e.currentTarget.style.background = 'none';
         }}
       >
@@ -187,12 +187,12 @@ export default function AppTopBar({
           style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             height: 34, padding: '0 12px 0 10px', marginRight: 4,
-            background: '#141416', border: '1px solid rgba(255,255,255,0.12)', borderRadius: radius.xl,
+            background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: radius.xl,
             color: '#FFFFFF', cursor: 'pointer', fontSize: font.size.sm, fontWeight: font.weight.medium,
             transition: 'background .15s, border-color .15s', flexShrink: 0,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#1c1c1e'; e.currentTarget.style.borderColor = '#F59E0B'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = '#141416'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'var(--brand-primary)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; }}
         >
           {/* Name the destination. "Back" alone makes you click to find out
               where you land — and on a project sub-page there are three
@@ -215,15 +215,15 @@ export default function AppTopBar({
       <nav style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0, overflow: 'hidden' }}>
         {crumbs.map((c, i) => (
           <React.Fragment key={c.href}>
-            {i > 0 && <CaretRight size={11} weight="bold" style={{ color: '#5B677A' }} />}
+            {i > 0 && <CaretRight size={11} weight="bold" style={{ color: '#7A8597' }} />}
             {c.isLast ? (
               <span style={{ fontSize: font.size.lg, fontWeight: font.weight.semibold, color: '#FFFFFF', letterSpacing: '-0.01em' }}>{c.label}</span>
             ) : (
               <Link
                 href={c.href}
-                style={{ fontSize: font.size.lg, color: '#CBD5E1', textDecoration: 'none', transition: 'color .15s' }}
+                style={{ fontSize: font.size.lg, color: '#D7DEE8', textDecoration: 'none', transition: 'color .15s' }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#CBD5E1')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#D7DEE8')}
               >
                 {c.label}
               </Link>
@@ -243,10 +243,10 @@ export default function AppTopBar({
           gap: 8,
           height: 36,
           padding: '0 10px 0 12px',
-          background: '#1c1c1e',
+          background: 'rgba(255,255,255,0.05)',
           border: '1px solid rgba(255,255,255,0.12)',
           borderRadius: radius.xl,
-          color: '#CBD5E1',
+          color: '#D7DEE8',
           fontSize: font.size.md,
           fontWeight: font.weight.medium,
           cursor: 'pointer',
@@ -255,14 +255,14 @@ export default function AppTopBar({
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = 'var(--border-strong)';
-          e.currentTarget.style.background = '#141416';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
-          e.currentTarget.style.background = '#1c1c1e';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
         }}
       >
-        <MagnifyingGlass size={15} style={{ color: '#8094B0' }} />
+        <MagnifyingGlass size={15} style={{ color: '#A9B4C4' }} />
         <span>Search</span>
         <kbd
           style={{
@@ -274,8 +274,8 @@ export default function AppTopBar({
             fontSize: font.size.xs,
             fontWeight: font.weight.semibold,
             fontFamily: font.mono,
-            color: '#CBD5E1',
-            background: '#141416',
+            color: '#D7DEE8',
+            background: 'rgba(255,255,255,0.07)',
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: radius.md,
           }}
@@ -300,7 +300,7 @@ export default function AppTopBar({
           background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',
           border: 'none',
           borderRadius: radius.xl,
-          color: '#241500',
+          color: 'var(--on-brand)',
           fontSize: font.size.md,
           fontWeight: font.weight.bold,
           letterSpacing: '0.01em',
@@ -332,7 +332,7 @@ export default function AppTopBar({
           height: 36,
           background: 'none',
           border: 'none',
-          color: '#CBD5E1',
+          color: '#D7DEE8',
           cursor: 'pointer',
           borderRadius: radius.xl,
           transition: 'color .15s, background .15s',
@@ -343,7 +343,7 @@ export default function AppTopBar({
           e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.color = '#CBD5E1';
+          e.currentTarget.style.color = '#D7DEE8';
           e.currentTarget.style.background = 'none';
         }}
       >
@@ -358,20 +358,20 @@ export default function AppTopBar({
             width: 34,
             height: 34,
             borderRadius: radius.full,
-            background: `linear-gradient(135deg,#FBBF24,#F59E0B)`,
+            background: 'linear-gradient(135deg, var(--brand-primary-strong), var(--brand-primary))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: font.size.md,
             fontWeight: font.weight.bold,
-            color: '#1C1C1E',
+            color: 'var(--on-brand)',
             cursor: 'pointer',
             border: 'none',
-            boxShadow: showUserMenu ? `0 0 0 2px rgba(245, 158, 11,0.35)` : 'none',
+            boxShadow: showUserMenu ? '0 0 0 2px var(--brand-primary-35)' : 'none',
             transition: 'box-shadow .15s',
           }}
           onMouseEnter={(e) => {
-            if (!showUserMenu) e.currentTarget.style.boxShadow = `0 0 0 2px rgba(245, 158, 11,0.35)`;
+            if (!showUserMenu) e.currentTarget.style.boxShadow = '0 0 0 2px var(--brand-primary-35)';
           }}
           onMouseLeave={(e) => {
             if (!showUserMenu) e.currentTarget.style.boxShadow = 'none';
@@ -388,7 +388,9 @@ export default function AppTopBar({
                 position: 'absolute',
                 top: 44,
                 right: 0,
-                background: '#141416',
+                background: 'rgba(22,24,29,0.94)',
+                backdropFilter: 'blur(20px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(150%)',
                 border: '1px solid rgba(255,255,255,0.12)',
                 borderRadius: radius['2xl'],
                 minWidth: 196,
@@ -406,10 +408,10 @@ export default function AppTopBar({
                   padding: '8px 10px 10px',
                 }}
               >
-                <UserCircle size={28} weight="fill" style={{ color: '#8094B0', flexShrink: 0 }} />
+                <UserCircle size={28} weight="fill" style={{ color: '#A9B4C4', flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '10px', fontWeight: font.weight.bold, color: '#8094B0', textTransform: 'uppercase', letterSpacing: '0.08em', lineHeight: 1.4 }}>
-                    Signed in as
+                  <div style={{ fontSize: '11.5px', fontWeight: font.weight.bold, color: '#A9B4C4', lineHeight: 1.4 }}>
+                    Signed In As
                   </div>
                   <div style={{ fontSize: font.size.md, fontWeight: font.weight.semibold, color: '#FFFFFF', lineHeight: 1.3 }}>
                     {userInitials}
@@ -432,10 +434,10 @@ export default function AppTopBar({
                   textDecoration: 'none',
                   transition: 'background .1s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(0,0,0,0.04)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
-                <GearSix size={16} style={{ color: '#CBD5E1' }} /> Settings
+                <GearSix size={16} style={{ color: '#D7DEE8' }} /> Settings
               </Link>
               <button
                 onClick={() => { setShowUserMenu(false); onLogout(); }}
@@ -449,14 +451,14 @@ export default function AppTopBar({
                   borderRadius: radius.lg,
                   background: 'none',
                   border: 'none',
-                  color: '#FF3B30',
+                  color: '#FF4D5E',
                   fontSize: font.size.md,
                   fontWeight: font.weight.medium,
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'background .1s',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,59,48,0.08)')}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,77,94,0.10)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 <SignOut size={16} /> Sign Out

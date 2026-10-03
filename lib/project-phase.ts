@@ -55,8 +55,8 @@ export const PHASE_LABEL: Record<ProjectPhase, string> = {
 
 /** What the choice says, in a GC's words, at project creation. */
 export const PHASE_CHOICES: { value: ProjectPhase; title: string; detail: string }[] = [
-  { value: 'bidding',  title: "We're bidding it", detail: 'Takeoff, estimate, bid packages, proposal' },
-  { value: 'building', title: 'We won it',        detail: 'Budget, subs, schedule, field, pay apps' },
+  { value: 'bidding',  title: "We're Bidding It", detail: 'Takeoff, estimate, bid packages, proposal' },
+  { value: 'building', title: 'We Won It',        detail: 'Budget, subs, schedule, field, pay apps' },
 ];
 
 export interface PhaseStep {
@@ -74,15 +74,15 @@ export interface PhaseStep {
  * pretending a bid flows into billing is what made the single journey wrong.
  */
 export const BIDDING_STEPS: PhaseStep[] = [
-  { key: 'takeoff',      title: 'Measure the drawings', desc: 'Upload the plans and the system measures and prices every trade from them.', href: '/takeoff' },
-  { key: 'estimate',     title: 'Price it',              desc: 'The estimate builds from the takeoff, rolled up by CSI division.', href: '/estimate' },
+  { key: 'takeoff',      title: 'Measure the Drawings', desc: 'Upload the plans and the system measures and prices every trade from them.', href: '/takeoff' },
+  { key: 'estimate',     title: 'Price It',              desc: 'The estimate builds from the takeoff, rolled up by CSI division.', href: '/estimate' },
   /* Levelling is FOLDED IN here rather than being its own step. It has no
      standalone screen — you level a specific package, from that package —
      so a separate step would have carried a number the navigation could
      never show, and a sequence whose numbers do not match the menu is the
      problem this file exists to solve. */
-  { key: 'bid-packages', title: 'Send bid packages',     desc: 'Scoped packages go out to your subs. Levelling compares what comes back — spread, gaps, coverage.', href: '/bid-packages' },
-  { key: 'proposal',     title: 'Submit the proposal',   desc: 'The jacket: scope, quantities and your number in one document.', href: '/proposal' },
+  { key: 'bid-packages', title: 'Send Bid Packages',     desc: 'Scoped packages go out to your subs. Levelling compares what comes back — spread, gaps, coverage.', href: '/bid-packages' },
+  { key: 'proposal',     title: 'Submit the Proposal',   desc: 'The jacket: scope, quantities and your number in one document.', href: '/proposal' },
 ];
 
 /**
@@ -91,12 +91,12 @@ export const BIDDING_STEPS: PhaseStep[] = [
  * right sequence for a job in hand.
  */
 export const BUILDING_STEPS: PhaseStep[] = [
-  { key: 'budget',     title: 'Set contract & budget', desc: 'Confirm the contract sum. Budget lines come from the takeoff.', href: '/budget' },
-  { key: 'subs',       title: 'Award & onboard subs',  desc: 'Award the winners — contracts, insurance and W-9s collect themselves.', href: '/subs' },
-  { key: 'schedule',   title: 'Build the schedule',    desc: 'Sequence the work. The critical path drives field priorities.', href: '/schedule' },
-  { key: 'daily-logs', title: 'Run the field',         desc: 'Daily logs capture crews, weather and progress from the site.', href: '/daily-logs' },
-  { key: 'pay-apps',   title: 'Bill the owner',        desc: 'The G702/G703 builds itself from live project data.', href: '/pay-apps' },
-  { key: 'closeout',   title: 'Close it out',          desc: 'Punch, closeout documents, and the job comes off your active list.', href: '/closeout' },
+  { key: 'budget',     title: 'Set Contract & Budget', desc: 'Confirm the contract sum. Budget lines come from the takeoff.', href: '/budget' },
+  { key: 'subs',       title: 'Award & Onboard Subs',  desc: 'Award the winners — contracts, insurance and W-9s collect themselves.', href: '/subs' },
+  { key: 'schedule',   title: 'Build the Schedule',    desc: 'Sequence the work. The critical path drives field priorities.', href: '/schedule' },
+  { key: 'daily-logs', title: 'Run the Field',         desc: 'Daily logs capture crews, weather and progress from the site.', href: '/daily-logs' },
+  { key: 'pay-apps',   title: 'Bill the Owner',        desc: 'The G702/G703 builds itself from live project data.', href: '/pay-apps' },
+  { key: 'closeout',   title: 'Close It Out',          desc: 'Punch, closeout documents, and the job comes off your active list.', href: '/closeout' },
 ];
 
 export const stepsForPhase = (phase: ProjectPhase): PhaseStep[] =>

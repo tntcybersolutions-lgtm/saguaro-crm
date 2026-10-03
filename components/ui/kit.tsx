@@ -142,11 +142,13 @@ export type StatItem = {
   onClick?: () => void;
 };
 
+/* Same family as the status pills (lib/status-colors): good = Ongoing green,
+   warn = Under Contract amber, bad = Overdue red. */
 const TONE_COLOR: Record<NonNullable<StatItem['tone']>, string | undefined> = {
   default: undefined,
-  good: '#34D399',
-  warn: '#FBBF24',
-  bad: '#F87171',
+  good: STATUS_COLORS.ongoing.color,
+  warn: STATUS_COLORS.under_contract.color,
+  bad: STATUS_COLORS.overdue.color,
 };
 
 export function StatTile({ label, value, sub, tone = 'default', href, onClick }: StatItem) {
@@ -174,8 +176,8 @@ export function StatRow({ items }: { items: StatItem[] }) {
 
 export type BadgeTone = StatusKind | 'neutral' | 'gold';
 
-const BADGE_NEUTRAL = { color: '#CBD5E1', bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.14)' };
-const BADGE_GOLD = { color: 'var(--brand-primary-strong)', bg: 'var(--brand-primary-12)', border: 'var(--brand-primary-35)' };
+const BADGE_NEUTRAL = { color: '#D7DEE8', bg: 'rgba(255,255,255,0.08)', border: 'rgba(255,255,255,0.18)' };
+const BADGE_GOLD = { color: 'var(--brand-primary)', bg: 'var(--brand-primary-12)', border: 'var(--brand-primary-35)' };
 
 /** Status badge. Tones are the six fixed status colors (lib/status-colors). */
 export function Badge({ tone = 'neutral', dot, children }: { tone?: BadgeTone; dot?: boolean; children: React.ReactNode }) {
@@ -532,7 +534,7 @@ export function Field({
   children: React.ReactNode;
 }) {
   // A <div> wrapper with a real <label htmlFor>: wrapping everything in a
-  // <label> would pull the hint/error under the global uppercase label rule.
+  // <label> would pull the hint/error under the global label rule.
   const autoId = React.useId();
   const child = React.isValidElement<{ id?: string }>(children) ? children : null;
   const id = child?.props.id ?? autoId;

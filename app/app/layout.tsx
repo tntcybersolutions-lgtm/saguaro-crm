@@ -33,14 +33,14 @@ import { ensureBrowserSession } from '../../lib/supabase-browser';
 interface ChatMsg { role: 'user' | 'assistant'; content: string; }
 
 const QUICK_PROMPTS = [
-  { label: 'Write bid intro letter', prompt: 'Write a professional bid cover letter for a commercial construction project. Make it persuasive and include our qualifications, approach, and value proposition.' },
-  { label: 'G702 pay app walkthrough', prompt: 'Walk me through how to properly fill out an AIA G702/G703 Application for Payment. What are the most common mistakes that cause rejection?' },
-  { label: 'Change order negotiation', prompt: 'How do I negotiate a change order with an owner who is pushing back on cost? Give me specific talking points and strategies.' },
-  { label: 'Subcontractor default', prompt: 'One of my subcontractors is behind schedule and I think they may default. What are my options and what steps should I take immediately to protect myself?' },
+  { label: 'Write Bid Intro Letter', prompt: 'Write a professional bid cover letter for a commercial construction project. Make it persuasive and include our qualifications, approach, and value proposition.' },
+  { label: 'G702 Pay App Walkthrough', prompt: 'Walk me through how to properly fill out an AIA G702/G703 Application for Payment. What are the most common mistakes that cause rejection?' },
+  { label: 'Change Order Negotiation', prompt: 'How do I negotiate a change order with an owner who is pushing back on cost? Give me specific talking points and strategies.' },
+  { label: 'Subcontractor Default', prompt: 'One of my subcontractors is behind schedule and I think they may default. What are my options and what steps should I take immediately to protect myself?' },
   { label: 'Lien rights — Arizona', prompt: 'Explain Arizona mechanics lien rights for a general contractor. What are the deadlines, required notices, and steps to perfect a lien?' },
-  { label: 'Win rate improvement', prompt: 'My company has been winning about 20% of bids. What are the most effective strategies to improve win rate in commercial construction?' },
-  { label: 'Cash flow projection', prompt: 'Help me build a cash flow projection for a $3M commercial project. What are the key inputs, how do I model retainage, and what are the typical cash flow risk periods?' },
-  { label: 'OSHA violation response', prompt: 'We just received an OSHA citation on one of our job sites. What are our options, timeline to respond, and how do we negotiate a reduction in penalties?' },
+  { label: 'Win Rate Improvement', prompt: 'My company has been winning about 20% of bids. What are the most effective strategies to improve win rate in commercial construction?' },
+  { label: 'Cash Flow Projection', prompt: 'Help me build a cash flow projection for a $3M commercial project. What are the key inputs, how do I model retainage, and what are the typical cash flow risk periods?' },
+  { label: 'OSHA Violation Response', prompt: 'We just received an OSHA citation on one of our job sites. What are our options, timeline to respond, and how do we negotiate a reduction in penalties?' },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -250,7 +250,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .ai-msg-content strong { color: ${colors.text}; }
         .ai-msg-content code { background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
         .ai-msg-content h3 { color: ${colors.gold}; font-size: 13px; margin: 10px 0 4px; }
-        .quick-prompt-btn:hover { background: rgba(245, 158, 11,.2) !important; border-color: rgba(245, 158, 11,.5) !important; }
+        .quick-prompt-btn:hover { background: rgba(255,230,0,.18) !important; border-color: rgba(255,230,0,.5) !important; }
       `}</style>
 
       {/* ── Sidebar (Desktop) ────────────────────────────────────────── */}
@@ -354,7 +354,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <div style={{ fontWeight: 700, fontSize: 14, color: colors.text, marginBottom: 4 }}>Sage AI Expert</div>
                   <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.6 }}>Expert in bidding, AIA contracts, lien law, finance,<br/>subcontractors, OSHA, estimating & more.</div>
                 </div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Quick Actions</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: colors.textMuted, marginBottom: 8 }}>Quick Actions</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {QUICK_PROMPTS.map(q => (
                     <button
@@ -371,7 +371,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             ) : (
               aiMessages.map((msg, i) => (
                 <div key={i} style={{ display: 'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', gap: 10, alignItems: 'flex-start' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, background: msg.role === 'user' ? `linear-gradient(135deg,${colors.gold},#B85C2A)` : '#2a2410', color: msg.role === 'user' ? colors.dark : colors.gold }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, background: msg.role === 'user' ? colors.gold : 'rgba(255,255,255,0.07)', color: msg.role === 'user' ? 'var(--on-brand)' : colors.gold }}>
                     {msg.role === 'user' ? userInitials : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
                   </div>
                   <div style={{ maxWidth: '82%', background: msg.role === 'user' ? colors.goldDim : colors.dark, border: `1px solid ${msg.role === 'user' ? colors.goldBorder : colors.border}`, borderRadius: msg.role === 'user' ? '12px 4px 12px 12px' : '4px 12px 12px 12px', padding: '10px 14px', fontSize: 13, lineHeight: 1.65, color: colors.text }}>
@@ -406,7 +406,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 value={aiMsg}
                 onChange={e => setAiMsg(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendAI()}
-                placeholder="Ask anything — bidding, contracts, lien, OSHA, finance..."
+                placeholder="Ask anything — bidding, contracts, lien, OSHA, finance…"
                 style={{ flex: 1, background: colors.raised, border: `1px solid ${colors.border}`, borderRadius: 8, padding: '10px 14px', color: colors.text, fontSize: 13, outline: 'none', transition: 'border-color .15s' }}
                 onFocus={e => (e.target.style.borderColor = colors.gold)}
                 onBlur={e => (e.target.style.borderColor = colors.border)}
@@ -415,9 +415,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <button
                 onClick={() => sendAI()}
                 disabled={aiLoading || !aiMsg.trim()}
-                style={{ padding: '10px 18px', background: aiLoading || !aiMsg.trim() ? 'rgba(245, 158, 11,.3)' : colors.gold, border: 'none', borderRadius: 8, color: colors.dark, fontWeight: 800, cursor: aiLoading || !aiMsg.trim() ? 'not-allowed' : 'pointer', fontSize: 13, transition: 'background .15s', whiteSpace: 'nowrap' }}
+                style={{ padding: '10px 18px', background: aiLoading || !aiMsg.trim() ? 'var(--brand-primary-25)' : colors.gold, border: 'none', borderRadius: 8, color: 'var(--on-brand)', fontWeight: 800, cursor: aiLoading || !aiMsg.trim() ? 'not-allowed' : 'pointer', fontSize: 13, transition: 'background .15s', whiteSpace: 'nowrap' }}
               >
-                {aiLoading ? '...' : 'Send'}
+                {aiLoading ? '…' : 'Send'}
               </button>
             </div>
             <div style={{ fontSize: 10, color: colors.textFaint, marginTop: 6 }}>Powered by Sage · Enter to send · Expert in construction law, finance & operations</div>
@@ -481,7 +481,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ color: colors.gold }}><circle cx={12} cy={12} r={10}/><circle cx={12} cy={12} r={6}/><circle cx={12} cy={12} r={2}/></svg>
                   Score a Bid
                 </div>
-                <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>Navigate to the Bids tab to use the full AI scorer</div>
+                <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>Open the Bids tab to use the full AI scorer.</div>
               </div>
               <button onClick={() => setShowScoreModal(false)} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', fontSize: 22, lineHeight: 1, padding: 4, display: 'inline-flex', alignItems: 'center' }}><X size={20} weight="regular" color={colors.textMuted} /></button>
             </div>
@@ -491,10 +491,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </p>
               <a
                 href="/app/bids?tab=score"
-                style={{ display: 'block', marginTop: 16, padding: '10px', background: colors.gold, borderRadius: 8, color: colors.dark, fontWeight: 800, fontSize: 14, textAlign: 'center', textDecoration: 'none' }}
+                style={{ display: 'block', marginTop: 16, padding: '10px', background: colors.gold, borderRadius: 8, color: 'var(--on-brand)', fontWeight: 800, fontSize: 14, textAlign: 'center', textDecoration: 'none' }}
                 onClick={() => setShowScoreModal(false)}
               >
-                Open Bid Scorer <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><ArrowRight size={16} weight="regular" color={colors.dark} /></span>
+                Open Bid Scorer <span style={{ display: 'inline-flex', verticalAlign: 'middle' }}><ArrowRight size={16} weight="regular" color="#0A0A00" /></span>
               </a>
             </div>
           </div>
