@@ -74,7 +74,7 @@ export const cardShadow =
 
 /** Uppercase micro-label used across the premium surface. */
 export const microLabel: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 700,
   color: CHART.textTertiary,
 };
