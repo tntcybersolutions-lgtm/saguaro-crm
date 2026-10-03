@@ -1,25 +1,40 @@
 'use client';
+/**
+ * Document Versions — version control for contracts, drawings, specs and
+ * submittals. Pass 4 on the kit.
+ *
+ * Anatomy: title + one primary action (New Document; Bulk Upload secondary)
+ * → StatRow (documents / approved / under review / drafts / checked out /
+ * last activity — tiles filter the register) → Toolbar (search, category)
+ * → the register as a kit DataTable with History / Compare / Upload Version /
+ * Check Out / Metadata / Access row actions. Every dialog is a FormModal; the
+ * slip-sheet revision overlay stays full-screen.
+ *
+ * Every read / write is the one this screen already used:
+ *   list      GET    /api/documents/versions
+ *   upload    POST   /api/documents/versions/upload-url → storage → POST /api/documents/versions
+ *   lock      POST   /api/documents/versions/checkout   { documentId, action }
+ *   workflow  POST   /api/documents/versions/approve    { documentId, versionId, action }
+ *   access    POST / DELETE /api/documents/versions/access
+ *   download  POST   /api/documents/versions/download   { versionId }
+ */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { openPdf } from '@/components/PdfViewer';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { humanError } from '@/lib/errors';
 import {
-  Folder, UploadSimple, ClockCounterClockwise, ArrowsLeftRight, Info, Users,
+  UploadSimple, ClockCounterClockwise, ArrowsLeftRight, Info, Users,
   LockSimple, LockSimpleOpen, DownloadSimple, CheckCircle, PaperPlaneTilt, Plus, X,
-  MagnifyingGlass, FileText, Trash, Files, Fingerprint, WarningCircle,
+  MagnifyingGlass, FileText, Trash, Files, Fingerprint, WarningCircle, ArrowsClockwise,
 } from '@phosphor-icons/react';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
-import { StandardSelect } from '@/components/ui/Select';
 import RevisionCompare, { overlaySupported } from '@/components/drawings/RevisionCompare';
-import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
-
-// ─── Color Palette ────────────────────────────────────────────────
-const C = {
-  GOLD: 'var(--brand-primary)', BG: 'var(--bg-base)', RAISED: 'var(--bg-surface)', BORDER: 'rgba(255,255,255,0.12)',
-  TEXT: '#FFFFFF', DIM: '#8094B0', GREEN: '#2CFF7A', RED: '#FF3B30',
-  AMBER: 'var(--warning)', BLUE: 'var(--brand-primary)', PURPLE: '#FF8A00',
-};
+import {
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
 
 // The private `documents` bucket enforces this MIME allow-list on upload.
 const ACCEPT = [
@@ -75,13 +90,14 @@ type Document = {
 
 type ProjectOpt = { id: string; name: string };
 type ModalView = 'none' | 'upload' | 'history' | 'compare' | 'metadata' | 'access' | 'bulk';
+type StatusFilter = 'all' | DocStatus | 'checkedOut';
 
 const CATEGORIES = ['All', 'Contracts', 'Drawings', 'Specs', 'Submittals', 'RFIs', 'Change Orders', 'Safety', 'Uncategorized'];
 const UPLOAD_CATS = CATEGORIES.filter((c) => c !== 'All');
 
-const statusColor: Record<DocStatus, string> = {
-  Draft: C.DIM, 'Under Review': C.AMBER, Approved: C.GREEN, Superseded: C.RED,
-};
+/** One status → one badge. Draft neutral, Under Review amber, Approved green, Superseded grey. */
+const STATUS_TONE: Record<DocStatus, BadgeTone> = { Draft: 'neutral', 'Under Review': 'under_contract', Approved: 'ongoing', Superseded: 'closed' };
+const STATUS_RANK: Record<string, number> = { 'Under Review': 0, Draft: 1, Approved: 2, Superseded: 3 };
 
 // ─── Helpers ──────────────────────────────────────────────────────
 function fmtDate(iso: string | null): string {
@@ -107,6 +123,74 @@ async function sha256hex(buf: ArrayBuffer): Promise<string> {
   }
 }
 
+const CSS = `
+.dvWs > .k-page { max-width: none; }
+.dvDoc { display: flex; flex-direction: column; gap: 3px; max-width: 420px; min-width: 0; }
+.dvDoc > b { color: var(--text-primary); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dvDocMeta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.dvDocNote { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dvMono { font-family: ui-monospace, monospace; font-size: var(--fs-sm); color: var(--brand-primary); font-weight: 700; }
+.dvMuted { color: var(--text-tertiary); }
+.dvWs .k-table tbody tr[data-locked="true"] td:first-child { box-shadow: inset 3px 0 0 var(--status-overdue); }
+.dvFile { display: flex; gap: 8px; align-items: center; }
+.dvFile .k-input { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
+.dvNext { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--bg-surface-2); border: 1px solid var(--border-subtle); border-left: 3px solid var(--brand-primary); font-size: var(--fs-xs); color: var(--text-tertiary); }
+.dvNext b { color: var(--text-primary); }
+.dvTimeline { position: relative; padding-left: 24px; }
+.dvTimeline::before { content: ''; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: var(--border-default); }
+.dvVer { position: relative; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border-subtle); }
+.dvVer:last-child { border-bottom: 0; margin-bottom: 0; padding-bottom: 0; }
+.dvVer::before { content: ''; position: absolute; left: -20px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--border-default); border: 2px solid var(--bg-solid); }
+.dvVer[data-latest="true"]::before { background: var(--brand-primary); }
+.dvVerHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.dvVerTitle { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+.dvVerTitle b { font-family: ui-monospace, monospace; font-size: var(--fs-md); color: var(--text-primary); }
+.dvVerTitle span { font-family: ui-monospace, monospace; font-size: var(--fs-xs); color: var(--text-tertiary); }
+.dvVerMeta { font-size: var(--fs-xs); color: var(--text-tertiary); margin-bottom: 4px; line-height: 1.5; }
+.dvVerMeta b { color: var(--text-primary); font-weight: 600; }
+.dvVerActions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+.dvVerify { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: var(--radius-sm); font-size: var(--fs-sm); color: var(--text-primary); margin-bottom: 14px; }
+.dvVerify[data-same="true"] { background: rgba(44,255,122,.08); border: 1px solid rgba(44,255,122,.3); }
+.dvVerify[data-same="false"] { background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.35); }
+.dvVerify > svg { flex-shrink: 0; }
+.dvVerify[data-same="true"] > svg { color: var(--status-ongoing); }
+.dvVerify[data-same="false"] > svg { color: var(--status-under-contract); }
+.dvCmp { border: 1px solid var(--border-default); border-radius: var(--radius-sm); overflow: hidden; }
+.dvCmpRow { display: grid; grid-template-columns: 1fr 1.2fr 1.2fr; gap: 8px; padding: 8px 12px; font-size: var(--fs-xs); border-top: 1px solid var(--border-subtle); }
+.dvCmpRow:first-child { border-top: 0; background: var(--bg-solid-2); font-weight: 700; color: var(--text-tertiary); }
+.dvCmpRow > span { word-break: break-word; min-width: 0; }
+.dvCmpRow > span:first-child { color: var(--text-tertiary); }
+.dvCmpRow[data-diff="true"] > span + span { color: var(--text-primary); }
+.dvCmpRow[data-diff="false"] > span + span { color: var(--text-tertiary); }
+.dvCmpRow[data-diff="true"] > span:last-child { font-weight: 600; }
+.dvCmpFoot { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; flex-wrap: wrap; }
+.dvGrant { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg-surface-2); border-radius: var(--radius-sm); margin-bottom: 4px; border: 1px solid var(--border-subtle); }
+.dvGrantRow { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+.dvGrantRow > :first-child { flex: 1 1 200px; }
+.dvBulk { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 12px; background: var(--bg-surface-2); border-radius: var(--radius-sm); margin-bottom: 4px; border: 1px solid var(--border-subtle); font-size: var(--fs-sm); color: var(--text-primary); }
+.dvBulk > span { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.dvBulk > span > span:first-of-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dvBulkEmpty { text-align: center; padding: 28px; color: var(--text-tertiary); font-size: var(--fs-sm); border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); margin-bottom: 16px; }
+.dvSection { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); margin-bottom: 8px; }
+.dvOverlay { position: fixed; inset: 0; z-index: 1100; background: var(--bg-base); display: flex; flex-direction: column; }
+.dvOverlayBar { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: var(--bg-solid); border-bottom: 1px solid var(--border-default); flex-wrap: wrap; }
+.dvOverlayTitle { font-size: var(--fs-md); font-weight: 700; color: var(--brand-primary); display: flex; align-items: center; gap: 8px; }
+.dvOverlaySub { font-size: var(--fs-xs); color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dvOverlayCtl { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.dvOverlayCtl select.k-select { width: auto; min-width: 190px; }
+.dvRevA { font-size: var(--fs-xs); font-weight: 700; color: var(--status-overdue); }
+.dvRevB { font-size: var(--fs-xs); font-weight: 700; color: var(--status-lead); }
+.dvOverlayBody { flex: 1; min-height: 0; position: relative; }
+.dvCenter { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.dvSpin { width: 32px; height: 32px; border: 3px solid var(--border-default); border-top-color: var(--brand-primary); border-radius: 50%; animation: dvspin 1s linear infinite; margin: 0 auto 12px; }
+@keyframes dvspin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) {
+  .dvWs .k-btn, .dvWs .k-stat, .dvWs select.k-select, .dvWs .k-input { min-height: 44px; }
+  .dvWs .k-table td { height: 48px; }
+  .dvDoc { max-width: 220px; }
+}
+`;
+
 // ─── Component ────────────────────────────────────────────────────
 export default function DocumentVersionsPage() {
   const [loading, setLoading] = useState(true);
@@ -115,6 +199,7 @@ export default function DocumentVersionsPage() {
   const [projects, setProjects] = useState<ProjectOpt[]>([]);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
   const [modalView, setModalView] = useState<ModalView>('none');
   const [compareA, setCompareA] = useState<string>('');
@@ -129,6 +214,7 @@ export default function DocumentVersionsPage() {
   const [uploadNotes, setUploadNotes] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState('');
 
   // bulk
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
@@ -144,14 +230,10 @@ export default function DocumentVersionsPage() {
   const [overlayUrls, setOverlayUrls] = useState<{ a: string; b: string } | null>(null);
   const [overlayErr, setOverlayErr] = useState('');
 
-  const [toast, setToast] = useState<{ msg: string; err?: boolean } | null>(null);
+  const { toast, show } = useToast(3200);
+  const showToast = useCallback((msg: string, err?: boolean) => { show(msg, err ? 'bad' : 'good'); }, [show]);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const bulkInputRef = useRef<HTMLInputElement>(null);
-
-  const showToast = useCallback((msg: string, err?: boolean) => {
-    setToast({ msg, err });
-    setTimeout(() => setToast(null), 3200);
-  }, []);
 
   // ─ Data loaders ─
   const load = useCallback(async () => {
@@ -191,6 +273,8 @@ export default function DocumentVersionsPage() {
   const filtered = useMemo(() => {
     let list = documents;
     if (activeCategory !== 'All') list = list.filter((d) => d.category === activeCategory);
+    if (statusFilter === 'checkedOut') list = list.filter((d) => !!d.checkedOutBy);
+    else if (statusFilter !== 'all') list = list.filter((d) => d.status === statusFilter);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((d) =>
@@ -201,18 +285,22 @@ export default function DocumentVersionsPage() {
       );
     }
     return list;
-  }, [documents, activeCategory, search]);
+  }, [documents, activeCategory, statusFilter, search]);
 
   const catCounts = useMemo(() => {
     const map: Record<string, number> = { All: documents.length };
     for (const d of documents) map[d.category] = (map[d.category] || 0) + 1;
     return map;
   }, [documents]);
+  const filtersActive = !!search || activeCategory !== 'All' || statusFilter !== 'all';
+  const clearFilters = () => { setSearch(''); setActiveCategory('All'); setStatusFilter('all'); };
+  const toggleStatus = (s: StatusFilter) => setStatusFilter((prev) => (prev === s ? 'all' : s));
 
   // ─ Modal control ─
   const openModal = (doc: Document | null, view: ModalView) => {
     setSelectedDoc(doc);
     setModalView(view);
+    setFormError('');
     if (view === 'compare' && doc && doc.versions.length >= 2) {
       setCompareA(doc.versions[doc.versions.length - 2].id);
       setCompareB(doc.versions[doc.versions.length - 1].id);
@@ -227,7 +315,7 @@ export default function DocumentVersionsPage() {
     if (view === 'bulk') { setBulkFiles([]); setBulkCategory('Uncategorized'); setBulkProjectId(''); }
     if (view === 'access') { setAccessEmail(''); setAccessRole('viewer'); }
   };
-  const closeModal = () => { setModalView('none'); setSelectedDoc(null); setUploadFile(null); setBulkFiles([]); };
+  const closeModal = () => { setModalView('none'); setSelectedDoc(null); setUploadFile(null); setBulkFiles([]); setFormError(''); };
 
   // ─ Revision overlay control ─
   const canOverlayVersion = (v: DocVersion) => overlaySupported(v.fileName, v.fileType);
@@ -312,9 +400,10 @@ export default function DocumentVersionsPage() {
 
   // ─ Handlers ─
   const handleUpload = async () => {
-    if (!uploadFile) { showToast('Please choose a file.', true); return; }
-    if (!selectedDoc && !uploadTitle.trim()) { showToast('Title is required.', true); return; }
+    if (!uploadFile) { setFormError('Please choose a file.'); return; }
+    if (!selectedDoc && !uploadTitle.trim()) { setFormError('Title is required.'); return; }
     setBusy(true);
+    setFormError('');
     try {
       const meta = await uploadToBucket(uploadFile, selectedDoc?.id);
       await finalize({
@@ -329,15 +418,16 @@ export default function DocumentVersionsPage() {
       closeModal();
       await load();
     } catch (e: any) {
-      showToast(e?.message || 'Upload failed.', true);
+      setFormError(e?.message || 'Upload failed.');
     } finally {
       setBusy(false);
     }
   };
 
   const handleBulkUpload = async () => {
-    if (bulkFiles.length === 0) { showToast('Add at least one file.', true); return; }
+    if (bulkFiles.length === 0) { setFormError('Add at least one file.'); return; }
     setBusy(true);
+    setFormError('');
     let ok = 0;
     const fails: string[] = [];
     for (const f of bulkFiles) {
@@ -424,278 +514,166 @@ export default function DocumentVersionsPage() {
     } catch (e: any) { showToast(e?.message || 'Download failed.', true); }
   };
 
-  // ─── Styles ─────────────────────────────────────────────────────
-  const sBtn = (bg: string, small?: boolean): React.CSSProperties => ({
-    background: bg, color: bg === C.GOLD || bg === C.AMBER ? '#0A0A00' : '#fff', border: 'none', borderRadius: 6,
-    padding: small ? '5px 10px' : '8px 16px', cursor: 'pointer',
-    fontSize: small ? 12 : 13, fontWeight: 600, whiteSpace: 'nowrap',
-    display: 'inline-flex', alignItems: 'center', gap: 6, opacity: busy ? 0.85 : 1,
-  });
-  const sInput: React.CSSProperties = {
-    background: C.BG, border: `1px solid ${C.BORDER}`, borderRadius: 6,
-    padding: '8px 12px', color: C.TEXT, fontSize: 13, width: '100%', outline: 'none',
-  };
-  const sCard: React.CSSProperties = { background: C.RAISED, border: `1px solid ${C.BORDER}`, borderRadius: 10, padding: 16, marginBottom: 8 };
-  const sOverlay: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(2,6,15,0.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 };
-  const sModal: React.CSSProperties = { background: C.RAISED, border: `1px solid ${C.BORDER}`, borderRadius: 12, padding: 24, width: 660, maxWidth: '100%', maxHeight: '85vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-lg)' };
-  const sBadge = (color: string): React.CSSProperties => ({ display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 27%, transparent)` });
-  const sLabel: React.CSSProperties = { fontSize: 12, color: C.DIM, display: 'block', marginBottom: 4 };
+  // ─── Stats ───
+  const revisionCount = documents.reduce((s, d) => s + d.versions.length, 0);
+  const approvedN = documents.filter((d) => d.status === 'Approved').length;
+  const reviewN = documents.filter((d) => d.status === 'Under Review').length;
+  const draftN = documents.filter((d) => d.status === 'Draft').length;
+  const lockedDocs = documents.filter((d) => d.checkedOutBy);
+  const lockedNames = Array.from(new Set(lockedDocs.map((d) => d.checkedOutBy as string)));
+  const lastMod = documents.reduce<string | null>((acc, d) => (d.lastModified && (!acc || d.lastModified > acc) ? d.lastModified : acc), null);
+  const stats: StatItem[] = loading
+    ? ['Documents', 'Approved', 'Under Review', 'Drafts', 'Checked Out', 'Last Activity'].map((label) => ({ label, value: '—', sub: 'Loading…' }))
+    : [
+        { label: 'Documents', value: documents.length, sub: filtersActive ? 'Click to show everything' : `${revisionCount} revision${revisionCount === 1 ? '' : 's'} on file`, onClick: clearFilters },
+        { label: 'Approved', value: approvedN, tone: approvedN > 0 ? 'good' : 'default', sub: statusFilter === 'Approved' ? 'Filtered — click to clear' : 'Released & current', onClick: () => toggleStatus('Approved') },
+        { label: 'Under Review', value: reviewN, tone: reviewN > 0 ? 'warn' : 'default', sub: statusFilter === 'Under Review' ? 'Filtered — click to clear' : 'Awaiting approval', onClick: () => toggleStatus('Under Review') },
+        { label: 'Drafts', value: draftN, sub: statusFilter === 'Draft' ? 'Filtered — click to clear' : 'Not yet submitted', onClick: () => toggleStatus('Draft') },
+        { label: 'Checked Out', value: lockedDocs.length, tone: lockedDocs.length > 0 ? 'bad' : 'default', sub: statusFilter === 'checkedOut' ? 'Filtered — click to clear' : lockedNames.length ? `Locked by ${lockedNames.slice(0, 2).join(', ')}${lockedNames.length > 2 ? '…' : ''}` : 'Nothing locked', onClick: () => toggleStatus('checkedOut') },
+        { label: 'Last Activity', value: lastMod ? fmtDate(lastMod) : '—', sub: 'Most recent revision' },
+      ];
 
-  const responsiveCSS = `
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .dvc-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
-    .dvc-tablewrap { overflow-x: auto; }
-    .dvc-row, .dvc-head { display: grid; grid-template-columns: 2fr 1fr 0.8fr 1fr 1fr 1.7fr; min-width: 880px; }
-    @media (max-width: 720px) { .dvc-stats { grid-template-columns: repeat(2, 1fr); } }
-  `;
-
-  if (loading) {
-    return (
-      <PremiumSurface maxWidth={2200}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 40, height: 40, border: `3px solid ${C.BORDER}`, borderTopColor: C.GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-            <div style={{ color: C.DIM, fontSize: 14 }}>Loading documents…</div>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          </div>
+  // ─── Register columns + actions ───
+  const columns: Column<Document>[] = [
+    { key: 'title', header: 'Document', accessor: (d) => d.title.toLowerCase(), render: (d) => (
+      <div className="dvDoc">
+        <b title={d.title}>{d.title}</b>
+        <div className="dvDocMeta">
+          <span>{d.project}</span>
+          {d.tags.map((t) => <Badge key={t} tone="neutral">{t}</Badge>)}
+          {d.checkedOutBy && <Badge tone="overdue"><LockSimple size={10} weight="fill" /> {d.checkedOutBy}</Badge>}
         </div>
-      </PremiumSurface>
+        {d.versions.length > 0 && (
+          <div className="dvDocNote">{d.versions.length} version{d.versions.length !== 1 ? 's' : ''}{d.versions[d.versions.length - 1]?.revisionNotes ? ` · latest: ${d.versions[d.versions.length - 1].revisionNotes}` : ''}</div>
+        )}
+      </div>
+    ) },
+    { key: 'category', header: 'Category', accessor: (d) => d.category, render: (d) => <span className="dvMuted">{d.category}</span> },
+    { key: 'currentVersion', header: 'Version', accessor: (d) => d.currentVersionNumber, render: (d) => <span className="dvMono">{d.currentVersion}</span> },
+    { key: 'status', header: 'Status', accessor: (d) => STATUS_RANK[d.status] ?? 9, render: (d) => <Badge tone={STATUS_TONE[d.status] ?? 'neutral'} dot>{d.status}</Badge> },
+    { key: 'lastModified', header: 'Modified', accessor: (d) => d.lastModified || '', render: (d) => <div><div style={{ color: 'var(--text-primary)' }}>{fmtDate(d.lastModified)}</div><div className="dvMuted" style={{ fontSize: 'var(--fs-xs)' }}>{d.modifiedBy}</div></div> },
+  ];
+  const rowActions = (d: Document): Action[] => [
+    { label: 'Version History', icon: <ClockCounterClockwise size={15} />, onClick: () => openModal(d, 'history') },
+    { label: 'Compare Versions', icon: <ArrowsLeftRight size={15} />, onClick: () => openModal(d, 'compare'), hidden: d.versions.length < 2 },
+    { label: 'Upload New Version', icon: <UploadSimple size={15} />, onClick: () => openModal(d, 'upload') },
+    { label: d.checkedOutBy ? 'Check In' : 'Check Out', icon: d.checkedOutBy ? <LockSimple size={15} /> : <LockSimpleOpen size={15} />, onClick: () => doCheckout(d.id, d.checkedOutBy ? 'checkin' : 'checkout') },
+    { label: 'Metadata', icon: <Info size={15} />, onClick: () => openModal(d, 'metadata') },
+    { label: 'Access Control', icon: <Users size={15} />, onClick: () => openModal(d, 'access') },
+  ];
+
+  // ─── Register body ───
+  let body: React.ReactNode;
+  if (!loading && error) {
+    body = <EmptyState icon={<WarningCircle size={22} />} title="Couldn't load documents" text={`${error} Nothing has been lost — try again.`} action={<Button icon={<ArrowsClockwise size={15} />} onClick={load}>Retry</Button>} />;
+  } else if (!loading && documents.length === 0) {
+    body = (
+      <EmptyState
+        icon={<FileText size={22} />}
+        title="Nothing under version control yet"
+        text="Contracts, drawings, specs, and submittals belong here. Every upload becomes v1; each revision after that is checksummed and comparable, approvals gate what's current, and check-out locks stop two people revising the same file."
+        action={<div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}><Button icon={<Plus size={15} weight="bold" />} onClick={() => openModal(null, 'upload')}>New Document</Button><Button icon={<Files size={15} weight="bold" />} onClick={() => openModal(null, 'bulk')}>Bulk Upload</Button></div>}
+      />
+    );
+  } else {
+    body = (
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={(d) => d.id}
+        loading={loading}
+        defaultSort={{ key: 'lastModified', dir: 'desc' }}
+        onRowClick={(d) => openModal(d, 'history')}
+        rowActions={rowActions}
+        empty={<EmptyState icon={<MagnifyingGlass size={22} />} title="No documents match these filters" text="Clear the search, category, or status filter to see more." action={<Button onClick={clearFilters}>Clear Filters</Button>} />}
+      />
     );
   }
 
+  const projectOptions = projects.map((p) => ({ value: p.id, label: p.name }));
+  const versionOptions = (doc: Document) => doc.versions.map((v) => ({ value: v.id, label: `${v.versionLabel} (${v.revisionCode})` }));
+
   return (
-    <PremiumSurface maxWidth={2200}>
-      <style>{responsiveCSS}</style>
-
-      {/* Toast */}
-      {toast && (
-        <div style={{ position: 'fixed', top: 20, right: 20, background: toast.err ? C.RED : C.GREEN, color: '#fff', padding: '10px 18px', borderRadius: 8, fontSize: 13, fontWeight: 600, zIndex: 2000, boxShadow: '0 4px 20px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {toast.err ? <WarningCircle size={16} weight="fill" /> : <CheckCircle size={16} weight="fill" />}
-          {toast.msg}
-        </div>
-      )}
-
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Version Control"
-        eyebrowIcon={<Folder size={13} weight="fill" color={C.GOLD} />}
-        title="Document"
-        accent="Versions"
+    <div className="dvWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Documents', href: '/app/documents' }, { label: 'Versions' }]}
+        title="Document Versions"
         subtitle={`${documents.length} document${documents.length !== 1 ? 's' : ''} under version control — every revision checksummed, approvals tracked, check-outs locked.`}
         actions={
           <>
-            <button style={ghostButtonStyle} className="pmBtn" onClick={() => openModal(null, 'bulk')}><Files size={16} weight="bold" /> Bulk Upload</button>
-            <button style={goldButtonStyle} className="pmBtn" onClick={() => openModal(null, 'upload')}><Plus size={16} weight="bold" /> New Document</button>
+            <Button icon={<Files size={15} weight="bold" />} onClick={() => openModal(null, 'bulk')}>Bulk Upload</Button>
+            <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openModal(null, 'upload')}>New Document</Button>
           </>
         }
-      />
+      >
+        {!error && <StatRow items={stats} />}
 
-      {error && (
-        <div style={{ ...sCard, borderLeft: `3px solid ${C.RED}`, display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <WarningCircle size={18} weight="fill" color={C.RED} />
-          <span style={{ color: C.DIM, fontSize: 13 }}>{error}</span>
-          <button style={{ ...sBtn(C.DIM, true), marginLeft: 'auto' }} onClick={load}>Retry</button>
-        </div>
-      )}
+        {!loading && !error && documents.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by name, tags, description, or project…"
+            filters={
+              <>
+                <Select aria-label="Category" value={activeCategory} onChange={(e) => setActiveCategory(e.target.value)} style={{ width: 'auto', minWidth: 170 }} options={CATEGORIES.map((c) => ({ value: c, label: c === 'All' ? `All Categories (${catCounts.All})` : `${c} (${catCounts[c] || 0})` }))} />
+                <Select aria-label="Status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as StatusFilter)} style={{ width: 'auto', minWidth: 150 }} options={[{ value: 'all', label: 'All Statuses' }, { value: 'Draft', label: 'Draft' }, { value: 'Under Review', label: 'Under Review' }, { value: 'Approved', label: 'Approved' }, { value: 'Superseded', label: 'Superseded' }, { value: 'checkedOut', label: 'Checked Out' }]} />
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={<span className="dvMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filtered.length} of {documents.length}</span>}
+          />
+        )}
 
-      {/* Stats — live version-control intelligence, not bare counts */}
-      <StatStrip items={[
-        {href: '/app/document-versions',  label: 'Documents', value: String(documents.length), sub: (() => { const n = documents.reduce((s, d) => s + d.versions.length, 0); return `${n} revision${n === 1 ? '' : 's'} on file`; })() },
-        {href: '/app/document-versions',  label: 'Approved', value: String(documents.filter((d) => d.status === 'Approved').length), accent: C.GREEN, sub: 'released & current' },
-        {href: '/app/document-versions',  label: 'Under Review', value: String(documents.filter((d) => d.status === 'Under Review').length), accent: documents.some((d) => d.status === 'Under Review') ? C.AMBER : undefined, sub: 'awaiting approval' },
-        {href: '/app/document-versions',  label: 'Drafts', value: String(documents.filter((d) => d.status === 'Draft').length), sub: 'not yet submitted' },
-        {href: '/app/document-versions',  label: 'Checked Out', value: String(documents.filter((d) => d.checkedOutBy).length), accent: documents.some((d) => d.checkedOutBy) ? C.RED : undefined, sub: (() => { const names = Array.from(new Set(documents.filter((d) => d.checkedOutBy).map((d) => d.checkedOutBy as string))); return names.length ? `locked by ${names.slice(0, 2).join(', ')}${names.length > 2 ? '…' : ''}` : 'nothing locked'; })() },
-        {href: '/app/document-versions',  label: 'Last Activity', value: (() => { const m = documents.reduce<string | null>((acc, d) => (d.lastModified && (!acc || d.lastModified > acc) ? d.lastModified : acc), null); return m ? fmtDate(m) : '—'; })(), sub: 'most recent revision' },
-      ]} />
+        <Card flush>{body}</Card>
+      </PageShell>
 
-      {/* Search */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
-        <div style={{ position: 'relative', maxWidth: 380, flex: 1 }}>
-          <MagnifyingGlass size={16} color={C.DIM} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-          <input style={{ ...sInput, paddingLeft: 32 }} placeholder="Search by name, tags, description, or project…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
-        {CATEGORIES.map((cat) => (
-          <button key={cat} onClick={() => setActiveCategory(cat)} style={{
-            padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            border: `1px solid ${activeCategory === cat ? C.GOLD : C.BORDER}`,
-            background: activeCategory === cat ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : 'transparent',
-            color: activeCategory === cat ? C.GOLD : C.DIM,
-          }}>
-            {cat} ({catCounts[cat] || 0})
-          </button>
+      {/* ── History ── */}
+      <FormModal open={modalView === 'history' && !!selectedDoc} onClose={closeModal} title="Version History" subtitle={selectedDoc?.title}>
+        {selectedDoc && (selectedDoc.versions.length === 0 ? (
+          <div className="dvMuted" style={{ fontSize: 'var(--fs-sm)' }}>No versions yet.</div>
+        ) : (
+          <div className="dvTimeline">
+            {[...selectedDoc.versions].reverse().map((ver, idx) => {
+              const supported = canOverlayVersion(ver);
+              const hasOther = selectedDoc.versions.some((v) => v.id !== ver.id && canOverlayVersion(v));
+              const can = supported && hasOther;
+              return (
+                <div key={ver.id} className="dvVer" data-latest={idx === 0 ? 'true' : 'false'}>
+                  <div className="dvVerHead">
+                    <div style={{ minWidth: 0 }}>
+                      <div className="dvVerTitle"><b>{ver.versionLabel}</b><span>{ver.revisionCode}</span><Badge tone={STATUS_TONE[ver.status] ?? 'neutral'}>{ver.status}</Badge>{idx === 0 && <Badge tone="gold">Current</Badge>}</div>
+                      <div className="dvVerMeta">Uploaded by <b>{ver.uploadedBy}</b> on {fmtDateTime(ver.uploadedAt)} · {fmtBytes(ver.fileSize)}</div>
+                      <div className="dvVerMeta"><b>Notes:</b> {ver.revisionNotes || '—'}</div>
+                      {ver.checksum && <div className="dvVerMeta" style={{ fontFamily: 'ui-monospace, monospace', display: 'flex', alignItems: 'center', gap: 4 }}><Fingerprint size={12} /> {ver.checksum.slice(0, 16)}…</div>}
+                      {ver.approvedBy && <div className="dvVerMeta" style={{ color: 'var(--status-ongoing)' }}>Approved by {ver.approvedBy} on {fmtDate(ver.approvedAt)}</div>}
+                    </div>
+                    <div className="dvVerActions">
+                      <Button size="sm" icon={<ArrowsLeftRight size={13} weight="bold" />} disabled={!can} title={can ? 'Overlay this revision against another (previous revision by default) — red = removed, blue = added' : supported ? 'No other PDF or image revision to compare this one against' : 'Visual compare supports PDF, PNG, JPG and WebP files only'} onClick={() => openOverlay(selectedDoc, ver.id)}>Compare</Button>
+                      <Button size="sm" icon={<DownloadSimple size={13} weight="bold" />} onClick={() => download(ver)}>Download</Button>
+                      {ver.status === 'Draft' && <Button size="sm" icon={<PaperPlaneTilt size={13} weight="bold" />} onClick={() => doWorkflow(selectedDoc.id, ver.id, 'submit')}>Submit</Button>}
+                      {ver.status === 'Under Review' && <Button size="sm" variant="primary" icon={<CheckCircle size={13} weight="bold" />} onClick={() => doWorkflow(selectedDoc.id, ver.id, 'approve')}>Approve</Button>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ))}
-      </div>
+      </FormModal>
 
-      {/* List */}
-      {filtered.length === 0 ? (
-        <SectionCard>
-          {search || activeCategory !== 'All' ? (
-            <PremiumEmpty
-              compact
-              icon={<MagnifyingGlass size={30} weight="duotone" color={C.GOLD} />}
-              title="No Documents Match"
-              description="Try adjusting your search or category filter."
-            />
-          ) : (
-            <PremiumEmpty
-              icon={<FileText size={30} weight="duotone" color={C.GOLD} />}
-              title="Nothing Under Version Control Yet"
-              description="Contracts, drawings, specs, and submittals belong here. Every upload becomes v1; each revision after that is checksummed and comparable, approvals gate what's current, and check-out locks stop two people revising the same file."
-              action={
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-                  <button style={goldButtonStyle} className="pmBtn" onClick={() => openModal(null, 'upload')}><Plus size={16} weight="bold" /> New Document</button>
-                  <button style={ghostButtonStyle} className="pmBtn" onClick={() => openModal(null, 'bulk')}><Files size={16} weight="bold" /> Bulk Upload</button>
-                </div>
-              }
-            />
-          )}
-        </SectionCard>
-      ) : (
-        <div className="dvc-tablewrap">
-          <div className="dvc-head" style={{ padding: '8px 16px', fontSize: 11, fontWeight: 700, color: C.DIM }}>
-            <span>Document</span><span>Category</span><span>Version</span><span>Status</span><span>Modified</span><span>Actions</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {filtered.map((doc) => (
-              <div key={doc.id} className="dvc-row" style={{ ...sCard, alignItems: 'center', padding: '12px 16px', marginBottom: 0, borderLeft: doc.checkedOutBy ? `3px solid ${C.RED}` : '3px solid transparent' }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 2 }}>{doc.title}</div>
-                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <span style={{ fontSize: 10, color: C.DIM }}>{doc.project}</span>
-                    {doc.tags.map((t) => (
-                      <span key={t} style={{ fontSize: 10, color: C.BLUE, background: 'color-mix(in srgb, var(--brand-primary) 9%, transparent)', padding: '1px 6px', borderRadius: 4 }}>{t}</span>
-                    ))}
-                    {doc.checkedOutBy && (
-                      <span style={{ fontSize: 10, color: C.RED, background: `${C.RED}18`, padding: '1px 6px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                        <LockSimple size={10} weight="fill" /> {doc.checkedOutBy}
-                      </span>
-                    )}
-                  </div>
-                  {doc.versions.length > 0 && (
-                    <div style={{ fontSize: 10.5, color: C.DIM, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {doc.versions.length} version{doc.versions.length !== 1 ? 's' : ''}
-                      {doc.versions[doc.versions.length - 1]?.revisionNotes ? ` · latest: ${doc.versions[doc.versions.length - 1].revisionNotes}` : ''}
-                    </div>
-                  )}
-                </div>
-                <span style={{ fontSize: 12, color: C.DIM }}>{doc.category}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.GOLD, fontFamily: 'monospace' }}>{doc.currentVersion}</span>
-                <span style={sBadge(statusColor[doc.status])}>{doc.status}</span>
-                <div>
-                  <div style={{ fontSize: 12, color: C.TEXT }}>{fmtDate(doc.lastModified)}</div>
-                  <div style={{ fontSize: 11, color: C.DIM }}>{doc.modifiedBy}</div>
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <button style={sBtn(C.BLUE, true)} onClick={() => openModal(doc, 'history')}><ClockCounterClockwise size={13} weight="bold" /> History</button>
-                  <button style={{ ...sBtn(C.PURPLE, true), opacity: doc.versions.length < 2 ? 0.4 : 1 }} onClick={() => openModal(doc, 'compare')} disabled={doc.versions.length < 2}><ArrowsLeftRight size={13} weight="bold" /> Compare</button>
-                  <button style={sBtn(C.GOLD, true)} onClick={() => openModal(doc, 'upload')}><UploadSimple size={13} weight="bold" /> Upload</button>
-                  {!doc.checkedOutBy ? (
-                    <button style={sBtn(C.DIM, true)} onClick={() => doCheckout(doc.id, 'checkout')}><LockSimpleOpen size={13} weight="bold" /> Check Out</button>
-                  ) : (
-                    <button style={sBtn(C.GREEN, true)} onClick={() => doCheckout(doc.id, 'checkin')}><LockSimple size={13} weight="bold" /> Check In</button>
-                  )}
-                  <button style={sBtn('#334155', true)} onClick={() => openModal(doc, 'metadata')}><Info size={13} weight="bold" /></button>
-                  <button style={sBtn('#334155', true)} onClick={() => openModal(doc, 'access')}><Users size={13} weight="bold" /></button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── History Modal ── */}
-      {modalView === 'history' && selectedDoc && (
-        <div style={sOverlay} onClick={closeModal}>
-          <div style={sModal} onClick={(e) => e.stopPropagation()}>
-            <ModalHeader title="Version History" subtitle={selectedDoc.title} onClose={closeModal} />
-            {selectedDoc.versions.length === 0 ? (
-              <div style={{ color: C.DIM, fontSize: 13, padding: 12 }}>No versions yet.</div>
-            ) : (
-              <div style={{ position: 'relative', paddingLeft: 24 }}>
-                <div style={{ position: 'absolute', left: 8, top: 4, bottom: 4, width: 2, background: C.BORDER }} />
-                {[...selectedDoc.versions].reverse().map((ver, idx) => (
-                  <div key={ver.id} style={{ position: 'relative', marginBottom: 20, paddingBottom: 12, borderBottom: idx < selectedDoc.versions.length - 1 ? `1px solid ${C.BORDER}` : 'none' }}>
-                    <div style={{ position: 'absolute', left: -20, top: 4, width: 12, height: 12, borderRadius: '50%', background: idx === 0 ? C.GOLD : C.BORDER, border: `2px solid ${C.RAISED}` }} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 700, fontSize: 15, color: C.TEXT, fontFamily: 'monospace' }}>{ver.versionLabel}</span>
-                          <span style={{ fontSize: 11, color: C.DIM, fontFamily: 'monospace' }}>{ver.revisionCode}</span>
-                          <span style={sBadge(statusColor[ver.status])}>{ver.status}</span>
-                        </div>
-                        <div style={{ fontSize: 12, color: C.DIM, marginBottom: 4 }}>
-                          Uploaded by <span style={{ color: C.TEXT }}>{ver.uploadedBy}</span> on {fmtDateTime(ver.uploadedAt)} · {fmtBytes(ver.fileSize)}
-                        </div>
-                        <div style={{ fontSize: 12, color: C.DIM, marginBottom: 6 }}>
-                          <span style={{ color: C.TEXT, fontWeight: 600 }}>Notes:</span> {ver.revisionNotes || '—'}
-                        </div>
-                        {ver.checksum && (
-                          <div style={{ fontSize: 11, color: C.DIM, display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'monospace' }}>
-                            <Fingerprint size={12} /> {ver.checksum.slice(0, 16)}…
-                          </div>
-                        )}
-                        {ver.approvedBy && (
-                          <div style={{ fontSize: 11, color: C.GREEN, marginTop: 4 }}>Approved by {ver.approvedBy} on {fmtDate(ver.approvedAt)}</div>
-                        )}
-                      </div>
-                      <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        {(() => {
-                          const supported = canOverlayVersion(ver);
-                          const hasOther = selectedDoc.versions.some((v) => v.id !== ver.id && canOverlayVersion(v));
-                          const can = supported && hasOther;
-                          return (
-                            <button
-                              style={{ ...sBtn(C.PURPLE, true), opacity: can ? 1 : 0.4, cursor: can ? 'pointer' : 'not-allowed' }}
-                              disabled={!can}
-                              title={can
-                                ? 'Overlay this revision against another (previous revision by default) — red = removed, blue = added'
-                                : supported
-                                  ? 'No other PDF or image revision to compare this one against'
-                                  : 'Visual compare supports PDF, PNG, JPG and WebP files only'}
-                              onClick={() => openOverlay(selectedDoc, ver.id)}
-                            >
-                              <ArrowsLeftRight size={13} weight="bold" /> Compare
-                            </button>
-                          );
-                        })()}
-                        <button style={sBtn(C.BLUE, true)} onClick={() => download(ver)}><DownloadSimple size={13} weight="bold" /> Download</button>
-                        {ver.status === 'Draft' && <button style={sBtn(C.AMBER, true)} onClick={() => doWorkflow(selectedDoc.id, ver.id, 'submit')}><PaperPlaneTilt size={13} weight="bold" /> Submit</button>}
-                        {ver.status === 'Under Review' && <button style={sBtn(C.GREEN, true)} onClick={() => doWorkflow(selectedDoc.id, ver.id, 'approve')}><CheckCircle size={13} weight="bold" /> Approve</button>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Compare Modal (honest metadata comparison — no fabricated diff) ── */}
-      {modalView === 'compare' && selectedDoc && (
-        <div style={sOverlay} onClick={closeModal}>
-          <div style={{ ...sModal, width: 720 }} onClick={(e) => e.stopPropagation()}>
-            <ModalHeader title="Compare Versions" subtitle={selectedDoc.title} onClose={closeModal} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div>
-                <label style={sLabel}>Version A</label>
-                <StandardSelect value={compareA} onChange={setCompareA} ariaLabel="Version A" width="100%"
-                  options={selectedDoc.versions.map((v) => ({ value: v.id, label: `${v.versionLabel} (${v.revisionCode})` }))} />
-              </div>
-              <div>
-                <label style={sLabel}>Version B</label>
-                <StandardSelect value={compareB} onChange={setCompareB} ariaLabel="Version B" width="100%"
-                  options={selectedDoc.versions.map((v) => ({ value: v.id, label: `${v.versionLabel} (${v.revisionCode})` }))} />
-              </div>
-            </div>
+      {/* ── Compare (honest metadata comparison — no fabricated diff) ── */}
+      <FormModal open={modalView === 'compare' && !!selectedDoc} onClose={closeModal} title="Compare Versions" subtitle={selectedDoc?.title}>
+        {selectedDoc && (
+          <>
+            <FormGrid cols={2}>
+              <Field label="Version A"><Select aria-label="Version A" value={compareA} onChange={(e) => setCompareA(e.target.value)} options={versionOptions(selectedDoc)} /></Field>
+              <Field label="Version B"><Select aria-label="Version B" value={compareB} onChange={(e) => setCompareB(e.target.value)} options={versionOptions(selectedDoc)} /></Field>
+            </FormGrid>
             {(() => {
               const vA = selectedDoc.versions.find((v) => v.id === compareA);
               const vB = selectedDoc.versions.find((v) => v.id === compareB);
-              if (!vA || !vB) return <div style={{ color: C.DIM, fontSize: 13 }}>Select two versions to compare.</div>;
+              if (!vA || !vB) return <div className="dvMuted" style={{ fontSize: 'var(--fs-sm)', marginTop: 12 }}>Select two versions to compare.</div>;
               const identical = !!vA.checksum && vA.checksum === vB.checksum;
               const rows: [string, string, string][] = [
                 ['Version', vA.versionLabel, vB.versionLabel],
@@ -708,248 +686,154 @@ export default function DocumentVersionsPage() {
                 ['SHA-256', vA.checksum ? `${vA.checksum.slice(0, 20)}…` : '—', vB.checksum ? `${vB.checksum.slice(0, 20)}…` : '—'],
                 ['Notes', vA.revisionNotes || '—', vB.revisionNotes || '—'],
               ];
+              const can = canOverlayVersion(vA) && canOverlayVersion(vB) && vA.id !== vB.id;
               return (
-                <div>
-                  <div style={{ ...sCard, borderLeft: `3px solid ${identical ? C.GREEN : C.AMBER}`, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                    {identical ? <CheckCircle size={18} weight="fill" color={C.GREEN} /> : <ArrowsLeftRight size={18} weight="bold" color={C.AMBER} />}
-                    <span style={{ fontSize: 13, color: C.TEXT }}>
-                      {identical
-                        ? 'Identical file bytes — the SHA-256 checksums match, so these two versions are byte-for-byte the same file.'
-                        : 'File bytes differ — the SHA-256 checksums do not match. Metadata for both versions is compared below.'}
-                    </span>
+                <div style={{ marginTop: 14 }}>
+                  <div className="dvVerify" data-same={identical ? 'true' : 'false'}>
+                    {identical ? <CheckCircle size={18} weight="fill" /> : <ArrowsLeftRight size={18} weight="bold" />}
+                    <span>{identical ? 'Identical file bytes — the SHA-256 checksums match, so these two versions are byte-for-byte the same file.' : 'File bytes differ — the SHA-256 checksums do not match. Metadata for both versions is compared below.'}</span>
                   </div>
-                  <div style={{ border: `1px solid ${C.BORDER}`, borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr', background: C.BG, padding: '8px 12px', fontSize: 11, fontWeight: 700, color: C.DIM }}>
-                      <span>Field</span><span style={{ color: C.RED }}>{vA.versionLabel}</span><span style={{ color: C.GREEN }}>{vB.versionLabel}</span>
-                    </div>
-                    {rows.map(([label, a, b], i) => {
-                      const diff = a !== b;
-                      return (
-                        <div key={label} style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr', padding: '8px 12px', fontSize: 12, borderTop: `1px solid ${C.BORDER}`, background: i % 2 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                          <span style={{ color: C.DIM }}>{label}</span>
-                          <span style={{ color: diff ? C.TEXT : C.DIM, wordBreak: 'break-word' }}>{a}</span>
-                          <span style={{ color: diff ? C.TEXT : C.DIM, wordBreak: 'break-word', fontWeight: diff ? 600 : 400 }}>{b}</span>
-                        </div>
-                      );
-                    })}
+                  <div className="dvCmp">
+                    <div className="dvCmpRow"><span>Field</span><span className="dvRevA">{vA.versionLabel}</span><span className="dvRevB">{vB.versionLabel}</span></div>
+                    {rows.map(([label, a, b]) => (
+                      <div key={label} className="dvCmpRow" data-diff={a !== b ? 'true' : 'false'}><span>{label}</span><span>{a}</span><span>{b}</span></div>
+                    ))}
                   </div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                    {(() => {
-                      const can = canOverlayVersion(vA) && canOverlayVersion(vB) && vA.id !== vB.id;
-                      return (
-                        <button
-                          style={{ ...sBtn(C.PURPLE, false), marginRight: 'auto', opacity: can ? 1 : 0.4, cursor: can ? 'pointer' : 'not-allowed' }}
-                          disabled={!can}
-                          title={can
-                            ? 'Slip-sheet overlay — old linework red, new blue, unchanged dark'
-                            : vA.id === vB.id
-                              ? 'Pick two different versions to overlay'
-                              : 'Visual compare supports PDF, PNG, JPG and WebP files only'}
-                          onClick={() => {
-                            const [oa, ob] = vA.version <= vB.version ? [vA, vB] : [vB, vA];
-                            setOverlay({ doc: selectedDoc, aId: oa.id, bId: ob.id });
-                          }}
-                        >
-                          <ArrowsLeftRight size={14} weight="bold" /> Visual Overlay
-                        </button>
-                      );
-                    })()}
-                    <button style={sBtn(C.BLUE, false)} onClick={() => download(vA)}><DownloadSimple size={14} weight="bold" /> {vA.versionLabel}</button>
-                    <button style={sBtn(C.GREEN, false)} onClick={() => download(vB)}><DownloadSimple size={14} weight="bold" /> {vB.versionLabel}</button>
+                  <div className="dvCmpFoot">
+                    <Button icon={<ArrowsLeftRight size={14} weight="bold" />} disabled={!can} style={{ marginRight: 'auto' }} title={can ? 'Slip-sheet overlay — old linework red, new blue, unchanged dark' : vA.id === vB.id ? 'Pick two different versions to overlay' : 'Visual compare supports PDF, PNG, JPG and WebP files only'} onClick={() => { const [oa, ob] = vA.version <= vB.version ? [vA, vB] : [vB, vA]; setOverlay({ doc: selectedDoc, aId: oa.id, bId: ob.id }); }}>Visual Overlay</Button>
+                    <Button icon={<DownloadSimple size={14} weight="bold" />} onClick={() => download(vA)}>{vA.versionLabel}</Button>
+                    <Button icon={<DownloadSimple size={14} weight="bold" />} onClick={() => download(vB)}>{vB.versionLabel}</Button>
                   </div>
                 </div>
               );
             })()}
+          </>
+        )}
+      </FormModal>
+
+      {/* ── Upload / New Document ── */}
+      <FormModal
+        open={modalView === 'upload'}
+        onClose={closeModal}
+        title={selectedDoc ? 'Upload New Version' : 'New Document'}
+        subtitle={selectedDoc?.title || 'The first upload becomes v1 — every revision after it is checksummed and comparable.'}
+        onSubmit={handleUpload}
+        submitLabel={busy ? 'Uploading…' : selectedDoc ? 'Upload Version' : 'Create Document'}
+        busy={busy}
+        error={formError || null}
+      >
+        <Field label="File" required hint="PDF, Word, Excel or image · up to 50 MB">
+          <input ref={uploadInputRef} type="file" accept={ACCEPT} style={{ display: 'none' }} onChange={(e) => { setUploadFile(e.target.files?.[0] || null); if (formError) setFormError(''); }} />
+          <div className="dvFile">
+            <div className="k-input" aria-live="polite"><FileText size={16} style={{ color: uploadFile ? 'var(--brand-primary)' : 'var(--text-tertiary)', flexShrink: 0 }} />{uploadFile ? `${uploadFile.name} · ${fmtBytes(uploadFile.size)}` : <span className="dvMuted">No file selected</span>}</div>
+            <Button icon={<UploadSimple size={15} weight="bold" />} onClick={() => uploadInputRef.current?.click()}>Choose</Button>
           </div>
+        </Field>
+        {!selectedDoc && (
+          <FormGrid cols={2}>
+            <Field label="Title" required span><Input placeholder="Document title" value={uploadTitle} onChange={(e) => { setUploadTitle(e.target.value); if (formError) setFormError(''); }} /></Field>
+            <Field label="Description" span><Textarea rows={2} placeholder="Brief description…" value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)} /></Field>
+            <Field label="Category"><Select aria-label="Category" value={uploadCategory} onChange={(e) => setUploadCategory(e.target.value)} options={UPLOAD_CATS} /></Field>
+            <Field label="Project"><Select aria-label="Project" value={uploadProjectId} onChange={(e) => setUploadProjectId(e.target.value)} placeholder="Unassigned" options={projectOptions} /></Field>
+            <Field label="Tags" span hint="Comma-separated — structural, concrete, phase-1"><Input placeholder="structural, concrete, phase-1" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} /></Field>
+          </FormGrid>
+        )}
+        <div style={{ marginTop: selectedDoc ? 0 : 12 }}>
+          <Field label="Revision Notes" hint="What changed in this revision — shown in the history and the compare view."><Textarea rows={2} placeholder="Describe what changed…" value={uploadNotes} onChange={(e) => setUploadNotes(e.target.value)} /></Field>
         </div>
-      )}
+        {selectedDoc && (
+          <div className="dvNext" style={{ marginTop: 12 }}>Current: <b style={{ color: 'var(--brand-primary)' }}>{selectedDoc.currentVersion}</b> · Next version: <b>v{selectedDoc.currentVersionNumber + 1}</b> (REV-{String(selectedDoc.currentVersionNumber + 1).padStart(3, '0')})</div>
+        )}
+      </FormModal>
 
-      {/* ── Upload / New Document Modal ── */}
-      {modalView === 'upload' && (
-        <div style={sOverlay} onClick={closeModal}>
-          <div style={sModal} onClick={(e) => e.stopPropagation()}>
-            <ModalHeader title={selectedDoc ? `Upload New Version` : 'New Document'} subtitle={selectedDoc?.title} onClose={closeModal} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label style={sLabel}>File</label>
-                <input ref={uploadInputRef} type="file" accept={ACCEPT} style={{ display: 'none' }} onChange={(e) => setUploadFile(e.target.files?.[0] || null)} />
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <div style={{ ...sInput, flex: 1, display: 'flex', alignItems: 'center', gap: 8, color: uploadFile ? C.TEXT : C.DIM }}>
-                    <FileText size={16} color={uploadFile ? C.GOLD : C.DIM} />
-                    {uploadFile ? `${uploadFile.name} · ${fmtBytes(uploadFile.size)}` : 'No file selected'}
-                  </div>
-                  <button style={sBtn(C.BLUE)} onClick={() => uploadInputRef.current?.click()}><UploadSimple size={15} weight="bold" /> Choose</button>
-                </div>
-                <div style={{ fontSize: 11, color: C.DIM, marginTop: 4 }}>PDF, Word, Excel or image · up to 50 MB</div>
-              </div>
-
-              {!selectedDoc && (
-                <>
-                  <div>
-                    <label style={sLabel}>Title *</label>
-                    <input style={sInput} placeholder="Document title" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} />
-                  </div>
-                  <div>
-                    <label style={sLabel}>Description</label>
-                    <textarea style={{ ...sInput, minHeight: 56, resize: 'vertical' }} placeholder="Brief description…" value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)} />
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <div>
-                      <label style={sLabel}>Category</label>
-                      <StandardSelect value={uploadCategory} onChange={setUploadCategory} ariaLabel="Category" width="100%" options={UPLOAD_CATS} />
-                    </div>
-                    <div>
-                      <label style={sLabel}>Project</label>
-                      <StandardSelect value={uploadProjectId} onChange={setUploadProjectId} ariaLabel="Project" placeholder="Unassigned" width="100%"
-                        options={projects.map((p) => ({ value: p.id, label: p.name }))} />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={sLabel}>Tags (Comma-Separated)</label>
-                    <input style={sInput} placeholder="structural, concrete, phase-1" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} />
-                  </div>
-                </>
-              )}
-
-              <div>
-                <label style={sLabel}>Revision Notes</label>
-                <textarea style={{ ...sInput, minHeight: 56, resize: 'vertical' }} placeholder="Describe what changed…" value={uploadNotes} onChange={(e) => setUploadNotes(e.target.value)} />
-              </div>
-
-              {selectedDoc && (
-                <div style={{ ...sCard, borderLeft: `3px solid ${C.BLUE}`, marginBottom: 0 }}>
-                  <div style={{ fontSize: 12, color: C.DIM }}>
-                    Current: <strong style={{ color: C.GOLD }}>{selectedDoc.currentVersion}</strong> · Next version:{' '}
-                    <strong style={{ color: C.TEXT }}>v{selectedDoc.currentVersionNumber + 1}</strong> (REV-{String(selectedDoc.currentVersionNumber + 1).padStart(3, '0')})
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
-                <button style={sBtn('#334155')} onClick={closeModal} disabled={busy}>Cancel</button>
-                <button style={sBtn(C.GOLD)} onClick={handleUpload} disabled={busy}>
-                  {busy ? 'Uploading…' : selectedDoc ? 'Upload Version' : 'Create Document'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Metadata Modal ── */}
-      {modalView === 'metadata' && selectedDoc && (
-        <div style={sOverlay} onClick={closeModal}>
-          <div style={sModal} onClick={(e) => e.stopPropagation()}>
-            <ModalHeader title="Document Metadata" subtitle={selectedDoc.title} onClose={closeModal} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              {([
-                ['Category', selectedDoc.category],
-                ['Project', selectedDoc.project],
-                ['Current Version', selectedDoc.currentVersion],
-                ['Status', selectedDoc.status],
-                ['Created', fmtDateTime(selectedDoc.createdAt)],
-                ['Last Modified', fmtDateTime(selectedDoc.lastModified)],
-                ['Total Versions', String(selectedDoc.versions.length)],
-                ['Checked Out', selectedDoc.checkedOutBy ? `${selectedDoc.checkedOutBy} (${fmtDateTime(selectedDoc.checkedOutAt)})` : 'No'],
-              ] as [string, string][]).map(([label, val]) => (
-                <div key={label}>
-                  <div style={{ fontSize: 11, color: C.DIM, marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontSize: 14, color: C.TEXT, fontWeight: 500 }}>{val}</div>
-                </div>
-              ))}
+      {/* ── Metadata ── */}
+      <FormModal open={modalView === 'metadata' && !!selectedDoc} onClose={closeModal} title="Document Metadata" subtitle={selectedDoc?.title}>
+        {selectedDoc && (
+          <>
+            <DetailList items={[
+              ['Category', selectedDoc.category],
+              ['Project', selectedDoc.project],
+              ['Current Version', selectedDoc.currentVersion],
+              ['Status', <Badge key="s" tone={STATUS_TONE[selectedDoc.status] ?? 'neutral'}>{selectedDoc.status}</Badge>],
+              ['Created', fmtDateTime(selectedDoc.createdAt)],
+              ['Last Modified', fmtDateTime(selectedDoc.lastModified)],
+              ['Total Versions', String(selectedDoc.versions.length)],
+              ['Checked Out', selectedDoc.checkedOutBy ? `${selectedDoc.checkedOutBy} (${fmtDateTime(selectedDoc.checkedOutAt)})` : 'No'],
+            ]} />
+            <div style={{ marginTop: 16 }}>
+              <div className="dvSection">Description</div>
+              <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-primary)', lineHeight: 1.5 }}>{selectedDoc.description || '—'}</div>
             </div>
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 11, color: C.DIM, marginBottom: 4 }}>Description</div>
-              <div style={{ fontSize: 13, color: C.TEXT, lineHeight: 1.5 }}>{selectedDoc.description || '—'}</div>
-            </div>
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 11, color: C.DIM, marginBottom: 6 }}>Tags</div>
+              <div className="dvSection">Tags</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {selectedDoc.tags.length ? selectedDoc.tags.map((t) => <span key={t} style={{ ...sBadge(C.BLUE), fontSize: 12 }}>{t}</span>) : <span style={{ color: C.DIM, fontSize: 12 }}>No tags</span>}
+                {selectedDoc.tags.length ? selectedDoc.tags.map((t) => <Badge key={t} tone="neutral">{t}</Badge>) : <span className="dvMuted" style={{ fontSize: 'var(--fs-xs)' }}>No tags</span>}
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </FormModal>
 
-      {/* ── Access Modal ── */}
-      {modalView === 'access' && selectedDoc && (
-        <div style={sOverlay} onClick={closeModal}>
-          <div style={sModal} onClick={(e) => e.stopPropagation()}>
-            <ModalHeader title="Access Control" subtitle={selectedDoc.title} onClose={closeModal} />
+      {/* ── Access ── */}
+      <FormModal open={modalView === 'access' && !!selectedDoc} onClose={closeModal} title="Access Control" subtitle={selectedDoc?.title}>
+        {selectedDoc && (
+          <>
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, color: C.DIM, marginBottom: 8, fontWeight: 600 }}>Current Access</div>
-              {selectedDoc.access.length === 0 && <div style={{ color: C.DIM, fontSize: 12 }}>No grants yet.</div>}
+              <div className="dvSection">Current Access</div>
+              {selectedDoc.access.length === 0 && <div className="dvMuted" style={{ fontSize: 'var(--fs-xs)' }}>No grants yet.</div>}
               {selectedDoc.access.map((a) => (
-                <div key={a.userId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: C.BG, borderRadius: 6, marginBottom: 4, border: `1px solid ${C.BORDER}` }}>
-                  <div>
-                    <span style={{ fontSize: 13, color: C.TEXT, fontWeight: 500 }}>{a.name}</span>
-                    <span style={{ ...sBadge(a.role === 'admin' ? C.GOLD : a.role === 'editor' ? C.GREEN : C.DIM), marginLeft: 8, fontSize: 10 }}>{a.role.charAt(0).toUpperCase() + a.role.slice(1)}</span>
+                <div key={a.userId} className="dvGrant">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-primary)', fontWeight: 500 }}>{a.name}</span>
+                    <Badge tone={a.role === 'admin' ? 'gold' : a.role === 'editor' ? 'ongoing' : 'neutral'}>{a.role.charAt(0).toUpperCase() + a.role.slice(1)}</Badge>
                   </div>
-                  <button style={{ ...sBtn(C.RED, true) }} onClick={() => removeAccess(a.userId)}><Trash size={12} weight="bold" /> Remove</button>
+                  <Button size="sm" variant="danger" icon={<Trash size={12} weight="bold" />} onClick={() => removeAccess(a.userId)}>Remove</Button>
                 </div>
               ))}
             </div>
-            <div style={{ borderTop: `1px solid ${C.BORDER}`, paddingTop: 16 }}>
-              <div style={{ fontSize: 12, color: C.DIM, marginBottom: 8, fontWeight: 600 }}>Grant Access</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input style={{ ...sInput, flex: 1 }} placeholder="Name or email" value={accessEmail} onChange={(e) => setAccessEmail(e.target.value)} />
-                <StandardSelect value={accessRole} onChange={(v) => setAccessRole(v as any)} ariaLabel="Role" width={120}
-                  options={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }, { value: 'admin', label: 'Admin' }]} />
-                <button style={sBtn(C.GREEN)} onClick={addAccess}><Plus size={15} weight="bold" /> Add</button>
+            <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 16 }}>
+              <div className="dvSection">Grant Access</div>
+              <div className="dvGrantRow">
+                <Field label="Name or email"><Input placeholder="Name or email" value={accessEmail} onChange={(e) => setAccessEmail(e.target.value)} /></Field>
+                <Field label="Role"><Select aria-label="Role" value={accessRole} onChange={(e) => setAccessRole(e.target.value as any)} options={[{ value: 'viewer', label: 'Viewer' }, { value: 'editor', label: 'Editor' }, { value: 'admin', label: 'Admin' }]} /></Field>
+                <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={addAccess} disabled={!accessEmail.trim()}>Add</Button>
               </div>
             </div>
+          </>
+        )}
+      </FormModal>
+
+      {/* ── Bulk Upload ── */}
+      <FormModal
+        open={modalView === 'bulk'}
+        onClose={closeModal}
+        title="Bulk Upload"
+        subtitle="Each file becomes a new document at v1."
+        onSubmit={handleBulkUpload}
+        submitLabel={busy ? 'Uploading…' : `Upload ${bulkFiles.length} File${bulkFiles.length !== 1 ? 's' : ''}`}
+        busy={busy}
+        error={formError || null}
+      >
+        <FormGrid cols={2}>
+          <Field label="Category for All"><Select aria-label="Category for all" value={bulkCategory} onChange={(e) => setBulkCategory(e.target.value)} options={UPLOAD_CATS} /></Field>
+          <Field label="Project for All"><Select aria-label="Project for all" value={bulkProjectId} onChange={(e) => setBulkProjectId(e.target.value)} placeholder="Unassigned" options={projectOptions} /></Field>
+        </FormGrid>
+        <input ref={bulkInputRef} type="file" accept={ACCEPT} multiple style={{ display: 'none' }} onChange={(e) => { setBulkFiles(Array.from(e.target.files || [])); if (formError) setFormError(''); }} />
+        <div style={{ margin: '14px 0 16px' }}><Button icon={<UploadSimple size={15} weight="bold" />} onClick={() => bulkInputRef.current?.click()}>Choose Files</Button></div>
+        {bulkFiles.length === 0 ? (
+          <div className="dvBulkEmpty">No files selected yet.</div>
+        ) : (
+          <div style={{ marginBottom: 8 }}>
+            {bulkFiles.map((f, idx) => (
+              <div key={idx} className="dvBulk">
+                <span><FileText size={14} style={{ color: 'var(--brand-primary)', flexShrink: 0 }} /><span>{f.name}</span><span className="dvMuted" style={{ flexShrink: 0 }}>· {fmtBytes(f.size)}</span></span>
+                <Button size="sm" variant="ghost" icon={<Trash size={12} weight="bold" />} aria-label={`Remove ${f.name}`} onClick={() => setBulkFiles((prev) => prev.filter((_, i) => i !== idx))} />
+              </div>
+            ))}
+            <div className="dvMuted" style={{ fontSize: 'var(--fs-xs)', marginTop: 8 }}>{bulkFiles.length} file(s) ready</div>
           </div>
-        </div>
-      )}
-
-      {/* ── Bulk Upload Modal ── */}
-      {modalView === 'bulk' && (
-        <div style={sOverlay} onClick={closeModal}>
-          <div style={sModal} onClick={(e) => e.stopPropagation()}>
-            <ModalHeader title="Bulk Upload" subtitle="Each file becomes a new document at v1" onClose={closeModal} />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <div>
-                <label style={sLabel}>Category for All</label>
-                <StandardSelect value={bulkCategory} onChange={setBulkCategory} ariaLabel="Category for all" width="100%" options={UPLOAD_CATS} />
-              </div>
-              <div>
-                <label style={sLabel}>Project for All</label>
-                <StandardSelect value={bulkProjectId} onChange={setBulkProjectId} ariaLabel="Project for all" placeholder="Unassigned" width="100%"
-                  options={projects.map((p) => ({ value: p.id, label: p.name }))} />
-              </div>
-            </div>
-            <input ref={bulkInputRef} type="file" accept={ACCEPT} multiple style={{ display: 'none' }} onChange={(e) => setBulkFiles(Array.from(e.target.files || []))} />
-            <button style={{ ...sBtn(C.BLUE), marginBottom: 16 }} onClick={() => bulkInputRef.current?.click()}><UploadSimple size={15} weight="bold" /> Choose Files</button>
-
-            {bulkFiles.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 28, color: C.DIM, fontSize: 13, border: `1px dashed ${C.BORDER}`, borderRadius: 8, marginBottom: 16 }}>
-                No files selected yet.
-              </div>
-            ) : (
-              <div style={{ marginBottom: 16 }}>
-                {bulkFiles.map((f, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: C.BG, borderRadius: 6, marginBottom: 4, border: `1px solid ${C.BORDER}` }}>
-                    <span style={{ fontSize: 13, color: C.TEXT, display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-                      <FileText size={14} color={C.GOLD} /> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
-                      <span style={{ color: C.DIM, flexShrink: 0 }}>· {fmtBytes(f.size)}</span>
-                    </span>
-                    <button style={{ ...sBtn(C.RED, true) }} onClick={() => setBulkFiles((prev) => prev.filter((_, i) => i !== idx))}><Trash size={12} weight="bold" /></button>
-                  </div>
-                ))}
-                <div style={{ fontSize: 12, color: C.DIM, marginTop: 8 }}>{bulkFiles.length} file(s) ready</div>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button style={sBtn('#334155')} onClick={closeModal} disabled={busy}>Cancel</button>
-              <button style={sBtn(C.PURPLE)} onClick={handleBulkUpload} disabled={bulkFiles.length === 0 || busy}>
-                {busy ? 'Uploading…' : `Upload ${bulkFiles.length} File${bulkFiles.length !== 1 ? 's' : ''}`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </FormModal>
 
       {/* ── Revision Overlay — full-screen slip-sheet compare ── */}
       {overlay && (() => {
@@ -960,44 +844,26 @@ export default function DocumentVersionsPage() {
         const opts = (excludeId: string) =>
           pickable.filter((v) => v.id !== excludeId).map((v) => ({ value: v.id, label: `${v.versionLabel} (${v.revisionCode})` }));
         return (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 1100, background: C.BG, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 16px', background: C.RAISED, borderBottom: `1px solid ${C.BORDER}`, flexWrap: 'wrap' }}>
+          <div className="dvOverlay" role="dialog" aria-label="Revision overlay">
+            <div className="dvOverlayBar">
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: C.GOLD, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <ArrowsLeftRight size={16} weight="bold" /> Revision Overlay
-                </div>
-                <div style={{ fontSize: 11.5, color: C.DIM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{overlay.doc.title}</div>
+                <div className="dvOverlayTitle"><ArrowsLeftRight size={16} weight="bold" /> Revision Overlay</div>
+                <div className="dvOverlaySub">{overlay.doc.title}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: C.RED }}>Rev A · Red</span>
-                <StandardSelect value={overlay.aId} onChange={(v) => setOverlay({ ...overlay, aId: v })} ariaLabel="Revision A (red)" width={190} options={opts(overlay.bId)} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#FF8A00' }}>Rev B · Blue</span>
-                <StandardSelect value={overlay.bId} onChange={(v) => setOverlay({ ...overlay, bId: v })} ariaLabel="Revision B (blue)" width={190} options={opts(overlay.aId)} />
-                <button
-                  style={sBtn('#334155', true)}
-                  title="Swap A and B"
-                  onClick={() => setOverlay({ ...overlay, aId: overlay.bId, bId: overlay.aId })}
-                ><ArrowsLeftRight size={13} weight="bold" /> Swap</button>
-                <button onClick={() => setOverlay(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.DIM, padding: 6, display: 'flex' }} aria-label="Close overlay">
-                  <X size={20} weight="bold" />
-                </button>
+              <div className="dvOverlayCtl">
+                <span className="dvRevA">Rev A · Red</span>
+                <Select aria-label="Revision A (red)" value={overlay.aId} onChange={(e) => setOverlay({ ...overlay, aId: e.target.value })} options={opts(overlay.bId)} />
+                <span className="dvRevB">Rev B · Blue</span>
+                <Select aria-label="Revision B (blue)" value={overlay.bId} onChange={(e) => setOverlay({ ...overlay, bId: e.target.value })} options={opts(overlay.aId)} />
+                <Button size="sm" icon={<ArrowsLeftRight size={13} weight="bold" />} title="Swap A and B" onClick={() => setOverlay({ ...overlay, aId: overlay.bId, bId: overlay.aId })}>Swap</Button>
+                <Button size="sm" variant="ghost" icon={<X size={18} weight="bold" />} aria-label="Close overlay" onClick={() => setOverlay(null)} />
               </div>
             </div>
-            <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
+            <div className="dvOverlayBody">
               {overlayErr ? (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ ...sCard, borderLeft: `3px solid ${C.RED}`, display: 'flex', alignItems: 'center', gap: 10, maxWidth: 460 }}>
-                    <WarningCircle size={18} weight="fill" color={C.RED} />
-                    <span style={{ color: C.DIM, fontSize: 13 }}>{overlayErr}</span>
-                  </div>
-                </div>
+                <div className="dvCenter"><EmptyState icon={<WarningCircle size={22} />} title="Couldn't load the revision files" text={overlayErr} action={<Button onClick={() => setOverlay({ ...overlay })}>Retry</Button>} /></div>
               ) : !overlayUrls ? (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ width: 32, height: 32, border: `3px solid ${C.BORDER}`, borderTopColor: C.GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-                    <div style={{ color: C.DIM, fontSize: 13 }}>Fetching revision files…</div>
-                  </div>
-                </div>
+                <div className="dvCenter"><div style={{ textAlign: 'center' }}><div className="dvSpin" /><div className="dvMuted" style={{ fontSize: 'var(--fs-sm)' }}>Fetching revision files…</div></div></div>
               ) : (
                 <RevisionCompare
                   key={`${overlay.aId}:${overlay.bId}`}
@@ -1009,21 +875,8 @@ export default function DocumentVersionsPage() {
           </div>
         );
       })()}
-    </PremiumSurface>
-  );
-}
 
-// ─── Shared modal header ──────────────────────────────────────────
-function ModalHeader({ title, subtitle, onClose }: { title: string; subtitle?: string | null; onClose: () => void }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-      <div>
-        <h2 style={{ margin: 0, fontSize: 18, color: C.GOLD }}>{title}</h2>
-        {subtitle && <p style={{ margin: '4px 0 0', color: C.DIM, fontSize: 13 }}>{subtitle}</p>}
-      </div>
-      <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.DIM, padding: 4, display: 'flex' }} aria-label="Close">
-        <X size={20} weight="bold" />
-      </button>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
     </div>
   );
 }

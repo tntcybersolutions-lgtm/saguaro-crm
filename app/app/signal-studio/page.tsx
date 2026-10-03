@@ -1,101 +1,88 @@
 'use client';
 /**
- * /app/signal-studio — Signal Studio inside the /app shell.
+ * /app/signal-studio — Signal Studio inside the /app shell. Pass 4 on the kit.
  *
- * The designer itself is components/signal-studio/Designer.tsx (extracted wholesale
- * from the legacy /field/heatmap page). This page owns PROJECT BINDING only:
+ * The designer itself is components/signal-studio/Designer.tsx — the wireless
+ * coverage (heat-map) designer extracted wholesale from the legacy
+ * /field/heatmap page, and it renders unchanged. This page owns PROJECT
+ * BINDING only:
  *   - ?projectId= deep link → straight into the designer, bound to that project
- *   - no projectId → a machined project picker (or an explicit "no project" start),
+ *   - no projectId → a project picker (or an explicit "no project" start),
  *     so designs never silently attach to the wrong job.
  * Legacy /field/heatmap links redirect here with their query string preserved.
  */
 import React, { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Buildings, CaretRight, Lightning } from '@phosphor-icons/react';
+import { Buildings, CaretRight, WarningCircle } from '@phosphor-icons/react';
 import Designer from '@/components/signal-studio/Designer';
 import { useProjects } from '@/lib/hooks/useProjects';
+import { PageShell, Card, Button, EmptyState, Badge } from '@/components/ui/kit';
+import { statusKindForProject } from '@/lib/status-colors';
 
-const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
-const TEXT = '#fff', DIM = '#D4D4D8', MUTED = 'rgba(255,255,255,0.5)';
+const CSS = `
+.ssWs > .k-page { max-width: 820px; }
+.ssList { display: flex; flex-direction: column; }
+.ssRow { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 14px; width: 100%; min-height: 60px; padding: 12px 16px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); }
+.ssRow:last-child { border-bottom: 0; }
+.ssRow:hover { background: rgba(255,255,255,0.03); }
+.ssRow:focus-visible { outline: 2px solid var(--brand-primary); outline-offset: -2px; }
+.ssIcon { width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: var(--brand-primary-12); border: 1px solid var(--brand-primary-35); color: var(--brand-primary); }
+.ssName { display: block; font-size: var(--fs-md); font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ssSub { display: block; font-size: var(--fs-xs); color: var(--text-tertiary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ssRow > svg:last-child { color: var(--brand-primary); flex-shrink: 0; }
+.ssSkel { height: 60px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.03); }
+.ssWarn { display: flex; gap: 10px; align-items: flex-start; font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.55; padding: 10px 14px; border-radius: var(--radius-sm); border: 1px solid rgba(255,197,61,.35); background: rgba(255,197,61,.08); }
+.ssWarn > svg { color: var(--status-under-contract); flex-shrink: 0; margin-top: 2px; }
+.ssFoot { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 640px) { .ssWs .k-btn { min-height: 44px; } }
+`;
 
 function ProjectPicker({ onPick, onSkip }: { onPick: (id: string) => void; onSkip: () => void }) {
   const { projects, loading, degraded } = useProjects();
   return (
-    <div data-tour="heatmap" style={{ maxWidth: 760, margin: '0 auto', padding: '48px 20px 64px' }}>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: GOLD, marginBottom: 12 }}>
-        <Lightning size={12} weight="fill" color={GOLD} /> Signal Studio
-      </div>
-      <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(24px,3vw,34px)', fontWeight: 800, letterSpacing: -0.8, color: TEXT }}>
-        Which project is this design for?
-      </h1>
-      <p style={{ margin: '0 0 26px', fontSize: 14, color: DIM, lineHeight: 1.55, maxWidth: 560 }}>
-        Coverage designs, bids and reports attach to the project you pick — so the whole
-        team finds them where the job lives. You can retarget later from the Save dialog.
-      </p>
+    <div className="ssWs" data-tour="heatmap">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Signal Studio' }]}
+        title="Signal Studio"
+        subtitle="Wireless coverage designer. Coverage designs, bids and reports attach to the project you pick — so the whole team finds them where the job lives. You can retarget later from the Save dialog."
+        actions={!loading ? <Button onClick={onSkip}>Start Without a Project</Button> : undefined}
+      >
+        {!loading && degraded && (
+          <div className="ssWarn" role="status"><WarningCircle size={16} weight="fill" /> Project list is temporarily unavailable — you can start without a project and attach it when you save.</div>
+        )}
 
-      {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[0, 1, 2].map((i) => (
-            <div key={i} style={{ height: 62, borderRadius: 12, border: `1px solid ${BORDER}`, background: RAISED, opacity: 0.6 - i * 0.15 }} />
-          ))}
-        </div>
-      )}
-      {!loading && degraded && (
-        <div style={{ marginBottom: 14, fontSize: 12.5, color: 'var(--warning)', background: 'color-mix(in srgb, var(--warning) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 25%, transparent)', borderRadius: 10, padding: '10px 12px', lineHeight: 1.5 }}>
-          Project list is temporarily unavailable — you can start without a project and attach it when you save.
-        </div>
-      )}
-      {!loading && projects.length === 0 && !degraded && (
-        <div style={{ marginBottom: 14, fontSize: 13, color: DIM, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px', lineHeight: 1.55 }}>
-          No projects yet. Start a design now and attach it to a project later, or create the
-          project first under <b style={{ color: TEXT }}>Projects</b>.
-        </div>
-      )}
-
-      {!loading && projects.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
-          {projects.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => onPick(p.id)}
-              className="ssp-row"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', cursor: 'pointer',
-                padding: '14px 16px', borderRadius: 12, border: `1px solid ${BORDER}`,
-                background: RAISED, color: TEXT, width: '100%',
-              }}
-            >
-              <span style={{ width: 38, height: 38, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', flexShrink: 0 }}>
-                <Buildings size={19} weight="duotone" color={GOLD} />
-              </span>
-              <span style={{ minWidth: 0, flex: 1 }}>
-                <span style={{ display: 'block', fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                <span style={{ display: 'block', fontSize: 11.5, color: MUTED, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {[p.project_number, p.address, p.status].filter(Boolean).join(' · ') || 'Project'}
-                </span>
-              </span>
-              <CaretRight size={15} weight="bold" color={GOLD} style={{ flexShrink: 0 }} />
-            </button>
-          ))}
-        </div>
-      )}
-
-      {!loading && (
-        <button
-          type="button"
-          onClick={onSkip}
-          style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, color: DIM, borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
-        >
-          Start Without a Project
-        </button>
-      )}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .ssp-row { transition: border-color .15s, background .15s, transform .15s; }
-        .ssp-row:hover { border-color: color-mix(in srgb, var(--brand-primary) 45%, transparent); background: var(--bg-surface-2); transform: translateY(-1px); }
-        .ssp-row:active { transform: translateY(0); }
-        .ssp-row:focus-visible { outline: 2px solid ${GOLD}; outline-offset: 2px; }
-      ` }} />
+        <Card title="Which project is this design for?" subtitle={loading ? 'Loading your projects…' : projects.length > 0 ? `${projects.length} project${projects.length === 1 ? '' : 's'} — pick one to open the designer bound to it.` : undefined} flush>
+          {loading && (
+            <div className="ssList" aria-busy="true" aria-label="Loading projects">
+              {[0, 1, 2].map((i) => <div key={i} className="ssSkel" style={{ opacity: 0.8 - i * 0.2 }} />)}
+            </div>
+          )}
+          {!loading && projects.length === 0 && !degraded && (
+            <EmptyState
+              icon={<Buildings size={22} />}
+              title="No projects yet"
+              text="Start a design now and attach it to a project later, or create the project first under Projects."
+              action={<div className="ssFoot"><Button variant="primary" href="/app/projects/new">Create a Project</Button><Button onClick={onSkip}>Start Without a Project</Button></div>}
+            />
+          )}
+          {!loading && projects.length > 0 && (
+            <div className="ssList">
+              {projects.map((p) => (
+                <button key={p.id} type="button" onClick={() => onPick(p.id)} className="ssRow">
+                  <span className="ssIcon"><Buildings size={19} weight="duotone" /></span>
+                  <span style={{ minWidth: 0, flex: 1 }}>
+                    <span className="ssName">{p.name}</span>
+                    <span className="ssSub">{[p.project_number, p.address].filter(Boolean).join(' · ') || 'Project'}</span>
+                  </span>
+                  {p.status && <Badge tone={statusKindForProject(p.status)}>{String(p.status).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</Badge>}
+                  <CaretRight size={15} weight="bold" />
+                </button>
+              ))}
+            </div>
+          )}
+        </Card>
+      </PageShell>
     </div>
   );
 }
@@ -126,7 +113,7 @@ function SignalStudioInner() {
 export default function SignalStudioPage() {
   // useSearchParams requires a Suspense boundary (same pattern as app/app/bids)
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', background: DARK }} />}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--bg-base)' }} />}>
       <SignalStudioInner />
     </Suspense>
   );
