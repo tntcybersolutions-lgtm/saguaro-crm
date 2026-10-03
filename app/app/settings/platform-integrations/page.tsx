@@ -56,7 +56,7 @@ export default function PlatformIntegrationsPage() {
   useEffect(() => { load(); }, [load]);
 
   const save = async () => {
-    if (!form.clientId.trim() || !form.clientSecret.trim()) { flash('Client ID and secret are both required', false); return; }
+    if (!form.clientId.trim() || !form.clientSecret.trim()) { flash('Client ID and secret are both required.', false); return; }
     setBusy(true);
     try {
       const res = await fetch(`/api/platform/integrations/${editing.app}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
@@ -74,7 +74,7 @@ export default function PlatformIntegrationsPage() {
       <PremiumSurface maxWidth={1100}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '72px 24px' }}>
           <IconChip size={64}><ShieldCheck size={30} weight="duotone" color={GOLD} /></IconChip>
-          <div style={{ fontSize: 18, fontWeight: 800, color: WHITE, margin: '18px 0 8px' }}>Platform owners only</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: WHITE, margin: '18px 0 8px' }}>Platform Owners Only</div>
           <div style={{ fontSize: 13.5, color: MUTED, maxWidth: 380, lineHeight: 1.55 }}>
             This page configures OAuth apps for every tenant on the platform and is limited to platform administrator accounts.
           </div>
@@ -99,9 +99,9 @@ export default function PlatformIntegrationsPage() {
       {/* Live figures — provider states come straight from the API. */}
       {apps !== null && (
         <StatStrip items={[
-          {href: '/app/settings/platform-integrations',  label: 'Providers', value: String(apps.length), sub: 'supported OAuth apps' },
-          {href: '/app/settings/platform-integrations',  label: 'Configured', value: String(configured.length), accent: configured.length > 0 ? GREEN : undefined, sub: 'live for all tenants' },
-          {href: '/app/settings/platform-integrations',  label: 'Not Configured', value: String(pending.length), accent: pending.length > 0 ? GOLD : undefined, sub: pending.length ? 'tenants can’t connect these yet' : 'everything is live' },
+          {href: '/app/settings/platform-integrations', label: 'Providers', value: String(apps.length), sub: 'Supported OAuth apps' },
+          {href: '/app/settings/platform-integrations', label: 'Configured', value: String(configured.length), accent: configured.length > 0 ? GREEN : undefined, sub: 'Live for all tenants' },
+          {href: '/app/settings/platform-integrations', label: 'Not Configured', value: String(pending.length), accent: pending.length > 0 ? GOLD : undefined, sub: pending.length ? 'Tenants can’t connect these yet' : 'Everything is live' },
         ]} />
       )}
 
@@ -127,11 +127,11 @@ export default function PlatformIntegrationsPage() {
                   <div style={{ flex: 1, minWidth: 180 }}>
                     <div style={{ fontWeight: 700, color: WHITE, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
                       {a.label}
-                      {a.configured ? <Pill tone="green" caps>Live</Pill> : <Pill tone="neutral" caps>Not set up</Pill>}
+                      {a.configured ? <Pill tone="green">Live</Pill> : <Pill tone="neutral">Not Set Up</Pill>}
                     </div>
                     <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{a.configured ? `Configured (${a.source})${a.client_id ? ` · ${a.client_id.slice(0, 10)}…` : ''}` : 'Not configured — tenants can’t connect this yet'}</div>
                   </div>
-                  <button onClick={() => { setEditing(a); setForm({ clientId: '', clientSecret: '' }); }} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 16px', fontSize: 12.5 }}>{a.configured ? 'Update' : 'Set up'}</button>
+                  <button onClick={() => { setEditing(a); setForm({ clientId: '', clientSecret: '' }); }} className="pmBtn" style={{ ...goldButtonStyle, padding: '8px 16px', fontSize: 12.5 }}>{a.configured ? 'Update' : 'Set Up'}</button>
                   {a.source === 'in-product' && (
                     <button onClick={() => remove(a)} className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '8px 12px', borderRadius: 10, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', color: RED, border: '1px solid rgba(239,68,68,0.35)' }}><Trash size={13} /></button>
                   )}
@@ -144,12 +144,12 @@ export default function PlatformIntegrationsPage() {
 
       {editing && (
         <div onClick={() => setEditing(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: '#131316', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(560px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 14, padding: 18, width: 'min(560px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 6 }}><div style={{ fontWeight: 800, fontSize: 16, flex: 1, color: WHITE }}>{editing.label}</div><button onClick={() => setEditing(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={19} color={MUTED} /></button></div>
 
             {/* setup guide */}
             <div style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))', border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: '10px 0 14px' }}>
-              <div style={{ fontSize: 12.5, color: WHITE, fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>1 · Register the app <a href={editing.portal} target="_blank" rel="noreferrer" style={{ color: GOLD, display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>{editing.portalName}<ArrowSquareOut size={12} /></a></div>
+              <div style={{ fontSize: 12.5, color: WHITE, fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>1 · Register the App <a href={editing.portal} target="_blank" rel="noreferrer" style={{ color: GOLD, display: 'inline-flex', alignItems: 'center', gap: 3, fontWeight: 600 }}>{editing.portalName}<ArrowSquareOut size={12} /></a></div>
               <div style={{ fontSize: 11.5, color: MUTED, marginBottom: 8 }}>Add these redirect URIs to the app (copy each):</div>
               {editing.redirects.map((r: string) => (
                 <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
@@ -160,12 +160,12 @@ export default function PlatformIntegrationsPage() {
               <div style={{ fontSize: 11.5, color: MUTED, marginTop: 6 }}>Enables: {editing.providers.join(', ')}.</div>
             </div>
 
-            <div style={{ fontSize: 12.5, color: WHITE, fontWeight: 700, marginBottom: 8 }}>2 · Paste the app credentials</div>
-            <label style={{ display: 'block', marginBottom: 10 }}><span style={{ fontSize: 12.5, color: MUTED }}>Client ID / App key</span>
+            <div style={{ fontSize: 12.5, color: WHITE, fontWeight: 700, marginBottom: 8 }}>2 · Paste the App Credentials</div>
+            <label style={{ display: 'block', marginBottom: 10 }}><span style={{ fontSize: 12.5, color: MUTED }}>Client ID / App Key</span>
               <input value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })} autoComplete="off" style={modalInputStyle} /></label>
-            <label style={{ display: 'block', marginBottom: 10 }}><span style={{ fontSize: 12.5, color: MUTED }}>Client secret / App secret</span>
+            <label style={{ display: 'block', marginBottom: 10 }}><span style={{ fontSize: 12.5, color: MUTED }}>Client Secret / App Secret</span>
               <input type="password" value={form.clientSecret} onChange={(e) => setForm({ ...form, clientSecret: e.target.value })} autoComplete="off" style={modalInputStyle} /></label>
-            <button onClick={save} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, width: '100%', marginTop: 4, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save — go live for all tenants'}</button>
+            <button onClick={save} disabled={busy} className="pmBtn" style={{ ...goldButtonStyle, width: '100%', marginTop: 4, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : 'Save — Go Live for All Tenants'}</button>
             <div style={{ fontSize: 11.5, color: MUTED, marginTop: 10, lineHeight: 1.5 }}>The secret is AES-encrypted server-side and never shown again. The client ID isn&apos;t a secret.</div>
             <button onClick={() => setEditing(null)} style={{ ...ghostButtonStyle, width: '100%', marginTop: 8, padding: '9px 16px', fontSize: 12.5, boxSizing: 'border-box' }} className="pmBtn">Cancel</button>
           </div>

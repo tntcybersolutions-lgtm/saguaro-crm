@@ -24,9 +24,9 @@ import {
 } from '@phosphor-icons/react';
 import { CSI_DIVISIONS as CANONICAL_CSI_DIVISIONS } from '@/lib/construction-intelligence';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -284,8 +284,7 @@ function AssemblyLibraryContent() {
     color: DIM,
     marginBottom: 4,
     fontWeight: 600,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
+
   };
 
   return (
@@ -311,19 +310,19 @@ function AssemblyLibraryContent() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
             <StatCard
               icon={<Stack size={19} weight="duotone" color={GOLD} />}
-              label="Assemblies" value={String(libStats.count)} sub="in library" accent={GOLD} delay={0.02}
+              label="Assemblies" value={String(libStats.count)} sub="In library" accent={GOLD} delay={0.02}
              href="/app/takeoff/assemblies"/>
             <StatCard
               icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
-              label="Library Value" value={currency(libStats.totalValue)} sub="total assembly cost" delay={0.06}
+              label="Library Value" value={currency(libStats.totalValue)} sub="Total assembly cost" delay={0.06}
              href="/app/takeoff/assemblies"/>
             <StatCard
               icon={<SquaresFour size={19} weight="duotone" color={GOLD} />}
-              label="CSI Divisions" value={String(libStats.divisions)} sub="covered" delay={0.10}
+              label="CSI Divisions" value={String(libStats.divisions)} sub="Covered" delay={0.10}
              href="/app/takeoff/assemblies"/>
             <StatCard
               icon={<FunnelSimple size={19} weight="duotone" color={GOLD} />}
-              label="Showing" value={String(filtered.length)} sub={`of ${libStats.count} assemblies`} delay={0.14}
+              label="Showing" value={String(filtered.length)} sub={`Of ${libStats.count} assemblies`} delay={0.14}
              href="/app/takeoff/assemblies"/>
           </div>
 
@@ -341,7 +340,7 @@ function AssemblyLibraryContent() {
             <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
               <input
                 type="text"
-                placeholder="Search assemblies..."
+                placeholder="Search assemblies…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 style={{
@@ -398,7 +397,7 @@ function AssemblyLibraryContent() {
 
             {/* Grid */}
             {loading ? (
-              <div style={{ textAlign: 'center', padding: 60, color: DIM }}>Loading assemblies...</div>
+              <div style={{ textAlign: 'center', padding: 60, color: DIM }}>Loading assemblies…</div>
             ) : filtered.length === 0 ? (
               assemblies.length === 0 ? (
                 <PremiumEmpty
@@ -447,7 +446,7 @@ function AssemblyLibraryContent() {
                       }}
                       onMouseEnter={e => {
                         (e.currentTarget as HTMLDivElement).style.borderColor = GOLD;
-                        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 1px ${GOLD}40, 0 14px 34px -18px rgba(0,0,0,0.7)`;
+                        (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 1px color-mix(in srgb, ${GOLD} 25%, transparent), 0 14px 34px -18px rgba(0,0,0,0.7)`;
                       }}
                       onMouseLeave={e => {
                         (e.currentTarget as HTMLDivElement).style.borderColor = BORDER;
@@ -462,31 +461,32 @@ function AssemblyLibraryContent() {
                           fontSize: 11,
                           padding: '2px 8px',
                           borderRadius: 4,
-                          background: `${GOLD}20`,
+                          background: `color-mix(in srgb, ${GOLD} 13%, transparent)`,
                           color: GOLD,
                           fontWeight: 600,
                           whiteSpace: 'nowrap',
                           marginLeft: 8,
+                          textTransform: 'capitalize',
                         }}>
                           {assembly.category || 'material'}
                         </span>
                       </div>
                       <div style={{ fontSize: 12, color: DIM, marginBottom: 12 }}>
-                        Div {assembly.csi_division} - {divName}
+                        Div {assembly.csi_division} — {divName}
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', gap: 16 }}>
                           <div>
-                            <div style={{ fontSize: 10, color: DIM, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unit</div>
+                            <div style={{ fontSize: 10, color: DIM}}>Unit</div>
                             <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{assembly.unit}</div>
                           </div>
                           <div>
-                            <div style={{ fontSize: 10, color: DIM, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Items</div>
+                            <div style={{ fontSize: 10, color: DIM}}>Items</div>
                             <div style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{itemCount}</div>
                           </div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 10, color: DIM, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Cost</div>
+                          <div style={{ fontSize: 10, color: DIM}}>Total Cost</div>
                           <div style={{ fontSize: 16, fontWeight: 700, color: GOLD }}>{currency(assembly.total_cost)}</div>
                         </div>
                       </div>
@@ -563,7 +563,7 @@ function AssemblyLibraryContent() {
               <textarea
                 value={form.description}
                 onChange={e => updateField('description', e.target.value)}
-                placeholder="Optional description..."
+                placeholder="Optional description…"
                 rows={2}
                 style={{ ...inputStyle, resize: 'vertical' as const }}
               />
@@ -761,7 +761,7 @@ function AssemblyLibraryContent() {
               padding: 16,
               marginBottom: 20,
             }}>
-              <div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 10, fontWeight: 600 }}>
+              <div style={{ fontSize: 11, color: DIM, marginBottom: 10, fontWeight: 600 }}>
                 Cost Summary
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -806,7 +806,7 @@ function AssemblyLibraryContent() {
                 }}
               >
                 <Trash size={14} weight="bold" />
-                {deleting ? 'Deleting...' : confirmDelete ? 'Confirm Delete' : 'Delete'}
+                {deleting ? 'Deleting…' : confirmDelete ? 'Confirm Delete' : 'Delete'}
               </button>
             ) : (
               <div />
@@ -825,7 +825,7 @@ function AssemblyLibraryContent() {
                 }}
                 className="pmBtn"
               >
-                {saving ? 'Saving...' : editingId ? 'Update Assembly' : 'Create Assembly'}
+                {saving ? 'Saving…' : editingId ? 'Update Assembly' : 'Create Assembly'}
               </button>
             </div>
           </div>

@@ -6,16 +6,16 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, StatSt
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const GOLD = '#F59E0B';
-const DARK = '#1c1c1e';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
 const GREEN = '#22c55e';
 const RED = '#ef4444';
-const BLUE = '#F59E0B';
-const AMBER = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
+const AMBER = 'var(--warning)';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,7 +55,7 @@ function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { bg: string; color: string }> = {
     active:   { bg: 'rgba(34,197,94,0.12)',  color: GREEN },
     inactive: { bg: 'rgba(239,68,68,0.12)',  color: RED },
-    expired:  { bg: 'rgba(245,158,11,0.12)', color: AMBER },
+    expired:  { bg: 'color-mix(in srgb, var(--warning) 12%, transparent)', color: AMBER },
   };
   const c = map[status] || map.inactive;
   return (
@@ -252,7 +252,7 @@ export default function PortalsPage() {
 
       {/* Header */}
       <ModuleHero
-        eyebrow="PORTAL ACCESS"
+        eyebrow="Portal Access"
         eyebrowIcon={<ShareNetwork size={13} weight="fill" color={GOLD} />}
         title="Portal Access"
         accent="Manager"
@@ -269,9 +269,9 @@ export default function PortalsPage() {
 
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard label="Active Client Portals" value={loading ? '—' : String(clientActive)} sub="clients with access" accent={GOLD} icon={<House size={19} weight="duotone" color={GOLD} />}  href="/app/portals"/>
-        <StatCard label="Active Sub Portals" value={loading ? '—' : String(subActive)} sub="subcontractors with access" accent={GOLD} icon={<HardHat size={19} weight="duotone" color={GOLD} />}  href="/app/portals"/>
-        <StatCard label="Total Active Links" value={loading ? '—' : String(clientActive + subActive)} sub="secure portal links live" accent={GREEN} icon={<ShareNetwork size={19} weight="duotone" color={GREEN} />}  href="/app/portals"/>
+        <StatCard label="Active Client Portals" value={loading ? '—' : String(clientActive)} sub="Clients with access" accent={GOLD} icon={<House size={19} weight="duotone" color={GOLD} />}  href="/app/portals"/>
+        <StatCard label="Active Sub Portals" value={loading ? '—' : String(subActive)} sub="Subcontractors with access" accent={GOLD} icon={<HardHat size={19} weight="duotone" color={GOLD} />}  href="/app/portals"/>
+        <StatCard label="Total Active Links" value={loading ? '—' : String(clientActive + subActive)} sub="Secure portal links live" accent={GREEN} icon={<ShareNetwork size={19} weight="duotone" color={GREEN} />}  href="/app/portals"/>
       </div>
 
       {/* Portal intelligence strip — coverage, engagement, and expiry pressure */}
@@ -279,22 +279,22 @@ export default function PortalsPage() {
         <StatStrip items={[
           {href: '/app/portals', 
             label: 'Projects Covered', value: `${coveredProjects} of ${projects.length}`,
-            sub: coveredProjects < projects.length ? `${projects.length - coveredProjects} project${projects.length - coveredProjects === 1 ? '' : 's'} without portal access` : 'every project has a live portal',
+            sub: coveredProjects < projects.length ? `${projects.length - coveredProjects} project${projects.length - coveredProjects === 1 ? '' : 's'} without portal access` : 'Every project has a live portal',
             accent: projects.length > 0 && coveredProjects < projects.length ? GOLD : GREEN,
           },
           {href: '/app/portals', 
             label: 'Never Opened', value: String(neverOpened),
             accent: neverOpened > 0 ? AMBER : GREEN,
-            sub: neverOpened > 0 ? 'links sent but never visited — resend the invite' : 'every active link has been visited',
+            sub: neverOpened > 0 ? 'Links sent but never visited — resend the invite' : 'Every active link has been visited',
           },
           {href: '/app/portals', 
             label: 'Expiring in 30 Days', value: String(expiring30),
             accent: expiring30 > 0 ? RED : GREEN,
-            sub: expiring30 > 0 ? 'client links auto-expire — reinvite to extend' : 'no client links expiring soon',
+            sub: expiring30 > 0 ? 'Client links auto-expire — reinvite to extend' : 'No client links expiring soon',
           },
           {href: '/app/portals', 
             label: 'Last Portal Visit', value: lastVisitTs > 0 ? fmt(new Date(lastVisitTs).toISOString()) : '—',
-            sub: 'most recent client or sub activity',
+            sub: 'Most recent client or sub activity',
           },
           {href: '/app/portals', 
             label: 'Links Issued', value: String(totalLinks),
@@ -313,7 +313,7 @@ export default function PortalsPage() {
             { n: '4', title: 'They Log In', desc: 'They go to the link or enter email at the portal login', color: GREEN },
           ].map(s => (
             <div key={s.n} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12 }}>
-              <div style={{ width: 26, height: 26, borderRadius: '50%', background: `rgba(245, 158, 11,0.15)`, border: `1.5px solid rgba(245, 158, 11,0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, color: GOLD, flexShrink: 0 }}>{s.n}</div>
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: `var(--brand-primary-18)`, border: `1.5px solid var(--brand-primary-25)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, color: GOLD, flexShrink: 0 }}>{s.n}</div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{s.title}</div>
                 <div style={{ fontSize: 12, color: DIM, lineHeight: 1.4 }}>{s.desc}</div>
@@ -328,7 +328,7 @@ export default function PortalsPage() {
         <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}` }}>
           {(['client', 'sub'] as Tab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ flex: 1, padding: '13px 20px', background: tab === t ? 'rgba(245, 158, 11,0.05)' : 'transparent', border: 'none', borderBottom: `2px solid ${tab === t ? GOLD : 'transparent'}`, color: tab === t ? GOLD : DIM, fontSize: 13, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
+              style={{ flex: 1, padding: '13px 20px', background: tab === t ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'transparent', border: 'none', borderBottom: `2px solid ${tab === t ? GOLD : 'transparent'}`, color: tab === t ? GOLD : DIM, fontSize: 13, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}>
               {t === 'client'
                 ? `Client Access (${clientSessions.filter(s => s.status === 'active').length} active)`
                 : `Subcontractor Access (${subSessions.filter(s => s.status === 'active').length} active)`}
@@ -384,7 +384,7 @@ export default function PortalsPage() {
             <div style={{ display: 'flex', borderBottom: `1px solid ${BORDER}` }}>
               {(['client', 'sub'] as Tab[]).map(t => (
                 <button key={t} onClick={() => { setInviteTab(t); setInviteSuccess(null); setInviteError(''); }}
-                  style={{ flex: 1, padding: '10px', background: inviteTab === t ? 'rgba(245, 158, 11,0.06)' : 'transparent', border: 'none', borderBottom: `2px solid ${inviteTab === t ? GOLD : 'transparent'}`, color: inviteTab === t ? GOLD : DIM, fontSize: 13, fontWeight: inviteTab === t ? 700 : 400, cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '10px', background: inviteTab === t ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent', border: 'none', borderBottom: `2px solid ${inviteTab === t ? GOLD : 'transparent'}`, color: inviteTab === t ? GOLD : DIM, fontSize: 13, fontWeight: inviteTab === t ? 700 : 400, cursor: 'pointer' }}>
                   {t === 'client' ? 'Client Portal' : 'Sub Portal'}
                 </button>
               ))}
@@ -428,11 +428,11 @@ export default function PortalsPage() {
                       </FormField>
                       <FormField label="Access Expires In">
                         <select value={clientForm.expiresInDays} onChange={e => setClientForm(f => ({ ...f, expiresInDays: e.target.value }))} style={selectStyle}>
-                          <option value="30">30 days</option>
-                          <option value="90">90 days</option>
-                          <option value="180">6 months</option>
-                          <option value="365">1 year</option>
-                          <option value="">Never expires</option>
+                          <option value="30">30 Days</option>
+                          <option value="90">90 Days</option>
+                          <option value="180">6 Months</option>
+                          <option value="365">1 Year</option>
+                          <option value="">Never Expires</option>
                         </select>
                         <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5 }}>The link stops working after this date. You can revoke or reinvite at any time.</div>
                       </FormField>
@@ -477,7 +477,7 @@ export default function PortalsPage() {
 function FormField({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 }}>{label}</label>
       {children}
     </div>
   );
@@ -490,7 +490,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 const selectStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', background: '#1c1c1e',
+  width: '100%', padding: '10px 12px', background: 'var(--bg-surface-2)',
   border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 14,
   outline: 'none', boxSizing: 'border-box', cursor: 'pointer',
 };
@@ -510,7 +510,7 @@ function SuccessCard({ url, name, type, emailSent, onAnother, onClose }: { url: 
       <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(34,197,94,0.12)', border: '1.5px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
         <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}><polyline points="20 6 9 17 4 12"/></svg>
       </div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Portal Access Created!</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 4 }}>Portal Access Created</div>
       <div style={{ fontSize: 13, color: DIM, marginBottom: 12 }}>
         {name} can now access their {type === 'client' ? 'client' : 'subcontractor'} portal.
       </div>
@@ -519,23 +519,23 @@ function SuccessCard({ url, name, type, emailSent, onAnother, onClose }: { url: 
       {emailSent ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ flexShrink: 0 }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Invitation email sent automatically</span>
+          <span style={{ fontSize: 12, color: GREEN, fontWeight: 600 }}>Invitation email sent automatically.</span>
         </div>
       ) : (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'color-mix(in srgb, var(--warning) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 18%, transparent)', borderRadius: 8, marginBottom: 16, textAlign: 'left' }}>
           <svg viewBox="0 0 24 24" fill="none" stroke={AMBER} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={16} height={16} style={{ flexShrink: 0 }}><circle cx={12} cy={12} r={10}/><line x1={12} y1={8} x2={12} y2={12}/><line x1={12} y1={16} x2={12.01} y2={16}/></svg>
-          <span style={{ fontSize: 12, color: AMBER, fontWeight: 600 }}>Email not sent automatically — copy the portal link below and share it directly</span>
+          <span style={{ fontSize: 12, color: AMBER, fontWeight: 600 }}>Email not sent automatically — copy the portal link below and share it directly.</span>
         </div>
       )}
 
       {/* Link box */}
-      <div style={{ background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', marginBottom: 12, textAlign: 'left' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 6 }}>Portal Link</div>
+      <div style={{ background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '10px 12px', marginBottom: 12, textAlign: 'left' }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: DIM, marginBottom: 6 }}>Portal Link</div>
         <div style={{ fontSize: 12, color: DIM, wordBreak: 'break-all', lineHeight: 1.5, marginBottom: 10 }}>{url}</div>
         <button onClick={copyUrl}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: linkCopied ? 'rgba(34,197,94,0.12)' : `rgba(245, 158, 11,0.12)`, border: `1px solid ${linkCopied ? 'rgba(34,197,94,0.3)' : 'rgba(245, 158, 11,0.3)'}`, borderRadius: 6, fontSize: 12, fontWeight: 700, color: linkCopied ? GREEN : GOLD, cursor: 'pointer' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: linkCopied ? 'rgba(34,197,94,0.12)' : `var(--brand-primary-12)`, border: `1px solid ${linkCopied ? 'rgba(34,197,94,0.3)' : 'var(--brand-primary-25)'}`, borderRadius: 6, fontSize: 12, fontWeight: 700, color: linkCopied ? GREEN : GOLD, cursor: 'pointer' }}>
           {linkCopied
-            ? <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polyline points="20 6 9 17 4 12"/></svg> Copied!</>
+            ? <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><polyline points="20 6 9 17 4 12"/></svg> Copied</>
             : <><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={13} height={13}><rect x={9} y={9} width={13} height={13} rx={2}/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Portal Link</>}
         </button>
       </div>
@@ -551,7 +551,7 @@ function SuccessCard({ url, name, type, emailSent, onAnother, onClose }: { url: 
         <button onClick={onAnother} style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 7, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
           <Plus size={13} weight="regular" color={DIM} /> Invite Another
         </button>
-        <button onClick={onClose} style={{ flex: 1, padding: '10px', background: `rgba(245, 158, 11,0.1)`, border: `1px solid rgba(245, 158, 11,0.25)`, borderRadius: 7, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={onClose} style={{ flex: 1, padding: '10px', background: `var(--brand-primary-12)`, border: `1px solid var(--brand-primary-25)`, borderRadius: 7, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
           Done
         </button>
       </div>
@@ -576,9 +576,9 @@ function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy,
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
-          <tr style={{ background: '#1c1c1e' }}>
+          <tr style={{ background: 'var(--bg-surface-2)' }}>
             {['Client', 'Project', 'Status', 'Last Access', 'Expires', 'Invite', 'Actions'].map(h => (
-              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -591,7 +591,7 @@ function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy,
               </td>
               <td style={{ padding: '12px 16px', color: DIM, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project_name || '—'}</td>
               <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
-              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{(s.last_login_at ?? s.last_accessed_at) ? <span style={{ color: DIM }}>{fmt((s.last_login_at ?? s.last_accessed_at) as string)}</span> : s.status === 'active' ? <span style={{ color: AMBER, fontWeight: 600 }}>Never opened</span> : <span style={{ color: DIM }}>—</span>}</td>
+              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{(s.last_login_at ?? s.last_accessed_at) ? <span style={{ color: DIM }}>{fmt((s.last_login_at ?? s.last_accessed_at) as string)}</span> : s.status === 'active' ? <span style={{ color: AMBER, fontWeight: 600 }}>Never Opened</span> : <span style={{ color: DIM }}>—</span>}</td>
               <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{(() => { if (!s.expires_at) return <span style={{ color: DIM }}>Never</span>; const dl = Math.ceil((new Date(s.expires_at).getTime() - Date.now()) / 86400000); return <span style={{ color: dl <= 0 ? RED : dl <= 30 ? AMBER : DIM, fontWeight: dl <= 30 ? 600 : 400 }}>{fmt(s.expires_at)}{dl <= 0 ? ' · expired' : dl <= 30 ? ` · ${dl}d left` : ''}</span>; })()}</td>
               {/* Resend invite column */}
               <td style={{ padding: '12px 16px' }}>
@@ -606,7 +606,7 @@ function ClientTable({ sessions, copied, revoking, resending, resendMsg, onCopy,
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button onClick={() => onCopy(s.token, 'client')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'rgba(245, 158, 11,0.1)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'rgba(245, 158, 11,0.25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : GOLD, cursor: 'pointer' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'var(--brand-primary-12)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'var(--brand-primary-25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : GOLD, cursor: 'pointer' }}>
                     {copied === s.token ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Copied</> : <><Copy size={11} weight="regular" color={GOLD} /> Copy Link</>}
                   </button>
                   <a href={`/portals/client/${s.token}`} target="_blank" rel="noreferrer"
@@ -646,9 +646,9 @@ function SubTable({ sessions, copied, revoking, resending, resendMsg, onCopy, on
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
-          <tr style={{ background: '#1c1c1e' }}>
+          <tr style={{ background: 'var(--bg-surface-2)' }}>
             {['Company', 'Project', 'Status', 'Last Login', 'Invite', 'Actions'].map(h => (
-              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+              <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, whiteSpace: 'nowrap' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -661,7 +661,7 @@ function SubTable({ sessions, copied, revoking, resending, resendMsg, onCopy, on
               </td>
               <td style={{ padding: '12px 16px', color: DIM, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.project_name || '—'}</td>
               <td style={{ padding: '12px 16px' }}><StatusBadge status={s.status} /></td>
-              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{s.last_login_at ? <span style={{ color: DIM }}>{fmt(s.last_login_at)}</span> : s.status === 'active' ? <span style={{ color: AMBER, fontWeight: 600 }}>Never opened</span> : <span style={{ color: DIM }}>—</span>}</td>
+              <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>{s.last_login_at ? <span style={{ color: DIM }}>{fmt(s.last_login_at)}</span> : s.status === 'active' ? <span style={{ color: AMBER, fontWeight: 600 }}>Never Opened</span> : <span style={{ color: DIM }}>—</span>}</td>
               {/* Resend invite column */}
               <td style={{ padding: '12px 16px' }}>
                 {s.status === 'active' && (
@@ -675,7 +675,7 @@ function SubTable({ sessions, copied, revoking, resending, resendMsg, onCopy, on
               <td style={{ padding: '12px 16px' }}>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button onClick={() => onCopy(s.token, 'sub')}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'rgba(245,158,11,0.25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : BLUE, cursor: 'pointer' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 10px', background: copied === s.token ? 'rgba(34,197,94,0.1)' : 'var(--brand-primary-12)', border: `1px solid ${copied === s.token ? 'rgba(34,197,94,0.25)' : 'var(--brand-primary-25)'}`, borderRadius: 5, fontSize: 11, fontWeight: 700, color: copied === s.token ? GREEN : BLUE, cursor: 'pointer' }}>
                     {copied === s.token ? <><CheckCircle size={11} weight="fill" color={GREEN} /> Copied</> : <><Copy size={11} weight="regular" color={BLUE} /> Copy Link</>}
                   </button>
                   <a href={`/portals/subcontractor/${s.token}`} target="_blank" rel="noreferrer"

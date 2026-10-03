@@ -359,14 +359,14 @@ export default function SchedulePage() {
         return (
           <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
             <button
-              title="Mark complete"
+              title="Mark Complete"
               disabled={busy || t.status === 'complete'}
               onClick={() => patchTask(t.id, { status: 'complete', pct_complete: 100 })}
               style={iconBtn(t.status === 'complete' ? colors.green : colors.textMuted, t.status === 'complete')}
             >
               <CheckCircle size={18} weight={t.status === 'complete' ? 'fill' : 'regular'} />
             </button>
-            <button title="Delete task" disabled={busy} onClick={() => deleteTask(t.id)} style={iconBtn(colors.red, false)}>
+            <button title="Delete Task" disabled={busy} onClick={() => deleteTask(t.id)} style={iconBtn(colors.red, false)}>
               {busy ? <CircleNotch size={16} className="spin" /> : <Trash size={16} />}
             </button>
           </div>
@@ -408,7 +408,7 @@ export default function SchedulePage() {
           { l: 'Overdue', v: stats.overdue, c: stats.overdue > 0 ? colors.red : colors.textMuted },
         ].map(k => (
           <div key={k.l} style={{ background: colors.raised, border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: '12px 16px' }}>
-            <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, textTransform: 'uppercase', letterSpacing: 0.5, color: colors.textMuted, marginBottom: 4 }}>{k.l}</div>
+            <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, marginBottom: 4 }}>{k.l}</div>
             <div style={{ fontSize: font.size['2xl'], fontWeight: font.weight.black, color: k.c }}>{k.v}</div>
           </div>
         ))}
@@ -416,7 +416,7 @@ export default function SchedulePage() {
 
       {/* Toolbar: project filter + view toggle */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-        <StandardSelect value={projectFilter} onChange={setProjectFilter} ariaLabel="Project" placeholder="All projects" style={{ minWidth: 220 }}
+        <StandardSelect value={projectFilter} onChange={setProjectFilter} ariaLabel="Project" placeholder="All Projects" style={{ minWidth: 220 }}
           options={projects.map(p => ({ value: p.id, label: p.name }))} />
         <div style={{ display: 'inline-flex', background: colors.raised, border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: 3, gap: 3 }}>
           {([['list', 'List', ListBullets], ['timeline', 'Timeline', ChartBar]] as const).map(([key, label, Icon]) => (
@@ -445,7 +445,7 @@ export default function SchedulePage() {
           loading={loading}
           tableId="schedule"
           defaultSort={{ key: 'start_date', dir: 'asc' }}
-          searchPlaceholder="Search tasks..."
+          searchPlaceholder="Search tasks…"
           emptyMessage="No tasks scheduled yet. Create your first task to start planning."
           onRowClick={(row) => router.push(`/app/schedule/${row.id}`)}
         />
@@ -470,8 +470,8 @@ export default function SchedulePage() {
               {form.projectId && (
                 <StatStrip items={[
                   {href: '/app/schedule',  label: 'Tasks', value: String(formProjectTasks.length), sub: `${formProjectTasks.filter(t => t.status === 'complete').length} complete on this project` },
-                  {href: '/app/schedule',  label: 'Critical Path', value: String(ctx?.schedule?.criticalCount ?? 0), accent: (ctx?.schedule?.criticalCount ?? 0) > 0 ? colors.gold : undefined, sub: 'tasks drive the end date' },
-                  {href: '/app/schedule',  label: 'Next Milestone', value: ctx?.schedule?.nextTasks?.[0]?.name || '—', sub: ctx?.schedule?.nextTasks?.[0]?.startDate ? `starts ${fmtDate(String(ctx.schedule.nextTasks[0].startDate).slice(0, 10))}` : 'nothing queued yet' },
+                  {href: '/app/schedule', label: 'Critical Path', value: String(ctx?.schedule?.criticalCount ?? 0), accent: (ctx?.schedule?.criticalCount ?? 0) > 0 ? colors.gold : undefined, sub: 'Tasks drive the end date' },
+                  {href: '/app/schedule', label: 'Next Milestone', value: ctx?.schedule?.nextTasks?.[0]?.name || '—', sub: ctx?.schedule?.nextTasks?.[0]?.startDate ? `Starts ${fmtDate(String(ctx.schedule.nextTasks[0].startDate).slice(0, 10))}` : 'Nothing queued yet' },
                 ]} />
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -481,7 +481,7 @@ export default function SchedulePage() {
                 </div>
                 <div>
                   <label style={labelStyle}>Project *</label>
-                  <StandardSelect value={form.projectId} onChange={(v) => setForm({ ...form, projectId: v, predecessorId: '' })} required ariaLabel="Project" placeholder="Select project..." width="100%"
+                  <StandardSelect value={form.projectId} onChange={(v) => setForm({ ...form, projectId: v, predecessorId: '' })} required ariaLabel="Project" placeholder="Select project…" width="100%"
                     options={projects.map(p => ({ value: p.id, label: p.name }))} />
                 </div>
                 <div>
@@ -490,7 +490,7 @@ export default function SchedulePage() {
                 </div>
                 <div>
                   <label style={labelStyle}>Trade</label>
-                  <StandardSelect value={form.trade} onChange={(v) => setForm({ ...form, trade: v })} ariaLabel="Trade" placeholder="Select trade..." width="100%"
+                  <StandardSelect value={form.trade} onChange={(v) => setForm({ ...form, trade: v })} ariaLabel="Trade" placeholder="Select trade…" width="100%"
                     options={TRADE_OPTIONS} />
                 </div>
                 <div>
@@ -534,7 +534,7 @@ export default function SchedulePage() {
               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
                 <button type="button" onClick={() => setShowCreate(false)} style={{ padding: '10px 20px', background: 'none', border: `1px solid ${colors.border}`, borderRadius: radius.lg, color: colors.textMuted, fontSize: font.size.md, fontWeight: font.weight.semibold, cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" disabled={creating} style={{ padding: '10px 24px', background: colors.gold, border: 'none', borderRadius: radius.lg, color: colors.dark, fontSize: font.size.md, fontWeight: font.weight.black, cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.6 : 1 }}>
-                  {creating ? 'Creating...' : 'Create Task'}
+                  {creating ? 'Creating…' : 'Create Task'}
                 </button>
               </div>
             </form>
@@ -595,8 +595,7 @@ function StatusEditor({ task, onSave, saving }: { task: ScheduleTask; onSave: (s
       options={STATUS_SELECT_OPTIONS}
       style={{
         padding: '5px 10px', borderRadius: 999, fontSize: font.size.xs, fontWeight: font.weight.bold,
-        textTransform: 'uppercase', letterSpacing: 0.4,
-        background: `${cfg.color}22`, color: cfg.color, border: `1px solid ${cfg.color}55`,
+        background: `color-mix(in srgb, ${cfg.color} 13%, transparent)`, color: cfg.color, border: `1px solid color-mix(in srgb, ${cfg.color} 33%, transparent)`,
       }}
     />
   );
@@ -641,7 +640,7 @@ function GanttChart({ rows, taskById, loading, onSelect }: {
   }, [rows]);
 
   if (loading) {
-    return <div style={{ padding: 48, textAlign: 'center', color: colors.textMuted }}>Loading timeline...</div>;
+    return <div style={{ padding: 48, textAlign: 'center', color: colors.textMuted }}>Loading timeline…</div>;
   }
   if (!geom) {
     return (
@@ -688,7 +687,7 @@ function GanttChart({ rows, taskById, loading, onSelect }: {
       <div style={{ display: 'flex' }}>
         {/* Fixed label column */}
         <div style={{ width: LABEL_W, flexShrink: 0, borderRight: `1px solid ${colors.border}` }}>
-          <div style={{ height: HEADER_H, display: 'flex', alignItems: 'flex-end', padding: '0 14px 8px', fontSize: font.size.xs, fontWeight: font.weight.bold, textTransform: 'uppercase', letterSpacing: 0.5, color: colors.textMuted, borderBottom: `1px solid ${colors.border}` }}>Task</div>
+          <div style={{ height: HEADER_H, display: 'flex', alignItems: 'flex-end', padding: '0 14px 8px', fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, borderBottom: `1px solid ${colors.border}` }}>Task</div>
           {rows.map((t) => {
             const unscheduled = !t.start_date || !t.end_date;
             return (
@@ -754,7 +753,7 @@ function GanttChart({ rows, taskById, loading, onSelect }: {
               return (
                 <g key={`bar${t.id}`} onClick={() => onSelect(t)} style={{ cursor: 'pointer' }}>
                   <title>{`${t.name}\n${fmtDate(t.start_date)} → ${fmtDate(t.end_date)}\n${pct}% · ${statusCfg(t.status).label}`}</title>
-                  <rect x={x} y={y} width={w} height={BAR_H} rx={5} fill={`${c}33`} stroke={c} strokeWidth={1} />
+                  <rect x={x} y={y} width={w} height={BAR_H} rx={5} fill={`color-mix(in srgb, ${c} 20%, transparent)`} stroke={c} strokeWidth={1} />
                   <rect x={x} y={y} width={(w * pct) / 100} height={BAR_H} rx={5} fill={c} opacity={0.9} />
                   {w > 46 && (
                     <text x={x + 7} y={y + BAR_H / 2 + 3.5} fontSize={10} fontWeight={700} fill={colors.text} style={{ pointerEvents: 'none' }}>{pct}%</text>

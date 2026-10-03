@@ -12,7 +12,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='#F59E0B',BG='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#CBD5E1',GREEN='#22C55E',RED='#EF4444',AMBER='#F59E0B',BLUE='#F59E0B',PURPLE='#8B5CF6';
+const GOLD='var(--brand-primary)',BG = 'var(--bg-base)',RAISED = 'var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#CBD5E1',GREEN='#22C55E',RED='#EF4444',AMBER ='var(--warning)',BLUE='var(--brand-primary)',PURPLE='#8B5CF6';
 
 /* ===== TYPES ===== */
 interface Assignment {
@@ -45,14 +45,14 @@ type Tab = 'grid' | 'timeline' | 'people' | 'staffing' | 'utilization' | 'availa
 /* ===== STYLE HELPERS ===== */
 function btn(primary?: boolean): React.CSSProperties {
   return primary
-    ? { padding: '8px 18px', background: `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 7, color: '#1C1C1E', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'opacity .15s' }
+    ? { padding: '8px 18px', background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 7, color: '#0A0A00', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'opacity .15s' }
     : { padding: '8px 18px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 7, color: DIM, fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'opacity .15s' };
 }
 function inp(): React.CSSProperties {
   return { width: '100%', padding: '8px 12px', background: BG, border: `1px solid ${BORDER}`, borderRadius: 7, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const };
 }
 function Badge({ label, color }: { label: string; color: string }) {
-  return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: `${color}22`, color, textTransform: 'uppercase' as const, letterSpacing: .5 }}>{label}</span>;
+  return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: `color-mix(in srgb, ${color} 13%, transparent)`, color }}>{String(label).replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}</span>;
 }
 function Card({ title, children, action, icon }: { title: string; children: React.ReactNode; action?: React.ReactNode; icon?: React.ReactNode }) {
   return <SectionCard flat title={title} action={action} icon={icon} style={{ marginBottom: 18 }}>{children}</SectionCard>;
@@ -454,8 +454,8 @@ export default function ResourcePlanningPage() {
 
     {/* Header */}
     <ModuleHero
-      eyebrow="RESOURCE PLANNING"
-      eyebrowIcon={<UsersThree size={13} weight="fill" color="#F59E0B" />}
+      eyebrow="Resource Planning"
+      eyebrowIcon={<UsersThree size={13} weight="fill" color="var(--brand-primary)" />}
       title="Resource"
       accent="Planning"
       subtitle="Workforce scheduling, utilization, capacity planning, and cost forecasting"
@@ -468,13 +468,13 @@ export default function ResourcePlanningPage() {
     />
 
     {/* Error banner */}
-    {error && <div style={{ margin: '0 0 16px', padding: '12px 18px', background: `${RED}15`, border: `1px solid ${RED}40`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    {error && <div style={{ margin: '0 0 16px', padding: '12px 18px', background: `color-mix(in srgb, ${RED} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${RED} 25%, transparent)`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <div style={{ fontSize: 13, color: RED, fontWeight: 600 }}>{error}</div>
       <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', fontWeight: 800, fontSize: 16 }}>x</button>
     </div>}
 
     {/* Conflict banner */}
-    {conflicts.length > 0 && <div style={{ margin: '0 0 16px', padding: '12px 18px', background: `${RED}15`, border: `1px solid ${RED}40`, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+    {conflicts.length > 0 && <div style={{ margin: '0 0 16px', padding: '12px 18px', background: `color-mix(in srgb, ${RED} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${RED} 25%, transparent)`, borderRadius: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
       <span style={{ fontSize: 20, fontWeight: 900, color: RED, lineHeight: 1 }}>!</span>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 700, fontSize: 13, color: RED }}>Scheduling Conflicts Detected ({conflicts.length})</div>
@@ -485,24 +485,24 @@ export default function ResourcePlanningPage() {
     {/* Stats row */}
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
       {[
-        { label: 'Total People', value: people.length, accent: BLUE, sub: 'in workforce', icon: <UsersThree size={19} weight="duotone" color={BLUE} /> },
-        { label: 'Active Assignments', value: assignments.filter(a => a.status !== 'released' && a.status !== 'unavailable').length, accent: GREEN, sub: 'not released', icon: <ClipboardText size={19} weight="duotone" color={GREEN} /> },
-        { label: 'Current FTEs', value: totalFTEs, accent: PURPLE, sub: 'full-time equiv', icon: <UserGear size={19} weight="duotone" color={PURPLE} /> },
-        { label: 'Conflicts', value: conflicts.length, accent: conflicts.length ? RED : GREEN, sub: 'scheduling overlaps', icon: <Warning size={19} weight="duotone" color={conflicts.length ? RED : GREEN} /> },
-        { label: 'Avg Utilization', value: avgUtil + '%', accent: avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN, sub: 'next 4 weeks', icon: <Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} /> },
-        { label: 'Overbooked / Available', value: `${overbookedCount} / ${availableCount}`, accent: overbookedCount > 0 ? RED : GREEN, sub: 'this week', icon: <Scales size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} /> },
+        { label: 'Total People', value: people.length, accent: BLUE, sub: 'In workforce', icon: <UsersThree size={19} weight="duotone" color={BLUE} /> },
+        { label: 'Active Assignments', value: assignments.filter(a => a.status !== 'released' && a.status !== 'unavailable').length, accent: GREEN, sub: 'Not released', icon: <ClipboardText size={19} weight="duotone" color={GREEN} /> },
+        { label: 'Current FTEs', value: totalFTEs, accent: PURPLE, sub: 'Full-time equiv', icon: <UserGear size={19} weight="duotone" color={PURPLE} /> },
+        { label: 'Conflicts', value: conflicts.length, accent: conflicts.length ? RED : GREEN, sub: 'Scheduling overlaps', icon: <Warning size={19} weight="duotone" color={conflicts.length ? RED : GREEN} /> },
+        { label: 'Avg Utilization', value: avgUtil + '%', accent: avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN, sub: 'Next 4 weeks', icon: <Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} /> },
+        { label: 'Overbooked / Available', value: `${overbookedCount} / ${availableCount}`, accent: overbookedCount > 0 ? RED : GREEN, sub: 'This week', icon: <Scales size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} /> },
       ].map((s, i) => <StatCard key={s.label} label={s.label} value={s.value} sub={s.sub} accent={s.accent} icon={s.icon} delay={0.04 * i}  href="/app/resource-planning"/>)}
     </div>
 
     {/* Filters */}
     <SectionCard
       title="Filters"
-      icon={<FunnelSimple size={17} weight="duotone" color="#F59E0B" />}
+      icon={<FunnelSimple size={17} weight="duotone" color="var(--brand-primary)" />}
       action={hasFilters ? <button onClick={clearFilters} style={{ ...btn(), fontSize: 11, padding: '5px 12px' }}>Clear Filters</button> : undefined}
       style={{ marginBottom: 18 }}
     >
     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-      <input value={filterPerson} onChange={e => setFilterPerson(e.target.value)} placeholder="Search person..." style={{ ...inp(), width: 160 }} />
+      <input value={filterPerson} onChange={e => setFilterPerson(e.target.value)} placeholder="Search person…" style={{ ...inp(), width: 160 }} />
       <StandardSelect value={filterProject} onChange={setFilterProject} ariaLabel="Project" placeholder="All Projects" width={180}
         options={projects.map(p => ({ value: p.id, label: p.name }))} />
       <StandardSelect value={filterTrade} onChange={setFilterTrade} ariaLabel="Trade" placeholder="All Trades" width={170}
@@ -535,7 +535,7 @@ export default function ResourcePlanningPage() {
     {/* Main content */}
     <div>
       {loading && <div style={{ textAlign: 'center', padding: 60, color: DIM }}>
-        <Spinner /><div style={{ marginTop: 12 }}>Loading resource data...</div>
+        <Spinner /><div style={{ marginTop: 12 }}>Loading resource data…</div>
       </div>}
 
       {/* ========== ASSIGNMENT FORM MODAL ========== */}
@@ -543,63 +543,63 @@ export default function ResourcePlanningPage() {
         <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 20, color: TEXT }}>{editId ? 'Edit Assignment' : 'New Assignment'}</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Person Name *</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Person Name *</label>
             <Suggest value={form.person_name || ''} onChange={e => setForm({ ...form, person_name: e.target.value })} placeholder="Full name" style={inp()} options={['n']} />
             </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Project *</label>
-            <StandardSelect value={form.project_id || ''} onChange={v => setForm({ ...form, project_id: v })} ariaLabel="Project" placeholder="Select project..." width="100%"
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Project *</label>
+            <StandardSelect value={form.project_id || ''} onChange={v => setForm({ ...form, project_id: v })} ariaLabel="Project" placeholder="Select project…" width="100%"
               options={projects.map(p => ({ value: p.id, label: p.name }))} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Role</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Role</label>
             <StandardSelect value={form.role || ''} onChange={v => setForm({ ...form, role: v })} ariaLabel="Role" width="100%" options={ROLES} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Trade</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Trade</label>
             <StandardSelect value={form.trade || ''} onChange={v => setForm({ ...form, trade: v })} ariaLabel="Trade" width="100%" options={TRADE_OPTIONS} />
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Start Date *</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Start Date *</label>
             <SaguaroDatePicker value={form.start_date || ''} onChange={v => setForm({ ...form, start_date: v })} style={inp()} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>End Date *</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>End Date *</label>
             <SaguaroDatePicker value={form.end_date || ''} onChange={v => setForm({ ...form, end_date: v })} style={inp()} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Status</label>
-            <StandardSelect value={form.status || 'assigned'} onChange={v => setForm({ ...form, status: v as Assignment['status'] })} ariaLabel="Status" width="100%" options={STATUS_OPTS} />
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Status</label>
+            <StandardSelect value={form.status || 'assigned'} onChange={v => setForm({ ...form, status: v as Assignment['status'] })} ariaLabel="Status" width="100%" options={STATUS_OPTS.map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} />
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Hours/Day</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Hours/Day</label>
             <input type="number" value={form.hours_per_day ?? 8} onChange={e => setForm({ ...form, hours_per_day: +e.target.value })} style={inp()} min={1} max={16} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Days/Week</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Days/Week</label>
             <input type="number" value={form.days_per_week ?? 5} onChange={e => setForm({ ...form, days_per_week: +e.target.value })} style={inp()} min={1} max={7} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Hourly Rate ($)</label>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Hourly Rate ($)</label>
             <input type="number" value={form.hourly_rate ?? 0} onChange={e => setForm({ ...form, hourly_rate: +e.target.value })} style={inp()} min={0} step={0.5} />
           </div>
         </div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Certifications</label>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Certifications</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {CERTS.map(c => <button key={c} onClick={() => toggleCert(c)} style={{ padding: '4px 10px', fontSize: 11, borderRadius: 5, border: `1px solid ${(form.certifications || []).includes(c) ? GOLD : BORDER}`, background: (form.certifications || []).includes(c) ? `${GOLD}20` : 'transparent', color: (form.certifications || []).includes(c) ? GOLD : DIM, cursor: 'pointer', fontWeight: 600 }}>{c}</button>)}
+            {CERTS.map(c => <button key={c} onClick={() => toggleCert(c)} style={{ padding: '4px 10px', fontSize: 11, borderRadius: 5, border: `1px solid ${(form.certifications || []).includes(c) ? GOLD : BORDER}`, background: (form.certifications || []).includes(c) ? `color-mix(in srgb, ${GOLD} 13%, transparent)` : 'transparent', color: (form.certifications || []).includes(c) ? GOLD : DIM, cursor: 'pointer', fontWeight: 600 }}>{c}</button>)}
           </div>
         </div>
         <div style={{ marginBottom: 18 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, letterSpacing: .5, marginBottom: 5 }}>Notes</label>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Notes</label>
           <textarea value={form.notes || ''} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} style={{ ...inp(), resize: 'vertical' as const }} />
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={saveAssignment} disabled={saving} style={{ ...btn(true), opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving...' : editId ? 'Update Assignment' : 'Create Assignment'}</button>
+          <button onClick={saveAssignment} disabled={saving} style={{ ...btn(true), opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : editId ? 'Update Assignment' : 'Create Assignment'}</button>
           <button onClick={() => { setShowForm(false); setEditId(null); }} style={btn()}>Cancel</button>
         </div>
       </ModalOverlay>}
@@ -611,7 +611,7 @@ export default function ResourcePlanningPage() {
           <div style={{ fontWeight: 700, fontSize: 16, color: TEXT, marginBottom: 8 }}>Delete Assignment?</div>
           <div style={{ fontSize: 13, color: DIM, marginBottom: 24 }}>This action cannot be undone. The assignment will be permanently removed.</div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-            <button onClick={() => deleteAssignment(showDeleteConfirm)} disabled={saving} style={{ ...btn(), borderColor: RED, color: RED, opacity: saving ? 0.6 : 1 }}>{saving ? 'Deleting...' : 'Delete'}</button>
+            <button onClick={() => deleteAssignment(showDeleteConfirm)} disabled={saving} style={{ ...btn(), borderColor: RED, color: RED, opacity: saving ? 0.6 : 1 }}>{saving ? 'Deleting…' : 'Delete'}</button>
             <button onClick={() => setShowDeleteConfirm(null)} style={btn()}>Cancel</button>
           </div>
         </div>
@@ -634,7 +634,7 @@ export default function ResourcePlanningPage() {
       </ModalOverlay>}
 
       {/* ========== ASSIGNMENT GRID (People x Projects x Weeks) ========== */}
-      {!loading && tab === 'grid' && <Card title={`Resource Assignment Grid (${gridData.GRID_WEEKS} Weeks)`} icon={<ClipboardText size={17} weight="duotone" color="#F59E0B" />} action={<span style={{ fontSize: 12, color: DIM }}>{filteredPeople.length} people shown</span>}>
+      {!loading && tab === 'grid' && <Card title={`Resource Assignment Grid (${gridData.GRID_WEEKS} Weeks)`} icon={<ClipboardText size={17} weight="duotone" color="var(--brand-primary)" />} action={<span style={{ fontSize: 12, color: DIM }}>{filteredPeople.length} people shown</span>}>
         <div ref={gridScrollRef} style={{ overflowX: 'auto' }}>
           <div style={{ minWidth: 1000 }}>
             {/* Headers */}
@@ -646,18 +646,18 @@ export default function ResourcePlanningPage() {
               </div>)}
             </div>
             {/* Rows */}
-            {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="#F59E0B" />} title="No assignment data" description="Create assignments to populate the grid." />}
+            {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--brand-primary)" />} title="No assignment data" description="Create assignments to populate the grid." />}
             {gridData.rows.map(row => <React.Fragment key={row.name}>
               {/* Person total row */}
-              <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, background: conflictPersons.has(row.name) ? `${RED}08` : `${BG}60`, borderBottom: `1px solid ${BORDER}15`, minHeight: 32, alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, background: conflictPersons.has(row.name) ? `color-mix(in srgb, ${RED} 3%, transparent)` : `color-mix(in srgb, ${BG} 38%, transparent)`, borderBottom: `1px solid ${BORDER}15`, minHeight: 32, alignItems: 'center' }}>
                 <div style={{ padding: '4px 8px', fontSize: 12, fontWeight: 700, color: conflictPersons.has(row.name) ? RED : TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {row.name} {conflictPersons.has(row.name) && <span style={{ fontSize: 9, color: RED, fontWeight: 800 }}>CONFLICT</span>}
+                  {row.name} {conflictPersons.has(row.name) && <span style={{ fontSize: 9, color: RED, fontWeight: 800 }}>Conflict</span>}
                 </div>
-                <div style={{ padding: '4px 8px', fontSize: 11, color: DIM, fontWeight: 600 }}>Total hrs/wk</div>
+                <div style={{ padding: '4px 8px', fontSize: 11, color: DIM, fontWeight: 600 }}>Total Hrs/Wk</div>
                 {row.totalWeekHours.map((h, wi) => {
                   const pct = h / 40 * 100;
-                  const bg = h === 0 ? 'transparent' : pct > 100 ? `${RED}30` : pct > 80 ? `${AMBER}20` : `${GREEN}15`;
-                  const color = h === 0 ? `${DIM}60` : pct > 100 ? RED : pct > 80 ? AMBER : GREEN;
+                  const bg = h === 0 ? 'transparent' : pct > 100 ? `color-mix(in srgb, ${RED} 19%, transparent)` : pct > 80 ? `color-mix(in srgb, ${AMBER} 13%, transparent)` : `color-mix(in srgb, ${GREEN} 8%, transparent)`;
+                  const color = h === 0 ? `color-mix(in srgb, ${DIM} 38%, transparent)` : pct > 100 ? RED : pct > 80 ? AMBER : GREEN;
                   return <div key={wi} style={{ padding: '4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color, background: bg, borderLeft: `1px solid ${BORDER}10`, borderRadius: 2 }}>
                     {h > 0 ? `${h}h` : '-'}
                   </div>;
@@ -667,7 +667,7 @@ export default function ResourcePlanningPage() {
               {row.cells.map(cell => <div key={cell.projectId} style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, borderBottom: `1px solid ${BORDER}08`, minHeight: 26, alignItems: 'center' }}>
                 <div />
                 <div style={{ padding: '2px 8px', fontSize: 11, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cell.projectName}</div>
-                {cell.weekHours.map((h, wi) => <div key={wi} style={{ padding: '2px 4px', textAlign: 'center', fontSize: 10, color: h > 0 ? BLUE : `${DIM}40`, borderLeft: `1px solid ${BORDER}08` }}>
+                {cell.weekHours.map((h, wi) => <div key={wi} style={{ padding: '2px 4px', textAlign: 'center', fontSize: 10, color: h > 0 ? BLUE : `color-mix(in srgb, ${DIM} 25%, transparent)`, borderLeft: `1px solid ${BORDER}08` }}>
                   {h > 0 ? `${h}h` : '-'}
                 </div>)}
               </div>)}
@@ -677,7 +677,7 @@ export default function ResourcePlanningPage() {
       </Card>}
 
       {/* ========== TIMELINE / GANTT ========== */}
-      {!loading && tab === 'timeline' && <Card title={`Timeline View (${TIMELINE_WEEKS} Weeks)`} icon={<CalendarBlank size={17} weight="duotone" color="#F59E0B" />} action={<span style={{ fontSize: 12, color: DIM }}>Starting {fmtDate(isoDate(timelineStart))}</span>}>
+      {!loading && tab === 'timeline' && <Card title={`Timeline View (${TIMELINE_WEEKS} Weeks)`} icon={<CalendarBlank size={17} weight="duotone" color="var(--brand-primary)" />} action={<span style={{ fontSize: 12, color: DIM }}>Starting {fmtDate(isoDate(timelineStart))}</span>}>
         <div style={{ overflowX: 'auto' }}>
           <div style={{ minWidth: 1100 }}>
             {/* Week headers */}
@@ -685,26 +685,26 @@ export default function ResourcePlanningPage() {
               <div style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, color: DIM }}>Person</div>
               {weeks.map((w, i) => {
                 const isCurrentWeek = isoDate(w) <= isoDate(new Date()) && isoDate(addDays(w, 6)) >= isoDate(new Date());
-                return <div key={i} style={{ padding: '6px 4px', fontSize: 10, fontWeight: 600, color: isCurrentWeek ? GOLD : DIM, textAlign: 'center', borderLeft: `1px solid ${BORDER}22`, background: isCurrentWeek ? `${GOLD}08` : 'transparent' }}>
+                return <div key={i} style={{ padding: '6px 4px', fontSize: 10, fontWeight: 600, color: isCurrentWeek ? GOLD : DIM, textAlign: 'center', borderLeft: `1px solid ${BORDER}22`, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 3%, transparent)` : 'transparent' }}>
                   {`${w.getMonth() + 1}/${w.getDate()}`}
                 </div>;
               })}
             </div>
             {/* Rows */}
-            {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="#F59E0B" />} title="No assignments match filters" description="Adjust filters or create new assignments." />}
+            {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="var(--brand-primary)" />} title="No assignments match filters" description="Adjust filters or create new assignments." />}
             {filteredPeople.map(([name, asns]) => {
               const isConflict = conflictPersons.has(name);
-              return <div key={name} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${TIMELINE_WEEKS},1fr)`, borderBottom: `1px solid ${BORDER}15`, minHeight: 36, alignItems: 'center', background: isConflict ? `${RED}08` : 'transparent' }}>
-                <div style={{ padding: '4px 8px', fontSize: 12, fontWeight: 600, color: isConflict ? RED : TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${name} (${asns[0]?.trade} - ${asns[0]?.role})`}>
-                  {name} {isConflict && <span style={{ fontSize: 9, color: RED, fontWeight: 800 }}>CONFLICT</span>}
+              return <div key={name} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${TIMELINE_WEEKS},1fr)`, borderBottom: `1px solid ${BORDER}15`, minHeight: 36, alignItems: 'center', background: isConflict ? `color-mix(in srgb, ${RED} 3%, transparent)` : 'transparent' }}>
+                <div style={{ padding: '4px 8px', fontSize: 12, fontWeight: 600, color: isConflict ? RED : TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${name} (${asns[0]?.trade} — ${asns[0]?.role})`}>
+                  {name} {isConflict && <span style={{ fontSize: 9, color: RED, fontWeight: 800 }}>Conflict</span>}
                 </div>
                 {weeks.map((w, wi) => {
                   const wStart = isoDate(w);
                   const wEnd = isoDate(addDays(w, 6));
                   const isCurrentWeek = wStart <= isoDate(new Date()) && wEnd >= isoDate(new Date());
                   const active = asns.filter(a => a.start_date <= wEnd && a.end_date >= wStart && a.status !== 'released');
-                  return <div key={wi} style={{ borderLeft: `1px solid ${BORDER}15`, height: '100%', padding: '2px 1px', display: 'flex', flexDirection: 'column', gap: 1, background: isCurrentWeek ? `${GOLD}05` : 'transparent' }}>
-                    {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) - ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 8, color: '#fff', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
+                  return <div key={wi} style={{ borderLeft: `1px solid ${BORDER}15`, height: '100%', padding: '2px 1px', display: 'flex', flexDirection: 'column', gap: 1, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 2%, transparent)` : 'transparent' }}>
+                    {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) — ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 8, color: '#fff', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
                       {active.length <= 2 ? (projMap[a.project_id] || '').slice(0, 12) : ''}
                     </div>)}
                   </div>;
@@ -720,19 +720,19 @@ export default function ResourcePlanningPage() {
             <span style={{ fontSize: 11, color: DIM, textTransform: 'capitalize' }}>{s}</span>
           </div>)}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 14, height: 10, borderRadius: 3, background: `${RED}30`, border: `1px solid ${RED}50` }} />
+            <div style={{ width: 14, height: 10, borderRadius: 3, background: `color-mix(in srgb, ${RED} 19%, transparent)`, border: `1px solid color-mix(in srgb, ${RED} 31%, transparent)` }} />
             <span style={{ fontSize: 11, color: DIM }}>Conflict</span>
           </div>
         </div>
       </Card>}
 
       {/* ========== PEOPLE LIST ========== */}
-      {!loading && tab === 'people' && <Card title={`People & Assignments (${filteredPeople.length})`} icon={<UsersThree size={17} weight="duotone" color="#F59E0B" />}>
-        {filteredPeople.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="#F59E0B" />} title="No people found" description="No people match the current filters." />}
+      {!loading && tab === 'people' && <Card title={`People & Assignments (${filteredPeople.length})`} icon={<UsersThree size={17} weight="duotone" color="var(--brand-primary)" />}>
+        {filteredPeople.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--brand-primary)" />} title="No people found" description="No people match the current filters." />}
         {filteredPeople.map(([name, asns]) => {
           const util = utilization.find(u => u.name === name);
           const isConflict = conflictPersons.has(name);
-          return <div key={name} style={{ background: `${BG}80`, border: `1px solid ${isConflict ? RED : BORDER}`, borderRadius: 8, padding: 16, marginBottom: 12 }}>
+          return <div key={name} style={{ background: `color-mix(in srgb, ${BG} 50%, transparent)`, border: `1px solid ${isConflict ? RED : BORDER}`, borderRadius: 8, padding: 16, marginBottom: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg,${GOLD},#B85C2A)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#1C1C1E' }}>{name.charAt(0)}</div>
@@ -754,22 +754,22 @@ export default function ResourcePlanningPage() {
             </div>
             {/* Certs */}
             {asns[0]?.certifications?.length > 0 && <div style={{ display: 'flex', gap: 4, marginBottom: 8, flexWrap: 'wrap' }}>
-              {asns[0].certifications.map(c => <span key={c} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `${PURPLE}18`, color: PURPLE, fontWeight: 600 }}>{c}</span>)}
+              {asns[0].certifications.map(c => <span key={c} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 4, background: `color-mix(in srgb, ${PURPLE} 9%, transparent)`, color: PURPLE, fontWeight: 600 }}>{c}</span>)}
             </div>}
             {/* Assignment rows */}
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-              <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, borderBottom: `1px solid ${BORDER}30` }}>{h}</th>)}</tr></thead>
+              <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}30` }}>{h}</th>)}</tr></thead>
               <tbody>{asns.map(a => <tr key={a.id || a.project_id + a.start_date}>
                 <td style={{ padding: '6px 8px', color: TEXT, fontWeight: 600 }}>{projMap[a.project_id] || a.project_id}</td>
-                <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} - {fmtDate(a.end_date)}</td>
+                <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h x {a.days_per_week}d</td>
                 <td style={{ padding: '6px 8px', color: GOLD, fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}/hr</td>
                 <td style={{ padding: '6px 8px' }}><Badge label={a.status} color={STATUS_COLORS[a.status]} /></td>
                 <td style={{ padding: '6px 8px' }}>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => editAssignment(a)} style={{ ...btn(), padding: '3px 8px', fontSize: 11 }}>Edit</button>
-                    <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `${PURPLE}50`, color: PURPLE }}>Move</button>
-                    <button onClick={() => a.id && setShowDeleteConfirm(a.id)} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `${RED}50`, color: RED }}>Del</button>
+                    <button onClick={() => setReassignTarget({ assignment: a, show: true })} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `color-mix(in srgb, ${PURPLE} 31%, transparent)`, color: PURPLE }}>Move</button>
+                    <button onClick={() => a.id && setShowDeleteConfirm(a.id)} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)`, color: RED }}>Delete</button>
                   </div>
                 </td>
               </tr>)}</tbody>
@@ -780,26 +780,26 @@ export default function ResourcePlanningPage() {
 
       {/* ========== PROJECT STAFFING ========== */}
       {!loading && tab === 'staffing' && <div>
-        {projects.length === 0 && <Card title="Project Staffing" icon={<Buildings size={17} weight="duotone" color="#F59E0B" />}><PremiumEmpty compact icon={<Buildings size={30} weight="duotone" color="#F59E0B" />} title="No projects found" description="Create a project to staff it here." /></Card>}
+        {projects.length === 0 && <Card title="Project Staffing" icon={<Buildings size={17} weight="duotone" color="var(--brand-primary)" />}><PremiumEmpty compact icon={<Buildings size={30} weight="duotone" color="var(--brand-primary)" />} title="No projects found" description="Create a project to staff it here." /></Card>}
         {projects.map(proj => {
           const projAsns = filtered.filter(a => a.project_id === proj.id);
           if (filterProject && filterProject !== proj.id) return null;
           if (!filterProject && projAsns.length === 0) return null;
-          return <Card key={proj.id} title={proj.name} icon={<Buildings size={17} weight="duotone" color="#F59E0B" />} action={<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          return <Card key={proj.id} title={proj.name} icon={<Buildings size={17} weight="duotone" color="var(--brand-primary)" />} action={<div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <span style={{ fontSize: 12, color: DIM }}>{projAsns.length} assignment{projAsns.length !== 1 ? 's' : ''}</span>
             <Badge label={proj.status || 'active'} color={GREEN} />
           </div>}>
             {projAsns.length === 0 ? <div style={{ padding: 16, textAlign: 'center', color: DIM, fontSize: 13 }}>No assignments for this project.</div>
               : <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, borderBottom: `1px solid ${BORDER}30` }}>{h}</th>)}</tr></thead>
-                <tbody>{projAsns.map(a => <tr key={a.id || a.person_name + a.start_date} style={{ borderBottom: `1px solid ${BORDER}15`, background: conflictPersons.has(a.person_name) ? `${RED}06` : 'transparent' }}>
+                <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}30` }}>{h}</th>)}</tr></thead>
+                <tbody>{projAsns.map(a => <tr key={a.id || a.person_name + a.start_date} style={{ borderBottom: `1px solid ${BORDER}15`, background: conflictPersons.has(a.person_name) ? `color-mix(in srgb, ${RED} 2%, transparent)` : 'transparent' }}>
                   <td style={{ padding: '6px 8px', color: conflictPersons.has(a.person_name) ? RED : TEXT, fontWeight: 600 }}>
                     {a.person_name}
                     {conflictPersons.has(a.person_name) && <span style={{ fontSize: 9, marginLeft: 4, color: RED }}>!</span>}
                   </td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.role}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.trade}</td>
-                  <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} - {fmtDate(a.end_date)}</td>
+                  <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
                   <td style={{ padding: '6px 8px', color: DIM }}>{a.hours_per_day}h/{a.days_per_week}d</td>
                   <td style={{ padding: '6px 8px', color: GOLD, fontWeight: 600 }}>{fmtMoney(a.hourly_rate)}</td>
                   <td style={{ padding: '6px 8px' }}><Badge label={a.status} color={STATUS_COLORS[a.status]} /></td>
@@ -809,7 +809,7 @@ export default function ResourcePlanningPage() {
                   <td style={{ padding: '6px 8px' }}>
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button onClick={() => editAssignment(a)} style={{ ...btn(), padding: '3px 8px', fontSize: 11 }}>Edit</button>
-                      <button onClick={() => a.id && setShowDeleteConfirm(a.id)} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `${RED}50`, color: RED }}>Del</button>
+                      <button onClick={() => a.id && setShowDeleteConfirm(a.id)} style={{ ...btn(), padding: '3px 8px', fontSize: 11, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)`, color: RED }}>Delete</button>
                     </div>
                   </td>
                 </tr>)}</tbody>
@@ -824,13 +824,13 @@ export default function ResourcePlanningPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 18 }}>
           <StatCard label="Avg Utilization" value={`${avgUtil}%`} accent={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} icon={<Gauge size={19} weight="duotone" color={avgUtil > 100 ? RED : avgUtil > 80 ? AMBER : GREEN} />}  href="/app/resource-planning"/>
           <StatCard label="Overbooked (100%+)" value={overbookedCount} accent={overbookedCount > 0 ? RED : GREEN} icon={<Warning size={19} weight="duotone" color={overbookedCount > 0 ? RED : GREEN} />}  href="/app/resource-planning"/>
-          <StatCard label="Under-utilized (<50%)" value={utilization.filter(u => u.pct < 50 && u.pct > 0).length} accent={BLUE} icon={<TrendDown size={19} weight="duotone" color={BLUE} />}  href="/app/resource-planning"/>
+          <StatCard label="Under-Utilized (<50%)" value={utilization.filter(u => u.pct < 50 && u.pct > 0).length} accent={BLUE} icon={<TrendDown size={19} weight="duotone" color={BLUE} />}  href="/app/resource-planning"/>
           <StatCard label="Unassigned" value={utilization.filter(u => u.pct === 0).length} accent={DIM} icon={<UserMinus size={19} weight="duotone" color={DIM} />}  href="/app/resource-planning"/>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
           {/* Utilization chart */}
-          <Card title="Utilization by Person (Next 4 Weeks)" icon={<Gauge size={17} weight="duotone" color="#F59E0B" />}>
+          <Card title="Utilization by Person (Next 4 Weeks)" icon={<Gauge size={17} weight="duotone" color="var(--brand-primary)" />}>
             {utilization.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: DIM }}>No data.</div>}
             {[...utilization].sort((a, b) => b.pct - a.pct).map(u => {
               const color = u.pct > 100 ? RED : u.pct > 80 ? AMBER : u.pct > 50 ? GREEN : BLUE;
@@ -847,7 +847,7 @@ export default function ResourcePlanningPage() {
             })}
           </Card>
           {/* Heatmap */}
-          <Card title="Weekly Heatmap (Hours)" icon={<Gauge size={17} weight="duotone" color="#F59E0B" />}>
+          <Card title="Weekly Heatmap (Hours)" icon={<Gauge size={17} weight="duotone" color="var(--brand-primary)" />}>
             <div style={{ display: 'grid', gridTemplateColumns: '140px repeat(4,1fr)', gap: 2 }}>
               <div style={{ fontSize: 10, fontWeight: 700, color: DIM }}>Person</div>
               {[0, 1, 2, 3].map(w => <div key={w} style={{ fontSize: 10, fontWeight: 700, color: DIM, textAlign: 'center' }}>Wk {w + 1}</div>)}
@@ -859,8 +859,8 @@ export default function ResourcePlanningPage() {
                     let hrs = 0;
                     asns.forEach(a => { if (a.status !== 'released' && a.status !== 'unavailable' && a.start_date <= we && a.end_date >= ws) hrs += a.hours_per_day * a.days_per_week; });
                     const pct = hrs / 40 * 100;
-                    const bg = pct === 0 ? `${BORDER}20` : pct <= 50 ? `${GREEN}30` : pct <= 80 ? `${GREEN}60` : pct <= 100 ? `${AMBER}60` : `${RED}60`;
-                    return <div key={w} style={{ background: bg, borderRadius: 3, padding: '3px 0', textAlign: 'center', fontSize: 10, fontWeight: 600, color: pct > 100 ? RED : pct > 0 ? TEXT : `${DIM}60` }}>{hrs > 0 ? `${hrs}h` : '-'}</div>;
+                    const bg = pct === 0 ? `${BORDER}20` : pct <= 50 ? `color-mix(in srgb, ${GREEN} 19%, transparent)` : pct <= 80 ? `color-mix(in srgb, ${GREEN} 38%, transparent)` : pct <= 100 ? `color-mix(in srgb, ${AMBER} 38%, transparent)` : `color-mix(in srgb, ${RED} 38%, transparent)`;
+                    return <div key={w} style={{ background: bg, borderRadius: 3, padding: '3px 0', textAlign: 'center', fontSize: 10, fontWeight: 600, color: pct > 100 ? RED : pct > 0 ? TEXT : `color-mix(in srgb, ${DIM} 38%, transparent)` }}>{hrs > 0 ? `${hrs}h` : '-'}</div>;
                   })}
                 </React.Fragment>;
               })}
@@ -870,7 +870,7 @@ export default function ResourcePlanningPage() {
       </div>}
 
       {/* ========== AVAILABILITY CALENDAR ========== */}
-      {!loading && tab === 'availability' && <Card title="Availability - Next 4 Weeks" icon={<CalendarBlank size={17} weight="duotone" color="#F59E0B" />}>
+      {!loading && tab === 'availability' && <Card title="Availability — Next 4 Weeks" icon={<CalendarBlank size={17} weight="duotone" color="var(--brand-primary)" />}>
         <div style={{ display: 'grid', gridTemplateColumns: '200px repeat(4,1fr)', gap: 2, marginBottom: 8 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: DIM, padding: 6 }}>Person / Trade / Role</div>
           {[0, 1, 2, 3].map(w => {
@@ -878,25 +878,25 @@ export default function ResourcePlanningPage() {
             return <div key={w} style={{ fontSize: 11, fontWeight: 700, color: DIM, textAlign: 'center', padding: 6 }}>{`${d.getMonth() + 1}/${d.getDate()}`} - {`${addDays(d, 6).getMonth() + 1}/${addDays(d, 6).getDate()}`}</div>;
           })}
         </div>
-        {availability.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="#F59E0B" />} title="No people tracked yet" description="Add assignments to see availability." />}
+        {availability.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--brand-primary)" />} title="No people tracked yet" description="Add assignments to see availability." />}
         {availability.map(a => <div key={a.name} style={{ display: 'grid', gridTemplateColumns: '200px repeat(4,1fr)', gap: 2, marginBottom: 2 }}>
-          <div style={{ padding: '6px 8px', fontSize: 12, color: TEXT, fontWeight: 600, background: `${RAISED}80`, borderRadius: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ padding: '6px 8px', fontSize: 12, color: TEXT, fontWeight: 600, background: `color-mix(in srgb, ${RAISED} 50%, transparent)`, borderRadius: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {a.name} <span style={{ fontSize: 10, color: DIM }}>({a.trade} - {a.role})</span>
           </div>
-          {a.weekFree.map((free, i) => <div key={i} style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, textAlign: 'center', borderRadius: 3, background: free ? `${GREEN}18` : a.weekHrs[i] > 40 ? `${RED}18` : `${AMBER}12`, color: free ? GREEN : a.weekHrs[i] > 40 ? RED : AMBER }}>
+          {a.weekFree.map((free, i) => <div key={i} style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, textAlign: 'center', borderRadius: 3, background: free ? `color-mix(in srgb, ${GREEN} 9%, transparent)` : a.weekHrs[i] > 40 ? `color-mix(in srgb, ${RED} 9%, transparent)` : `color-mix(in srgb, ${AMBER} 7%, transparent)`, color: free ? GREEN : a.weekHrs[i] > 40 ? RED : AMBER }}>
             {free ? 'Available' : `${a.weekHrs[i]}h booked`}
           </div>)}
         </div>)}
         {/* Summary at bottom */}
-        <div style={{ marginTop: 16, padding: '12px 16px', background: `${BG}60`, borderRadius: 8, display: 'flex', gap: 24 }}>
+        <div style={{ marginTop: 16, padding: '12px 16px', background: `color-mix(in srgb, ${BG} 38%, transparent)`, borderRadius: 8, display: 'flex', gap: 24 }}>
           <div style={{ fontSize: 12, color: DIM }}>
-            <span style={{ fontWeight: 700, color: GREEN }}>Available this week:</span> {availability.filter(a => a.weekFree[0]).length} of {availability.length}
+            <span style={{ fontWeight: 700, color: GREEN }}>Available This Week:</span> {availability.filter(a => a.weekFree[0]).length} of {availability.length}
           </div>
           <div style={{ fontSize: 12, color: DIM }}>
-            <span style={{ fontWeight: 700, color: RED }}>Overbooked this week:</span> {availability.filter(a => a.weekHrs[0] > 40).length}
+            <span style={{ fontWeight: 700, color: RED }}>Overbooked This Week:</span> {availability.filter(a => a.weekHrs[0] > 40).length}
           </div>
           <div style={{ fontSize: 12, color: DIM }}>
-            <span style={{ fontWeight: 700, color: AMBER }}>Partially booked:</span> {availability.filter(a => !a.weekFree[0] && a.weekHrs[0] <= 40).length}
+            <span style={{ fontWeight: 700, color: AMBER }}>Partially Booked:</span> {availability.filter(a => !a.weekFree[0] && a.weekHrs[0] <= 40).length}
           </div>
         </div>
       </Card>}
@@ -904,7 +904,7 @@ export default function ResourcePlanningPage() {
       {/* ========== HEADCOUNT FORECAST ========== */}
       {!loading && tab === 'forecast' && <div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
-          <Card title="Monthly Headcount Projection" icon={<UsersThree size={17} weight="duotone" color="#F59E0B" />}>
+          <Card title="Monthly Headcount Projection" icon={<UsersThree size={17} weight="duotone" color="var(--brand-primary)" />}>
             {forecast.map(f => {
               const pct = f.count / maxForecast * 100;
               return <div key={f.label} style={{ marginBottom: 10 }}>
@@ -918,7 +918,7 @@ export default function ResourcePlanningPage() {
               </div>;
             })}
           </Card>
-          <Card title="Monthly Labor Cost Projection" icon={<CurrencyDollar size={17} weight="duotone" color="#F59E0B" />}>
+          <Card title="Monthly Labor Cost Projection" icon={<CurrencyDollar size={17} weight="duotone" color="var(--brand-primary)" />}>
             {forecast.map(f => {
               const maxC = Math.max(1, ...forecast.map(x => x.cost));
               const pct = f.cost / maxC * 100;
@@ -935,9 +935,9 @@ export default function ResourcePlanningPage() {
           </Card>
         </div>
         {/* Forecast table */}
-        <Card title="Forecast Detail" icon={<ClipboardText size={17} weight="duotone" color="#F59E0B" />}>
+        <Card title="Forecast Detail" icon={<ClipboardText size={17} weight="duotone" color="var(--brand-primary)" />}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead><tr>{['Month', 'Headcount', 'FTEs', 'Labor Cost', 'Avg Cost/Person', 'Trend'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Month', 'Headcount', 'FTEs', 'Labor Cost', 'Avg Cost/Person', 'Trend'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{forecast.map((f, fi) => {
               const prevCount = fi > 0 ? forecast[fi - 1].count : f.count;
               const trend = f.count > prevCount ? 'up' : f.count < prevCount ? 'down' : 'flat';
@@ -958,10 +958,10 @@ export default function ResourcePlanningPage() {
 
       {/* ========== LABOR COSTS ========== */}
       {!loading && tab === 'costs' && <div>
-        <Card title="Labor Cost by Project" icon={<CurrencyDollar size={17} weight="duotone" color="#F59E0B" />}>
+        <Card title="Labor Cost by Project" icon={<CurrencyDollar size={17} weight="duotone" color="var(--brand-primary)" />}>
           {projectCosts.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: DIM }}>No cost data available.</div>}
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead><tr>{['Project', 'Headcount', 'Total Hours', 'Labor Cost', 'Avg Rate', 'Cost Bar'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
+            <thead><tr>{['Project', 'Headcount', 'Total Hours', 'Labor Cost', 'Avg Rate', 'Cost Bar'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
             <tbody>{projectCosts.map(pc => <tr key={pc.project} style={{ borderBottom: `1px solid ${BORDER}20` }}>
               <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 700 }}>{pc.project}</td>
               <td style={{ padding: '10px 12px', color: BLUE, fontWeight: 600 }}>{pc.headcount}</td>
@@ -995,7 +995,7 @@ export default function ResourcePlanningPage() {
 
         {/* Trade breakdown */}
         <div style={{ marginTop: 18 }}>
-          <Card title="Cost by Trade" icon={<Scales size={17} weight="duotone" color="#F59E0B" />}>
+          <Card title="Cost by Trade" icon={<Scales size={17} weight="duotone" color="var(--brand-primary)" />}>
             {(() => {
               const tradeMap: Record<string, { hours: number; cost: number; count: number }> = {};
               assignments.forEach(a => {
@@ -1009,7 +1009,7 @@ export default function ResourcePlanningPage() {
               const trades = Object.entries(tradeMap).sort((a, b) => b[1].cost - a[1].cost);
               const maxTradeCost = Math.max(1, ...trades.map(([, v]) => v.cost));
               return <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead><tr>{['Trade', 'Assignments', 'Hours', 'Cost', 'Avg Rate', ''].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase' as const, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
+                <thead><tr>{['Trade', 'Assignments', 'Hours', 'Cost', 'Avg Rate', ''].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
                 <tbody>{trades.map(([trade, v]) => <tr key={trade} style={{ borderBottom: `1px solid ${BORDER}20` }}>
                   <td style={{ padding: '8px 12px', color: TEXT, fontWeight: 600 }}>{trade}</td>
                   <td style={{ padding: '8px 12px', color: DIM }}>{v.count}</td>

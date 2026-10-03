@@ -19,10 +19,10 @@ import { humanError } from '@/lib/errors';
 import { StatusPill } from '@/components/ui/Status';
 
 // ─── Heatmap shipping palette (single source of truth — identical to app/field/heatmap) ─
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.1)';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
 const TEXT = '#fff', DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.5)';
-const GOLD_DIM = 'rgba(245,158,11,0.12)';   // chip/tab active fill
-const GOLD_LINE = 'rgba(245,158,11,0.35)';  // active tab inset ring
+const GOLD_DIM = 'var(--brand-primary-12)';   // chip/tab active fill
+const GOLD_LINE = 'var(--brand-primary-35)';  // active tab inset ring
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Project { id: string; name: string; }
@@ -142,7 +142,7 @@ const STEPS = [
   'Complete',
 ];
 
-const RING_HEX = { green: '#22c55e', amber: '#f59e0b', red: '#ef4444' } as const;
+const RING_HEX = { green: '#22c55e', amber: 'var(--warning)', red: '#ef4444' } as const;
 
 // SVG confidence donut — mirrors the mobile HealthRing (color by confidenceColor()).
 function ConfidenceRing({ value, size = 96, stroke = 9 }: { value: number; size?: number; stroke?: number }) {
@@ -161,7 +161,7 @@ function ConfidenceRing({ value, size = 96, stroke = 9 }: { value: number; size?
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: size * 0.24, fontWeight: 800, color: col, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{v}%</span>
-        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase', marginTop: 2 }}>Confidence</span>
+        <span style={{ fontSize: 9, fontWeight: 700, color: MUTED, marginTop: 2 }}>Confidence</span>
       </div>
     </div>
   );
@@ -173,7 +173,7 @@ function MetricCard({ icon, label, value, accent }: { icon: React.ReactNode; lab
     <div className="lift" style={{ background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, boxShadow: 'var(--shadow-sm)' }}>
       <div style={{ color: MUTED, marginBottom: 8 }}>{icon}</div>
       <div style={{ fontSize: 24, fontWeight: 800, color: accent || TEXT, lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: MUTED, marginTop: 4 }}>{label}</div>
+      <div style={{ fontSize: 11, color: MUTED, marginTop: 4 }}>{label}</div>
     </div>
   );
 }
@@ -349,7 +349,7 @@ export default function TakeoffPage() {
 
   async function startUpload(file: File, projectId: string) {
     setPhase('uploading');
-    setProgress({ pct: 5, message: 'Creating takeoff record...', step: 1 });
+    setProgress({ pct: 5, message: 'Creating takeoff record…', step: 1 });
     setErrorMsg('');
 
     try {
@@ -366,7 +366,7 @@ export default function TakeoffPage() {
       /* 2. Upload the bytes straight to storage — a serverless function will
             not take a body over 4.5 MB, and a real drawing set is far bigger.
             See /api/takeoff/[id]/upload-url. */
-      setProgress({ pct: 20, message: 'Uploading blueprint...', step: 2 });
+      setProgress({ pct: 20, message: 'Uploading blueprint…', step: 2 });
 
       const urlRes = await fetch(`/api/takeoff/${takeoffId}/upload-url`, {
         method: 'POST',
@@ -401,7 +401,7 @@ export default function TakeoffPage() {
 
       // 3. Analyze via SSE
       setPhase('analyzing');
-      setProgress({ pct: 25, message: 'AI is reading your blueprint...', step: 3 });
+      setProgress({ pct: 25, message: 'AI is reading your blueprint…', step: 3 });
 
       await new Promise<void>((resolve, reject) => {
         const evtSource = new EventSource(`/api/takeoff/${takeoffId}/analyze`);
@@ -443,7 +443,7 @@ export default function TakeoffPage() {
 
       // 4. Reload list and select new takeoff
       setPhase('done');
-      setProgress({ pct: 100, message: 'Complete!', step: 8 });
+      setProgress({ pct: 100, message: 'Complete', step: 8 });
       await loadTakeoffs();
       await loadDetail(takeoffId);
 
@@ -503,7 +503,7 @@ export default function TakeoffPage() {
         .tk-tabbtn { flex: 1; background: transparent; border: none; color: ${DIM}; border-radius: 7px; padding: 8px 6px; font-size: 12px; font-weight: 700; letter-spacing: .2px; cursor: pointer; transition: background .12s, color .12s; }
         .tk-tabbtn:hover { background: rgba(255,255,255,0.05); color: ${TEXT}; }
         .tk-tabbtn[data-on="true"] { background: ${GOLD_DIM}; color: ${GOLD}; box-shadow: inset 0 0 0 1px ${GOLD_LINE}; }
-        .tk-scanline { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, ${GOLD}, transparent); box-shadow: 0 0 12px 2px rgba(245,158,11,0.6); animation: tk-scan 2s ease-in-out infinite; }
+        .tk-scanline { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, ${GOLD}, transparent); box-shadow: 0 0 12px 2px color-mix(in srgb, var(--brand-primary) 60%, transparent); animation: tk-scan 2s ease-in-out infinite; }
         @keyframes tk-scan { 0% { top: 0 } 50% { top: calc(100% - 2px) } 100% { top: 0 } }
         @media (max-width: 900px) { .tk-strip { grid-template-columns: repeat(2, 1fr); } }
       ` }} />
@@ -515,7 +515,7 @@ export default function TakeoffPage() {
           title="Takeoff"
           accent="Studio"
           subtitle="Blueprint analysis, measured takeoff, assemblies, and rates."
-          note="no spreadsheet"
+          note="No spreadsheet"
           actions={
             <>
               <Badge label={`${takeoffs.length} Total`} color="muted" />
@@ -529,17 +529,17 @@ export default function TakeoffPage() {
             could only find them by typing URLs. One row, every tool. ── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10, marginBottom: 22 }}>
           {[
-            { href: '/app/takeoff/measured', title: 'Measured takeoff', sub: 'Trace & price the drawing live', icon: <Ruler size={16} weight="duotone" color={GOLD} /> },
-            { href: '/app/takeoff/assemblies', title: 'Assembly library', sub: 'Templates that explode into bills', icon: <Stack size={16} weight="duotone" color={GOLD} /> },
-            { href: '/app/takeoff/rates', title: 'Cost rates', sub: 'Your material & labor rates', icon: <CurrencyDollar size={16} weight="duotone" color={GOLD} /> },
+            { href: '/app/takeoff/measured', title: 'Measured Takeoff', sub: 'Trace & price the drawing live', icon: <Ruler size={16} weight="duotone" color={GOLD} /> },
+            { href: '/app/takeoff/assemblies', title: 'Assembly Library', sub: 'Templates that explode into bills', icon: <Stack size={16} weight="duotone" color={GOLD} /> },
+            { href: '/app/takeoff/rates', title: 'Cost Rates', sub: 'Your material & labor rates', icon: <CurrencyDollar size={16} weight="duotone" color={GOLD} /> },
           ].map(d => (
-            <Link key={d.href} href={d.href} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(245,158,11,0.22)', background: 'rgba(245,158,11,0.05)', textDecoration: 'none' }}>
+            <Link key={d.href} href={d.href} className="lift" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)', background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)', textDecoration: 'none' }}>
               {d.icon}
               <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <span style={{ color: '#fff', fontWeight: 700, fontSize: 13 }}>{d.title}</span>
                 <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.sub}</span>
               </span>
-              <span aria-hidden style={{ marginLeft: 'auto', color: 'rgba(245,158,11,0.5)', fontWeight: 900 }}>›</span>
+              <span aria-hidden style={{ marginLeft: 'auto', color: 'color-mix(in srgb, var(--brand-primary) 50%, transparent)', fontWeight: 900 }}>›</span>
             </Link>
           ))}
         </div>
@@ -547,10 +547,10 @@ export default function TakeoffPage() {
         {/* KPIs — one tight row, not four fat cards (declutter) */}
         <div style={{ marginBottom: 28 }}>
           <StatStrip items={[
-            { label: 'This Month', value: String(thisMonthComplete.length), sub: 'completed takeoffs', icon: <Clipboard size={12} color={GOLD} /> },
-            { label: 'Avg Confidence', value: completed.length ? `${avgConfidence}%` : '—', sub: 'across all analyses', icon: <Target size={12} color={GOLD} /> },
-            { label: 'Total Bid Value', value: completed.length ? totalBidStr : '—', sub: 'sum of complete takeoffs', icon: <CurrencyDollar size={12} color={GOLD} /> },
-            { label: 'Avg Processing', value: processingSecs.length ? `~${fmtSecs(avgProcessingSecs)}` : '—', sub: 'per blueprint analysis', icon: <Lightning size={12} color={GOLD} /> },
+            { label: 'This Month', value: String(thisMonthComplete.length), sub: 'Completed takeoffs', icon: <Clipboard size={12} color={GOLD} /> },
+            { label: 'Avg Confidence', value: completed.length ? `${avgConfidence}%` : '—', sub: 'Across all analyses', icon: <Target size={12} color={GOLD} /> },
+            { label: 'Total Bid Value', value: completed.length ? totalBidStr : '—', sub: 'Sum of complete takeoffs', icon: <CurrencyDollar size={12} color={GOLD} /> },
+            { label: 'Avg Processing', value: processingSecs.length ? `~${fmtSecs(avgProcessingSecs)}` : '—', sub: 'Per blueprint analysis', icon: <Lightning size={12} color={GOLD} /> },
           ]} />
         </div>
 
@@ -615,8 +615,8 @@ export default function TakeoffPage() {
                     </div>
                     {creatingProject || projects.length === 0 ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <label style={{ color: T.muted, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                          New project name
+                        <label style={{ color: T.muted, fontSize: 11, fontWeight: 700}}>
+                          New Project Name
                         </label>
                         <input
                           autoFocus
@@ -661,7 +661,7 @@ export default function TakeoffPage() {
                         {projects.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
-                        <option value="__new__">+ New project…</option>
+                        <option value="__new__">+ New Project…</option>
                       </select>
                     )}
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -673,7 +673,7 @@ export default function TakeoffPage() {
                           onClick={() => void createProjectAndAnalyze()}
                           style={{ flex: 1 }}
                         >
-                          {createBusy ? 'Creating…' : 'Create project & analyze'}
+                          {createBusy ? 'Creating…' : 'Create Project & Analyze'}
                         </Btn>
                       ) : (
                         <Btn data-tour="run-takeoff"
@@ -705,11 +705,11 @@ export default function TakeoffPage() {
                     <div style={{
                       position: 'relative', height: 120, borderRadius: 12, overflow: 'hidden',
                       border: `1px solid ${BORDER}`, background: DARK,
-                      backgroundImage: 'linear-gradient(rgba(245,158,11,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.06) 1px, transparent 1px)',
+                      backgroundImage: 'linear-gradient(color-mix(in srgb, var(--brand-primary) 6%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 6%, transparent) 1px, transparent 1px)',
                       backgroundSize: '20px 20px',
                     }}>
                       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ruler size={30} weight="regular" color="rgba(245,158,11,0.35)" />
+                        <Ruler size={30} weight="regular" color="var(--brand-primary-35)" />
                       </div>
                       <div className="tk-scanline" />
                     </div>
@@ -728,7 +728,7 @@ export default function TakeoffPage() {
                               fontSize: 10, fontWeight: 700,
                               background: done ? T.greenDim : active ? T.blueDim : 'rgba(255,255,255,0.05)',
                               color: done ? T.green : active ? T.blue : T.faint,
-                              border: `1px solid ${done ? 'rgba(34,197,94,0.3)' : active ? 'rgba(245,158,11,0.3)' : T.border}`,
+                              border: `1px solid ${done ? 'rgba(34,197,94,0.3)' : active ? 'var(--brand-primary-25)' : T.border}`,
                             }}>
                               {done ? <Check size={12} weight="bold" color={T.green} /> : stepNum}
                             </span>
@@ -866,14 +866,14 @@ export default function TakeoffPage() {
                 onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }}
                 style={{
                   display: 'flex', gap: 26, alignItems: 'center', flexWrap: 'wrap',
-                  background: dragOver ? 'rgba(245,158,11,0.06)' : RAISED,
+                  background: dragOver ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : RAISED,
                   border: `1px solid ${dragOver ? GOLD : BORDER}`, borderRadius: 20, padding: 26,
                   boxShadow: 'var(--shadow-lg)',
                   transition: 'border-color .15s, background .15s',
                 }}
               >
                 <div style={{ flex: '1 1 300px', minWidth: 260 }}>
-                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.6, color: GOLD, textTransform: 'uppercase', marginBottom: 12 }}>AI Blueprint Takeoff</div>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 12 }}>AI Blueprint Takeoff</div>
                   <h2 style={{ fontSize: 'clamp(22px,3vw,34px)', fontWeight: 900, lineHeight: 1.08, margin: '0 0 12px', color: '#fff', letterSpacing: -0.5 }}>Turn a blueprint into a priced estimate.</h2>
                   <p style={{ color: DIM, fontSize: 14.5, lineHeight: 1.55, margin: '0 0 16px', maxWidth: 460 }}>Drop a drawing and get quantities read straight off the plan, CSI-coded line items with a material and labor split, cost per square foot, confidence scoring, and a client-ready estimate — in minutes.</p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '9px 18px', margin: '0 0 20px', maxWidth: 480 }}>
@@ -909,7 +909,7 @@ export default function TakeoffPage() {
                   />
                   {/* Fallback deliverable preview when no screenshot is shipped — reads as the output. */}
                   <div style={{ display: 'none', flexDirection: 'column', gap: 10, padding: 22, minHeight: 220 }}>
-                    <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.4, color: GOLD, textTransform: 'uppercase' }}>AI Blueprint Estimate</div>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: GOLD}}>AI Blueprint Estimate</div>
                     <div style={{ fontSize: 34, fontWeight: 900, color: GOLD, letterSpacing: '-0.03em', lineHeight: 1 }}>$1,284,500</div>
                     <div style={{ height: 12, borderRadius: 6, overflow: 'hidden', display: 'flex', gap: 1, marginTop: 4 }}>
                       {['26', '23', '22', '09', '03', '08'].map((d, i) => (
@@ -962,7 +962,7 @@ export default function TakeoffPage() {
                               style={{
                                 display: 'inline-flex', alignItems: 'center', gap: 6,
                                 padding: '7px 14px', borderRadius: 8, textDecoration: 'none',
-                                background: GOLD, color: '#1A1206', fontSize: 13, fontWeight: 800,
+                                background: GOLD, color: '#0A0A00', fontSize: 13, fontWeight: 800,
                               }}
                             >
                               Build bid + compliance →
@@ -979,7 +979,7 @@ export default function TakeoffPage() {
                       <div style={{ position: 'relative', background: RAISED, border: `1px solid ${BORDER}`, borderLeft: `4px solid ${GOLD}`, borderRadius: 20, padding: 26, overflow: 'hidden', boxShadow: 'var(--shadow-lg)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
                           <div style={{ minWidth: 240, flex: '1 1 auto' }}>
-                            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.6, color: GOLD, textTransform: 'uppercase', marginBottom: 8 }}>AI Blueprint Estimate</div>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 8 }}>AI Blueprint Estimate</div>
                             <h2 style={{ margin: '0 0 10px', fontSize: 'clamp(20px,2.6vw,28px)', fontWeight: 900, letterSpacing: -0.5, color: '#fff', lineHeight: 1.1 }}>
                               {t.project_name || t.project_name_detected || 'Untitled Project'}
                             </h2>
@@ -1008,7 +1008,7 @@ export default function TakeoffPage() {
                       {/* ═══ C. TRADE BREAKDOWN BAR — "where's the money" ═══ */}
                       {tradeSegments.length > 0 && (
                         <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: 16, boxShadow: 'var(--shadow-sm)' }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', color: MUTED, textTransform: 'uppercase', marginBottom: 12 }}>Cost by Trade</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, marginBottom: 12 }}>Cost by Trade</div>
                           <div style={{ display: 'flex', height: 14, borderRadius: 7, overflow: 'hidden', gap: 1 }}>
                             {tradeSegments.map(s => (
                               <div key={s.divCode} title={`Div ${s.divCode} ${s.divName} — ${fmt(s.totalCost)} (${s.pct.toFixed(0)}%)`}
@@ -1131,13 +1131,13 @@ export default function TakeoffPage() {
                         icon={<Wall size={19} weight="duotone" color={GOLD} />}
                         label="Material Cost"
                         value={fmt(selectedTakeoff.material_cost)}
-                        sub="direct materials"
+                        sub="Direct materials"
                        href="/app/takeoff"/>
                       <StatCard
                         icon={<HardHat size={19} weight="duotone" color={GOLD} />}
                         label="Labor Cost"
                         value={fmt(selectedTakeoff.labor_cost)}
-                        sub="all trades"
+                        sub="All trades"
                        href="/app/takeoff"/>
                       <StatCard
                         icon={<ChartBar size={19} weight="duotone" color={GOLD} />}

@@ -15,14 +15,14 @@ import { Buildings, CaretRight, Lightning } from '@phosphor-icons/react';
 import Designer from '@/components/signal-studio/Designer';
 import { useProjects } from '@/lib/hooks/useProjects';
 
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.1)';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
 const TEXT = '#fff', DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.5)';
 
 function ProjectPicker({ onPick, onSkip }: { onPick: (id: string) => void; onSkip: () => void }) {
   const { projects, loading, degraded } = useProjects();
   return (
     <div data-tour="heatmap" style={{ maxWidth: 760, margin: '0 auto', padding: '48px 20px 64px' }}>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, letterSpacing: 1.6, textTransform: 'uppercase', color: GOLD, marginBottom: 12 }}>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 800, color: GOLD, marginBottom: 12 }}>
         <Lightning size={12} weight="fill" color={GOLD} /> Signal Studio
       </div>
       <h1 style={{ margin: '0 0 8px', fontSize: 'clamp(24px,3vw,34px)', fontWeight: 800, letterSpacing: -0.8, color: TEXT }}>
@@ -41,7 +41,7 @@ function ProjectPicker({ onPick, onSkip }: { onPick: (id: string) => void; onSki
         </div>
       )}
       {!loading && degraded && (
-        <div style={{ marginBottom: 14, fontSize: 12.5, color: '#FCD34D', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, padding: '10px 12px', lineHeight: 1.5 }}>
+        <div style={{ marginBottom: 14, fontSize: 12.5, color: 'var(--warning)', background: 'color-mix(in srgb, var(--warning) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 25%, transparent)', borderRadius: 10, padding: '10px 12px', lineHeight: 1.5 }}>
           Project list is temporarily unavailable — you can start without a project and attach it when you save.
         </div>
       )}
@@ -66,7 +66,7 @@ function ProjectPicker({ onPick, onSkip }: { onPick: (id: string) => void; onSki
                 background: RAISED, color: TEXT, width: '100%',
               }}
             >
-              <span style={{ width: 38, height: 38, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.3)', flexShrink: 0 }}>
+              <span style={{ width: 38, height: 38, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)', flexShrink: 0 }}>
                 <Buildings size={19} weight="duotone" color={GOLD} />
               </span>
               <span style={{ minWidth: 0, flex: 1 }}>
@@ -87,12 +87,12 @@ function ProjectPicker({ onPick, onSkip }: { onPick: (id: string) => void; onSki
           onClick={onSkip}
           style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, color: DIM, borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
         >
-          Start without a project
+          Start Without a Project
         </button>
       )}
       <style dangerouslySetInnerHTML={{ __html: `
         .ssp-row { transition: border-color .15s, background .15s, transform .15s; }
-        .ssp-row:hover { border-color: rgba(245,158,11,0.45); background: #17181b; transform: translateY(-1px); }
+        .ssp-row:hover { border-color: color-mix(in srgb, var(--brand-primary) 45%, transparent); background: var(--bg-surface-2); transform: translateY(-1px); }
         .ssp-row:active { transform: translateY(0); }
         .ssp-row:focus-visible { outline: 2px solid ${GOLD}; outline-offset: 2px; }
       ` }} />

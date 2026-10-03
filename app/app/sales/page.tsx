@@ -115,9 +115,9 @@ function ProfitPanel() {
   }, []);
 
   const columns: Column<ProfitJob>[] = [
-    { key: 'name', header: 'Job', primary: true, accessor: (j) => j.name || 'Untitled job' },
+    { key: 'name', header: 'Job', primary: true, accessor: (j) => j.name || 'Untitled Job' },
     { key: 'revenueCents', header: 'Contract', align: 'right', render: (j) => usd(j.revenueCents) },
-    { key: 'costCents', header: 'Projected cost', align: 'right', render: (j) => usd(j.costCents ?? 0) },
+    { key: 'costCents', header: 'Projected Cost', align: 'right', render: (j) => usd(j.costCents ?? 0) },
     {
       key: 'marginCents', header: 'Margin', align: 'right', accessor: (j) => j.marginCents ?? 0,
       render: (j) => (
@@ -130,7 +130,7 @@ function ProfitPanel() {
 
   if (state === 'error') {
     return (
-      <Card title="Booked profit · active jobs">
+      <Card title="Booked Profit · Active Jobs">
         <EmptyState title="Couldn’t load profit right now" text="Check your connection and reload the page." />
       </Card>
     );
@@ -144,14 +144,14 @@ function ProfitPanel() {
     <>
       {t && (
         <StatRow items={[
-          { label: 'Booked margin', value: usd(t.totalMarginCents), tone: t.totalMarginCents >= 0 ? 'good' : 'bad', sub: t.marginPct != null ? `${t.marginPct}% of contract` : undefined },
-          { label: 'Contract revenue', value: usd(t.totalRevenueCents), sub: `${t.costedJobCount} job${t.costedJobCount === 1 ? '' : 's'} with costs` },
-          { label: 'Projected cost', value: usd(t.totalCostCents), sub: 'worst of budget / committed / actual' },
+          { label: 'Booked Margin', value: usd(t.totalMarginCents), tone: t.totalMarginCents >= 0 ? 'good' : 'bad', sub: t.marginPct != null ? `${t.marginPct}% of contract` : undefined },
+          { label: 'Contract Revenue', value: usd(t.totalRevenueCents), sub: `${t.costedJobCount} job${t.costedJobCount === 1 ? '' : 's'} with costs` },
+          { label: 'Projected Cost', value: usd(t.totalCostCents), sub: 'Worst of budget / committed / actual' },
         ]} />
       )}
       <Card
         flush
-        title="Booked profit · active jobs"
+        title="Booked Profit · Active Jobs"
         subtitle={uncosted > 0 ? `${uncosted} active job${uncosted === 1 ? ' has' : 's have'} no budget or cost yet — add a budget to see the margin.` : undefined}
         actions={<Button size="sm" variant="ghost" href="/app/billing/cost-control" icon={<ArrowRight size={13} />}>Cost Control</Button>}
       >
@@ -180,19 +180,19 @@ export default function SalesHomePage() {
 
   return (
     <PageShell
-      title={name ? `${name.split(' ')[0]}'s pipeline` : 'Your pipeline'}
+      title={name ? `${name.split(' ')[0]}'s Pipeline` : 'Your Pipeline'}
       subtitle="What you're chasing, what it's worth, and what's gone quiet — first thing, every day."
-      actions={<Button variant="primary" href="/app/leads" icon={<ArrowRight size={15} />}>Open the pipeline</Button>}
+      actions={<Button variant="primary" href="/app/leads" icon={<ArrowRight size={15} />}>Open the Pipeline</Button>}
     >
       {/* Universal search + the rep's quick hops, one row. */}
       <div className="k-toolbar">
         <UniversalSearch />
         <div className="k-toolbar-spacer" />
-        <Button href="/app/leads" icon={<Kanban size={15} />} title="The stage board — move a deal, open its page">Leads & deals</Button>
+        <Button href="/app/leads" icon={<Kanban size={15} />} title="The stage board — move a deal, open its page">Leads & Deals</Button>
         <Button href="/app/projects" icon={<FolderSimple size={15} />} title="Everything won and running">Jobs</Button>
         <Button href="/app/customers" icon={<AddressBook size={15} />} title="Who you're working with">Customers</Button>
         <Button href="/app/reports" icon={<ChartBar size={15} />} title="Win rate, revenue, activity">Reports</Button>
-        <Button href="/app/people" icon={<Users size={15} />} title="Add a rep, set what each role can touch">Reps & access</Button>
+        <Button href="/app/people" icon={<Users size={15} />} title="Add a rep, set what each role can touch">Reps & Access</Button>
       </div>
 
       {/* Booked profit across active jobs (same cost engine as Cost Control). */}

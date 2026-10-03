@@ -65,8 +65,8 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 };
 const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.08em',
-  textTransform: 'uppercase', color: MUTED, marginBottom: 6,
+  display: 'block', fontSize: 10.5, fontWeight: 800,
+  color: MUTED, marginBottom: 6,
 };
 
 /** Pulsing skeleton row (pmSkeleton keyframes ship with PremiumSurface). */
@@ -107,7 +107,7 @@ export default function IntegrationsHubPage() {
       setKeys(k.keys ?? []);
       setHooks(w.webhooks ?? []);
     } catch {
-      flash('Failed to load integrations', false);
+      flash('Couldn’t load integrations.', false);
     }
     setLoading(false);
   }, []);
@@ -119,7 +119,7 @@ export default function IntegrationsHubPage() {
     setHookEvents((prev) => (prev.includes(e) ? prev.filter((x) => x !== e) : [...prev, e]));
 
   const createKey = async () => {
-    if (!keyName.trim()) { flash('Name the key first', false); return; }
+    if (!keyName.trim()) { flash('Name the key first.', false); return; }
     setCreatingKey(true);
     try {
       const res = await fetch('/api/integrations/api-keys', {
@@ -144,15 +144,15 @@ export default function IntegrationsHubPage() {
     try {
       const res = await fetch(`/api/integrations/api-keys/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
-      flash('Key revoked');
+      flash('Key revoked.');
       await load();
-    } catch { flash('Revoke failed', false); }
+    } catch { flash('Revoke failed.', false); }
   };
 
   const createHook = async () => {
-    if (!hookName.trim()) { flash('Name the webhook', false); return; }
-    if (!hookUrl.trim()) { flash('Endpoint URL required', false); return; }
-    if (hookEvents.length === 0) { flash('Pick at least one event', false); return; }
+    if (!hookName.trim()) { flash('Name the webhook.', false); return; }
+    if (!hookUrl.trim()) { flash('Endpoint URL is required.', false); return; }
+    if (hookEvents.length === 0) { flash('Pick at least one event.', false); return; }
     setSavingHook(true);
     try {
       const res = await fetch('/api/integrations/webhooks', {
@@ -162,7 +162,7 @@ export default function IntegrationsHubPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Create failed');
-      flash('Webhook added');
+      flash('Webhook added.');
       setShowHookForm(false);
       setHookName(''); setHookUrl(''); setHookEvents([]);
       await load();
@@ -181,16 +181,16 @@ export default function IntegrationsHubPage() {
       });
       if (!res.ok) throw new Error();
       await load();
-    } catch { flash('Update failed', false); }
+    } catch { flash('Update failed.', false); }
   };
 
   const deleteHook = async (id: string) => {
     try {
       const res = await fetch(`/api/integrations/webhooks/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error();
-      flash('Webhook deleted');
+      flash('Webhook deleted.');
       await load();
-    } catch { flash('Delete failed', false); }
+    } catch { flash('Delete failed.', false); }
   };
 
   const testHook = async (id: string) => {
@@ -200,7 +200,7 @@ export default function IntegrationsHubPage() {
       const data = await res.json();
       flash(data.success ? `Test delivered (HTTP ${data.status})` : `Test failed (${data.status || 'no response'})`, !!data.success);
       await load();
-    } catch { flash('Test failed', false); }
+    } catch { flash('Test failed.', false); }
     setTesting(null);
   };
 
@@ -245,10 +245,10 @@ export default function IntegrationsHubPage() {
       {/* Live figures — keys and webhooks come straight from the API. */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/settings/integrations-hub',  label: 'Marketplace', value: String(MARKETPLACE.length), sub: 'live integrations' },
-          {href: '/app/settings/integrations-hub',  label: 'Active API Keys', value: String(liveKeys.length), sub: keys.length > liveKeys.length ? `${keys.length - liveKeys.length} revoked` : 'none revoked' },
-          {href: '/app/settings/integrations-hub',  label: 'Webhooks', value: String(hooks.length), sub: hooks.length ? `${activeHooks.length} active` : 'none configured' },
-          {href: '/app/settings/integrations-hub',  label: 'Events Emitted', value: String(WEBHOOK_EVENTS.length), sub: 'subscribable event types' },
+          {href: '/app/settings/integrations-hub', label: 'Marketplace', value: String(MARKETPLACE.length), sub: 'Live integrations' },
+          {href: '/app/settings/integrations-hub', label: 'Active API Keys', value: String(liveKeys.length), sub: keys.length > liveKeys.length ? `${keys.length - liveKeys.length} revoked` : 'None revoked' },
+          {href: '/app/settings/integrations-hub', label: 'Webhooks', value: String(hooks.length), sub: hooks.length ? `${activeHooks.length} active` : 'None configured' },
+          {href: '/app/settings/integrations-hub', label: 'Events Emitted', value: String(WEBHOOK_EVENTS.length), sub: 'Subscribable event types' },
         ]} />
       )}
 
@@ -275,7 +275,7 @@ export default function IntegrationsHubPage() {
                 </Link>
               ) : (
                 <a href={m.href} style={{ ...ghostButtonStyle, width: '100%', padding: '9px 16px', fontSize: 12.5, boxSizing: 'border-box' }} className="pmBtn">
-                  <ArrowSquareOut size={14} weight="bold" /> Request access
+                  <ArrowSquareOut size={14} weight="bold" /> Request Access
                 </a>
               )}
             </div>
@@ -313,7 +313,7 @@ export default function IntegrationsHubPage() {
           {/* Create form */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015))', borderRadius: 12, border: `1px solid ${BORDER}` }}>
             <div>
-              <label style={labelStyle}>Key name</label>
+              <label style={labelStyle}>Key Name</label>
               <input style={inputStyle} placeholder="e.g. Reporting pipeline" value={keyName} onChange={(e) => setKeyName(e.target.value)} />
             </div>
             <div>
@@ -331,10 +331,9 @@ export default function IntegrationsHubPage() {
                         border: `1px solid ${on ? 'var(--brand-primary-35)' : BORDER}`,
                         background: on ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.04)',
                         color: on ? GOLD_HI : MUTED,
-                        textTransform: 'uppercase', letterSpacing: '0.04em',
                       }}
                     >
-                      {s}
+                      {s.charAt(0).toUpperCase() + s.slice(1)}
                     </button>
                   );
                 })}
@@ -342,7 +341,7 @@ export default function IntegrationsHubPage() {
             </div>
             <div>
               <button onClick={createKey} disabled={creatingKey} className="pmBtn" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 12.5, cursor: creatingKey ? 'not-allowed' : 'pointer', opacity: creatingKey ? 0.6 : 1 }}>
-                <Plus size={14} weight="bold" /> {creatingKey ? 'Creating…' : 'Create API key'}
+                <Plus size={14} weight="bold" /> {creatingKey ? 'Creating…' : 'Create API Key'}
               </button>
             </div>
           </div>
@@ -362,10 +361,10 @@ export default function IntegrationsHubPage() {
                   <div style={{ fontSize: 12, color: FAINT, fontFamily: 'monospace', marginTop: 2 }}>{k.key_prefix}••••••••</div>
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
-                  {(k.scopes ?? []).map((s: string) => <Pill key={s} tone="neutral" caps>{s}</Pill>)}
+                  {(k.scopes ?? []).map((s: string) => <Pill key={s} tone="neutral">{s.charAt(0).toUpperCase() + s.slice(1)}</Pill>)}
                 </div>
                 {k.revoked_at
-                  ? <Pill tone="red" caps>Revoked</Pill>
+                  ? <Pill tone="red">Revoked</Pill>
                   : <button onClick={() => revokeKey(k.id)} style={compactDanger} className="pmBtn"><Trash size={14} weight="bold" /> Revoke</button>}
               </div>
             ))}
@@ -420,7 +419,7 @@ export default function IntegrationsHubPage() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={createHook} disabled={savingHook} className="pmBtn" style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 12.5, cursor: savingHook ? 'not-allowed' : 'pointer', opacity: savingHook ? 0.6 : 1 }}>
-                  {savingHook ? 'Saving…' : 'Add webhook'}
+                  {savingHook ? 'Saving…' : 'Add Webhook'}
                 </button>
                 <button onClick={() => setShowHookForm(false)} style={compactGhost} className="pmBtn">Cancel</button>
               </div>
@@ -441,7 +440,7 @@ export default function IntegrationsHubPage() {
                     <div style={{ fontSize: 14, fontWeight: 600, color: WHITE }}>{h.name}</div>
                     <div style={{ fontSize: 12, color: FAINT, wordBreak: 'break-all', marginTop: 2 }}>{h.url}</div>
                   </div>
-                  <Pill tone={h.active ? 'green' : 'neutral'} caps>{h.active ? 'Active' : 'Paused'}</Pill>
+                  <Pill tone={h.active ? 'green' : 'neutral'}>{h.active ? 'Active' : 'Paused'}</Pill>
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(h.events ?? []).map((e: string) => (
@@ -450,8 +449,8 @@ export default function IntegrationsHubPage() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   {h.last_status != null
-                    ? <Pill tone={statusTone(h.last_status)} caps>Last: HTTP {h.last_status}</Pill>
-                    : <span style={{ fontSize: 12, color: FAINT }}>Never fired</span>}
+                    ? <Pill tone={statusTone(h.last_status)}>Last: HTTP {h.last_status}</Pill>
+                    : <span style={{ fontSize: 12, color: FAINT }}>Never Fired</span>}
                   {h.last_fired_at && <span style={{ fontSize: 12, color: FAINT }}>{new Date(h.last_fired_at).toLocaleString()}</span>}
                   <div style={{ flex: 1 }} />
                   <button onClick={() => testHook(h.id)} disabled={testing === h.id} style={{ ...compactGhost, opacity: testing === h.id ? 0.6 : 1 }} className="pmBtn">
