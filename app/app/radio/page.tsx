@@ -68,9 +68,8 @@ import {
   MapTrifold,
   CaretDown,
 } from '@phosphor-icons/react';
+import { PageShell, Button as KitButton } from '@/components/ui/kit';
 import {
-  PremiumSurface,
-  ModuleHero,
   PremiumEmpty,
   goldButtonStyle,
   goldOutlineButtonStyle,
@@ -3328,7 +3327,45 @@ export default function RadioDispatchPage() {
    * hero and the console plate are sized to fit one viewport so the feed
    * inside the plate stays the only thing that scrolls. */
   return (
-    <PremiumSurface maxWidth={2200} pad="26px 24px 26px">
+    <div className="rdWs">
+      <style dangerouslySetInnerHTML={{ __html: `.rdWs > .k-page { max-width: none; } .rdPanic { position: relative; overflow: hidden; user-select: none; touch-action: none; } .rdPanicFill { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(255,59,48,0.35); pointer-events: none; }` }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Radio' }]}
+        title="Radio"
+        subtitle="Dispatch console — push-to-talk for the crew, with English and Spanish transcripts. Connection state is real: transmissions only show once they arrive."
+        actions={
+          <>
+            {/* Assistance queue toggle — badge counts the live queue */}
+            <KitButton
+              variant={assistShown ? 'primary' : 'secondary'}
+              icon={<Lifebuoy size={15} weight="bold" />}
+              onClick={() => setAssistShown((v) => !v)}
+              aria-pressed={assistShown}
+              title="Assistance queue — field requests waiting on dispatch"
+            >
+              Assist{assistQueue.length > 0 ? ` (${assistQueue.length}${assistOpenCount > 0 ? ' open' : ''})` : ''}
+            </KitButton>
+            {/* EN/ES lives in the console overflow menu — a transcript
+              * preference does not earn permanent chrome. */}
+            {/* PANIC — hold to confirm. A hold-to-fire control, not a click, so it keeps its own fill. */}
+            <KitButton
+              variant="danger"
+              className="rdPanic"
+              icon={<Siren size={16} weight="fill" />}
+              onPointerDown={panicDown}
+              onPointerUp={panicUp}
+              onPointerLeave={panicUp}
+              onPointerCancel={panicUp}
+              disabled={panicFiring}
+              title="Hold to send a panic alarm to every channel member"
+              style={panicSent ? { color: GREEN, borderColor: GREEN_BORDER, background: GREEN_SOFT } : undefined}
+            >
+              <span aria-hidden className="rdPanicFill" style={{ width: `${panicHold * 100}%`, transition: panicHold === 0 ? 'width .2s ease' : 'none' }} />
+              <span style={{ position: 'relative' }}>{panicFiring ? 'Sending…' : panicSent ? 'Panic Sent' : 'Hold — Panic'}</span>
+            </KitButton>
+          </>
+        }
+      >
       <style>{`
         @keyframes sagRadioEq { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
         .sagRadioRow .sagRowActions { opacity: 0; pointer-events: none; transition: opacity .15s ease; }
@@ -3360,87 +3397,6 @@ export default function RadioDispatchPage() {
         /* Instrument readouts appear once the header has room for them. */
         @media (min-width: 1200px) { .sagReadout { display: flex !important; } }
       `}</style>
-      <ModuleHero
-        eyebrow="Dispatch Console"
-        eyebrowIcon={<Broadcast size={13} weight="bold" />}
-        title={
-          <>
-            <VividGoldChip
-              icon={<Broadcast size={26} weight="fill" />}
-              size={50}
-              style={{ verticalAlign: 'middle', marginRight: 16, transform: 'translateY(-3px)' }}
-            />
-            Saguaro
-          </>
-        }
-        accent="Radio"
-        subtitle="Push-to-talk for the crew, with English and Spanish transcripts."
-        actions={
-          <>
-            {/* Assistance queue toggle — badge counts the live queue */}
-            <button
-              onClick={() => setAssistShown((v) => !v)}
-              title="Assistance queue — field requests waiting on dispatch"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '9px 14px', borderRadius: 12, cursor: 'pointer',
-                background: assistShown ? 'linear-gradient(180deg, var(--brand-primary-25), color-mix(in srgb, var(--brand-primary) 14%, transparent))' : FIELD_BG,
-                border: assistOpenCount > 0 ? `1px solid ${RED_BORDER}` : FIELD_BORDER,
-                color: assistShown ? GOLD_HI : MUTED, fontWeight: 800, fontSize: 12.5,
-              }}
-            >
-              <Lifebuoy size={15} weight="bold" /> Assist
-              {assistQueue.length > 0 && (
-                <span
-                  style={{
-                    minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999,
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    background: assistOpenCount > 0 ? RED : 'rgba(255,255,255,0.14)',
-                    color: assistOpenCount > 0 ? WHITE : MUTED,
-                    fontSize: 10, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {assistQueue.length}
-                </span>
-              )}
-            </button>
-            {/* EN/ES lives in the console overflow menu — a transcript
-              * preference does not earn permanent chrome. */}
-            {/* PANIC — hold to confirm */}
-            <button
-              onPointerDown={panicDown}
-              onPointerUp={panicUp}
-              onPointerLeave={panicUp}
-              onPointerCancel={panicUp}
-              disabled={panicFiring}
-              title="Hold to send a panic alarm to every channel member"
-              style={{
-                position: 'relative', overflow: 'hidden',
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                padding: '11px 20px', borderRadius: 12, cursor: panicFiring ? 'wait' : 'pointer',
-                background: panicSent ? GREEN_SOFT : RED_SOFT,
-                border: `1px solid ${panicSent ? GREEN_BORDER : RED_BORDER}`,
-                color: panicSent ? GREEN : RED, fontWeight: 900, fontSize: 13,
-                userSelect: 'none', touchAction: 'none',
-              }}
-            >
-              <span
-                aria-hidden
-                style={{
-                  position: 'absolute', left: 0, top: 0, bottom: 0,
-                  width: `${panicHold * 100}%`,
-                  background: 'rgba(255,59,48,0.35)',
-                  transition: panicHold === 0 ? 'width .2s ease' : 'none',
-                }}
-              />
-              <Siren size={16} weight="fill" style={{ position: 'relative' }} />
-              <span style={{ position: 'relative' }}>
-                {panicFiring ? 'Sending…' : panicSent ? 'Panic Sent' : 'Hold — Panic'}
-              </span>
-            </button>
-          </>
-        }
-      />
 
       {/* ══════════════════════════════════════════════════════════════════
         * DISPATCH CONSOLE
@@ -5146,6 +5102,7 @@ export default function RadioDispatchPage() {
           ))}
         </div>
       )}
-    </PremiumSurface>
+      </PageShell>
+    </div>
   );
 }
