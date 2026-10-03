@@ -126,7 +126,11 @@ export default function NextStepBar() {
      "YOU ARE HERE: Send bid packages" for some job the user is not in
      contradicted it. Off the dashboard and outside a job, the bar speaks for
      the company-level sales journey instead. */
-  const onDashboard = pathname === '/app' || pathname === '/app/';
+  /* The rail moved with the old dashboard to /app/classic. The new role-based
+     home at /app shows no journey strip at all: it is company scope, and the
+     spec keeps one job's onboarding out of the company work queue. */
+  const onHome = pathname === '/app' || pathname === '/app/';
+  const onDashboard = pathname === '/app/classic';
   const dashboardProjectId = inProject || !onDashboard ? null : ((pickedExists ? picked : projects[0]?.id) ?? null);
   const journeyId = projectId ?? dashboardProjectId;
   /* Gold whenever a job is driving the bar, whether or not we are standing on
@@ -136,7 +140,7 @@ export default function NextStepBar() {
 
   const { ctx, error: ctxError } = useProjectContext(journeyId);
   const { data: salesData, error: salesError } = useSWR<{ signals: SalesSignals }>(
-    onBuildJourney ? null : '/api/sales-journey',
+    onBuildJourney || onHome ? null : '/api/sales-journey',
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 300_000 },
   );
@@ -153,6 +157,8 @@ export default function NextStepBar() {
     ro.observe(el);
     return () => { ro.disconnect(); set(0); };
   });
+
+  if (onHome) return null;
 
   let tone = BLUE;
   let toneHi = BLUE_HI;

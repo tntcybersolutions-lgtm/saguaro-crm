@@ -175,7 +175,7 @@ export function TrendArea({
             <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.05)" />
             <XAxis
               dataKey="label"
-              tick={{ fill: CHART.textTertiary, fontSize: 11 }}
+              tick={{ fill: CHART.textTertiary, fontSize: 12 }}
               tickLine={false}
               axisLine={{ stroke: 'rgba(255,255,255,0.08)' }}
               minTickGap={12}
@@ -183,7 +183,7 @@ export function TrendArea({
             />
             <YAxis
               width={46}
-              tick={{ fill: CHART.textTertiary, fontSize: 11 }}
+              tick={{ fill: CHART.textTertiary, fontSize: 12 }}
               tickLine={false}
               axisLine={false}
               tickFormatter={axisFmt}

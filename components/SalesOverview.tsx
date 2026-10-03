@@ -67,11 +67,11 @@ function FollowUpRow({ f, tone }: { f: FollowUp; tone: string }) {
         borderTop: `1px solid ${BORDER}`, textDecoration: 'none',
       }}
     >
-      <span style={{ color: tone, fontSize: 11.5, fontWeight: 800, whiteSpace: 'nowrap', minWidth: 78 }}>
+      <span style={{ color: tone, fontSize: 12.5, fontWeight: 800, whiteSpace: 'nowrap', minWidth: 78 }}>
         {dayLabel(f.due)}
       </span>
       <span style={{ color: TEXT, fontSize: 13, flex: 1, minWidth: 0 }}>{f.what}</span>
-      <span style={{ color: DIM, fontSize: 11.5, whiteSpace: 'nowrap' }}>{f.who}</span>
+      <span style={{ color: DIM, fontSize: 12.5, whiteSpace: 'nowrap' }}>{f.who}</span>
     </Link>
   );
 }
@@ -191,21 +191,21 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
         ) : (
           <div>
             {followUps.overdue.length > 0 && (
-              <div style={{ padding: '10px 20px 2px', color: RED, fontSize: 10.5, fontWeight: 800 }}>
+              <div style={{ padding: '10px 20px 2px', color: RED, fontSize: 12, fontWeight: 800 }}>
                 Late · {followUps.overdueCount}
               </div>
             )}
             {followUps.overdue.map(f => <FollowUpRow key={f.id} f={f} tone={RED} />)}
 
             {followUps.today.length > 0 && (
-              <div style={{ padding: '12px 20px 2px', color: AMBER, fontSize: 10.5, fontWeight: 800 }}>
+              <div style={{ padding: '12px 20px 2px', color: AMBER, fontSize: 12, fontWeight: 800 }}>
                 Today · {followUps.todayCount}
               </div>
             )}
             {followUps.today.map(f => <FollowUpRow key={f.id} f={f} tone={AMBER} />)}
 
             {followUps.upcoming.length > 0 && (
-              <div style={{ padding: '12px 20px 2px', color: DIM, fontSize: 10.5, fontWeight: 800 }}>
+              <div style={{ padding: '12px 20px 2px', color: DIM, fontSize: 12, fontWeight: 800 }}>
                 Next 7 Days · {followUps.upcomingCount}
               </div>
             )}

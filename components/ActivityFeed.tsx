@@ -154,7 +154,7 @@ export default function ActivityFeed({
                 <div style={{ color: TEXT, fontSize: 13.2, lineHeight: 1.45 }}>
                   {a.description || a.action}
                 </div>
-                <div style={{ color: DIM, fontSize: 11.5, marginTop: 2, display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                <div style={{ color: DIM, fontSize: 12.5, marginTop: 2, display: 'flex', gap: 7, flexWrap: 'wrap' }}>
                   {a.user_name && <span>{a.user_name}</span>}
                   {!projectId && a.project_name && a.project_id && (
                     <>
