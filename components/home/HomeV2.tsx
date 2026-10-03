@@ -345,7 +345,14 @@ function HomeInner() {
           <h1>{ctx ? `${ctx.viewLabel} Home` : 'Home'}</h1>
           {ctx?.firstName && <span className="hv2-greet">Hi {ctx.firstName}</span>}
         </div>
-        <div className="hv2-controls">
+        <div className="hv2-actions">
+          <button type="button" className="hv2-btn hv2-btn-ghost" onClick={() => window.dispatchEvent(new Event('open-command-palette'))} aria-label="Search">
+            <MagnifyingGlass size={15} weight="bold" /> <span className="hv2-hide-sm">Search</span>
+          </button>
+          <QuickCreate view={(ctx?.view || 'operations') as HomeView} projectId={sp.get('project')} />
+        </div>
+      </header>
+      <div className="hv2-controls">
           {ctx && ctx.views.length > 1 && (
             <Segmented label="Dashboard view" value={ctx.view} options={ctx.views} onChange={v => setParam('view', v)} />
           )}
@@ -362,12 +369,7 @@ function HomeInner() {
           {ctx && (
             <Segmented label="Date window" value={ctx.window} options={[{ key: 'today', label: 'Today' }, { key: '7d', label: 'Next 7 Days' }]} onChange={v => setParam('window', v)} />
           )}
-          <button type="button" className="hv2-btn hv2-btn-ghost" onClick={() => window.dispatchEvent(new Event('open-command-palette'))} aria-label="Search">
-            <MagnifyingGlass size={15} weight="bold" /> <span className="hv2-hide-sm">Search</span>
-          </button>
-          <QuickCreate view={(ctx?.view || 'operations') as HomeView} projectId={sp.get('project')} />
-        </div>
-      </header>
+      </div>
       {ctx && ctx.savedView !== ctx.view && (
         <div className="hv2-hint">
           {ctx.savedView ? `Your default is ${ctx.views.find(v => v.key === ctx.savedView)?.label || ctx.savedView}.` : `Showing ${ctx.viewLabel} because of your role.`}{' '}
@@ -436,7 +438,8 @@ const CSS = `
 .hv2-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 8px; }
 .hv2-titlewrap { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
 .hv2-greet { color: var(--text-tertiary); font-size: 14px; }
-.hv2-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.hv2-actions { display: flex; align-items: center; gap: 8px; }
+.hv2-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 8px; }
 .hv2-seg { display: inline-flex; flex-wrap: wrap; background: var(--bg-surface-2); border: 1px solid var(--glass-border); border-radius: 10px; padding: 3px; gap: 2px; }
 .hv2-seg button { min-height: 34px; padding: 0 12px; border: 0; border-radius: 7px; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 650; cursor: pointer; }
 .hv2-seg button.on { background: var(--brand-primary); color: var(--on-brand); }
