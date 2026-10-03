@@ -26,3 +26,13 @@ Or compare any file with the backup:
 ## Restore — without reverting (feature flag)
 The new home ships behind a flag. Turning it off returns everyone to the
 current dashboard without a deploy. The flag is documented in the dashboard PR.
+
+## Second backup — immediately before merging the role-based home
+| What | Where |
+|---|---|
+| Code (tag) | `backup/pre-dashboard-merge-2026-10-03` → `main` @ `2dfbb1e78a8aeb7bc2ec0bf08448e0faf6a4dc31` (includes PR #40) |
+| Live deployment | Vercel `dpl_86aqgEAvk4d862qeALvQZAhEcmW7` (`saguaro-2rff30ewx-salty-vault.vercel.app`) — **Instant Rollback** target |
+| Database | The home and service screen add no tables or columns. New service calls are ordinary `service_tickets` rows. |
+
+Fastest restore: Vercel → Deployments → `dpl_86aqgEAvk4d862qeALvQZAhEcmW7` → Instant Rollback.
+The old dashboard also stays reachable at `/app/classic`.
