@@ -429,3 +429,7 @@ export default function PdfViewer() {
     document.body,
   );
 }
+
+/* The same single-page renderer, for a screen that shows a sheet inline (the
+   drawings canvas) and hands off to openPdf() for zoom and compare. */
+export { Pane as PdfPane };
