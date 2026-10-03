@@ -37,6 +37,10 @@ const config: CapacitorConfig = {
   server: {
     url: serverUrl,
     cleartext: serverUrl.startsWith('http://'),
+    // Keep every page of the site inside the app. Capacitor otherwise treats a
+    // URL as "in app" only if it starts with server.url — with the /app start
+    // path, the redirect to /login opened in Safari (seen on the simulator).
+    allowNavigation: ['www.saguarocontrol.net', 'saguarocontrol.net'],
     androidScheme: 'https',
   },
 
