@@ -36,7 +36,7 @@ const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
 
-const SAGUARO_GOLD = '#F59E0B';
+const SAGUARO_GOLD = '#FFE600'; // Saguaro default brand: neon yellow
 const PLATFORM_BASE = '#0d1117';
 
 /* Grounds that are known-good starting points, so nobody has to guess a hex. */

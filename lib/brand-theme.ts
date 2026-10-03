@@ -213,8 +213,15 @@ export interface BrandTheme {
 export const AA_TEXT = 4.5;
 export const AA_LARGE = 3;
 
-const SAGUARO_GOLD = '#F59E0B';
-const SAGUARO_BASE = '#0d1117';
+/* Saguaro defaults (owner decision 2026-10-02): neon yellow on jet black.
+   The previous defaults (gold #F59E0B on navy #0d1117) are treated as "no
+   custom color" so tenants who never picked one move to the new look. */
+const SAGUARO_GOLD = '#FFE600';
+const SAGUARO_BASE = '#000000';
+const LEGACY_DEFAULT_PRIMARY = new Set(['#f59e0b', '#c8960f', '#c8881c']);
+const LEGACY_DEFAULT_BASE = new Set(['#0d1117', '#0a0a0a']);
+const notLegacy = (hex: string | null | undefined, legacy: Set<string>) =>
+  hex && !legacy.has(hex.trim().toLowerCase()) ? hex : null;
 
 /**
  * Build a complete, readable theme from whatever the tenant supplied.
@@ -226,8 +233,8 @@ export function deriveTheme(input: BrandInput): BrandTheme {
   const fixes: ContrastFix[] = [];
   let usedFallback = false;
 
-  const primaryRgb = parseHex(input.primary) ?? (() => { usedFallback = true; return parseHex(SAGUARO_GOLD)!; })();
-  const baseRgb = parseHex(input.surface) ?? parseHex(SAGUARO_BASE)!;
+  const primaryRgb = parseHex(notLegacy(input.primary, LEGACY_DEFAULT_PRIMARY)) ?? (() => { usedFallback = true; return parseHex(SAGUARO_GOLD)!; })();
+  const baseRgb = parseHex(notLegacy(input.surface, LEGACY_DEFAULT_BASE)) ?? parseHex(SAGUARO_BASE)!;
 
   const white = { r: 255, g: 255, b: 255 };
   const ink = { r: 12, g: 16, b: 22 };

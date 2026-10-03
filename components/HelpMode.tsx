@@ -845,7 +845,7 @@ export function HelpModeButton() {
       }}
     >
       <MagicWand size={15} weight={on ? 'fill' : 'duotone'} />
-      Help me
+      Help Me
     </button>
   );
 }
