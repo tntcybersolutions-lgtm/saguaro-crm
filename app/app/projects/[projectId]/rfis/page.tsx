@@ -1,41 +1,45 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+/**
+ * Project RFIs — Pass 3 #2 reference screen (dense table + detail).
+ *
+ * Anatomy: title + one primary action (New RFI) → StatRow (each tile filters
+ * the log) → Toolbar → workspace split: DataTable log on the left, and when a
+ * row is selected, a detail workspace (question / answer / radio evidence)
+ * beside a 320–384px metadata + action rail. Phone: list, then detail, stacked.
+ *
+ * Every write goes through a route this screen already used:
+ *   create   POST   /api/rfis/create
+ *   answer   POST   /api/rfis/[id]/answer
+ *   reassign PATCH  /api/rfis/[id]        (ball_in_court / assigned_to_name / due_date)
+ *   close    PATCH  /api/rfis/[id]        (status 'closed' + closed_at)
+ *   delete   DELETE /api/rfis/[id]
+ *   detail   GET    /api/rfis/[id]        (impacts, radio provenance)
+ */
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
-import { T, Badge, Btn, Table } from '@/components/ui/shell';
 import {
-  PremiumSurface,
-  ModuleHero,
-  SectionCard,
-  StatCard,
-  PremiumEmpty,
-  goldButtonStyle,
-  ghostButtonStyle,
-  goldOutlineButtonStyle,
-  StatStrip,
-  FlowSteps,
-  InsightRow,
-  AutoChip,
-  IconChip,
-} from '@/components/ui/premium';
-import { SkeletonKPI, SkeletonRow } from '@/components/ui/Skeleton';
-import { ListToolbar } from '@/components/ui/ListToolbar';
-import { Question, WarningCircle, Clipboard, FolderOpen, CheckCircle, Clock, Trash, Plus, Lightning, Buildings } from '@phosphor-icons/react';
+  PageShell, Card, StatRow, Badge, Button, Toolbar, DataTable, EmptyState, RowActions,
+  FormModal, Field, Input, Textarea, Select, FormGrid, DetailList, Toast, useToast,
+  type Column, type Action, type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import {
+  Question, WarningCircle, Plus, Lightning, X, ChatText, UserSwitch, CheckCircle,
+  Trash, FilePdf, Waveform, ArrowClockwise,
+} from '@phosphor-icons/react';
 import { CSI_DIVISIONS } from '@/lib/construction-intelligence';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
-import { moduleAccent } from '@/lib/module-identity';
 import RadioEvidence, {
-  RadioEvidenceChip,
   hasRadioEvidence,
   radioProvenanceFromText,
   radioEvidenceFromRecord,
   stripRadioProvenance,
-  type RadioEvidenceSource,
 } from '@/components/RadioEvidence';
-import { StatusPill } from '@/components/ui/Status';
+import { MODULES } from '@/lib/status-system';
+import { layout } from '@/lib/design-tokens';
 
 interface RFI {
   id: string;
@@ -56,46 +60,155 @@ interface RFI {
   created_at: string;
 }
 
+/** Fields only the single-record read carries (the list route is narrow). */
+interface RFIDetail {
+  cost_impact?: number | string | null;
+  cost_impact_direction?: string | null;
+  schedule_impact_days?: number | null;
+  impact_description?: string | null;
+  drawing_reference?: string | null;
+  pdf_url?: string | null;
+  answered_at?: string | null;
+  closed_at?: string | null;
+  [k: string]: unknown;
+}
+
+type StatusFilter = 'all' | 'open' | 'in_review' | 'answered' | 'closed' | 'overdue';
+
 // Smart date default — +N days out, local ISO, always user-editable.
 const isoPlusDays = (days: number) => {
   const d = new Date(Date.now() + days * 86400000);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-const STATUS_BADGE: Record<string, 'blue' | 'green' | 'muted' | 'red'> = {
-  open: 'blue',
-  answered: 'green',
-  closed: 'muted',
-  overdue: 'red',
+/** Date-only values parse at local noon ('T12:00:00') so they never shift a day under UTC. */
+function fmtDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = iso.length <= 10 ? new Date(iso + 'T12:00:00') : new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+const IN_REVIEW = new Set(['submitted', 'pending', 'under_review']);
+const ANSWERABLE = (s: string) => s !== 'answered' && s !== 'closed';
+
+/** One status → one badge. Overdue wins. Open/draft stay neutral so the log is
+ *  not a rainbow: only In Review (amber), Overdue (red), Answered (green) and
+ *  Closed (grey) carry a hue, all from lib/status-colors. */
+function rfiStatus(r: RFI): { label: string; tone: BadgeTone } {
+  if (r.is_overdue) return { label: 'Overdue', tone: 'overdue' };
+  const s = r.status || 'open';
+  if (s === 'answered') return { label: 'Answered', tone: 'ongoing' };
+  if (s === 'closed') return { label: 'Closed', tone: 'closed' };
+  if (s === 'under_review') return { label: 'In Review', tone: 'under_contract' };
+  if (s === 'submitted') return { label: 'Submitted', tone: 'under_contract' };
+  if (s === 'pending') return { label: 'Pending', tone: 'under_contract' };
+  if (s === 'draft') return { label: 'Draft', tone: 'neutral' };
+  return { label: 'Open', tone: 'neutral' };
+}
+
+const isUrgent = (r: RFI) => !!(r.is_urgent || r.priority === 'high' || r.priority === 'critical');
+
+function daysOpen(rfi: RFI): number {
+  const created = new Date(rfi.created_at || Date.now());
+  return Math.max(0, Math.floor((Date.now() - created.getTime()) / 86400000));
+}
+
+function ballInCourt(rfi: RFI): string {
+  return (rfi.ball_in_court || rfi.assigned_to_name || '').trim();
+}
+
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+
+/** Pull a readable message out of a failed response without echoing raw bodies. */
+async function readError(r: Response, fallback: string): Promise<string> {
+  try {
+    const d = await r.json();
+    return (d && typeof d.error === 'string' && d.error) || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+const CSS = `
+.rfiWs > .k-page { max-width: none; }
+.rfiCq { container: rfiws / inline-size; min-width: 0; }
+.rfiSplit { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.rfiSplit > * { min-width: 0; }
+@container rfiws (min-width: 1080px) {
+  .rfiSplit[data-open="true"] { grid-template-columns: minmax(340px, 0.8fr) minmax(0, 1.6fr); }
+}
+.rfiDetailCq { container: rfidetail / inline-size; min-width: 0; }
+.rfiDetail { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; min-width: 0; }
+.rfiDetail > * { min-width: 0; }
+.rfiRail { order: -1; }
+@container rfidetail (min-width: 720px) {
+  .rfiDetail { grid-template-columns: minmax(0, 1fr) clamp(${layout.detailRailMin}px, 34%, ${layout.detailRailMax}px); }
+  .rfiRail { order: 0; position: sticky; top: 16px; }
+}
+.rfiList .k-table th:first-child, .rfiList .k-table td:first-child { position: sticky; left: 0; z-index: 1; background: var(--bg-solid); }
+.rfiList .k-table th:first-child { background: var(--bg-solid-2); z-index: 3; }
+.rfiList .k-table tbody tr:hover td:first-child { background: linear-gradient(rgba(255,255,255,0.03), rgba(255,255,255,0.03)), var(--bg-solid); }
+.rfiList .k-table tbody tr:has([data-sel="true"]) td { background: var(--brand-primary-08); }
+.rfiList .k-table tbody tr:has([data-sel="true"]) td:first-child { background: linear-gradient(var(--brand-primary-08), var(--brand-primary-08)), var(--bg-solid); box-shadow: inset 3px 0 0 var(--brand-primary); }
+.rfiNum { color: var(--text-primary); font-weight: 800; font-variant-numeric: tabular-nums; }
+.rfiSubj { display: flex; align-items: center; gap: 6px; max-width: 420px; min-width: 0; }
+.rfiSubj > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; color: var(--text-primary); font-weight: 600; }
+.rfiBadges { display: inline-flex; align-items: center; gap: 6px; }
+.rfiLate { color: var(--status-overdue); font-weight: 700; }
+.rfiMuted { color: var(--text-tertiary); }
+.rfiSection { display: flex; flex-direction: column; gap: 8px; }
+.rfiSection + .rfiSection { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-subtle); }
+.rfiSectionTitle { font-size: var(--fs-sm); font-weight: 700; color: var(--text-tertiary); }
+.rfiProse { font-size: var(--fs-md); line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; overflow-wrap: anywhere; max-width: ${layout.readingMaxWidth}; }
+.rfiActions { display: flex; flex-direction: column; gap: 8px; }
+.rfiActions .k-btn { width: 100%; justify-content: flex-start; }
+.rfiActionsRow { display: flex; gap: 8px; align-items: center; }
+.rfiActionsRow > .k-btn { flex: 1 1 auto; }
+.rfiNext { font-size: var(--fs-sm); color: var(--text-tertiary); line-height: 1.5; }
+.rfiInlineErr { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--status-overdue); }
+.rfiSeg[aria-pressed="true"] { border-color: var(--border-strong); background: rgba(255,255,255,0.12); color: var(--text-primary); }
+.rfiSeg[data-urgent="true"][aria-pressed="true"] { border-color: var(--status-overdue); color: var(--status-overdue); }
+.rfiFormBtns { display: flex; gap: 8px; flex-wrap: wrap; }
+.rfiDateInput { width: 100%; }
+@media (max-width: 640px) {
+  .rfiWs .k-btn, .rfiWs .k-stat, .rfiWs select.k-select, .rfiWs .k-input { min-height: 44px; }
+  .rfiWs .k-table td { height: 48px; }
+  .rfiSubj { max-width: 220px; }
+}
+`;
+
+const DATE_INPUT_STYLE: React.CSSProperties = {
+  width: '100%', minHeight: 40, padding: '8px 12px', fontSize: 14,
+  background: 'var(--bg-surface-2)', border: '1px solid var(--border-default)',
+  borderRadius: 'var(--radius-sm)', color: 'var(--text-primary)',
 };
 
 export default function RFIsPage() {
   const { projectId } = useParams() as { projectId: string };
   const [rfis, setRfis] = useState<RFI[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
   const [answeringId, setAnsweringId] = useState<string | null>(null);
   const [answerText, setAnswerText] = useState('');
   const [answeredBy, setAnsweredBy] = useState('');
   const [submittingAnswer, setSubmittingAnswer] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
+  const { toast, show } = useToast(4000);
 
   // Filters
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
 
-  /* ── Radio evidence: an RFI promoted from a transmission carries the voice
-   *    behind it. The list route returns a narrow column set (no attachments,
-   *    no notes), so the row detects it from the headline the promote appends
-   *    to `question`, and the full structured provenance is pulled from the
-   *    RFI detail only when the user opens the card. ── */
-  const [evidenceId, setEvidenceId] = useState<string | null>(null);
-  const [evidenceSrc, setEvidenceSrc] = useState<RadioEvidenceSource | null>(null);
-  const [evidenceLoading, setEvidenceLoading] = useState(false);
-  const [evidenceError, setEvidenceError] = useState('');
+  // Selection + the full single-record read behind the detail workspace.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<RFIDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState('');
+  const detailRef = useRef<HTMLDivElement>(null);
 
   // Assign / ball-in-court
   const [assigningId, setAssigningId] = useState<string | null>(null);
@@ -130,14 +243,14 @@ export default function RFIsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
+    setLoadError('');
     try {
       const r = await fetch(`/api/rfis/list?projectId=${projectId}`);
-      if (!r.ok) throw new Error(await r.text());
+      if (!r.ok) throw new Error(await readError(r, 'Could not load RFIs.'));
       const d = await r.json();
       setRfis(d.rfis ?? []);
     } catch (e: unknown) {
-      setError((e as Error).message || 'Failed to load RFIs');
+      setLoadError((e as Error).message || 'Could not load RFIs.');
     } finally {
       setLoading(false);
     }
@@ -156,10 +269,56 @@ export default function RFIsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const totalCount = rfis?.length ?? 0;
-  const openCount = rfis?.filter(r => r.status === 'open').length ?? 0;
-  const answeredCount = rfis?.filter(r => r.status === 'answered').length ?? 0;
-  const overdueCount = rfis?.filter(r => r.is_overdue).length ?? 0;
+  const loadDetail = useCallback(async (id: string) => {
+    setDetail(null);
+    setDetailError('');
+    if (id.startsWith('temp-')) return; // not on the server yet
+    setDetailLoading(true);
+    try {
+      const r = await fetch(`/api/rfis/${id}`);
+      if (!r.ok) throw new Error(await readError(r, 'Could not load this RFI record.'));
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      setDetail((d.rfi ?? null) as RFIDetail | null);
+    } catch (e: unknown) {
+      setDetailError((e as Error).message || 'Could not load this RFI record.');
+    } finally {
+      setDetailLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedId) loadDetail(selectedId);
+    else { setDetail(null); setDetailError(''); }
+  }, [selectedId, loadDetail]);
+
+  const selected = selectedId ? rfis.find(r => r.id === selectedId) ?? null : null;
+
+  // Keep a selected optimistic row selected once the server swaps in its real id.
+  useEffect(() => {
+    if (selectedId && !selected && !loading) setSelectedId(null);
+  }, [selectedId, selected, loading]);
+
+  function selectRfi(rfi: RFI) {
+    if (selectedId !== rfi.id) {
+      setAnsweringId(null);
+      setAssigningId(null);
+    }
+    setSelectedId(rfi.id);
+    // Stacked layouts: bring the detail into view instead of leaving it below the fold.
+    requestAnimationFrame(() => {
+      const el = detailRef.current;
+      if (el && el.getBoundingClientRect().top > window.innerHeight * 0.6) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+
+  const totalCount = rfis.length;
+  const openCount = rfis.filter(r => (r.status || 'open') === 'open').length;
+  const answeredCount = rfis.filter(r => r.status === 'answered').length;
+  const inReviewCount = rfis.filter(r => IN_REVIEW.has(r.status)).length;
+  const overdueCount = rfis.filter(r => r.is_overdue).length;
 
   // SmartCreate intelligence — ctx snapshot + the live log
   const subs: any[] = ctx?.subs || [];
@@ -168,19 +327,8 @@ export default function RFIsPage() {
   const oldestOpenDays = rfis.filter(r => r.status === 'open').reduce((m, r) => Math.max(m, daysOpen(r)), 0);
   const specDiv = (CSI_DIVISIONS as Record<string, { name: string }>)[fSpecSection.slice(0, 2)] ? fSpecSection.slice(0, 2) : '';
 
-  function daysOpen(rfi: RFI): number {
-    const created = new Date(rfi.created_at || Date.now());
-    return Math.max(0, Math.floor((Date.now() - created.getTime()) / 86400000));
-  }
-
-  function ballInCourt(rfi: RFI): string {
-    return (rfi.ball_in_court || rfi.assigned_to_name || '').trim();
-  }
-
   // Distinct ball-in-court holders for the assignee filter.
-  const assigneeOptions = Array.from(
-    new Set(rfis.map(ballInCourt).filter(Boolean))
-  ).sort();
+  const assigneeOptions = Array.from(new Set(rfis.map(ballInCourt).filter(Boolean))).sort();
 
   const filteredRfis = rfis.filter(rfi => {
     if (search) {
@@ -193,11 +341,16 @@ export default function RFIsPage() {
     }
     if (statusFilter !== 'all') {
       if (statusFilter === 'overdue') { if (!rfi.is_overdue) return false; }
+      else if (statusFilter === 'in_review') { if (!IN_REVIEW.has(rfi.status)) return false; }
       else if ((rfi.status || 'open') !== statusFilter) return false;
     }
     if (assigneeFilter !== 'all' && ballInCourt(rfi) !== assigneeFilter) return false;
     return true;
   });
+
+  const filtersActive = !!search || statusFilter !== 'all' || assigneeFilter !== 'all';
+  const clearFilters = () => { setSearch(''); setStatusFilter('all'); setAssigneeFilter('all'); };
+  const toggleStatus = (f: StatusFilter) => setStatusFilter(prev => (prev === f ? 'all' : f));
 
   /* ── Unsaved-work protection (R14): the create form arms the guard once any
    *    field differs from its seeded default (the architect assignee and the
@@ -226,18 +379,21 @@ export default function RFIsPage() {
     onSave: () => submitRFI(),
   });
 
-  /** Close paths for the create form (hero Cancel / footer Cancel) run through the guard. */
+  /** Every close path for the create modal (X, Cancel, Esc, backdrop) runs through the guard. */
   function closeCreate() {
-    guard.requestClose(() => { setShowForm(false); setError(''); });
+    guard.requestClose(() => { setShowForm(false); setFormError(''); });
   }
 
-  /** POST the RFI — shared by the form button and the guard's "Save & leave".
-   *  Optimistic: the row lands and the form closes instantly; returns true
+  function openCreate() {
+    setFormError('');
+    setShowForm(true);
+  }
+
+  /** POST the RFI — shared by the modal submit and the guard's "Save & leave".
+   *  Optimistic: the row lands and the modal closes instantly; returns true
    *  once the server confirms. */
   async function submitRFI(): Promise<boolean> {
-    if (!fSubject.trim()) { setError('Subject is required.'); return false; }
-    // Optimistic create (house pattern: budget saveEdit) — the row lands in the
-    // log and the form closes instantly; the network settles in the background.
+    if (!fSubject.trim()) { setFormError('Subject is required.'); return false; }
     const assignedName = (fAssignedTo === '__other' ? fAssignedOther.trim() : fAssignedTo) || '';
     const tempId = `temp-${Date.now()}`;
     const optimistic: RFI = {
@@ -256,22 +412,26 @@ export default function RFIsPage() {
     setFAssignedTo(ctx?.defaults?.architectName || ctx?.project?.architectName || '');
     setShowForm(false);
     setSaving(true);
-    setError('');
+    setFormError('');
     try {
       const r = await fetch('/api/rfis/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId, subject: fSubject, question: fQuestion, specSection: fSpecSection, dueDate: fDueDate || undefined,
-          assignedToName: (fAssignedTo === '__other' ? fAssignedOther.trim() : fAssignedTo) || undefined,
+          assignedToName: assignedName || undefined,
           isUrgent: fUrgent,
           priority: fUrgent ? 'high' : 'medium',
         }),
       });
       const d = await r.json();
       if (d.error) throw new Error(d.error);
-      if (d.rfi) setRfis(prev => prev.map(x => (x.id === tempId ? d.rfi : x)));
+      if (d.rfi) {
+        setRfis(prev => prev.map(x => (x.id === tempId ? d.rfi : x)));
+        setSelectedId(prev => (prev === tempId ? d.rfi.id : prev));
+      }
       guard.clearDraft();
+      show(`RFI #${d.rfi?.rfi_number ?? nextRfiNumber} created.`);
       revalidate();
       return true;
     } catch (e: unknown) {
@@ -281,7 +441,7 @@ export default function RFIsPage() {
       setFDueDate(fDueDate);
       setFAssignedTo(fAssignedTo);
       setShowForm(true);
-      setError((e as Error).message || 'Failed to create RFI');
+      setFormError((e as Error).message || 'Failed to create RFI.');
       return false;
     } finally {
       setSaving(false);
@@ -290,15 +450,12 @@ export default function RFIsPage() {
 
   async function submitAnswer(rfiId: string) {
     if (!answerText.trim()) return;
-    // Optimistic patch (house pattern: budget saveEdit) — the RFI flips to
-    // answered instantly; rollback + error banner if the server disagrees.
+    // Optimistic patch — the RFI flips to answered instantly; rollback if the server disagrees.
     const prevRfi = rfis.find(x => x.id === rfiId);
     setRfis(prev => prev.map(x => (x.id === rfiId ? { ...x, status: 'answered', answer: answerText, answered_by: answeredBy || null, is_overdue: false } : x)));
     setAnsweringId(null);
     setAnswerText('');
     setAnsweredBy('');
-    setSuccessMsg('Answer submitted successfully.');
-    setTimeout(() => setSuccessMsg(''), 4000);
     setSubmittingAnswer(true);
     try {
       const r = await fetch(`/api/rfis/${rfiId}/answer`, {
@@ -308,6 +465,7 @@ export default function RFIsPage() {
       });
       const d = await r.json();
       if (d.error) throw new Error(d.error);
+      show('Answer submitted.');
       revalidate();
     } catch (e: unknown) {
       // Rollback + reopen the answer form with the typed values intact.
@@ -315,8 +473,7 @@ export default function RFIsPage() {
       setAnsweringId(rfiId);
       setAnswerText(answerText);
       setAnsweredBy(answeredBy);
-      setSuccessMsg('');
-      setError((e as Error).message || 'Failed to submit answer');
+      show((e as Error).message || 'Failed to submit answer.', 'bad');
     } finally {
       setSubmittingAnswer(false);
     }
@@ -324,8 +481,7 @@ export default function RFIsPage() {
 
   async function submitAssign(rfiId: string) {
     if (!assignName.trim() && !assignDue) return;
-    // Optimistic patch (house pattern: budget saveEdit) — ball-in-court and due
-    // date move instantly; rollback + error banner if the server disagrees.
+    // Optimistic patch — ball-in-court and due date move instantly; rollback if the server disagrees.
     const prevRfi = rfis.find(x => x.id === rfiId);
     setRfis(prev => prev.map(x => (x.id === rfiId ? {
       ...x,
@@ -335,16 +491,12 @@ export default function RFIsPage() {
     setAssigningId(null);
     setAssignName('');
     setAssignDue('');
-    setSuccessMsg('RFI assigned. Ball is now in their court.');
-    setTimeout(() => setSuccessMsg(''), 4000);
     setSavingAssign(true);
-    setError('');
     try {
       const payload: Record<string, unknown> = {};
       if (assignName.trim()) {
         payload.assigned_to_name = assignName.trim();
         payload.ball_in_court = assignName.trim();
-        // Re-open if it had been answered/closed and the ball is being moved again.
       }
       if (assignDue) payload.due_date = assignDue;
       const r = await fetch(`/api/rfis/${rfiId}`, {
@@ -354,6 +506,7 @@ export default function RFIsPage() {
       });
       const d = await r.json();
       if (d.error) throw new Error(d.error);
+      show('RFI reassigned. The ball is in their court.');
       revalidate();
     } catch (e: unknown) {
       // Rollback + reopen the assign form with the typed values intact.
@@ -361,406 +514,486 @@ export default function RFIsPage() {
       setAssigningId(rfiId);
       setAssignName(assignName);
       setAssignDue(assignDue);
-      setSuccessMsg('');
-      setError((e as Error).message || 'Failed to assign RFI');
+      show((e as Error).message || 'Failed to reassign RFI.', 'bad');
     } finally {
       setSavingAssign(false);
     }
   }
 
-  /** Open (or close) the radio-evidence card for one RFI. Read-only — nothing
-   *  is written, and a failed detail read is reported, never faked. */
-  async function openEvidence(rfi: RFI) {
-    if (evidenceId === rfi.id) { setEvidenceId(null); return; }
+  /** Close out an RFI through the same PATCH route reassign uses. */
+  async function closeRfi(rfi: RFI) {
+    const ok = await confirmDialog({
+      title: `Close RFI #${rfi.rfi_number}?`,
+      message: 'It moves to Closed and drops out of overdue tracking.',
+      confirmLabel: 'Close RFI',
+    });
+    if (!ok) return;
+    const prevRfi = rfi;
+    setRfis(prev => prev.map(x => (x.id === rfi.id ? { ...x, status: 'closed', is_overdue: false } : x)));
     setAnsweringId(null);
     setAssigningId(null);
-    setEvidenceId(rfi.id);
-    // Paint instantly from the headline the list row already carries…
-    setEvidenceSrc(radioProvenanceFromText(rfi.question));
-    setEvidenceError('');
-    setEvidenceLoading(true);
     try {
-      // …then upgrade to the structured provenance stored in attachments jsonb,
-      // which is the only place the radio message ID lives.
-      const r = await fetch(`/api/rfis/${rfi.id}`);
+      const r = await fetch(`/api/rfis/${rfi.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'closed', closed_at: new Date().toISOString() }),
+      });
       const d = await r.json();
-      if (!r.ok || d.error) throw new Error(d.error || 'Could not load this RFI record');
-      const full = radioEvidenceFromRecord(d.rfi);
-      if (full) setEvidenceSrc(full);
-      else setEvidenceError('This RFI no longer carries the radio provenance that was filed with it.');
+      if (!r.ok || d.error) throw new Error(d.error || 'Could not close the RFI.');
+      show(`RFI #${rfi.rfi_number} closed.`);
+      revalidate();
     } catch (e: unknown) {
-      setEvidenceError((e as Error).message || 'Could not load the radio evidence for this RFI.');
-    } finally {
-      setEvidenceLoading(false);
+      setRfis(prev => prev.map(x => (x.id === rfi.id ? prevRfi : x)));
+      show((e as Error).message || 'Could not close the RFI. Please try again.', 'bad');
     }
   }
 
-  const inp: React.CSSProperties = {
-    width: '100%', padding: '8px 12px', background: T.surface,
-    border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
+  async function deleteRfi(rfi: RFI) {
+    if (!(await confirmDialog({ title: 'Please confirm', message: `Delete RFI #${rfi.rfi_number}? This cannot be undone.`, confirmLabel: 'Delete', danger: true }))) return;
+    setRfis(prev => prev.filter(r => r.id !== rfi.id));
+    if (selectedId === rfi.id) setSelectedId(null);
+    try {
+      const res = await fetch(`/api/rfis/${rfi.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('delete failed');
+      show(`RFI #${rfi.rfi_number} deleted.`);
+    } catch {
+      show('Could not delete the RFI. Please try again.', 'bad');
+      load();
+    }
+  }
+
+  function startAnswer(rfi: RFI) {
+    selectRfi(rfi);
+    setAnsweringId(rfi.id);
+    setAnswerText('');
+    setAnsweredBy('');
+    setAssigningId(null);
+  }
+
+  function startAssign(rfi: RFI) {
+    selectRfi(rfi);
+    setAssigningId(rfi.id);
+    setAssignName(ballInCourt(rfi));
+    setAssignDue(rfi.due_date || '');
+    setAnsweringId(null);
+  }
+
+  /** The record's verbs — shared by the row overflow and the rail. */
+  function rfiActions(rfi: RFI): Action[] {
+    const s = rfi.status || 'open';
+    const temp = rfi.id.startsWith('temp-');
+    return [
+      { label: 'Open Details', icon: <Question size={15} />, onClick: () => selectRfi(rfi) },
+      { label: 'Answer', icon: <ChatText size={15} />, onClick: () => startAnswer(rfi), hidden: !ANSWERABLE(s), disabled: temp },
+      { label: 'Reassign', icon: <UserSwitch size={15} />, onClick: () => startAssign(rfi), disabled: temp },
+      { label: 'Close RFI', icon: <CheckCircle size={15} />, onClick: () => closeRfi(rfi), hidden: s === 'closed', disabled: temp },
+      { label: 'Delete', icon: <Trash size={15} />, onClick: () => deleteRfi(rfi), tone: 'danger', disabled: temp },
+    ];
+  }
+
+  // ── Stat tiles: each opens the log filtered to that slice ──
+  const stats: StatItem[] = loading
+    ? [
+        { label: 'Open', value: '—', sub: 'Loading…' },
+        { label: 'Overdue', value: '—', sub: 'Loading…' },
+        { label: 'In Review', value: '—', sub: 'Loading…' },
+        { label: 'Answered', value: '—', sub: 'Loading…' },
+      ]
+    : [
+        { label: 'Open', value: openCount, sub: statusFilter === 'open' ? 'Filtered — click to clear' : oldestOpenDays > 0 ? `Oldest ${oldestOpenDays}d` : 'Awaiting a response', onClick: () => toggleStatus('open') },
+        { label: 'Overdue', value: overdueCount, tone: overdueCount > 0 ? 'bad' : 'default', sub: statusFilter === 'overdue' ? 'Filtered — click to clear' : overdueCount > 0 ? 'Past the response date' : 'All on time', onClick: () => toggleStatus('overdue') },
+        { label: 'In Review', value: inReviewCount, tone: inReviewCount > 0 ? 'warn' : 'default', sub: statusFilter === 'in_review' ? 'Filtered — click to clear' : 'Submitted or being answered', onClick: () => toggleStatus('in_review') },
+        { label: 'Answered', value: answeredCount, tone: answeredCount > 0 ? 'good' : 'default', sub: statusFilter === 'answered' ? 'Filtered — click to clear' : 'Ready to close out', onClick: () => toggleStatus('answered') },
+      ];
+
+  // ── List columns: full log, or a compact log beside the detail workspace ──
+  const numberCol: Column<RFI> = {
+    key: 'rfi_number', header: 'RFI #', accessor: r => r.rfi_number, width: 72,
+    render: r => <span className="rfiNum" data-sel={r.id === selectedId ? 'true' : undefined}>#{r.rfi_number}</span>,
   };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
-  const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
-
-  // Disabled-aware CTA helper — keeps goldButtonStyle looking correct while a
-  // write is in flight or a required field is empty.
-  const disabledGold = (isDisabled: boolean): React.CSSProperties => ({
-    ...goldButtonStyle,
-    opacity: isDisabled ? 0.5 : 1,
-    cursor: isDisabled ? 'not-allowed' : 'pointer',
-  });
-
-  return (
-    <PremiumSurface maxWidth={2200}>
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Project RFIs"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('rfis').vivid ?? moduleAccent('rfis').hex}><Question size={13} weight="fill" color="#F8FAFC" /></IconChip>}
-        accentColor={moduleAccent('rfis').hex}
-        title="Requests for"
-        accent="Information"
-        subtitle="Questions, ball-in-court, and close-out."
-        note="Get it in writing"
-        actions={
-          showForm ? (
-            <button onClick={closeCreate} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-          ) : (
-            <button data-tour="create-rfi" onClick={() => setShowForm(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create RFI</button>
-          )
-        }
-      />
-
-      {/* Stat Cards — skeletons while loading, greyed/suppressed on error, real values otherwise */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 22 }}>
-        {loading ? (
-          <>
-            <SkeletonKPI />
-            <SkeletonKPI />
-            <SkeletonKPI />
-            <SkeletonKPI />
-          </>
-        ) : error ? (
-          <div style={{ gridColumn: '1 / -1', opacity: 0.55 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              <StatCard icon={<Clipboard size={19} weight="duotone" color={T.faint} />} label="Total RFIs" value="—"  href={`/app/projects/${projectId}/rfis`}/>
-              <StatCard icon={<FolderOpen size={19} weight="duotone" color={T.faint} />} label="Open" value="—"  href={`/app/projects/${projectId}/rfis`}/>
-              <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.faint} />} label="Answered" value="—"  href={`/app/projects/${projectId}/rfis`}/>
-              <StatCard icon={<Clock size={19} weight="duotone" color={T.faint} />} label="Overdue" value="—"  href={`/app/projects/${projectId}/rfis`}/>
-            </div>
-          </div>
-        ) : (
-          <>
-            <StatCard icon={<Clipboard size={19} weight="duotone" color={moduleAccent('rfis').hex} />} label="Total RFIs" value={String(totalCount ?? 0)} delay={0.02}  href={`/app/projects/${projectId}/rfis`}/>
-            <StatCard icon={<FolderOpen size={19} weight="duotone" color={moduleAccent('rfis').hex} />} label="Open" value={String(openCount ?? 0)} accent={T.gold} delay={0.06}  href={`/app/projects/${projectId}/rfis`}/>
-            <StatCard icon={<CheckCircle size={19} weight="duotone" color={T.green} />} label="Answered" value={String(answeredCount ?? 0)} accent={T.green} delay={0.10}  href={`/app/projects/${projectId}/rfis`}/>
-            <StatCard icon={<Clock size={19} weight="duotone" color={overdueCount > 0 ? T.red : T.faint} />} label="Overdue" value={String(overdueCount ?? 0)} accent={overdueCount > 0 ? T.red : undefined} sub={overdueCount > 0 ? 'Needs attention' : undefined} delay={0.14}  href={`/app/projects/${projectId}/rfis`}/>
-          </>
+  const subjectCol: Column<RFI> = {
+    key: 'subject', header: 'Subject', accessor: r => (r.subject || '').toLowerCase(),
+    render: r => (
+      <div className="rfiSubj">
+        <span title={r.subject}>{r.subject || 'Untitled RFI'}</span>
+        {hasRadioEvidence({ question: r.question }) && (
+          <Waveform size={14} weight="fill" aria-label="Filed from Saguaro Radio" style={{ flexShrink: 0, color: 'var(--text-tertiary)' }} />
         )}
       </div>
+    ),
+  };
+  const bicCol: Column<RFI> = {
+    key: 'bic', header: 'Ball in Court', accessor: r => ballInCourt(r).toLowerCase(),
+    render: r => { const b = ballInCourt(r); return b ? <span style={{ color: 'var(--text-primary)' }}>{b}</span> : <span className="rfiMuted">Unassigned</span>; },
+  };
+  const dueCol: Column<RFI> = {
+    key: 'due_date', header: 'Due Date', accessor: r => r.due_date || '',
+    render: r => <span className={r.is_overdue ? 'rfiLate' : undefined}>{fmtDate(r.due_date)}</span>,
+  };
+  const daysCol: Column<RFI> = {
+    key: 'days', header: 'Days Open', accessor: r => daysOpen(r), align: 'right',
+    render: r => <span className="rfiMuted">{daysOpen(r)}d</span>,
+  };
+  const statusCol: Column<RFI> = {
+    key: 'status', header: 'Status', accessor: r => rfiStatus(r).label,
+    render: r => {
+      const st = rfiStatus(r);
+      return (
+        <span className="rfiBadges">
+          <Badge tone={st.tone}>{st.label}</Badge>
+          {/* Urgent only matters while the RFI is still waiting on an answer. */}
+          {isUrgent(r) && ANSWERABLE(r.status || 'open') && <Badge tone="neutral"><Lightning size={11} weight="fill" /> Urgent</Badge>}
+        </span>
+      );
+    },
+  };
+  const columns: Column<RFI>[] = selected
+    ? [numberCol, subjectCol, dueCol, statusCol]
+    : [numberCol, subjectCol, bicCol, dueCol, daysCol, statusCol];
 
-      {successMsg && (
-        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: T.greenDim, border: `1px solid rgba(34,197,94,0.4)`, borderRadius: 10, color: T.green, fontSize: 13 }}>{successMsg}</div>
-      )}
-      {/* Inline banner for action errors (form/answer) when data is already on screen;
-          full-load errors are surfaced by the error block in the table below instead. */}
-      {error && !loading && rfis.length > 0 && (
-        <div style={{ margin: '0 0 16px', padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 10, color: T.red, fontSize: 13 }}>{error}</div>
-      )}
+  // ── Detail workspace pieces ──
+  const selStatus = selected ? (selected.status || 'open') : 'open';
+  const selDef = MODULES.rfis?.statuses?.[selStatus];
+  const radioFromText = selected && hasRadioEvidence({ question: selected.question }) ? radioProvenanceFromText(selected.question) : null;
+  const radioFromRecord = detail ? radioEvidenceFromRecord(detail) : null;
+  const radioSource = radioFromRecord ?? radioFromText;
 
-      {/* Create Form — SmartCreate: walks in knowing the project */}
-      {showForm && (
-        <div style={{ marginBottom: 22 }}>
-          {ctx && (
-            <StatStrip items={[
-              {href: `/app/projects/${projectId}/rfis`,  label: 'Next RFI', value: `#${nextRfiNumber}`, sub: totalCount > 0 ? `Follows ${totalCount} on this project` : 'First on this project' },
-              {href: `/app/projects/${projectId}/rfis`,  label: 'Ball in Court', value: architectName || 'Unassigned', sub: architectName ? 'Architect of record' : 'Pick a recipient below' },
-              {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(openCount), accent: overdueCount > 0 ? T.red : undefined, sub: overdueCount > 0 ? `${overdueCount} overdue` : oldestOpenDays > 0 ? `Oldest ${oldestOpenDays}d` : 'All current' },
-              {href: `/app/projects/${projectId}/rfis`,  label: 'Response Due', value: '+7 days', sub: 'Standard turnaround' },
-              {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(subs.length), sub: subs.length > 0 ? 'Roster ready to assign' : 'None awarded yet' },
-              {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(ctx?.counts?.openSubmittals ?? 0), sub: 'Linkable from an answer' },
-            ]} />
-          )}
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 330px', gap: 22, alignItems: 'start' }}>
-            <SectionCard title="New Request for Information" icon={<Question size={17} weight="duotone" color={moduleAccent('rfis').hex} />}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={lbl}>Subject *</label>
-                  <input value={fSubject} onChange={e => setFSubject(e.target.value)} placeholder="e.g. Clarify footing depth at grid A-3" style={inp} />
-                  <div style={hint}>Keep it one line — the subject is what the architect scans in their inbox.</div>
-                </div>
-                <div>
-                  <label style={lbl}>RFI Number<AutoChip /></label>
-                  <input value={`#${nextRfiNumber}`} readOnly style={{ ...inp, color: T.gold, fontWeight: 700 }} />
-                  <div style={hint}>Next in the project sequence — confirmed at submit.</div>
-                </div>
-                <div>
-                  <label style={lbl}>Response Due{auto.due && <AutoChip />}</label>
-                  <SaguaroDatePicker value={fDueDate} onChange={setFDueDate} style={inp} />
-                  <div style={hint}>Defaulted to +7 days — overdue tracking runs against this date.</div>
-                </div>
-                <div>
-                  <label style={lbl}>Spec Section</label>
-                  <select value={specDiv} onChange={e => { const code = e.target.value; setFSpecSection(code ? `${code} 00 00` : ''); }} style={{ ...inp, cursor: 'pointer', marginBottom: 6 }}>
-                    <option value="">CSI division…</option>
-                    {Object.entries(CSI_DIVISIONS).map(([code, d]) => (
-                      <option key={code} value={code}>Div {code} — {(d as { name: string }).name}</option>
-                    ))}
-                  </select>
-                  <input value={fSpecSection} onChange={e => setFSpecSection(e.target.value)} placeholder="e.g. 03 30 00" style={inp} />
-                  <div style={hint}>Pick the division to stamp its MasterFormat prefix, then refine to the exact section.</div>
-                </div>
-                <div>
-                  <label style={lbl}>Assign To — Ball in Court{auto.assignee && architectName !== '' && fAssignedTo === architectName && <AutoChip />}</label>
-                  <select value={fAssignedTo} onChange={e => setFAssignedTo(e.target.value)} style={{ ...inp, cursor: 'pointer' }}>
-                    <option value="">Unassigned</option>
-                    {architectName && <option value={architectName}>{architectName} — Architect</option>}
-                    {subs.map(s => (
-                      <option key={s.membershipId || s.id} value={s.companyName}>{s.companyName}{s.trade ? ` — ${s.trade}` : ''}</option>
-                    ))}
-                    <option value="__other">Other — type a name…</option>
-                  </select>
-                  {fAssignedTo === '__other' && (
-                    <input value={fAssignedOther} onChange={e => setFAssignedOther(e.target.value)} placeholder="Name or company" style={{ ...inp, marginTop: 6 }} autoFocus />
-                  )}
-                  <div style={hint}>{architectName ? `Defaults to ${architectName} — the architect of record answers most RFIs.` : 'Architect, owner rep, or any sub from the awarded roster.'}</div>
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={lbl}>Urgency</label>
-                  <div style={{ display: 'flex', gap: 8, maxWidth: 360 }}>
-                    <button type="button" onClick={() => setFUrgent(false)} className="pmBtn"
-                      style={{ flex: 1, padding: '9px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', background: !fUrgent ? 'var(--brand-primary-12)' : 'transparent', border: `1px solid ${!fUrgent ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : T.border}`, color: !fUrgent ? T.gold : T.muted }}>
-                      Standard
-                    </button>
-                    <button type="button" onClick={() => setFUrgent(true)} className="pmBtn"
-                      style={{ flex: 1, padding: '9px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: fUrgent ? 'rgba(239,68,68,0.14)' : 'transparent', border: `1px solid ${fUrgent ? 'rgba(239,68,68,0.5)' : T.border}`, color: fUrgent ? T.red : T.muted }}>
-                      <Lightning size={13} weight="fill" /> Urgent
-                    </button>
-                  </div>
-                  <div style={hint}>{fUrgent ? 'Flagged urgent — priority is raised and the responder sees it first.' : 'Urgent raises priority and flags the record for the responder.'}</div>
-                </div>
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={lbl}>Question / Description</label>
-                  <textarea value={fQuestion} onChange={e => setFQuestion(e.target.value)} rows={4} placeholder="Describe the question in detail…" style={{ ...inp, resize: 'vertical' }} />
-                  <div style={hint}>Reference sheets and grid lines — precise questions come back answered, not re-asked.</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-                <button onClick={submitRFI} disabled={saving || !fSubject.trim()} className="pmBtn" style={disabledGold(saving || !fSubject.trim())}>{saving ? 'Submitting…' : 'Submit RFI'}</button>
-                <button onClick={closeCreate} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-              </div>
-            </SectionCard>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="Project Routing" icon={<Buildings size={17} weight="duotone" color={T.gold} />}>
-                <InsightRow label="Project" value={ctx?.project?.name || '—'} />
-                <InsightRow label="Architect" value={architectName || 'Not on file'} />
-                <InsightRow label="Owner" value={ctx?.defaults?.ownerName || ctx?.project?.ownerName || '—'} />
-                <InsightRow label="Subs on Roster" value={String(subs.length)} />
-                <InsightRow label="Open / Overdue" value={`${openCount} / ${overdueCount}`} accent={overdueCount > 0 ? T.red : undefined} strong />
-              </SectionCard>
-              <SectionCard flat title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={T.gold} />}>
-                <FlowSteps title="" steps={[
-                  { title: 'RFI Logs and Routes', desc: `Numbered #${nextRfiNumber} automatically — the ball-in-court gets the email and in-app notification.` },
-                  { title: 'The Clock Starts', desc: 'Days-open and overdue tracking run against the response-due date.' },
-                  { title: 'Answer Lands on the Record', desc: 'One click captures the response and the RFI closes out.' },
-                  { title: 'Impacts Spawn Follow-Ups', desc: 'Cost or scope in the answer? Link a change order or submittal straight from this RFI.' },
-                ]} />
-              </SectionCard>
+  const detailValue = (v: React.ReactNode): React.ReactNode =>
+    detailLoading ? <span className="rfiMuted">Loading…</span>
+      : detailError ? <span className="rfiMuted">Unavailable</span>
+      : v;
+
+  const costImpact = (() => {
+    if (!detail || detail.cost_impact == null || detail.cost_impact === '') return null;
+    const n = Number(detail.cost_impact);
+    if (!Number.isFinite(n)) return null;
+    const dir = detail.cost_impact_direction ? ` · ${String(detail.cost_impact_direction).replace(/_/g, ' ')}` : '';
+    return `${money.format(n)}${dir}`;
+  })();
+  const scheduleImpact = detail && detail.schedule_impact_days != null
+    ? `${detail.schedule_impact_days} ${Math.abs(Number(detail.schedule_impact_days)) === 1 ? 'day' : 'days'}`
+    : null;
+
+  const answerForm = selected && answeringId === selected.id && (
+    <div className="rfiSection">
+      <div className="rfiSectionTitle">Answer / Response</div>
+      <Field label="Answer" required>
+        <Textarea value={answerText} onChange={e => setAnswerText(e.target.value)} rows={4} placeholder="Type the answer…" autoFocus />
+      </Field>
+      <Field label="Answered By">
+        <Input value={answeredBy} onChange={e => setAnsweredBy(e.target.value)} placeholder="Your name" />
+      </Field>
+      <div className="rfiFormBtns">
+        <Button variant="primary" onClick={() => submitAnswer(selected.id)} disabled={submittingAnswer || !answerText.trim()}>
+          {submittingAnswer ? 'Saving…' : 'Submit Answer'}
+        </Button>
+        <Button variant="ghost" onClick={() => { setAnsweringId(null); setAnswerText(''); setAnsweredBy(''); }}>Cancel</Button>
+      </div>
+    </div>
+  );
+
+  const assignForm = selected && assigningId === selected.id && (
+    <div className="rfiSection">
+      <div className="rfiSectionTitle">Reassign</div>
+      <FormGrid cols={2}>
+        <Field label="Ball in Court (Assignee)">
+          <Input value={assignName} onChange={e => setAssignName(e.target.value)} placeholder="e.g. Jane Architect / ACME Design" autoFocus />
+        </Field>
+        <Field label="Due Date">
+          <div className="rfiDateInput"><SaguaroDatePicker value={assignDue} onChange={setAssignDue} style={DATE_INPUT_STYLE} /></div>
+        </Field>
+      </FormGrid>
+      <div className="rfiFormBtns">
+        <Button variant="primary" onClick={() => submitAssign(selected.id)} disabled={savingAssign || (!assignName.trim() && !assignDue)}>
+          {savingAssign ? 'Saving…' : 'Save Assignment'}
+        </Button>
+        <Button variant="ghost" onClick={() => { setAssigningId(null); setAssignName(''); setAssignDue(''); }}>Cancel</Button>
+      </div>
+    </div>
+  );
+
+  const detailWorkspace = selected && (
+    <div ref={detailRef} className="rfiDetailCq">
+      <div className="rfiDetail">
+        <Card
+          title={<>RFI #{selected.rfi_number} — {selected.subject || 'Untitled RFI'}</>}
+          subtitle={selected.spec_section ? `Spec ${selected.spec_section}` : undefined}
+          actions={<Button variant="ghost" size="sm" icon={<X size={16} />} aria-label="Close details" title="Close details" onClick={() => setSelectedId(null)} />}
+        >
+          <div className="rfiSection">
+            <div className="rfiSectionTitle">Question</div>
+            {stripRadioProvenance(selected.question)
+              ? <div className="rfiProse">{stripRadioProvenance(selected.question)}</div>
+              : <div className="rfiMuted" style={{ fontSize: 'var(--fs-sm)' }}>No question text was entered.</div>}
+          </div>
+
+          {selected.answer && (
+            <div className="rfiSection">
+              <div className="rfiSectionTitle">Answer{selected.answered_by ? ` — ${selected.answered_by}` : ''}</div>
+              <div className="rfiProse">{selected.answer}</div>
             </div>
+          )}
+
+          {answerForm}
+          {assignForm}
+
+          {detail?.impact_description && (
+            <div className="rfiSection">
+              <div className="rfiSectionTitle">Impact Notes</div>
+              <div className="rfiProse">{String(detail.impact_description)}</div>
+            </div>
+          )}
+
+          {/* The voice behind an RFI promoted from a radio transmission: paints from
+              the headline the list row carries, upgrades to the structured
+              provenance in the record's attachments once the detail read lands. */}
+          {radioFromText && (
+            <div className="rfiSection">
+              {radioSource && <RadioEvidence source={radioSource} title="Voice on the Record" />}
+              {detailLoading && <div className="rfiMuted" style={{ fontSize: 'var(--fs-sm)' }}>Loading the radio evidence…</div>}
+              {!detailLoading && !detailError && detail && !radioFromRecord && (
+                <div className="rfiMuted" style={{ fontSize: 'var(--fs-sm)' }}>This RFI no longer carries the radio provenance that was filed with it.</div>
+              )}
+            </div>
+          )}
+        </Card>
+
+        <aside className="rfiRail" aria-label="RFI details and actions">
+          <Card title="Details">
+            <div className="rfiSection">
+              <div className="rfiBadges">
+                <Badge tone={rfiStatus(selected).tone} dot>{rfiStatus(selected).label}</Badge>
+                {isUrgent(selected) && ANSWERABLE(selStatus) && <Badge tone="neutral"><Lightning size={11} weight="fill" /> Urgent</Badge>}
+              </div>
+              {selDef?.action && <div className="rfiNext">{selDef.action}.</div>}
+            </div>
+            <div className="rfiSection">
+              <DetailList items={[
+                ['Ball in Court', ballInCourt(selected) || 'Unassigned'],
+                ['Due', <span key="due" className={selected.is_overdue ? 'rfiLate' : undefined}>{fmtDate(selected.due_date)}</span>],
+                ['Days Open', `${daysOpen(selected)}d`],
+                ['Cost Impact', detailValue(costImpact ?? '—')],
+                ['Schedule Impact', detailValue(scheduleImpact ?? '—')],
+                ['Spec Section', selected.spec_section || ''],
+                ['Drawing', detailValue(detail?.drawing_reference ? String(detail.drawing_reference) : '—')],
+                ['Submitted By', selected.submitted_by || ''],
+                ['Created', fmtDate(selected.created_at)],
+              ]} />
+              {detailError && (
+                <div className="rfiInlineErr" role="alert">
+                  <WarningCircle size={15} /> {detailError}
+                  <Button size="sm" variant="ghost" icon={<ArrowClockwise size={14} />} onClick={() => loadDetail(selected.id)}>Retry</Button>
+                </div>
+              )}
+            </div>
+            <div className="rfiSection">
+              <div className="rfiActions">
+                {ANSWERABLE(selStatus) && (
+                  <Button icon={<ChatText size={16} />} onClick={() => startAnswer(selected)} disabled={selected.id.startsWith('temp-') || answeringId === selected.id}>
+                    Answer / Respond
+                  </Button>
+                )}
+                <div className="rfiActionsRow">
+                  <Button icon={<UserSwitch size={16} />} onClick={() => startAssign(selected)} disabled={selected.id.startsWith('temp-') || assigningId === selected.id}>
+                    Reassign
+                  </Button>
+                  <RowActions actions={[
+                    { label: 'Open PDF', icon: <FilePdf size={15} />, href: detail?.pdf_url ? String(detail.pdf_url) : undefined, hidden: !detail?.pdf_url },
+                    { label: 'Delete', icon: <Trash size={15} />, onClick: () => deleteRfi(selected), tone: 'danger', disabled: selected.id.startsWith('temp-') },
+                  ]} />
+                </div>
+                {selStatus !== 'closed' && (
+                  <Button icon={<CheckCircle size={16} />} onClick={() => closeRfi(selected)} disabled={selected.id.startsWith('temp-')}>
+                    Close RFI
+                  </Button>
+                )}
+              </div>
+            </div>
+          </Card>
+        </aside>
+      </div>
+    </div>
+  );
+
+  // ── List body: loading / error / empty / no-match / rows — each distinct ──
+  let listBody: React.ReactNode;
+  if (loadError) {
+    listBody = (
+      <EmptyState
+        icon={<WarningCircle size={22} />}
+        title="Couldn't load RFIs"
+        text={`${loadError} Nothing has been lost — try again.`}
+        action={<Button icon={<ArrowClockwise size={15} />} onClick={load}>Retry</Button>}
+      />
+    );
+  } else if (!loading && rfis.length === 0) {
+    listBody = (
+      <EmptyState
+        icon={<Question size={22} />}
+        title="No RFIs yet"
+        text="Create a Request for Information when you need clarification on plans, specs, or project details."
+        action={<Button icon={<Plus size={15} weight="bold" />} onClick={openCreate}>Create First RFI</Button>}
+      />
+    );
+  } else {
+    listBody = (
+      <DataTable
+        columns={columns}
+        rows={filteredRfis}
+        rowKey={r => r.id}
+        loading={loading}
+        onRowClick={selectRfi}
+        rowActions={rfiActions}
+        empty={
+          <EmptyState
+            icon={<Question size={22} />}
+            title="No RFIs match these filters"
+            text="Clear the search, status, or ball-in-court filter to see more."
+            action={<Button onClick={clearFilters}>Clear Filters</Button>}
+          />
+        }
+      />
+    );
+  }
+
+  return (
+    <div className="rfiWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[
+          { label: 'Projects', href: '/app/projects' },
+          { label: ctx?.project?.name || 'Project', href: `/app/projects/${projectId}/overview` },
+          { label: 'RFIs' },
+        ]}
+        title="RFIs"
+        subtitle="Questions, ball-in-court, and close-out."
+        actions={
+          <Button variant="primary" data-tour="create-rfi" icon={<Plus size={15} weight="bold" />} onClick={openCreate}>
+            New RFI
+          </Button>
+        }
+      >
+        {!loadError && <StatRow items={stats} />}
+
+        {!loading && !loadError && rfis.length > 0 && (
+          <Toolbar
+            search={search}
+            onSearch={setSearch}
+            placeholder="Search by number, subject, or spec section…"
+            filters={
+              <>
+                <Select
+                  aria-label="Status"
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value as StatusFilter)}
+                  style={{ width: 'auto', minWidth: 160 }}
+                  options={[
+                    { value: 'all', label: 'All Statuses' },
+                    { value: 'open', label: 'Open' },
+                    { value: 'overdue', label: 'Overdue' },
+                    { value: 'in_review', label: 'In Review' },
+                    { value: 'answered', label: 'Answered' },
+                    { value: 'closed', label: 'Closed' },
+                  ]}
+                />
+                {assigneeOptions.length > 0 && (
+                  <Select
+                    aria-label="Ball in Court"
+                    value={assigneeFilter}
+                    onChange={e => setAssigneeFilter(e.target.value)}
+                    style={{ width: 'auto', minWidth: 160, maxWidth: 260 }}
+                    options={[{ value: 'all', label: 'Anyone' }, ...assigneeOptions]}
+                  />
+                )}
+                {filtersActive && <Button variant="ghost" size="sm" onClick={clearFilters}>Clear</Button>}
+              </>
+            }
+            actions={<span className="rfiMuted" style={{ fontSize: 'var(--fs-sm)' }}>{filteredRfis.length} of {rfis.length}</span>}
+          />
+        )}
+
+        <div className="rfiCq">
+          <div className="rfiSplit" data-open={selected ? 'true' : 'false'}>
+            <div className="rfiList">
+              <Card flush>{listBody}</Card>
+            </div>
+            {detailWorkspace}
           </div>
         </div>
-      )}
+      </PageShell>
 
-      {/* Toolbar */}
-      {!loading && !error && rfis.length > 0 && (
-        <ListToolbar
-          module="rfis"
-          search={search}
-          onSearch={setSearch}
-          searchPlaceholder="Search RFIs by number, subject, or spec section…"
-          filters={[
-            {
-              key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter,
-              allLabel: 'All Statuses',
-              options: [
-                { value: 'open', label: 'Open' },
-                { value: 'answered', label: 'Answered' },
-                { value: 'closed', label: 'Closed' },
-                { value: 'overdue', label: 'Overdue' },
-              ],
-            },
-            {
-              key: 'assignee', label: 'Ball in Court', value: assigneeFilter, onChange: setAssigneeFilter,
-              allLabel: 'Anyone', options: assigneeOptions,
-            },
-          ]}
-          count={{ shown: filteredRfis.length, total: rfis.length }}
-          style={{ marginBottom: 14 }}
-        />
-      )}
+      <FormModal
+        open={showForm}
+        onClose={closeCreate}
+        title="New RFI"
+        subtitle={`#${nextRfiNumber} on this project · ${openCount} open${overdueCount > 0 ? `, ${overdueCount} overdue` : ''}${subs.length > 0 ? ` · ${subs.length} subs on the roster` : ''}`}
+        onSubmit={async () => { await submitRFI(); }}
+        submitLabel="Submit RFI"
+        busy={saving}
+        error={formError}
+      >
+        <FormGrid cols={2}>
+          <Field label="Subject" required span hint="Keep it one line — the subject is what the architect scans in their inbox.">
+            <Input value={fSubject} onChange={e => { setFSubject(e.target.value); if (formError) setFormError(''); }} placeholder="e.g. Clarify footing depth at grid A-3" autoFocus aria-invalid={formError === 'Subject is required.' || undefined} />
+          </Field>
+          <Field label="RFI Number" hint="Next in the project sequence — confirmed at submit.">
+            <Input value={`#${nextRfiNumber}`} readOnly />
+          </Field>
+          <Field label="Response Due" hint={auto.due && fDueDate === isoPlusDays(7) ? 'Defaulted to +7 days — overdue tracking runs against this date.' : 'Overdue tracking runs against this date.'}>
+            <div className="rfiDateInput"><SaguaroDatePicker value={fDueDate} onChange={setFDueDate} style={DATE_INPUT_STYLE} /></div>
+          </Field>
+          <Field label="Spec Section" hint="Pick the division to stamp its MasterFormat prefix, then refine to the exact section.">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Select
+                aria-label="CSI division"
+                value={specDiv}
+                onChange={e => { const code = e.target.value; setFSpecSection(code ? `${code} 00 00` : ''); }}
+                placeholder="CSI division…"
+                options={Object.entries(CSI_DIVISIONS).map(([code, d]) => ({ value: code, label: `Div ${code} — ${(d as { name: string }).name}` }))}
+              />
+              <Input aria-label="Spec section" value={fSpecSection} onChange={e => setFSpecSection(e.target.value)} placeholder="e.g. 03 30 00" />
+            </div>
+          </Field>
+          <Field
+            label="Assign To — Ball in Court"
+            hint={architectName
+              ? (auto.assignee && fAssignedTo === architectName ? `Defaulted to ${architectName} — the architect of record answers most RFIs.` : `${architectName} is the architect of record.`)
+              : 'Architect, owner rep, or any sub from the awarded roster.'}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Select
+                aria-label="Assign to"
+                value={fAssignedTo}
+                onChange={e => setFAssignedTo(e.target.value)}
+                options={[
+                  { value: '', label: 'Unassigned' },
+                  ...(architectName ? [{ value: architectName, label: `${architectName} — Architect` }] : []),
+                  ...subs.map(s => ({ value: String(s.companyName ?? ''), label: `${s.companyName}${s.trade ? ` — ${s.trade}` : ''}` })),
+                  { value: '__other', label: 'Other — type a name…' },
+                ]}
+              />
+              {fAssignedTo === '__other' && (
+                <Input aria-label="Assignee name" value={fAssignedOther} onChange={e => setFAssignedOther(e.target.value)} placeholder="Name or company" autoFocus />
+              )}
+            </div>
+          </Field>
+          <Field label="Urgency" span hint={fUrgent ? 'Flagged urgent — priority is raised and the responder sees it first.' : 'Urgent raises priority and flags the record for the responder.'}>
+            <div className="rfiFormBtns" role="group" aria-label="Urgency">
+              <Button className="rfiSeg" aria-pressed={!fUrgent} onClick={() => setFUrgent(false)}>Standard</Button>
+              <Button className="rfiSeg" data-urgent="true" aria-pressed={fUrgent} icon={<Lightning size={13} weight="fill" />} onClick={() => setFUrgent(true)}>Urgent</Button>
+            </div>
+          </Field>
+          <Field label="Question / Description" span hint="Reference sheets and grid lines — precise questions come back answered, not re-asked.">
+            <Textarea value={fQuestion} onChange={e => setFQuestion(e.target.value)} rows={5} placeholder="Describe the question in detail…" />
+          </Field>
+        </FormGrid>
+      </FormModal>
 
-      {/* Table */}
-      <SectionCard title="RFI Log" icon={<Clipboard size={17} weight="duotone" color={moduleAccent('rfis').hex} />} flush>
-        {loading ? (
-          <div>
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-          </div>
-        ) : error ? (
-          <PremiumEmpty
-            tone="error"
-            icon={<WarningCircle size={32} weight="duotone" color={T.red} />}
-            title="Couldn't load RFIs"
-            description={error || 'Something went wrong while loading Requests for Information. Please try again.'}
-            action={<button onClick={load} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
-          />
-        ) : rfis.length === 0 ? (
-          <PremiumEmpty
-            icon={<Question size={32} weight="duotone" color={T.gold} />}
-            title="No RFIs yet"
-            description="Create your first Request for Information when you need clarification on plans, specs, or project details."
-            action={<button onClick={() => setShowForm(true)} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create First RFI</button>}
-          />
-        ) : filteredRfis.length === 0 ? (
-          <PremiumEmpty
-            icon={<Question size={32} weight="duotone" color={T.gold} />}
-            title="No RFIs match these filters"
-            description="Try clearing the status or ball-in-court filters to see more."
-            action={<button onClick={() => { setSearch(''); setStatusFilter('all'); setAssigneeFilter('all'); }} style={goldOutlineButtonStyle} className="pmBtn">Clear Filters</button>}
-          />
-        ) : (
-          <>
-            <Table
-              headers={['RFI #', 'Subject', 'Status', 'Ball in Court', 'Due Date', 'Days Open', 'Actions']}
-              rows={filteredRfis.map(rfi => {
-                const displayStatus = rfi.is_overdue ? 'overdue' : (rfi.status || 'open');
-                const bic = ballInCourt(rfi);
-                // Filed from a radio transmission? The promote appends its
-                // headline to `question`, which is in the list payload.
-                const radio = hasRadioEvidence({ question: rfi.question })
-                  ? radioProvenanceFromText(rfi.question)
-                  : null;
-                const questionPreview = stripRadioProvenance(rfi.question);
-                return [
-                  <span key="n" style={{ color: T.gold, fontWeight: 700 }}>#{rfi.rfi_number}</span>,
-                  <div key="sub">
-                    <div style={{ fontWeight: 600 }}>{rfi.subject}</div>
-                    {questionPreview && <div style={{ fontSize: 11, color: T.muted, marginTop: 2, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{questionPreview}</div>}
-                    {radio && (
-                      <div style={{ marginTop: 5 }}>
-                        <RadioEvidenceChip
-                          durationSecs={radio.audio_duration_secs}
-                          active={evidenceId === rfi.id}
-                          onClick={() => openEvidence(rfi)}
-                        />
-                      </div>
-                    )}
-                  </div>,
-                  <div key="s" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <StatusPill module="rfis" status={displayStatus} size="sm" />
-                    {/* The urgent toggle on the create form promises the responder
-                        sees this first. Until now it wrote priority='high' and
-                        nothing ever displayed it. An open RFI is the only place
-                        it still matters — once answered, urgency is history. */}
-                    {(rfi.is_urgent || rfi.priority === 'high' || rfi.priority === 'critical')
-                      && rfi.status === 'open' && <Badge label="Urgent" color="amber" />}
-                    {rfi.is_overdue && rfi.status !== 'overdue' && <Badge label="Overdue" color="red" />}
-                  </div>,
-                  <span key="bic" style={{ color: bic ? T.white : T.faint, fontWeight: bic ? 600 : 400 }}>{bic || 'Unassigned'}</span>,
-                  <span key="dd" style={{ color: rfi.is_overdue ? T.red : T.muted, fontWeight: rfi.is_overdue ? 700 : 400 }}>
-                    {rfi.due_date ? new Date(rfi.due_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                  </span>,
-                  <span key="do" style={{ color: T.muted }}>{daysOpen(rfi)}d</span>,
-                  <div key="act" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {(rfi.status === 'open' || rfi.status === 'pending' || rfi.status === 'draft') && (
-                      <Btn size="sm" onClick={() => { setAnsweringId(answeringId === rfi.id ? null : rfi.id); setAnswerText(''); setAnsweredBy(''); setAssigningId(null); setEvidenceId(null); }}>
-                        {answeringId === rfi.id ? 'Cancel' : 'Answer'}
-                      </Btn>
-                    )}
-                    {rfi.status === 'answered' && <span style={{ fontSize: 11, color: T.green, fontWeight: 700 }}>Answered</span>}
-                    <Btn size="sm" variant="ghost" onClick={() => { setAssigningId(assigningId === rfi.id ? null : rfi.id); setAssignName(bic); setAssignDue(rfi.due_date || ''); setAnsweringId(null); setEvidenceId(null); }}>
-                      {assigningId === rfi.id ? 'Cancel' : 'Assign'}
-                    </Btn>
-                    <button onClick={async (e) => {
-                      e.stopPropagation();
-                      if (!(await confirmDialog({ title: 'Please confirm', message: 'Delete this RFI?', danger: true }))) return;
-                      setRfis(prev => prev.filter(r => r.id !== rfi.id));
-                      try {
-                        const res = await fetch(`/api/rfis/${rfi.id}`, { method: 'DELETE' });
-                        if (!res.ok) throw new Error('delete failed');
-                      } catch { setError('Could not delete the RFI. Please try again.'); load(); }
-                    }} style={{background:'none',border:'none',color:'rgba(239,68,68,.5)',cursor:'pointer',fontSize:12,padding:'2px 6px',marginLeft:4}} title="Delete RFI"><Trash size={14} weight="regular" /></button>
-                  </div>,
-                ];
-              })}
-            />
-            {/* Inline radio-evidence panel — the voice behind a promoted RFI */}
-            {evidenceId && (
-              <div style={{ padding: '16px 20px', background: T.surface2, borderTop: `1px solid ${T.border}` }}>
-                {evidenceError && (
-                  <div style={{ marginBottom: 10, padding: '10px 14px', background: T.redDim, border: `1px solid rgba(239,68,68,0.4)`, borderRadius: 10, color: T.red, fontSize: 12.5 }}>
-                    {evidenceError}
-                  </div>
-                )}
-                {evidenceSrc ? (
-                  <RadioEvidence source={evidenceSrc} title="Voice on the Record" />
-                ) : evidenceLoading ? (
-                  <div style={{ fontSize: 12.5, color: T.faint }}>Loading the radio evidence…</div>
-                ) : !evidenceError ? (
-                  <div style={{ fontSize: 12.5, color: T.muted }}>No radio provenance is stored on this RFI.</div>
-                ) : null}
-                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button onClick={() => setEvidenceId(null)} style={ghostButtonStyle} className="pmBtn">Close</button>
-                </div>
-              </div>
-            )}
-            {/* Inline assign / ball-in-court panel */}
-            {assigningId && (
-              <div style={{ padding: '16px 20px', background: T.surface2, borderTop: `1px solid ${T.border}` }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 10 }}>
-                  <div>
-                    <label style={lbl}>Ball in Court (Assignee)</label>
-                    <input value={assignName} onChange={e => setAssignName(e.target.value)} placeholder="e.g. Jane Architect / ACME Design" style={inp} />
-                  </div>
-                  <div>
-                    <label style={lbl}>Due Date</label>
-                    <SaguaroDatePicker value={assignDue} onChange={setAssignDue} style={inp} />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => submitAssign(assigningId)} disabled={savingAssign || (!assignName.trim() && !assignDue)} className="pmBtn" style={disabledGold(savingAssign || (!assignName.trim() && !assignDue))}>
-                    {savingAssign ? 'Saving…' : 'Save Assignment'}
-                  </button>
-                  <button onClick={() => { setAssigningId(null); setAssignName(''); setAssignDue(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-                </div>
-              </div>
-            )}
-            {/* Inline answer form */}
-            {answeringId && (
-              <div style={{ padding: '16px 20px', background: T.surface2, borderTop: `1px solid ${T.border}` }}>
-                <div style={{ marginBottom: 10 }}>
-                  <label style={lbl}>Answer / Response</label>
-                  <textarea value={answerText} onChange={e => setAnswerText(e.target.value)} rows={3} placeholder="Type your answer…" style={{ ...inp, resize: 'vertical' }} />
-                </div>
-                <div style={{ marginBottom: 10 }}>
-                  <label style={lbl}>Answered By</label>
-                  <input value={answeredBy} onChange={e => setAnsweredBy(e.target.value)} placeholder="Your name" style={inp} />
-                </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => submitAnswer(answeringId)} disabled={submittingAnswer || !answerText.trim()} className="pmBtn" style={disabledGold(submittingAnswer || !answerText.trim())}>
-                    {submittingAnswer ? 'Saving…' : 'Submit Answer'}
-                  </button>
-                  <button onClick={() => { setAnsweringId(null); setAnswerText(''); setAnsweredBy(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </SectionCard>
-
-      <UnsavedGuardModal guard={guard} />
-    </PremiumSurface>
+      {/* Above the FormModal overlay (z 10000) so the unsaved-work prompt is never hidden behind it. */}
+      <div style={{ position: 'relative', zIndex: 10001 }}>
+        <UnsavedGuardModal guard={guard} />
+      </div>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
