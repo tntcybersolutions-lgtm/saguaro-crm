@@ -1,0 +1,178 @@
+name: iOS (Saguaro Field)
+
+# The iOS shell runs on a GitHub-hosted Mac (Xcode + CocoaPods preinstalled),
+# so no local Mac is needed.
+#
+#   build     — every PR/push touching the shell: npx cap sync ios (with
+#               pod install), an unsigned Xcode build, then the app is launched
+#               in the iPhone simulator and screenshots are uploaded as proof.
+#   testflight — manual only (Run workflow → testflight: true). Signs, archives
+#               and uploads to TestFlight. Needs the Apple secrets listed on the
+#               job; it skips itself cleanly when they are not set.
+#
+# macOS runner minutes bill at 10x on private repos — the build job is limited
+# to changes that actually touch the native shell.
+
+on:
+  pull_request:
+    paths: ['ios/**', 'capacitor.config.ts', 'package.json', 'package-lock.json', '.github/workflows/ios.yml']
+  push:
+    branches: [main]
+    paths: ['ios/**', 'capacitor.config.ts', 'package.json', 'package-lock.json', '.github/workflows/ios.yml']
+  workflow_dispatch:
+    inputs:
+      testflight:
+        description: 'Sign, archive and upload to TestFlight (needs Apple secrets)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # Server mode: the WebView loads https://www.saguarocontrol.net, so webDir
+      # only needs a placeholder page for cap to copy.
+      - name: Placeholder webDir
+        run: mkdir -p out && echo '<!doctype html><title>Saguaro Field</title>' > out/index.html
+
+      - name: Capacitor sync (runs pod install)
+        run: npx cap sync ios
+
+      - name: Xcode build (simulator, unsigned)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/dd \
+            CODE_SIGNING_ALLOWED=NO \
+            build | tail -n 40
+
+      - name: Launch in the iPhone simulator and screenshot
+        run: |
+          APP=$(find build/dd/Build/Products -name 'App.app' -maxdepth 3 | head -1)
+          echo "App bundle: $APP"
+          DEVICE=$(xcrun simctl list devices available | grep -m1 -E 'iPhone 1[5-6]( Pro)? \(' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          echo "Simulator: $DEVICE"
+          xcrun simctl boot "$DEVICE"
+          xcrun simctl bootstatus "$DEVICE" -b
+          mkdir -p shots
+          xcrun simctl io "$DEVICE" screenshot shots/0-home-before-install.png
+          xcrun simctl install "$DEVICE" "$APP"
+          xcrun simctl launch "$DEVICE" com.saguaro.field
+          sleep 2;  xcrun simctl io "$DEVICE" screenshot shots/1-splash.png
+          sleep 20; xcrun simctl io "$DEVICE" screenshot shots/2-app-loaded.png
+          xcrun simctl terminate "$DEVICE" com.saguaro.field || true
+          sleep 2;  xcrun simctl io "$DEVICE" screenshot shots/3-home-icon.png
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-screenshots
+          path: shots/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: podfile-lock
+          path: ios/App/Podfile.lock
+
+  testflight:
+    if: github.event_name == 'workflow_dispatch' && inputs.testflight
+    needs: build
+    runs-on: macos-14
+    timeout-minutes: 60
+    env:
+      # Repo secrets (Settings → Secrets and variables → Actions):
+      #   IOS_DIST_CERT_P12_BASE64   Apple Distribution certificate (.p12), base64
+      #   IOS_DIST_CERT_PASSWORD     its export password
+      #   IOS_PROFILE_BASE64         App Store provisioning profile for com.saguaro.field, base64
+      #   APPLE_TEAM_ID              10-character Team ID
+      #   ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_P8_BASE64   App Store Connect API key
+      HAS_SECRETS: ${{ secrets.IOS_DIST_CERT_P12_BASE64 != '' && secrets.IOS_PROFILE_BASE64 != '' && secrets.ASC_KEY_P8_BASE64 != '' }}
+    steps:
+      - name: Check Apple secrets
+        run: |
+          if [ "$HAS_SECRETS" != "true" ]; then
+            echo "::warning::Apple signing secrets are not set — skipping the TestFlight upload. See the env comment in .github/workflows/ios.yml."
+          fi
+      - uses: actions/checkout@v4
+        if: env.HAS_SECRETS == 'true'
+      - uses: actions/setup-node@v4
+        if: env.HAS_SECRETS == 'true'
+        with:
+          node-version: 20
+          cache: npm
+      - if: env.HAS_SECRETS == 'true'
+        run: npm ci && mkdir -p out && echo '<!doctype html><title>Saguaro Field</title>' > out/index.html && npx cap sync ios
+
+      - name: Install certificate and profile
+        if: env.HAS_SECRETS == 'true'
+        env:
+          P12: ${{ secrets.IOS_DIST_CERT_P12_BASE64 }}
+          P12_PW: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+          PROFILE: ${{ secrets.IOS_PROFILE_BASE64 }}
+        run: |
+          KC=$RUNNER_TEMP/build.keychain-db; KCPW=$(uuidgen)
+          echo "$P12" | base64 --decode > $RUNNER_TEMP/cert.p12
+          security create-keychain -p "$KCPW" "$KC"
+          security set-keychain-settings -lut 21600 "$KC"
+          security unlock-keychain -p "$KCPW" "$KC"
+          security import $RUNNER_TEMP/cert.p12 -P "$P12_PW" -A -t cert -f pkcs12 -k "$KC"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KCPW" "$KC"
+          security list-keychain -d user -s "$KC"
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/saguaro.mobileprovision
+          PROFILE_NAME=$(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/saguaro.mobileprovision | plutil -extract Name raw -)
+          echo "PROFILE_NAME=$PROFILE_NAME" >> $GITHUB_ENV
+
+      - name: Archive (bump build number to the run number)
+        if: env.HAS_SECRETS == 'true'
+        run: |
+          set -o pipefail
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/App.xcarchive \
+            DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} \
+            archive | tail -n 40
+
+      - name: Export IPA
+        if: env.HAS_SECRETS == 'true'
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key><dict><key>com.saguaro.field</key><string>$PROFILE_NAME</string></dict>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath $RUNNER_TEMP/App.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist -exportPath $RUNNER_TEMP/export
+
+      - name: Upload to TestFlight
+        if: env.HAS_SECRETS == 'true'
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$ASC_KEY_P8" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          xcrun altool --upload-app -t ios -f $RUNNER_TEMP/export/*.ipa \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"
