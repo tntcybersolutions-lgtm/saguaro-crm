@@ -20,6 +20,7 @@ import {
 import GettingStartedRail from '@/components/GettingStartedRail';
 import ProjectOwnershipCard from '@/components/projects/ProjectOwnershipCard';
 import { StatStrip } from '@/components/ui/premium';
+import { accentForProject } from '@/lib/project-identity';
 import { normalisePhase } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
 
@@ -212,7 +213,7 @@ export default function OverviewPage(){
         eyebrow="Project Overview"
         eyebrowIcon={<Buildings size={12} weight="fill" />}
         icon={<Buildings size={26} weight="duotone" color={CIN.goldHi} />}
-        title={p.name}
+        title={<span style={{ color: accentForProject(projectId).hex, textShadow: `0 0 18px ${accentForProject(projectId).ring}` }}>{p.name}</span>}
         subtitle={[p.address,p.city,p.state].filter(Boolean).join(', ') || 'Command center for this project — financials, schedule, and field health at a glance.'}
         actions={<>
           {/* The one primary action follows where the job is. A pay app is

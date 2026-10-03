@@ -15,6 +15,7 @@
  */
 
 import React from 'react';
+import { neonCard, neonFor, neonText } from '@/lib/neon';
 import { Check } from '@phosphor-icons/react';
 import { moduleAccent } from '@/lib/module-identity';
 import { ScribbleNote } from '@/components/Scribble';
@@ -338,8 +339,12 @@ export function StatCard({
   delay?: number;
 }) {
   const interactive = !!(onClick || href || forceInteractive);
-  const numberColor = accent || WHITE;
-  const ring = active ? (accent || GOLD) : null;
+  /* Neon by default (owner 2026-10-03): every stat card is lit in its own
+     accent — a caller's accent wins, otherwise a stable neon from the label. */
+  const lit = accent || neonFor(label);
+  const numberColor = lit;
+  const ring = active ? lit : null;
+  const glow = neonCard(lit);
   const inner = (
     <div
       onClick={onClick}
@@ -348,15 +353,15 @@ export function StatCard({
       style={{
         position: 'relative', overflow: 'hidden',
         background: ring
-          ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 16%, transparent), color-mix(in srgb, ${ring} 5%, transparent)), ${SURFACE}`
-          : SURFACE,
+          ? `linear-gradient(160deg, color-mix(in srgb, ${ring} 24%, transparent), color-mix(in srgb, ${ring} 8%, transparent)), ${SURFACE}`
+          : `${glow.background}, ${SURFACE}`,
         backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-        border: `1px solid ${ring || BORDER}`, borderRadius: 12,
+        border: `1px solid ${ring || `color-mix(in srgb, ${lit} 30%, transparent)`}`, borderTop: glow.borderTop, borderRadius: 12,
         padding: '11px 14px',
         // compact plate — tight, not fat (Procore/JobTread density)
         boxShadow: ring
           ? `0 0 0 1px ${ring}, 0 8px 20px -14px color-mix(in srgb, ${ring} 45%, transparent), inset 0 1px 0 rgba(255,255,255,0.08)`
-          : `0 8px 20px -18px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)`,
+          : glow.boxShadow,
         cursor: interactive ? 'pointer' : 'default',
         animation: `pmRise .5s ease ${delay.toFixed(2)}s both`,
         height: '100%',
@@ -372,10 +377,10 @@ export function StatCard({
       <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${numberColor}, transparent)`, opacity: 0.85 }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         <IconChip size={26}>{icon}</IconChip>
-        <span style={{ fontSize: 12, color: MUTED, fontWeight: 700 }}>{label}</span>
+        <span style={{ fontSize: 12.5, color: `color-mix(in srgb, ${lit} 65%, #FFFFFF)`, fontWeight: 750 }}>{label}</span>
       </div>
-      <div style={{ fontSize: 20, fontWeight: 800, color: numberColor, letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      {sub != null && <div style={{ fontSize: 11.5, color: FAINT, marginTop: 2 }}>{sub}</div>}
+      <div style={{ fontSize: 22, fontWeight: 800, ...neonText(numberColor), letterSpacing: '-0.02em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      {sub != null && <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{sub}</div>}
     </div>
   );
   if (href) {

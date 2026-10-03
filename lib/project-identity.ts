@@ -1,8 +1,7 @@
 /**
  * Project identity accents — the curated theme template for project titles.
  *
- * Eight designer-picked Sonoran hues, every one tuned to sit on the dark
- * ground next to brand gold. A project's accent is DETERMINISTIC (hashed from
+ * Eight neon hues on the jet-black ground (was: muted Sonoran tones). A project's accent is DETERMINISTIC (hashed from
  * its id) so it is stable forever, identical on web and mobile, and never
  * "willy-nilly rainbow": same palette, controlled touchpoints only — project
  * title, monogram chip, accent rules. Body text and backgrounds never change.
@@ -26,14 +25,17 @@ const A = (hex: string, name: string): ProjectAccent => ({
 });
 
 export const PROJECT_ACCENTS: ProjectAccent[] = [
-  A('#F5B84D', 'Gold'),         // brightened brand gold — default family
-  A('#E08A5C', 'Copper'),
-  A('#9BB07F', 'Sage'),
-  A('#7FA3C7', 'Steel Blue'),
-  A('#C78A8A', 'Desert Rose'),
-  A('#D9B98A', 'Sandstone'),
-  A('#7FB09B', 'Agave'),
-  A('#9C8FBF', 'Slate Violet'),
+  // Neon set (owner 2026-10-03: "all project names need bright neon coloring").
+  // Kept clear of the status reds/ambers/greens so a project color never reads
+  // as a status. Same hash, same slots — every project keeps a stable color.
+  A('#FFE600', 'Neon Yellow'),
+  A('#22E5FF', 'Neon Cyan'),
+  A('#FF4FD8', 'Neon Magenta'),
+  A('#B388FF', 'Neon Violet'),
+  A('#5AC8FF', 'Neon Sky'),
+  A('#C6FF3D', 'Neon Lime'),
+  A('#FF3D9A', 'Hot Pink'),
+  A('#4D7CFF', 'Electric Blue'),
 ];
 
 /** Stable hash: same project id -> same accent, on every surface, forever. */

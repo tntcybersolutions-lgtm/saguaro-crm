@@ -15,6 +15,7 @@
  * All animation is disabled under prefers-reduced-motion.
  */
 import React from 'react';
+import { neonCard, neonFor, neonText } from '@/lib/neon';
 import { ScribbleNote } from '@/components/Scribble';
 
 /* ── Palette — jet black + glass + neon yellow (COPY-STYLE §7) ── */
@@ -249,7 +250,7 @@ export function StatCard({
   value,
   sub,
   valueColor,
-  accentColor = CIN.gold,
+  accentColor,
   delay = 0,
   href,
   onClick,
@@ -265,6 +266,10 @@ export function StatCard({
   onClick?: () => void;
 }) {
   const interactive = !!(href || onClick);
+  /* Neon by default (owner 2026-10-03): a caller's accent wins, otherwise a
+     stable neon from the label — no more flat dark tiles. */
+  const lit = accentColor || neonFor(label);
+  const glow = neonCard(lit);
   const inner = (
     <div
       className="sgLift"
@@ -272,17 +277,18 @@ export function StatCard({
       style={{
         position: 'relative', overflow: 'hidden',
         animation: `sgRise .5s ease ${delay.toFixed(2)}s both`,
-        background: CIN.surface,
+        background: `${glow.background}, ${CIN.surface}`,
         backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR,
-        border: `1px solid ${CIN.border}`,
+        border: `1px solid color-mix(in srgb, ${lit} 30%, transparent)`,
+        borderTop: glow.borderTop,
         borderRadius: 16,
         padding: '16px 18px',
-        boxShadow: '0 12px 34px -22px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)',
+        boxShadow: glow.boxShadow,
         cursor: interactive ? 'pointer' : 'default',
         height: '100%',
       }}
     >
-      <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${accentColor}, transparent)` }} />
+      <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${lit}, transparent)` }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         {icon && (
           <span
@@ -298,9 +304,9 @@ export function StatCard({
             {icon}
           </span>
         )}
-        <span style={{ fontSize: 12.5, fontWeight: 700, color: CIN.muted }}>{label}</span>
+        <span style={{ fontSize: 12.5, fontWeight: 750, color: `color-mix(in srgb, ${lit} 65%, #FFFFFF)` }}>{label}</span>
       </div>
-      <div style={{ fontSize: 25, fontWeight: 900, color: valueColor || CIN.text, letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 25, fontWeight: 900, ...neonText(valueColor || lit), letterSpacing: '-0.02em', lineHeight: 1.05, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: CIN.faint, marginTop: 6 }}>{sub}</div>}
     </div>
   );

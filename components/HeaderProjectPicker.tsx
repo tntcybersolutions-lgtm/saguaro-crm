@@ -17,6 +17,7 @@
  */
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { accentForProject } from '@/lib/project-identity';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretUpDown, MagnifyingGlass, Buildings, Check } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
@@ -160,7 +161,7 @@ export default function HeaderProjectPicker() {
         }}
       >
         <Buildings size={15} weight="duotone" color={currentName ? GOLD : DIM} />
-        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, ...(currentName && currentId ? { color: accentForProject(currentId).hex, textShadow: `0 0 12px ${accentForProject(currentId).ring}` } : {}) }}>
           {currentName ?? 'Choose a Job'}
         </span>
         <CaretUpDown size={13} weight="bold" color={DIM} />

@@ -18,6 +18,8 @@ import ActivityFeed from '@/components/ActivityFeed';
 import SalesOverview from '@/components/SalesOverview';
 import type { Metric, QueueItem, ScheduleEntry, HomeView, DataState } from '@/lib/home/rank';
 import { TIER_LABEL } from '@/lib/home/rank';
+import { NEON_CYCLE, neonCard, neonText } from '@/lib/neon';
+import { accentForProject } from '@/lib/project-identity';
 
 interface HomePayload {
   context: {
@@ -108,21 +110,26 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
   );
 }
 
-function MetricCard({ m }: { m: Metric }) {
+function MetricCard({ m, index }: { m: Metric; index: number }) {
   const shown = m.state === 'ok' || m.state === 'empty';
+  // Each metric lit in its own neon (owner 2026-10-03). Unavailable/failed
+  // cards stay neutral so a missing number never looks like a bright result.
+  const lit = NEON_CYCLE[index % NEON_CYCLE.length];
+  const glow = shown ? neonCard(lit) : null;
+  const cardStyle: React.CSSProperties = glow ? { background: glow.background, borderTop: glow.borderTop, boxShadow: glow.boxShadow, borderColor: `color-mix(in srgb, ${lit} 28%, transparent)` } : {};
   const body = (
     <>
-      <div className="hv2-metric-label">{m.label}</div>
-      <div className="hv2-metric-value" style={{ color: shown ? 'var(--text-primary)' : 'var(--text-tertiary)', fontSize: shown ? 28 : 15 }}>
+      <div className="hv2-metric-label" style={shown ? { color: `color-mix(in srgb, ${lit} 65%, #FFFFFF)` } : undefined}>{m.label}</div>
+      <div className="hv2-metric-value" style={{ ...(shown ? neonText(lit) : { color: 'var(--text-tertiary)' }), fontSize: shown ? 30 : 15 }}>
         {shown ? m.value : m.state === 'restricted' ? 'No access' : m.state === 'failed' ? 'Couldn\'t load' : 'Not available'}
       </div>
       <div className="hv2-metric-basis">{shown ? m.basis : m.note || m.basis}</div>
     </>
   );
   return m.href && shown ? (
-    <Link href={m.href} className="hv2-card hv2-metric hv2-link" aria-label={`${m.label}: ${m.value}`}>{body}</Link>
+    <Link href={m.href} className="hv2-card hv2-metric hv2-link" style={cardStyle} aria-label={`${m.label}: ${m.value}`}>{body}</Link>
   ) : (
-    <div className="hv2-card hv2-metric">{body}</div>
+    <div className="hv2-card hv2-metric" style={cardStyle}>{body}</div>
   );
 }
 
@@ -169,7 +176,7 @@ function QueueRow({ it, today, canEdit, onChanged }: { it: QueueItem; today: str
       <div className="hv2-qmain">
         <div className="hv2-qtitle">{it.title}{it.count ? <span className="hv2-count">{it.count}</span> : null}</div>
         <div className="hv2-qmeta">
-          {it.projectName ? <span>{it.projectName}</span> : null}
+          {it.projectName ? <span className="hv2-proj" style={neonText(accentForProject(it.projectId).hex)}>{it.projectName}</span> : null}
           {ownerCell}
           <span>{it.reason}</span>
           {it.dueAt ? <span>Due {fmtDay(it.dueAt, today)}</span> : null}
@@ -266,7 +273,7 @@ function Schedule({ data }: { data: HomePayload }) {
                       <span className="hv2-skind">{fmtTime(e.time) || e.kind}</span>
                       <span className="hv2-stext">
                         <span className="hv2-stitle">{e.title}</span>
-                        <span className="hv2-smeta">{[fmtTime(e.time) ? e.kind : null, e.projectName, e.who].filter(Boolean).join(' · ')}</span>
+                        <span className="hv2-smeta">{fmtTime(e.time) ? e.kind + ' · ' : ''}{e.projectName ? <span className="hv2-proj" style={neonText(accentForProject(e.projectId).hex)}>{e.projectName}</span> : null}{e.who ? ' · ' + e.who : ''}</span>
                       </span>
                     </>
                   );
@@ -302,7 +309,7 @@ function WorkTable({ data }: { data: HomePayload }) {
                     const val = isDateCol(c.key) ? (raw ? fmtDay(String(raw), today) : '—') : raw ?? '—';
                     return (
                       <td key={c.key} style={{ textAlign: c.align || 'left' }}>
-                        {i === 0 && r.href ? <Link href={r.href} className="hv2-tlink">{String(val)}</Link> : String(val)}
+                        {i === 0 && r.href ? <Link href={r.href} className="hv2-tlink" style={t.kind === 'jobs' || t.kind === 'my-jobs' ? neonText(accentForProject(r.id).hex) : undefined}>{String(val)}</Link> : String(val)}
                       </td>
                     );
                   })}
@@ -450,7 +457,7 @@ function HomeInner() {
               <button type="button" className="hv2-linkbtn" onClick={() => mutate()}>Retry</button>
             </div>
           )}
-          <div className="hv2-metrics hv2-order-3">{data.metrics.map(m => <MetricCard key={m.key} m={m} />)}</div>
+          <div className="hv2-metrics hv2-order-3">{data.metrics.map((m, i) => <MetricCard key={m.key} m={m} index={i} />)}</div>
           <div className="hv2-primary hv2-order-1">
             <NeedsAttention data={data} onChanged={() => mutate()} />
             <Schedule data={data} />
@@ -488,7 +495,9 @@ export default function HomeV2() {
 const CSS = `
 .hv2 { padding: 24px; max-width: 1600px; margin: 0 auto; color: var(--text-primary); font-size: 15px; }
 .hv2 h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.01em; margin: 0; }
-.hv2 h2 { font-size: 17px; font-weight: 750; margin: 0; }
+.hv2 h2 { font-size: 17px; font-weight: 800; margin: 0; padding-bottom: 6px; background: linear-gradient(90deg, var(--neon-yellow, #FFE600), var(--neon-cyan, #22E5FF)) left bottom / 44px 2px no-repeat; }
+.hv2 h1 { background: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 50%, var(--neon-yellow, #FFE600) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hv2-proj { font-weight: 700; }
 .hv2 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .hv2-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin-bottom: 8px; }
 .hv2-titlewrap { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
@@ -508,6 +517,7 @@ const CSS = `
 .hv2-linkbtn { background: none; border: 0; padding: 0; color: var(--brand-primary); font-weight: 700; font-size: 13px; cursor: pointer; text-decoration: none; }
 .hv2-stack { display: flex; flex-direction: column; gap: 20px; margin-top: 12px; }
 .hv2-card { background: var(--bg-surface); border: 1px solid var(--glass-border); border-radius: 14px; box-shadow: var(--glass-highlight); }
+.hv2-card { border-top: 2px solid color-mix(in srgb, var(--neon-cyan, #22E5FF) 55%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--neon-cyan, #22E5FF) 5%, transparent), transparent 140px), var(--bg-surface); }
 .hv2-pad { padding: 18px 20px; }
 .hv2-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
 .hv2-metric { padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; text-decoration: none; color: inherit; min-height: 112px; }

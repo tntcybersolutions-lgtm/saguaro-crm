@@ -928,6 +928,23 @@ button.k-stat { text-align: left; font: inherit; }
 .k-stat-label { font-size: var(--fs-xs); font-weight: 600; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .k-stat-value { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); font-variant-numeric: tabular-nums; line-height: 1.25; }
 .k-stat-sub { font-size: var(--fs-xs); color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* ── Neon lift (owner 2026-10-03: "neon bright colors", no flat dark boxes) ──
+   Decorative accents only — kept apart from the red/amber/green status palette.
+   Stat tiles cycle through the neon set; cards get a lit top edge and a header
+   rule that fades out of neon. Source of truth for the hexes: lib/neon.ts. */
+:root { --neon-yellow: #FFE600; --neon-cyan: #22E5FF; --neon-magenta: #FF4FD8; --neon-violet: #B388FF; --neon-sky: #5AC8FF; --neon-lime: #C6FF3D; }
+.k-stat { --lit: var(--neon-yellow); position: relative; border-top: 2px solid var(--lit); border-color: color-mix(in srgb, var(--lit) 30%, transparent); border-top-color: var(--lit); background: linear-gradient(165deg, color-mix(in srgb, var(--lit) 16%, transparent) 0%, color-mix(in srgb, var(--lit) 4%, transparent) 55%, rgba(255,255,255,0.03) 100%), var(--bg-surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--lit) 18%, transparent), 0 10px 32px -14px color-mix(in srgb, var(--lit) 55%, transparent), var(--glass-highlight); }
+.k-stat:nth-child(6n+2) { --lit: var(--neon-cyan); }
+.k-stat:nth-child(6n+3) { --lit: var(--neon-magenta); }
+.k-stat:nth-child(6n+4) { --lit: var(--neon-violet); }
+.k-stat:nth-child(6n+5) { --lit: var(--neon-sky); }
+.k-stat:nth-child(6n+6) { --lit: var(--neon-lime); }
+.k-stat .k-stat-value { color: var(--lit); text-shadow: 0 0 14px color-mix(in srgb, var(--lit) 45%, transparent); }
+.k-stat .k-stat-label { color: color-mix(in srgb, var(--lit) 65%, #FFFFFF); font-weight: 700; }
+a.k-stat:hover, button.k-stat:hover { border-color: var(--lit); background: linear-gradient(165deg, color-mix(in srgb, var(--lit) 24%, transparent), color-mix(in srgb, var(--lit) 8%, transparent)), var(--bg-surface-2); }
+.k-card { border-top: 2px solid color-mix(in srgb, var(--neon-yellow) 70%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--neon-yellow) 5%, transparent), transparent 120px), var(--bg-surface); }
+.k-card-head { border-bottom: 1px solid transparent; border-image: linear-gradient(90deg, var(--neon-yellow), var(--neon-cyan) 40%, transparent) 1; }
+.k-card-title { background: linear-gradient(90deg, #FFFFFF 0%, #FFFFFF 55%, var(--neon-yellow) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
 /* Badge */
 .k-badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: normal; white-space: nowrap; border: 1px solid; line-height: 1; }
