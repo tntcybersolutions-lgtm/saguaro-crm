@@ -29,6 +29,7 @@
  * defensively only when the row carries a photos/photo_urls array.
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { humanError } from '@/lib/errors';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -330,7 +331,7 @@ export default function DailyLogDetailPage() {
               },
               value
                 ? async () => {
-                    if (!window.confirm(`Clear the ${opts.title} entry? This removes the recorded text.`)) return;
+                    if (!(await confirmDialog({ title: 'Clear entry?', message: `This removes the recorded ${opts.title}.`, confirmLabel: 'Clear', danger: true }))) return;
                     const ok = await saveFields({ [opts.field]: null } as Partial<DailyLog>, `${opts.title} cleared`);
                     if (ok) closeEditor();
                   }
@@ -534,7 +535,7 @@ export default function DailyLogDetailPage() {
               },
               (l.materials_delivered || l.visitors)
                 ? async () => {
-                    if (!window.confirm('Clear materials and visitors? This removes both recorded entries.')) return;
+                    if (!(await confirmDialog({ title: 'Clear materials & visitors?', message: 'This removes both recorded entries.', confirmLabel: 'Clear', danger: true }))) return;
                     const ok = await saveFields({ materials_delivered: null, visitors: null }, 'Materials & visitors cleared');
                     if (ok) closeEditor();
                   }

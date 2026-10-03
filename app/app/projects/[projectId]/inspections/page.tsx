@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { useParams } from 'next/navigation';
 import SaguaroDatePicker from '../../../../../components/SaguaroDatePicker';
@@ -190,7 +191,7 @@ export default function InspectionsPage() {
       if (res.status === 409) {
         const g = await res.json().catch(() => ({}));
         if (g?.requiresQcOverride && typeof window !== 'undefined' &&
-            window.confirm(`${g.error || 'QC is not complete for this site.'}\n\nSchedule the inspection anyway?`)) {
+            (await confirmDialog({ title: 'Schedule anyway?', message: g.error || 'QC is not complete for this site.', confirmLabel: 'Schedule anyway' }))) {
           res = await fetch('/api/inspections/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, override: true }) });
         } else if (g?.requiresQcOverride) {
           setErrorMsg(g.error || 'QC not complete for this site.'); setSaving(false); return false;

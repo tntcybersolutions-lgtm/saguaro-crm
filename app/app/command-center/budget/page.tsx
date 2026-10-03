@@ -1,5 +1,6 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { textPrompt } from '@/lib/ui/async-dialog';
 import Link from 'next/link';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useBudget, useChangeOrders, createChangeOrder, advanceChangeOrder } from '@/lib/hooks/useFranchise';
@@ -44,7 +45,7 @@ export default function BudgetPage() {
   async function act(id: string, action: 'advance' | 'reject') {
     if (busy[id]) return;
     let reason: string | undefined;
-    if (action === 'reject') { reason = typeof window !== 'undefined' ? window.prompt('Reason for rejection?') || undefined : undefined; if (reason === undefined) return; }
+    if (action === 'reject') { const rr = await textPrompt({ title: 'Reject', label: 'Reason for rejection', multiline: true, required: true }); if (!rr) return; reason = rr; }
     setBusy((b) => ({ ...b, [id]: true }));
     try { await advanceChangeOrder(id, action, reason); } catch { /* noop */ } finally { setBusy((b) => ({ ...b, [id]: false })); }
   }

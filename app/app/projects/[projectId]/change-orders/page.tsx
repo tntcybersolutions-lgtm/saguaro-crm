@@ -1,5 +1,6 @@
 'use client';
 import { useProjects } from '@/lib/hooks/useProjects';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useUnsavedGuard } from '@/lib/useUnsavedGuard';
@@ -284,7 +285,7 @@ export default function ChangeOrdersPage() {
   }
 
   async function rejectCO(id:string){
-    if(!window.confirm('Reject this change order?')) return;
+    if(!(await confirmDialog({ title: 'Reject change order?', message: 'This marks the change order rejected.', confirmLabel: 'Reject', danger: true }))) return;
     setApprovingId(id);
     try{
       const r = await fetch(`/api/change-orders/${id}/reject`,{method:'POST',headers:{'Content-Type':'application/json'}});
@@ -619,7 +620,7 @@ export default function ChangeOrdersPage() {
                                   </div>
                                 ))}
                                 <div style={{height:1,background:BORDER,margin:'4px 0'}}/>
-                                <div onClick={()=>{if(confirm('Delete this change order?'))handleDeleteCO(co.id);}} style={{padding:'7px 12px',fontSize:12,color:RED,cursor:'pointer',borderRadius:6,display:'flex',alignItems:'center',gap:8}} onMouseEnter={e=>(e.currentTarget.style.background='rgba(192,48,48,.08)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
+                                <div onClick={async ()=>{if(await confirmDialog({ title: 'Delete change order?', message: 'This cannot be undone.', confirmLabel: 'Delete', danger: true }))handleDeleteCO(co.id);}} style={{padding:'7px 12px',fontSize:12,color:RED,cursor:'pointer',borderRadius:6,display:'flex',alignItems:'center',gap:8}} onMouseEnter={e=>(e.currentTarget.style.background='rgba(192,48,48,.08)')} onMouseLeave={e=>(e.currentTarget.style.background='transparent')}>
                                   <span style={{fontSize:14,display:'inline-flex',alignItems:'center'}}><Trash size={14} color={RED} weight="regular" /></span>Delete
                                 </div>
                               </div>

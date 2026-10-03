@@ -6,6 +6,7 @@
  * Backed by the canonical project_files table via /api/files/* (signed URLs).
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { textPrompt, confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import { humanError } from '@/lib/errors';
 import { useParams } from 'next/navigation';
@@ -101,9 +102,9 @@ export default function FilesPage() {
   });
 
   const patchFile = (row: any) => { setFiles((prev) => prev.map((f) => (f.id === row.id ? { ...f, ...row } : f))); setSel((s: any) => (s && s.id === row.id ? { ...s, ...row } : s)); };
-  const rename = async (f: any) => { const name = prompt('Rename file', f.file_name); if (!name || name === f.file_name) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_name: name }) })).json(); if (r.file) { patchFile(r.file); flash('Renamed.'); } };
-  const move = async (f: any) => { const dest = prompt('Move to folder (blank = root)', f.folder || ''); if (dest === null) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: dest }) })).json(); if (r.file) { patchFile(r.file); flash(dest ? `Moved to ${dest}.` : 'Moved to root.'); } };
-  const del = async (f: any, hard = false) => { if (hard && !confirm(`Permanently delete "${f.file_name}"? This cannot be undone.`)) return; await fetch(`/api/files/${f.id}${hard ? '?hard=1' : ''}`, { method: 'DELETE' }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); setSel(null); flash(hard ? 'Deleted permanently.' : 'Moved to trash.'); };
+  const rename = async (f: any) => { const name = await textPrompt({ title: 'Rename file', label: 'File name', defaultValue: f.file_name, required: true }); if (!name || name === f.file_name) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file_name: name }) })).json(); if (r.file) { patchFile(r.file); flash('Renamed.'); } };
+  const move = async (f: any) => { const dest = await textPrompt({ title: 'Move file', label: 'Folder (blank = root)', defaultValue: f.folder || '' }); if (dest === null) return; const r = await (await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: dest }) })).json(); if (r.file) { patchFile(r.file); flash(dest ? `Moved to ${dest}.` : 'Moved to root.'); } };
+  const del = async (f: any, hard = false) => { if (hard && !(await confirmDialog({ title: "Delete permanently?", message: `"${f.file_name}" cannot be recovered.`, confirmLabel: "Delete", danger: true }))) return; await fetch(`/api/files/${f.id}${hard ? '?hard=1' : ''}`, { method: 'DELETE' }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); setSel(null); flash(hard ? 'Deleted permanently.' : 'Moved to trash.'); };
   const restore = async (f: any) => { await fetch(`/api/files/${f.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ restore: true }) }); setFiles((prev) => prev.filter((x) => x.id !== f.id)); flash('Restored.'); };
 
   const kinds: { k: string; label: string }[] = [{ k: 'all', label: 'All' }, ...(['image', 'video', 'pdf', 'doc', 'sheet', 'audio', 'cad', 'other'] as FileKind[]).map((k) => ({ k, label: KIND_LABEL[k] }))];
@@ -317,8 +318,8 @@ function ShareMenu({ file, onClose, onToast }: { file: any; onClose: () => void;
     setBusy(channel);
     try {
       let to: string | null = null;
-      if (channel === 'email') { to = prompt('Send to email address'); if (!to) { setBusy(''); return; } }
-      if (channel === 'sms') { to = prompt('Send to phone number (optional)') || ''; }
+      if (channel === 'email') { to = await textPrompt({ title: 'Send by email', label: 'Email address', type: 'email', required: true }); if (!to) { setBusy(''); return; } }
+      if (channel === 'sms') { to = (await textPrompt({ title: 'Send by text', label: 'Phone number (optional)', type: 'tel' })) || ''; }
       const res = await fetch('/api/files/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileId: file.id, channel, to }) });
       const json = await res.json();
       if (json.error) throw new Error(json.error);

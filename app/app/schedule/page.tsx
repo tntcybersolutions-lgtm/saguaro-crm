@@ -17,6 +17,7 @@
  * assigned_to / notes columns — those are intentionally absent here.)
  */
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { confirmDialog } from '@/lib/ui/async-dialog';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { humanError } from '@/lib/errors';
@@ -183,7 +184,7 @@ export default function SchedulePage() {
   }, [tasks]);
 
   const deleteTask = useCallback(async (id: string) => {
-    if (!window.confirm('Delete this task? This cannot be undone.')) return;
+    if (!(await confirmDialog({ title: 'Delete task?', message: 'This cannot be undone.', confirmLabel: 'Delete', danger: true }))) return;
     const prev = tasks;
     setTasks(ts => ts.filter(t => t.id !== id));
     setSavingId(id);
