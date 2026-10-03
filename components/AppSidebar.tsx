@@ -239,7 +239,14 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
               src={wl.logoUrl}
               alt={wl.companyName || 'Company logo'}
               onError={() => setImgFailed(true)}
-              style={{ maxWidth: 44, maxHeight: 44, width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', ...platedImg }}
+              /* Fill the square tile — cover + centered so a photo or a mark
+                 never letterboxes, drifts, or spills past the 52px tile. The
+                 parent clips (overflow: hidden), so nothing runs off. A DARK
+                 mark keeps its light plate and is contained, same rule as the
+                 expanded banner — cropped onto dark chrome it would vanish. */
+              style={needsPlate
+                ? { maxWidth: 44, maxHeight: 44, width: 'auto', height: 'auto', objectFit: 'contain', display: 'block', ...platedImg }
+                : { width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
             />
           ) : monogram(36, 14)}
         </Link>
@@ -268,23 +275,39 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
       >
         {hasLogo ? (
           <>
-            {/* Logo at a proper size — contained, aspect preserved, left-anchored.
-                maxHeight was 48, which is what made this unreadable: the cap is
-                on HEIGHT with width:auto, so a PORTRAIT logo collapses to a
-                sliver. A real 600x1301 tenant logo rendered at 22x48px. Tall
-                logos now get real height, and wide lockups still stop at 100%
-                width, so both shapes land somewhere sensible. */}
-            <img
-              src={wl.logoUrl}
-              alt={wl.companyName || 'Company logo'}
-              onError={() => setImgFailed(true)}
-              style={{
-                display: 'block', maxWidth: '100%', maxHeight: 96,
-                width: 'auto', height: 'auto', objectFit: 'contain', objectPosition: 'left center',
-                ...platedImg,
+            {needsPlate ? (
+              /* A DARK brand mark would disappear if cropped onto dark chrome,
+                 so it keeps the light plate and is contained (never cropped),
+                 aspect preserved, left-anchored. */
+              <img
+                src={wl.logoUrl}
+                alt={wl.companyName || 'Company logo'}
+                onError={() => setImgFailed(true)}
+                style={{
+                  display: 'block', maxWidth: '100%', maxHeight: 96,
+                  width: 'auto', height: 'auto', objectFit: 'contain', objectPosition: 'left center',
+                  ...platedImg,
+                  marginBottom: (wl.companyName || planPill) ? 9 : 0,
+                }}
+              />
+            ) : (
+              /* A PHOTO (or a standard mark) fills a fixed banner — cover +
+                 centered inside an overflow-clipped box, so the image always
+                 fills the full width with no letterboxing, no drift, and
+                 nothing spilling past the card. */
+              <div style={{
+                width: '100%', height: 104, borderRadius: 10, overflow: 'hidden',
                 marginBottom: (wl.companyName || planPill) ? 9 : 0,
-              }}
-            />
+                background: 'rgba(255,255,255,0.03)',
+              }}>
+                <img
+                  src={wl.logoUrl}
+                  alt={wl.companyName || 'Company logo'}
+                  onError={() => setImgFailed(true)}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }}
+                />
+              </div>
+            )}
             {(wl.companyName || planPill) && (
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                 {wl.companyName && (
