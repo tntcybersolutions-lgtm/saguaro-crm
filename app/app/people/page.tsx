@@ -1,47 +1,37 @@
 'use client';
 /**
- * People & Access — unified hub.
+ * People & Access — unified hub, Pass 4 on the kit.
  * ONE nav home for the two people-shaped surfaces that used to be separate
  * sidebar items (and read as duplicate modules):
  *   • Directory     → workforce / HR crew records (employees, certs, pay,
  *                     assignments, incident history)  → <PeopleDirectory/>
  *   • Roles & Access → the RBAC platform: roles, permission matrix, user
  *                     assignments, invites, audit log → <AccessManager/>
- * A top segmented control switches between them; ?tab=access deep-links
- * straight to the access side (used by the /app/roles-permissions redirect
- * and the Settings tile).
- *
- * Presentation: dressed in the cinematic premium kit (PremiumSurface aurora +
- * ModuleHero) to match the Dashboard. The two child surfaces render inside the
- * surface unchanged. (The segmented switch is no longer position:sticky because
- * PremiumSurface's root is overflow:hidden, which nullifies sticky — the tab
- * chooser now sits at the top of the content like the rest of the kit.)
+ * Kit Tabs switch between them; ?tab=access deep-links straight to the access
+ * side (used by the /app/roles-permissions redirect and the Settings tile).
+ * The two child surfaces render unchanged.
  */
 import { useState, useEffect } from 'react';
-import { UsersThree, ShieldCheck } from '@phosphor-icons/react';
+import { PageShell, StatRow, Tabs, type StatItem } from '@/components/ui/kit';
 import { PeopleDirectory } from '@/components/team/PeopleDirectory';
 import { AccessManager } from '@/components/team/AccessManager';
-import { PremiumSurface, ModuleHero, StatStrip, IconChip } from '@/components/ui/premium';
-import { moduleAccent } from '@/lib/module-identity';
 import { getAuthHeaders, getSupabaseBrowser } from '@/lib/supabase-browser';
-
-// Kit-aligned literals (mirror components/ui/premium.tsx tokens)
-const GOLD = 'var(--brand-primary)', GOLD_HI = 'var(--brand-primary-strong)';
-const MUTED = 'rgba(255,255,255,0.62)';
-const FAINT = 'rgba(255,255,255,0.42)';
 
 type Tab = 'directory' | 'access';
 
-const TABS = [
-  { key: 'directory' as const, label: 'Directory', sub: 'Crew & HR records', Icon: UsersThree },
-  { key: 'access' as const, label: 'Roles & Access', sub: 'Users, roles & permissions', Icon: ShieldCheck },
-];
-
-/* Roster snapshot for the hub StatStrip — the screen walks in already knowing
+/* Roster snapshot for the hub StatRow — the screen walks in already knowing
    the team: sign-ins, roles, assignment coverage, invite health, crew certs.
    Read-only aggregation over the same tenant-scoped APIs the two child
-   surfaces use; non-fatal (strip simply hides) if anything fails. */
+   surfaces use; non-fatal (the row simply hides) if anything fails. */
 interface HubSnap { users: number; roles: number; assigns: number; invites: number; expired: number; crew: number; osha: number }
+
+const CSS = `
+.ppWs > .k-page { max-width: none; }
+.ppTabs { margin-bottom: 4px; }
+@media (max-width: 640px) {
+  .ppWs .k-stat, .ppWs .k-tab { min-height: 44px; }
+}
+`;
 
 export default function PeopleAccessHub() {
   // Default landing = Roles & Access (the RBAC platform). Directory is one tap away.
@@ -76,7 +66,7 @@ export default function PeopleAccessHub() {
         const crewActive = emp.filter(e => e?.is_active !== false);
         const osha = crewActive.filter(e => e?.osha_10_certified || e?.osha_30_certified).length;
         if (alive) setSnap({ users: userCount, roles: rolesArr.length, assigns: assignArr.length, invites: invArr.length, expired, crew: crewActive.length, osha });
-      } catch { /* non-fatal — the strip hides */ }
+      } catch { /* non-fatal — the row hides */ }
     })();
     return () => { alive = false; };
   }, []);
@@ -100,76 +90,38 @@ export default function PeopleAccessHub() {
     } catch { /* no-op */ }
   };
 
+  const stats: StatItem[] | null = snap && [
+    { label: 'Team Members', value: snap.users, sub: 'Platform sign-ins', onClick: () => select('access') },
+    { label: 'Roles Defined', value: snap.roles, sub: snap.roles > 0 ? 'Permission templates in force' : 'Built-ins seed on first visit', onClick: () => select('access') },
+    { label: 'Role Assignments', value: snap.assigns, tone: snap.users > 0 && snap.assigns === 0 ? 'warn' : 'default', sub: snap.assigns > 0 ? 'Users mapped to roles' : snap.users > 0 ? 'No roles assigned yet — start in Users' : 'Assign roles from Roles & Access', onClick: () => select('access') },
+    { label: 'Pending Invites', value: snap.invites, tone: snap.expired > 0 ? 'bad' : snap.invites > 0 ? 'warn' : 'default', sub: snap.expired > 0 ? `${snap.expired} expired — resend from Users` : snap.invites > 0 ? 'Invites expire after 7 days' : 'None outstanding', onClick: () => select('access') },
+    { label: 'Crew Directory', value: snap.crew, sub: snap.crew > 0 ? `${snap.osha} OSHA certified` : 'Add employees in Directory', onClick: () => select('directory') },
+  ];
+
   return (
-    <PremiumSurface maxWidth={2200} pad="40px 20px 0">
-      {/* ── cinematic header ── */}
-      <ModuleHero
-        eyebrow="Team"
-        eyebrowIcon={<IconChip size={24} vivid={moduleAccent('team').vivid ?? moduleAccent('team').hex}><UsersThree size={13} weight="fill" color="#F8FAFC" /></IconChip>}
-        accentColor={moduleAccent('team').hex}
-        title="People &"
-        accent="Access"
-        subtitle="Crew records and role-based access, in one place."
-      />
+    <div className="ppWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Settings', href: '/app/settings' }, { label: 'People & Access' }]}
+        title="People & Access"
+        subtitle="Crew records and role-based access, in one place. Hiding a control is not authorization — the server enforces every permission."
+      >
+        {stats && <StatRow items={stats} />}
 
-      {/* ── roster intelligence strip — what the system already knows ── */}
-      {snap && (
-        <StatStrip items={[
-          {href: '/app/people', label: 'Team Members', value: String(snap.users), sub: 'Platform sign-ins' },
-          {href: '/app/people', label: 'Roles Defined', value: String(snap.roles), sub: snap.roles > 0 ? 'Permission templates in force' : 'Built-ins seed on first visit' },
-          {href: '/app/people', 
-            label: 'Role Assignments', value: String(snap.assigns),
-            accent: snap.users > 0 && snap.assigns === 0 ? 'var(--brand-primary-strong)' : undefined,
-            sub: snap.assigns > 0 ? 'Users mapped to roles' : snap.users > 0 ? 'No roles assigned yet — start in Users' : 'Assign roles from Roles & Access',
-          },
-          {href: '/app/people', 
-            label: 'Pending Invites', value: String(snap.invites),
-            accent: snap.expired > 0 ? '#FF3B30' : snap.invites > 0 ? 'var(--brand-primary-strong)' : undefined,
-            sub: snap.expired > 0 ? `${snap.expired} expired — resend from Users` : snap.invites > 0 ? 'Invites expire after 7 days' : 'None outstanding',
-          },
-          {href: '/app/people', label: 'Crew Directory', value: String(snap.crew), sub: snap.crew > 0 ? `${snap.osha} OSHA certified` : 'Add employees in Directory' },
-        ]} />
-      )}
-
-      {/* ── unified segmented switch ── */}
-      <div style={{ marginBottom: 26 }}>
-        <div
-          style={{
-            display: 'inline-flex', flexWrap: 'wrap',
-            background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.012))',
-            border: '1px solid rgba(255,255,255,0.09)', borderRadius: 14, padding: 5, gap: 5,
-            boxShadow: '0 20px 50px -30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.04)',
-          }}
-        >
-          {TABS.map(({ key, label, sub, Icon }) => {
-            const on = tab === key;
-            return (
-              <button
-                key={key}
-                onClick={() => select(key)}
-                className="pmBtn"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 10, textAlign: 'left',
-                  border: 'none', cursor: 'pointer', borderRadius: 10, padding: '9px 16px',
-                  background: on ? `linear-gradient(135deg, ${GOLD}, ${GOLD_HI})` : 'transparent',
-                  color: on ? '#1A1206' : MUTED,
-                  boxShadow: on ? '0 10px 26px -12px color-mix(in srgb, var(--brand-primary) 70%, transparent)' : 'none',
-                  transition: 'background .18s ease, color .18s ease',
-                }}
-              >
-                <Icon size={20} weight={on ? 'fill' : 'regular'} />
-                <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                  <span style={{ fontSize: 14, fontWeight: 800 }}>{label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: on ? 'rgba(26,18,6,0.72)' : FAINT }}>{sub}</span>
-                </span>
-              </button>
-            );
-          })}
+        <div className="ppTabs">
+          <Tabs
+            value={tab}
+            onChange={(k) => select(k as Tab)}
+            tabs={[
+              { key: 'access', label: 'Roles & Access', count: snap?.users },
+              { key: 'directory', label: 'Directory', count: snap?.crew },
+            ]}
+          />
         </div>
-      </div>
 
-      {/* ── active surface ── */}
-      {tab === 'directory' ? <PeopleDirectory /> : <AccessManager />}
-    </PremiumSurface>
+        {/* ── active surface (unchanged child components) ── */}
+        {tab === 'directory' ? <PeopleDirectory /> : <AccessManager />}
+      </PageShell>
+    </div>
   );
 }
