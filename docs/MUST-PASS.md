@@ -43,8 +43,14 @@ to stop.
 - Pick a project, enter crew / weather / work done, save
 - Reopen and confirm it persisted with today's practice date, not a UTC date
 - API: `app/api/daily-logs`
-- Taps at 390px: MEASURE
-- STATUS: NOT VERIFIED
+- Taps at 390px: CANNOT VERIFY (3 Oct) — no browser on the run machine (Playwright not installed)
+- STATUS: PASS 2026-10-03 — driven live as the QA user against a fresh local build
+  (`node --env-file=.env.local scripts/qa/path1-daily-log.mjs`): create 200 with
+  log_date = practice date, crew/weather/work/temps/super/phase saved; same-day
+  duplicate 409 with the existing id; list + detail reopen it; fixture deleted (GET 404).
+  Fixed on the way: the form defaulted to the UTC day, and the table's Temp column read
+  `temperature_high/low`, keys the route never returns (every row showed —° / —°).
+  On-screen render and tap count NOT driven — CANNOT VERIFY until a browser run.
 
 ### Path 2 — Clock in and clock out
 - Open `app/app/time/page.tsx` (474 lines), clock in, clock out

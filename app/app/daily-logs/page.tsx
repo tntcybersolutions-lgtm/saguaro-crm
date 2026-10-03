@@ -27,8 +27,11 @@ interface DailyLog {
   project_id: string;
   log_date: string;
   weather: string | null;
-  temperature_high: number | null;
-  temperature_low: number | null;
+  /* The table stores high_temp / low_temp. This read temperature_high /
+     temperature_low, keys the list route never returns, so every row showed
+     "—° / —°" whatever was saved. */
+  high_temp: number | null;
+  low_temp: number | null;
   crew_count: number;
   work_performed: string;
   delays: string;
@@ -47,6 +50,10 @@ interface Project { id: string; name: string; }
 
 const columnHelper = createColumnHelper<DailyLog>();
 
+/** Today as YYYY-MM-DD on the user's wall clock. The form defaulted to
+ *  toISOString() — the UTC day — so in Arizona every log started after 5 pm
+ *  was dated tomorrow. */
+const practiceToday = () => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const fmtDay = (d?: string | null) => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '—';
 /** Workdays (Mon-Fri) strictly between two ISO dates — 0 across a plain weekend. */
 function missedWorkdays(fromIso: string, toIso: string) {
@@ -80,7 +87,7 @@ export default function DailyLogsPage() {
 
   const [form, setForm] = useState({
     projectId: '',
-    logDate: new Date().toISOString().slice(0, 10),
+    logDate: practiceToday(),
     weather: '',
     temperatureHigh: '',
     temperatureLow: '',
@@ -259,7 +266,7 @@ export default function DailyLogsPage() {
       setLastApplied({});
       setCarryUsed(false);
       setShowCreate(false);
-      setForm({ projectId: '', logDate: new Date().toISOString().slice(0, 10), weather: '', temperatureHigh: '', temperatureLow: '', crewCount: '', workPerformed: '', delays: '', safetyNotes: '', materialsDelivered: '', visitors: '', notes: '', superintendent: '', precipitation: '', windConditions: '', phaseOfWork: '', equipment: '' });
+      setForm({ projectId: '', logDate: practiceToday(), weather: '', temperatureHigh: '', temperatureLow: '', crewCount: '', workPerformed: '', delays: '', safetyNotes: '', materialsDelivered: '', visitors: '', notes: '', superintendent: '', precipitation: '', windConditions: '', phaseOfWork: '', equipment: '' });
       setAutoCrew(false);
       await fetchLogs();
       return true;
@@ -296,11 +303,11 @@ export default function DailyLogsPage() {
       header: 'Weather',
       cell: (info) => info.getValue() || '—',
     }),
-    columnHelper.accessor((row) => `${row.temperature_high ?? '—'}° / ${row.temperature_low ?? '—'}°`, {
+    columnHelper.accessor((row) => `${row.high_temp ?? '—'}° / ${row.low_temp ?? '—'}°`, {
       id: 'temp',
       header: 'Temp',
       // The cell renders "72° / 55°" — sort on the numeric high, not the string.
-      sortingFn: (a, b) => (Number(a.original.temperature_high) || 0) - (Number(b.original.temperature_high) || 0),
+      sortingFn: (a, b) => (Number(a.original.high_temp) || 0) - (Number(b.original.high_temp) || 0),
       cell: (info) => <span style={{ color: colors.textMuted }}>{info.getValue()}</span>,
     }),
     columnHelper.accessor('crew_count', {

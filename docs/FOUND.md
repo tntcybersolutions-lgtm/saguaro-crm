@@ -59,3 +59,10 @@ converge. One line each, newest at the bottom.
   "New Pay App" on a closed job and while bidding.
 - (2 Oct, audit verify) `app/app/projects/[projectId]/takeoff/page.tsx` — on load the upload hero
   ("Drop a plan") shows for ~3–5 s before a completed takeoff's results replace it.
+- (3 Oct, Path 1) `package.json` prebuild — `npm run build` fails locally: HEATMAP ENGINE DRIFT, `lib/heatmap/interfloor.ts` was edited in this repo (7cb3f4fb, #31) instead of the canonical `D:\Saguaro-Field\lib\heatmap`; build only runs with `SAGUARO_PEER_DIR=/nonexistent`.
+- (3 Oct, Path 1) `npx tsc --noEmit` — 8 pre-existing errors: `app/api/leads/[id]/media/route.ts:33,69` (`deal_media`) and `app/api/reviews/route.ts:23,58` (`customer_reviews`) — tables missing from the generated Supabase types.
+- (3 Oct, Path 1) `app/app/daily-logs/page.tsx:253` — a same-day duplicate save gets the server's 409 ("already exists… open it") but the page throws a generic "Failed to create daily log" and drops `existingLogId`.
+- (3 Oct, Path 1) `app/app/daily-logs/page.tsx:383,452` — "This Month" and the modal's gap banner still use the UTC date (`toISOString`), so after 5 pm Arizona the gap is computed against tomorrow.
+- (3 Oct, Path 1) `app/api/daily-logs/create/route.ts:47` — server fallback `log_date` is the UTC day when the client sends none (mobile/API callers).
+- (3 Oct, Path 1) `app/api/daily-logs/list/route.ts:20`, `app/api/daily-logs/[id]/route.ts:19,54,73` — catches with no variable, nothing logged, not `apiError()` (§3).
+- (3 Oct, Path 1) `app/api/daily-logs/list/route.ts` + `[id]` GET use `getUser` only (no `requirePermission`), while create/edit/delete gate on Projects — read is unscoped by role.
