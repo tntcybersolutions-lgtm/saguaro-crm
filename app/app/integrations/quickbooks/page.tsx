@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldButtonStyle } from '@/components/ui/premium';
 import { Plugs, ArrowsClockwise, ListChecks, SlidersHorizontal, ClockCounterClockwise, ArrowsLeftRight } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B', DARK = '#1c1c1e', BORDER = 'rgba(255,255,255,0.12)';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#22C55E', RED = '#EF4444', QB_GREEN = '#2CA01C';
 
 type SyncHistoryEntry = {
@@ -132,7 +132,7 @@ export default function QuickBooksPage() {
     if (syncVendors) entities.push('vendors');
 
     if (entities.length === 0) {
-      setNotification({ type: 'error', msg: 'Select at least one entity to sync' });
+      setNotification({ type: 'error', msg: 'Select at least one entity to sync.' });
       return;
     }
 
@@ -186,7 +186,7 @@ export default function QuickBooksPage() {
   if (loading) {
     return (
       <PremiumSurface maxWidth={1100}>
-        <div style={{ color: DIM, fontSize: 14 }}>Loading QuickBooks integration...</div>
+        <div style={{ color: DIM, fontSize: 14 }}>Loading QuickBooks integration…</div>
       </PremiumSurface>
     );
   }
@@ -241,10 +241,10 @@ export default function QuickBooksPage() {
       {/* What the integration already knows — every figure derived from live state */}
       <StatStrip items={[
         {href: '/app/integrations/quickbooks',  label: 'Connection', value: connected ? 'Connected' : 'Not Connected', accent: connected ? GREEN : RED, sub: 'QuickBooks Online' },
-        {href: '/app/integrations/quickbooks',  label: 'Last Sync', value: timeAgo(integration?.last_sync_at ?? null), sub: 'most recent run' },
-        {href: '/app/integrations/quickbooks',  label: 'Syncs Recorded', value: String(syncHistory.length), sub: 'kept in history below' },
-        {href: '/app/integrations/quickbooks',  label: 'Records Synced', value: String(syncHistory.reduce((s, h) => s + Object.values(h.results).reduce((x, r) => x + (r.count || 0), 0), 0)), sub: 'across all runs' },
-        {href: '/app/integrations/quickbooks',  label: 'Entities Enabled', value: `${[syncInvoices, syncBills, syncCustomers, syncVendors].filter(Boolean).length}/${SYNC_ENTITIES.length}`, sub: 'invoices to vendors' },
+        {href: '/app/integrations/quickbooks',  label: 'Last Sync', value: timeAgo(integration?.last_sync_at ?? null), sub: 'Most recent run' },
+        {href: '/app/integrations/quickbooks',  label: 'Syncs Recorded', value: String(syncHistory.length), sub: 'Kept in history below' },
+        {href: '/app/integrations/quickbooks',  label: 'Records Synced', value: String(syncHistory.reduce((s, h) => s + Object.values(h.results).reduce((x, r) => x + (r.count || 0), 0), 0)), sub: 'Across all runs' },
+        {href: '/app/integrations/quickbooks',  label: 'Entities Enabled', value: `${[syncInvoices, syncBills, syncCustomers, syncVendors].filter(Boolean).length}/${SYNC_ENTITIES.length}`, sub: 'Invoices to vendors' },
       ]} />
 
       {/* Connection Status */}
@@ -277,7 +277,6 @@ export default function QuickBooksPage() {
 
           <span style={{
             padding: '5px 12px', borderRadius: 999, fontSize: 11, fontWeight: 800,
-            letterSpacing: '0.08em', textTransform: 'uppercase',
             background: connected ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
             border: `1px solid ${connected ? 'rgba(34,197,94,0.35)' : 'rgba(239,68,68,0.35)'}`,
             color: connected ? GREEN : RED,
@@ -325,8 +324,8 @@ export default function QuickBooksPage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
                       borderRadius: 8, cursor: 'pointer', marginBottom: 6,
-                      background: checked ? 'rgba(245, 158, 11,0.06)' : 'transparent',
-                      border: `1px solid ${checked ? 'rgba(245, 158, 11,0.2)' : 'transparent'}`,
+                      background: checked ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent',
+                      border: `1px solid ${checked ? 'color-mix(in srgb, var(--brand-primary) 20%, transparent)' : 'transparent'}`,
                     }}
                   >
                     <input
@@ -352,7 +351,7 @@ export default function QuickBooksPage() {
                   {[
                     { key: 'push', label: 'Push to QB', icon: '→' },
                     { key: 'pull', label: 'Pull from QB', icon: '←' },
-                    { key: 'bidirectional', label: 'Bi-directional', icon: '⇄' },
+                    { key: 'bidirectional', label: 'Bi-Directional', icon: '⇄' },
                   ].map((d) => (
                     <button
                       key={d.key}
@@ -360,7 +359,7 @@ export default function QuickBooksPage() {
                       style={{
                         flex: 1, padding: '10px 8px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
                         border: syncDirection === d.key ? `1px solid ${GOLD}` : `1px solid ${BORDER}`,
-                        background: syncDirection === d.key ? 'rgba(245, 158, 11,0.1)' : 'transparent',
+                        background: syncDirection === d.key ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'transparent',
                         color: syncDirection === d.key ? GOLD : DIM,
                       }}
                     >
@@ -381,7 +380,7 @@ export default function QuickBooksPage() {
                       style={{
                         padding: '10px 12px', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600,
                         border: syncFrequency === f ? `1px solid ${GOLD}` : `1px solid ${BORDER}`,
-                        background: syncFrequency === f ? 'rgba(245, 158, 11,0.1)' : 'transparent',
+                        background: syncFrequency === f ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'transparent',
                         color: syncFrequency === f ? GOLD : DIM,
                         textTransform: 'capitalize',
                       }}
@@ -409,7 +408,7 @@ export default function QuickBooksPage() {
                   <thead>
                     <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                       {['Date', 'Direction', 'Entities', 'Records', 'Status', 'By'].map((h) => (
-                        <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                        <th key={h} style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>
                           {h}
                         </th>
                       ))}
@@ -425,8 +424,8 @@ export default function QuickBooksPage() {
                           <td style={{ padding: '10px 12px', color: DIM }}>
                             <span style={{
                               padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                              background: entry.direction === 'push' ? 'rgba(245, 158, 11,0.12)' : 'rgba(245,158,11,0.12)',
-                              color: entry.direction === 'push' ? GOLD : '#F59E0B',
+                              background: entry.direction === 'push' ? 'var(--brand-primary-12)' : 'var(--brand-primary-12)',
+                              color: entry.direction === 'push' ? GOLD : GOLD,
                             }}>
                               {entry.direction === 'push' ? '→ Push' : '← Pull'}
                             </span>
@@ -455,17 +454,17 @@ export default function QuickBooksPage() {
           {/* Field Mapping */}
           <SectionCard
             title="Field Mapping"
-            subtitle="How Saguaro fields map to QuickBooks fields"
+            subtitle="How Saguaro fields map to QuickBooks fields."
             icon={<ArrowsLeftRight size={17} weight="duotone" color={GOLD} />}
           >
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
                   <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>Entity</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>Saguaro Control Systems</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>Entity</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>Saguaro Control Systems</th>
                     <th style={{ padding: '10px 12px', textAlign: 'center', color: DIM, fontWeight: 600 }}>{'⇄'}</th>
-                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11, textTransform: 'uppercase' }}>QuickBooks Field</th>
+                    <th style={{ padding: '10px 12px', textAlign: 'left', color: DIM, fontWeight: 600, fontSize: 11 }}>QuickBooks Field</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -474,7 +473,7 @@ export default function QuickBooksPage() {
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{
                           padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                          background: 'rgba(245, 158, 11,0.1)', color: GOLD,
+                          background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', color: GOLD,
                         }}>
                           {m.entity}
                         </span>

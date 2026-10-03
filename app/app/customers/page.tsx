@@ -10,9 +10,11 @@ import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldBu
 import { ListToolbar } from '@/components/ui/ListToolbar';
 
 /* ─── Palette ─── */
-const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = '#0a0a0a';
-const RED = '#FF3B30', AMBER = '#FF9500', BLUE = '#F59E0B', PURPLE = '#AF52DE';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#34C759';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
+const RED = '#FF3B30', AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#AF52DE';
+/* Colors are CSS vars now, so a hex alpha suffix no longer works — tint with color-mix. */
+const mix = (c: string, pct: number) => `color-mix(in srgb, ${c} ${pct}%, transparent)`;
 
 /* ─── Types ─── */
 type CustomerStatus = 'lead' | 'qualified' | 'proposal' | 'customer' | 'lost';
@@ -276,16 +278,16 @@ export default function CustomersPage() {
           eyebrow="Customer Profile"
           eyebrowIcon={<UsersThree size={13} weight="fill" color={GOLD} />}
           title={c.name}
-          subtitle={`${c.email}  ·  ${c.phone}`}
+          subtitle={`${c.email} · ${c.phone}`}
           actions={
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <div style={{
                 padding: '4px 14px', borderRadius: 99, fontSize: 12, fontWeight: 700,
-                background: `${STATUS_COLORS[c.status]}20`, color: STATUS_COLORS[c.status],
-                border: `1px solid ${STATUS_COLORS[c.status]}40`, textTransform: 'capitalize',
+                background: mix(STATUS_COLORS[c.status], 13), color: STATUS_COLORS[c.status],
+                border: `1px solid ${mix(STATUS_COLORS[c.status], 25)}`, textTransform: 'capitalize',
               }}>{c.status}</div>
               <div style={{
-                width: 48, height: 48, borderRadius: 12, background: `${scoreColor(c.lead_score)}15`,
+                width: 48, height: 48, borderRadius: 12, background: mix(scoreColor(c.lead_score), 8),
                 border: `2px solid ${scoreColor(c.lead_score)}`, display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 fontSize: 18, fontWeight: 800, color: scoreColor(c.lead_score),
@@ -300,7 +302,7 @@ export default function CustomersPage() {
             <button key={tab} onClick={() => setDetailTab(tab)} className="pmBtn" style={{
               padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 600,
               border: `1px solid ${detailTab === tab ? GOLD : BORDER}`,
-              background: detailTab === tab ? `${GOLD}18` : 'transparent',
+              background: detailTab === tab ? mix(GOLD, 9) : 'transparent',
               color: detailTab === tab ? GOLD : DIM,
               cursor: 'pointer', textTransform: 'capitalize', whiteSpace: 'nowrap',
               transition: 'background .15s ease, color .15s ease, border-color .15s ease',
@@ -352,8 +354,8 @@ export default function CustomersPage() {
             <SectionCard title="Actions" icon={<Lightning size={17} weight="duotone" color={GOLD} />}>
               <div style={{ display: 'grid', gap: 10 }}>
                 <div style={{ display: 'grid', gap: 6 }}>
-                  <label style={{ fontSize: 11.5, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Assign to team member
+                  <label style={{ fontSize: 11.5, fontWeight: 700, color: DIM }}>
+                    Assign to Team Member
                   </label>
                   <UserPicker
                     value={assignee}
@@ -385,7 +387,7 @@ export default function CustomersPage() {
               >
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  style={{ width: '100%', maxWidth: 520, background: '#141416', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
+                  style={{ width: '100%', maxWidth: 520, background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 20, boxShadow: '0 30px 80px -20px rgba(0,0,0,0.8)' }}
                 >
                   <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', marginBottom: 4 }}>Email {c.name}</div>
                   <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>To: {c.email}</div>
@@ -426,7 +428,7 @@ export default function CustomersPage() {
                   </div>
                   <div style={{ display: 'grid', gap: 8 }}>
                     {projectRollup.get(c.id)!.list.map(p => (
-                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '8px 12px', background: `${BG}60`, borderRadius: 8, border: `1px solid ${BORDER}` }}>
+                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '8px 12px', background: mix(BG, 38), borderRadius: 8, border: `1px solid ${BORDER}` }}>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                           {p.status && <div style={{ fontSize: 11, color: DIM, textTransform: 'capitalize' }}>{p.status}</div>}
@@ -453,7 +455,7 @@ export default function CustomersPage() {
                 {Object.entries(c.discovery_answers).map(([key, val]) => (
                   <div key={key} style={{
                     display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                    background: `${BG}60`, borderRadius: 10, border: `1px solid ${BORDER}`,
+                    background: mix(BG, 38), borderRadius: 10, border: `1px solid ${BORDER}`,
                   }}>
                     <span style={{ fontSize: 20, display: 'inline-flex', alignItems: 'center' }}>
                       {key === 'project_type' ? <Buildings size={20} /> : key === 'budget' ? <CurrencyDollar size={20} /> : key === 'priorities' ? <Target size={20} /> :
@@ -488,7 +490,7 @@ export default function CustomersPage() {
                 {c.recommendations.map(rec => (
                   <div key={rec.id} style={{
                     display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                    background: `${BG}60`, borderRadius: 10, border: `1px solid ${BORDER}`,
+                    background: mix(BG, 38), borderRadius: 10, border: `1px solid ${BORDER}`,
                   }}>
                     <span style={{
                       fontSize: 18, display: 'inline-flex', alignItems: 'center',
@@ -523,11 +525,11 @@ export default function CustomersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
                 {c.design_sessions.map(ds => (
                   <div key={ds.id} style={{
-                    padding: 16, background: `${BG}60`, borderRadius: 12,
+                    padding: 16, background: mix(BG, 38), borderRadius: 12,
                     border: `1px solid ${BORDER}`, textAlign: 'center',
                   }}>
                     <div style={{
-                      height: 80, background: `linear-gradient(135deg, ${GOLD}20, ${CARD})`,
+                      height: 80, background: `linear-gradient(135deg, ${mix(GOLD, 13)}, ${CARD})`,
                       borderRadius: 8, marginBottom: 10, display: 'flex',
                       alignItems: 'center', justifyContent: 'center', fontSize: 30,
                     }}><House size={30} /></div>
@@ -554,7 +556,7 @@ export default function CustomersPage() {
                 {c.material_selections.map((ms, i) => (
                   <div key={i} style={{
                     display: 'flex', justifyContent: 'space-between', padding: '12px 16px',
-                    background: `${BG}60`, borderRadius: 10, border: `1px solid ${BORDER}`,
+                    background: mix(BG, 38), borderRadius: 10, border: `1px solid ${BORDER}`,
                   }}>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600 }}>{ms.name}</div>
@@ -582,7 +584,7 @@ export default function CustomersPage() {
                 {c.conversations.map((cv, i) => (
                   <div key={i} style={{
                     display: 'flex', gap: 12, padding: '12px 16px',
-                    background: `${BG}60`, borderRadius: 10, border: `1px solid ${BORDER}`,
+                    background: mix(BG, 38), borderRadius: 10, border: `1px solid ${BORDER}`,
                   }}>
                     <span style={{ fontSize: 20, display: 'inline-flex', alignItems: 'center' }}><Cactus size={20} color={GOLD} /></span>
                     <div>
@@ -629,28 +631,28 @@ export default function CustomersPage() {
           <StatCard
             icon={<UsersThree size={19} weight="duotone" color={GOLD} />}
             label="Total Profiles" value={String(customers.length)} accent={GOLD}
-            sub="in pipeline" delay={0.02}
+            sub="In pipeline" delay={0.02}
           />
           <StatCard
             icon={<Target size={19} weight="duotone" color={GOLD} />}
             label="Active Pipeline"
             value={String((statusCounts.lead || 0) + (statusCounts.qualified || 0) + (statusCounts.proposal || 0))}
-            sub="lead · qualified · proposal" accent={GOLD} delay={0.06}
+            sub="Lead · Qualified · Proposal" accent={GOLD} delay={0.06}
           />
           <StatCard
             icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
             label="Customers Won" value={String(statusCounts.customer || 0)} accent={GREEN}
-            sub="converted" delay={0.10}
+            sub="Converted" delay={0.10}
           />
           <StatCard
             icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
             label="Lifetime Value" value={fmt(lifetimeTotals.value)} accent={GOLD}
-            sub={lifetimeTotals.withProjects > 0 ? `${lifetimeTotals.withProjects} customer${lifetimeTotals.withProjects === 1 ? '' : 's'} with projects` : 'assign customers to projects'} delay={0.14}
+            sub={lifetimeTotals.withProjects > 0 ? `${lifetimeTotals.withProjects} customer${lifetimeTotals.withProjects === 1 ? '' : 's'} with projects` : 'Assign customers to projects'} delay={0.14}
           />
           <StatCard
             icon={<Gauge size={19} weight="duotone" color={GOLD} />}
             label="Avg Lead Score" value={String(avgScore)} accent={scoreColor(avgScore)}
-            sub="across all leads" delay={0.18}
+            sub="Across all leads" delay={0.18}
           />
         </div>
       )}
@@ -660,7 +662,7 @@ export default function CustomersPage() {
         module="customers"
         search={search}
         onSearch={setSearch}
-        searchPlaceholder="Search by name or email..."
+        searchPlaceholder="Search by name or email…"
         filters={[
           { key: 'status', label: 'Status', value: filterStatus, onChange: setFilterStatus, allLabel: `All (${statusCounts.all})`, options: STATUSES.map(s => ({ value: s, label: `${s.charAt(0).toUpperCase() + s.slice(1)} (${statusCounts[s] || 0})` })) },
           { key: 'source', label: 'Source', value: filterSource, onChange: setFilterSource, allLabel: 'All Sources', options: [...SOURCES] },
@@ -715,7 +717,7 @@ export default function CustomersPage() {
                     {['Name', 'Email', 'State', 'Status', 'Score', 'Projects', 'Lifetime Value', 'Source', 'Created'].map(h => (
                       <th key={h} style={{
                         padding: '12px 14px', textAlign: 'left', fontSize: 10.5,
-                        color: 'var(--text-tertiary)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                        color: 'var(--text-tertiary)', fontWeight: 700,
                       }}>{h}</th>
                     ))}
                   </tr>
@@ -727,11 +729,11 @@ export default function CustomersPage() {
                       onClick={() => { setSelected(c); setDetailTab('overview'); }}
                       style={{
                         borderBottom: `1px solid ${BORDER}`,
-                        background: idx % 2 === 0 ? 'transparent' : `${BG}30`,
+                        background: idx % 2 === 0 ? 'transparent' : mix(BG, 19),
                         cursor: 'pointer', transition: 'background .15s',
                       }}
-                      onMouseEnter={e => (e.currentTarget.style.background = `${GOLD}08`)}
-                      onMouseLeave={e => (e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : `${BG}30`)}
+                      onMouseEnter={e => (e.currentTarget.style.background = mix(GOLD, 3))}
+                      onMouseLeave={e => (e.currentTarget.style.background = idx % 2 === 0 ? 'transparent' : mix(BG, 19))}
                     >
                       <td style={{ padding: '12px 14px', fontSize: 14, fontWeight: 600 }}>{c.name}</td>
                       <td style={{ padding: '12px 14px', fontSize: 13, color: DIM }}>{c.email}</td>
@@ -739,7 +741,7 @@ export default function CustomersPage() {
                       <td style={{ padding: '12px 14px' }}>
                         <span style={{
                           padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700,
-                          background: `${STATUS_COLORS[c.status]}20`, color: STATUS_COLORS[c.status],
+                          background: mix(STATUS_COLORS[c.status], 13), color: STATUS_COLORS[c.status],
                           textTransform: 'capitalize',
                         }}>{c.status}</span>
                       </td>

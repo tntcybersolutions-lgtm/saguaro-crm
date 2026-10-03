@@ -12,8 +12,8 @@ import { FlagCheckered } from '@phosphor-icons/react';
 
 const SEV_LABEL: Record<Severity, string> = { red: 'Critical Slip', yellow: 'Slipping', green: 'On Track' };
 
-// Slip badge/metric text: "+12d" later than baseline, "On time" when not slipping, "—" when unknown.
-const slipLabel = (slip: number | null) => (slip == null ? '—' : slip > 0 ? `+${slip}d` : 'On time');
+// Slip badge/metric text: "+12d" later than baseline, "On Time" when not slipping, "—" when unknown.
+const slipLabel = (slip: number | null) => (slip == null ? '—' : slip > 0 ? `+${slip}d` : 'On Time');
 
 export default function MilestonesPage() {
   const { ready, loading: gateLoading } = useFranchiseGate();
@@ -63,11 +63,11 @@ export default function MilestonesPage() {
       {/* Schedule pulse — slip mix against baseline, worst-first */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/command-center/milestones',  label: 'Total Milestones', value: String(summary.total), sub: 'across all sites' },
-          {href: '/app/command-center/milestones',  label: 'On Track', value: String(summary.green), accent: C.green, sub: 'holding baseline' },
-          {href: '/app/command-center/milestones',  label: 'Slipping', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'inside float' },
-          {href: '/app/command-center/milestones',  label: 'Critical Slip', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'recover these first' },
-          {href: '/app/command-center/milestones',  label: 'Critical Path', value: String(summary.critical), accent: summary.critical > 0 ? C.gold : undefined, sub: 'drive the end date' },
+          {href: '/app/command-center/milestones',  label: 'Total Milestones', value: String(summary.total), sub: 'Across all sites' },
+          {href: '/app/command-center/milestones',  label: 'On Track', value: String(summary.green), accent: C.green, sub: 'Holding baseline' },
+          {href: '/app/command-center/milestones',  label: 'Slipping', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'Inside float' },
+          {href: '/app/command-center/milestones',  label: 'Critical Slip', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'Recover these first' },
+          {href: '/app/command-center/milestones',  label: 'Critical Path', value: String(summary.critical), accent: summary.critical > 0 ? C.gold : undefined, sub: 'Drive the end date' },
         ]} />
       )}
 
@@ -104,7 +104,7 @@ export default function MilestonesPage() {
             <LiftCard key={it.id} sev={h.severity}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title || it.name || 'Untitled milestone'}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title || it.name || 'Untitled Milestone'}</div>
                   <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
                     {it.project_id ? (
                       <Link href={`/app/projects/${it.project_id}`} style={{ color: C.blue, textDecoration: 'none' }}>{it.project_name || 'Project'}</Link>
@@ -126,7 +126,7 @@ export default function MilestonesPage() {
 
               {it.is_critical_path && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 12, alignItems: 'center' }}>
-                  <Pill tone="red" caps>Critical Path</Pill>
+                  <Pill tone="red">Critical Path</Pill>
                 </div>
               )}
             </LiftCard>

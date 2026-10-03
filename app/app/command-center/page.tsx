@@ -15,8 +15,8 @@ import {
 } from '@phosphor-icons/react';
 
 const C = {
-  gold: '#F59E0B', green: '#34C759', yellow: '#FF9500', red: '#FF3B30', blue: '#F59E0B',
-  bg: '#0a0a0a', card: '#141416', border: 'rgba(255,255,255,0.12)', dim: '#CBD5E1', text: '#FFFFFF',
+  gold: 'var(--brand-primary)', green: '#34C759', yellow: '#FF9500', red: '#FF3B30', blue: 'var(--brand-primary)',
+  bg: 'var(--bg-base)', card: 'var(--bg-surface)', border: 'rgba(255,255,255,0.12)', dim: '#CBD5E1', text: '#FFFFFF',
 };
 const STATUS_COLOR: Record<HealthStatus, string> = { green: C.green, yellow: C.yellow, red: C.red };
 const STATUS_LABEL: Record<HealthStatus, string> = { green: 'On Track', yellow: 'Watch', red: 'Escalate' };
@@ -146,13 +146,13 @@ export default function CommandCenterPage() {
       {/* Portfolio pulse — live KPIs from the same feeds the subpages run on */}
       <StatStrip items={[
         {href: '/app/command-center',  label: 'Projects', value: String(summary.total), sub: `${summary.green} on track` },
-        {href: '/app/command-center',  label: 'Watch', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'yellow health' },
-        {href: '/app/command-center/escalations',  label: 'Escalate', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'red — act today' },
-        {href: '/app/command-center',  label: 'Portfolio Value', value: fmtMoney(summary.contract), sub: 'sum of contracts' },
-        {href: '/app/command-center',  label: 'Avg Complete', value: `${summary.avg}%`, sub: 'across reporting projects' },
-        {href: '/app/command-center/risks',  label: 'Open Risks', value: String(modCounts.openRisks), accent: modCounts.critRisks > 0 ? C.red : undefined, sub: modCounts.critRisks ? `${modCounts.critRisks} critical` : 'register-wide' },
-        {href: '/app/command-center/escalations',  label: 'Escalations', value: String(modCounts.openEsc), accent: modCounts.openEsc > 0 ? C.red : undefined, sub: 'open now' },
-        {href: '/app/command-center/long-lead',  label: 'Long-Lead Risk', value: `${modCounts.llAtRisk}/${modCounts.llTotal}`, accent: modCounts.llAtRisk > 0 ? C.yellow : undefined, sub: 'items off runway' },
+        {href: '/app/command-center',  label: 'Watch', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'Yellow health' },
+        {href: '/app/command-center/escalations',  label: 'Escalate', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'Red — act today' },
+        {href: '/app/command-center',  label: 'Portfolio Value', value: fmtMoney(summary.contract), sub: 'Sum of contracts' },
+        {href: '/app/command-center',  label: 'Avg Complete', value: `${summary.avg}%`, sub: 'Across reporting projects' },
+        {href: '/app/command-center/risks',  label: 'Open Risks', value: String(modCounts.openRisks), accent: modCounts.critRisks > 0 ? C.red : undefined, sub: modCounts.critRisks ? `${modCounts.critRisks} critical` : 'Register-wide' },
+        {href: '/app/command-center/escalations',  label: 'Escalations', value: String(modCounts.openEsc), accent: modCounts.openEsc > 0 ? C.red : undefined, sub: 'Open now' },
+        {href: '/app/command-center/long-lead',  label: 'Long-Lead Risk', value: `${modCounts.llAtRisk}/${modCounts.llTotal}`, accent: modCounts.llAtRisk > 0 ? C.yellow : undefined, sub: 'Items off runway' },
       ]} />
 
       {/* Needs-attention banner */}
@@ -226,7 +226,7 @@ export default function CommandCenterPage() {
             <>
               <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 6 }}>No active projects yet</div>
               <div style={{ fontSize: 13, maxWidth: 520, margin: '0 auto', lineHeight: 1.55 }}>
-                Add a project and this screen starts triaging for you — health scores from budget variance, RFI and punch backlog, schedule freshness, and inspections, ranked worst-first so the morning scan takes ten seconds.
+                Add a project and this screen starts triaging for you — health scores from budget variance, RFI and punch backlog, schedule freshness, and inspections, ranked worst first so the morning scan takes ten seconds.
               </div>
             </>
           ) : 'Nothing matches this filter.'}
@@ -256,7 +256,7 @@ export default function CommandCenterPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: C.dim, marginBottom: 4 }}>
                     <span>Complete</span><span style={{ fontWeight: 700, color: C.text }}>{h.percentComplete != null ? `${Math.round(h.percentComplete)}%` : '—'}</span>
                   </div>
-                  <div style={{ height: 6, borderRadius: 3, background: '#1c1c1e', overflow: 'hidden' }}>
+                  <div style={{ height: 6, borderRadius: 3, background: 'var(--bg-surface-2)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${Math.min(100, Math.max(0, h.percentComplete || 0))}%`, background: STATUS_COLOR[h.status], borderRadius: 3 }} />
                   </div>
                 </div>
@@ -298,7 +298,7 @@ export default function CommandCenterPage() {
 function Metric({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)' }}>{label}</div>
       <div style={{ fontSize: 14, fontWeight: 800, color: color || '#FFFFFF', marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );

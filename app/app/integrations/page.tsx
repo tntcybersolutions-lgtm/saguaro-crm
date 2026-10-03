@@ -6,7 +6,7 @@ import { IntegrationStrip } from '@/components/Integrations';
 import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, InsightRow, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { Plugs, MagnifyingGlass } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B', DARK = '#1c1c1e', CARD = '#141416', BORDER = 'rgba(255,255,255,0.12)';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-surface-2)', CARD = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#22C55E', RED = '#EF4444';
 
 type Integration = {
@@ -52,7 +52,7 @@ const ICONS: Record<string, string> = {
 const CATEGORY_COLORS: Record<string, string> = {
   accounting: '#22C55E',
   project_management: '#F97316',
-  communication: '#F59E0B',
+  communication: 'var(--brand-primary)',
   documents: '#EAB308',
   storage: '#6366F1',
   custom: '#8B5CF6',
@@ -101,7 +101,7 @@ export default function IntegrationsPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success')) {
-      setNotification({ type: 'success', msg: 'Integration connected successfully!' });
+      setNotification({ type: 'success', msg: 'Integration connected successfully.' });
       window.history.replaceState({}, '', '/app/integrations');
     }
     if (params.get('error')) {
@@ -144,7 +144,7 @@ export default function IntegrationsPage() {
           window.open(data.auth_url, '_blank', 'width=600,height=700');
         }
       } catch {
-        setNotification({ type: 'error', msg: 'Failed to initiate Xero connection' });
+        setNotification({ type: 'error', msg: 'Failed to initiate Xero connection.' });
       }
       setConnectingKey(null);
       return;
@@ -172,10 +172,10 @@ export default function IntegrationsPage() {
         body: JSON.stringify({ provider: intg.key }),
       });
       if (!res.ok) throw new Error('Connection failed');
-      setNotification({ type: 'success', msg: `${intg.name} connection initiated` });
+      setNotification({ type: 'success', msg: `${intg.name} connection initiated.` });
       fetchIntegrations();
     } catch {
-      setNotification({ type: 'error', msg: `Failed to connect ${intg.name}` });
+      setNotification({ type: 'error', msg: `Failed to connect ${intg.name}.` });
     }
     setConnectingKey(null);
   }
@@ -195,10 +195,10 @@ export default function IntegrationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      setNotification({ type: 'success', msg: `${intg.name} disconnected` });
+      setNotification({ type: 'success', msg: `${intg.name} disconnected.` });
       fetchIntegrations();
     } catch {
-      setNotification({ type: 'error', msg: `Failed to disconnect ${intg.name}` });
+      setNotification({ type: 'error', msg: `Failed to disconnect ${intg.name}.` });
     }
   }
 
@@ -235,7 +235,7 @@ export default function IntegrationsPage() {
       });
       fetchIntegrations();
     } catch {
-      setNotification({ type: 'error', msg: 'Sync failed' });
+      setNotification({ type: 'error', msg: 'Sync failed.' });
     }
     setSyncing(null);
   }
@@ -255,14 +255,14 @@ export default function IntegrationsPage() {
       });
       const data = await res.json();
       if (data.connection_test?.success) {
-        setNotification({ type: 'success', msg: 'Sage 300 connected successfully!' });
+        setNotification({ type: 'success', msg: 'Sage 300 connected successfully.' });
       } else {
         setNotification({ type: 'error', msg: `Connection test failed: ${data.connection_test?.message}` });
       }
       setShowSetup(null);
       fetchIntegrations();
     } catch {
-      setNotification({ type: 'error', msg: 'Failed to connect Sage 300' });
+      setNotification({ type: 'error', msg: 'Failed to connect Sage 300.' });
     }
     setConnectingKey(null);
   }
@@ -305,12 +305,12 @@ export default function IntegrationsPage() {
         eyebrowIcon={<Plugs size={13} weight="fill" color={GOLD} />}
         title="Connect Your"
         accent="Stack"
-        subtitle={loading ? 'Loading...' : `${connectedCount} connected \u00B7 ${integrations.length} available across ${categoryCount} categor${categoryCount === 1 ? 'y' : 'ies'}.`}
+        subtitle={loading ? 'Loading…' : `${connectedCount} connected \u00B7 ${integrations.length} available across ${categoryCount} categor${categoryCount === 1 ? 'y' : 'ies'}.`}
         actions={<>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search integrations..."
+            placeholder="Search integrations…"
             style={{
               padding: '9px 14px', background: CARD, border: `1px solid ${BORDER}`,
               borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: 240,
@@ -329,11 +329,11 @@ export default function IntegrationsPage() {
       {/* Marketplace intelligence \u2014 the imported StatStrip, live figures only */}
       {!loading && integrations.length > 0 && (
         <StatStrip items={[
-          {href: '/app/integrations',  label: 'Connected', value: String(connectedCount), accent: connectedCount > 0 ? GREEN : undefined, sub: connectedCount > 0 ? 'live and syncing' : 'none connected yet' },
-          {href: '/app/integrations',  label: 'Available Now', value: String(availableCount), sub: 'ready to connect' },
-          {href: '/app/integrations',  label: 'Coming Soon', value: String(comingSoonCount), sub: 'on the roadmap' },
-          {href: '/app/integrations',  label: 'Categories', value: String(categoryCount), sub: 'accounting to storage' },
-          {href: '/app/integrations',  label: 'Last Sync', value: lastSynced ? timeAgo(lastSynced.last_sync_at) : 'Never', sub: lastSynced ? lastSynced.name : 'no syncs recorded' },
+          {href: '/app/integrations',  label: 'Connected', value: String(connectedCount), accent: connectedCount > 0 ? GREEN : undefined, sub: connectedCount > 0 ? 'Live and syncing' : 'None connected yet' },
+          {href: '/app/integrations',  label: 'Available Now', value: String(availableCount), sub: 'Ready to connect' },
+          {href: '/app/integrations',  label: 'Coming Soon', value: String(comingSoonCount), sub: 'On the roadmap' },
+          {href: '/app/integrations',  label: 'Categories', value: String(categoryCount), sub: 'Accounting to storage' },
+          {href: '/app/integrations',  label: 'Last Sync', value: lastSynced ? timeAgo(lastSynced.last_sync_at) : 'Never', sub: lastSynced ? lastSynced.name : 'No syncs recorded' },
         ]} />
       )}
 
@@ -349,7 +349,7 @@ export default function IntegrationsPage() {
             style={{
               padding: '7px 16px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
               border: category === cat.key ? `1px solid ${GOLD}` : `1px solid ${BORDER}`,
-              background: category === cat.key ? 'rgba(245, 158, 11,0.12)' : 'transparent',
+              background: category === cat.key ? 'var(--brand-primary-12)' : 'transparent',
               color: category === cat.key ? GOLD : DIM,
               transition: 'all 0.2s',
             }}
@@ -369,7 +369,7 @@ export default function IntegrationsPage() {
       {/* Loading */}
       {loading && (
         <div style={{ textAlign: 'center', padding: 60, color: DIM }}>
-          <div style={{ fontSize: 14 }}>Loading integrations...</div>
+          <div style={{ fontSize: 14 }}>Loading integrations…</div>
         </div>
       )}
 
@@ -397,7 +397,7 @@ export default function IntegrationsPage() {
               key={intg.key}
               style={{
                 background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))',
-                border: `1px solid ${intg.connected ? 'rgba(34,197,94,0.35)' : intg.available ? 'rgba(245,158,11,0.22)' : BORDER}`,
+                border: `1px solid ${intg.connected ? 'rgba(34,197,94,0.35)' : intg.available ? 'color-mix(in srgb, var(--brand-primary) 22%, transparent)' : BORDER}`,
                 borderRadius: 16,
                 padding: 22,
                 position: 'relative',
@@ -426,7 +426,7 @@ export default function IntegrationsPage() {
                         Connected
                       </span>
                     ) : intg.available ? (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#FBBF24', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--brand-primary-strong)', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', padding: '2px 8px', borderRadius: 10, whiteSpace: 'nowrap' }}>
                         Available
                       </span>
                     ) : (
@@ -437,7 +437,7 @@ export default function IntegrationsPage() {
                   </div>
                   <span style={{
                     fontSize: 10, fontWeight: 600, color: CATEGORY_COLORS[intg.category] || DIM,
-                    background: `${CATEGORY_COLORS[intg.category] || DIM}18`,
+                    background: `color-mix(in srgb, ${CATEGORY_COLORS[intg.category] || DIM} 9%, transparent)`,
                     padding: '2px 8px', borderRadius: 8, display: 'inline-block', marginTop: 3,
                   }}>
                     {intg.category.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -453,7 +453,7 @@ export default function IntegrationsPage() {
               {/* Connected Details */}
               {intg.connected && (
                 <div style={{ marginBottom: 14, padding: '6px 12px', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.18)', borderRadius: 10 }}>
-                  <InsightRow label="Last sync" value={timeAgo(intg.last_sync_at)} />
+                  <InsightRow label="Last Sync" value={timeAgo(intg.last_sync_at)} />
                   <InsightRow label="Status" value="Active" accent={GREEN} />
                   <InsightRow label="Auth" value={String(intg.auth_type || 'credentials').replace(/_/g, ' ')} />
                 </div>
@@ -469,7 +469,7 @@ export default function IntegrationsPage() {
                           href="/app/integrations/quickbooks"
                           style={{
                             flex: 1, padding: '8px 0', textAlign: 'center', borderRadius: 8,
-                            background: `linear-gradient(135deg,${GOLD},#FBBF24)`, color: '#1C1C1E',
+                            background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: '#0A0A00',
                             fontSize: 12, fontWeight: 700, textDecoration: 'none',
                           }}
                         >
@@ -485,7 +485,7 @@ export default function IntegrationsPage() {
                             opacity: syncing === intg.key ? 0.6 : 1,
                           }}
                         >
-                          {syncing === intg.key ? 'Syncing...' : 'Sync Now'}
+                          {syncing === intg.key ? 'Syncing…' : 'Sync Now'}
                         </button>
                       </>
                     )}
@@ -510,7 +510,7 @@ export default function IntegrationsPage() {
                       opacity: connectingKey === intg.key ? 0.6 : 1,
                     }}
                   >
-                    {connectingKey === intg.key ? 'Connecting...' : 'Connect'}
+                    {connectingKey === intg.key ? 'Connecting…' : 'Connect'}
                   </button>
                 ) : (
                   <div style={{
@@ -559,7 +559,7 @@ export default function IntegrationsPage() {
             }}
           >
             <h2 style={{ margin: '0 0 6px', fontSize: 20, fontWeight: 800, color: TEXT }}>Connect Sage 300</h2>
-            <p style={{ margin: '0 0 24px', fontSize: 13, color: DIM }}>Enter your Sage 300 API endpoint and credentials</p>
+            <p style={{ margin: '0 0 24px', fontSize: 13, color: DIM }}>Enter your Sage 300 API endpoint and credentials.</p>
 
             <label style={{ display: 'block', marginBottom: 14 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: DIM, display: 'block', marginBottom: 5 }}>API Endpoint URL *</span>
@@ -631,12 +631,12 @@ export default function IntegrationsPage() {
                 disabled={!setupForm.api_url || connectingKey === 'sage300'}
                 style={{
                   padding: '10px 24px', borderRadius: 8, cursor: 'pointer',
-                  background: `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none',
-                  color: '#1C1C1E', fontSize: 13, fontWeight: 700,
+                  background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none',
+                  color: '#0A0A00', fontSize: 13, fontWeight: 700,
                   opacity: !setupForm.api_url || connectingKey === 'sage300' ? 0.5 : 1,
                 }}
               >
-                {connectingKey === 'sage300' ? 'Testing...' : 'Test & Connect'}
+                {connectingKey === 'sage300' ? 'Testing…' : 'Test & Connect'}
               </button>
             </div>
           </div>

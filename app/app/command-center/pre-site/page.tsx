@@ -45,7 +45,7 @@ export default function PreSitePage() {
 
   const pill = (active: boolean, color: string): React.CSSProperties => ({
     padding: '5px 11px', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: 'pointer',
-    border: `1px solid ${active ? color : C.border}`, background: active ? color : '#1c1c1e', color: active ? '#fff' : C.dim,
+    border: `1px solid ${active ? color : C.border}`, background: active ? color : 'var(--bg-surface-2)', color: active ? '#fff' : C.dim,
   });
 
   return (
@@ -56,9 +56,9 @@ export default function PreSitePage() {
           eyebrowIcon={<Clipboard size={13} weight="fill" />}
           title="Pre-Site"
           accent="Inspection"
-          subtitle="Feasibility due-diligence before lease and build."
+          subtitle="Feasibility due diligence before lease and build."
           actions={
-            <select value={activeSite} onChange={(e) => setSite(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: '#1c1c1e', color: C.text, fontWeight: 600 }}>
+            <select value={activeSite} onChange={(e) => setSite(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: 'var(--bg-surface-2)', color: C.text, fontWeight: 600 }}>
               {(projects as any[]).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           }
@@ -79,7 +79,7 @@ export default function PreSitePage() {
             <StatStrip items={[
               {href: '/app/command-center/pre-site',  label: 'Reviewed', value: `${view.reviewed}/${view.list.length}`, accent: view.pct >= 100 ? C.green : C.gold },
               {href: '/app/command-center/pre-site',  label: 'Passed', value: String(view.passed), accent: C.green },
-              {href: '/app/command-center/pre-site',  label: 'Flagged', value: String(view.flagged), accent: view.flagged ? C.red : undefined, sub: view.flagged ? 'needs resolution' : 'clear' },
+              {href: '/app/command-center/pre-site',  label: 'Flagged', value: String(view.flagged), accent: view.flagged ? C.red : undefined, sub: view.flagged ? 'Needs resolution' : 'Clear' },
               {href: '/app/command-center/pre-site',  label: 'Complete', value: `${view.pct}%`, accent: view.pct >= 100 ? C.green : C.gold },
             ]} />
             {view.flagged > 0 && (
@@ -90,7 +90,7 @@ export default function PreSitePage() {
             <SectionCard
               icon={<Clipboard size={16} weight="duotone" color={C.gold} />}
               title="Feasibility Checklist"
-              subtitle={`${view.list.length} points — pass what clears, flag what could kill or re-price the deal`}
+              subtitle={`${view.list.length} points — pass what clears, flag what could kill or re-price the deal.`}
               bodyStyle={{ padding: '6px 20px 10px' }}
             >
               {view.list.map((it) => {

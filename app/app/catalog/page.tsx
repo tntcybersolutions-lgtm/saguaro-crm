@@ -58,7 +58,7 @@ import {
   ORDER_PATH_SENTENCE,
 } from '@/app/api/catalog/stock';
 
-const GOLD = '#F59E0B', DARK = '#0a0a0a', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', AMBER = '#FBBF24', RED = '#c03030';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', AMBER = 'var(--brand-primary-strong)', RED = '#c03030';
 
 const fmtMoney = (n: number) => '$' + ((Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
 const fmtDate = (d?: string | null) => {
@@ -116,12 +116,12 @@ type SortMode = 'name' | 'price' | 'category';
 
 const INP: React.CSSProperties = { padding: '9px 12px 9px 34px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontSize: 13, outline: 'none', width: 260, boxSizing: 'border-box' };
 const SEL: React.CSSProperties = { padding: '8px 10px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 9, color: TEXT, fontSize: 12.5, outline: 'none', cursor: 'pointer' };
-const TH: React.CSSProperties = { padding: '9px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap', background: DARK };
+const TH: React.CSSProperties = { padding: '9px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap', background: DARK };
 
 /** Small chip marking a price as REFERENCE data — never mistakable for a live quote. */
 function RefChip() {
   return (
-    <span style={{ marginLeft: 5, padding: '1px 5px', borderRadius: 5, background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.35)', color: AMBER, fontSize: 8.5, fontWeight: 900, letterSpacing: 0.5, verticalAlign: 'middle', whiteSpace: 'nowrap' as const }}>REF</span>
+    <span style={{ marginLeft: 5, padding: '1px 5px', borderRadius: 5, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)', border: '1px solid var(--brand-primary-35)', color: AMBER, fontSize: 8.5, fontWeight: 900, verticalAlign: 'middle', whiteSpace: 'nowrap' as const }}>Ref</span>
   );
 }
 
@@ -175,10 +175,10 @@ function Availability({ offer, compact = false, feedConnected = false }: { offer
   }
   const s = String(offer.stockStatus || '').toLowerCase();
   const [label, color, bg] =
-    s === 'in_stock' ? ['In stock', GREEN, 'rgba(34,197,94,0.12)'] :
-    s === 'limited' ? ['Limited', AMBER, 'rgba(245,158,11,0.14)'] :
-    s === 'out_of_stock' ? ['Out of stock', RED, 'rgba(192,48,48,0.14)'] :
-    ['Special order', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0.06)'];
+    s === 'in_stock' ? ['In Stock', GREEN, 'rgba(34,197,94,0.12)'] :
+    s === 'limited' ? ['Limited', 'var(--warning)', 'color-mix(in srgb, var(--warning) 14%, transparent)'] :
+    s === 'out_of_stock' ? ['Out of Stock', RED, 'rgba(192,48,48,0.14)'] :
+    ['Special Order', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0.06)'];
   const qty = offer.qtyInStock != null ? `${offer.qtyInStock.toLocaleString('en-US')} ` : '';
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
@@ -204,7 +204,7 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
   return (
     <span className="catProvPop" role="tooltip">
       <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: TEXT, marginBottom: 2 }}>{offer.vendor}</span>
-      <span style={{ display: 'block', fontSize: 10, fontWeight: 900, letterSpacing: 0.6, color: AMBER, textTransform: 'uppercase' as const, marginBottom: 3 }}>Reference price</span>
+      <span style={{ display: 'block', fontSize: 10, fontWeight: 900, color: AMBER, marginBottom: 3 }}>Reference Price</span>
       <span style={{ display: 'block', fontSize: 11, color: DIM, lineHeight: 1.45 }}>
         Captured {fmtDate(offer.asOf)}{offer.source ? ` · ${offer.source}` : ''} — not a live quote.
       </span>
@@ -219,9 +219,9 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
           target="_blank"
           rel="noopener noreferrer"
           className="pmBtn"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: AMBER, textDecoration: 'none', border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.10)', borderRadius: 6, padding: '3px 8px' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: AMBER, textDecoration: 'none', border: '1px solid var(--brand-primary-35)', background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', borderRadius: 6, padding: '3px 8px' }}
         >
-          <MagnifyingGlassPlus size={11} weight="bold" /> Check availability
+          <MagnifyingGlassPlus size={11} weight="bold" /> Check Availability
         </a>
         {site && (
           <a
@@ -231,7 +231,7 @@ function ProvPop({ offer, item }: { offer: Offer; item: CatalogItem }) {
             className="pmBtn"
             style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 800, color: DIM, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 8px' }}
           >
-            <Globe size={11} weight="bold" /> Vendor site
+            <Globe size={11} weight="bold" /> Vendor Site
           </a>
         )}
       </span>
@@ -287,12 +287,12 @@ function ItemVisual({ item, onOpen }: { item: CatalogItem; onOpen: (item: Catalo
       style={{
         width: 40, height: 40, borderRadius: 10, position: 'relative', overflow: 'hidden', flex: 'none',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: `linear-gradient(150deg, ${hue}24, rgba(255,255,255,0.03) 70%)`,
-        border: `1px solid ${hue}3D`,
+        background: `linear-gradient(150deg, color-mix(in srgb, ${hue} 14%, transparent), rgba(255,255,255,0.03) 70%)`,
+        border: `1px solid color-mix(in srgb, ${hue} 24%, transparent)`,
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.07)',
       }}
     >
-      <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${hue}, ${hue}55)` }} />
+      <span style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${hue}, color-mix(in srgb, ${hue} 33%, transparent))` }} />
       <MonoIcon size={17} weight="duotone" color={hue} />
     </div>
   );
@@ -478,7 +478,7 @@ export default function CatalogPage() {
       fd.append('file', file);
       const r = await fetch('/api/catalog/image', { method: 'POST', body: fd });
       const d = await r.json();
-      if (!r.ok || d.error) throw new Error(d.error || 'Upload failed');
+      if (!r.ok || d.error) throw new Error(d.error || 'Upload failed.');
       applyImage(itemId, d.imageUrl || null);
       setImgMenu(null);
     } catch (e: any) {
@@ -501,7 +501,7 @@ export default function CatalogPage() {
         body: JSON.stringify({ itemId, imageUrl: url }),
       });
       const d = await r.json();
-      if (!r.ok || d.error) throw new Error(d.error || 'Could not save the image URL');
+      if (!r.ok || d.error) throw new Error(d.error || 'Could not save the image URL.');
       applyImage(itemId, d.imageUrl || null);
       setImgMenu(null);
       setImgUrlDraft('');
@@ -566,12 +566,12 @@ export default function CatalogPage() {
   return (
     <PremiumSurface maxWidth={2200}>
       <style>{`
-        .catAdd:active{transform:translateY(1px)!important;filter:brightness(.94)!important;box-shadow:0 1px 4px rgba(245,158,11,0.18),inset 0 1px 0 rgba(255,255,255,0.22)!important}
-        .catStep:hover{transform:none!important;filter:none!important;background:rgba(245,158,11,0.20)!important}
-        .catStep:active{background:rgba(245,158,11,0.28)!important}
+        .catAdd:active{transform:translateY(1px)!important;filter:brightness(.94)!important;box-shadow:0 1px 4px var(--brand-primary-18),inset 0 1px 0 rgba(255,255,255,0.22)!important}
+        .catStep:hover{transform:none!important;filter:none!important;background:color-mix(in srgb, var(--brand-primary) 20%, transparent)!important}
+        .catStep:active{background:color-mix(in srgb, var(--brand-primary) 28%, transparent)!important}
         @media (prefers-reduced-motion: reduce){.catAdd:active{transform:none!important}}
         .catProv{position:relative;display:inline-block;outline:none}
-        .catProv .catProvPop{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:60;width:264px;padding:10px 12px;border-radius:9px;background:#141416;border:1px solid rgba(245,158,11,0.35);box-shadow:0 8px 24px rgba(245,158,11,0.10),inset 0 1px 0 rgba(255,255,255,0.06);text-align:left;white-space:normal;cursor:default}
+        .catProv .catProvPop{display:none;position:absolute;right:0;bottom:calc(100% + 6px);z-index:60;width:264px;padding:10px 12px;border-radius:9px;background:var(--bg-surface);border:1px solid var(--brand-primary-35);box-shadow:0 8px 24px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.06);text-align:left;white-space:normal;cursor:default}
         .catProv:hover .catProvPop,.catProv:focus-within .catProvPop{display:block}
         .catImgBtn{opacity:0;transition:opacity .15s ease}
         tr:hover .catImgBtn,.catImgBtn:focus-visible{opacity:1}
@@ -591,7 +591,7 @@ export default function CatalogPage() {
             </div>
             {verticalsSorted.length > 0 && (
               <select value={vertical} onChange={(e) => setVertical(e.target.value)} style={SEL} className="pmBtn" aria-label="Filter by vertical">
-                <option value="all">All verticals ({allItems.length})</option>
+                <option value="all">All Verticals ({allItems.length})</option>
                 {verticalsSorted.map((v) => (
                   <option key={v} value={v}>{titleCase(v)} ({verticalCounts.get(v) || 0})</option>
                 ))}
@@ -609,17 +609,17 @@ export default function CatalogPage() {
                 style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', fontSize: 12 }}
                 aria-expanded={pricingInfo}
               >
-                <Info size={13} weight="bold" /> How pricing works
+                <Info size={13} weight="bold" /> How Pricing Works
               </button>
               {pricingInfo && (
-                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 80, width: 304, background: '#141416', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 12px 32px rgba(245,158,11,0.10), inset 0 1px 0 rgba(255,255,255,0.06)', textAlign: 'left' }}>
-                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 0.8, color: AMBER, textTransform: 'uppercase' as const, marginBottom: 8 }}>How pricing and ordering work</div>
+                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', zIndex: 80, width: 304, background: 'var(--bg-surface)', border: '1px solid var(--brand-primary-35)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', textAlign: 'left' }}>
+                  <div style={{ fontSize: 11, fontWeight: 900, color: AMBER, marginBottom: 8 }}>How Pricing and Ordering Work</div>
                   {[
-                    ['1. Reference snapshot', 'Every price is seeded reference data stamped with its capture date — never a live quote.'],
-                    ['2. No stock claims', 'Availability is not tracked. A stock badge appears only on rows fed by a connected vendor feed, stamped with that vendor and date.'],
-                    ['3. Check availability', 'The Check availability link on any offer searches that exact SKU and vendor, so you confirm today\'s price and stock yourself.'],
+                    ['1. Reference Snapshot', 'Every price is seeded reference data stamped with its capture date — never a live quote.'],
+                    ['2. No Stock Claims', 'Availability is not tracked. A stock badge appears only on rows fed by a connected vendor feed, stamped with that vendor and date.'],
+                    ['3. Check Availability', 'The Check Availability link on any offer searches that exact SKU and vendor, so you confirm today\'s price and stock yourself.'],
                     ['4. Draft the PO', 'Adding items creates draft POs grouped by vendor, with the reference-pricing note written onto each PO.'],
-                    ['5. Your vendor confirms', 'The vendor confirms price and stock before the PO is issued. Vendor API feeds connect here when accounts are linked.'],
+                    ['5. Your Vendor Confirms', 'The vendor confirms price and stock before the PO is issued. Vendor API feeds connect here when accounts are linked.'],
                   ].map(([h, b]) => (
                     <div key={h} style={{ marginBottom: 8 }}>
                       <div style={{ fontSize: 11.5, fontWeight: 800, color: TEXT }}>{h}</div>
@@ -681,7 +681,7 @@ export default function CatalogPage() {
              The honesty is not negotiable, so it stays — as one sentence. The
              long version lives behind "How pricing works" in the header, where
              someone who wants it can go and get it. ── */}
-        <div style={{ display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap' as const, padding: '9px 16px', borderBottom: `1px solid ${BORDER}`, background: 'rgba(245,158,11,0.05)' }}>
+        <div style={{ display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap' as const, padding: '9px 16px', borderBottom: `1px solid ${BORDER}`, background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
           <Info size={13} weight="bold" color={AMBER} style={{ flex: 'none' }} />
           <span style={{ fontSize: 11.5, color: DIM, lineHeight: 1.45, minWidth: 0 }}>
             {data?.hasLiveStockFeed
@@ -695,7 +695,7 @@ export default function CatalogPage() {
               className="pmBtn"
               style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 800, color: DIM, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 6, padding: '3px 9px', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
             >
-              {showVendorSites ? 'Hide vendor sites' : `${vendorLinks.length} vendor sites`}
+              {showVendorSites ? 'Hide Vendor Sites' : `${vendorLinks.length} Vendor Sites`}
             </button>
           )}
         </div>
@@ -776,13 +776,13 @@ export default function CatalogPage() {
                     <React.Fragment key={it.id}>
                       {showCat && it.category && (
                         <tr>
-                          <td colSpan={6} style={{ padding: '10px 12px 5px', fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase' as const, letterSpacing: 1.5, borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
+                          <td colSpan={6} style={{ padding: '10px 12px 5px', fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.45)', borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
                             {titleCase(it.category)}
                           </td>
                         </tr>
                       )}
                       <tr
-                        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: qty > 0 ? 'rgba(245,158,11,0.05)' : 'transparent' }}
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: qty > 0 ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'transparent' }}
                         onMouseEnter={(e) => { if (!qty) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
                         onMouseLeave={(e) => { if (!qty) e.currentTarget.style.background = 'transparent'; }}
                       >
@@ -794,23 +794,23 @@ export default function CatalogPage() {
                               className="pmBtn catAdd"
                               style={{
                                 display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 13px',
-                                background: it.prices.length ? `linear-gradient(180deg,#FBBF24,${GOLD} 60%,#D97706)` : 'rgba(255,255,255,0.06)',
-                                border: 'none', borderRadius: 8, color: it.prices.length ? '#1A1206' : 'rgba(255,255,255,0.3)',
+                                background: it.prices.length ? `linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))` : 'rgba(255,255,255,0.06)',
+                                border: 'none', borderRadius: 8, color: it.prices.length ? '#0A0A00' : 'rgba(255,255,255,0.3)',
                                 fontSize: 11.5, fontWeight: 900, cursor: it.prices.length ? 'pointer' : 'not-allowed',
-                                boxShadow: it.prices.length ? '0 2px 8px rgba(245,158,11,0.22), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
+                                boxShadow: it.prices.length ? '0 2px 8px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
                               }}
                             >
                               <Plus size={12} weight="bold" /> Add
                             </button>
                           ) : (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 0, border: `1px solid rgba(245,158,11,0.35)`, borderRadius: 8, overflow: 'hidden', background: 'linear-gradient(180deg, rgba(245,158,11,0.10), rgba(245,158,11,0.04))', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 0 12px rgba(245,158,11,0.10)' }}>
-                              <button onClick={() => setQty(it.id, qty - 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'rgba(245,158,11,0.12)', border: 'none', boxShadow: 'inset -1px 0 0 rgba(245,158,11,0.25)', color: AMBER, cursor: 'pointer' }}><Minus size={11} weight="bold" /></button>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 0, border: `1px solid var(--brand-primary-35)`, borderRadius: 8, overflow: 'hidden', background: 'var(--brand-primary-08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' }}>
+                              <button onClick={() => setQty(it.id, qty - 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--brand-primary-12)', border: 'none', boxShadow: 'inset -1px 0 0 var(--brand-primary-25)', color: AMBER, cursor: 'pointer' }}><Minus size={11} weight="bold" /></button>
                               <input
                                 value={qty}
                                 onChange={(e) => setQty(it.id, Math.max(0, parseInt(e.target.value) || 0))}
                                 style={{ width: 42, textAlign: 'center', background: 'transparent', border: 'none', color: AMBER, fontWeight: 800, fontSize: 12.5, outline: 'none', fontVariantNumeric: 'tabular-nums' }}
                               />
-                              <button onClick={() => setQty(it.id, qty + 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'rgba(245,158,11,0.12)', border: 'none', boxShadow: 'inset 1px 0 0 rgba(245,158,11,0.25)', color: AMBER, cursor: 'pointer' }}><Plus size={11} weight="bold" /></button>
+                              <button onClick={() => setQty(it.id, qty + 1)} className="pmBtn catStep" style={{ padding: '5px 9px', background: 'var(--brand-primary-12)', border: 'none', boxShadow: 'inset 1px 0 0 var(--brand-primary-25)', color: AMBER, cursor: 'pointer' }}><Plus size={11} weight="bold" /></button>
                             </div>
                           )}
                         </td>
@@ -836,10 +836,10 @@ export default function CatalogPage() {
                                 </button>
                               )}
                               {imgMenu === it.id && (
-                                <div style={{ position: 'absolute', zIndex: 80, top: '100%', left: 0, marginTop: 6, width: 252, padding: 11, borderRadius: 10, background: '#141416', border: '1px solid rgba(245,158,11,0.30)', boxShadow: '0 10px 28px rgba(245,158,11,0.10), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
-                                  <div style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: 0.8, color: AMBER, textTransform: 'uppercase' as const, marginBottom: 7 }}>Real product photo</div>
-                                  <label className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 8, color: AMBER, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
-                                    <UploadSimple size={12} weight="bold" /> Upload image
+                                <div style={{ position: 'absolute', zIndex: 80, top: '100%', left: 0, marginTop: 6, width: 252, padding: 11, borderRadius: 10, background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', boxShadow: '0 10px 28px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+                                  <div style={{ fontSize: 9.5, fontWeight: 900, color: AMBER, marginBottom: 7 }}>Real Product Photo</div>
+                                  <label className="pmBtn" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 11px', background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)', borderRadius: 8, color: AMBER, fontSize: 11, fontWeight: 800, cursor: 'pointer' }}>
+                                    <UploadSimple size={12} weight="bold" /> Upload Image
                                     <input
                                       type="file"
                                       accept="image/png,image/jpeg,image/webp,image/gif"
@@ -877,7 +877,7 @@ export default function CatalogPage() {
                           {best ? (
                             <span className="catProv" tabIndex={0}>
                               <ProvPop offer={best} item={it} />
-                              <div style={{ fontWeight: 800, color: '#FBBF24', fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
+                              <div style={{ fontWeight: 800, color: AMBER, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
                                 {fmtMoney(best.price)}<RefChip />
                               </div>
                               <div style={{ fontSize: 10.5, color: DIM, marginTop: 1 }}>{best.vendor}</div>
@@ -962,10 +962,10 @@ export default function CatalogPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="pmBtn"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: AMBER, textDecoration: 'none', border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.10)', borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 9.5, fontWeight: 800, color: AMBER, textDecoration: 'none', border: '1px solid var(--brand-primary-35)', background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', borderRadius: 6, padding: '3px 7px', whiteSpace: 'nowrap' as const }}
                                 title={`Search today's price and availability for this SKU at ${best.vendor}`}
                               >
-                                <MagnifyingGlassPlus size={10} weight="bold" /> Check availability
+                                <MagnifyingGlassPlus size={10} weight="bold" /> Check Availability
                               </a>
                               {vendorSiteHref(best.vendorWebsite) && (
                                 <a
@@ -998,8 +998,8 @@ export default function CatalogPage() {
         <div style={{
           position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 5000,
           background: 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0) 46%), rgba(12,12,13,0.97)',
-          borderTop: `1px solid rgba(245,158,11,0.4)`,
-          boxShadow: '0 -8px 32px rgba(245,158,11,0.12), inset 0 1px 0 rgba(255,255,255,0.06)',
+          borderTop: `1px solid var(--brand-primary-35)`,
+          boxShadow: '0 -8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
           padding: '14px 24px',
           display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
           animation: 'pmRise .2s cubic-bezier(.2,.7,.3,1)',
@@ -1036,7 +1036,7 @@ export default function CatalogPage() {
           onClick={() => setLightbox(null)}
           style={{ position: 'fixed', inset: 0, zIndex: 6000, background: 'rgba(2,4,8,0.72)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 28, cursor: 'zoom-out' }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 'min(760px, 92vw)', background: '#141416', border: '1px solid rgba(245,158,11,0.30)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 24px 64px rgba(245,158,11,0.10), inset 0 1px 0 rgba(255,255,255,0.06)', cursor: 'default' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 'min(760px, 92vw)', background: 'var(--bg-surface)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', cursor: 'default' }}>
             <img src={lightbox.imageUrl} alt={lightbox.name} style={{ display: 'block', maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain', margin: '0 auto', background: DARK }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 14px', borderTop: `1px solid ${BORDER}` }}>
               <div style={{ minWidth: 0 }}>

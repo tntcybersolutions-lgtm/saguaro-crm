@@ -8,16 +8,18 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
 /* ── Color Palette ── */
-const GOLD = '#F59E0B';
-const BG = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const BG = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
+/* Text on a brand-yellow fill. */
+const ON_GOLD = '#0A0A00';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const GREEN = '#22C55E';
 const RED = '#EF4444';
-const AMBER = '#F59E0B';
-const BLUE = '#F59E0B';
+const AMBER = 'var(--warning)';
+const BLUE = 'var(--brand-primary)';
 const PURPLE = '#8B5CF6';
 
 /* ── Constants ── */
@@ -184,7 +186,7 @@ function FieldPreview({ field }: { field: CustomField }) {
           </span>
           <input
             style={inp}
-            placeholder={field.field_type === 'url' ? 'https://example.com' : 'Enter text...'}
+            placeholder={field.field_type === 'url' ? 'https://example.com' : 'Enter text…'}
             defaultValue={field.default_value || ''}
             readOnly
           />
@@ -206,7 +208,7 @@ function FieldPreview({ field }: { field: CustomField }) {
             type="number"
             placeholder={
               field.validation?.min != null && field.validation?.max != null
-                ? `${field.validation.min} - ${field.validation.max}`
+                ? `${field.validation.min}–${field.validation.max}`
                 : '0'
             }
             defaultValue={field.default_value || ''}
@@ -214,7 +216,7 @@ function FieldPreview({ field }: { field: CustomField }) {
           />
           {(field.validation?.min != null || field.validation?.max != null) && (
             <div style={{ color: PURPLE, fontSize: 10, marginTop: 4 }}>
-              Range: {field.validation?.min ?? 'any'} - {field.validation?.max ?? 'any'}
+              Range: {field.validation?.min ?? 'any'}–{field.validation?.max ?? 'any'}
             </div>
           )}
         </div>
@@ -252,7 +254,7 @@ function FieldPreview({ field }: { field: CustomField }) {
             Preview: {fieldLabel}{requiredMark}
           </span>
           <select style={{ ...inp, appearance: 'auto' }} disabled>
-            <option>-- Select --</option>
+            <option>Select…</option>
             {(field.options || []).map((o, i) => (
               <option key={i}>{o}</option>
             ))}
@@ -346,9 +348,9 @@ function OptionsEditor({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && addOption()}
-          placeholder="Type an option and press Enter..."
+          placeholder="Type an option and press Enter…"
         />
-        <button style={btn(GOLD, BG)} onClick={addOption}>
+        <button style={btn(GOLD, ON_GOLD)} onClick={addOption}>
           Add
         </button>
       </div>
@@ -385,7 +387,7 @@ function OptionsEditor({
             style={{ ...btn('transparent', RED), padding: '2px 6px', fontSize: 11 }}
             onClick={() => removeOption(i)}
           >
-            X
+            ×
           </button>
         </div>
       ))}
@@ -639,8 +641,6 @@ function ModuleSummaryModal({
             fontSize: 11,
             fontWeight: 700,
             color: DIM,
-            textTransform: 'uppercase',
-            letterSpacing: '.5px',
             borderBottom: `1px solid ${BORDER}`,
           }}
         >
@@ -669,7 +669,7 @@ function ModuleSummaryModal({
         ))}
         {summaries.length === 0 && (
           <div style={{ textAlign: 'center', padding: 30, color: DIM, fontSize: 13 }}>
-            No summary data available
+            No summary data available.
           </div>
         )}
         <div
@@ -793,21 +793,21 @@ export default function CustomFieldsPage() {
   /* ── Save field (create or update) ── */
   const saveField = async () => {
     if (!formData.field_name.trim() || !formData.field_label.trim()) {
-      flash('Field name and label are required', 'err');
+      flash('Field name and label are required.', 'err');
       return;
     }
     if (
       (formData.field_type === 'select' || formData.field_type === 'multiselect') &&
       (!formData.options || formData.options.length === 0)
     ) {
-      flash('Select fields require at least one option', 'err');
+      flash('Select fields require at least one option.', 'err');
       return;
     }
     if (formData.field_type === 'text' && formValidation.regex) {
       try {
         new RegExp(formValidation.regex);
       } catch {
-        flash('Invalid regex pattern in validation rules', 'err');
+        flash('Invalid regex pattern in validation rules.', 'err');
         return;
       }
     }
@@ -817,7 +817,7 @@ export default function CustomFieldsPage() {
       formValidation.max != null &&
       formValidation.min > formValidation.max
     ) {
-      flash('Minimum value cannot be greater than maximum value', 'err');
+      flash('Minimum value cannot be greater than maximum value.', 'err');
       return;
     }
 
@@ -841,11 +841,11 @@ export default function CustomFieldsPage() {
         body: JSON.stringify(editingId ? { ...payload, id: editingId } : payload),
       });
       if (!r.ok) throw new Error('Save failed');
-      flash(editingId ? 'Field updated successfully' : 'Field created successfully');
+      flash(editingId ? 'Field updated.' : 'Field created.');
       resetForm();
       await loadFields();
     } catch {
-      flash('Failed to save field', 'err');
+      flash('Failed to save field.', 'err');
     } finally {
       setSaving(false);
     }
@@ -860,11 +860,11 @@ export default function CustomFieldsPage() {
         body: JSON.stringify({ id: f.id, _delete: true }),
       });
       if (!r.ok) throw new Error('Delete failed');
-      flash('Field deleted');
+      flash('Field deleted.');
       setDeleteTarget(null);
       await loadFields();
     } catch {
-      flash('Failed to delete field', 'err');
+      flash('Failed to delete field.', 'err');
     }
   };
 
@@ -878,7 +878,7 @@ export default function CustomFieldsPage() {
       });
       await loadFields();
     } catch {
-      flash('Failed to toggle status', 'err');
+      flash('Failed to toggle status.', 'err');
     }
   };
 
@@ -901,7 +901,7 @@ export default function CustomFieldsPage() {
         }),
       });
     } catch {
-      flash('Failed to save new order', 'err');
+      flash('Failed to save new order.', 'err');
       await loadFields();
     }
   };
@@ -958,7 +958,7 @@ export default function CustomFieldsPage() {
     a.download = `custom-fields-${activeModule.toLowerCase().replace(/\s+/g, '-')}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    flash(`Exported ${fields.length} fields as JSON`);
+    flash(`Exported ${fields.length} fields as JSON.`);
   };
 
   const importFields = () => {
@@ -987,10 +987,10 @@ export default function CustomFieldsPage() {
           });
           count++;
         }
-        flash(`Imported ${count} field${count !== 1 ? 's' : ''} successfully`);
+        flash(`Imported ${count} field${count !== 1 ? 's' : ''}.`);
         await loadFields();
       } catch {
-        flash('Failed to import — invalid or malformed JSON file', 'err');
+        flash('Failed to import — invalid or malformed JSON file.', 'err');
       }
     };
     el.click();
@@ -1064,7 +1064,7 @@ export default function CustomFieldsPage() {
             onClick={() => loadSummaries()}
             disabled={loadingSummary}
           >
-            {loadingSummary ? 'Loading...' : 'Module Summary'}
+            {loadingSummary ? 'Loading…' : 'Module Summary'}
           </button>
           <button style={ghostButtonStyle} className="pmBtn" onClick={importFields}>
             Import JSON
@@ -1099,9 +1099,9 @@ export default function CustomFieldsPage() {
                   setShowPreview(null);
                 }}
                 style={{
-                  background: isActive ? 'rgba(245,158,11,0.12)' : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+                  background: isActive ? 'var(--brand-primary-12)' : 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
                   color: isActive ? GOLD : DIM,
-                  border: `1px solid ${isActive ? 'rgba(245,158,11,0.45)' : BORDER}`,
+                  border: `1px solid ${isActive ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : BORDER}`,
                   borderRadius: 999,
                   padding: '7px 16px',
                   fontSize: 12.5,
@@ -1153,7 +1153,7 @@ export default function CustomFieldsPage() {
             icon={<Clipboard size={19} weight="duotone" color={GOLD} />}
             label={`${activeModule} Fields`}
             value={stats.total}
-            sub={stats.total > 0 ? 'defined on this module' : 'none defined yet'}
+            sub={stats.total > 0 ? 'Defined on this module' : 'None defined yet'}
             delay={0.02}
            href="/app/custom-fields"/>
           <StatCard
@@ -1161,7 +1161,7 @@ export default function CustomFieldsPage() {
             label="Active"
             value={stats.active}
             accent={stats.active > 0 ? GREEN : undefined}
-            sub={stats.active > 0 ? `showing on every ${activeModule} record` : 'toggle a field on to show it'}
+            sub={stats.active > 0 ? `Showing on every ${activeModule} record` : 'Toggle a field on to show it'}
             delay={0.06}
            href="/app/custom-fields"/>
           <StatCard
@@ -1169,14 +1169,14 @@ export default function CustomFieldsPage() {
             label="Required"
             value={stats.required}
             accent={stats.required > 0 ? AMBER : undefined}
-            sub="block save until filled in"
+            sub="Blocks save until filled in"
             delay={0.10}
            href="/app/custom-fields"/>
           <StatCard
             icon={<Stack size={19} weight="duotone" color={PURPLE} />}
             label="Field Types"
             value={Object.keys(stats.byType).length}
-            sub={`of ${FIELD_TYPES.length} available types in use`}
+            sub={`Of ${FIELD_TYPES.length} available types in use`}
             delay={0.14}
            href="/app/custom-fields"/>
         </div>
@@ -1185,7 +1185,7 @@ export default function CustomFieldsPage() {
         <div style={{ marginBottom: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
           <input
             style={{ ...inputStyle(), maxWidth: 360 }}
-            placeholder="Search fields by name, label, or type..."
+            placeholder="Search fields by name, label, or type…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -1350,7 +1350,7 @@ export default function CustomFieldsPage() {
                 />
               </div>
               <span style={{ color: TEXT, fontSize: 13 }}>
-                Required field
+                Required Field
               </span>
             </div>
 
@@ -1395,7 +1395,7 @@ export default function CustomFieldsPage() {
                 />
               </div>
               <span style={{ color: TEXT, fontSize: 13 }}>
-                Active (visible to users)
+                Active (Visible to Users)
               </span>
             </div>
 
@@ -1439,14 +1439,14 @@ export default function CustomFieldsPage() {
             <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
               <button
                 style={{
-                  ...btn(GOLD, BG),
+                  ...btn(GOLD, ON_GOLD),
                   opacity: saving ? 0.6 : 1,
                 }}
                 onClick={saveField}
                 disabled={saving}
               >
                 {saving
-                  ? 'Saving...'
+                  ? 'Saving…'
                   : editingId
                   ? 'Update Field'
                   : 'Create Field'}
@@ -1472,7 +1472,7 @@ export default function CustomFieldsPage() {
                 animation: 'spin 1s linear infinite',
               }}
             />
-            <div style={{ fontSize: 14 }}>Loading custom fields...</div>
+            <div style={{ fontSize: 14 }}>Loading custom fields…</div>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         ) : filteredFields.length === 0 ? (
@@ -1511,8 +1511,6 @@ export default function CustomFieldsPage() {
                 fontSize: 11,
                 fontWeight: 700,
                 color: DIM,
-                textTransform: 'uppercase',
-                letterSpacing: '.5px',
               }}
             >
               <span>#</span>
@@ -1877,7 +1875,7 @@ export default function CustomFieldsPage() {
               Export
             </button>
             <button
-              style={btn(GOLD, BG)}
+              style={btn(GOLD, ON_GOLD)}
               onClick={() => {
                 resetForm();
                 setShowForm(true);

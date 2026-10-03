@@ -14,10 +14,10 @@ import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
 
 // No 'intelligence' key exists in lib/module-identity — this surface stays on
 // the gold ground (money + flagship voice) rather than inventing a module hue.
-const GOLD = '#F59E0B', DIM = '#CBD5E1', TEXT = '#FFFFFF';
+const GOLD = 'var(--brand-primary)', DIM = '#CBD5E1', TEXT = '#FFFFFF';
 // Desert-dusk semantic palette — harmonized with the dashboard (muted emerald,
 // terracotta, warm amber) so severity accents sit on the aurora bg.
-const GREEN = '#45B37D', RED = '#E0644E', AMBER = '#F0A63C';
+const GREEN = '#45B37D', RED = '#E0644E', AMBER = 'var(--warning)';
 // Nested surfaces layered on the PremiumSurface aurora (white-alpha glass —
 // dark-shell surfaces never take black alphas).
 const NEST = 'rgba(20,20,22,0.55)', NEST_BORDER = 'rgba(255,255,255,0.08)';
@@ -56,11 +56,11 @@ function daysAgo(iso?: string | null): number | null {
 // Healthy (both green), >=50 Watch (amber), <50 At Risk (red). No score ⇒ no
 // verdict — the ring stays empty rather than pretending.
 function healthGrade(score: number | null): { color: string; verdict: string } {
-  if (score == null) return { color: 'rgba(255,255,255,0.35)', verdict: 'No score' };
+  if (score == null) return { color: 'rgba(255,255,255,0.35)', verdict: 'No Score' };
   if (score >= 85) return { color: GREEN, verdict: 'Excellent' };
   if (score >= 70) return { color: GREEN, verdict: 'Healthy' };
   if (score >= 50) return { color: AMBER, verdict: 'Watch' };
-  return { color: RED, verdict: 'At risk' };
+  return { color: RED, verdict: 'At Risk' };
 }
 
 // healthComponents arrives in whatever shape the server settles on — tolerate
@@ -183,7 +183,7 @@ function HealthRing({ score, components }: { score: number | null; components: s
           {score != null && (
             <circle
               cx="32" cy="32" r={R} fill="none"
-              stroke={g.color} strokeWidth="6"
+              style={{ stroke: g.color }} strokeWidth="6"
               strokeDasharray={`${frac * C} ${C}`}
               strokeLinecap="round"
               transform="rotate(-90 32 32)"
@@ -197,7 +197,7 @@ function HealthRing({ score, components }: { score: number | null; components: s
           {score == null ? '—' : Math.round(score)}
         </div>
       </div>
-      <div style={{ fontSize: 10, fontWeight: 800, color: g.color, textTransform: 'uppercase' as const, letterSpacing: '0.06em', marginTop: 4 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, color: g.color, marginTop: 4 }}>
         {g.verdict}
       </div>
     </div>
@@ -213,18 +213,18 @@ function BurnBar({ actual, expected, delta }: { actual: number | null; expected:
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-        <span style={{ fontSize: 10, color: DIM, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em' }}>
+        <span style={{ fontSize: 10, color: DIM, fontWeight: 700 }}>
           {/* This plots actualBurnPct, which is invoicedCosts / contract — what
               has been SPENT, not what has been billed to the owner. Calling it
               billing burn put a cost ratio under a revenue heading. */}
-          Cost burn vs schedule
+          Cost Burn vs Schedule
         </span>
         {delta != null ? (
           <span style={{ fontSize: 11, fontWeight: 800, color: ahead ? GREEN : RED, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' as const }}>
             {ahead ? '+' : '-'}{Math.abs(delta).toFixed(1)} pts {ahead ? 'ahead' : 'behind'}
           </span>
         ) : (
-          <span style={{ fontSize: 11, color: DIM, whiteSpace: 'nowrap' as const }}>no schedule dates</span>
+          <span style={{ fontSize: 11, color: DIM, whiteSpace: 'nowrap' as const }}>No schedule dates</span>
         )}
       </div>
       <div style={{ position: 'relative' as const, height: 12 }}>
@@ -232,7 +232,7 @@ function BurnBar({ actual, expected, delta }: { actual: number | null; expected:
           {actual != null && (
             <div style={{
               height: '100%', width: `${aw}%`, borderRadius: 6,
-              background: 'linear-gradient(90deg, rgba(245,158,11,0.5), #F59E0B)',
+              background: 'linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 50%, transparent), var(--brand-primary))',
             }} />
           )}
         </div>
@@ -261,7 +261,7 @@ function moneyVal(v: number | null, suffix?: React.ReactNode): { value: React.Re
 }
 
 const RULE_LABEL: React.CSSProperties = {
-  fontSize: 10, color: DIM, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.09em',
+  fontSize: 10, color: DIM, fontWeight: 800,
   margin: '14px 0 4px', paddingTop: 12, borderTop: `1px solid ${HAIR}`,
 };
 
@@ -284,9 +284,9 @@ function ProjectCard({ r }: { r: Row }) {
           </Link>
           <div style={{ marginTop: 6 }}>
             {r.status ? (
-              <Pill tone={r.status === 'active' ? 'green' : 'neutral'} caps>{r.status}</Pill>
+              <Pill tone={r.status === 'active' ? 'green' : 'neutral'}>{r.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</Pill>
             ) : (
-              <span style={{ fontSize: 11, color: DIM }}>status unknown</span>
+              <span style={{ fontSize: 11, color: DIM }}>Status unknown</span>
             )}
           </div>
         </div>
@@ -298,32 +298,32 @@ function ProjectCard({ r }: { r: Row }) {
       {/* Money — gold, Number()-guarded upstream, em-dash when absent */}
       <div style={RULE_LABEL}>Money</div>
       <InsightRow label="Contract" {...moneyVal(r.contract)} />
-      <InsightRow label="Billed to date" {...moneyVal(r.billed)} />
-      <InsightRow label="Invoiced costs" {...moneyVal(r.invoiced)} />
+      <InsightRow label="Billed to Date" {...moneyVal(r.billed)} />
+      <InsightRow label="Invoiced Costs" {...moneyVal(r.invoiced)} />
       <InsightRow label="Approved COs" value={co.value} accent={co.accent} />
       <InsightRow label="Margin" value={r.margin == null ? '—' : fmtK(r.margin)} accent={marginAccent} strong />
 
       {/* Field signals */}
       <div style={RULE_LABEL}>Field</div>
       {noField ? (
-        <div style={{ fontSize: 11.5, color: DIM, padding: '4px 0' }}>{'—'} no field telemetry yet</div>
+        <div style={{ fontSize: 11.5, color: DIM, padding: '4px 0' }}>{'—'} No field telemetry yet</div>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, paddingTop: 4 }}>
           {r.openRfis != null && (
             <Pill tone={rfiOverdue ? 'red' : r.openRfis > 0 ? 'amber' : 'green'}>
-              {r.openRfis} open RFI{r.openRfis === 1 ? '' : 's'}
-              {r.openRfis > 0 && r.oldestRfiDays != null ? ` · oldest ${r.oldestRfiDays}d` : ''}
+              {r.openRfis} Open RFI{r.openRfis === 1 ? '' : 's'}
+              {r.openRfis > 0 && r.oldestRfiDays != null ? ` · Oldest ${r.oldestRfiDays}d` : ''}
             </Pill>
           )}
           {r.openPunch != null && (
-            <Pill tone={r.openPunch > 0 ? 'amber' : 'green'}>{r.openPunch} punch open</Pill>
+            <Pill tone={r.openPunch > 0 ? 'amber' : 'green'}>{r.openPunch} Punch Open</Pill>
           )}
           {r.logStreak != null && (
-            <Pill tone={r.logStreak >= 3 ? 'green' : 'neutral'}>{r.logStreak}d log streak</Pill>
+            <Pill tone={r.logStreak >= 3 ? 'green' : 'neutral'}>{r.logStreak}d Log Streak</Pill>
           )}
           {r.lastActivityDays != null && (
             <Pill tone="neutral">
-              {r.lastActivityDays === 0 ? 'active today' : `active ${r.lastActivityDays}d ago`}
+              {r.lastActivityDays === 0 ? 'Active Today' : `Active ${r.lastActivityDays}d Ago`}
             </Pill>
           )}
         </div>
@@ -435,11 +435,11 @@ export default function IntelligencePage() {
   const tMargin = sum((r) => r.margin);
   const tRfi = sum((r) => r.openRfis);
   const tPunch = sum((r) => r.openPunch);
-  const coverage = (s: { n: number }) => s.n === rows.length ? `across ${rows.length} project${rows.length === 1 ? '' : 's'}` : `${s.n} of ${rows.length} reporting`;
+  const coverage = (s: { n: number }) => s.n === rows.length ? `Across ${rows.length} project${rows.length === 1 ? '' : 's'}` : `${s.n} of ${rows.length} reporting`;
   const moneyStat = (label: string, s: { total: number; n: number }, sub?: string) =>
     s.n > 0
       ? { label, href: '/app/intelligence', value: fmtK(s.total), sub: sub ?? coverage(s), accent: GOLD }
-      : { label, href: '/app/intelligence', value: '—', sub: 'no data yet' };
+      : { label, href: '/app/intelligence', value: '—', sub: 'No data yet' };
 
   if (loading) {
     return (
@@ -462,7 +462,7 @@ export default function IntelligencePage() {
           <div style={{ position: 'relative' as const, display: 'flex', gap: 10, alignItems: 'center' }}>
             {/* Autopilot's only nav entry (de-featured from the sidebar). */}
             <GhostButton size="md" href="/app/autopilot" title="Overdue RFIs, expiring insurance, stale change orders — flagged across every project">
-              Autopilot alerts
+              Autopilot Alerts
             </GhostButton>
             {ids.length > 0 && (
               <GhostButton size="md" icon={<ArrowsClockwise size={14} weight="bold" />} onClick={() => void mutate()}>
@@ -477,12 +477,12 @@ export default function IntelligencePage() {
             {selectorOpen && (
               <div style={{
                 position: 'absolute' as const, top: '100%', right: 0, marginTop: 8,
-                background: '#141416', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14,
+                background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14,
                 padding: 12, minWidth: 320, maxHeight: 400, overflowY: 'auto' as const,
                 zIndex: 100, boxShadow: '0 24px 60px -20px rgba(4,6,10,0.8)',
               }}>
-                <div style={{ fontSize: 11, color: DIM, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 8 }}>
-                  Select up to 5 projects
+                <div style={{ fontSize: 11, color: DIM, fontWeight: 700, marginBottom: 8 }}>
+                  Select up to 5 Projects
                 </div>
                 {projects.map((p) => (
                   <label
@@ -490,10 +490,10 @@ export default function IntelligencePage() {
                     style={{
                       display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
                       borderRadius: 8, cursor: 'pointer',
-                      background: selectedIds.has(p.id) ? 'rgba(245, 158, 11,0.1)' : 'transparent',
+                      background: selectedIds.has(p.id) ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'transparent',
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'rgba(245, 158, 11,0.15)' : 'rgba(255,255,255,0.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'rgba(245, 158, 11,0.1)' : 'transparent'}
+                    onMouseEnter={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'rgba(255,255,255,0.05)'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'transparent'}
                   >
                     <input
                       type="checkbox"
@@ -577,7 +577,7 @@ export default function IntelligencePage() {
           {/* 1 — INSIGHTS: the honest sentences, severity first */}
           <SectionCard flat
             title="Portfolio Insights"
-            subtitle="What the numbers say across your selected projects"
+            subtitle="What the numbers say across your selected projects."
             icon={<Lightbulb size={17} weight="duotone" color={GOLD} />}
             style={{ marginBottom: 24 }}
           >
@@ -598,7 +598,7 @@ export default function IntelligencePage() {
                     }}>
                       <div aria-hidden style={{ position: 'absolute' as const, left: 0, top: 0, bottom: 0, width: 3, background: rail }} />
                       {pname && (
-                        <div style={{ fontSize: 10, fontWeight: 800, color: DIM, textTransform: 'uppercase' as const, letterSpacing: '0.07em', marginBottom: 4 }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 4 }}>
                           {pname}
                         </div>
                       )}
@@ -613,7 +613,7 @@ export default function IntelligencePage() {
           {/* 2 — Comparison grid: one machined card per project */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <SquaresFour size={15} weight="duotone" color={GOLD} />
-            <span style={{ fontSize: 11, fontWeight: 800, color: DIM, textTransform: 'uppercase' as const, letterSpacing: '0.09em' }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: DIM }}>
               Project Comparison
             </span>
           </div>
@@ -632,13 +632,13 @@ export default function IntelligencePage() {
             moneyStat('Approved COs', tCO, tCOCount.n > 0 ? `${tCOCount.total} approved change order${tCOCount.total === 1 ? '' : 's'}` : undefined),
             tMargin.n > 0
               ? { label: 'Portfolio Margin', value: fmtK(tMargin.total), sub: coverage(tMargin), accent: tMargin.total < 0 ? RED : GOLD }
-              : { label: 'Portfolio Margin', value: '—', sub: 'no data yet' },
+              : { label: 'Portfolio Margin', value: '—', sub: 'No data yet' },
             tRfi.n > 0
-              ? { label: 'Open RFIs', value: String(tRfi.total), sub: tRfi.total > 0 ? 'awaiting answers' : 'all answered', accent: tRfi.total > 10 ? RED : tRfi.total > 5 ? AMBER : undefined }
-              : { label: 'Open RFIs', value: '—', sub: 'no data yet' },
+              ? { label: 'Open RFIs', value: String(tRfi.total), sub: tRfi.total > 0 ? 'Awaiting answers' : 'All answered', accent: tRfi.total > 10 ? RED : tRfi.total > 5 ? AMBER : undefined }
+              : { label: 'Open RFIs', value: '—', sub: 'No data yet' },
             tPunch.n > 0
               ? { label: 'Open Punch', value: String(tPunch.total), sub: coverage(tPunch), accent: tPunch.total > 0 ? AMBER : undefined }
-              : { label: 'Open Punch', value: '—', sub: 'no data yet' },
+              : { label: 'Open Punch', value: '—', sub: 'No data yet' },
           ]} />
         </>
       )}

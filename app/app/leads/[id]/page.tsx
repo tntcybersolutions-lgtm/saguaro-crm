@@ -34,7 +34,7 @@ const STAGE_TONE: Record<string, BadgeTone> = {
   Negotiation: 'lead', Won: 'under_contract', Lost: 'closed',
 };
 const ACTIVITY_TYPES = ['call', 'email', 'meeting', 'note'] as const;
-const ACTIVITY_LABELS: Record<string, string> = { call: 'Phone call', email: 'Email', meeting: 'Meeting', note: 'Note' };
+const ACTIVITY_LABELS: Record<string, string> = { call: 'Phone Call', email: 'Email', meeting: 'Meeting', note: 'Note' };
 
 type Lead = {
   id: string; company_name: string | null; contact_name: string | null;
@@ -240,16 +240,16 @@ export default function DealPage() {
 
   if (loading || error || !lead) {
     return (
-      <PageShell crumbs={CRUMBS} title={loading ? 'Loading deal…' : 'Deal unavailable'}>
+      <PageShell crumbs={CRUMBS} title={loading ? 'Loading deal…' : 'Deal Unavailable'}>
         <Card>
           {loading ? (
             <div className="k-hint">Loading deal…</div>
           ) : (
             <EmptyState
               icon={<WarningCircle size={22} />}
-              title="Deal unavailable"
+              title="Deal Unavailable"
               text={error || 'This deal could not be found.'}
-              action={<Button href="/app/leads">Back to pipeline</Button>}
+              action={<Button href="/app/leads">Back to Pipeline</Button>}
             />
           )}
         </Card>
@@ -275,7 +275,7 @@ export default function DealPage() {
   return (
     <PageShell
       crumbs={[...CRUMBS, { label: lead.company_name || 'Deal' }]}
-      title={lead.company_name || 'Untitled deal'}
+      title={lead.company_name || 'Untitled Deal'}
       subtitle={`${lead.contact_name || 'No contact'}${lead.project_type ? ` · ${lead.project_type}` : ''}`}
       actions={
         <>
@@ -288,23 +288,23 @@ export default function DealPage() {
             Email the GC
           </Button>
           {isWon && (lead.project_id ? (
-            <Button variant="primary" href={`/app/projects/${lead.project_id}`} icon={<ArrowRight size={15} />}>View the job</Button>
+            <Button variant="primary" href={`/app/projects/${lead.project_id}`} icon={<ArrowRight size={15} />}>View the Job</Button>
           ) : (
-            <Button variant="primary" onClick={convert} disabled={converting} icon={<ArrowRight size={15} />}>{converting ? 'Opening…' : 'Open the job'}</Button>
+            <Button variant="primary" onClick={convert} disabled={converting} icon={<ArrowRight size={15} />}>{converting ? 'Opening…' : 'Open the Job'}</Button>
           ))}
         </>
       }
     >
       <StatRow items={[
-        { label: 'Estimated value', value: fmt(lead.estimated_value) },
+        { label: 'Estimated Value', value: fmt(lead.estimated_value) },
         { label: 'Stage', value: <Badge tone={STAGE_TONE[lead.stage || ''] ?? 'neutral'} dot>{lead.stage || 'Unstaged'}</Badge> },
         { label: 'Probability', value: lead.probability != null ? `${Number(lead.probability)}%` : '—' },
-        { label: 'Next action', value: lead.next_action_date ? fmtDate(lead.next_action_date) : '—', sub: lead.next_action || 'nothing scheduled' },
+        { label: 'Next Action', value: lead.next_action_date ? fmtDate(lead.next_action_date) : '—', sub: lead.next_action || 'Nothing scheduled' },
       ]} />
 
       {/* Stage bar — the Path 12 spine */}
       <Card
-        title="Move this deal"
+        title="Move This Deal"
         subtitle={isWon ? (lead.project_id ? 'Won — this deal is open as a job.' : 'Won — ready to become a project.') : 'One click moves the deal; the board and sales overview update at once.'}
       >
         <div className="k-row-actions" style={{ justifyContent: 'flex-start', flexWrap: 'wrap', gap: 8 }}>
@@ -334,7 +334,7 @@ export default function DealPage() {
             ['Phone', lead.phone],
             ['Source', lead.source],
             ['Location', lead.location],
-            ['Next action', lead.next_action],
+            ['Next Action', lead.next_action],
             ['Created', lead.created_at ? fmtDate(lead.created_at) : null],
           ]} />
           {lead.notes && (
@@ -388,13 +388,13 @@ export default function DealPage() {
       {/* Files & media — upload photos/files/docs/videos; download in place */}
       <Card
         flush
-        title="Files & media"
+        title="Files & Media"
         subtitle="Photos, documents and videos for this deal — uploaded here, downloaded here."
         actions={
           <>
             <input ref={fileRef} type="file" multiple hidden disabled={uploading} onChange={(e) => { void onUpload(e.target.files); e.currentTarget.value = ''; }} />
             <Button size="sm" icon={<UploadSimple size={14} />} onClick={() => fileRef.current?.click()} disabled={uploading}>
-              {uploading ? 'Uploading…' : 'Upload files'}
+              {uploading ? 'Uploading…' : 'Upload Files'}
             </Button>
           </>
         }
@@ -417,7 +417,7 @@ export default function DealPage() {
         subtitle={lead.email ? `${lead.contact_name || 'Contact'} · ${lead.email}` : undefined}
         busy={sending}
         onSubmit={sendToGc}
-        submitLabel={sending ? 'Sending…' : 'Send email'}
+        submitLabel={sending ? 'Sending…' : 'Send Email'}
       >
         <FormGrid cols={1}>
           <Field label="Subject" required>

@@ -31,7 +31,7 @@ const STAGE_TONE: Record<Stage, BadgeTone> = {
 };
 const SOURCES = ['Website', 'Referral', 'Cold Call', 'Social Media', 'Trade Show', 'Advertisement', 'Repeat Client', 'Other'] as const;
 const ACTIVITY_TYPES = ['call', 'email', 'meeting', 'note'] as const;
-const ACTIVITY_LABELS: Record<string, string> = { call: 'Phone call', email: 'Email', meeting: 'Meeting', note: 'Note' };
+const ACTIVITY_LABELS: Record<string, string> = { call: 'Phone Call', email: 'Email', meeting: 'Meeting', note: 'Note' };
 
 /* ─── Types ─── */
 type Lead = {
@@ -365,7 +365,7 @@ export default function LeadsPage() {
       if (!r.ok) throw new Error(d?.error || `Request failed (${r.status})`);
       setEmailForm({ subject: '', message: '' });
       fetchActivities(detailLead.id);
-      showToast(`Sent to ${detailLead.contact_email || 'the lead'}`, 'success');
+      showToast(`Sent to ${detailLead.contact_email || 'the lead'}.`, 'success');
     } catch (e) {
       showToast(humanError(e, "Couldn't send that email."), 'error');
     } finally {
@@ -439,8 +439,8 @@ export default function LeadsPage() {
 
   /* ─── The lead's verbs — one set, used by the board menu, list rows and the detail modal ─── */
   const leadActions = (lead: Lead, opts: { inlineOpen?: boolean } = {}): Action[] => [
-    { label: 'Open deal page', icon: <ArrowRight size={14} />, href: `/app/leads/${lead.id}`, inline: opts.inlineOpen },
-    { label: 'Quick look', icon: <Eye size={14} />, onClick: () => openDetail(lead) },
+    { label: 'Open Deal Page', icon: <ArrowRight size={14} />, href: `/app/leads/${lead.id}`, inline: opts.inlineOpen },
+    { label: 'Quick Look', icon: <Eye size={14} />, onClick: () => openDetail(lead) },
     { label: 'Edit', icon: <PencilSimple size={14} />, onClick: () => openEditor(lead) },
     ...STAGES.filter(s => s !== lead.stage).map((s): Action => ({ label: `Move to ${s}`, onClick: () => moveToStage(lead, s) })),
     { label: 'Delete', icon: <Trash size={14} />, tone: 'danger', onClick: () => setConfirmDelete(lead) },
@@ -456,7 +456,7 @@ export default function LeadsPage() {
     { key: 'source', header: 'Source' },
     { key: 'owner', header: 'Owner', accessor: (l) => ownerName(l.assigned_to) },
     {
-      key: 'next_action_date', header: 'Follow-up', accessor: (l) => l.next_action_date || null,
+      key: 'next_action_date', header: 'Follow-Up', accessor: (l) => l.next_action_date || null,
       render: (l) => l.next_action_date
         ? <span style={{ color: isOverdue(l) ? '#F87171' : undefined, fontWeight: isOverdue(l) ? 700 : undefined }}>{fmtDate(l.next_action_date)}</span>
         : '—',
@@ -464,18 +464,18 @@ export default function LeadsPage() {
     { key: 'created_at', header: 'Created', render: (l) => fmtDate(l.created_at) },
   ];
   const ownerColumns: Column<RepRow>[] = [
-    { key: 'name', header: 'Owner', primary: true, render: (r) => <span style={{ color: r.id === 'unassigned' ? '#FBBF24' : undefined }}>{r.name}</span> },
+    { key: 'name', header: 'Owner', primary: true, render: (r) => <span style={{ color: r.id === 'unassigned' ? 'var(--warning)' : undefined }}>{r.name}</span> },
     { key: 'open', header: 'Open', align: 'right' },
     { key: 'openVal', header: 'Pipeline', align: 'right', render: (r) => fmt(r.openVal) },
     { key: 'won', header: 'Won', align: 'right' },
-    { key: 'wonVal', header: 'Won value', align: 'right', render: (r) => <span style={{ color: r.wonVal > 0 ? '#34D399' : undefined }}>{fmt(r.wonVal)}</span> },
+    { key: 'wonVal', header: 'Won Value', align: 'right', render: (r) => <span style={{ color: r.wonVal > 0 ? '#34D399' : undefined }}>{fmt(r.wonVal)}</span> },
     {
-      key: 'rate', header: 'Win rate', align: 'right', accessor: (r) => (r.won + r.lost > 0 ? Math.round((r.won / (r.won + r.lost)) * 100) : null),
+      key: 'rate', header: 'Win Rate', align: 'right', accessor: (r) => (r.won + r.lost > 0 ? Math.round((r.won / (r.won + r.lost)) * 100) : null),
       render: (r) => {
         const closed = r.won + r.lost;
         if (!closed) return '—';
         const rate = Math.round((r.won / closed) * 100);
-        return <span style={{ fontWeight: 700, color: rate >= 50 ? '#34D399' : '#FBBF24' }}>{rate}%</span>;
+        return <span style={{ fontWeight: 700, color: rate >= 50 ? '#34D399' : 'var(--warning)' }}>{rate}%</span>;
       },
     },
   ];
@@ -483,39 +483,39 @@ export default function LeadsPage() {
     { key: 'stage', header: 'Stage', render: (r) => <Badge tone={STAGE_TONE[r.stage]} dot>{r.stage}</Badge> },
     { key: 'count', header: 'Count', align: 'right' },
     { key: 'value', header: 'Value', align: 'right', render: (r) => fmt(r.value) },
-    { key: 'pct', header: '% of pipeline', align: 'right', render: (r) => `${r.pct}%` },
+    { key: 'pct', header: '% of Pipeline', align: 'right', render: (r) => `${r.pct}%` },
   ];
 
   const emptyAll = (
     <EmptyState
       title="No leads yet"
       text="Track every prospect from first contact to signed contract. Each new lead gets a follow-up 3 days out, and win/loss outcomes feed your bid intelligence."
-      action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>Add your first lead</Button>}
+      action={<Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>Add Your First Lead</Button>}
     />
   );
   const emptyFiltered = (
-    <EmptyState title="No leads match your filters" text="Try a different search or clear the filters." action={<Button onClick={clearFilters}>Clear filters</Button>} />
+    <EmptyState title="No leads match your filters" text="Try a different search or clear the filters." action={<Button onClick={clearFilters}>Clear Filters</Button>} />
   );
 
   /* ═══════════════════════════════ RENDER ═══════════════════════════════ */
   return (
     <PageShell
-      title="Lead pipeline"
+      title="Lead Pipeline"
       subtitle={loading ? 'Loading leads…' : `${filtered.length} lead${filtered.length !== 1 ? 's' : ''} · ${fmt(metrics.totalVal)} in the pipeline`}
       actions={
         <>
           <Button icon={<DownloadSimple size={15} />} onClick={exportCSV} disabled={filtered.length === 0}>Export CSV</Button>
-          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>New lead</Button>
+          <Button variant="primary" icon={<Plus size={15} weight="bold" />} onClick={() => openEditor(emptyLead())}>New Lead</Button>
         </>
       }
     >
       {!loading && !error && leads.length > 0 && (
         <StatRow items={[
-          { label: 'Total pipeline', value: fmt(metrics.totalVal), sub: `${metrics.total} leads` },
-          { label: 'Active pipeline', value: fmt(metrics.activeVal), sub: 'open stages only' },
-          { label: 'Won revenue', value: fmt(metrics.wonVal), sub: `${metrics.byStage['Won']?.count || 0} deals closed`, tone: metrics.wonVal > 0 ? 'good' : 'default' },
-          { label: 'Win rate', value: `${metrics.winRate}%`, sub: 'of decided deals', tone: metrics.winRate >= 50 ? 'good' : metrics.winRate >= 25 ? 'warn' : 'bad' },
-          { label: 'Avg deal size', value: fmt(metrics.avgDeal), sub: 'won deals' },
+          { label: 'Total Pipeline', value: fmt(metrics.totalVal), sub: `${metrics.total} leads` },
+          { label: 'Active Pipeline', value: fmt(metrics.activeVal), sub: 'Open stages only' },
+          { label: 'Won Revenue', value: fmt(metrics.wonVal), sub: `${metrics.byStage['Won']?.count || 0} deals closed`, tone: metrics.wonVal > 0 ? 'good' : 'default' },
+          { label: 'Win Rate', value: `${metrics.winRate}%`, sub: 'Of decided deals', tone: metrics.winRate >= 50 ? 'good' : metrics.winRate >= 25 ? 'warn' : 'bad' },
+          { label: 'Avg Deal Size', value: fmt(metrics.avgDeal), sub: 'Won deals' },
         ]} />
       )}
 
@@ -528,7 +528,7 @@ export default function LeadsPage() {
               { key: 'kanban', label: 'Board' },
               { key: 'list', label: 'List', count: loading ? undefined : filtered.length },
               { key: 'funnel', label: 'Funnel' },
-              { key: 'owners', label: 'By owner', count: loading ? undefined : byRep.length },
+              { key: 'owners', label: 'By Owner', count: loading ? undefined : byRep.length },
             ]}
           />
         </div>
@@ -558,7 +558,7 @@ export default function LeadsPage() {
               actions={
                 <>
                   <span className="k-hint">{filtered.length} of {leads.length}</span>
-                  {filtersOn && <Button size="sm" variant="ghost" onClick={clearFilters}>Clear filters</Button>}
+                  {filtersOn && <Button size="sm" variant="ghost" onClick={clearFilters}>Clear Filters</Button>}
                 </>
               }
             />
@@ -608,7 +608,7 @@ export default function LeadsPage() {
                       </div>
                       {rate != null && (
                         <div className="k-hint" style={{ marginLeft: 108, padding: '2px 0' }}>
-                          <span style={{ fontWeight: 700, color: rate >= 50 ? '#34D399' : rate >= 25 ? '#FBBF24' : '#F87171' }}>{rate}%</span> ↓ convert to {conversionRates[idx].to}
+                          <span style={{ fontWeight: 700, color: rate >= 50 ? '#34D399' : rate >= 25 ? 'var(--warning)' : '#F87171' }}>{rate}%</span> ↓ convert to {conversionRates[idx].to}
                         </div>
                       )}
                     </div>
@@ -616,11 +616,11 @@ export default function LeadsPage() {
                 })}
               </div>
               <StatRow items={[
-                { label: 'Overall win rate', value: `${metrics.winRate}%`, tone: metrics.winRate >= 50 ? 'good' : metrics.winRate >= 25 ? 'warn' : 'bad' },
-                { label: 'Avg deal size (won)', value: fmt(metrics.avgDeal) },
-                { label: 'Active leads', value: leads.filter(l => l.stage !== 'Won' && l.stage !== 'Lost').length },
+                { label: 'Overall Win Rate', value: `${metrics.winRate}%`, tone: metrics.winRate >= 50 ? 'good' : metrics.winRate >= 25 ? 'warn' : 'bad' },
+                { label: 'Avg Deal Size (Won)', value: fmt(metrics.avgDeal) },
+                { label: 'Active Leads', value: leads.filter(l => l.stage !== 'Won' && l.stage !== 'Lost').length },
               ]} />
-              <Card flush title="Stage breakdown">
+              <Card flush title="Stage Breakdown">
                 <DataTable
                   columns={stageColumns}
                   rows={STAGES.map(s => ({ stage: s, count: metrics.byStage[s]?.count || 0, value: metrics.byStage[s]?.value || 0, pct: metrics.total ? Math.round(((metrics.byStage[s]?.count || 0) / metrics.total) * 100) : 0 }))}
@@ -668,7 +668,7 @@ export default function LeadsPage() {
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.project_type || ''}</span>
                             {lead.next_action_date && (
                               <span style={{ color: isOverdue(lead) ? '#F87171' : undefined, fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                Follow-up {fmtDate(lead.next_action_date)}
+                                Follow-Up {fmtDate(lead.next_action_date)}
                               </span>
                             )}
                           </div>
@@ -693,7 +693,7 @@ export default function LeadsPage() {
       <FormModal
         open={showModal && !!editLead}
         onClose={closeEditor}
-        title={editLead?.id ? 'Edit lead' : 'New lead'}
+        title={editLead?.id ? 'Edit Lead' : 'New Lead'}
         busy={saving}
         footer={
           <>
@@ -705,24 +705,24 @@ export default function LeadsPage() {
             )}
             <Button variant="ghost" onClick={closeEditor} disabled={saving}>Cancel</Button>
             <Button variant="primary" onClick={handleSave} disabled={saving || !editLead?.company_name?.trim()}>
-              {saving ? 'Saving…' : editLead?.id ? 'Update lead' : 'Create lead'}
+              {saving ? 'Saving…' : editLead?.id ? 'Update Lead' : 'Create Lead'}
             </Button>
           </>
         }
       >
         {editLead && (
           <FormGrid cols={2}>
-            <FormSection>Company & contact</FormSection>
-            <Field label="Company name" required>
+            <FormSection>Company & Contact</FormSection>
+            <Field label="Company Name" required>
               <Input value={editLead.company_name || ''} onChange={e => setEditLead({ ...editLead, company_name: e.target.value })} placeholder="Acme Corp" autoFocus />
             </Field>
-            <Field label="Contact name">
+            <Field label="Contact Name">
               <Input value={editLead.contact_name || ''} onChange={e => setEditLead({ ...editLead, contact_name: e.target.value })} placeholder="John Smith" />
             </Field>
-            <Field label="Contact email">
+            <Field label="Contact Email">
               <Input type="email" value={editLead.contact_email || ''} onChange={e => setEditLead({ ...editLead, contact_email: e.target.value })} placeholder="john@acme.com" />
             </Field>
-            <Field label="Contact phone">
+            <Field label="Contact Phone">
               <Input type="tel" value={editLead.contact_phone || ''} onChange={e => setEditLead({ ...editLead, contact_phone: e.target.value })} placeholder="(555) 123-4567" />
             </Field>
 
@@ -730,17 +730,17 @@ export default function LeadsPage() {
             <Field label="Stage">
               <Select options={[...STAGES]} value={editLead.stage || 'New'} onChange={e => setEditLead({ ...editLead, stage: e.target.value as Stage })} />
             </Field>
-            <Field label="Estimated value ($)">
+            <Field label="Estimated Value ($)">
               <Input type="number" inputMode="decimal" value={editLead.estimated_value || ''} onChange={e => setEditLead({ ...editLead, estimated_value: Number(e.target.value) })} placeholder="50000" />
             </Field>
             <Field label="Source">
               <Select options={[...SOURCES]} value={editLead.source || 'Website'} onChange={e => setEditLead({ ...editLead, source: e.target.value })} />
             </Field>
-            <Field label="Project type">
+            <Field label="Project Type">
               <Select options={[...BUILDING_TYPES]} placeholder="Select building type…" value={editLead.project_type || ''} onChange={e => setEditLead({ ...editLead, project_type: e.target.value })} />
             </Field>
             <Field
-              label="Follow-up date"
+              label="Follow-Up Date"
               hint={editLead.id ? 'Next scheduled touch for this lead.' : 'Suggested 3 days out — first touch while the lead is warm. The card turns red if it slips.'}
             >
               <DateInput value={editLead.next_action_date || ''} onChange={e => setEditLead({ ...editLead, next_action_date: e.target.value })} />
@@ -783,8 +783,8 @@ export default function LeadsPage() {
         footer={detailLead && (
           <>
             <Button variant="danger" icon={<Trash size={15} />} style={{ marginRight: 'auto' }} onClick={() => setConfirmDelete(detailLead)}>Delete</Button>
-            <Button icon={<PencilSimple size={15} />} onClick={() => openEditor(detailLead)}>Edit lead</Button>
-            <Button variant="primary" icon={<ArrowRight size={15} />} onClick={() => router.push(`/app/leads/${detailLead.id}`)}>Open deal page</Button>
+            <Button icon={<PencilSimple size={15} />} onClick={() => openEditor(detailLead)}>Edit Lead</Button>
+            <Button variant="primary" icon={<ArrowRight size={15} />} onClick={() => router.push(`/app/leads/${detailLead.id}`)}>Open Deal Page</Button>
           </>
         )}
       >
@@ -793,7 +793,7 @@ export default function LeadsPage() {
             <StatRow items={[
               { label: 'Value', value: fmt(detailLead.estimated_value) },
               { label: 'Stage', value: <Badge tone={STAGE_TONE[detailLead.stage] ?? 'neutral'} dot>{detailLead.stage}</Badge> },
-              { label: 'Follow-up', value: detailLead.next_action_date ? fmtDate(detailLead.next_action_date) : '—', tone: isOverdue(detailLead) ? 'bad' : 'default' },
+              { label: 'Follow-Up', value: detailLead.next_action_date ? fmtDate(detailLead.next_action_date) : '—', tone: isOverdue(detailLead) ? 'bad' : 'default' },
             ]} />
 
             <div style={{ display: 'grid', gap: 16, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))' }}>
@@ -802,7 +802,7 @@ export default function LeadsPage() {
                   ['Source', detailLead.source],
                   ['Phone', detailLead.contact_phone],
                   ['Owner', ownerName(detailLead.assigned_to)],
-                  ['Project type', detailLead.project_type],
+                  ['Project Type', detailLead.project_type],
                 ]} />
                 {(detailLead.tags || []).length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 10 }}>
@@ -812,7 +812,7 @@ export default function LeadsPage() {
                 {detailLead.notes && <p className="k-hint" style={{ marginTop: 10, whiteSpace: 'pre-wrap', fontSize: 'var(--fs-sm)' }}>{detailLead.notes}</p>}
               </div>
               <div>
-                <div className="k-label" style={{ marginBottom: 8 }}>Move to stage</div>
+                <div className="k-label" style={{ marginBottom: 8 }}>Move to Stage</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {STAGES.map(s => (
                     <Button key={s} size="sm" variant={s === detailLead.stage ? 'primary' : 'secondary'} disabled={s === detailLead.stage}
@@ -832,7 +832,7 @@ export default function LeadsPage() {
                   <Textarea placeholder="Write your message…" aria-label="Email message" value={emailForm.message} onChange={e => setEmailForm({ ...emailForm, message: e.target.value })} rows={4} />
                   <div>
                     <Button type="submit" icon={<EnvelopeSimple size={15} />} disabled={emailSending || !emailForm.subject.trim() || !emailForm.message.trim()}>
-                      {emailSending ? 'Sending…' : 'Send email'}
+                      {emailSending ? 'Sending…' : 'Send Email'}
                     </Button>
                   </div>
                 </form>
@@ -889,7 +889,7 @@ export default function LeadsPage() {
         onClose={() => setConfirmDelete(null)}
         size="sm"
         busy={deleting}
-        title="Delete lead?"
+        title="Delete Lead?"
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirmDelete(null)} disabled={deleting}>Cancel</Button>

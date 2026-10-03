@@ -18,7 +18,7 @@ import {
   Code, Key, WebhooksLogo, Terminal, Plugs, BracketsCurly, Cube, Broadcast, PaperPlaneTilt,
 } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B', CARD = '#141416', INSET = '#0a0a0a', BORDER = 'rgba(255,255,255,0.12)', HAIRLINE = 'rgba(255,255,255,0.07)';
+const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', INSET = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.12)', HAIRLINE = 'rgba(255,255,255,0.07)';
 const DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.45)', TEXT = '#FFFFFF', GREEN = '#22C55E';
 
 // Integrations accent — steel blue, local because 'integrations' is not a key in
@@ -31,7 +31,7 @@ const CODE_PANEL: React.CSSProperties = {
   fontFamily: 'monospace', fontSize: 12, lineHeight: 1.8,
 };
 
-const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: MUTED, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
+const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, color: MUTED, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
 
 type Endpoint = {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -51,8 +51,8 @@ type APIModule = {
 
 const METHOD_COLORS: Record<string, string> = {
   GET: '#22C55E',
-  POST: '#F59E0B',
-  PATCH: '#F59E0B',
+  POST: 'var(--brand-primary)',
+  PATCH: 'var(--brand-primary)',
   DELETE: '#EF4444',
 };
 
@@ -236,10 +236,10 @@ export default function ApiDocsPage() {
 
       {/* Stat strip — the platform surface at a glance, counted from the catalog */}
       <StatStrip items={[
-        {href: '/app/integrations/api-docs',  label: 'Live Endpoints', value: String(liveCount), accent: GREEN, sub: 'accepting sk_live_ keys today', icon: <Broadcast size={11} weight="bold" color={GREEN} /> },
-        {href: '/app/integrations/api-docs',  label: 'Coming Soon', value: String(soonCount), sub: 'documented, on the roadmap', icon: <Code size={11} weight="bold" color={API_ACCENT} /> },
-        {href: '/app/integrations/api-docs',  label: 'API Modules', value: String(API_MODULES.length), sub: 'projects to takeoffs', icon: <Cube size={11} weight="bold" color={API_ACCENT} /> },
-        {href: '/app/integrations/api-docs',  label: 'Webhook Events', value: String(WEBHOOK_EVENTS.length), sub: 'all emitted by the dispatcher', icon: <WebhooksLogo size={11} weight="bold" color={API_ACCENT} /> },
+        {href: '/app/integrations/api-docs',  label: 'Live Endpoints', value: String(liveCount), accent: GREEN, sub: 'Accepting sk_live_ keys today', icon: <Broadcast size={11} weight="bold" color={GREEN} /> },
+        {href: '/app/integrations/api-docs',  label: 'Coming Soon', value: String(soonCount), sub: 'Documented, on the roadmap', icon: <Code size={11} weight="bold" color={API_ACCENT} /> },
+        {href: '/app/integrations/api-docs',  label: 'API Modules', value: String(API_MODULES.length), sub: 'Projects to takeoffs', icon: <Cube size={11} weight="bold" color={API_ACCENT} /> },
+        {href: '/app/integrations/api-docs',  label: 'Webhook Events', value: String(WEBHOOK_EVENTS.length), sub: 'All emitted by the dispatcher', icon: <WebhooksLogo size={11} weight="bold" color={API_ACCENT} /> },
       ]} />
 
       {/* Section Tabs */}
@@ -257,8 +257,8 @@ export default function ApiDocsPage() {
               display: 'inline-flex', alignItems: 'center', gap: 7,
               padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
               border: 'none', whiteSpace: 'nowrap',
-              background: activeSection === s.key ? `linear-gradient(180deg, #FBBF24, ${GOLD})` : 'transparent',
-              color: activeSection === s.key ? '#241500' : DIM,
+              background: activeSection === s.key ? `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD})` : 'transparent',
+              color: activeSection === s.key ? '#0A0A00' : DIM,
             }}
           >
             {s.icon}{s.label}
@@ -329,7 +329,7 @@ export default function ApiDocsPage() {
                         <span style={{
                           padding: '3px 8px', borderRadius: 5, fontSize: 10, fontWeight: 800,
                           minWidth: 52, textAlign: 'center', fontFamily: 'monospace',
-                          background: METHOD_COLORS[ep.method] + '18',
+                          background: `color-mix(in srgb, ${METHOD_COLORS[ep.method]} 9%, transparent)`,
                           color: METHOD_COLORS[ep.method],
                         }}>
                           {ep.method}
@@ -340,12 +340,12 @@ export default function ApiDocsPage() {
                         <span style={{ fontSize: 12, color: DIM, flex: 1 }}>{ep.description}</span>
                         <span style={{
                           padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
-                          textTransform: 'uppercase', letterSpacing: 0.4, whiteSpace: 'nowrap',
+                          whiteSpace: 'nowrap',
                           background: soon ? 'rgba(203,213,225,0.12)' : `${GREEN}1e`,
                           color: soon ? DIM : GREEN,
                           border: `1px solid ${soon ? BORDER : GREEN + '55'}`,
                         }}>
-                          {soon ? 'Coming soon' : 'Live'}
+                          {soon ? 'Coming Soon' : 'Live'}
                         </span>
                       </div>
                     );
@@ -362,7 +362,7 @@ export default function ApiDocsPage() {
         <div>
           <SectionCard
             title="API Key Authentication"
-            subtitle="Bearer tokens, tenant-scoped — the full secret shows exactly once"
+            subtitle="Bearer tokens, tenant-scoped — the full secret shows exactly once."
             icon={<Key size={17} weight="duotone" color={API_ACCENT} />}
             accent={API_ACCENT}
             style={{ marginBottom: 24 }}
@@ -378,7 +378,7 @@ export default function ApiDocsPage() {
               <div>Authorization: Bearer {'sk_live_<your_secret_key>'}</div>
             </div>
 
-            <h4 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Key Scopes &amp; Lifecycle</h4>
+            <h4 style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 800, color: MUTED }}>Key Scopes &amp; Lifecycle</h4>
             <ul style={{ margin: 0, padding: '0 0 0 20px', fontSize: 13, color: DIM, lineHeight: 2 }}>
               <li>Scopes are hierarchical — <span style={{ color: TEXT }}>admin</span> implies <span style={{ color: TEXT }}>write</span> implies <span style={{ color: TEXT }}>read</span></li>
               <li>Read endpoints (like the ones below) require the <span style={{ color: TEXT }}>read</span> scope</li>
@@ -389,7 +389,7 @@ export default function ApiDocsPage() {
 
           <SectionCard
             title="Code Examples"
-            subtitle="The same authenticated list call in curl, JavaScript, and Python"
+            subtitle="The same authenticated list call in curl, JavaScript, and Python."
             icon={<Code size={17} weight="duotone" color={API_ACCENT} />}
             accent={API_ACCENT}
           >
@@ -401,8 +401,8 @@ export default function ApiDocsPage() {
                   style={{
                     padding: '6px 16px', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     border: 'none', textTransform: 'capitalize',
-                    background: codeTab === lang ? `linear-gradient(180deg, #FBBF24, ${GOLD})` : 'transparent',
-                    color: codeTab === lang ? '#241500' : DIM,
+                    background: codeTab === lang ? `linear-gradient(180deg, var(--brand-primary-strong), ${GOLD})` : 'transparent',
+                    color: codeTab === lang ? '#0A0A00' : DIM,
                   }}
                 >
                   {lang}
@@ -453,7 +453,7 @@ export default function ApiDocsPage() {
                       onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
                       <td style={{ padding: '10px 14px' }}>
-                        <code style={{ fontSize: 12, color: GOLD, fontFamily: 'monospace', background: `${GOLD}12`, padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>
+                        <code style={{ fontSize: 12, color: GOLD, fontFamily: 'monospace', background: 'var(--brand-primary-08)', padding: '2px 8px', borderRadius: 4, whiteSpace: 'nowrap' }}>
                           {ev.event}
                         </code>
                       </td>
@@ -467,13 +467,13 @@ export default function ApiDocsPage() {
 
           <SectionCard flat
             title="Webhook Payload Format"
-            subtitle="Every delivery carries these headers and this body shape"
+            subtitle="Every delivery carries these headers and this body shape."
             icon={<BracketsCurly size={17} weight="duotone" color={API_ACCENT} />}
             accent={API_ACCENT}
           >
             <div className="ad-stack" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Headers</div>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Headers</div>
                 <div style={{ ...CODE_PANEL, padding: 14, fontSize: 11, color: TEXT }}>
                   <div>Content-Type: application/json</div>
                   <div>X-Saguaro-Event: project.created</div>
@@ -483,7 +483,7 @@ export default function ApiDocsPage() {
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Body</div>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Body</div>
                 <div style={{ ...CODE_PANEL, padding: 14, fontSize: 11, color: TEXT }}>
                   <div>{'{'}</div>
                   <div>&nbsp;&nbsp;"event": "project.created",</div>
@@ -502,7 +502,7 @@ export default function ApiDocsPage() {
       {activeSection === 'try' && (
         <SectionCard
           title="API Explorer"
-          subtitle="Test API endpoints directly from this page"
+          subtitle="Test API endpoints directly from this page."
           icon={<Terminal size={17} weight="duotone" color={API_ACCENT} />}
           accent={API_ACCENT}
         >
@@ -510,11 +510,11 @@ export default function ApiDocsPage() {
             {/* Request Side */}
             <div>
               <label style={{ display: 'block', marginBottom: 14 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>API Key (Bearer Token)</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: DIM, display: 'block', marginBottom: 5 }}>API Key (Bearer Token)</span>
                 <input
                   value={tryApiKey}
                   onChange={(e) => setTryApiKey(e.target.value)}
-                  placeholder="Paste your sk_live_ key..."
+                  placeholder="Paste your sk_live_ key…"
                   style={{
                     width: '100%', padding: '10px 14px', background: INSET, border: `1px solid ${BORDER}`,
                     borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', fontFamily: 'monospace',
@@ -552,7 +552,7 @@ export default function ApiDocsPage() {
 
               {tryMethod !== 'GET' && (
                 <label style={{ display: 'block', marginBottom: 14 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 5 }}>Request Body (JSON)</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: DIM, display: 'block', marginBottom: 5 }}>Request Body (JSON)</span>
                   <textarea
                     value={tryBody}
                     onChange={(e) => setTryBody(e.target.value)}
@@ -573,12 +573,12 @@ export default function ApiDocsPage() {
                 className="pmBtn"
                 style={{ ...goldButtonStyle, opacity: tryLoading ? 0.6 : 1, cursor: tryLoading ? 'wait' : 'pointer' }}
               >
-                <PaperPlaneTilt size={15} weight="bold" />{tryLoading ? 'Sending...' : 'Send Request'}
+                <PaperPlaneTilt size={15} weight="bold" />{tryLoading ? 'Sending…' : 'Send Request'}
               </button>
 
               {/* Quick endpoint buttons */}
               <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Quick Select</div>
+                <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Quick Select</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {['/api/v1/projects', '/api/v1/rfis', '/api/v1/change-orders', '/api/v1/pay-apps', '/api/v1/invoices', '/api/v1/contracts', '/api/v1/subcontractors'].map((ep) => (
                     <button
@@ -586,8 +586,8 @@ export default function ApiDocsPage() {
                       onClick={() => { setTryEndpoint(ep); setTryMethod('GET'); }}
                       style={{
                         padding: '4px 10px', borderRadius: 6, cursor: 'pointer', fontSize: 11,
-                        background: tryEndpoint === ep ? `${GOLD}18` : 'transparent',
-                        border: `1px solid ${tryEndpoint === ep ? GOLD + '44' : BORDER}`,
+                        background: tryEndpoint === ep ? 'color-mix(in srgb, var(--brand-primary) 9%, transparent)' : 'transparent',
+                        border: `1px solid ${tryEndpoint === ep ? 'color-mix(in srgb, var(--brand-primary) 27%, transparent)' : BORDER}`,
                         color: tryEndpoint === ep ? GOLD : DIM, fontFamily: 'monospace',
                       }}
                     >
@@ -600,7 +600,7 @@ export default function ApiDocsPage() {
 
             {/* Response Side */}
             <div>
-              <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Response</div>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: MUTED, marginBottom: 8 }}>Response</div>
               <div style={{
                 ...CODE_PANEL, color: TEXT, lineHeight: 1.6,
                 minHeight: 300, maxHeight: 500, overflowY: 'auto',

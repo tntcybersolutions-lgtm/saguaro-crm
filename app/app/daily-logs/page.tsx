@@ -332,7 +332,7 @@ export default function DailyLogsPage() {
       header: 'Safety',
       cell: (info) => {
         const v = info.getValue();
-        return v ? <span style={{ color: colors.red }}>{v.slice(0, 40)}{v.length > 40 ? '...' : ''}</span> : <span style={{ color: colors.green }}>OK</span>;
+        return v ? <span style={{ color: colors.red }}>{v.slice(0, 40)}{v.length > 40 ? '…' : ''}</span> : <span style={{ color: colors.green }}>OK</span>;
       },
     }),
   ], []);
@@ -402,7 +402,7 @@ export default function DailyLogsPage() {
         module="daily-logs"
         search={logSearch}
         onSearch={setLogSearch}
-        searchPlaceholder="Search daily logs..."
+        searchPlaceholder="Search daily logs…"
         filters={[
           { key: 'project', label: 'Project', value: projectFilter, onChange: setProjectFilter, allLabel: 'All Projects', options: projects.map(p => ({ value: p.id, label: p.name })) },
           { key: 'delays', label: 'Delays', value: delayFilter, onChange: setDelayFilter, allLabel: 'All Days', options: [
@@ -412,7 +412,7 @@ export default function DailyLogsPage() {
         ]}
         sort={sortBy}
         onSort={setSortBy}
-        sortOptions={[{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]}
+        sortOptions={[{ value: 'newest', label: 'Newest First' }, { value: 'oldest', label: 'Oldest First' }]}
         count={{ shown: visibleLogs.length, total: logs.length }}
         style={{ marginBottom: 16 }}
       />
@@ -425,7 +425,7 @@ export default function DailyLogsPage() {
           columns={columns}
           loading={loading}
           tableId="daily-logs"
-          searchPlaceholder="Refine within results..."
+          searchPlaceholder="Refine within results…"
           emptyMessage="No daily logs yet. Create your first log to start tracking."
           onRowClick={(row) => guard.requestLeave(`/app/daily-logs/${row.id}`)}
         />
@@ -455,8 +455,8 @@ export default function DailyLogsPage() {
                     </div>
                     <div style={{ marginTop: 6 }}>
                       <InsightRow label="Project" value={`${Number(ctx.project?.percentComplete) || 0}% complete`} />
-                      <InsightRow label="Open items" value={`${ctx.counts?.openRfis ?? 0} RFIs · ${ctx.counts?.openSubmittals ?? 0} submittals · ${ctx.counts?.openPunch ?? 0} punch`} />
-                      {prev ? <InsightRow label="Prev log" value={`${prev.crew_count || 0} crew${prev.weather ? ` · ${prev.weather}` : ''}${prev.superintendent ? ` · ${prev.superintendent}` : ''}`} /> : null}
+                      <InsightRow label="Open Items" value={`${ctx.counts?.openRfis ?? 0} RFIs · ${ctx.counts?.openSubmittals ?? 0} submittals · ${ctx.counts?.openPunch ?? 0} punch`} />
+                      {prev ? <InsightRow label="Prev Log" value={`${prev.crew_count || 0} crew${prev.weather ? ` · ${prev.weather}` : ''}${prev.superintendent ? ` · ${prev.superintendent}` : ''}`} /> : null}
                     </div>
                     {(prev || lastLog) && !carryUsed ? (
                       <button
@@ -466,7 +466,7 @@ export default function DailyLogsPage() {
                         title="Carry the last log's crew count, superintendent, phase, and equipment into today — work performed stays blank"
                         style={{ marginTop: 10, padding: '7px 14px', background: 'var(--brand-primary-18, rgba(255,255,255,0.06))', border: '1px solid var(--brand-primary-35, rgba(255,255,255,0.2))', borderRadius: radius.md, color: 'var(--brand-primary)', fontSize: font.size.sm, fontWeight: font.weight.bold, cursor: carrying ? 'wait' : 'pointer', opacity: carrying ? 0.6 : 1 }}
                       >
-                        {carrying ? 'Carrying forward…' : 'Same as yesterday — carry crew, super, phase & equipment'}
+                        {carrying ? 'Carrying forward…' : 'Same as Yesterday — Carry Crew, Super, Phase & Equipment'}
                       </button>
                     ) : carryUsed ? (
                       <div style={{ marginTop: 8, fontSize: font.size.sm, color: colors.textDim }}>
@@ -487,7 +487,7 @@ export default function DailyLogsPage() {
                     setForm(f => ({ ...f, projectId: pid, crewCount: prev?.crew_count ? String(prev.crew_count) : f.crewCount }));
                     setAutoCrew(!!(prev?.crew_count));
                   }} required style={inputStyle}>
-                    <option value="">Select project...</option>
+                    <option value="">Select project…</option>
                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
@@ -507,7 +507,7 @@ export default function DailyLogsPage() {
                 </div>
                 <div>
                   <label style={labelStyle}>Weather</label>
-                  <Suggest value={form.weather} onChange={(e) => setForm({ ...form, weather: e.target.value })} style={inputStyle} placeholder="Clear, 10 mph W, dusty..." options={['w']} />
+                  <Suggest value={form.weather} onChange={(e) => setForm({ ...form, weather: e.target.value })} style={inputStyle} placeholder="Clear, 10 mph W, dusty…" options={['w']} />
                   </div>
                 <div>
                   <label style={labelStyle}>Crew Count{autoCrew && form.crewCount ? <AutoChip /> : null}</label>
@@ -533,32 +533,32 @@ export default function DailyLogsPage() {
               </div>
               <div>
                 <label style={labelStyle}>Equipment On Site{carryUsed && form.equipment ? <AutoChip /> : null}</label>
-                <textarea value={form.equipment} onChange={(e) => setForm({ ...form, equipment: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Equipment on site..." />
+                <textarea value={form.equipment} onChange={(e) => setForm({ ...form, equipment: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Equipment on site…" />
               </div>
               <div>
                 <label style={labelStyle}>Work Performed *</label>
-                <textarea value={form.workPerformed} onChange={(e) => setForm({ ...form, workPerformed: e.target.value })} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Describe work completed today..." />
+                <textarea value={form.workPerformed} onChange={(e) => setForm({ ...form, workPerformed: e.target.value })} rows={3} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Describe work completed today…" />
               </div>
               <div>
                 <label style={labelStyle}>Delays</label>
-                <textarea value={form.delays} onChange={(e) => setForm({ ...form, delays: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Any delays or issues..." />
+                <textarea value={form.delays} onChange={(e) => setForm({ ...form, delays: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Any delays or issues…" />
               </div>
               <div>
                 <label style={labelStyle}>Safety Notes</label>
-                <textarea value={form.safetyNotes} onChange={(e) => setForm({ ...form, safetyNotes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Safety observations, incidents, near misses..." />
+                <textarea value={form.safetyNotes} onChange={(e) => setForm({ ...form, safetyNotes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Safety observations, incidents, near misses…" />
               </div>
               <div>
                 <label style={labelStyle}>Materials Delivered</label>
-                <input value={form.materialsDelivered} onChange={(e) => setForm({ ...form, materialsDelivered: e.target.value })} style={inputStyle} placeholder="Concrete, rebar, lumber..." />
+                <input value={form.materialsDelivered} onChange={(e) => setForm({ ...form, materialsDelivered: e.target.value })} style={inputStyle} placeholder="Concrete, rebar, lumber…" />
               </div>
               <div>
                 <label style={labelStyle}>Visitors</label>
-                <input value={form.visitors} onChange={(e) => setForm({ ...form, visitors: e.target.value })} style={inputStyle} placeholder="Inspector, owner, architect..." />
+                <input value={form.visitors} onChange={(e) => setForm({ ...form, visitors: e.target.value })} style={inputStyle} placeholder="Inspector, owner, architect…" />
               </div>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
                 <button type="button" onClick={closeCreate} style={{ padding: '10px 20px', background: 'none', border: `1px solid ${colors.border}`, borderRadius: radius.lg, color: colors.textMuted, fontSize: font.size.md, fontWeight: font.weight.semibold, cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" disabled={creating} style={{ padding: '10px 24px', background: colors.gold, border: 'none', borderRadius: radius.lg, color: colors.dark, fontSize: font.size.md, fontWeight: font.weight.black, cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.6 : 1 }}>
-                  {creating ? 'Creating...' : 'Create Log'}
+                <button type="submit" disabled={creating} style={{ padding: '10px 24px', background: colors.gold, border: 'none', borderRadius: radius.lg, color: '#0A0A00', fontSize: font.size.md, fontWeight: font.weight.black, cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.6 : 1 }}>
+                  {creating ? 'Creating…' : 'Create Log'}
                 </button>
               </div>
             </form>

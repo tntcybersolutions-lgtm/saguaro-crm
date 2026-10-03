@@ -11,16 +11,16 @@ import Link from 'next/link';
 import { Broadcast, Buildings, ClipboardText, Gauge, Funnel } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty } from '@/components/ui/premium';
 
-const BASE   = '#0a0a0a';
-const CARD   = '#141416';
-const GOLD   = '#F59E0B';
+const BASE   = 'var(--bg-base)';
+const CARD   = 'var(--bg-surface)';
+const GOLD   = 'var(--brand-primary)';
 const GREEN  = '#34C759';
 const RED    = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT   = '#FFFFFF';
 const DIM    = '#CBD5E1';
-const BLUE   = '#F59E0B';
-const AMBER  = '#FF9500';
+const BLUE   = 'var(--brand-primary)';
+const AMBER  = 'var(--warning)';
 
 interface ProjectCard {
   id: string;
@@ -52,7 +52,7 @@ function ProgressRing({ pct, size = 52 }: { pct: number; size?: number }) {
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={stroke} />
         <circle
           cx={size / 2} cy={size / 2} r={r} fill="none"
-          stroke={GOLD} strokeWidth={stroke}
+          style={{ stroke: GOLD }} strokeWidth={stroke}
           strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round"
         />
       </svg>
@@ -92,6 +92,9 @@ function formatDate(d: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+// Display-only: 'on_hold' → 'On Hold'. The raw value still drives filters/colors.
+const titleize = (s: string) => s.replace(/[_-]/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase());
+
 function getStatusColor(status: string): string {
   const s = status.toLowerCase();
   if (s === 'active' || s === 'in_progress' || s === 'in progress') return GREEN;
@@ -126,7 +129,7 @@ function SortButton({ active, label, onClick }: { active: boolean; label: string
         padding: '6px 12px',
         borderRadius: 8,
         border: `1px solid ${active ? GOLD : BORDER}`,
-        background: active ? `${GOLD}18` : 'transparent',
+        background: active ? `color-mix(in srgb, ${GOLD} 9%, transparent)` : 'transparent',
         color: active ? GOLD : DIM,
         fontSize: 11,
         fontWeight: 600,
@@ -148,7 +151,7 @@ function FilterPill({ active, label, onClick, color }: { active: boolean; label:
         padding: '5px 10px',
         borderRadius: 20,
         border: `1px solid ${active ? c : BORDER}`,
-        background: active ? `${c}15` : 'transparent',
+        background: active ? `color-mix(in srgb, ${c} 8%, transparent)` : 'transparent',
         color: active ? c : DIM,
         fontSize: 11,
         fontWeight: 600,
@@ -266,7 +269,7 @@ export default function CommandCenterPage() {
           icon={<Gauge size={19} weight="duotone" color={GREEN} />}
           label="Avg Complete"
           value={`${avgComplete}%`}
-          sub="across portfolio"
+          sub="Across portfolio"
           accent={GREEN}
           delay={0.10}
          href="/app/intelligence/command-center"/>
@@ -276,7 +279,7 @@ export default function CommandCenterPage() {
       <SectionCard title="Sort & Filter" icon={<Funnel size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 24 }}>
         {/* Sort controls */}
         <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sort by</div>
+          <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 8 }}>Sort By</div>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
             <SortButton active={sortBy === 'progress'} label="Progress" onClick={() => setSortBy('progress')} />
             <SortButton active={sortBy === 'budget_variance'} label="Budget Variance" onClick={() => setSortBy('budget_variance')} />
@@ -287,7 +290,7 @@ export default function CommandCenterPage() {
 
         {/* Filter controls */}
         <div>
-          <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Filter</div>
+          <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 8 }}>Filter</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <FilterPill active={statusFilter === 'all'} label="All" onClick={() => setStatusFilter('all')} />
             <FilterPill active={statusFilter === 'active'} label="Active" onClick={() => setStatusFilter('active')} color={GREEN} />
@@ -367,18 +370,18 @@ export default function CommandCenterPage() {
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       <span style={{
-                        fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-                        color: typeColor, background: `${typeColor}15`, border: `1px solid ${typeColor}33`,
+                        fontSize: 9, fontWeight: 700,
+                        color: typeColor, background: `color-mix(in srgb, ${typeColor} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${typeColor} 20%, transparent)`,
                         borderRadius: 4, padding: '2px 6px',
                       }}>
-                        {project.type}
+                        {titleize(project.type)}
                       </span>
                       <span style={{
-                        fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-                        color: statusColor, background: `${statusColor}15`, border: `1px solid ${statusColor}33`,
+                        fontSize: 9, fontWeight: 700,
+                        color: statusColor, background: `color-mix(in srgb, ${statusColor} 8%, transparent)`, border: `1px solid color-mix(in srgb, ${statusColor} 20%, transparent)`,
                         borderRadius: 4, padding: '2px 6px',
                       }}>
-                        {project.status}
+                        {titleize(project.status)}
                       </span>
                     </div>
                   </div>
@@ -388,7 +391,7 @@ export default function CommandCenterPage() {
                 {/* Budget row */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div style={{ fontSize: 10, color: DIM, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>Budget</div>
+                    <div style={{ fontSize: 10, color: DIM, fontWeight: 600, marginBottom: 2 }}>Budget</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                       <span style={{ fontSize: 14, fontWeight: 700, color: TEXT }}>{formatCurrency(project.budget_original)}</span>
                       <span style={{ fontSize: 11, color: DIM }}>vs</span>
@@ -397,7 +400,7 @@ export default function CommandCenterPage() {
                   </div>
                   <span style={{
                     fontSize: 13, fontWeight: 800, color: variance.color,
-                    background: `${variance.color}15`, padding: '3px 8px', borderRadius: 6,
+                    background: `color-mix(in srgb, ${variance.color} 8%, transparent)`, padding: '3px 8px', borderRadius: 6,
                   }}>
                     {variance.label}
                   </span>
@@ -429,7 +432,7 @@ function OpenItemPill({ label, count, color }: { label: string; count: number; c
       <span style={{
         width: 20, height: 20, borderRadius: '50%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: count > 0 ? `${color}22` : `${DIM}11`,
+        background: count > 0 ? `color-mix(in srgb, ${color} 13%, transparent)` : `${DIM}11`,
         fontSize: 10, fontWeight: 800, color: count > 0 ? color : DIM,
       }}>
         {count}

@@ -39,10 +39,10 @@ export default function FinancialsPage() {
 
       {/* Money pulse — dense strip from the live financial rollup */}
       <StatStrip items={[
-        {href: '/app/command-center/financials',  label: 'Retainage Held', value: fmtMoneyShort(totals.retainage), accent: C.gold, sub: 'released at closeout' },
-        {href: '/app/command-center/financials',  label: 'Work in Place', value: fmtMoneyShort(totals.wip), sub: `across ${totals.sites} site${totals.sites === 1 ? '' : 's'}` },
-        {href: '/app/command-center/financials',  label: 'Lien Waivers', value: `${totals.lienCollected}/${totals.lienTotal}`, accent: totals.lienTotal > 0 && totals.lienCollected < totals.lienTotal ? C.yellow : undefined, sub: totals.lienTotal > 0 && totals.lienCollected < totals.lienTotal ? `${totals.lienTotal - totals.lienCollected} still outstanding` : 'all releases on file' },
-        {href: '/app/command-center/financials',  label: 'Sites TI-Ready', value: String(totals.tiReady), accent: totals.tiReady ? C.green : undefined, sub: 'reimbursement package complete' },
+        {href: '/app/command-center/financials',  label: 'Retainage Held', value: fmtMoneyShort(totals.retainage), accent: C.gold, sub: 'Released at closeout' },
+        {href: '/app/command-center/financials',  label: 'Work in Place', value: fmtMoneyShort(totals.wip), sub: `Across ${totals.sites} site${totals.sites === 1 ? '' : 's'}` },
+        {href: '/app/command-center/financials',  label: 'Lien Waivers', value: `${totals.lienCollected}/${totals.lienTotal}`, accent: totals.lienTotal > 0 && totals.lienCollected < totals.lienTotal ? C.yellow : undefined, sub: totals.lienTotal > 0 && totals.lienCollected < totals.lienTotal ? `${totals.lienTotal - totals.lienCollected} still outstanding` : 'All releases on file' },
+        {href: '/app/command-center/financials',  label: 'Sites TI-Ready', value: String(totals.tiReady), accent: totals.tiReady ? C.green : undefined, sub: 'Reimbursement package complete' },
       ]} />
 
       {loading ? <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading…</div>
@@ -65,7 +65,7 @@ export default function FinancialsPage() {
                 <Metric label="TI Reimbursement" value={f.tiTotal ? `${f.tiPct}%` : '—'} color={f.tiReady ? C.green : f.tiPct > 0 ? C.yellow : C.dim} />
               </div>
               <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>Closeout / TI package readiness</div>
+                <div style={{ fontSize: 11, color: C.dim, marginBottom: 4 }}>Closeout / TI Package Readiness</div>
                 <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${f.tiPct}%`, background: f.tiReady ? C.green : C.gold }} />
                 </div>
@@ -82,7 +82,7 @@ export default function FinancialsPage() {
 
 function Metric({ label, value, color }: { label: string; value: React.ReactNode; color?: string }) {
   return <div>
-    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: C.faint }}>{label}</div>
+    <div style={{ fontSize: 10, fontWeight: 700, color: C.faint }}>{label}</div>
     <div style={{ fontSize: 16, fontWeight: 800, color: color || C.text, marginTop: 1, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
   </div>;
 }

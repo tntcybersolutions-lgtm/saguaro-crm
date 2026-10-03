@@ -6,16 +6,16 @@ import { WIDGET_CATALOG, WidgetBody, useWidgetMetrics, type WidgetSettings } fro
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
 /* ─── Colors ────────────────────────────────────────────────────────── */
-const GOLD   = '#F59E0B';
-const BG     = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD   = 'var(--brand-primary)';
+const BG     = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT   = '#FFFFFF';
 const DIM    = '#CBD5E1';
 const GREEN  = '#22C55E';
 const RED    = '#EF4444';
-const AMBER  = '#F59E0B';
-const BLUE   = '#F59E0B';
+const AMBER  = 'var(--warning)';
+const BLUE   = 'var(--brand-primary)';
 const PURPLE = '#8B5CF6';
 
 /* ─── Types ─────────────────────────────────────────────────────────── */
@@ -153,7 +153,7 @@ const pill = (active: boolean): React.CSSProperties => ({
   borderRadius: 6,
   border: `1px solid ${active ? GOLD : BORDER}`,
   background: active ? GOLD : 'transparent',
-  color: active ? BG : DIM,
+  color: active ? '#0A0A00' : DIM,
   cursor: 'pointer',
   fontSize: 13,
   fontWeight: active ? 700 : 500,
@@ -165,7 +165,7 @@ const btnStyle = (variant: 'primary' | 'secondary' | 'danger' | 'ghost' = 'prima
   borderRadius: 6,
   border: variant === 'secondary' || variant === 'ghost' ? `1px solid ${BORDER}` : 'none',
   background: variant === 'primary' ? GOLD : variant === 'danger' ? RED : 'transparent',
-  color: variant === 'primary' ? BG : variant === 'danger' ? '#fff' : DIM,
+  color: variant === 'primary' ? '#0A0A00' : variant === 'danger' ? '#fff' : DIM,
   cursor: 'pointer',
   fontSize: 13,
   fontWeight: 600,
@@ -235,7 +235,7 @@ const modalStyle: React.CSSProperties = {
 function SettingGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 8 }}>{label}</div>
       {children}
     </div>
   );
@@ -534,7 +534,7 @@ export default function DashboardConfigPage() {
       <PremiumSurface maxWidth={2200}>
         <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
           <div style={{ width: 40, height: 40, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          <div style={{ color: DIM, fontSize: 15 }}>Loading dashboard configuration...</div>
+          <div style={{ color: DIM, fontSize: 15 }}>Loading dashboard configuration…</div>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </PremiumSurface>
@@ -566,9 +566,9 @@ export default function DashboardConfigPage() {
             )}
             <button onClick={() => setConfirmResetOpen(true)} style={ghostButtonStyle} className="pmBtn">Reset Default</button>
             <button onClick={() => { setLoadModalOpen(true); fetchSavedLayouts(); }} style={ghostButtonStyle} className="pmBtn">Load Layout</button>
-            <button onClick={() => setSaveAsModalOpen(true)} style={ghostButtonStyle} className="pmBtn">Save As...</button>
+            <button onClick={() => setSaveAsModalOpen(true)} style={ghostButtonStyle} className="pmBtn">Save As…</button>
             <button onClick={handleSave} disabled={saving || !isDirty} style={{ ...goldButtonStyle, opacity: (!isDirty || saving) ? 0.5 : 1, cursor: (!isDirty || saving) ? 'not-allowed' : 'pointer' }} className="pmBtn">
-              {saving ? 'Saving...' : 'Save Layout'}
+              {saving ? 'Saving…' : 'Save Layout'}
             </button>
           </>}
         />
@@ -591,7 +591,7 @@ export default function DashboardConfigPage() {
               <input
                 value={layout.name}
                 onChange={e => setLayout(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter layout name..."
+                placeholder="Enter layout name…"
                 style={{ ...inputStyle, width: 260 }}
               />
             </div>
@@ -603,7 +603,7 @@ export default function DashboardConfigPage() {
             </div>
             <button onClick={() => setPresetModalOpen(true)} style={{ ...ghostButtonStyle, padding: '9px 16px' }} className="pmBtn">
               <span>Presets</span>
-              {layout.preset && <span style={{ fontSize: 10, background: GOLD, color: '#1C1C1E', padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>{layout.preset}</span>}
+              {layout.preset && <span style={{ fontSize: 10, background: GOLD, color: '#0A0A00', padding: '1px 6px', borderRadius: 8, fontWeight: 700 }}>{layout.preset}</span>}
             </button>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: DIM }}>{layout.widgets.length} widget{layout.widgets.length !== 1 ? 's' : ''}</span>
@@ -624,7 +624,7 @@ export default function DashboardConfigPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
               <input
-                placeholder="Search widgets..."
+                placeholder="Search widgets…"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 style={{ ...inputStyle, width: 240 }}
@@ -651,7 +651,7 @@ export default function DashboardConfigPage() {
                         <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>{cw.name}</span>
                       </div>
                       {count > 0 && (
-                        <span style={{ fontSize: 10, background: GOLD, color: '#1C1C1E', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>{count}</span>
+                        <span style={{ fontSize: 10, background: GOLD, color: '#0A0A00', padding: '2px 7px', borderRadius: 10, fontWeight: 700 }}>{count}</span>
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: DIM, flex: 1 }}>{cw.description}</div>
@@ -665,7 +665,7 @@ export default function DashboardConfigPage() {
                 <div style={{ gridColumn: '1/-1' }}>
                   <PremiumEmpty
                     icon={<Package size={30} weight="duotone" color={GOLD} />}
-                    title="No widgets match your search"
+                    title="No Widgets Match Your Search"
                     description="Try a different keyword or category filter."
                     compact
                   />
@@ -720,7 +720,7 @@ export default function DashboardConfigPage() {
                       position: 'relative',
                       opacity: dragId === w.id ? 0.4 : 1,
                       transition: 'border-color .15s, box-shadow .15s, opacity .15s',
-                      boxShadow: isConfiguring ? `0 0 0 2px ${GOLD}30` : 'none',
+                      boxShadow: isConfiguring ? '0 0 0 2px color-mix(in srgb, var(--brand-primary) 19%, transparent)' : 'none',
                     }}
                   >
                     {/* Widget Header */}
@@ -745,7 +745,7 @@ export default function DashboardConfigPage() {
                           style={{ ...miniBtn, opacity: idx === 0 ? 0.3 : 1 }} title="Move up"><CaretUp size={14} color={DIM} weight="regular" /></button>
                         <button onClick={() => moveWidget(w.id, 'down')} disabled={idx === layout.widgets.length - 1}
                           style={{ ...miniBtn, opacity: idx === layout.widgets.length - 1 ? 0.3 : 1 }} title="Move down"><CaretDown size={14} color={DIM} weight="regular" /></button>
-                        <button onClick={() => setConfigWidgetId(isConfiguring ? null : w.id)} style={{ ...miniBtn, background: isConfiguring ? GOLD : BG, color: isConfiguring ? BG : DIM }} title="Configure"><Gear size={14} color={isConfiguring ? BG : DIM} weight="regular" /></button>
+                        <button onClick={() => setConfigWidgetId(isConfiguring ? null : w.id)} style={{ ...miniBtn, background: isConfiguring ? GOLD : BG, color: isConfiguring ? '#0A0A00' : DIM }} title="Configure"><Gear size={14} color={isConfiguring ? '#0A0A00' : DIM} weight="regular" /></button>
                         <button onClick={() => removeWidget(w.id)} style={{ ...miniBtn, color: RED }} title="Remove"><X size={14} color={RED} weight="regular" /></button>
                       </div>
                     </div>
@@ -917,7 +917,7 @@ export default function DashboardConfigPage() {
                 if (!count) return null;
                 return (
                   <span key={cat} style={{ fontSize: 11, color: DIM }}>
-                    {cat}: <span style={{ color: TEXT, fontWeight: 600 }}>{count}</span>
+                    {cat.charAt(0).toUpperCase() + cat.slice(1)}: <span style={{ color: TEXT, fontWeight: 600 }}>{count}</span>
                   </span>
                 );
               })}
@@ -986,7 +986,7 @@ export default function DashboardConfigPage() {
             {loadingLayouts ? (
               <div style={{ textAlign: 'center', padding: 40, color: DIM }}>
                 <div style={{ width: 32, height: 32, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 12px' }} />
-                Loading saved layouts...
+                Loading saved layouts…
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               </div>
             ) : savedLayouts.length === 0 ? (
@@ -1015,7 +1015,7 @@ export default function DashboardConfigPage() {
                         disabled={deletingId === sl.id}
                         style={{ ...btnStyle('danger'), opacity: deletingId === sl.id ? 0.5 : 1 }}
                       >
-                        {deletingId === sl.id ? '...' : 'Delete'}
+                        {deletingId === sl.id ? '…' : 'Delete'}
                       </button>
                     </div>
                   </div>
@@ -1040,7 +1040,7 @@ export default function DashboardConfigPage() {
                 autoFocus
                 value={saveAsName}
                 onChange={e => setSaveAsName(e.target.value)}
-                placeholder="Enter a name for this layout..."
+                placeholder="Enter a name for this layout…"
                 style={inputStyle}
                 onKeyDown={e => { if (e.key === 'Enter') handleSaveAs(); }}
               />
@@ -1051,7 +1051,7 @@ export default function DashboardConfigPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button onClick={() => setSaveAsModalOpen(false)} style={ghostButtonStyle} className="pmBtn">Cancel</button>
               <button onClick={handleSaveAs} disabled={!saveAsName.trim() || saving} style={{ ...goldButtonStyle, opacity: (!saveAsName.trim() || saving) ? 0.5 : 1 }} className="pmBtn">
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>

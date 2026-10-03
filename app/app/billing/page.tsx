@@ -6,8 +6,8 @@ import { CheckCircle, Warning, CreditCard, DeviceMobile, Question, Lightning, Pu
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, ghostButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 import { ADDONS, type AddonDef } from '@/lib/addons';
 
-const GOLD   = '#F59E0B';
-const RAISED = '#141416';
+const GOLD   = 'var(--brand-primary)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM    = '#CBD5E1';
 const TEXT   = '#FFFFFF';
@@ -70,7 +70,7 @@ const PLANS = [
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; bg: string; color: string }> = {
-    trialing:  { label: 'Free Trial',  bg: 'rgba(245,158,11,0.12)', color: GOLD },
+    trialing:  { label: 'Free Trial',  bg: 'var(--brand-primary-12)', color: GOLD },
     active:    { label: 'Active',      bg: 'rgba(34,197,94,0.12)',  color: GREEN },
     past_due:  { label: 'Past Due',    bg: 'rgba(239,68,68,0.12)',  color: RED },
     canceled:  { label: 'Canceled',    bg: 'rgba(110,110,115,0.1)', color: DIM },
@@ -78,7 +78,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   const s = map[status] ?? map.active;
   return (
-    <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 6, background: s.bg, color: s.color, letterSpacing: 0.5 }}>
+    <span style={{ fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 6, background: s.bg, color: s.color }}>
       {s.label}
     </span>
   );
@@ -306,7 +306,7 @@ export default function BillingPage() {
 
         {/* Header */}
         <ModuleHero
-          eyebrow="ACCOUNT"
+          eyebrow="Account"
           eyebrowIcon={<CreditCard size={13} weight="fill" color={GOLD} />}
           title="Billing &"
           accent="Subscription"
@@ -316,11 +316,11 @@ export default function BillingPage() {
         {/* Account intelligence strip — live plan, usage, and renewal totals */}
         {sub && (
           <StatStrip items={[
-            {href: '/app/billing',  label: 'Plan', value: sub.plan_name || 'Subscription', sub: sub.billing_interval === 'annual' ? 'annual billing' : 'monthly billing' },
-            {href: '/app/billing',  label: 'Status', value: sub.status === 'trialing' ? (trialDays ?? 0) + ' trial days left' : (sub.status || '').replace(/_/g, ' '), accent: sub.status === 'past_due' ? RED : sub.status === 'active' ? GREEN : GOLD, sub: sub.cancel_at ? 'cancels ' + new Date(sub.cancel_at).toLocaleDateString() : sub.status === 'trialing' ? 'full access during trial' : undefined },
-            {href: '/app/billing',  label: 'Price', value: priceCents > 0 ? fmtC(priceCents) : '—', sub: priceCents > 0 ? 'billed ' + (sub.billing_interval === 'annual' ? 'annually' : 'monthly') : 'no charge on file' },
-            {href: '/app/billing',  label: 'AI Takeoff Pages', value: unlimitedAi ? 'Unlimited' : aiLimit != null ? aiUsed + ' / ' + aiLimit : String(aiUsed), accent: !unlimitedAi && aiLimit != null && aiUsed >= aiLimit ? RED : undefined, sub: unlimitedAi ? aiUsed + ' used this period' : aiLimit != null ? Math.max(0, aiLimit - aiUsed) + ' left this period' : 'this billing period' },
-            {href: '/app/billing',  label: 'Renews In', value: renewDays != null ? renewDays + ' days' : '—', sub: sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : 'no period on file' },
+            {href: '/app/billing',  label: 'Plan', value: sub.plan_name || 'Subscription', sub: sub.billing_interval === 'annual' ? 'Annual billing' : 'Monthly billing' },
+            {href: '/app/billing',  label: 'Status', value: sub.status === 'trialing' ? (trialDays ?? 0) + ' trial days left' : (sub.status || '').replace(/_/g, ' '), accent: sub.status === 'past_due' ? RED : sub.status === 'active' ? GREEN : GOLD, sub: sub.cancel_at ? 'Cancels ' + new Date(sub.cancel_at).toLocaleDateString() : sub.status === 'trialing' ? 'Full access during trial' : undefined },
+            {href: '/app/billing',  label: 'Price', value: priceCents > 0 ? fmtC(priceCents) : '—', sub: priceCents > 0 ? 'Billed ' + (sub.billing_interval === 'annual' ? 'annually' : 'monthly') : 'No charge on file' },
+            {href: '/app/billing',  label: 'AI Takeoff Pages', value: unlimitedAi ? 'Unlimited' : aiLimit != null ? aiUsed + ' / ' + aiLimit : String(aiUsed), accent: !unlimitedAi && aiLimit != null && aiUsed >= aiLimit ? RED : undefined, sub: unlimitedAi ? aiUsed + ' used this period' : aiLimit != null ? Math.max(0, aiLimit - aiUsed) + ' left this period' : 'This billing period' },
+            {href: '/app/billing',  label: 'Renews In', value: renewDays != null ? renewDays + ' days' : '—', sub: sub.current_period_end ? new Date(sub.current_period_end).toLocaleDateString() : 'No period on file' },
           ]} />
         )}
 
@@ -367,7 +367,7 @@ export default function BillingPage() {
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 {sub.status === 'active' && (
                   <button onClick={handlePortal} disabled={portalLoading} style={ghostButtonStyle} className="pmBtn">
-                    {portalLoading ? 'Loading...' : 'Manage Payment & Invoices'}
+                    {portalLoading ? 'Loading…' : 'Manage Payment & Invoices'}
                   </button>
                 )}
                 {sub.status === 'active' && !sub.cancel_at && (
@@ -396,7 +396,7 @@ export default function BillingPage() {
               <div style={{ fontSize: 13, color: DIM }}>Renews in {periodDays} days · {sub.billing_interval === 'annual' ? 'Annual' : 'Monthly'} billing</div>
             )}
             {sub.status === 'past_due' && (
-              <div style={{ fontSize: 14, color: RED, fontWeight: 600 }}>Payment failed — please update your payment method</div>
+              <div style={{ fontSize: 14, color: RED, fontWeight: 600 }}>Payment failed — please update your payment method.</div>
             )}
             {sub.cancel_at && (
               <div style={{ fontSize: 13, color: RED }}>Cancels on {new Date(sub.cancel_at).toLocaleDateString()}</div>
@@ -406,7 +406,7 @@ export default function BillingPage() {
             {sub.status === 'trialing' && trialDays !== null && (
               <div style={{ marginTop: 20 }}>
                 <div style={{ height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, ((30 - trialDays) / 30) * 100))}%`, background: `linear-gradient(90deg, ${GOLD}, #FCD34D)`, borderRadius: 3 }} />
+                  <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, ((30 - trialDays) / 30) * 100))}%`, background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`, borderRadius: 3 }} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: DIM }}>
                   <span>Trial started</span>
@@ -433,8 +433,8 @@ export default function BillingPage() {
           style={{ marginBottom: 28 }}
           action={
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '3px', border: `1px solid ${BORDER}` }}>
-              <button onClick={() => setAnnual(false)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: !annual ? 'rgba(245,158,11,0.15)' : 'transparent', color: !annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Monthly</button>
-              <button onClick={() => setAnnual(true)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: annual ? 'rgba(245,158,11,0.15)' : 'transparent', color: annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button onClick={() => setAnnual(false)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: !annual ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'transparent', color: !annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Monthly</button>
+              <button onClick={() => setAnnual(true)} style={{ padding: '6px 16px', borderRadius: 6, border: 'none', background: annual ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'transparent', color: annual ? GOLD : DIM, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 Annual
                 <span style={{ fontSize: 10, fontWeight: 800, color: GREEN, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.25)', padding: '1px 6px', borderRadius: 8 }}>-17%</span>
               </button>
@@ -447,19 +447,19 @@ export default function BillingPage() {
               const isUpgrade = plan.id === 'professional' && currentPlanName.includes('starter');
               return (
                 <div key={plan.id} style={{
-                  background: plan.popular ? 'linear-gradient(180deg, #141416, #141416)' : RAISED,
+                  background: RAISED,
                   border: `1.5px solid ${isCurrent ? GREEN : plan.popular ? GOLD : BORDER}`,
                   borderRadius: 14, overflow: 'hidden', position: 'relative',
-                  boxShadow: plan.popular ? `0 0 40px rgba(245,158,11,0.08)` : 'none',
+                  boxShadow: 'none',
                 }}>
                   {plan.popular && !isCurrent && (
-                    <div style={{ background: `linear-gradient(90deg, ${GOLD}, #FCD34D)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: '#1C1C1E', letterSpacing: 2, textTransform: 'uppercase' }}>Most Popular</div>
+                    <div style={{ background: `linear-gradient(90deg, ${GOLD}, var(--brand-primary-strong))`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: '#0A0A00' }}>Most Popular</div>
                   )}
                   {isCurrent && (
-                    <div style={{ background: 'rgba(34,197,94,0.15)', borderBottom: `1px solid rgba(34,197,94,0.25)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: GREEN, letterSpacing: 2, textTransform: 'uppercase' }}>Current Plan</div>
+                    <div style={{ background: 'rgba(34,197,94,0.15)', borderBottom: `1px solid rgba(34,197,94,0.25)`, textAlign: 'center', padding: '5px 0', fontSize: 10, fontWeight: 800, color: GREEN }}>Current Plan</div>
                   )}
                   <div style={{ padding: '24px 22px' }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: plan.popular ? GOLD : DIM, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>{plan.name}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: plan.popular ? GOLD : DIM, marginBottom: 4 }}>{plan.name}</div>
                     <div style={{ fontSize: 12, color: DIM, marginBottom: 16 }}>{plan.tagline}</div>
 
                     {plan.price_mo > 0 ? (
@@ -480,12 +480,12 @@ export default function BillingPage() {
                       style={{
                         width: '100%', padding: '11px 0', borderRadius: 8, border: isCurrent ? `1px solid rgba(34,197,94,0.3)` : plan.popular ? 'none' : `1px solid ${BORDER}`,
                         background: isCurrent ? 'rgba(34,197,94,0.08)' : plan.popular ? 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))' : 'rgba(255,255,255,0.06)',
-                        color: isCurrent ? GREEN : plan.popular ? '#241500' : TEXT,
+                        color: isCurrent ? GREEN : plan.popular ? '#0A0A00' : TEXT,
                         fontWeight: 800, fontSize: 13, cursor: isCurrent ? 'default' : 'pointer', marginBottom: 20,
                         boxShadow: plan.popular && !isCurrent ? '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' : 'none',
                       }}
                     >
-                      {isCurrent ? 'Current Plan' : upgrading === plan.id ? 'Loading...' : plan.id === 'enterprise' ? 'Contact Sales' : isUpgrade ? 'Upgrade Now' : 'Select Plan'}
+                      {isCurrent ? 'Current Plan' : upgrading === plan.id ? 'Loading…' : plan.id === 'enterprise' ? 'Contact Sales' : isUpgrade ? 'Upgrade Now' : 'Select Plan'}
                     </button>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -517,7 +517,7 @@ export default function BillingPage() {
           {/* Current plan summary + Change plan via the Stripe billing portal */}
           <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '18px 20px', marginBottom: 18, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, color: DIM, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 4 }}>Current Plan</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: DIM, marginBottom: 4 }}>Current Plan</div>
               {sub ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 18, fontWeight: 900, color: TEXT }}>{sub.plan_name}</span>
@@ -527,7 +527,7 @@ export default function BillingPage() {
                   </span>
                 </div>
               ) : (
-                <div style={{ fontSize: 14, color: DIM }}>{loading ? 'Loading your plan...' : 'No active subscription — choose a plan above.'}</div>
+                <div style={{ fontSize: 14, color: DIM }}>{loading ? 'Loading your plan…' : 'No active subscription — choose a plan above.'}</div>
               )}
               <div style={{ fontSize: 12, color: DIM, marginTop: 6 }}>
                 {sub && (sub.status === 'active' || sub.status === 'past_due')
@@ -537,7 +537,7 @@ export default function BillingPage() {
             </div>
             {sub && (sub.status === 'active' || sub.status === 'past_due') && (
               <button onClick={handlePortal} disabled={portalLoading} style={goldOutlineButtonStyle} className="pmBtn">
-                {portalLoading ? 'Loading...' : 'Change Plan'}
+                {portalLoading ? 'Loading…' : 'Change Plan'}
               </button>
             )}
           </div>
@@ -561,10 +561,10 @@ export default function BillingPage() {
                 const pendingDisable = state === 'active' && !!disableReqs[addon.key];
                 const busy = requesting === addon.key;
                 const chip =
-                  state === 'active' ? { label: pendingDisable ? 'Active · disable requested' : 'Active', bg: 'rgba(34,197,94,0.12)', color: GREEN } :
-                  state === 'trial' ? { label: trialLeft != null ? `Trial · ${trialLeft}d left` : 'Trial', bg: 'rgba(245,158,11,0.12)', color: GOLD } :
-                  state === 'requested' ? { label: 'Requested', bg: 'rgba(245,158,11,0.12)', color: GOLD } :
-                  { label: 'Not enabled', bg: 'rgba(255,255,255,0.06)', color: DIM };
+                  state === 'active' ? { label: pendingDisable ? 'Active · Disable Requested' : 'Active', bg: 'rgba(34,197,94,0.12)', color: GREEN } :
+                  state === 'trial' ? { label: trialLeft != null ? `Trial · ${trialLeft}d Left` : 'Trial', bg: 'var(--brand-primary-12)', color: GOLD } :
+                  state === 'requested' ? { label: 'Requested', bg: 'var(--brand-primary-12)', color: GOLD } :
+                  { label: 'Not Enabled', bg: 'rgba(255,255,255,0.06)', color: DIM };
                 return (
                   <div key={addon.key} style={{ background: RAISED, border: `1px solid ${state === 'active' || state === 'trial' ? 'rgba(34,197,94,0.3)' : BORDER}`, borderRadius: 14, padding: '18px 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
@@ -573,7 +573,7 @@ export default function BillingPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 12.5, fontWeight: 800, color: GOLD }}>{addon.price}</span>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: DIM, letterSpacing: 1, textTransform: 'uppercase', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, padding: '1px 7px', borderRadius: 6 }}>{addon.kind}</span>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: DIM, textTransform: 'capitalize', background: 'rgba(255,255,255,0.05)', border: `1px solid ${BORDER}`, padding: '1px 7px', borderRadius: 6 }}>{addon.kind}</span>
                     </div>
                     <div style={{ fontSize: 12, color: DIM, lineHeight: 1.55, flex: 1 }}>{addon.desc}</div>
                     {state === 'requested' ? (
@@ -582,11 +582,11 @@ export default function BillingPage() {
                       <div style={{ fontSize: 12, color: DIM, fontWeight: 600, lineHeight: 1.5 }}>Disable requested — stays on until our team processes it (within 1 business day).</div>
                     ) : state === 'active' || state === 'trial' ? (
                       <button onClick={() => requestAddon(addon, 'disable')} disabled={busy} style={{ ...dangerGhostStyle, padding: '8px 14px', fontSize: 12.5, alignSelf: 'flex-start' }} className="pmBtn">
-                        {busy ? 'Submitting...' : 'Request Disable'}
+                        {busy ? 'Submitting…' : 'Request Disable'}
                       </button>
                     ) : (
                       <button onClick={() => requestAddon(addon, 'enable')} disabled={busy} style={{ ...goldOutlineButtonStyle, padding: '8px 14px', fontSize: 12.5, alignSelf: 'flex-start' }} className="pmBtn">
-                        {busy ? 'Submitting...' : 'Enable'}
+                        {busy ? 'Submitting…' : 'Enable'}
                       </button>
                     )}
                   </div>
@@ -597,7 +597,7 @@ export default function BillingPage() {
           {entError && (
             <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: RED, flexWrap: 'wrap' }}>
               <Warning size={16} weight="fill" color={RED} />
-              <span>Couldn't load add-on status — cards may show "Not enabled" for add-ons you already have.</span>
+              <span>Couldn't load add-on status — cards may show "Not Enabled" for add-ons you already have.</span>
               <button onClick={loadEntitlements} style={{ background: 'none', border: 'none', color: GOLD, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>Retry</button>
             </div>
           )}
@@ -606,7 +606,7 @@ export default function BillingPage() {
           </div>
 
           {/* Downgrade guidance */}
-          <div style={{ marginTop: 16, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ marginTop: 16, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 240 }}>
               <div style={{ fontSize: 13, fontWeight: 800, color: TEXT, marginBottom: 3 }}>Thinking about downgrading?</div>
               <div style={{ fontSize: 12.5, color: DIM, lineHeight: 1.6 }}>
@@ -615,7 +615,7 @@ export default function BillingPage() {
             </div>
             {sub && (sub.status === 'active' || sub.status === 'past_due') && (
               <button onClick={handlePortal} disabled={portalLoading} style={ghostButtonStyle} className="pmBtn">
-                {portalLoading ? 'Loading...' : 'Open Billing Portal'}
+                {portalLoading ? 'Loading…' : 'Open Billing Portal'}
               </button>
             )}
           </div>
@@ -624,7 +624,7 @@ export default function BillingPage() {
         {/* Install App Section */}
         <SectionCard flat
           icon={<DeviceMobile size={17} weight="duotone" color={GOLD} />}
-          title="Get the app for iPhone & iPad"
+          title="Get the App for iPhone & iPad"
           subtitle="Saguaro Control Systems App"
           style={{ marginBottom: 28 }}
           action={
@@ -673,18 +673,18 @@ export default function BillingPage() {
       {/* Cancel Confirmation Modal */}
       {showCancel && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div style={{ background: '#141416', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '36px 32px', maxWidth: 440, width: '100%', boxShadow: 'var(--shadow-lg)' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, color: TEXT }}>Cancel your subscription?</div>
+          <div style={{ background: 'var(--bg-surface)', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '36px 32px', maxWidth: 440, width: '100%', boxShadow: 'var(--shadow-lg)' }}>
+            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 12, color: TEXT }}>Cancel Your Subscription?</div>
             <div style={{ fontSize: 14, color: DIM, lineHeight: 1.65, marginBottom: 28 }}>
               You'll retain access until the end of your current billing period. Your data will be preserved for 30 days after that. You can reactivate anytime.
             </div>
-            <div style={{ background: 'rgba(245,158,11,0.08)', border: `1px solid rgba(245,158,11,0.2)`, borderRadius: 8, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: GOLD }}>
+            <div style={{ background: 'var(--brand-primary-08)', border: `1px solid var(--brand-primary-18)`, borderRadius: 8, padding: '12px 16px', marginBottom: 24, fontSize: 13, color: GOLD }}>
               Before you go — email us at <strong>support@saguarocontrol.net</strong> and we'll give you 20% off your next 3 months.
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={() => setShowCancel(false)} style={{ flex: 1, padding: '12px 0', background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Keep My Plan</button>
               <button onClick={handleCancel} disabled={canceling} style={{ flex: 1, padding: '12px 0', background: 'rgba(239,68,68,0.1)', border: `1px solid rgba(239,68,68,0.3)`, borderRadius: 8, color: RED, fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-                {canceling ? 'Canceling...' : 'Yes, Cancel'}
+                {canceling ? 'Canceling…' : 'Yes, Cancel'}
               </button>
             </div>
           </div>

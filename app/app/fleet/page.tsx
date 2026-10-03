@@ -14,15 +14,15 @@ import { useToast } from '@/components/Toast';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', RED = '#ef4444', AMBER = '#f59e0b';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
+const DIM = '#CBD5E1', TEXT = '#FFFFFF', GREEN = '#3dd68c', RED = '#ef4444', AMBER = 'var(--warning)';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const usd = (c: number) => '$' + Math.round((c || 0) / 100).toLocaleString();
 const now = () => new Date().toISOString();
 const fmt = (s: string | null) => s ? new Date(s + (s.length === 10 ? 'T12:00:00' : '')).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 const EXPIRIES: [string, string][] = [['warranty_expires', 'Warranty'], ['registration_expires', 'Registration'], ['insurance_expires', 'Insurance'], ['contract_expires', 'Contract']];
 const ago = (iso: string | null | undefined) => { if (!iso) return null; const ms = Date.now() - Date.parse(iso); if (!Number.isFinite(ms)) return null; const m = Math.max(0, Math.round(ms / 60000)); if (m < 60) return `${m}m ago`; const h = Math.round(m / 60); if (h < 24) return `${h}h ago`; const d = Math.round(h / 24); return d < 30 ? `${d}d ago` : `${Math.round(d / 30)}mo ago`; };
-const STATUS_LABEL: Record<string, string> = { active: 'Active', in_shop: 'In shop', retired: 'Retired', out_of_service: 'Out of service' };
+const STATUS_LABEL: Record<string, string> = { active: 'Active', in_shop: 'In Shop', retired: 'Retired', out_of_service: 'Out of Service' };
 
 export default function FleetPage() {
   const { showToast } = useToast();
@@ -130,25 +130,25 @@ export default function FleetPage() {
 
   const exportReport = () => {
     const w = window.open('', '_blank'); if (!w) return;
-    const rows = assets.map((a) => { const h = assetHealth(a as Asset, records as MaintenanceRecord[], docs as AssetDoc[], now()); const col = (STATUS_COLOR as any)[h.overall]; const nextM = h.maintenance.status !== 'unknown' && h.maintenance.status !== 'ok' ? `${h.maintenance.label || 'service'} (${h.maintenance.remainingMiles != null ? (h.maintenance.remainingMiles < 0 ? Math.abs(h.maintenance.remainingMiles) + ' mi over' : h.maintenance.remainingMiles + ' mi') : ''}${h.maintenance.remainingDays != null ? ` ${h.maintenance.remainingDays}d` : ''})` : '—'; const exp = EXPIRIES.map(([c, l]) => { const e = expiryStatus(a[c], now()); return e.status === 'expired' ? `${l} EXPIRED` : e.status === 'soon' ? `${l} ${e.daysUntil}d` : null; }).filter(Boolean).join(', ') || '—'; return `<tr><td style="border:1px solid #ccc;padding:5px 8px"><b>${a.name}</b><div style="color:#666;font-size:10px">${[a.make, a.model, a.year].filter(Boolean).join(' ')}</div></td><td style="border:1px solid #ccc;padding:5px 8px">${a.type}</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right">${a.odometer ? Math.round(a.odometer).toLocaleString() : '—'}</td><td style="border:1px solid #ccc;padding:5px 8px">${a.status}</td><td style="border:1px solid #ccc;padding:5px 8px;color:${nextM === '—' ? '#111' : '#b8860b'}">${nextM}</td><td style="border:1px solid #ccc;padding:5px 8px">${exp}</td><td style="border:1px solid #ccc;padding:5px 8px"><span style="display:inline-block;width:9px;height:9px;border-radius:5px;background:${col}"></span></td></tr>`; }).join('');
+    const rows = assets.map((a) => { const h = assetHealth(a as Asset, records as MaintenanceRecord[], docs as AssetDoc[], now()); const col = (STATUS_COLOR as any)[h.overall]; const nextM = h.maintenance.status !== 'unknown' && h.maintenance.status !== 'ok' ? `${h.maintenance.label || 'service'} (${h.maintenance.remainingMiles != null ? (h.maintenance.remainingMiles < 0 ? Math.abs(h.maintenance.remainingMiles) + ' mi over' : h.maintenance.remainingMiles + ' mi') : ''}${h.maintenance.remainingDays != null ? ` ${h.maintenance.remainingDays}d` : ''})` : '—'; const exp = EXPIRIES.map(([c, l]) => { const e = expiryStatus(a[c], now()); return e.status === 'expired' ? `${l} expired` : e.status === 'soon' ? `${l} ${e.daysUntil}d` : null; }).filter(Boolean).join(', ') || '—'; return `<tr><td style="border:1px solid #ccc;padding:5px 8px"><b>${a.name}</b><div style="color:#666;font-size:10px">${[a.make, a.model, a.year].filter(Boolean).join(' ')}</div></td><td style="border:1px solid #ccc;padding:5px 8px">${a.type}</td><td style="border:1px solid #ccc;padding:5px 8px;text-align:right">${a.odometer ? Math.round(a.odometer).toLocaleString() : '—'}</td><td style="border:1px solid #ccc;padding:5px 8px">${a.status}</td><td style="border:1px solid #ccc;padding:5px 8px;color:${nextM === '—' ? '#111' : '#b8860b'}">${nextM}</td><td style="border:1px solid #ccc;padding:5px 8px">${exp}</td><td style="border:1px solid #ccc;padding:5px 8px"><span style="display:inline-block;width:9px;height:9px;border-radius:5px;background:${col}"></span></td></tr>`; }).join('');
     w.document.write(`<html><head><title>Fleet Report</title></head><body style="font-family:Arial;padding:24px;color:#111">
       <h2 style="margin:0">Fleet Report</h2><div style="color:#555;font-size:12px;margin-bottom:16px">Generated ${new Date().toLocaleString()}</div>
       <div style="display:flex;gap:24px;margin-bottom:18px;font-size:13px">
         <div><b style="font-size:20px">${summary.total}</b><br>Assets</div>
-        <div><b style="font-size:20px;color:#c03030">${summary.maintenanceOverdue}</b><br>Maint. overdue</div>
-        <div><b style="font-size:20px;color:#b8860b">${summary.maintenanceSoon}</b><br>Due soon</div>
-        <div><b style="font-size:20px;color:#c03030">${summary.docsExpired}</b><br>Docs expired</div>
+        <div><b style="font-size:20px;color:#c03030">${summary.maintenanceOverdue}</b><br>Maint. Overdue</div>
+        <div><b style="font-size:20px;color:#b8860b">${summary.maintenanceSoon}</b><br>Due Soon</div>
+        <div><b style="font-size:20px;color:#c03030">${summary.docsExpired}</b><br>Docs Expired</div>
         <div><b style="font-size:20px;color:#b8860b">${summary.docsExpiringSoon}</b><br>Expiring</div>
-        <div><b style="font-size:20px">${usd(summary.totalMaintenanceCostCents)}</b><br>Maint. cost</div>
+        <div><b style="font-size:20px">${usd(summary.totalMaintenanceCostCents)}</b><br>Maint. Cost</div>
       </div>
       ${summary.needsAttention.length ? `<div style="background:#fff4e5;border-left:3px solid #b8860b;padding:8px 12px;margin-bottom:14px;font-size:13px"><b>Needs attention:</b> ${summary.needsAttention.join(', ')}</div>` : ''}
-      <table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr style="background:#141416;color:#fff">${['Asset', 'Type', 'Odometer', 'Status', 'Next maintenance', 'Expiring', ''].map((h) => `<th style="border:1px solid #ccc;padding:6px 8px;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+      <table style="border-collapse:collapse;width:100%;font-size:12px"><thead><tr style="background:#141416;color:#fff">${['Asset', 'Type', 'Odometer', 'Status', 'Next Maintenance', 'Expiring', ''].map((h) => `<th style="border:1px solid #ccc;padding:6px 8px;text-align:left">${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
       </body></html>`);
     w.document.close(); w.focus(); w.print();
   };
 
   const inp: React.CSSProperties = { background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: DARK, fontWeight: 700, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14 };
+  const btn: React.CSSProperties = { background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 8, padding: '9px 16px', cursor: 'pointer', fontSize: 14 };
 
   return (
     <>
@@ -157,25 +157,25 @@ export default function FleetPage() {
         {/* Header */}
         <ModuleHero
           eyebrow="Fleet Management"
-          eyebrowIcon={<Truck size={13} weight="fill" color="#F59E0B" />}
+          eyebrowIcon={<Truck size={13} weight="fill" color={GOLD} />}
           title="Fleet"
           accent="Registry"
           subtitle="Maintenance, documents, and last-known location."
           actions={<>
-            <button onClick={openIntegrate} style={ghostButtonStyle} className="pmBtn"><Broadcast size={15} weight="fill" color={GOLD} />GPS integration</button>
+            <button onClick={openIntegrate} style={ghostButtonStyle} className="pmBtn"><Broadcast size={15} weight="fill" color={GOLD} />GPS Integration</button>
             {assets.length > 0 && <button onClick={exportReport} style={ghostButtonStyle} className="pmBtn"><FilePdf size={15} />Report</button>}
-            <button data-tour="add-asset" onClick={() => { setF({ type: 'vehicle' }); setAdding(true); }} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" />Add asset</button>
+            <button data-tour="add-asset" onClick={() => { setF({ type: 'vehicle' }); setAdding(true); }} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" />Add Asset</button>
           </>}
         />
 
         {/* KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, marginBottom: 20 }}>
           <StatCard icon={<Truck size={19} weight="duotone" color={GOLD} />} label="Assets" value={summary.total} accent={GOLD} sub={`${summary.byType.vehicle || 0} vehicle${(summary.byType.vehicle || 0) === 1 ? '' : 's'} · ${summary.byType.equipment || 0} equipment${summary.byStatus.in_shop ? ` · ${summary.byStatus.in_shop} in shop` : ''}`} delay={0.02}  href="/app/fleet"/>
-          <StatCard icon={<Warning size={19} weight="duotone" color={summary.maintenanceOverdue ? RED : GOLD} />} label="Maint. overdue" value={summary.maintenanceOverdue} accent={summary.maintenanceOverdue ? RED : undefined} sub={summary.needsAttention.length ? summary.needsAttention.slice(0, 2).join(', ') + (summary.needsAttention.length > 2 ? ` +${summary.needsAttention.length - 2}` : '') : 'all caught up'} delay={0.06}  href="/app/fleet"/>
-          <StatCard icon={<Wrench size={19} weight="duotone" color={summary.maintenanceSoon ? AMBER : GOLD} />} label="Due soon" value={summary.maintenanceSoon} accent={summary.maintenanceSoon ? AMBER : undefined} sub="within 500 mi or 14 days" delay={0.10}  href="/app/fleet"/>
-          <StatCard icon={<FileText size={19} weight="duotone" color={summary.docsExpired ? RED : GOLD} />} label="Docs expired" value={summary.docsExpired} accent={summary.docsExpired ? RED : undefined} sub={summary.docsExpired ? 'renew to stay road-legal' : 'registrations & insurance current'} delay={0.14}  href="/app/fleet"/>
-          <StatCard icon={<CalendarBlank size={19} weight="duotone" color={summary.docsExpiringSoon ? AMBER : GOLD} />} label="Expiring" value={summary.docsExpiringSoon} accent={summary.docsExpiringSoon ? AMBER : undefined} sub="docs inside the 30-day window" delay={0.18}  href="/app/fleet"/>
-          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Maint. cost" value={usd(summary.totalMaintenanceCostCents)} sub={`across ${records.length} service record${records.length === 1 ? '' : 's'}`} delay={0.22}  href="/app/fleet"/>
+          <StatCard icon={<Warning size={19} weight="duotone" color={summary.maintenanceOverdue ? RED : GOLD} />} label="Maint. Overdue" value={summary.maintenanceOverdue} accent={summary.maintenanceOverdue ? RED : undefined} sub={summary.needsAttention.length ? summary.needsAttention.slice(0, 2).join(', ') + (summary.needsAttention.length > 2 ? ` +${summary.needsAttention.length - 2}` : '') : 'All caught up'} delay={0.06}  href="/app/fleet"/>
+          <StatCard icon={<Wrench size={19} weight="duotone" color={summary.maintenanceSoon ? AMBER : GOLD} />} label="Due Soon" value={summary.maintenanceSoon} accent={summary.maintenanceSoon ? AMBER : undefined} sub="Within 500 mi or 14 days" delay={0.10}  href="/app/fleet"/>
+          <StatCard icon={<FileText size={19} weight="duotone" color={summary.docsExpired ? RED : GOLD} />} label="Docs Expired" value={summary.docsExpired} accent={summary.docsExpired ? RED : undefined} sub={summary.docsExpired ? 'Renew to stay road-legal' : 'Registrations & insurance current'} delay={0.14}  href="/app/fleet"/>
+          <StatCard icon={<CalendarBlank size={19} weight="duotone" color={summary.docsExpiringSoon ? AMBER : GOLD} />} label="Expiring" value={summary.docsExpiringSoon} accent={summary.docsExpiringSoon ? AMBER : undefined} sub="Docs inside the 30-day window" delay={0.18}  href="/app/fleet"/>
+          <StatCard icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />} label="Maint. Cost" value={usd(summary.totalMaintenanceCostCents)} sub={`Across ${records.length} service record${records.length === 1 ? '' : 's'}`} delay={0.22}  href="/app/fleet"/>
         </div>
 
         {assets.some((a) => a.last_lat) ? <SectionCard flat title="Live Map" icon={<MapPin size={17} weight="duotone" color={GOLD} />} style={{ marginBottom: 16 }}><FleetMap assets={assets} pings={selId ? pings : []} selId={selId} onSelect={setSelId} /></SectionCard> : null}
@@ -185,7 +185,7 @@ export default function FleetPage() {
           <SectionCard title="Fleet Registry" icon={<Truck size={17} weight="duotone" color={GOLD} />} bodyStyle={{ padding: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '8px 12px', marginBottom: 10 }}><MagnifyingGlass size={16} color={DIM} /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search fleet…" style={{ background: 'none', border: 'none', color: TEXT, outline: 'none', flex: 1, fontSize: 14 }} /></div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '68vh', overflowY: 'auto' }}>
-              {filtered.length === 0 ? (assets.length ? <div style={{ color: DIM, fontSize: 13, padding: 12 }}>No matches</div> : <PremiumEmpty compact icon={<Truck size={30} weight="duotone" color={GOLD} />} title="No assets yet" description="Add your first vehicle or piece of equipment — the registry tracks maintenance schedules, expiring documents, GPS location, and lifetime cost per asset." action={<button onClick={() => { setF({ type: 'vehicle' }); setAdding(true); }} style={{ ...goldButtonStyle, padding: '8px 14px', fontSize: 13 }} className="pmBtn"><Plus size={14} weight="bold" />Add asset</button>} />) : filtered.map((a) => {
+              {filtered.length === 0 ? (assets.length ? <div style={{ color: DIM, fontSize: 13, padding: 12 }}>No matches</div> : <PremiumEmpty compact icon={<Truck size={30} weight="duotone" color={GOLD} />} title="No assets yet" description="Add your first vehicle or piece of equipment — the registry tracks maintenance schedules, expiring documents, GPS location, and lifetime cost per asset." action={<button onClick={() => { setF({ type: 'vehicle' }); setAdding(true); }} style={{ ...goldButtonStyle, padding: '8px 14px', fontSize: 13 }} className="pmBtn"><Plus size={14} weight="bold" />Add Asset</button>} />) : filtered.map((a) => {
                 const h = assetHealth(a as Asset, records as MaintenanceRecord[], docs as AssetDoc[], now());
                 const mnt = h.maintenance;
                 const badExp = h.expiries.find((x) => x.status === 'expired') || h.expiries.find((x) => x.status === 'soon');
@@ -194,19 +194,19 @@ export default function FleetPage() {
                   : badExp ? `${badExp.category} ${badExp.status === 'expired' ? 'expired' : `expires in ${badExp.daysUntil}d`}` : null;
                 const seen = ago(a.last_location_at);
                 return (
-                <button key={a.id} onClick={() => setSelId(a.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: selId === a.id ? 'rgba(245,158,11,0.12)' : RAISED, border: `1px solid ${selId === a.id ? GOLD : BORDER}`, borderRadius: 10, padding: 10, cursor: 'pointer', color: TEXT }}>
+                <button key={a.id} onClick={() => setSelId(a.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: selId === a.id ? 'var(--brand-primary-12)' : RAISED, border: `1px solid ${selId === a.id ? GOLD : BORDER}`, borderRadius: 10, padding: 10, cursor: 'pointer', color: TEXT }}>
                   {a.type === 'vehicle' ? <Truck size={20} color={DIM} /> : <Wrench size={20} color={DIM} />}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</span>
-                      {a.status && a.status !== 'active' ? <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, letterSpacing: 0.4, textTransform: 'uppercase', padding: '1px 7px', borderRadius: 999, background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.4)', color: '#FBBF24' }}>{STATUS_LABEL[a.status] || a.status}</span> : null}
+                      {a.status && a.status !== 'active' ? <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, padding: '1px 7px', borderRadius: 999, background: 'color-mix(in srgb, var(--warning) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 40%, transparent)', color: 'var(--warning)' }}>{STATUS_LABEL[a.status] || a.status}</span> : null}
                     </div>
                     <div style={{ color: DIM, fontSize: 12.5 }}>{[a.license_plate, a.odometer ? `${Math.round(a.odometer).toLocaleString()} ${a.odometer_unit || 'mi'}` : null].filter(Boolean).join(' · ') || a.category || a.type}</div>
                     {issue ? <div style={{ fontSize: 11.5, color: h.overall === 'overdue' ? RED : AMBER, marginTop: 2 }}>{issue}</div> : null}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                     <span title={h.overall} style={{ width: 10, height: 10, borderRadius: 5, background: (STATUS_COLOR as any)[h.overall] }} />
-                    <span style={{ fontSize: 10, color: DIM, whiteSpace: 'nowrap' }}>{seen ? <><MapPin size={9} style={{ verticalAlign: -1 }} /> {seen}</> : 'no GPS'}</span>
+                    <span style={{ fontSize: 10, color: DIM, whiteSpace: 'nowrap' }}>{seen ? <><MapPin size={9} style={{ verticalAlign: -1 }} /> {seen}</> : 'No GPS'}</span>
                   </div>
                 </button>
               ); })}
@@ -225,21 +225,21 @@ export default function FleetPage() {
                     <button onClick={() => delAsset(sel.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><Trash size={17} color={RED} /></button>
                   </div>
                   <div style={{ display: 'flex', gap: 18, marginTop: 12, flexWrap: 'wrap', fontSize: 13 }}>
-                    {[['VIN', sel.vin], ['Plate', sel.license_plate], ['S/N', sel.serial_number], ['Odometer', sel.odometer ? `${Math.round(sel.odometer).toLocaleString()} ${sel.odometer_unit || 'mi'}` : null], ['Status', STATUS_LABEL[sel.status] || sel.status], ['Services', selRecords.length ? `${selRecords.length} logged` : null], ['Lifetime maint.', selRecords.some((r) => r.cost_cents) ? usd(selRecords.reduce((s, r) => s + (Number(r.cost_cents) || 0), 0)) : null], ['Docs', selDocs.length ? `${selDocs.length} on file` : null], ['Last seen', ago(sel.last_location_at)]].filter((x) => x[1]).map(([k, v]) => <div key={k as string}><div style={{ color: DIM, fontSize: 11, textTransform: 'uppercase' }}>{k}</div><div style={{ fontWeight: 600 }}>{v}</div></div>)}
+                    {[['VIN', sel.vin], ['Plate', sel.license_plate], ['S/N', sel.serial_number], ['Odometer', sel.odometer ? `${Math.round(sel.odometer).toLocaleString()} ${sel.odometer_unit || 'mi'}` : null], ['Status', STATUS_LABEL[sel.status] || sel.status], ['Services', selRecords.length ? `${selRecords.length} logged` : null], ['Lifetime Maint.', selRecords.some((r) => r.cost_cents) ? usd(selRecords.reduce((s, r) => s + (Number(r.cost_cents) || 0), 0)) : null], ['Docs', selDocs.length ? `${selDocs.length} on file` : null], ['Last Seen', ago(sel.last_location_at)]].filter((x) => x[1]).map(([k, v]) => <div key={k as string}><div style={{ color: DIM, fontSize: 11 }}>{k}</div><div style={{ fontWeight: 600 }}>{v}</div></div>)}
                   </div>
                 </SectionCard>
 
                 {/* warnings */}
                 {(() => { const warns = EXPIRIES.map(([col, label]) => ({ label, ...expiryStatus(sel[col], now()) })).filter((w) => w.status === 'soon' || w.status === 'expired'); const mnt = health?.maintenance; const show = warns.length || (mnt && (mnt.status === 'soon' || mnt.status === 'overdue')); return show ? (
-                  <div style={{ background: 'rgba(245,158,11,0.06)', border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 12, padding: 14 }}>
-                    <div style={{ fontSize: 12, color: AMBER, fontWeight: 800, letterSpacing: 0.5, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Warning size={15} weight="fill" />ATTENTION</div>
+                  <div style={{ background: 'color-mix(in srgb, var(--warning) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 30%, transparent)', borderRadius: 12, padding: 14 }}>
+                    <div style={{ fontSize: 12, color: AMBER, fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}><Warning size={15} weight="fill" />Attention</div>
                     {mnt && (mnt.status === 'soon' || mnt.status === 'overdue') ? <div style={{ fontSize: 13.5, color: mnt.status === 'overdue' ? RED : AMBER, marginBottom: 4 }}>Maintenance {mnt.status}: {mnt.label || 'service'}{mnt.remainingMiles != null ? ` (${mnt.remainingMiles < 0 ? Math.abs(mnt.remainingMiles) + ' mi over' : mnt.remainingMiles + ' mi left'})` : ''}{mnt.remainingDays != null ? ` (${mnt.remainingDays < 0 ? Math.abs(mnt.remainingDays) + ' days over' : mnt.remainingDays + ' days'})` : ''}</div> : null}
                     {warns.map((w) => <div key={w.label} style={{ fontSize: 13.5, color: w.status === 'expired' ? RED : AMBER }}>{w.label} {w.status === 'expired' ? `expired ${Math.abs(w.daysUntil!)} days ago` : `expires in ${w.daysUntil} days`}</div>)}
                   </div>
                 ) : null; })()}
 
                 {/* location */}
-                <SectionCard flat title="Last known location" icon={<MapPin size={17} weight="duotone" color={GOLD} />} action={sel.last_lat ? <a href={`https://maps.google.com/?q=${sel.last_lat},${sel.last_lng}`} target="_blank" rel="noreferrer" style={{ color: GOLD, fontSize: 13, textDecoration: 'none', display: 'inline-flex', gap: 5, alignItems: 'center' }}>Open in Maps <ArrowSquareOut size={13} /></a> : null}>
+                <SectionCard flat title="Last Known Location" icon={<MapPin size={17} weight="duotone" color={GOLD} />} action={sel.last_lat ? <a href={`https://maps.google.com/?q=${sel.last_lat},${sel.last_lng}`} target="_blank" rel="noreferrer" style={{ color: GOLD, fontSize: 13, textDecoration: 'none', display: 'inline-flex', gap: 5, alignItems: 'center' }}>Open in Maps <ArrowSquareOut size={13} /></a> : null}>
                   {sel.last_lat ? (
                     <div style={{ fontSize: 13.5 }}><MapPin size={15} color={GOLD} weight="fill" style={{ verticalAlign: -2 }} /> {sel.last_lat.toFixed(5)}, {sel.last_lng.toFixed(5)} · <span style={{ color: DIM }}>{fmt(sel.last_location_at)}{sel.last_speed_mph ? ` · ${Math.round(sel.last_speed_mph)} mph` : ''}</span>
                       {trip.points > 1 ? <div style={{ color: DIM, fontSize: 12.5, marginTop: 6 }}>Recent trip: {trip.distanceMiles} mi · max {trip.maxSpeedMph} mph · {trip.durationMin} min ({trip.points} pings)</div> : null}
@@ -248,7 +248,7 @@ export default function FleetPage() {
                 </SectionCard>
 
                 {/* maintenance */}
-                <SectionCard flat title="Maintenance" icon={<Wrench size={17} weight="duotone" color={GOLD} />} action={<button onClick={() => setAddingMaint(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">+ Log service</button>}>
+                <SectionCard flat title="Maintenance" icon={<Wrench size={17} weight="duotone" color={GOLD} />} action={<button onClick={() => setAddingMaint(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">+ Log Service</button>}>
                   {selRecords.length === 0 ? <span style={{ color: DIM, fontSize: 13 }}>No maintenance logged.</span> : selRecords.map((r) => (
                     <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${BORDER}`, fontSize: 13.5 }}>
                       <Wrench size={15} color={DIM} />
@@ -259,7 +259,7 @@ export default function FleetPage() {
                 </SectionCard>
 
                 {/* documents */}
-                <SectionCard title="Documents" icon={<FileText size={17} weight="duotone" color={GOLD} />} action={<button onClick={() => setAddingDoc(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">+ Add doc</button>}>
+                <SectionCard title="Documents" icon={<FileText size={17} weight="duotone" color={GOLD} />} action={<button onClick={() => setAddingDoc(true)} style={{ ...goldButtonStyle, padding: '7px 13px', fontSize: 13 }} className="pmBtn">+ Add Doc</button>}>
                   {selDocs.length === 0 ? <span style={{ color: DIM, fontSize: 13 }}>No documents. Add titles, warranties, insurance, contracts — with expirations for auto-warnings.</span> : selDocs.map((d) => { const e = expiryStatus(d.expires_at, now()); return (
                     <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${BORDER}`, fontSize: 13.5 }}>
                       <FileText size={15} color={DIM} />
@@ -275,31 +275,31 @@ export default function FleetPage() {
       </PremiumSurface>
 
       {(adding || editing) && (
-        <Modal title={adding ? 'Add asset' : 'Edit asset'} onClose={() => { setAdding(false); setEditing(false); }}>
-          {adding && <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>{['vehicle', 'equipment'].map((t) => <button key={t} onClick={() => setF({ ...f, type: t })} style={{ ...btn, flex: 1, background: f.type === t ? GOLD : 'transparent', color: f.type === t ? DARK : TEXT, border: `1px solid ${BORDER}`, textTransform: 'capitalize' }}>{t}</button>)}</div>}
-          {f.type === 'vehicle' && <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}><input value={f.vin ?? ''} onChange={(e) => setF({ ...f, vin: e.target.value.toUpperCase() })} placeholder="VIN (auto-fills)" style={{ ...inp, fontFamily: 'monospace' }} /><button onClick={decodeVin} disabled={vinBusy} style={{ ...btn, background: '#FBBF24', display: 'inline-flex', alignItems: 'center', gap: 5 }}><Barcode size={16} />{vinBusy ? '…' : 'Decode'}</button></div>}
+        <Modal title={adding ? 'Add Asset' : 'Edit Asset'} onClose={() => { setAdding(false); setEditing(false); }}>
+          {adding && <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>{['vehicle', 'equipment'].map((t) => <button key={t} onClick={() => setF({ ...f, type: t })} style={{ ...btn, flex: 1, background: f.type === t ? GOLD : 'transparent', color: f.type === t ? '#0A0A00' : TEXT, border: `1px solid ${BORDER}`, textTransform: 'capitalize' }}>{t}</button>)}</div>}
+          {f.type === 'vehicle' && <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}><input value={f.vin ?? ''} onChange={(e) => setF({ ...f, vin: e.target.value.toUpperCase() })} placeholder="VIN (auto-fills)" style={{ ...inp, fontFamily: 'monospace' }} /><button onClick={decodeVin} disabled={vinBusy} style={{ ...btn, background: 'var(--brand-primary-strong)', display: 'inline-flex', alignItems: 'center', gap: 5 }}><Barcode size={16} />{vinBusy ? '…' : 'Decode'}</button></div>}
           <input value={f.name ?? ''} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Name / nickname (e.g. Truck 12)" style={inp} />
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input value={f.make ?? ''} onChange={(e) => setF({ ...f, make: e.target.value })} placeholder="Make" style={inp} /><input value={f.model ?? ''} onChange={(e) => setF({ ...f, model: e.target.value })} placeholder="Model" style={inp} /><input value={f.year ?? ''} onChange={(e) => setF({ ...f, year: e.target.value })} placeholder="Year" style={{ ...inp, width: 80 }} /></div>
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><input value={f.license_plate ?? ''} onChange={(e) => setF({ ...f, license_plate: e.target.value })} placeholder="Plate" style={inp} /><input value={f.serial_number ?? ''} onChange={(e) => setF({ ...f, serial_number: e.target.value })} placeholder="Serial #" style={inp} /><input value={f.odometer ?? ''} onChange={(e) => setF({ ...f, odometer: e.target.value })} placeholder="Odometer" style={{ ...inp, width: 110 }} /></div>
           {editing && <>
-            <div style={{ color: DIM, fontSize: 12, marginTop: 12, marginBottom: 4 }}>Expirations (for warnings)</div>
+            <div style={{ color: DIM, fontSize: 12, marginTop: 12, marginBottom: 4 }}>Expirations (for Warnings)</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{EXPIRIES.map(([col, label]) => <label key={col} style={{ flex: 1, minWidth: 130, fontSize: 12, color: DIM }}>{label}<SaguaroDatePicker value={f[col] ?? ''} onChange={(v) => setF({ ...f, [col]: v })} style={{ ...inp, marginTop: 2 }} /></label>)}</div>
           </>}
-          <button onClick={adding ? addAsset : saveEdit} style={{ ...btn, marginTop: 14, width: '100%' }}>{adding ? 'Add asset' : 'Save'}</button>
+          <button onClick={adding ? addAsset : saveEdit} style={{ ...btn, marginTop: 14, width: '100%' }}>{adding ? 'Add Asset' : 'Save'}</button>
         </Modal>
       )}
       {addingMaint && (
-        <Modal title="Log service" onClose={() => setAddingMaint(false)}>
+        <Modal title="Log Service" onClose={() => setAddingMaint(false)}>
           <select value={m.kind} onChange={(e) => setM({ ...m, kind: e.target.value })} style={inp}>{['service', 'repair', 'inspection', 'other'].map((k) => <option key={k} value={k}>{k}</option>)}</select>
           <input value={m.description ?? ''} onChange={(e) => setM({ ...m, description: e.target.value })} placeholder="Description (e.g. Oil change)" style={{ ...inp, marginTop: 8 }} />
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}><SaguaroDatePicker value={m.performed_at} onChange={(v) => setM({ ...m, performed_at: v })} style={inp} /><input value={m.odometer_at ?? ''} onChange={(e) => setM({ ...m, odometer_at: e.target.value })} placeholder="Odometer" style={inp} /><input value={m.cost ?? ''} onChange={(e) => setM({ ...m, cost: e.target.value })} placeholder="Cost $" style={inp} /></div>
-          <div style={{ color: DIM, fontSize: 12, marginTop: 12, marginBottom: 4 }}>Next due (triggers a warning)</div>
+          <div style={{ color: DIM, fontSize: 12, marginTop: 12, marginBottom: 4 }}>Next Due (Triggers a Warning)</div>
           <div style={{ display: 'flex', gap: 8 }}><input value={m.next_due_odometer ?? ''} onChange={(e) => setM({ ...m, next_due_odometer: e.target.value })} placeholder="Next @ odometer" style={inp} /><SaguaroDatePicker value={m.next_due_date ?? ''} onChange={(v) => setM({ ...m, next_due_date: v })} style={inp} /></div>
-          <button onClick={addMaint} style={{ ...btn, marginTop: 14, width: '100%' }}>Log it</button>
+          <button onClick={addMaint} style={{ ...btn, marginTop: 14, width: '100%' }}>Log It</button>
         </Modal>
       )}
       {addingDoc && (
-        <Modal title="Add document" onClose={() => setAddingDoc(false)}>
+        <Modal title="Add Document" onClose={() => setAddingDoc(false)}>
           <select value={doc.category} onChange={(e) => setDoc({ ...doc, category: e.target.value })} style={inp}>{['title', 'warranty', 'insurance', 'registration', 'contract', 'receipt', 'manual', 'photo', 'other'].map((c) => <option key={c} value={c}>{c}</option>)}</select>
           <input value={doc.label ?? ''} onChange={(e) => setDoc({ ...doc, label: e.target.value })} placeholder="Label" style={{ ...inp, marginTop: 8 }} />
           <label onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) uploadDocFile(f); }} style={{ display: 'block', marginTop: 8, border: `1.5px dashed ${doc.file_url && !/^https?:\/\//.test(doc.file_url) ? DIM : BORDER}`, borderRadius: 10, padding: 16, textAlign: 'center', cursor: docUploading ? 'wait' : 'pointer', color: DIM, fontSize: 13, background: DARK }}>
@@ -307,12 +307,12 @@ export default function FleetPage() {
             <input type="file" accept="image/*,application/pdf" disabled={docUploading} style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadDocFile(f); }} />
           </label>
           <input value={doc.file_url ?? ''} onChange={(e) => setDoc({ ...doc, file_url: e.target.value })} placeholder="…or paste a file URL" style={{ ...inp, marginTop: 8 }} />
-          <label style={{ fontSize: 12, color: DIM, marginTop: 10, display: 'block' }}>Expires (for warnings)<SaguaroDatePicker value={doc.expires_at ?? ''} onChange={(v) => setDoc({ ...doc, expires_at: v })} style={{ ...inp, marginTop: 2 }} /></label>
+          <label style={{ fontSize: 12, color: DIM, marginTop: 10, display: 'block' }}>Expires (for Warnings)<SaguaroDatePicker value={doc.expires_at ?? ''} onChange={(v) => setDoc({ ...doc, expires_at: v })} style={{ ...inp, marginTop: 2 }} /></label>
           <button onClick={addDocument} style={{ ...btn, marginTop: 14, width: '100%' }}>Add</button>
         </Modal>
       )}
       {showIntegrate && (
-        <Modal title="GPS / telematics integration" onClose={() => setShowIntegrate(false)}>
+        <Modal title="GPS / Telematics Integration" onClose={() => setShowIntegrate(false)}>
           <p style={{ color: DIM, fontSize: 13, lineHeight: 1.5, marginTop: 0 }}>
             Connect <b>any</b> GPS provider — Bouncie, Samsara, Motive, or a plain tracker — without handing us your login.
             Generate a connect key, then paste your <b>ingest URL</b> into that provider's <b>webhook</b> setting.
@@ -320,7 +320,7 @@ export default function FleetPage() {
           </p>
 
           <div style={{ background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 12, margin: '12px 0' }}>
-            <div style={{ color: DIM, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Your ingest URL</div>
+            <div style={{ color: DIM, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Your Ingest URL</div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <code style={{ flex: 1, fontSize: 12, color: GREEN, wordBreak: 'break-all', fontFamily: 'monospace' }}>{ingestBase}</code>
               <button onClick={() => copyText(ingestBase, 'url')} style={{ ...btn, padding: '6px 10px', background: 'transparent', color: TEXT, border: `1px solid ${BORDER}`, display: 'inline-flex', gap: 4, alignItems: 'center' }}>{copied === 'url' ? <Check size={14} color={GREEN} /> : <Copy size={14} />}{copied === 'url' ? 'Copied' : 'Copy'}</button>
@@ -329,8 +329,8 @@ export default function FleetPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 6, marginBottom: 8 }}>
-            <div style={{ fontSize: 12, color: DIM, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', flex: 1 }}>Connect keys</div>
-            <button onClick={() => genToken('generic')} disabled={genBusy} style={{ ...btn, padding: '6px 12px', fontSize: 13, display: 'inline-flex', gap: 5, alignItems: 'center' }}><Plus size={14} weight="bold" />{genBusy ? '…' : 'New key'}</button>
+            <div style={{ fontSize: 12, color: DIM, fontWeight: 700, flex: 1 }}>Connect Keys</div>
+            <button onClick={() => genToken('generic')} disabled={genBusy} style={{ ...btn, padding: '6px 12px', fontSize: 13, display: 'inline-flex', gap: 5, alignItems: 'center' }}><Plus size={14} weight="bold" />{genBusy ? '…' : 'New Key'}</button>
           </div>
 
           {integrations.length === 0 ? (

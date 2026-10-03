@@ -5,7 +5,7 @@ import { ArrowsClockwise, Robot, CheckCircle, Bell, WarningOctagon, Warning, Lis
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, FlowSteps, InsightRow, goldButtonStyle } from '@/components/ui/premium';
 import { useProjects } from '@/lib/hooks/useProjects';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
 
 type AlertSeverity = 'critical' | 'high' | 'medium' | 'low';
 
@@ -26,12 +26,12 @@ interface AutopilotAlert {
 // in execution order — used to render the pipeline rail and bucket live alerts.
 const SCAN_RULES = [
   { title: 'Overdue RFIs',         desc: 'Open RFIs past their response-due date.',       match: (a: AutopilotAlert) => /overdue rfi/i.test(a.title) },
-  { title: 'Expiring insurance',   desc: 'Active certificates expiring within 30 days.',  match: (a: AutopilotAlert) => /insurance/i.test(a.title) },
-  { title: 'Pending lien waivers', desc: 'Waivers still awaiting signature.',             match: (a: AutopilotAlert) => /lien waiver/i.test(a.title) },
-  { title: 'Stale change orders',  desc: 'COs sitting in pending for more than 14 days.', match: (a: AutopilotAlert) => /stale change order/i.test(a.title) },
-  { title: 'Budget overruns',      desc: 'Budget lines at 90% spent or beyond.',          match: (a: AutopilotAlert) => /budget/i.test(a.title) },
-  { title: 'Overdue invoices',     desc: 'Sent or pending invoices past their due date.', match: (a: AutopilotAlert) => /overdue invoice/i.test(a.title) },
-  { title: 'Scope-creep velocity', desc: 'CO / RFI spikes over the last 14 days.',        match: (a: AutopilotAlert) => /velocity/i.test(a.title) },
+  { title: 'Expiring Insurance',   desc: 'Active certificates expiring within 30 days.',  match: (a: AutopilotAlert) => /insurance/i.test(a.title) },
+  { title: 'Pending Lien Waivers', desc: 'Waivers still awaiting signature.',             match: (a: AutopilotAlert) => /lien waiver/i.test(a.title) },
+  { title: 'Stale Change Orders',  desc: 'COs sitting in pending for more than 14 days.', match: (a: AutopilotAlert) => /stale change order/i.test(a.title) },
+  { title: 'Budget Overruns',      desc: 'Budget lines at 90% spent or beyond.',          match: (a: AutopilotAlert) => /budget/i.test(a.title) },
+  { title: 'Overdue Invoices',     desc: 'Sent or pending invoices past their due date.', match: (a: AutopilotAlert) => /overdue invoice/i.test(a.title) },
+  { title: 'Scope-Creep Velocity', desc: 'CO / RFI spikes over the last 14 days.',        match: (a: AutopilotAlert) => /velocity/i.test(a.title) },
 ];
 
 export default function AutopilotPage() {
@@ -71,7 +71,7 @@ export default function AutopilotPage() {
     return filter === 'all' || a.severity === filter;
   });
 
-  const sevColor = (s: string) => s==='critical'?{bg:'rgba(192,48,48,.12)',c:'#ff7070',border:'rgba(192,48,48,.3)'}:s==='high'?{bg:'rgba(249,115,22,.1)',c:'#f97316',border:'rgba(249,115,22,.3)'}:{bg:'rgba(245, 158, 11,.1)',c:GOLD,border:'rgba(245, 158, 11,.3)'};
+  const sevColor = (s: string) => s==='critical'?{bg:'rgba(192,48,48,.12)',c:'#ff7070',border:'rgba(192,48,48,.3)'}:s==='high'?{bg:'rgba(249,115,22,.1)',c:'#f97316',border:'rgba(249,115,22,.3)'}:{bg:'color-mix(in srgb, var(--warning) 10%, transparent)',c:'var(--warning)',border:'color-mix(in srgb, var(--warning) 30%, transparent)'};
 
   async function acknowledge(alertId: string) {
     setAlertStates(prev => ({ ...prev, [alertId]: 'acknowledged' }));
@@ -111,14 +111,14 @@ export default function AutopilotPage() {
         body: JSON.stringify({}),
       });
       const data = await r.json();
-      showFeedback(data.summary || 'Autopilot scan complete!');
+      showFeedback(data.summary || 'Autopilot scan complete.');
       // The scan replaces the open alert set server-side — refresh, and drop
       // per-alert local state that was keyed to the previous set's ids.
       await loadAlerts();
       setAlertStates({});
       setLastScanAt(new Date());
     } catch {
-      showFeedback('Autopilot scan triggered!');
+      showFeedback('Autopilot scan triggered.');
     }
     clearInterval(ticker);
     setScanStage(-1);
@@ -157,7 +157,7 @@ export default function AutopilotPage() {
       {/* Header */}
       <ModuleHero
         eyebrow="AI Monitoring"
-        eyebrowIcon={<Robot size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<Robot size={13} weight="fill" color="var(--brand-primary)" />}
         title="Autopilot"
         accent="Dashboard"
         subtitle="Scans every 6 hours, and on demand."
@@ -169,9 +169,9 @@ export default function AutopilotPage() {
             style={{...goldButtonStyle, opacity: scanning ? 0.65 : 1, cursor: scanning ? 'not-allowed' : 'pointer'}}
           >
             {scanning ? (
-              <><ArrowsClockwise size={16} weight="bold" color="#1A1206" /> Scanning...</>
+              <><ArrowsClockwise size={16} weight="bold" color="#0A0A00" /> Scanning…</>
             ) : (
-              <><Robot size={16} weight="fill" color="#1A1206" /> Run Scan Now</>
+              <><Robot size={16} weight="fill" color="#0A0A00" /> Run Scan Now</>
             )}
           </button>
         }
@@ -182,25 +182,25 @@ export default function AutopilotPage() {
         <StatCard
           icon={<Bell size={19} weight="duotone" color={GOLD} />}
           label="Total Alerts" value={allAlerts.length.toString()}
-          sub={byProject.length > 0 ? `${SCAN_RULES.length} checks · ${byProject.length} project${byProject.length === 1 ? '' : 's'} affected` : `across ${SCAN_RULES.length} deterministic checks`} delay={0.02}
+          sub={byProject.length > 0 ? `${SCAN_RULES.length} checks · ${byProject.length} project${byProject.length === 1 ? '' : 's'} affected` : `Across ${SCAN_RULES.length} deterministic checks`} delay={0.02}
          href="/app/autopilot"/>
         <StatCard
           icon={<WarningOctagon size={19} weight="duotone" color="#ff7070" />}
           label="Critical" value={allAlerts.filter(a=>a.severity==='critical').length.toString()}
           accent={allAlerts.some(a=>a.severity==='critical') ? '#ff7070' : undefined}
-          sub="need immediate action" delay={0.06}
+          sub="Need immediate action" delay={0.06}
          href="/app/autopilot"/>
         <StatCard
           icon={<Warning size={19} weight="duotone" color="#f97316" />}
           label="High" value={allAlerts.filter(a=>a.severity==='high').length.toString()}
           accent={allAlerts.some(a=>a.severity==='high') ? '#f97316' : undefined}
-          sub="review soon" delay={0.10}
+          sub="Review soon" delay={0.10}
          href="/app/autopilot"/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color="#3dd68c" />}
           label="Acknowledged" value={acknowledgedCount.toString()}
           accent={acknowledgedCount > 0 ? '#3dd68c' : undefined}
-          sub="handled this session" delay={0.14}
+          sub="Handled this session" delay={0.14}
          href="/app/autopilot"/>
       </div>
 
@@ -220,8 +220,8 @@ export default function AutopilotPage() {
             return (
               <div key={alert.id} style={{background:isAcknowledged?'rgba(61,214,140,.05)':'rgba(255,255,255,0.03)',border:`1px solid ${isAcknowledged?'rgba(61,214,140,.22)':sc.border}`,borderRadius:14,padding:20,opacity:isAcknowledged?0.72:1,transition:'all .2s'}}>
                 <div style={{display:'flex',alignItems:'flex-start',gap:14}}>
-                  <div style={{padding:'4px 10px',borderRadius:6,background:isAcknowledged?'rgba(61,214,140,.15)':sc.bg,color:isAcknowledged?'#3dd68c':sc.c,fontSize:10,fontWeight:800,textTransform:'uppercase' as const,border:`1px solid ${isAcknowledged?'rgba(61,214,140,.3)':sc.border}`,flexShrink:0,marginTop:2}}>
-                    {isAcknowledged ? 'ACK' : alert.severity}
+                  <div style={{padding:'4px 10px',borderRadius:6,background:isAcknowledged?'rgba(61,214,140,.15)':sc.bg,color:isAcknowledged?'#3dd68c':sc.c,fontSize:10,fontWeight:800,textTransform:'capitalize' as const,border:`1px solid ${isAcknowledged?'rgba(61,214,140,.3)':sc.border}`,flexShrink:0,marginTop:2}}>
+                    {isAcknowledged ? 'Acknowledged' : alert.severity}
                   </div>
                   <div style={{flex:1}}>
                     <div style={{fontWeight:800,color:TEXT,fontSize:15,marginBottom:5}}>{alert.title}</div>
@@ -232,7 +232,7 @@ export default function AutopilotPage() {
                       {alert.created_at && <span style={{fontSize:11,padding:'2px 8px',borderRadius:5,background:'rgba(255,255,255,0.05)',color:'rgba(255,255,255,0.55)'}}>{new Date(alert.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>}
                       {alert.project_id && (
                         <Link href={`/app/projects/${alert.project_id}/autopilot`} style={{textDecoration:'none'}}>
-                          <span style={{fontSize:11,padding:'2px 8px',borderRadius:5,background:'rgba(245,158,11,0.10)',border:'1px solid rgba(245,158,11,0.30)',color:'#FBBF24',fontWeight:700}}>{projName(alert.project_id) || 'View project'}</span>
+                          <span style={{fontSize:11,padding:'2px 8px',borderRadius:5,background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',color:'var(--brand-primary-strong)',fontWeight:700}}>{projName(alert.project_id) || 'View Project'}</span>
                         </Link>
                       )}
                     </div>
@@ -262,7 +262,7 @@ export default function AutopilotPage() {
           {visibleAlerts.length===0&&(
             <PremiumEmpty
               icon={<CheckCircle size={38} weight="duotone" color="#3dd68c" />}
-              title="No autopilot alerts — all clear!"
+              title="No Autopilot alerts — all clear."
               description="Every check came back clean: RFIs answered on time, insurance current, waivers signed, change orders moving, budgets inside 90%, invoices collected, and no scope-creep spikes. The engine re-scans automatically every 6 hours."
               action={
                 <button
@@ -272,9 +272,9 @@ export default function AutopilotPage() {
                   style={{...goldButtonStyle, opacity: scanning ? 0.65 : 1, cursor: scanning ? 'not-allowed' : 'pointer'}}
                 >
                   {scanning ? (
-                    <><ArrowsClockwise size={16} weight="bold" color="#1A1206" /> Scanning...</>
+                    <><ArrowsClockwise size={16} weight="bold" color="#0A0A00" /> Scanning…</>
                   ) : (
-                    <><Robot size={16} weight="fill" color="#1A1206" /> Run Scan Now</>
+                    <><Robot size={16} weight="fill" color="#0A0A00" /> Run Scan Now</>
                   )}
                 </button>
               }
@@ -312,7 +312,7 @@ export default function AutopilotPage() {
           <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'10px 0'}}/>
           <InsightRow label="Critical" value={String(liveAlerts.filter(a=>a.severity==='critical').length)} accent="#ff7070"/>
           <InsightRow label="High" value={String(liveAlerts.filter(a=>a.severity==='high').length)} accent="#f97316"/>
-          <InsightRow label="Medium / low" value={String(liveAlerts.filter(a=>a.severity==='medium'||a.severity==='low').length)}/>
+          <InsightRow label="Medium / Low" value={String(liveAlerts.filter(a=>a.severity==='medium'||a.severity==='low').length)}/>
         </SectionCard>
       </div>
       </div>

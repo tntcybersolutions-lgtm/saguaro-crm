@@ -65,9 +65,9 @@ export default function DirectoryPage() {
       {/* Roster pulse — real counts across the portfolio */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/command-center/directory',  label: 'Stakeholders', value: String(summary.total), accent: summary.total > 0 ? C.gold : undefined, sub: 'across the portfolio' },
-          {href: '/app/command-center/directory',  label: 'Sites Covered', value: String(summary.sites), sub: 'with a roster' },
-          {href: '/app/command-center/directory',  label: 'Distinct Roles', value: String(summary.roles), sub: 'trades, vendors, authorities' },
+          {href: '/app/command-center/directory',  label: 'Stakeholders', value: String(summary.total), accent: summary.total > 0 ? C.gold : undefined, sub: 'Across the portfolio' },
+          {href: '/app/command-center/directory',  label: 'Sites Covered', value: String(summary.sites), sub: 'With a roster' },
+          {href: '/app/command-center/directory',  label: 'Distinct Roles', value: String(summary.roles), sub: 'Trades, vendors, authorities' },
         ]} />
       )}
 
@@ -87,7 +87,7 @@ export default function DirectoryPage() {
           <SectionCard>
             <PremiumEmpty icon={<Users size={32} weight="duotone" color={C.gold} />} title="No stakeholders yet"
               description="Build the roster for each location — every trade, vendor, and authority in one place so anyone in the org knows who to call."
-              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add your first</GoldButton>} />
+              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add Your First</GoldButton>} />
           </SectionCard>
         ) : (
           <SectionCard flat>
@@ -106,7 +106,7 @@ export default function DirectoryPage() {
                     <div style={{ fontSize: 15, fontWeight: 800 }}>{s.name}</div>
                     <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, color: col, background: `${col}18`, padding: '2px 8px', borderRadius: 6, marginTop: 4 }}>{role}</span>
                   </div>
-                  <button onClick={() => remove(s.id)} aria-label="remove" style={{ background: 'none', border: 'none', color: C.faint, cursor: 'pointer', fontSize: 15, lineHeight: 1 }}><X size={15} weight="regular" color={C.faint} /></button>
+                  <button onClick={() => remove(s.id)} aria-label="Remove" style={{ background: 'none', border: 'none', color: C.faint, cursor: 'pointer', fontSize: 15, lineHeight: 1 }}><X size={15} weight="regular" color={C.faint} /></button>
                 </div>
                 <div style={{ fontSize: 12, color: C.dim, marginTop: 10, display: 'flex', flexDirection: 'column', gap: 3 }}>
                   {s.company && <span><Buildings size={14} weight="regular" color={C.dim} style={{ verticalAlign: 'middle', marginRight: 4 }} />{s.company}</span>}
@@ -129,17 +129,17 @@ function AddForm({ projects, onDone }: { projects: any[]; onDone: () => void }) 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
-  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: '#1c1c1e', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.name) { setErr('Site and name are required.'); return; }
     setBusy(true); setErr('');
-    try { await addStakeholder(f); onDone(); } catch (e: any) { setErr(e?.message || 'Failed'); } finally { setBusy(false); }
+    try { await addStakeholder(f); onDone(); } catch (e: any) { setErr(e?.message || "Couldn't add the stakeholder. Please try again."); } finally { setBusy(false); }
   }
 
   return (
-    <SectionCard title="Add stakeholder" subtitle="Name, role, and how to reach them — tied to a site" icon={<Users size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+    <SectionCard title="Add Stakeholder" subtitle="Name, role, and how to reach them — tied to a site." icon={<Users size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div><label style={lbl}>Name *</label><input style={inp} value={f.name || ''} onChange={(e) => set('name', e.target.value)} /></div>
         <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select site…</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>

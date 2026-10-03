@@ -19,15 +19,15 @@ import {
   CurrencyCircleDollar, Warning, X,
 } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B', GOLD_HI = '#FBBF24', DARK = '#0a0a0a', BORDER = 'rgba(255,255,255,0.08)', HAIRLINE = 'rgba(255,255,255,0.07)';
+const GOLD = 'var(--brand-primary)', GOLD_HI = 'var(--brand-primary-strong)', DARK = 'var(--bg-base)', BORDER = 'rgba(255,255,255,0.08)', HAIRLINE = 'rgba(255,255,255,0.07)';
 const DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.45)', TEXT = '#FFFFFF', GREEN = '#3dd68c', RED = '#c03030';
 
 // Module accent — bids family (desert rose). Chips / eyebrows / badges ONLY.
 const BIDS = moduleAccent('bids');
 
 const INP: React.CSSProperties = { width: '100%', padding: '9px 12px', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const LBL: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
-const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: MUTED, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
+const LBL: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 6 };
+const TH: React.CSSProperties = { padding: '10px 14px', textAlign: 'left', fontSize: 10.5, fontWeight: 700, color: MUTED, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
 const TD: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, verticalAlign: 'top' };
 
 // Shapes returned by GET /api/bids/win-factors and GET /api/bids/history.
@@ -145,23 +145,23 @@ export default function IntelligencePage() {
         <StatStrip items={[
           {href: '/app/bid-intelligence',  label: 'Overall Win Rate', value: `${headlineWinRate}%`, accent: headlineWinRate >= 50 ? GREEN : undefined, sub: `${recordWins}W · ${recordLosses}L recorded`, icon: <Trophy size={11} weight="bold" color={BIDS.hex} /> },
           {href: '/app/bid-intelligence',  label: 'Avg Winning Margin', value: `${(avgMargin||0).toFixed(1)}%`, icon: <Percent size={11} weight="bold" color={BIDS.hex} /> },
-          {href: '/app/bid-intelligence',  label: 'Bids Analyzed', value: String(bidsAnalyzed), sub: 'marked Won or Lost', icon: <Stack size={11} weight="bold" color={BIDS.hex} /> },
-          {href: '/app/bid-intelligence',  label: 'Total Bid Value', value: `$${totalValue.toLocaleString()}`, accent: totalValue > 0 ? GOLD : undefined, sub: 'across logged bids', icon: <CurrencyCircleDollar size={11} weight="bold" color={GOLD_HI} /> },
-          {href: '/app/bid-intelligence',  label: 'Trades Tracked', value: String(factors.length), sub: factors.length > 0 ? 'learned win factors' : 'none learned yet', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
+          {href: '/app/bid-intelligence',  label: 'Bids Analyzed', value: String(bidsAnalyzed), sub: 'Marked Won or Lost', icon: <Stack size={11} weight="bold" color={BIDS.hex} /> },
+          {href: '/app/bid-intelligence',  label: 'Total Bid Value', value: `$${totalValue.toLocaleString()}`, accent: totalValue > 0 ? GOLD : undefined, sub: 'Across logged bids', icon: <CurrencyCircleDollar size={11} weight="bold" color={GOLD_HI} /> },
+          {href: '/app/bid-intelligence',  label: 'Trades Tracked', value: String(factors.length), sub: factors.length > 0 ? 'Learned win factors' : 'None learned yet', icon: <ChartBar size={11} weight="bold" color={BIDS.hex} /> },
         ]} />
       )}
 
       {/* Score opportunity panel — real AI scoring, inline on the page */}
       {scoring && (
         <SectionCard
-          title="Score a new bid opportunity"
+          title="Score a New Bid Opportunity"
           subtitle="Priced against your recorded win history."
           icon={<Sparkle size={17} weight="duotone" color={BIDS.hex} />}
           accent={BIDS.hex}
           style={{ marginBottom: 24 }}
         >
           <div className="pg-stack-1" style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14,marginBottom:14}}>
-            {[['Opportunity Title',title,setTitle,'e.g. 3,200 SF Custom Home - Scottsdale'],['Estimated Value',value,setValue,'$450,000']].map(f=>(
+            {[['Opportunity Title',title,setTitle,'e.g. 3,200 SF Custom Home — Scottsdale'],['Estimated Value',value,setValue,'$450,000']].map(f=>(
               <div key={f[0] as string}><label style={LBL}>{f[0] as string}</label>
                 <input value={f[1] as string} onChange={e=>(f[2] as Function)(e.target.value)} placeholder={f[3] as string} style={INP}/></div>
             ))}
@@ -179,7 +179,7 @@ export default function IntelligencePage() {
               </select></div>
           </div>
           <div style={{marginBottom:16}}><label style={LBL}>Description</label>
-            <textarea value={desc} onChange={e=>setDesc(e.target.value)} rows={3} placeholder="Describe the project scope..." style={{...INP,resize:'vertical'}}/></div>
+            <textarea value={desc} onChange={e=>setDesc(e.target.value)} rows={3} placeholder="Describe the project scope…" style={{...INP,resize:'vertical'}}/></div>
           <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
             <button onClick={scoreOpportunity} disabled={loading} className="pmBtn" style={{...goldButtonStyle,cursor:loading?'wait':'pointer',opacity:loading?0.6:1}}>
               <Sparkle size={15} weight="bold" />{loading?'Scoring…':'Score with AI'}
@@ -190,13 +190,13 @@ export default function IntelligencePage() {
           {result&&!('error' in result)&&<div style={{marginTop:24}}>
             {/* Machined verdict band — micro-caps labels over hairline-separated figures */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:0,marginBottom:20,borderTop:`1px solid ${HAIRLINE}`,borderBottom:`1px solid ${HAIRLINE}`}}>
-              {[{l:'Fit Score',v:`${result['score']}/100`,c:TEXT},{l:'Win Probability',v:`${result['winProbability']}%`,c:GREEN},{l:'Recommendation',v:String(result['recommendation']??'').toUpperCase(),c:GOLD_HI},{l:'Suggested Margin',v:`${result['suggestedMargin']}%`,c:TEXT}].map((k,i)=>(
-                <div key={k.l} style={{textAlign:'center' as const,padding:'16px 10px',borderLeft:i>0?`1px solid ${HAIRLINE}`:'none'}}><div style={{fontSize:10,color:MUTED,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:8}}>{k.l}</div><div style={{fontSize:22,fontWeight:800,color:k.c,fontVariantNumeric:'tabular-nums' as const,letterSpacing:'-0.01em'}}>{k.v}</div></div>
+              {[{l:'Fit Score',v:`${result['score']}/100`,c:TEXT},{l:'Win Probability',v:`${result['winProbability']}%`,c:GREEN},{l:'Recommendation',v:String(result['recommendation']??'').replace(/^./,ch=>ch.toUpperCase()),c:GOLD_HI},{l:'Suggested Margin',v:`${result['suggestedMargin']}%`,c:TEXT}].map((k,i)=>(
+                <div key={k.l} style={{textAlign:'center' as const,padding:'16px 10px',borderLeft:i>0?`1px solid ${HAIRLINE}`:'none'}}><div style={{fontSize:10,color:MUTED,fontWeight:700,marginBottom:8}}>{k.l}</div><div style={{fontSize:22,fontWeight:800,color:k.c,fontVariantNumeric:'tabular-nums' as const,letterSpacing:'-0.01em'}}>{k.v}</div></div>
               ))}
             </div>
             <div style={{background:DARK,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,fontSize:13,color:DIM,lineHeight:1.7}}>{result['reasoning'] as string}</div>
             {Array.isArray(result['riskFactors'])&&(result['riskFactors'] as string[]).length>0&&<div style={{marginTop:14}}>
-              <div style={{fontSize:11,color:MUTED,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:'0.06em',marginBottom:8}}>Risk Factors</div>
+              <div style={{fontSize:11,color:MUTED,fontWeight:700,marginBottom:8}}>Risk Factors</div>
               {(result['riskFactors'] as string[]).map((rf,i)=>(
                 <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start',fontSize:12,color:DIM,lineHeight:1.6,marginBottom:5}}>
                   <span style={{width:5,height:5,borderRadius:'50%',background:RED,marginTop:6,flexShrink:0}}/>{rf}
@@ -239,17 +239,17 @@ export default function IntelligencePage() {
             }
           />
           <FlowStrip steps={[
-            { title: 'Log outcomes', desc: 'mark bids Won or Lost' },
-            { title: 'Engine learns', desc: 'win rates per trade + CSI division' },
-            { title: 'Score the next one', desc: 'AI fit score against your record' },
-            { title: 'Sharpen the number', desc: 'suggested margin, honest risks' },
+            { title: 'Log Outcomes', desc: 'Mark bids Won or Lost' },
+            { title: 'Engine Learns', desc: 'Win rates per trade + CSI division' },
+            { title: 'Score the Next One', desc: 'AI fit score against your record' },
+            { title: 'Sharpen the Number', desc: 'Suggested margin, honest risks' },
           ]} />
         </SectionCard>
       ) : (
       <div className="pg-stack-1" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24,alignItems:'start'}}>
         {/* Win rate profile — learned trade factors + real headline stats */}
         <SectionCard flat
-          title="Bid intelligence profile"
+          title="Bid Intelligence Profile"
           subtitle="Learned trade factors from your recorded outcomes"
           icon={<TrendUp size={17} weight="duotone" color={BIDS.hex} />}
           accent={BIDS.hex}
@@ -277,7 +277,7 @@ export default function IntelligencePage() {
             </div>
           );})}
           {best && (
-            <div style={{marginTop:20,display:'flex',gap:10,alignItems:'flex-start',background:'linear-gradient(180deg, rgba(245,158,11,0.08), rgba(255,255,255,0.02))',border:`1px solid rgba(245,158,11,0.3)`,borderRadius:10,padding:14,fontSize:12,color:DIM,lineHeight:1.6}}>
+            <div style={{marginTop:20,display:'flex',gap:10,alignItems:'flex-start',background:'linear-gradient(180deg, var(--brand-primary-08), rgba(255,255,255,0.02))',border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:10,padding:14,fontSize:12,color:DIM,lineHeight:1.6}}>
               <Sparkle size={14} weight="fill" color={GOLD_HI} style={{marginTop:2,flexShrink:0}} />
               <span><strong style={{color:TEXT,fontWeight:700}}>AI Recommendation:</strong> Strongest on {tradeLabel(best)} — {Math.round((best.win_rate||0)*100)}% win rate.{worst && worst!==best && (worst.win_rate||0) < (best.win_rate||0) ? ` Weakest on ${tradeLabel(worst)} — ${Math.round((worst.win_rate||0)*100)}% win rate; sharpen pricing or qualify harder there.` : ''}</span>
             </div>
@@ -286,7 +286,7 @@ export default function IntelligencePage() {
 
         {/* Bid history — this tenant's real recorded outcomes, machined table */}
         <SectionCard
-          title="Bid history"
+          title="Bid History"
           subtitle={`${bids.length} recorded bid${bids.length !== 1 ? 's' : ''}`}
           icon={<Notebook size={17} weight="duotone" color={BIDS.hex} />}
           accent={BIDS.hex}
@@ -303,7 +303,7 @@ export default function IntelligencePage() {
             <tbody>{bids.map((o,i)=>{
               const oc = String(o.outcome||'').toLowerCase();
               const won = oc==='won', lost = oc==='lost';
-              const proj = (o.project_name && o.project_name.trim()) || 'Untitled bid';
+              const proj = (o.project_name && o.project_name.trim()) || 'Untitled Bid';
               const type = (o.project_type && o.project_type.trim()) || (Array.isArray(o.trades) && o.trades.length ? o.trades[0] : '—');
               const amt = Number(o.bid_amount)||0;
               const mp = o.margin_pct==null ? null : Number(o.margin_pct);
@@ -316,8 +316,8 @@ export default function IntelligencePage() {
                 <td style={{...TD,textAlign:'right' as const,color:GOLD,fontWeight:700,fontVariantNumeric:'tabular-nums' as const,whiteSpace:'nowrap' as const}}>${amt.toLocaleString()}</td>
                 <td style={{...TD,textAlign:'right' as const,color:DIM,fontVariantNumeric:'tabular-nums' as const}}>{mp==null?'—':`${mp}%`}</td>
                 <td style={TD}>
-                  <span style={{fontSize:10,fontWeight:800,letterSpacing:'0.04em',padding:'3px 9px',borderRadius:999,background:won?'rgba(26,138,74,.15)':lost?'rgba(192,48,48,.12)':'rgba(255,255,255,.06)',color:won?GREEN:lost?RED:DIM,whiteSpace:'nowrap' as const}}>
-                    {(o.outcome||'').toString().toUpperCase()||'—'}
+                  <span style={{fontSize:10,fontWeight:800,padding:'3px 9px',borderRadius:999,background:won?'rgba(26,138,74,.15)':lost?'rgba(192,48,48,.12)':'rgba(255,255,255,.06)',color:won?GREEN:lost?RED:DIM,whiteSpace:'nowrap' as const}}>
+                    {(o.outcome||'').toString().replace(/^./,ch=>ch.toUpperCase())||'—'}
                   </span>
                   {lost&&o.loss_reason&&<div style={{fontSize:10,color:MUTED,marginTop:3}}>{o.loss_reason}</div>}
                 </td>

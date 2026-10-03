@@ -16,7 +16,7 @@ import { docTypeLabel } from '@/lib/document-types';
 import { PdfIcon } from '@/components/ui/FileTypeIcon';
 import { SortableTh, usePersistedSort, useSortedRows } from '@/app/app/_shared/table-sort';
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -36,8 +36,7 @@ function Badge({ label, color = '#CBD5E1', bg = 'rgba(148,163,184,.12)' }: { lab
     <span style={{
       fontSize: 10, fontWeight: 700, padding: '2px 8px',
       borderRadius: 4, background: bg, color,
-      textTransform: 'uppercase', letterSpacing: 0.3,
-    }}>{label}</span>
+    }}>{label ? String(label).replace(/_/g, ' ').replace(/\b[a-z]/g, c => c.toUpperCase()) : label}</span>
   );
 }
 
@@ -113,7 +112,7 @@ interface CloseoutItem {
 const isCloseoutDone = (s: string) => s === 'accepted';
 
 const CLOSEOUT_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  pending:      { label: 'Pending',      color: GOLD,      bg: 'rgba(245,158,11,.1)' },
+  pending:      { label: 'Pending',      color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 10%, transparent)' },
   submitted:    { label: 'Submitted',    color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
   under_review: { label: 'Under Review', color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
   accepted:     { label: 'Complete',     color: GREEN,     bg: 'rgba(61,214,140,.12)' },
@@ -130,9 +129,9 @@ const CLOSEOUT_TYPE_LABEL: Record<string, string> = {
 const statusConfig: Record<string, { color: string; bg: string }> = {
   paid:      { color: GREEN,   bg: 'rgba(61,214,140,.12)' },
   approved:  { color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
-  draft:     { color: GOLD,    bg: 'rgba(245, 158, 11,.12)' },
+  draft:     { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
   executed:  { color: GREEN,   bg: 'rgba(61,214,140,.12)' },
-  pending:   { color: GOLD,    bg: 'rgba(245, 158, 11,.12)' },
+  pending:   { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' },
   submitted: { color: '#4a9de8', bg: 'rgba(26,95,168,.12)' },
 };
 
@@ -470,14 +469,14 @@ export default function DocumentsPage() {
             flush
           >
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', padding: '14px 20px 4px' }}>
-              <button onClick={() => setLibTypeFilter('')} className="pmBtn" style={{ padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: !libTypeFilter ? 'rgba(245,158,11,0.16)' : 'rgba(255,255,255,0.05)', border: `1px solid ${!libTypeFilter ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.1)'}`, color: !libTypeFilter ? '#F5B84D' : '#9CA3AF' }}>
+              <button onClick={() => setLibTypeFilter('')} className="pmBtn" style={{ padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: !libTypeFilter ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${!libTypeFilter ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : 'rgba(255,255,255,0.1)'}`, color: !libTypeFilter ? 'var(--brand-primary-strong)' : '#9CA3AF' }}>
                 All · {libDocs.length}
               </button>
               {libTypes.map(t => {
                 const n = libDocs.filter(d => d.doc_type === t).length;
                 const on = libTypeFilter === t;
                 return (
-                  <button key={t} onClick={() => setLibTypeFilter(on ? '' : t)} className="pmBtn" style={{ padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: on ? 'rgba(245,158,11,0.16)' : 'rgba(255,255,255,0.05)', border: `1px solid ${on ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.1)'}`, color: on ? '#F5B84D' : '#9CA3AF' }}>
+                  <button key={t} onClick={() => setLibTypeFilter(on ? '' : t)} className="pmBtn" style={{ padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: on ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${on ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : 'rgba(255,255,255,0.1)'}`, color: on ? 'var(--brand-primary-strong)' : '#9CA3AF' }}>
                     {docTypeLabel(t)} · {n}
                   </button>
                 );
@@ -494,7 +493,7 @@ export default function DocumentsPage() {
                 </tr></thead>
                 <tbody>
                   {loadingLib && <SkeletonRows rows={5} cols={5} />}
-                  {errorLib && !loadingLib && <ErrorRow colSpan={5} message="Couldn't load the library." onRetry={loadLibrary} />}
+                  {errorLib && !loadingLib && <ErrorRow colSpan={5} message="Couldn't Load the Library" onRetry={loadLibrary} />}
                   {!loadingLib && !errorLib && sortedLib.map(doc => (
                     <tr key={doc.id}>
                       {/* The library listed every row by its doc_type, so
@@ -518,7 +517,7 @@ export default function DocumentsPage() {
                       </td>
                       <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>{doc.projectName ?? '—'}</td>
                       <td style={{ padding: '12px 16px', color: '#9CA3AF' }}>{fmtDay(doc.created_at) ?? '—'}</td>
-                      <td style={{ padding: '12px 16px' }}><Badge label={(doc.status || 'generated').toUpperCase()} color="#34D27B" bg="rgba(52,210,123,0.12)" /></td>
+                      <td style={{ padding: '12px 16px' }}><Badge label={doc.status || 'generated'} color="#34D27B" bg="rgba(52,210,123,0.12)" /></td>
                       <td style={{ padding: '12px 16px', textAlign: 'right' }}>
                         {/* A bid jacket has a real jacket behind it — drawings,
                             specs, bid form, requirements. Send the GC there
@@ -529,7 +528,7 @@ export default function DocumentsPage() {
                             className="pmBtn"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginRight: 8, textDecoration: 'none' }}
                           >
-                            Open jacket
+                            Open Jacket
                           </Link>
                         )}
                         <button onClick={() => openLibDoc(doc)} disabled={busyKey === `lib-${doc.id}`} className="pmBtn" title="Open the PDF" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '5px 12px', borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: '#E4E4E7' }}>
@@ -575,13 +574,13 @@ export default function DocumentsPage() {
                   {loadingPayApps ? (
                     <SkeletonRows cols={5} />
                   ) : errorPayApps ? (
-                    <ErrorRow colSpan={5} message="Couldn't load pay applications" onRetry={loadPayApps} />
+                    <ErrorRow colSpan={5} message="Couldn't Load Pay Applications" onRetry={loadPayApps} />
                   ) : visPayApps.length === 0 ? (
                     <tr><td colSpan={5} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
                         icon={<Receipt size={30} weight="duotone" color={GOLD} />}
-                        title={payApps.length > 0 ? 'No pay applications match' : 'No pay applications yet'}
+                        title={payApps.length > 0 ? 'No Pay Applications Match' : 'No Pay Applications Yet'}
                         description={payApps.length > 0 ? 'Clear the search above to see every record.' : 'Generated AIA G702 / G703 pay applications will appear here.'}
                         action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Generate New</Link>}
                       />
@@ -648,13 +647,13 @@ export default function DocumentsPage() {
                   {loadingLienWaivers ? (
                     <SkeletonRows cols={6} />
                   ) : errorLienWaivers ? (
-                    <ErrorRow colSpan={6} message="Couldn't load lien waivers" onRetry={loadLienWaivers} />
+                    <ErrorRow colSpan={6} message="Couldn't Load Lien Waivers" onRetry={loadLienWaivers} />
                   ) : visLienWaivers.length === 0 ? (
                     <tr><td colSpan={6} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
                         icon={<Shield size={30} weight="duotone" color={GOLD} />}
-                        title={lienWaivers.length > 0 ? 'No lien waivers match' : 'No lien waivers yet'}
+                        title={lienWaivers.length > 0 ? 'No Lien Waivers Match' : 'No Lien Waivers Yet'}
                         description={lienWaivers.length > 0 ? 'Clear the search above to see every record.' : 'Conditional and unconditional lien waivers you generate will be listed here.'}
                         action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Generate New</Link>}
                       />
@@ -714,7 +713,7 @@ export default function DocumentsPage() {
                   onChange={e => setSelectedProject(e.target.value)}
                   style={projectSelectStyle}
                 >
-                  {projects.length === 0 && <option value="">No projects</option>}
+                  {projects.length === 0 && <option value="">No Projects</option>}
                   {projects.map(pr => (
                     <option key={pr.id} value={pr.id}>{pr.name ?? pr.project_number ?? pr.id}</option>
                   ))}
@@ -796,13 +795,13 @@ export default function DocumentsPage() {
                   {loadingPayroll ? (
                     <SkeletonRows cols={5} />
                   ) : errorPayroll ? (
-                    <ErrorRow colSpan={5} message="Couldn't load certified payroll" onRetry={loadPayroll} />
+                    <ErrorRow colSpan={5} message="Couldn't Load Certified Payroll" onRetry={loadPayroll} />
                   ) : visPayroll.length === 0 ? (
                     <tr><td colSpan={5} style={{ padding: 0 }}>
                       <PremiumEmpty
                         compact
                         icon={<NotePencil size={30} weight="duotone" color={GOLD} />}
-                        title={payroll.length > 0 ? 'No payroll records match' : 'No certified payroll records yet'}
+                        title={payroll.length > 0 ? 'No Payroll Records Match' : 'No Certified Payroll Records Yet'}
                         description={payroll.length > 0 ? 'Clear the search above to see every record.' : 'WH-347 certified payroll filings you generate will appear here.'}
                         action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Generate WH-347</Link>}
                       />
@@ -850,7 +849,7 @@ export default function DocumentsPage() {
                   onChange={e => setSelectedProject(e.target.value)}
                   style={projectSelectStyle}
                 >
-                  {projects.length === 0 && <option value="">No projects</option>}
+                  {projects.length === 0 && <option value="">No Projects</option>}
                   {projects.map(pr => (
                     <option key={pr.id} value={pr.id}>{pr.name ?? pr.project_number ?? pr.id}</option>
                   ))}
@@ -881,7 +880,7 @@ export default function DocumentsPage() {
                   <div style={{ height: 8, background: 'rgba(255,255,255,0.1)', borderRadius: 4 }}>
                     <div style={{
                       height: '100%', width: `${pct}%`,
-                      background: `linear-gradient(90deg,${GOLD},#FBBF24)`,
+                      background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`,
                       borderRadius: 4, transition: 'width .3s',
                     }} />
                   </div>
@@ -901,7 +900,7 @@ export default function DocumentsPage() {
                 tone="error"
                 compact
                 icon={<WarningCircle size={30} weight="duotone" color={RED} />}
-                title="Couldn't load closeout items"
+                title="Couldn't Load Closeout Items"
                 description="We couldn't reach this project's closeout list. Your data is safe — try again."
                 action={<button onClick={() => selectedProject && loadCloseout(selectedProject)} style={goldOutlineButtonStyle} className="pmBtn">Retry</button>}
               />
@@ -909,14 +908,14 @@ export default function DocumentsPage() {
               <PremiumEmpty
                 compact
                 icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
-                title="Select a project"
+                title="Select a Project"
                 description="Choose a project above to view its closeout checklist."
               />
             ) : visCloseout.length === 0 ? (
               <PremiumEmpty
                 compact
                 icon={<Clipboard size={30} weight="duotone" color={GOLD} />}
-                title={closeoutItems.length > 0 ? 'No closeout items match' : 'No closeout items yet'}
+                title={closeoutItems.length > 0 ? 'No Closeout Items Match' : 'No Closeout Items Yet'}
                 description={closeoutItems.length > 0 ? 'Clear the search above to see the full checklist.' : 'Closeout items (warranties, O&M manuals, as-builts, certificates) added to this project will appear here.'}
               />
             ) : (
@@ -950,7 +949,7 @@ export default function DocumentsPage() {
                       <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>
                         {[CLOSEOUT_TYPE_LABEL[item.item_type] ?? item.item_type, item.trade, item.responsible_party]
                           .filter(Boolean).join(' · ')}
-                        {item.due_date ? `  ·  Due ${item.due_date}` : ''}
+                        {item.due_date ? ` · Due ${item.due_date}` : ''}
                       </div>
                     </div>
                     <div style={{ marginLeft: 'auto' }}>

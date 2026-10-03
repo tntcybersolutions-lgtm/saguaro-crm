@@ -9,9 +9,9 @@ import { toCents, toDollars, extend } from '@/lib/calc';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty } from '@/components/ui/premium';
 import { Scales, MagnifyingGlass, CurrencyDollar, Calculator, CalendarBlank, CalendarCheck, Table as TableIcon, FileMagnifyingGlass } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const BORDER = 'rgba(255,255,255,0.12)';
@@ -189,7 +189,7 @@ export default function PrevailingWagePage() {
   const weeklyCost = rate ? toDollars(extend(40, toCents(rate.total))) : 0;
 
   const inputStyle: React.CSSProperties = {
-    background: '#1c1c1e',
+    background: 'var(--bg-surface-2)',
     border: `1px solid ${BORDER}`,
     borderRadius: 10,
     padding: '10px 14px',
@@ -204,7 +204,7 @@ export default function PrevailingWagePage() {
       {/* Header */}
       <ModuleHero
         eyebrow="Compliance"
-        eyebrowIcon={<Scales size={13} weight="fill" color="#F59E0B" />}
+        eyebrowIcon={<Scales size={13} weight="fill" color="var(--brand-primary)" />}
         title="Prevailing Wage"
         accent="Calculator"
         subtitle={<>
@@ -217,11 +217,11 @@ export default function PrevailingWagePage() {
 
       {/* Honesty disclaimer — the shared schedule is sample/reference data, not
           an official determination. Tenant-entered CUSTOM rows are authoritative. */}
-      <div style={{ background: 'rgba(245, 158, 11,.10)', border: `1px solid rgba(245, 158, 11,.4)`, borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 12.5, color: '#FCD9A0', lineHeight: 1.55 }}>
-        <span style={{ fontWeight: 800, color: GOLD, textTransform: 'uppercase', letterSpacing: 0.3, marginRight: 6 }}>Sample / reference rates</span>
+      <div style={{ background: 'color-mix(in srgb, var(--warning) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--warning) 40%, transparent)', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 12.5, color: '#D7DEE8', lineHeight: 1.55 }}>
+        <span style={{ fontWeight: 800, color: 'var(--warning)', marginRight: 6 }}>Sample / Reference Rates</span>
         These are realistic Davis-Bacon-style rates for estimating and planning only — <strong>not an official wage determination</strong>. Before certifying payroll, verify against the official determination on{' '}
         <a href="https://sam.gov/content/wage-determinations" target="_blank" rel="noopener noreferrer" style={{ color: GOLD, fontWeight: 700 }}>SAM.gov (WDOL)</a>{' '}
-        for the exact project, county and decision number. Rows marked <span style={{ color: BLUE, fontWeight: 800 }}>CUSTOM</span> are your own tenant-entered determination and override the sample schedule.
+        for the exact project, county and decision number. Rows marked <span style={{ color: BLUE, fontWeight: 800 }}>Custom</span> are your own tenant-entered determination and override the sample schedule.
       </div>
       {error && (
         <div style={{ background: 'rgba(192,48,48,.1)', border: '1px solid rgba(192,48,48,.3)', borderRadius: 8, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: '#ff7070' }}>
@@ -235,7 +235,7 @@ export default function PrevailingWagePage() {
           <div style={{ marginBottom: 18 }}>
             <label style={{ fontSize: 12, color: DIM, fontWeight: 600, display: 'block', marginBottom: 6 }}>State</label>
             <select value={state} onChange={(e) => onStateChange(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-              {states.length === 0 && <option value="">No data</option>}
+              {states.length === 0 && <option value="">No Data</option>}
               {states.map((s) => (
                 <option key={s} value={s}>{STATE_NAMES[s] ? `${STATE_NAMES[s]} (${s})` : s}</option>
               ))}
@@ -249,7 +249,7 @@ export default function PrevailingWagePage() {
               onChange={(e) => { setCounty(e.target.value); setDetermination(''); }}
               style={{ ...inputStyle, cursor: 'pointer' }}
             >
-              <option value="">All counties / statewide</option>
+              <option value="">All Counties / Statewide</option>
               {countyList.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
@@ -264,7 +264,7 @@ export default function PrevailingWagePage() {
               style={{ ...inputStyle, cursor: 'pointer' }}
               disabled={countyDeterminations.length === 0}
             >
-              <option value="">{countyDeterminations.length > 1 ? 'All determinations' : 'Current determination'}</option>
+              <option value="">{countyDeterminations.length > 1 ? 'All Determinations' : 'Current Determination'}</option>
               {countyDeterminations.map((d) => (
                 <option key={d.determination_number} value={d.determination_number}>
                   {d.determination_number} — {fmtDate(d.effective_date)}
@@ -281,10 +281,10 @@ export default function PrevailingWagePage() {
               style={{ ...inputStyle, cursor: 'pointer' }}
               disabled={rates.length === 0}
             >
-              {rates.length === 0 && <option value="">No classifications</option>}
+              {rates.length === 0 && <option value="">No Classifications</option>}
               {rates.map((r) => (
                 <option key={r.id} value={r.classification}>
-                  {r.classification}{r.custom ? ' (custom)' : ''}
+                  {r.classification}{r.custom ? ' (Custom)' : ''}
                 </option>
               ))}
             </select>
@@ -303,9 +303,9 @@ export default function PrevailingWagePage() {
                       else { setIsCustom(false); setHoursPreset(p.hours); }
                     }}
                     style={{
-                      background: active ? 'rgba(245, 158, 11,0.15)' : '#1c1c1e',
+                      background: active ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'var(--bg-surface-2)',
                       color: active ? GOLD : DIM,
-                      border: `1px solid ${active ? GOLD + '40' : BORDER}`,
+                      border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-primary) 25%, transparent)' : BORDER}`,
                       borderRadius: 8,
                       padding: '7px 16px',
                       fontSize: 13,
@@ -358,7 +358,7 @@ export default function PrevailingWagePage() {
                 icon={<CurrencyDollar size={17} weight="duotone" color={GREEN} />}
                 accent={GREEN}
                 action={
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 6, background: 'rgba(245,158,11,0.12)', color: BLUE, textTransform: 'uppercase' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 6, background: 'var(--brand-primary-12)', color: BLUE }}>
                     {rate.classification}
                   </span>
                 }
@@ -366,8 +366,8 @@ export default function PrevailingWagePage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'left', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}`, textTransform: 'uppercase', letterSpacing: 0.5 }}>Component</th>
-                      <th style={{ textAlign: 'right', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}`, textTransform: 'uppercase', letterSpacing: 0.5 }}>Rate/hr</th>
+                      <th style={{ textAlign: 'left', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}` }}>Component</th>
+                      <th style={{ textAlign: 'right', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}` }}>Rate/hr</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -401,17 +401,17 @@ export default function PrevailingWagePage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      <th style={{ textAlign: 'left', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}`, textTransform: 'uppercase', letterSpacing: 0.5 }}>Component</th>
-                      <th style={{ textAlign: 'right', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}`, textTransform: 'uppercase', letterSpacing: 0.5 }}>Amount</th>
+                      <th style={{ textAlign: 'left', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}` }}>Component</th>
+                      <th style={{ textAlign: 'right', fontSize: 11, color: DIM, fontWeight: 600, padding: '6px 0', borderBottom: `1px solid ${BORDER}` }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ padding: '10px 0', fontSize: 14, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>Base ({fmt(rate.base)} x {hours}h)</td>
+                      <td style={{ padding: '10px 0', fontSize: 14, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>Base ({fmt(rate.base)} × {hours}h)</td>
                       <td style={{ padding: '10px 0', fontSize: 14, color: TEXT, textAlign: 'right', fontWeight: 600, borderBottom: `1px solid ${BORDER}` }}>{fmt(baseCost)}</td>
                     </tr>
                     <tr>
-                      <td style={{ padding: '10px 0', fontSize: 14, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>Fringe ({fmt(rate.fringe)} x {hours}h)</td>
+                      <td style={{ padding: '10px 0', fontSize: 14, color: TEXT, borderBottom: `1px solid ${BORDER}` }}>Fringe ({fmt(rate.fringe)} × {hours}h)</td>
                       <td style={{ padding: '10px 0', fontSize: 14, color: TEXT, textAlign: 'right', fontWeight: 600, borderBottom: `1px solid ${BORDER}` }}>{fmt(fringeCost)}</td>
                     </tr>
                     <tr>
@@ -453,7 +453,7 @@ export default function PrevailingWagePage() {
             <thead>
               <tr>
                 {['Classification', 'Base Rate', 'Fringe', 'Total/hr', 'Daily (8hr)', 'Weekly (40hr)'].map((h) => (
-                  <th key={h} style={{ textAlign: h === 'Classification' ? 'left' : 'right', fontSize: 11, color: DIM, fontWeight: 600, padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>
+                  <th key={h} style={{ textAlign: h === 'Classification' ? 'left' : 'right', fontSize: 11, color: DIM, fontWeight: 600, padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>
                     {h}
                   </th>
                 ))}
@@ -471,10 +471,10 @@ export default function PrevailingWagePage() {
                   <tr
                     key={r.id}
                     onClick={() => setSelectedClass(r.classification)}
-                    style={{ cursor: 'pointer', background: selectedClass === r.classification ? 'rgba(245, 158, 11,0.06)' : 'transparent', transition: 'background 0.15s' }}
+                    style={{ cursor: 'pointer', background: selectedClass === r.classification ? 'var(--brand-primary-08)' : 'transparent', transition: 'background 0.15s' }}
                   >
                     <td style={{ padding: '10px 12px', fontSize: 14, color: selectedClass === r.classification ? GOLD : TEXT, fontWeight: selectedClass === r.classification ? 700 : 500, borderBottom: `1px solid ${BORDER}` }}>
-                      {r.classification}{r.custom ? <span style={{ fontSize: 10, color: BLUE, marginLeft: 6, fontWeight: 700 }}>CUSTOM</span> : null}
+                      {r.classification}{r.custom ? <span style={{ fontSize: 10, color: BLUE, marginLeft: 6, fontWeight: 700 }}>Custom</span> : null}
                     </td>
                     <td style={{ padding: '10px 12px', fontSize: 14, color: TEXT, textAlign: 'right', borderBottom: `1px solid ${BORDER}` }}>{fmt(r.base)}</td>
                     <td style={{ padding: '10px 12px', fontSize: 14, color: TEXT, textAlign: 'right', borderBottom: `1px solid ${BORDER}` }}>{fmt(r.fringe)}</td>
