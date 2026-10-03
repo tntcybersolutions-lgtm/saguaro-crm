@@ -70,3 +70,15 @@ converge. One line each, newest at the bottom.
   closed job — the unlogged count should stop at closeout.
 - (3 Oct, Pass 4 drive) Preview session expires mid-walk (~30–40 min): /app/billing bounced to
   /login?next= seconds after /app/invoicing rendered; on-device QA has to re-sign-in each pass.
+- (3 Oct, Pass 4 drive) `/app/schedule` — all 15 Pima tasks carry `pct_complete` 100 with
+  `status` not_started, so every bar reads full while Complete says 0 and Overdue says 15.
+  The data disagree with themselves; one of the two writers is wrong.
+- (3 Oct, Pass 4 drive) `/app/intelligence` — the comparison cards show $0.00 contract /
+  billed / invoiced for ZZ AUDIT 2 Fix Check and ZZ AUDIT Mesa Flex Office although the
+  projects page carries contracts for them; the summary API returns zeros, not nulls.
+- (3 Oct, Pass 4 drive) `/app/portals` — the StatRow's sixth tile (Last Portal Visit) wraps
+  to its own row at 1280; the kit StatRow has no "max 5 per row" rule for 6-tile pages.
+- (3 Oct, Pass 4 drive) `/app/takeoff` — per-division line-item tables need a horizontal
+  scroll at 1280 to reach Total and % of Div; the first column is not sticky there.
+- (3 Oct, Pass 4 drive) Kit DataTable row-action menus open upward near the bottom of the
+  viewport and can overlap the row above (seen on /app/portals) — cosmetic.
