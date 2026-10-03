@@ -58,7 +58,7 @@ const modalBox: React.CSSProperties = { background: RAISED, border: `1px solid $
 const selectS: React.CSSProperties = { ...inputS, appearance: 'auto' as any };
 const labelS: React.CSSProperties = { fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, display: 'block', fontWeight: 700};
 const tableHeaderS: React.CSSProperties = { padding: '10px 14px', fontSize: 11, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' };
-const tableCellS: React.CSSProperties = { padding: '10px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid ${BORDER}15`, whiteSpace: 'nowrap' };
+const tableCellS: React.CSSProperties = { padding: '10px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, whiteSpace: 'nowrap' };
 
 /* ─── Small Components ─── */
 function StatusBadge({ status }: { status: string }) {
@@ -520,7 +520,7 @@ export default function PrequalificationPage() {
                 {/* Recent activity */}
                 <SectionCard title="Recent Submissions" icon={<Clipboard size={17} weight="duotone" color={GOLD} />}>
                   {submissions.slice(0, 5).map(s => (
-                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${BORDER}22`, cursor: 'pointer' }} onClick={() => { setShowDetail(s.id); }}>
+                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }} onClick={() => { setShowDetail(s.id); }}>
                       <div>
                         <div style={{ fontSize: 13, fontWeight: 600 }}>{s.sub_name}</div>
                         <div style={{ fontSize: 11, color: DIM }}>{s.sub_trade} — {fmtDate(s.submitted_at)}</div>
@@ -564,7 +564,7 @@ export default function PrequalificationPage() {
                     expDocs.sort((a, b) => a.daysLeft - b.daysLeft);
                     if (expDocs.length === 0) return <div style={{ color: DIM, fontSize: 13, padding: 20, textAlign: 'center' }}>No documents expiring within 90 days</div>;
                     return expDocs.slice(0, 6).map((ed, i) => (
-                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${BORDER}22` }}>
+                      <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                         <div>
                           <div style={{ fontSize: 13, fontWeight: 600 }}>{ed.subName}</div>
                           <div style={{ fontSize: 11, color: DIM }}>{ed.docName}</div>
@@ -957,7 +957,7 @@ export default function PrequalificationPage() {
                     const ans = detailSub.answers[q.id];
                     const display = Array.isArray(ans) ? ans.join(', ') : String(ans ?? '—');
                     return (
-                      <div key={q.id} style={{ padding: '10px 14px', borderBottom: i < detailTemplate.questions.length - 1 ? `1px solid ${BORDER}22` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div key={q.id} style={{ padding: '10px 14px', borderBottom: i < detailTemplate.questions.length - 1 ? `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 12, color: TEXT, fontWeight: 600 }}>{q.label}</div>
                           <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>

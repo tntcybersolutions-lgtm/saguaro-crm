@@ -168,7 +168,7 @@ export default function EstimateLoading() {
               gridTemplateColumns: '80px 2fr 80px 60px 100px 100px 80px',
               gap: 12,
               padding: '14px 16px',
-              borderBottom: `1px solid ${BORDER}40`,
+              borderBottom: `1px solid color-mix(in srgb, ${BORDER} 25%, transparent)`,
               animation: 'pulse 1.6s ease-in-out infinite',
               animationDelay: `${i * 0.12}s`,
             }}

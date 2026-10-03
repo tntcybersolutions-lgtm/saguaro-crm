@@ -603,7 +603,7 @@ export default function SubPortal(){
             {alerts.map((a,i)=>{
               const days=a.doc.days_until_expiry;
               const c=a.level==='critical'?RED:a.level==='warning'?AMBER:BLUE;
-              return <div key={i} style={{padding:'8px 0',borderBottom:i<alerts.length-1?`1px solid ${BORDER}44`:'none',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
+              return <div key={i} style={{padding:'8px 0',borderBottom:i<alerts.length-1?`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`:'none',display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
                 <div style={{fontSize:13,color:TEXT}}><strong style={{color:c}}>{a.doc.doc_type}</strong> &mdash; {a.doc.file_name}</div>
                 <div style={{fontSize:12,fontWeight:700,color:c}}>{days<=0?'Expired':days<=30?`${days}d — Urgent`:days<=60?`${days}d — Warning`:`${days}d — Notice`}</div>
               </div>;
@@ -648,7 +648,7 @@ export default function SubPortal(){
             <div style={{fontSize:15,fontWeight:700,color:TEXT,marginBottom:14}}>Recent Daily Logs</div>
             {dailyLogs.length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:20}}>No logs submitted yet</div>:
             dailyLogs.slice(0,3).map((log:any)=>(
-              <div key={log.id} style={{padding:'10px 0',borderBottom:`1px solid ${BORDER}44`}}>
+              <div key={log.id} style={{padding:'10px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                 <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}><span style={{fontSize:13,fontWeight:600,color:TEXT}}>{fmtDate(log.log_date)}</span><span style={badge(log.status)}>{log.status}</span></div>
                 <div style={{fontSize:12,color:DIM}}>{log.crew_count} crew &middot; {log.hours_worked}h</div>
               </div>
@@ -658,7 +658,7 @@ export default function SubPortal(){
             <div style={{fontSize:15,fontWeight:700,color:TEXT,marginBottom:14}}>Open RFIs</div>
             {rfis.filter((r:any)=>r.status==='open').length===0?<div style={{color:DIM,fontSize:13,textAlign:'center',padding:20}}>No open RFIs</div>:
             rfis.filter((r:any)=>r.status==='open').slice(0,5).map((rfi:any)=>(
-              <div key={rfi.id} style={{padding:'8px 0',borderBottom:`1px solid ${BORDER}44`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div key={rfi.id} style={{padding:'8px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                 <div><div style={{fontSize:13,fontWeight:600,color:TEXT}}>{rfi.rfi_number}</div><div style={{fontSize:11,color:DIM}}>{rfi.subject}</div></div>
                 <span style={badge(rfi.status)}>{rfi.status}</span>
               </div>
@@ -801,7 +801,7 @@ export default function SubPortal(){
                 <table style={{width:'100%',borderCollapse:'collapse',minWidth:600}}>
                   <thead><tr>{['Description','Scheduled Value','Previous','This Period','Requested','GC Status'].map(h=><th key={h} style={{textAlign:'left',padding:'6px 10px',fontSize:10,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                   <tbody>{pa.line_items.map((li:any)=>(
-                    <tr key={li.id} style={{borderBottom:`1px solid ${BORDER}44`}}>
+                    <tr key={li.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                       <td style={{padding:'8px 10px',fontSize:12,color:TEXT}}>{li.description}</td>
                       <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.scheduled_value)}</td>
                       <td style={{padding:'8px 10px',fontSize:12,color:DIM}}>{fmt(li.previous_completed)}</td>
@@ -946,7 +946,7 @@ export default function SubPortal(){
                   const pct=Math.round((task.percent_complete||0)*100);
                   const c=pct>=100?GREEN:pct>=50?BLUE:AMBER;
                   return(
-                    <tr key={task.id} style={{borderBottom:`1px solid ${BORDER}44`}}>
+                    <tr key={task.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                       <td style={{padding:'10px 12px',fontSize:13,color:TEXT,fontWeight:600}}>{task.title||task.name||'Task'}</td>
                       <td style={{padding:'10px 12px',fontSize:12,color:DIM}}>{task.phase||'--'}</td>
                       <td style={{padding:'10px 12px',fontSize:12,color:DIM}}>{fmtDate(task.start_date)}</td>
@@ -1027,7 +1027,7 @@ export default function SubPortal(){
               <table style={{width:'100%',borderCollapse:'collapse',minWidth:500}}>
                 <thead><tr>{['Date','Quality','Schedule','Safety','Communication','Cleanup','Comments'].map(h=><th key={h} style={{textAlign:'left',padding:'8px 12px',fontSize:11,fontWeight:700,color:DIM,borderBottom:`1px solid ${BORDER}`}}>{h}</th>)}</tr></thead>
                 <tbody>{scorecard.scorecards.map((sc:any)=>(
-                  <tr key={sc.id} style={{borderBottom:`1px solid ${BORDER}44`}}>
+                  <tr key={sc.id} style={{borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
                     <td style={{padding:'8px 12px',fontSize:12,color:DIM}}>{fmtDate(sc.rated_at)}</td>
                     <td style={{padding:'8px 12px'}}>{sc.quality_score!=null?<Stars rating={sc.quality_score} size={12}/>:'--'}</td>
                     <td style={{padding:'8px 12px'}}>{sc.schedule_score!=null?<Stars rating={sc.schedule_score} size={12}/>:'--'}</td>
@@ -1256,7 +1256,7 @@ export default function SubPortal(){
           <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:12}}>Documents ({files.length})</div>
           {files.length===0&&<div style={{color:DIM,fontSize:13}}>Nothing here yet — your uploads and documents the GC shares with you appear here.</div>}
           {files.map((d:any)=>(
-            <div key={d.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:`1px solid ${BORDER}44`,flexWrap:'wrap'}}>
+            <div key={d.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,flexWrap:'wrap'}}>
               <span style={{fontSize:20}}>{/pdf/i.test(d.doc_type||'')?'\u{1F4C4}':/sheet|excel|csv/i.test(d.doc_type||'')?'\u{1F4CA}':/word/i.test(d.doc_type||'')?'\u{1F4DD}':'\u{1F4CE}'}</span>
               <div style={{flex:1,minWidth:180}}>
                 <div style={{fontSize:13,fontWeight:700,color:TEXT}}>{d.title}</div>
@@ -1294,7 +1294,7 @@ export default function SubPortal(){
           <div key={disc} style={card()}>
             <div style={{fontSize:11,fontWeight:700,color:DIM,marginBottom:10}}>{disc} &middot; {list.length} sheet{list.length===1?'':'s'}</div>
             {list.map((d:any)=>(
-              <div key={d.id} style={{display:'flex',alignItems:'center',gap:12,padding:'9px 0',borderBottom:`1px solid ${BORDER}44`,flexWrap:'wrap'}}>
+              <div key={d.id} style={{display:'flex',alignItems:'center',gap:12,padding:'9px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,flexWrap:'wrap'}}>
                 <span style={{fontSize:12,fontWeight:800,color:GOLD,minWidth:64}}>{d.sheet_number||'--'}</span>
                 <div style={{flex:1,minWidth:160,fontSize:13,color:TEXT}}>{d.name}</div>
                 <span style={{fontSize:11,color:DIM}}>Rev {d.version??'--'}{d.revision_date?` \u00b7 ${fmtDate(d.revision_date)}`:''}</span>
@@ -1326,7 +1326,7 @@ export default function SubPortal(){
           <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:12}}>Open Items ({open.length})</div>
           {open.length===0&&<div style={{color:DIM,fontSize:13}}>Nothing open — you're clear on this project.</div>}
           {open.map((p:any)=>(
-            <div key={p.id} style={{padding:'12px 0',borderBottom:`1px solid ${BORDER}44`}}>
+            <div key={p.id} style={{padding:'12px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
               <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
                 <span style={badge(p.priority==='high'?'rejected':'pending')}>{p.priority||'normal'}</span>
                 <div style={{flex:1,minWidth:200,fontSize:13,fontWeight:700,color:TEXT}}>{p.description}</div>
@@ -1343,7 +1343,7 @@ export default function SubPortal(){
         <div style={card()}>
           <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:12}}>Completed ({done.length})</div>
           {done.map((p:any)=>(
-            <div key={p.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid ${BORDER}44`,flexWrap:'wrap'}}>
+            <div key={p.id} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`,flexWrap:'wrap'}}>
               <span style={{color:GREEN,fontWeight:800}}>{'\u2713'}</span>
               <div style={{flex:1,minWidth:200,fontSize:13,color:DIM}}>{p.description}</div>
               <span style={{fontSize:11,color:DIM}}>{fmtDate(p.completed_at)}</span>
@@ -1362,7 +1362,7 @@ export default function SubPortal(){
         <div style={{fontSize:15,fontWeight:800,color:TEXT,marginBottom:14}}>Activity History</div>
         {activity.length===0&&<div style={{color:DIM,fontSize:13}}>Your uploads, invoice submissions and completed work will appear here, timestamped.</div>}
         {activity.map((e:any)=>(
-          <div key={e.id} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:`1px solid ${BORDER}44`}}>
+          <div key={e.id} style={{display:'flex',gap:12,padding:'10px 0',borderBottom:`1px solid color-mix(in srgb, ${BORDER} 27%, transparent)`}}>
             <div style={{width:8,height:8,borderRadius:'50%',background:GOLD,marginTop:6,flexShrink:0}}/>
             <div style={{flex:1}}>
               <div style={{fontSize:13,color:TEXT}}>{label(e)}</div>

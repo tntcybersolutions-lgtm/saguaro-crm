@@ -635,7 +635,7 @@ export default function SubPortalPage() {
                 <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color={GOLD} />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor." /></td></tr>
               )}
               {filteredUsers.map(u => (
-                <tr key={u.id} style={{ borderBottom: `1px solid ${BORDER}22`, cursor: 'pointer' }}
+                <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }}
                   onClick={() => setUserDetailModal(u)}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -749,7 +749,7 @@ export default function SubPortalPage() {
                 <p style={{ color: DIM, fontSize: 13 }}>No pending invitations.</p>
               )}
               {users.filter(u => u.status === 'pending').map(u => (
-                <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${BORDER}22` }}>
+                <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <div>
                     <span style={{ color: TEXT, fontSize: 14 }}>{u.contactName}</span>
                     <span style={{ color: DIM, fontSize: 12, marginLeft: 8 }}>{u.company}</span>
@@ -796,7 +796,7 @@ export default function SubPortalPage() {
                 <tr><td colSpan={ALL_PERMISSIONS_LIST.length + 2} style={{ padding: 0 }}><PremiumEmpty compact icon={<ListChecks size={30} weight="duotone" color={GOLD} />} title="No subs found" description="Invite a subcontractor to manage their portal permissions here." /></td></tr>
               )}
               {filteredUsers.map(u => (
-                <tr key={u.id} style={{ borderBottom: `1px solid ${BORDER}22` }}>
+                <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '10px 16px' }}>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{u.contactName}</div>
                     <div style={{ color: DIM, fontSize: 12 }}>{u.company}</div>
@@ -845,7 +845,7 @@ export default function SubPortalPage() {
               <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color={GOLD} />} title="No portal activity yet" description="Sub logins and document views will appear here." />
             )}
             {activity.map((a, i) => (
-              <div key={a.id} style={{ display: 'flex', gap: 14, padding: '14px 20px', borderBottom: `1px solid ${BORDER}22`,
+              <div key={a.id} style={{ display: 'flex', gap: 14, padding: '14px 20px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`,
                 background: i % 2 === 0 ? 'transparent' : `color-mix(in srgb, ${BG} 25%, transparent)` }}>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: `color-mix(in srgb, ${BLUE} 13%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: BLUE, fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                   {a.subName.split(' ').map(n => n[0]).join('')}
@@ -887,7 +887,7 @@ export default function SubPortalPage() {
                 <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<FileText size={30} weight="duotone" color={GOLD} />} title="No shared documents yet" description="Documents shared to the sub portal will appear here." /></td></tr>
               )}
               {docs.map(d => (
-                <tr key={d.id} style={{ borderBottom: `1px solid ${BORDER}22` }}>
+                <tr key={d.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <FileText size={16} weight="duotone" color={GOLD} />
@@ -965,7 +965,7 @@ export default function SubPortalPage() {
                     return true;
                   })
                   .map(c => (
-                  <tr key={c.id} style={{ borderBottom: `1px solid ${BORDER}22` }}>
+                  <tr key={c.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                     <td style={{ padding: '10px 16px', fontWeight: 500, fontSize: 14 }}>{c.subName}</td>
                     <td style={{ padding: '10px 16px', color: DIM, fontSize: 13 }}>{c.company}</td>
                     <td style={{ padding: '10px 16px' }}>
@@ -1098,7 +1098,7 @@ export default function SubPortalPage() {
               <PremiumEmpty compact icon={<Envelope size={30} weight="duotone" color={GOLD} />} title="No announcements sent yet" description="Broadcasts you send to your subcontractors will appear here." />
             )}
             {announcements.map(a => (
-              <div key={a.id} style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}22` }}>
+              <div key={a.id} style={{ padding: '16px 20px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <span style={{ fontWeight: 600, fontSize: 15, color: TEXT }}>{a.subject}</span>
                   <span style={{ color: DIM, fontSize: 12 }}>{fmtDateTime(a.sentDate)}</span>

@@ -858,7 +858,7 @@ export function AccessManager() {
                   const ini = (r.name || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?';
                   const inviteExp = r.invite ? inviteExpiry(r.invite.created_at) : null;
                   return (
-                    <tr key={r.key} style={{ borderBottom: `1px solid ${BORDER}15` }}>
+                    <tr key={r.key} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                       {/* Person */}
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
@@ -1069,13 +1069,13 @@ export function AccessManager() {
                   {/* rows */}
                   {CATEGORIES.map(cat => (
                     <React.Fragment key={cat}>
-                      <div style={{ padding: '8px 10px', color: TEXT, borderBottom: `1px solid ${BORDER}15` }}>{cat}</div>
+                      <div style={{ padding: '8px 10px', color: TEXT, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>{cat}</div>
                       {PERM_LEVELS.map(level => {
                         const isActive = selectedRole.permissions[cat] === level;
                         const canEdit = !selectedRole.isBuiltIn;
                         return (
                           <div key={level} style={{ padding: '6px 10px', textAlign: 'center',
-                            borderBottom: `1px solid ${BORDER}15` }}>
+                            borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                             <div onClick={() => canEdit && togglePerm(selectedRole.id, cat, level)} style={{
                               width: 22, height: 22, borderRadius: '50%', margin: '0 auto',
                               border: `2px solid ${isActive ? permLevelColor(level) : BORDER}`,
@@ -1152,13 +1152,13 @@ export function AccessManager() {
               {CATEGORIES.map(cat => (
                 <tr key={cat}>
                   <td style={{ padding: '8px 12px', color: TEXT, fontWeight: 500,
-                    borderBottom: `1px solid ${BORDER}20`, position: 'sticky', left: 0,
+                    borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, position: 'sticky', left: 0,
                     background: RAISED, zIndex: 1 }}>{cat}</td>
                   {roles.map(r => {
                     const level = r.permissions[cat] ?? 'None';
                     return (
                       <td key={r.id} style={{ padding: '6px 8px', textAlign: 'center',
-                        borderBottom: `1px solid ${BORDER}20` }}>
+                        borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                         <span style={{
                           display: 'inline-block', padding: '3px 10px', borderRadius: 4, fontSize: 11,
                           fontWeight: 600, color: level === 'None' ? DIM : '#fff',
@@ -1224,7 +1224,7 @@ export function AccessManager() {
                   {pendingInvites.map(inv => {
                     const exp = inviteExpiry(inv.created_at);
                     return (
-                      <tr key={inv.id} style={{ borderBottom: `1px solid ${BORDER}15` }}>
+                      <tr key={inv.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                         <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500 }}>{inv.email}</td>
                         <td style={{ padding: '10px 12px', color: DIM }}>{inv.role || 'member'}</td>
                         <td style={{ padding: '10px 12px', color: DIM, fontSize: 12 }}>{relTimeAgo(inv.created_at)}</td>
@@ -1267,7 +1267,7 @@ export function AccessManager() {
                 ) : filteredAssignments.map(a => {
                   const role = roles.find(r => r.id === a.roleId);
                   return (
-                    <tr key={a.id} style={{ borderBottom: `1px solid ${BORDER}15` }}>
+                    <tr key={a.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                       <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500 }}>{a.userName}</td>
                       <td style={{ padding: '10px 12px', color: DIM }}>{a.email}</td>
                       <td style={{ padding: '10px 12px' }}>
@@ -1347,20 +1347,20 @@ export function AccessManager() {
                     const match = lA === lB;
                     return (
                       <tr key={cat} style={{ background: match ? 'transparent' : `${RED}08` }}>
-                        <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500, borderBottom: `1px solid ${BORDER}15` }}>{cat}</td>
-                        <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid ${BORDER}15` }}>
+                        <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 500, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>{cat}</td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                           <span style={{ padding: '3px 12px', borderRadius: 4, fontSize: 12, fontWeight: 600,
                             color: lA === 'None' ? DIM : '#fff', background: `color-mix(in srgb, ${permLevelColor(lA)} 13%, transparent)`,
                             border: `1px solid ${permLevelColor(lA)}` }}>{lA}</span>
                         </td>
-                        <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid ${BORDER}15` }}>
+                        <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                           {match ? (
                             <span style={{ color: GREEN, fontSize: 16 }}>=</span>
                           ) : (
                             <span style={{ color: RED, fontSize: 14, fontWeight: 700 }}>{'\u2260'}</span>
                           )}
                         </td>
-                        <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid ${BORDER}15` }}>
+                        <td style={{ padding: '8px 12px', textAlign: 'center', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                           <span style={{ padding: '3px 12px', borderRadius: 4, fontSize: 12, fontWeight: 600,
                             color: lB === 'None' ? DIM : '#fff', background: `color-mix(in srgb, ${permLevelColor(lB)} 13%, transparent)`,
                             border: `1px solid ${permLevelColor(lB)}` }}>{lB}</span>
@@ -1412,7 +1412,7 @@ export function AccessManager() {
                   else if (a.action.includes('Deleted') || a.action.includes('Unassigned')) actionColor = RED;
                   else if (a.action.includes('Assigned')) actionColor = BLUE;
                   return (
-                    <tr key={a.id} style={{ borderBottom: `1px solid ${BORDER}15` }}>
+                    <tr key={a.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` }}>
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{ color: actionColor, fontWeight: 600, fontSize: 12 }}>{a.action}</span>
                       </td>
@@ -1470,11 +1470,11 @@ export function AccessManager() {
             ))}
             {CATEGORIES.map(cat => (
               <React.Fragment key={cat}>
-                <div style={{ padding: '6px 8px', color: TEXT, borderTop: `1px solid ${BORDER}20` }}>{cat}</div>
+                <div style={{ padding: '6px 8px', color: TEXT, borderTop: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>{cat}</div>
                 {PERM_LEVELS.map(level => {
                   const isActive = formPerms[cat] === level;
                   return (
-                    <div key={level} style={{ padding: '4px 8px', textAlign: 'center', borderTop: `1px solid ${BORDER}20` }}>
+                    <div key={level} style={{ padding: '4px 8px', textAlign: 'center', borderTop: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                       <div onClick={() => setFormPerms(prev => ({ ...prev, [cat]: level }))} style={{
                         width: 20, height: 20, borderRadius: '50%', margin: '0 auto', cursor: 'pointer',
                         border: `2px solid ${isActive ? permLevelColor(level) : BORDER}`,

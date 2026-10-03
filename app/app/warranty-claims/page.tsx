@@ -110,7 +110,7 @@ const css = {
   field: { flex: '1 1 220px', marginBottom: 12 } as React.CSSProperties,
   table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 } as React.CSSProperties,
   th: { textAlign: 'left' as const, padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11} as React.CSSProperties,
-  td: { padding: '10px 12px', borderBottom: `1px solid ${BORDER}15` } as React.CSSProperties,
+  td: { padding: '10px 12px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` } as React.CSSProperties,
   trHover: { cursor: 'pointer', transition: 'background .15s' } as React.CSSProperties,
   overlay: { position: 'fixed' as const, inset: 0, background: 'var(--bg-base)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' } as React.CSSProperties,
   modal: { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 28, width: '90%', maxWidth: 820, maxHeight: '90vh', overflowY: 'auto' as const, position: 'relative' as const } as React.CSSProperties,
@@ -583,7 +583,7 @@ export default function WarrantyClaimsPage() {
                 <tbody>
                   {filtered.map(c => (
                     <tr key={c.id} style={css.trHover} onClick={() => setDetailClaim(c)}
-                      onMouseEnter={e => (e.currentTarget.style.background = BORDER + '33')}
+                      onMouseEnter={e => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td style={css.td}><span style={{ fontFamily: 'monospace', color: GOLD }}>{c.claim_number}</span></td>
                       <td style={css.td}><span title={c.category} style={{ fontSize: 16 }}>{CATEGORY_ICONS[c.category] || '\u2731'}</span></td>
@@ -981,7 +981,7 @@ export default function WarrantyClaimsPage() {
                   const daysLeft = Math.ceil((new Date(c.warranty_expiry).getTime() - Date.now()) / 86400000);
                   return (
                     <tr key={c.id} style={css.trHover} onClick={() => { setDetailClaim(c); setActiveTab('claims'); }}
-                      onMouseEnter={e => (e.currentTarget.style.background = BORDER + '33')}
+                      onMouseEnter={e => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td style={css.td}><span style={{ fontFamily: 'monospace', color: GOLD }}>{c.claim_number}</span></td>
                       <td style={css.td}>{c.title}</td>

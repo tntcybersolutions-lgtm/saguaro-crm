@@ -1212,7 +1212,7 @@ export default function ClientPortalPage() {
                   padding: '16px 8px 8px',
                 }}>
                   <div style={{ fontSize: 10, color: '#fff', fontWeight: 600 }}>{photo.caption}</div>
-                  <div style={{ fontSize: 9, color: 'rgba(28,28,30,.6)' }}>{fmtDate(photo.date)}</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,.75)' }}>{fmtDate(photo.date)}</div>
                 </div>
               </div>
             ))}
@@ -1388,7 +1388,7 @@ export default function ClientPortalPage() {
                 </thead>
                 <tbody>
                   {invoices.map((inv) => (
-                    <tr key={inv.id} style={{ borderBottom: `1px solid ${BORDER}22` }}>
+                    <tr key={inv.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                       <td style={{ padding: '12px', color: TEXT, fontWeight: 600 }}>{inv.number}</td>
                       <td style={{ padding: '12px', color: DIM }}>{fmtDate(inv.date)}</td>
                       <td style={{ padding: '12px', color: DIM }}>{fmtDate(inv.due_date)}</td>
@@ -1416,9 +1416,9 @@ export default function ClientPortalPage() {
               {budgetLines.map((line) => (
                 <div key={line.id}>
                   <div
-                    style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 100px 100px 100px 100px', gap: 8, padding: '10px 12px', fontSize: 13, cursor: 'pointer', borderBottom: `1px solid ${BORDER}22`, transition: 'background .15s' }}
+                    style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 100px 100px 100px 100px', gap: 8, padding: '10px 12px', fontSize: 13, cursor: 'pointer', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, transition: 'background .15s' }}
                     onClick={() => setExpandedBudget({ ...expandedBudget, [line.id]: !expandedBudget[line.id] })}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = `${BORDER}33`)}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                   >
                     <div style={{ color: GOLD, fontWeight: 600 }}>{line.code}</div>
@@ -1433,7 +1433,7 @@ export default function ClientPortalPage() {
                     <div style={{ textAlign: 'right', color: line.remaining < 0 ? RED : GREEN }}>{fmt(line.remaining)}</div>
                   </div>
                   {expandedBudget[line.id] && (
-                    <div style={{ padding: '12px 24px', background: 'color-mix(in srgb, var(--bg-base) 50%, transparent)', borderBottom: `1px solid ${BORDER}22` }}>
+                    <div style={{ padding: '12px 24px', background: 'color-mix(in srgb, var(--bg-base) 50%, transparent)', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                       <div style={{ display: 'flex', gap: 24, fontSize: 12, color: DIM }}>
                         <div>Committed: <span style={{ color: TEXT, fontWeight: 600 }}>{fmt(line.committed)}</span></div>
                         <div>% Complete: <span style={{ color: GOLD, fontWeight: 600 }}>{line.current > 0 ? pct(line.spent, line.current) : 0}%</span></div>
@@ -1490,7 +1490,7 @@ export default function ClientPortalPage() {
                 </thead>
                 <tbody>
                   {payments.map((p) => (
-                    <tr key={p.id} style={{ borderBottom: `1px solid ${BORDER}22` }}>
+                    <tr key={p.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                       <td style={{ padding: '12px', color: DIM }}>{fmtDate(p.date)}</td>
                       <td style={{ padding: '12px', color: GREEN, fontWeight: 700 }}>{fmt(p.amount)}</td>
                       <td style={{ padding: '12px', color: TEXT }}>{p.method}</td>
@@ -1531,7 +1531,7 @@ export default function ClientPortalPage() {
               >
                 <div style={{
                   maxWidth: '70%',
-                  background: msg.sender_type === 'client' ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : `${BORDER}80`,
+                  background: msg.sender_type === 'client' ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : `color-mix(in srgb, ${BORDER} 50%, transparent)`,
                   borderRadius: msg.sender_type === 'client' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                   padding: '12px 16px',
                   border: `1px solid ${msg.sender_type === 'client' ? `color-mix(in srgb, ${GOLD} 19%, transparent)` : BORDER}`,
@@ -1574,7 +1574,7 @@ export default function ClientPortalPage() {
                 key={name}
                 style={{ padding: '8px 12px', borderRadius: 6, cursor: 'pointer', color: TEXT, fontSize: 13, transition: 'background .15s' }}
                 onClick={() => insertMention(name)}
-                onMouseEnter={(e) => (e.currentTarget.style.background = `${BORDER}60`)}
+                onMouseEnter={(e) => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 38%, transparent)`)}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
                 @{name}
@@ -2361,7 +2361,7 @@ export default function ClientPortalPage() {
           </div>
 
           {/* Footer links & branding */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, paddingTop: 12, borderTop: `1px solid ${BORDER}44` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, paddingTop: 12, borderTop: `1px solid color-mix(in srgb, ${BORDER} 27%, transparent)` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Cactus size={17} weight="fill" color={GOLD} />
               <div>

@@ -71,7 +71,7 @@ const btnDanger: React.CSSProperties = { padding: '8px 16px', background: 'trans
 const inputS: React.CSSProperties = { padding: '9px 14px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const };
 const badge = (c: string, bg: string): React.CSSProperties => ({ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, color: c, background: bg, display: 'inline-block' });
 const thS: React.CSSProperties = { padding: '10px 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left' as const, borderBottom: `1px solid ${BORDER}` };
-const tdS: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid ${BORDER}22` };
+const tdS: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` };
 
 /* ── modal ────────────────────────────────────────────── */
 function Modal({ open, onClose, title, children, width = 540 }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; width?: number }) {
@@ -749,7 +749,7 @@ export default function ClientPortalPage() {
               <div key={t.user.id}
                 onClick={() => setSelectedThread(t.user.id)}
                 style={{
-                  padding: '12px 16px', cursor: 'pointer', borderBottom: `1px solid ${BORDER}22`,
+                  padding: '12px 16px', cursor: 'pointer', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`,
                   background: selectedThread === t.user.id ? 'rgba(255,255,255,0.06)' : 'transparent',
                   transition: 'background .15s',
                 }}
@@ -1077,7 +1077,7 @@ export default function ClientPortalPage() {
         {filteredLog.slice(0, 100).map((e, i) => (
           <div key={e.id || i} style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '10px 0', borderBottom: i < filteredLog.length - 1 ? `1px solid ${BORDER}22` : 'none',
+            padding: '10px 0', borderBottom: i < filteredLog.length - 1 ? `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` : 'none',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
               <div style={{
@@ -1132,7 +1132,7 @@ export default function ClientPortalPage() {
             const max = sorted[0]?.count || 1;
             if (sorted.length === 0) return <div style={{ color: DIM, fontSize: 13 }}>No activity data yet.</div>;
             return sorted.map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '8px 0', borderBottom: i < sorted.length - 1 ? `1px solid ${BORDER}22` : 'none' }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '8px 0', borderBottom: i < sorted.length - 1 ? `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` : 'none' }}>
                 <div style={{ width: 140, fontWeight: 600, fontSize: 13, color: TEXT }}>{item.name}</div>
                 <div style={{ flex: 1, height: 8, borderRadius: 4, background: BG, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${Math.round(item.count / max * 100)}%`, background: `linear-gradient(90deg,${GOLD},${AMBER})`, borderRadius: 4, transition: 'width .4s' }} />

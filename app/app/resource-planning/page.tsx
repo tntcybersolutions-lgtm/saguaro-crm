@@ -641,7 +641,7 @@ export default function ResourcePlanningPage() {
             <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, borderBottom: `1px solid ${BORDER}`, marginBottom: 6 }}>
               <div style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, color: DIM }}>Person</div>
               <div style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, color: DIM }}>Project</div>
-              {gridData.gridWeeks.map((w, i) => <div key={i} style={{ padding: '6px 4px', fontSize: 10, fontWeight: 600, color: DIM, textAlign: 'center', borderLeft: `1px solid ${BORDER}22` }}>
+              {gridData.gridWeeks.map((w, i) => <div key={i} style={{ padding: '6px 4px', fontSize: 10, fontWeight: 600, color: DIM, textAlign: 'center', borderLeft: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                 Wk {`${w.getMonth() + 1}/${w.getDate()}`}
               </div>)}
             </div>
@@ -649,7 +649,7 @@ export default function ResourcePlanningPage() {
             {gridData.rows.length === 0 && <PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color="var(--brand-primary)" />} title="No assignment data" description="Create assignments to populate the grid." />}
             {gridData.rows.map(row => <React.Fragment key={row.name}>
               {/* Person total row */}
-              <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, background: conflictPersons.has(row.name) ? `color-mix(in srgb, ${RED} 3%, transparent)` : `color-mix(in srgb, ${BG} 38%, transparent)`, borderBottom: `1px solid ${BORDER}15`, minHeight: 32, alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, background: conflictPersons.has(row.name) ? `color-mix(in srgb, ${RED} 3%, transparent)` : `color-mix(in srgb, ${BG} 38%, transparent)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, minHeight: 32, alignItems: 'center' }}>
                 <div style={{ padding: '4px 8px', fontSize: 12, fontWeight: 700, color: conflictPersons.has(row.name) ? RED : TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {row.name} {conflictPersons.has(row.name) && <span style={{ fontSize: 9, color: RED, fontWeight: 800 }}>Conflict</span>}
                 </div>
@@ -658,16 +658,16 @@ export default function ResourcePlanningPage() {
                   const pct = h / 40 * 100;
                   const bg = h === 0 ? 'transparent' : pct > 100 ? `color-mix(in srgb, ${RED} 19%, transparent)` : pct > 80 ? `color-mix(in srgb, ${AMBER} 13%, transparent)` : `color-mix(in srgb, ${GREEN} 8%, transparent)`;
                   const color = h === 0 ? `color-mix(in srgb, ${DIM} 38%, transparent)` : pct > 100 ? RED : pct > 80 ? AMBER : GREEN;
-                  return <div key={wi} style={{ padding: '4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color, background: bg, borderLeft: `1px solid ${BORDER}10`, borderRadius: 2 }}>
+                  return <div key={wi} style={{ padding: '4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color, background: bg, borderLeft: `1px solid color-mix(in srgb, ${BORDER} 6%, transparent)`, borderRadius: 2 }}>
                     {h > 0 ? `${h}h` : '-'}
                   </div>;
                 })}
               </div>
               {/* Per-project breakdown */}
-              {row.cells.map(cell => <div key={cell.projectId} style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, borderBottom: `1px solid ${BORDER}08`, minHeight: 26, alignItems: 'center' }}>
+              {row.cells.map(cell => <div key={cell.projectId} style={{ display: 'grid', gridTemplateColumns: `160px 140px repeat(${gridData.GRID_WEEKS}, 1fr)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 3%, transparent)`, minHeight: 26, alignItems: 'center' }}>
                 <div />
                 <div style={{ padding: '2px 8px', fontSize: 11, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cell.projectName}</div>
-                {cell.weekHours.map((h, wi) => <div key={wi} style={{ padding: '2px 4px', textAlign: 'center', fontSize: 10, color: h > 0 ? BLUE : `color-mix(in srgb, ${DIM} 25%, transparent)`, borderLeft: `1px solid ${BORDER}08` }}>
+                {cell.weekHours.map((h, wi) => <div key={wi} style={{ padding: '2px 4px', textAlign: 'center', fontSize: 10, color: h > 0 ? BLUE : `color-mix(in srgb, ${DIM} 25%, transparent)`, borderLeft: `1px solid color-mix(in srgb, ${BORDER} 3%, transparent)` }}>
                   {h > 0 ? `${h}h` : '-'}
                 </div>)}
               </div>)}
@@ -685,7 +685,7 @@ export default function ResourcePlanningPage() {
               <div style={{ padding: '6px 8px', fontSize: 11, fontWeight: 700, color: DIM }}>Person</div>
               {weeks.map((w, i) => {
                 const isCurrentWeek = isoDate(w) <= isoDate(new Date()) && isoDate(addDays(w, 6)) >= isoDate(new Date());
-                return <div key={i} style={{ padding: '6px 4px', fontSize: 10, fontWeight: 600, color: isCurrentWeek ? GOLD : DIM, textAlign: 'center', borderLeft: `1px solid ${BORDER}22`, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 3%, transparent)` : 'transparent' }}>
+                return <div key={i} style={{ padding: '6px 4px', fontSize: 10, fontWeight: 600, color: isCurrentWeek ? GOLD : DIM, textAlign: 'center', borderLeft: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 3%, transparent)` : 'transparent' }}>
                   {`${w.getMonth() + 1}/${w.getDate()}`}
                 </div>;
               })}
@@ -694,7 +694,7 @@ export default function ResourcePlanningPage() {
             {filteredPeople.length === 0 && <PremiumEmpty compact icon={<CalendarBlank size={30} weight="duotone" color="var(--brand-primary)" />} title="No assignments match filters" description="Adjust filters or create new assignments." />}
             {filteredPeople.map(([name, asns]) => {
               const isConflict = conflictPersons.has(name);
-              return <div key={name} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${TIMELINE_WEEKS},1fr)`, borderBottom: `1px solid ${BORDER}15`, minHeight: 36, alignItems: 'center', background: isConflict ? `color-mix(in srgb, ${RED} 3%, transparent)` : 'transparent' }}>
+              return <div key={name} style={{ display: 'grid', gridTemplateColumns: `180px repeat(${TIMELINE_WEEKS},1fr)`, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, minHeight: 36, alignItems: 'center', background: isConflict ? `color-mix(in srgb, ${RED} 3%, transparent)` : 'transparent' }}>
                 <div style={{ padding: '4px 8px', fontSize: 12, fontWeight: 600, color: isConflict ? RED : TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={`${name} (${asns[0]?.trade} — ${asns[0]?.role})`}>
                   {name} {isConflict && <span style={{ fontSize: 9, color: RED, fontWeight: 800 }}>Conflict</span>}
                 </div>
@@ -703,7 +703,7 @@ export default function ResourcePlanningPage() {
                   const wEnd = isoDate(addDays(w, 6));
                   const isCurrentWeek = wStart <= isoDate(new Date()) && wEnd >= isoDate(new Date());
                   const active = asns.filter(a => a.start_date <= wEnd && a.end_date >= wStart && a.status !== 'released');
-                  return <div key={wi} style={{ borderLeft: `1px solid ${BORDER}15`, height: '100%', padding: '2px 1px', display: 'flex', flexDirection: 'column', gap: 1, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 2%, transparent)` : 'transparent' }}>
+                  return <div key={wi} style={{ borderLeft: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, height: '100%', padding: '2px 1px', display: 'flex', flexDirection: 'column', gap: 1, background: isCurrentWeek ? `color-mix(in srgb, ${GOLD} 2%, transparent)` : 'transparent' }}>
                     {active.map((a, ai) => <div key={ai} title={`${projMap[a.project_id] || '?'} (${a.role}) — ${a.hours_per_day}h/day`} onClick={() => editAssignment(a)} style={{ height: active.length > 1 ? 10 : 20, borderRadius: 3, background: STATUS_COLORS[a.status] || BLUE, opacity: .85, fontSize: 8, color: '#fff', overflow: 'hidden', whiteSpace: 'nowrap', padding: '0 3px', lineHeight: active.length > 1 ? '10px' : '20px', fontWeight: 700, cursor: 'pointer' }}>
                       {active.length <= 2 ? (projMap[a.project_id] || '').slice(0, 12) : ''}
                     </div>)}
@@ -747,7 +747,7 @@ export default function ResourcePlanningPage() {
                   <div style={{ fontSize: 11, color: DIM }}>Utilization (4wk)</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: util && util.pct > 100 ? RED : util && util.pct > 80 ? AMBER : GREEN }}>{util?.pct || 0}%</div>
                 </div>
-                <div style={{ width: 60, height: 8, borderRadius: 4, background: `${BORDER}50`, overflow: 'hidden' }}>
+                <div style={{ width: 60, height: 8, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 31%, transparent)`, overflow: 'hidden' }}>
                   <div style={{ width: `${Math.min(100, util?.pct || 0)}%`, height: '100%', borderRadius: 4, background: util && util.pct > 100 ? RED : util && util.pct > 80 ? AMBER : GREEN }} />
                 </div>
               </div>
@@ -758,7 +758,7 @@ export default function ResourcePlanningPage() {
             </div>}
             {/* Assignment rows */}
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-              <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}30` }}>{h}</th>)}</tr></thead>
+              <thead><tr>{['Project', 'Dates', 'Hrs/Day', 'Rate', 'Status', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
               <tbody>{asns.map(a => <tr key={a.id || a.project_id + a.start_date}>
                 <td style={{ padding: '6px 8px', color: TEXT, fontWeight: 600 }}>{projMap[a.project_id] || a.project_id}</td>
                 <td style={{ padding: '6px 8px', color: DIM }}>{fmtDate(a.start_date)} – {fmtDate(a.end_date)}</td>
@@ -791,8 +791,8 @@ export default function ResourcePlanningPage() {
           </div>}>
             {projAsns.length === 0 ? <div style={{ padding: 16, textAlign: 'center', color: DIM, fontSize: 13 }}>No assignments for this project.</div>
               : <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}30` }}>{h}</th>)}</tr></thead>
-                <tbody>{projAsns.map(a => <tr key={a.id || a.person_name + a.start_date} style={{ borderBottom: `1px solid ${BORDER}15`, background: conflictPersons.has(a.person_name) ? `color-mix(in srgb, ${RED} 2%, transparent)` : 'transparent' }}>
+                <thead><tr>{['Person', 'Role', 'Trade', 'Dates', 'Hours', 'Rate', 'Status', 'Reassign', 'Actions'].map(h => <th key={h} style={{ padding: '5px 8px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: DIM, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 19%, transparent)` }}>{h}</th>)}</tr></thead>
+                <tbody>{projAsns.map(a => <tr key={a.id || a.person_name + a.start_date} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)`, background: conflictPersons.has(a.person_name) ? `color-mix(in srgb, ${RED} 2%, transparent)` : 'transparent' }}>
                   <td style={{ padding: '6px 8px', color: conflictPersons.has(a.person_name) ? RED : TEXT, fontWeight: 600 }}>
                     {a.person_name}
                     {conflictPersons.has(a.person_name) && <span style={{ fontSize: 9, marginLeft: 4, color: RED }}>!</span>}
@@ -839,7 +839,7 @@ export default function ResourcePlanningPage() {
                   <span style={{ color: TEXT, fontWeight: 600 }}>{u.name} <span style={{ fontSize: 10, color: DIM }}>({u.trade})</span></span>
                   <span style={{ color, fontWeight: 700 }}>{u.pct}%</span>
                 </div>
-                <div style={{ width: '100%', height: 14, borderRadius: 4, background: `${BORDER}40`, overflow: 'hidden', position: 'relative' }}>
+                <div style={{ width: '100%', height: 14, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 25%, transparent)`, overflow: 'hidden', position: 'relative' }}>
                   <div style={{ width: `${Math.min(150, u.pct) / 150 * 100}%`, height: '100%', borderRadius: 4, background: color, transition: 'width .3s' }} />
                   {u.pct > 100 && <div style={{ position: 'absolute', left: '66.7%', top: 0, bottom: 0, width: 2, background: RED, opacity: .7 }} />}
                 </div>
@@ -859,7 +859,7 @@ export default function ResourcePlanningPage() {
                     let hrs = 0;
                     asns.forEach(a => { if (a.status !== 'released' && a.status !== 'unavailable' && a.start_date <= we && a.end_date >= ws) hrs += a.hours_per_day * a.days_per_week; });
                     const pct = hrs / 40 * 100;
-                    const bg = pct === 0 ? `${BORDER}20` : pct <= 50 ? `color-mix(in srgb, ${GREEN} 19%, transparent)` : pct <= 80 ? `color-mix(in srgb, ${GREEN} 38%, transparent)` : pct <= 100 ? `color-mix(in srgb, ${AMBER} 38%, transparent)` : `color-mix(in srgb, ${RED} 38%, transparent)`;
+                    const bg = pct === 0 ? `color-mix(in srgb, ${BORDER} 13%, transparent)` : pct <= 50 ? `color-mix(in srgb, ${GREEN} 19%, transparent)` : pct <= 80 ? `color-mix(in srgb, ${GREEN} 38%, transparent)` : pct <= 100 ? `color-mix(in srgb, ${AMBER} 38%, transparent)` : `color-mix(in srgb, ${RED} 38%, transparent)`;
                     return <div key={w} style={{ background: bg, borderRadius: 3, padding: '3px 0', textAlign: 'center', fontSize: 10, fontWeight: 600, color: pct > 100 ? RED : pct > 0 ? TEXT : `color-mix(in srgb, ${DIM} 38%, transparent)` }}>{hrs > 0 ? `${hrs}h` : '-'}</div>;
                   })}
                 </React.Fragment>;
@@ -912,7 +912,7 @@ export default function ResourcePlanningPage() {
                   <span style={{ color: TEXT, fontWeight: 600 }}>{f.label}</span>
                   <span style={{ color: BLUE, fontWeight: 700 }}>{f.count} people ({f.fte} FTE)</span>
                 </div>
-                <div style={{ width: '100%', height: 18, borderRadius: 4, background: `${BORDER}30`, overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: 18, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
                   <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${BLUE},${PURPLE})` }} />
                 </div>
               </div>;
@@ -927,7 +927,7 @@ export default function ResourcePlanningPage() {
                   <span style={{ color: TEXT, fontWeight: 600 }}>{f.label}</span>
                   <span style={{ color: GOLD, fontWeight: 700 }}>{fmtMoney(f.cost)}</span>
                 </div>
-                <div style={{ width: '100%', height: 18, borderRadius: 4, background: `${BORDER}30`, overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: 18, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
                   <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${GOLD},${AMBER})` }} />
                 </div>
               </div>;
@@ -941,7 +941,7 @@ export default function ResourcePlanningPage() {
             <tbody>{forecast.map((f, fi) => {
               const prevCount = fi > 0 ? forecast[fi - 1].count : f.count;
               const trend = f.count > prevCount ? 'up' : f.count < prevCount ? 'down' : 'flat';
-              return <tr key={f.label} style={{ borderBottom: `1px solid ${BORDER}20` }}>
+              return <tr key={f.label} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                 <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 600 }}>{f.label}</td>
                 <td style={{ padding: '10px 12px', color: BLUE, fontWeight: 700 }}>{f.count}</td>
                 <td style={{ padding: '10px 12px', color: PURPLE, fontWeight: 700 }}>{f.fte}</td>
@@ -962,14 +962,14 @@ export default function ResourcePlanningPage() {
           {projectCosts.length === 0 && <div style={{ padding: 32, textAlign: 'center', color: DIM }}>No cost data available.</div>}
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
             <thead><tr>{['Project', 'Headcount', 'Total Hours', 'Labor Cost', 'Avg Rate', 'Cost Bar'].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
-            <tbody>{projectCosts.map(pc => <tr key={pc.project} style={{ borderBottom: `1px solid ${BORDER}20` }}>
+            <tbody>{projectCosts.map(pc => <tr key={pc.project} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
               <td style={{ padding: '10px 12px', color: TEXT, fontWeight: 700 }}>{pc.project}</td>
               <td style={{ padding: '10px 12px', color: BLUE, fontWeight: 600 }}>{pc.headcount}</td>
               <td style={{ padding: '10px 12px', color: DIM }}>{pc.hours.toLocaleString()}h</td>
               <td style={{ padding: '10px 12px', color: GOLD, fontWeight: 700, fontSize: 14 }}>{fmtMoney(pc.labor)}</td>
               <td style={{ padding: '10px 12px', color: DIM }}>{pc.hours > 0 ? fmtMoney(pc.labor / pc.hours) + '/hr' : '-'}</td>
               <td style={{ padding: '10px 12px', width: 200 }}>
-                <div style={{ width: '100%', height: 12, borderRadius: 4, background: `${BORDER}30`, overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: 12, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
                   <div style={{ width: `${pc.labor / maxCost * 100}%`, height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${GOLD},${AMBER})` }} />
                 </div>
               </td>
@@ -1010,14 +1010,14 @@ export default function ResourcePlanningPage() {
               const maxTradeCost = Math.max(1, ...trades.map(([, v]) => v.cost));
               return <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead><tr>{['Trade', 'Assignments', 'Hours', 'Cost', 'Avg Rate', ''].map(h => <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: `1px solid ${BORDER}` }}>{h}</th>)}</tr></thead>
-                <tbody>{trades.map(([trade, v]) => <tr key={trade} style={{ borderBottom: `1px solid ${BORDER}20` }}>
+                <tbody>{trades.map(([trade, v]) => <tr key={trade} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '8px 12px', color: TEXT, fontWeight: 600 }}>{trade}</td>
                   <td style={{ padding: '8px 12px', color: DIM }}>{v.count}</td>
                   <td style={{ padding: '8px 12px', color: DIM }}>{v.hours.toLocaleString()}h</td>
                   <td style={{ padding: '8px 12px', color: GOLD, fontWeight: 700 }}>{fmtMoney(v.cost)}</td>
                   <td style={{ padding: '8px 12px', color: DIM }}>{v.hours > 0 ? fmtMoney(v.cost / v.hours) + '/hr' : '-'}</td>
                   <td style={{ padding: '8px 12px', width: 160 }}>
-                    <div style={{ width: '100%', height: 10, borderRadius: 4, background: `${BORDER}30`, overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: 10, borderRadius: 4, background: `color-mix(in srgb, ${BORDER} 19%, transparent)`, overflow: 'hidden' }}>
                       <div style={{ width: `${v.cost / maxTradeCost * 100}%`, height: '100%', borderRadius: 4, background: PURPLE }} />
                     </div>
                   </td>

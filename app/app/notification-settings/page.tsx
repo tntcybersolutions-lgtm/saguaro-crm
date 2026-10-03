@@ -422,7 +422,7 @@ export default function NotificationSettingsPage() {
       padding: '12px 14px',
       cursor: 'pointer',
       borderRadius: 6,
-      background: expanded ? `${BORDER}30` : 'transparent',
+      background: expanded ? `color-mix(in srgb, ${BORDER} 19%, transparent)` : 'transparent',
       transition: 'background 0.15s',
       userSelect: 'none' as const,
     }) as React.CSSProperties,
@@ -431,7 +431,7 @@ export default function NotificationSettingsPage() {
       gridTemplateColumns: '1fr 60px 60px 60px',
       alignItems: 'center',
       padding: '8px 14px 8px 44px',
-      borderBottom: `1px solid ${BORDER}20`,
+      borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`,
       gap: 8,
     } as React.CSSProperties,
     channelHeader: {
@@ -910,7 +910,7 @@ export default function NotificationSettingsPage() {
             <div
               key={m.module}
               style={{
-                borderBottom: `1px solid ${BORDER}40`,
+                borderBottom: `1px solid color-mix(in srgb, ${BORDER} 25%, transparent)`,
                 marginBottom: 2,
               }}
             >

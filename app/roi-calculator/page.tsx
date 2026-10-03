@@ -780,7 +780,7 @@ export default function ROICalculatorPage() {
                   <tr key={feature}>
                     <td style={{ padding: '14px 20px', color: TEXT, fontWeight: 500 }}>{feature}</td>
                     <td style={{ color: '#ef4444' }}>{manual}</td>
-                    <td style={{ color: manual === '✓ Included' ? GREEN : DIM }}>{procore}</td>
+                    <td style={{ color: procore === '✓ Included' ? GREEN : DIM }}>{procore}</td>
                     <td style={{ color: GREEN, fontWeight: 600 }}>{saguaro}</td>
                   </tr>
                 ))}
