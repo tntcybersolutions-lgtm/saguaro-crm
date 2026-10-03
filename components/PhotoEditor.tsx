@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',GOLD_CANVAS='#F59E0B',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 
 interface PhotoEditorProps {
   src: string;
@@ -74,7 +74,7 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.clearRect(x, y, cw, ch);
       ctx.drawImage(canvas, x, y, cw, ch, x, y, cw, ch);
-      ctx.strokeStyle = GOLD;
+      ctx.strokeStyle = GOLD_CANVAS; // canvas can't resolve CSS vars
       ctx.lineWidth = 2;
       ctx.setLineDash([6, 3]);
       ctx.strokeRect(x, y, cw, ch);
@@ -150,7 +150,7 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
 
   const btnStyle = (active?: boolean): React.CSSProperties => ({
     padding: '8px 14px', background: active ? GOLD : RAISED, border: `1px solid ${active ? GOLD : BORDER}`,
-    borderRadius: 7, color: active ? '#000' : TEXT, fontSize: 12, fontWeight: 700,
+    borderRadius: 7, color: active ? '#0A0A00' : TEXT, fontSize: 12, fontWeight: 700,
     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap',
   });
 
@@ -158,10 +158,10 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
     <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid ${BORDER}` }}>
-        <div style={{ color: TEXT, fontWeight: 700, fontSize: 16 }}>📸 Photo Editor</div>
+        <div style={{ color: TEXT, fontWeight: 700, fontSize: 16 }}>Photo Editor</div>
         <div style={{ display: 'flex', gap: 8 }}>
           {onSave && (
-            <button onClick={handleSave} disabled={saving} style={{ ...btnStyle(), background: `linear-gradient(135deg,${GOLD},#FBBF24)`, color: '#000', border: 'none' }}>
+            <button onClick={handleSave} disabled={saving} style={{ ...btnStyle(), background: `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, color: '#0A0A00', border: 'none' }}>
               {saving ? 'Saving…' : '💾 Save'}
             </button>
           )}
@@ -185,18 +185,18 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
         {/* Rotate */}
         <button onClick={() => handleRotate(-90)} style={btnStyle()}>↺ Rotate Left</button>
         <button onClick={() => handleRotate(90)} style={btnStyle()}>↻ Rotate Right</button>
-        <button onClick={() => handleRotate(180)} style={btnStyle()}>🔄 Flip 180°</button>
+        <button onClick={() => handleRotate(180)} style={btnStyle()}>Flip 180°</button>
 
         {/* Flip */}
-        <button onClick={() => setFlipH(!flipH)} style={btnStyle(flipH)}>↔ Flip H</button>
-        <button onClick={() => setFlipV(!flipV)} style={btnStyle(flipV)}>↕ Flip V</button>
+        <button onClick={() => setFlipH(!flipH)} style={btnStyle(flipH)}>↔ Flip Horizontal</button>
+        <button onClick={() => setFlipV(!flipV)} style={btnStyle(flipV)}>↕ Flip Vertical</button>
 
         {/* Crop */}
         {!cropping ? (
-          <button onClick={() => setCropping(true)} style={btnStyle()}>✂️ Crop</button>
+          <button onClick={() => setCropping(true)} style={btnStyle()}>Crop</button>
         ) : (
           <>
-            <button onClick={applyCrop} style={btnStyle(true)}>✅ Apply Crop</button>
+            <button onClick={applyCrop} style={btnStyle(true)}>Apply Crop</button>
             <button onClick={() => { setCropping(false); setCropStart(null); setCropEnd(null); draw(); }} style={btnStyle()}>Cancel</button>
           </>
         )}
@@ -220,7 +220,7 @@ export default function PhotoEditor({ src, photoId, onSave, onDelete, onClose }:
               <button onClick={() => setConfirmDelete(false)} style={{ padding: '6px 12px', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 6, color: DIM, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
             </div>
           ) : (
-            <button onClick={() => setConfirmDelete(true)} style={{ ...btnStyle(), color: '#EF4444', borderColor: 'rgba(239,68,68,.3)' }}>🗑️ Delete</button>
+            <button onClick={() => setConfirmDelete(true)} style={{ ...btnStyle(), color: '#EF4444', borderColor: 'rgba(239,68,68,.3)' }}>Delete</button>
           )}
         </div>
       </div>

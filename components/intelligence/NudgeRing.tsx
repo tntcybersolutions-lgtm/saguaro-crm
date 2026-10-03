@@ -107,7 +107,7 @@ export default function NudgeRing({
               border: `1.5px solid ${color}`, pointerEvents: 'none', zIndex: 2,
               boxShadow: `0 0 26px -6px ${color}, inset 0 0 22px -14px ${color}`,
               // CSS custom property feeds the sgNudgeBoost keyframe glow.
-              ...({ '--sg-nudge-glow': `${color}66` } as React.CSSProperties),
+              ...({ '--sg-nudge-glow': `color-mix(in srgb, ${color} 40%, transparent)` } as React.CSSProperties),
               animation: boost
                 ? 'sgNudgeBoost 1.1s ease-out 3, sgNudgePulse 1.1s ease-in-out infinite'
                 : 'sgNudgePulse 2.4s ease-in-out infinite',
@@ -121,10 +121,10 @@ export default function NudgeRing({
               position: 'absolute', top: -11, right: 16, zIndex: 3,
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '3px 11px', borderRadius: 999, pointerEvents: 'none',
-              background: '#141416', border: `1px solid ${color}`,
+              background: 'var(--bg-surface)', border: `1px solid ${color}`,
               boxShadow: `0 0 14px -4px ${color}`,
-              fontSize: 10, fontWeight: 900, letterSpacing: '0.07em',
-              textTransform: 'uppercase', color, whiteSpace: 'nowrap',
+              fontSize: 10, fontWeight: 900,
+              color, whiteSpace: 'nowrap',
             }}
           >
             <span aria-hidden style={{

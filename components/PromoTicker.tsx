@@ -5,13 +5,13 @@ import Link from 'next/link';
 // Rolling promo ticker — rotates through benefit-only messages.
 // NO time/performance guarantees (e.g. "switch in 1 day") to avoid advertising liability.
 const MESSAGES: { text: string; cta: string; href: string }[] = [
-  { text: 'Free migration from any platform or spreadsheet', cta: 'See how', href: '/switch-from-procore' },
-  { text: 'One flat price · unlimited users · no per-seat fees', cta: 'View pricing', href: '/pricing' },
-  { text: 'AI takeoff reads your blueprints and builds the estimate', cta: 'See the platform', href: '/features' },
-  { text: 'Native iOS field app — included free for your whole crew', cta: 'Get the app', href: '/get-the-app' },
+  { text: 'Free migration from any platform or spreadsheet', cta: 'See How', href: '/switch-from-procore' },
+  { text: 'One flat price · unlimited users · no per-seat fees', cta: 'View Pricing', href: '/pricing' },
+  { text: 'AI takeoff reads your blueprints and builds the estimate', cta: 'See the Platform', href: '/features' },
+  { text: 'Native iOS field app — included free for your whole crew', cta: 'Get the App', href: '/get-the-app' },
 ];
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const ROTATE_MS = 5000;
 
 export default function PromoTicker() {
@@ -30,7 +30,7 @@ export default function PromoTicker() {
   return (
     <div
       style={{
-        background: 'rgba(245, 158, 11, 0.05)',
+        background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         padding: '9px 44px',
         display: 'flex',

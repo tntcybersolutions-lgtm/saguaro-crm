@@ -26,8 +26,8 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
   const colors = {
     success: { bg: 'rgba(34,197,94,0.15)', border: '#22c55e', icon: '✅' },
     error:   { bg: 'rgba(239,68,68,0.15)',  border: '#ef4444', icon: '❌' },
-    info:    { bg: 'rgba(245,158,11,0.15)', border: '#F59E0B', icon: 'ℹ️' },
-    warning: { bg: 'rgba(245, 158, 11,0.15)', border: '#F59E0B', icon: '⚠️' },
+    info:    { bg: 'var(--brand-primary-12)', border: 'var(--brand-primary)', icon: 'ℹ️' },
+    warning: { bg: 'var(--brand-primary-12)', border: 'var(--brand-primary)', icon: '⚠️' },
   };
   const c = colors[toast.type];
 

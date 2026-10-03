@@ -25,8 +25,8 @@ import { SectionCard, goldButtonStyle } from '@/components/ui/premium';
 import { useProjects } from '@/lib/hooks/useProjects';
 import { useProjectContext } from '@/lib/hooks/useProjectContext';
 
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
 const TEXT = '#FFFFFF';
 const MUTED = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.42)';
@@ -118,7 +118,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
        lists literally the same list. */
     ...(projects.length === 0
       ? [{
-          title: 'Create your project',
+          title: 'Create Your Project',
           desc: 'Name, address, owner — everything else builds on this.',
           done: false,
           href: '/app/projects/new',
@@ -166,7 +166,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
   return (
     <div data-tour="getting-started" style={{ marginBottom: 24 }}>
       <SectionCard
-        title="Your path to first payment"
+        title="Your Path to First Payment"
         subtitle={
           activeProject
             ? `${activeProject.name}${next ? ` · next up: ${next.title}` : ''}`
@@ -193,8 +193,8 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
               </select>
             )}
             <span style={{
-              padding: '3px 10px', borderRadius: 999, background: 'rgba(245,158,11,0.14)',
-              border: '1px solid rgba(245,158,11,0.4)', color: GOLD_HI,
+              padding: '3px 10px', borderRadius: 999, background: 'var(--brand-primary-12)',
+              border: '1px solid var(--brand-primary-35)', color: GOLD_HI,
               fontSize: 11, fontWeight: 800, letterSpacing: '0.05em', whiteSpace: 'nowrap',
             }}>{doneCount} of {steps.length} steps</span>
             <button
@@ -221,20 +221,20 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
 
             {/* The pipeline — FlowSteps anatomy, every row deep-linked */}
             <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', left: 10, top: 10, bottom: 16, width: 1, background: 'linear-gradient(180deg, rgba(245,158,11,0.45), rgba(255,255,255,0.08))' }} />
+              <div style={{ position: 'absolute', left: 10, top: 10, bottom: 16, width: 1, background: 'linear-gradient(180deg, var(--brand-primary-35), rgba(255,255,255,0.08))' }} />
               {steps.map((s, i) => {
                 const isCur = i === curIdx;
                 // Every row with an href is reachable — done rows say "Review",
                 // the current one says "Resume", future ones say "Open".
                 const verb = s.done ? 'Review' : isCur ? 'Resume' : 'Open';
-                const base = isCur ? 'rgba(245,158,11,0.07)' : 'transparent';
+                const base = isCur ? 'var(--brand-primary-08)' : 'transparent';
                 const row = (
                   <div
                     style={{
                       display: 'flex', gap: 12, alignItems: 'flex-start', position: 'relative',
                       padding: '7px 8px', margin: '0 -8px', borderRadius: 10,
                       background: base,
-                      border: isCur ? '1px solid rgba(245,158,11,0.32)' : '1px solid transparent',
+                      border: isCur ? '1px solid var(--brand-primary-35)' : '1px solid transparent',
                       transition: 'background .15s ease',
                     }}
                     onMouseEnter={e => { if (s.href) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
@@ -245,10 +245,10 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       background: s.done ? `linear-gradient(180deg,${GOLD_HI},${GOLD})` : '#101011',
                       border: s.done ? 'none' : `1px solid rgba(245,158,11,${isCur ? 0.85 : 0.45})`,
-                      boxShadow: isCur ? '0 0 12px rgba(245,158,11,0.45)' : undefined,
-                      color: s.done ? '#241500' : GOLD_HI, fontSize: 10, fontWeight: 900,
+                      boxShadow: isCur ? '0 0 12px var(--brand-primary-35)' : undefined,
+                      color: s.done ? '#0A0A00' : GOLD_HI, fontSize: 10, fontWeight: 900,
                     }}>
-                      {s.done ? <Check size={12} weight="bold" color="#241500" /> : i + 1}
+                      {s.done ? <Check size={12} weight="bold" color="#0A0A00" /> : i + 1}
                     </div>
                     <div style={{ minWidth: 0, paddingTop: 1, flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
@@ -256,9 +256,9 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
                         {isCur && (
                           <span style={{
                             padding: '1px 7px', borderRadius: 999, flexShrink: 0,
-                            background: 'rgba(245,158,11,0.16)', border: '1px solid rgba(245,158,11,0.45)',
+                            background: 'var(--brand-primary-18)', border: '1px solid var(--brand-primary-35)',
                             color: GOLD_HI, fontSize: 9, fontWeight: 900, letterSpacing: '0.08em',
-                          }}>YOU ARE HERE</span>
+                          }}>You Are Here</span>
                         )}
                       </div>
                       <div style={{ fontSize: 11.5, color: s.done ? FAINT : MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>
@@ -287,7 +287,7 @@ export default function GettingStartedRail({ projectId }: { projectId?: string }
             {/* Gold CTA on the next incomplete step */}
             {next?.href && (
               <Link href={next.href} style={{ ...goldButtonStyle, marginTop: 18 }} className="pmBtn">
-                Next: {next.title} <ArrowRight size={15} weight="bold" color="#241500" />
+                Next: {next.title} <ArrowRight size={15} weight="bold" color="#0A0A00" />
               </Link>
             )}
           </>

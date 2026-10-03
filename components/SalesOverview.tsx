@@ -22,7 +22,7 @@ import {
 import { SectionCard, StatCard, PremiumEmpty } from '@/components/ui/premium';
 import { WinLossBar, DonutRatio } from '@/components/charts';
 
-const GOLD = '#F59E0B', TEXT = '#FFFFFF', DIM = 'rgba(255,255,255,0.62)';
+const GOLD = 'var(--brand-primary)', TEXT = '#FFFFFF', DIM = 'rgba(255,255,255,0.62)';
 const BORDER = 'rgba(255,255,255,0.10)', RED = '#FF3B30', AMBER = '#FF9500', GREEN = '#34C759';
 
 interface FollowUp {
@@ -110,7 +110,7 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
           description={error || 'No data came back.'}
           tone="error"
           compact
-          action={<button onClick={load} style={{ padding: '8px 14px', background: 'rgba(245,158,11,0.14)', border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 8, color: GOLD, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Try again</button>}
+          action={<button onClick={load} style={{ padding: '8px 14px', background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-25)`, borderRadius: 8, color: GOLD, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' }}>Try Again</button>}
         />
       </SectionCard>
     );
@@ -126,7 +126,7 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
             the jobs it totals, pipeline and win rate to the leads board, past
             due to the follow-up list on My Work. */}
         <StatCard
-          label="Contract value"
+          label="Contract Value"
           value={money(contract.activeValue)}
           sub={`${contract.activeCount} active job${contract.activeCount === 1 ? '' : 's'}`}
           icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}
@@ -140,14 +140,14 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
           href="/app/leads"
         />
         <StatCard
-          label="Past due"
+          label="Past Due"
           value={String(followUps.overdueCount)}
           sub={followUps.overdueCount ? 'follow-ups already late' : 'nothing is late'}
           icon={<WarningCircle size={17} weight="duotone" color={followUps.overdueCount ? RED : GREEN} />}
           href="/app/my-work"
         />
         <StatCard
-          label="Win rate"
+          label="Win Rate"
           value={outcomes.winRate === null ? '—' : `${outcomes.winRate}%`}
           sub={outcomes.winRate === null ? 'nothing decided yet' : `${outcomes.wonCount} won · ${outcomes.lostCount} lost`}
           icon={<Target size={17} weight="duotone" color={GOLD} />}
@@ -157,10 +157,10 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
 
       {/* Real tracking graphs — win/loss ratio + pipeline mix, live numbers */}
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', marginBottom: 16 }}>
-        <WinLossBar won={outcomes.wonCount} lost={outcomes.lostCount} title="Win / loss" subtitle="Closed deals" />
+        <WinLossBar won={outcomes.wonCount} lost={outcomes.lostCount} title="Win / Loss" subtitle="Closed deals" />
         {stages.length > 0 && (
           <DonutRatio
-            title="Pipeline by stage"
+            title="Pipeline by Stage"
             data={stages.map(([stage, v]) => ({ label: stage.replace(/_/g, ' '), value: v.value }))}
             format="currency"
             centerValue={money(pipeline.value)}
@@ -191,22 +191,22 @@ export default function SalesOverview({ style }: { style?: React.CSSProperties }
         ) : (
           <div>
             {followUps.overdue.length > 0 && (
-              <div style={{ padding: '10px 20px 2px', color: RED, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+              <div style={{ padding: '10px 20px 2px', color: RED, fontSize: 10.5, fontWeight: 800 }}>
                 Late · {followUps.overdueCount}
               </div>
             )}
             {followUps.overdue.map(f => <FollowUpRow key={f.id} f={f} tone={RED} />)}
 
             {followUps.today.length > 0 && (
-              <div style={{ padding: '12px 20px 2px', color: AMBER, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
+              <div style={{ padding: '12px 20px 2px', color: AMBER, fontSize: 10.5, fontWeight: 800 }}>
                 Today · {followUps.todayCount}
               </div>
             )}
             {followUps.today.map(f => <FollowUpRow key={f.id} f={f} tone={AMBER} />)}
 
             {followUps.upcoming.length > 0 && (
-              <div style={{ padding: '12px 20px 2px', color: DIM, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.07em', textTransform: 'uppercase' }}>
-                Next 7 days · {followUps.upcomingCount}
+              <div style={{ padding: '12px 20px 2px', color: DIM, fontSize: 10.5, fontWeight: 800 }}>
+                Next 7 Days · {followUps.upcomingCount}
               </div>
             )}
             {followUps.upcoming.map(f => <FollowUpRow key={f.id} f={f} tone={DIM} />)}

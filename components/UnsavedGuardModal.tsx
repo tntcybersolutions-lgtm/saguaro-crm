@@ -36,14 +36,14 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
           <span style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
             width: 38, height: 38, borderRadius: 11,
-            background: 'var(--brand-primary-12, rgba(245,158,11,0.12))',
-            border: '1px solid var(--brand-primary-25, rgba(245,158,11,0.25))',
+            background: 'var(--brand-primary-12, var(--brand-primary-12))',
+            border: '1px solid var(--brand-primary-25, var(--brand-primary-25))',
           }}>
             <Warning size={19} weight="duotone" color={colors.gold} />
           </span>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: font.size.xl, fontWeight: font.weight.black, color: colors.text }}>
-              You have unsaved changes
+              You Have Unsaved Changes
             </div>
             <div style={{ fontSize: font.size.md, color: colors.textMuted, lineHeight: 1.6, marginTop: 6 }}>
               Leaving now will lose the work on this form.
@@ -60,7 +60,7 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
               background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', color: colors.red,
             }}
           >
-            Discard &amp; leave
+            Discard &amp; Leave
           </button>
           <button type="button" onClick={guard.stay} style={{ ...ghostButtonStyle, padding: '10px 16px', fontSize: 13 }}>
             Stay
@@ -75,7 +75,7 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
                 opacity: guard.saving ? 0.6 : 1, cursor: guard.saving ? 'not-allowed' : 'pointer',
               }}
             >
-              {guard.saving ? 'Saving…' : 'Save & leave'}
+              {guard.saving ? 'Saving…' : 'Save & Leave'}
             </button>
           ) : hasDraft ? (
             <button
@@ -83,7 +83,7 @@ export default function UnsavedGuardModal({ guard }: { guard: UnsavedGuardApi })
               onClick={guard.keepDraftAndLeave}
               style={{ ...goldButtonStyle, padding: '10px 18px', fontSize: 13 }}
             >
-              Keep draft &amp; leave
+              Keep Draft &amp; Leave
             </button>
           ) : null}
         </div>

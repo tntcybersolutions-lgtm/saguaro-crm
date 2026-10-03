@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -96,7 +96,7 @@ export default function ThemeToggle() {
         borderRadius: 8,
         border: `1px solid ${BORDER}`,
         background: theme === 'dark' ? RAISED : '#ffffff',
-        color: theme === 'dark' ? GOLD : '#F59E0B',
+        color: theme === 'dark' ? GOLD : 'var(--brand-primary)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

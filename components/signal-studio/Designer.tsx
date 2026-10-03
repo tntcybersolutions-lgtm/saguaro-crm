@@ -39,7 +39,7 @@ import dynamic from 'next/dynamic';
 // CLIENT-ONLY 3D building view (three.js touches window/WebGL → never SSR).
 const Building3D = dynamic(() => import('@/components/heatmap/Building3D'), { ssr: false });
 
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.1)';
+const GOLD = 'var(--brand-primary)', GOLD_CANVAS = '#F59E0B', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.1)';
 const TEXT = '#fff', DIM = '#CBD5E1', MUTED = 'rgba(255,255,255,0.5)';
 
 type Tool = 'select' | 'scale' | 'wall' | 'place';
@@ -208,9 +208,9 @@ const getAdvice = (p: HeatmapProject, cov: CoverageResult | null): DesignAdvice 
   if (smokes > 0 && density.areaFt2 > 0) {
     const guideline = Math.ceil(density.areaFt2 / 900); // NFPA 72 spot spacing 30 ft ≈ 900 ft² each — a LAYOUT guideline; the AHJ + NFPA 72 govern
     checks.push(smokes < guideline
-      ? { label: 'Smoke / heat', detail: `${smokes} placed — 30 ft NFPA 72 spacing suggests ~${guideline} for ${density.areaFt2.toLocaleString()} ft² (AHJ governs)`, status: 'warn' }
-      : { label: 'Smoke / heat', detail: `${smokes} placed for ${density.areaFt2.toLocaleString()} ft² — meets the 30 ft spacing guideline (~${guideline})`, status: 'ok' });
-  } else checks.push({ label: 'Smoke / heat', detail: smokes ? `${smokes} placed — set the scale to check spacing` : 'None placed (fire-alarm scope)', status: 'ok' });
+      ? { label: 'Smoke / Heat', detail: `${smokes} placed — 30 ft NFPA 72 spacing suggests ~${guideline} for ${density.areaFt2.toLocaleString()} ft² (AHJ governs)`, status: 'warn' }
+      : { label: 'Smoke / Heat', detail: `${smokes} placed for ${density.areaFt2.toLocaleString()} ft² — meets the 30 ft spacing guideline (~${guideline})`, status: 'ok' });
+  } else checks.push({ label: 'Smoke / Heat', detail: smokes ? `${smokes} placed — set the scale to check spacing` : 'None placed (fire-alarm scope)', status: 'ok' });
   const motionCeil = p.devices.filter((d) => d.typeId === 'motion_pir_ceiling').length;
   const motionWall = p.devices.filter((d) => d.typeId === 'motion_pir_wall').length;
   checks.push({ label: 'Motion', detail: motionCeil + motionWall ? `${motionCeil + motionWall} placed · ${motionCeil} ceiling / ${motionWall} wall` : 'None placed', status: 'ok' });
@@ -242,18 +242,18 @@ const DEVICE_LAYER: Partial<Record<DeviceTypeId, string>> = {
 };
 const deviceLayerKey = (t: DeviceTypeId) => DEVICE_LAYER[t] || 'other';
 const LAYER_META: { key: string; name: string; color: string }[] = [
-  { key: 'wifi', name: 'Wi-Fi / access points', color: SYSTEM_COLORS.wifi },
+  { key: 'wifi', name: 'Wi-Fi / Access Points', color: SYSTEM_COLORS.wifi },
   { key: 'camera', name: 'Cameras', color: SYSTEM_COLORS.camera },
-  { key: 'access', name: 'Access control', color: SYSTEM_COLORS.access },
-  { key: 'sensor', name: 'Sensors (motion / smoke)', color: SYSTEM_COLORS.sensor },
+  { key: 'access', name: 'Access Control', color: SYSTEM_COLORS.access },
+  { key: 'sensor', name: 'Sensors (Motion / Smoke)', color: SYSTEM_COLORS.sensor },
   { key: 'network', name: 'Network / IoT', color: SYSTEM_COLORS.iot },
-  { key: 'av', name: 'AV / speakers', color: SYSTEM_COLORS.av },
-  { key: 'power', name: 'Electrical outlets', color: SYSTEM_COLORS.power },
-  { key: 'data', name: 'Data jacks (RJ45)', color: SYSTEM_COLORS.power },
-  { key: 'voice', name: 'Voice jacks (RJ11)', color: SYSTEM_COLORS.power },
-  { key: 'combo', name: 'Combo plates', color: SYSTEM_COLORS.power },
-  { key: 'cabling', name: 'Cable terminations', color: SYSTEM_COLORS.cabling },
-  { key: 'other', name: 'Other devices', color: '#94a3b8' },
+  { key: 'av', name: 'AV / Speakers', color: SYSTEM_COLORS.av },
+  { key: 'power', name: 'Electrical Outlets', color: SYSTEM_COLORS.power },
+  { key: 'data', name: 'Data Jacks (RJ45)', color: SYSTEM_COLORS.power },
+  { key: 'voice', name: 'Voice Jacks (RJ11)', color: SYSTEM_COLORS.power },
+  { key: 'combo', name: 'Combo Plates', color: SYSTEM_COLORS.power },
+  { key: 'cabling', name: 'Cable Terminations', color: SYSTEM_COLORS.cabling },
+  { key: 'other', name: 'Other Devices', color: '#94a3b8' },
 ];
 // ── compact layer-chip row (the 6 approved systems) shown under the header ──
 type PanelTab = 'design' | 'layers' | 'bom' | 'survey';
@@ -390,7 +390,7 @@ function drawCinematicField(ctx: CanvasRenderingContext2D, p: HeatmapProject): C
     const gx = gp.centroid.x, gy = gp.centroid.y;
     ctx.save(); ctx.setLineDash([6, 7]); ctx.strokeStyle = '#22D3A5'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(gx, gy - 70, 34, 0, 7); ctx.stroke(); ctx.setLineDash([]);
     ctx.fillStyle = '#22D3A5'; ctx.font = '800 34px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('+', gx, gy - 70); ctx.restore();
-    const lines: [string, string, string][] = [['DEAD ZONE', '800 30px system-ui', '#fff'], [`${Math.round(gp.area).toLocaleString()} ft² · low signal`, '700 22px system-ui', '#ffd7d7'], ['▸ Place 1 AP here', '800 23px system-ui', '#22D3A5']];
+    const lines: [string, string, string][] = [['Dead Zone', '800 30px system-ui', '#fff'], [`${Math.round(gp.area).toLocaleString()} ft² · low signal`, '700 22px system-ui', '#ffd7d7'], ['▸ Place 1 AP here', '800 23px system-ui', '#22D3A5']];
     const tw = Math.max(...lines.map((l) => { ctx.font = l[1]; return ctx.measureText(l[0]).width; })) + 40, bh = 112, ly = Math.min(gy + 40, H - 150);
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 18; ctx.fillStyle = 'rgba(140,22,26,.97)'; rr(ctx, gx - tw / 2, ly - bh / 2, tw, bh, 14); ctx.fill(); ctx.restore();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; lines.forEach((l, i) => { ctx.font = l[1]; ctx.fillStyle = l[2]; ctx.fillText(l[0], gx, ly - 32 + i * 32); });
@@ -808,7 +808,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           }
           setPendingScale([]);
         } else {
-          const ans = window.prompt('Real-world length of this line, in FEET:', '20');
+          const ans = window.prompt('Real-world length of this line, in feet:', '20');
           const ft = ans ? parseFloat(ans) : NaN;
           if (ft > 0) {
             const pxPerFt = px / ft;
@@ -1172,7 +1172,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         const swapNote = replacedCount > 0 ? ` Replaced ${replacedCount} previously auto-placed AP${replacedCount === 1 ? '' : 's'}.` : '';
         setAiNotes([`Auto-designed: ${apCount} × ${apLabel} → ${pct}% coverage · ${dz === 0 ? 'no dead zones' : dz + ' dead zone' + (dz === 1 ? '' : 's')}.${swapNote} Undo reverts.`]);
       } catch {
-        setBusy(''); setAiNotes(['Auto-design failed — try Auto-place, then Fix dead zones.']);
+        setBusy(''); setAiNotes(['Auto-design failed — try Auto-place, then Fix Dead Zones.']);
       }
     }, 20);
   };
@@ -1444,11 +1444,11 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       ctx.lineWidth = 1.6; ctx.strokeStyle = '#0a0a0a'; ctx.stroke();
     }
     if (pendingWall.length) {
-      ctx.strokeStyle = GOLD; ctx.lineWidth = 3; ctx.setLineDash([9, 6]);
+      ctx.strokeStyle = GOLD_CANVAS; ctx.lineWidth = 3; ctx.setLineDash([9, 6]);
       ctx.beginPath(); ctx.moveTo(pendingWall[0].x, pendingWall[0].y);
       pendingWall.slice(1).forEach((p) => ctx.lineTo(p.x, p.y)); ctx.stroke(); ctx.setLineDash([]);
     }
-    if (pendingScale.length) { ctx.fillStyle = GOLD; pendingScale.forEach((p) => { ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, 7); ctx.fill(); }); }
+    if (pendingScale.length) { ctx.fillStyle = GOLD_CANVAS; pendingScale.forEach((p) => { ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, 7); ctx.fill(); }); }
     // ── dead zones (outlined + labeled) ──
     if (showHeat && coverage) for (const g of coverage.gaps) {
       ctx.strokeStyle = '#ff453a'; ctx.lineWidth = 3; ctx.setLineDash([11, 7]);
@@ -1714,7 +1714,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     const netHtml = sched && sched.rows.length
       ? `<h2>Network schedule — IP · VLAN · switch port</h2>
          <p style="font-size:12px;color:#555;margin:0 0 8px">${sched.vlans.map((v) => `${v.name} — VLAN ${v.id} (${v.subnet}.0/24)`).join(' &nbsp;·&nbsp; ')}</p>
-         <table><thead><tr><th>Device</th><th>VLAN</th><th>IP address</th><th>Switch port</th><th class="r">PoE</th></tr></thead>
+         <table><thead><tr><th>Device</th><th>VLAN</th><th>IP Address</th><th>Switch Port</th><th class="r">PoE</th></tr></thead>
          <tbody>${sched.rows.map((r) => `<tr><td>${r.label}</td><td>${r.vlan.id} · ${r.vlan.name}</td><td>${r.ip}</td><td>${r.port}</td><td class="r">${r.poeW ? r.poeW + ' W' : '—'}</td></tr>`).join('')}</tbody>
          <tfoot><tr><td>${sched.poePorts} PoE ports</td><td></td><td></td><td></td><td class="r">${sched.poeTotal} W</td></tr></tfoot></table>`
       : '';
@@ -1722,7 +1722,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     const pxPerFt = project.scale?.pxPerFt || 10;
     const aps = project.devices.filter((d) => d.typeId === 'wifi_ap');
     const nnFt = (ap: Device) => { let m = Infinity; for (const o of aps) if (o !== ap) m = Math.min(m, dist(ap.pos, o.pos) / pxPerFt); return m === Infinity ? null : m; };
-    const powerHtml = aps.length ? `<div class="sect"><h2>Access-point power settings</h2>
+    const powerHtml = aps.length ? `<div class="sect"><h2>Access-Point Power Settings</h2>
       <table><thead><tr><th>AP</th><th>Nearest AP</th><th>Power</th><th>Why</th></tr></thead><tbody>${aps.map((ap, i) => {
         const nn = nnFt(ap); const half = nn != null && nn < 45;
         return `<tr><td><b>${ap.label || 'AP ' + (i + 1)}</b>${ap.channel != null ? ` · ch ${ap.channel}` : ''}</td><td>${nn != null ? Math.round(nn) + ' ft' : 'isolated'}</td><td><b style="color:${half ? '#a8620a' : '#137a3f'}">${half ? 'Half (50%)' : 'Full (100%)'}</b></td><td style="color:#555;font-size:12px">${half ? 'Overlaps a neighbour closely — half power trims co-channel interference and improves roaming.' : 'Well spaced — full power to reach the edges of its cell.'}</td></tr>`;
@@ -1732,7 +1732,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
     const rack = idfDev?.pos || (project.devices.find((d) => d.typeId === 'iot_gateway' || d.typeId === 'smart_switch')?.pos) || { x: project.imgW / 2, y: project.imgH / 2 };
     const cs = summarizeCables(project, rack);
     const cabRows = project.devices.filter((d) => recommendCabling(d.typeId).dataCable || recommendCabling(d.typeId).powerCable);
-    const cableHtml = cabRows.length ? `<div class="sect"><h2>Cable &amp; termination schedule</h2>
+    const cableHtml = cabRows.length ? `<div class="sect"><h2>Cable &amp; Termination Schedule</h2>
       <table><thead><tr><th>Device</th><th>Run</th><th>Cable</th><th>Termination</th></tr></thead><tbody>${cabRows.map((d) => {
         const len = runLengthFt(d.pos, rack, pxPerFt); const rec = recommendCabling(d.typeId, { distanceFt: len });
         const cab = rec.dataCable ? rec.dataCable.name : (rec.powerCable ? rec.powerCable.name : '—');
@@ -1783,7 +1783,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       ? `<p style="font-size:12.5px;margin:0 2px 16px;color:#333"><b>Density check:</b> ${aps.length} AP${aps.length === 1 ? '' : 's'} on ${dflag.areaFt2.toLocaleString()} ft² = 1 AP per ${Math.round(dflag.areaFt2 / aps.length).toLocaleString()} ft² — engineering ceiling 1 AP / 1,500 ft² (max ${dflag.capAps} for this floor)${dflag.flagged ? ' — <b style="color:#b42318">over the cap, re-design recommended</b>' : ' — within the cap'}.</p>`
       : '';
     const apJustHtml = aps.length ? `<div class="sect"><h2>Access points — why each one is there</h2>
-      <table><thead><tr><th>AP</th><th class="r">Area served</th><th class="r">Spacing</th><th class="c">Band</th><th class="r">Tx power</th></tr></thead>
+      <table><thead><tr><th>AP</th><th class="r">Area Served</th><th class="r">Spacing</th><th class="c">Band</th><th class="r">Tx Power</th></tr></thead>
       <tbody>${aps.map((ap, i) => {
         const nn = nnFt(ap); const a = servedFt2(ap.id);
         return `<tr><td><b>${ap.label || 'AP ' + (i + 1)}</b>${ap.channel != null ? ` · ch ${ap.channel}` : ''}</td><td class="r">${a != null ? a.toLocaleString() + ' ft²' : '—'}</td><td class="r">${nn != null ? Math.round(nn) + ' ft to nearest' : 'only AP'}</td><td class="c">${ap.band || '5'} GHz</td><td class="r">${ap.txPowerDbm ?? 15} dBm</td></tr>`;
@@ -1791,22 +1791,22 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       <p style="font-size:12px;color:#555;margin-top:6px">Area served = floor cells where this AP is the strongest signal (best-server model${covForAps ? `, ${covForAps.cellPx} px grid` : ''}). Spacing is center-to-center on the plan.</p></div>` : '';
 
     // ── building-wide summary section (multi-floor only) ──
-    const buildingHtml = summary ? `<div class="sect"><h2>Building summary</h2>
+    const buildingHtml = summary ? `<div class="sect"><h2>Building Summary</h2>
       <div class="cards">
         <div class="card"><div class="k">Floors</div><div class="v">${summary.floorCount}</div></div>
-        <div class="card"><div class="k">Avg coverage</div><div class="v">${summary.avgCoveragePct}%</div></div>
-        <div class="card"><div class="k">Total area</div><div class="v">${summary.totalAreaFt2.toLocaleString()}<span style="font-size:12px;font-weight:600"> ft²</span></div></div>
+        <div class="card"><div class="k">Avg Coverage</div><div class="v">${summary.avgCoveragePct}%</div></div>
+        <div class="card"><div class="k">Total Area</div><div class="v">${summary.totalAreaFt2.toLocaleString()}<span style="font-size:12px;font-weight:600"> ft²</span></div></div>
         <div class="card"><div class="k">Devices</div><div class="v">${summary.totalDevices}</div></div>
-        <div class="card"><div class="k">Access points</div><div class="v">${summary.totalAps}</div></div>
+        <div class="card"><div class="k">Access Points</div><div class="v">${summary.totalAps}</div></div>
         <div class="card"><div class="k">Cameras</div><div class="v">${summary.totalCameras}</div></div>
         <div class="card"><div class="k">Combined BOM</div><div class="v">$${summary.bom.total.toLocaleString()}</div></div>
       </div>
-      <table style="margin-top:12px"><thead><tr><th>Floor</th><th class="r">Area</th><th class="c">Coverage</th><th class="c">Devices</th><th class="c">APs</th><th class="c">Dead zones</th></tr></thead>
+      <table style="margin-top:12px"><thead><tr><th>Floor</th><th class="r">Area</th><th class="c">Coverage</th><th class="c">Devices</th><th class="c">APs</th><th class="c">Dead Zones</th></tr></thead>
       <tbody>${summary.floors.map((fl) => `<tr><td><b>${fl.name}</b>${fl.hasPlan ? '' : ' <span style="color:#999">(no plan)</span>'}</td><td class="r">${fl.areaFt2 ? fl.areaFt2.toLocaleString() + ' ft²' : '—'}</td><td class="c">${fl.hasScale && fl.apCount ? fl.coveragePct + '%' : '—'}</td><td class="c">${fl.deviceCount}</td><td class="c">${fl.apCount}</td><td class="c">${fl.deadZones}</td></tr>`).join('')}</tbody></table></div>` : '';
 
     // ── per-floor hero maps (multi) or the single active hero ──
     const heroSectionHtml = multi
-      ? `<div class="sect"><h2>Floor coverage maps</h2>${heroes.map((h) => {
+      ? `<div class="sect"><h2>Floor Coverage Maps</h2>${heroes.map((h) => {
           const st = h.cov?.stats; const cap = st ? `${Math.round(st.pctCovered)}% covered · ${st.deviceCount} device${st.deviceCount === 1 ? '' : 's'} · ${st.deadZones} dead zone${st.deadZones === 1 ? '' : 's'}` : 'No coverage layer on this floor';
           return h.url ? `<div class="floorblock"><div class="floortitle">${h.name} <span>— ${cap}</span></div><img class="plan" src="${h.url}"/></div>` : '';
         }).join('')}</div>`
@@ -1822,7 +1822,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       .band{background:linear-gradient(100deg,#0a0a0a,#161b22);color:#fff;padding:20px 26px;display:flex;align-items:center;gap:16px;border-radius:0 0 4px 4px}
       .mark{width:38px;height:38px;flex:0 0 38px}
       .band h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px}
-      .band .tag{color:#D4A017;font-size:11px;text-transform:uppercase;letter-spacing:1.4px;font-weight:700}
+      .band .tag{color:#D4A017;font-size:11px;font-weight:700}
       .meta{color:#555;font-size:12.5px;margin:14px 2px 12px;display:flex;flex-wrap:wrap;gap:4px 18px}
       .meta b{color:#111}
       .verdict{font-size:15px;line-height:1.5;color:#1a2232;background:#f7f9fc;border:1px solid #e5e9f0;border-left:4px solid #D4A017;border-radius:10px;padding:13px 16px;margin:0 2px 16px}
@@ -1830,14 +1830,14 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       img.plan{width:100%;border:1px solid #d5d9de;border-radius:8px;margin-top:4px}
       .floorblock{page-break-inside:avoid;margin-top:12px}
       .floortitle{font-size:13px;font-weight:800;color:#0a0a0a;margin:0 0 4px}.floortitle span{font-weight:600;color:#6b7688}
-      h2{font-size:12px;margin:26px 0 8px;text-transform:uppercase;letter-spacing:.7px;color:#0a0a0a;border-bottom:2px solid #D4A017;padding-bottom:5px;display:inline-block}
+      h2{font-size:12px;margin:26px 0 8px;color:#0a0a0a;border-bottom:2px solid #D4A017;padding-bottom:5px;display:inline-block}
       table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:2px} td,th{border-bottom:1px solid #e7e9ec;padding:7px 9px}
-      th{text-align:left;background:#f4f5f7;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#555}
+      th{text-align:left;background:#f4f5f7;font-size:11px;color:#555}
       .c{text-align:center}.r{text-align:right;font-variant-numeric:tabular-nums}
       tfoot td{font-weight:800;border-top:2px solid #0a0a0a;background:#fafbfc}
       .cards{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
       .card{flex:1;min-width:120px;border:1px solid #e7e9ec;border-radius:8px;padding:11px 13px;background:#fafbfc}
-      .card .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:#777}
+      .card .k{font-size:10.5px;color:#777}
       .card .v{font-size:22px;font-weight:800;color:#0a0a0a;margin-top:3px}
       .sect{page-break-inside:avoid}
       .note{color:#888;font-size:10.5px;margin-top:22px;border-top:1px solid #e7e9ec;padding-top:10px}
@@ -1852,20 +1852,20 @@ export default function Designer({ projectId }: { projectId: string | null }) {
       ${densityHtml}
       ${buildingHtml}
       ${heroSectionHtml}
-      <div class="sect"><h2>${multi ? `Active floor — ${activeHero?.name || project.name}` : 'Coverage metrics'}</h2>
+      <div class="sect"><h2>${multi ? `Active floor — ${activeHero?.name || project.name}` : 'Coverage Metrics'}</h2>
       <div class="cards">
         <div class="card"><div class="k">Coverage</div><div class="v">${s ? s.pctCovered.toFixed(0) : (activeHero?.cov ? Math.round(activeHero.cov.stats.pctCovered) : '—')}%</div></div>
         <div class="card"><div class="k">Health</div><div class="v">${s ? s.healthScore : (activeHero?.cov ? activeHero.cov.stats.healthScore : '—')}</div></div>
         <div class="card"><div class="k">Devices</div><div class="v">${project.devices.length}</div></div>
-        <div class="card"><div class="k">Dead zones</div><div class="v">${s ? s.deadZones : (activeHero?.cov ? activeHero.cov.stats.deadZones : 0)}</div></div>
-        <div class="card"><div class="k">Dead area</div><div class="v">${s ? Math.round(s.deadArea) : (activeHero?.cov ? Math.round(activeHero.cov.stats.deadArea) : 0)}<span style="font-size:12px;font-weight:600"> ft²</span></div></div>
+        <div class="card"><div class="k">Dead Zones</div><div class="v">${s ? s.deadZones : (activeHero?.cov ? activeHero.cov.stats.deadZones : 0)}</div></div>
+        <div class="card"><div class="k">Dead Area</div><div class="v">${s ? Math.round(s.deadArea) : (activeHero?.cov ? Math.round(activeHero.cov.stats.deadArea) : 0)}<span style="font-size:12px;font-weight:600"> ft²</span></div></div>
       </div></div>
       ${combinedBomHtml}
-      <div class="sect"><h2>${multi ? 'Bill of materials — active floor' : 'Bill of materials'}</h2>
+      <div class="sect"><h2>${multi ? 'Bill of Materials — Active Floor' : 'Bill of Materials'}</h2>
       <table><thead><tr><th>Item</th><th class="c">Qty</th><th class="r">Unit</th><th class="r">Ext</th></tr></thead>
       <tbody>${rowsHtml}</tbody>
       <tfoot><tr><td>Total (hardware, est.)</td><td></td><td></td><td class="r">$${bom.total.toLocaleString()}</td></tr></tfoot></table></div>
-      <div class="sect"><h2>Cabling &amp; power</h2>
+      <div class="sect"><h2>Cabling &amp; Power</h2>
       <p style="font-size:13px">PoE load ≈ <b>${bom.poeWatts} W</b> · <b>${bom.cat6Runs}</b> Cat6 home-runs · recommended switch: <b>${bom.recSwitch?.model || '—'}</b> (${bom.recSwitch?.poeBudgetW || 0} W budget)${bom.recNvr ? ` · recorder: <b>${bom.recNvr.model}</b>` : ''}</p></div>
       ${apJustHtml}
       ${powerHtml}
@@ -2074,7 +2074,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
             <div className="hm-hero-eyebrow"><Lightning size={11} weight="fill" color={GOLD} /> Signal Studio</div>
             <div className="hm-hero-title">
               <span className="hm-hero-name">{project ? project.name : 'Wi-Fi, camera & cabling design'}</span>
-              {project && <span className="hm-hero-cal" data-ok={!!project.scale}>{project.scale ? 'Calibrated' : 'Not calibrated'}</span>}
+              {project && <span className="hm-hero-cal" data-ok={!!project.scale}>{project.scale ? 'Calibrated' : 'Not Calibrated'}</span>}
             </div>
           </div>
         </div>
@@ -2093,26 +2093,26 @@ export default function Designer({ projectId }: { projectId: string | null }) {
 
       {(fieldMode ? floors.length > 1 : (project || floors.length > 1)) && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 16px', borderBottom: `1px solid ${BORDER}`, background: RAISED }}>
-          <span style={{ fontSize: 11, color: MUTED, textTransform: 'uppercase', letterSpacing: 1, marginRight: 2 }}>Building floors</span>
+          <span style={{ fontSize: 11, color: MUTED, marginRight: 2 }}>Building Floors</span>
           {floors.map((f) => (
             <div key={f.id} onClick={() => switchFloor(f.id)} onDoubleClick={() => renameFloor(f.id)}
               title="Click to switch · double-click to rename"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 11px', borderRadius: 8, cursor: 'pointer',
-                background: f.id === activeFloor ? 'rgba(245,158,11,0.16)' : DARK, color: f.id === activeFloor ? GOLD : DIM,
-                border: `1px solid ${f.id === activeFloor ? 'rgba(245,158,11,0.4)' : BORDER}`, fontWeight: 700, fontSize: 12.5 }}>
+                background: f.id === activeFloor ? 'var(--brand-primary-18)' : DARK, color: f.id === activeFloor ? GOLD : DIM,
+                border: `1px solid ${f.id === activeFloor ? 'var(--brand-primary-35)' : BORDER}`, fontWeight: 700, fontSize: 12.5 }}>
               {f.name}
               <span style={{ fontSize: 10.5, color: MUTED, fontWeight: 600 }}>{f.proj ? `${f.proj.devices.length} dev` : 'empty'}</span>
               {floors.length > 1 && <span onClick={(e) => { e.stopPropagation(); removeFloor(f.id); }} style={{ color: MUTED, marginLeft: 1, fontWeight: 800, fontSize: 14 }} title="Remove floor">×</span>}
             </div>
           ))}
-          <button onClick={addFloor} className="hm-btn" style={{ background: 'rgba(255,255,255,0.06)', color: TEXT }}>+ Add floor</button>
+          <button onClick={addFloor} className="hm-btn" style={{ background: 'rgba(255,255,255,0.06)', color: TEXT }}>+ Add Floor</button>
         </div>
       )}
 
       {/* ── system layer-chip row (the 6 approved systems) — click a chip to show / hide that system ── */}
       {project && !fieldMode && (
         <div className="hm-chiprow">
-          <span style={{ fontSize: 10.5, color: MUTED, textTransform: 'uppercase', letterSpacing: 1, marginRight: 2 }}>Systems</span>
+          <span style={{ fontSize: 10.5, color: MUTED, marginRight: 2 }}>Systems</span>
           {SYSTEM_CHIPS.map((c) => {
             const on = c.cabling ? showCabling : layerVis[c.key] !== false;
             return (
@@ -2131,9 +2131,9 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         <div className="hm-pad" style={{ maxWidth: 1040, margin: '24px auto' }}>
           {/* ── cinematic hero: sell the payoff on the empty state ── */}
           <div onDragOver={onDragOverFiles} onDragLeave={onDragLeaveFiles} onDrop={onDropFiles}
-            style={{ display: 'flex', gap: 26, alignItems: 'center', flexWrap: 'wrap', background: dragOver ? 'rgba(245,158,11,0.06)' : RAISED, border: `1px solid ${dragOver ? GOLD : BORDER}`, borderRadius: 20, padding: 26, transition: 'border-color .15s, background .15s' }}>
+            style={{ display: 'flex', gap: 26, alignItems: 'center', flexWrap: 'wrap', background: dragOver ? 'var(--brand-primary-08)' : RAISED, border: `1px solid ${dragOver ? GOLD : BORDER}`, borderRadius: 20, padding: 26, transition: 'border-color .15s, background .15s' }}>
             <div style={{ flex: '1 1 300px', minWidth: 280 }}>
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.6, color: GOLD, textTransform: 'uppercase', marginBottom: 12 }}>Signal Studio — Wi-Fi, camera &amp; cabling design</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 12 }}>Signal Studio — Wi-Fi, camera &amp; cabling design</div>
               <h2 style={{ fontSize: 'clamp(24px,3.2vw,38px)', fontWeight: 900, lineHeight: 1.06, margin: '0 0 14px', color: '#fff', letterSpacing: -1 }}>Design the whole low-voltage system.</h2>
               <p style={{ color: DIM, fontSize: 14.5, lineHeight: 1.55, margin: '0 0 18px', maxWidth: 470 }}>Drop a blueprint. Devices place themselves, dead zones surface, and the bill of materials writes itself.</p>
               {/* The six-bullet feature grid that sat here was marketing copy
@@ -2144,7 +2144,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   then let them use it. */}
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                 <label className="hm-cta" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}>
-                  <UploadSimple size={15} weight="bold" /> {busy || (dragOver ? 'Drop to load' : 'Upload blueprint')}
+                  <UploadSimple size={15} weight="bold" /> {busy || (dragOver ? 'Drop to Load' : 'Upload Blueprint')}
                   <input type="file" accept="image/*,application/pdf,.pdf" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && smartUpload(e.target.files[0])} />
                 </label>
                 <button className="hm-cta" style={{ background: 'rgba(255,255,255,0.07)', color: TEXT, border: `1px solid ${BORDER}`, boxShadow: '0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)', display: 'inline-flex', alignItems: 'center', gap: 7 }} onClick={() => { const o = TEMPLATES.find((t) => t.id === 'office') || TEMPLATES[0]; if (o) buildTemplate(o); }}>
@@ -2161,7 +2161,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
             </div>
           </div>
           <div style={{ marginTop: 22, textAlign: 'left' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 1.6, marginBottom: 12, textAlign: 'center' }}>Or open a finished example to see how one is put together</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 12, textAlign: 'center' }}>Or open a finished example to see how one is put together</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {TEMPLATES.map((t) => (
                 <button key={t.id} className="hm-tmpl" onClick={() => buildTemplate(t)}>
@@ -2194,25 +2194,25 @@ export default function Designer({ projectId }: { projectId: string | null }) {
             <div className="hm-fieldbar">
               {fieldStep === 'plan' && <>
                 <span className="hm-fieldmsg">Plan loaded <Check size={13} weight="bold" color="#30D158" style={{ verticalAlign: '-2px' }} /> — next, set the scale so every distance is real.</span>
-                <button className="hm-big" onClick={() => openStep('scale')}>Set the scale →</button>
+                <button className="hm-big" onClick={() => openStep('scale')}>Set the Scale →</button>
               </>}
               {fieldStep === 'scale' && (project.scale ? <>
                 <span className="hm-fieldmsg">Scale set <Check size={13} weight="bold" color="#30D158" style={{ verticalAlign: '-2px' }} /> — distances on this plan are real now.</span>
-                <button className="hm-big" onClick={() => openStep('devices')}>Place devices →</button>
-                <button className="hm-big" data-alt="true" onClick={() => openStep('walls')}>Trace walls</button>
-                <button className="hm-big" data-alt="true" onClick={() => { finishWall(); setTool('scale'); setScaleDoor(true); setPendingScale([]); }}>Redo scale</button>
+                <button className="hm-big" onClick={() => openStep('devices')}>Place Devices →</button>
+                <button className="hm-big" data-alt="true" onClick={() => openStep('walls')}>Trace Walls</button>
+                <button className="hm-big" data-alt="true" onClick={() => { finishWall(); setTool('scale'); setScaleDoor(true); setPendingScale([]); }}>Redo Scale</button>
               </> : <>
                 {/* ONE primary CTA; the three manual scale methods fold into a compact segment */}
                 <button className="hm-big" onClick={autopilot}><Sparkle size={15} weight="fill" /> AI: read plan &amp; design everything</button>
                 <div className="hm-seg" role="group" aria-label="Set the scale by hand">
-                  <button type="button" className="hm-seg-btn" data-on={scaleDoor && scaleDoorFt === 3 && tool === 'scale'} onClick={() => { finishWall(); setScaleDoorFt(3); setTool('scale'); setScaleDoor(true); setPendingScale([]); }}>Single door · 3 ft</button>
+                  <button type="button" className="hm-seg-btn" data-on={scaleDoor && scaleDoorFt === 3 && tool === 'scale'} onClick={() => { finishWall(); setScaleDoorFt(3); setTool('scale'); setScaleDoor(true); setPendingScale([]); }}>Single Door · 3 ft</button>
                   <button type="button" className="hm-seg-btn" data-on={scaleDoor && scaleDoorFt === 6 && tool === 'scale'} onClick={() => { finishWall(); setScaleDoorFt(6); setTool('scale'); setScaleDoor(true); setPendingScale([]); }}>Double · 6 ft</button>
-                  <button type="button" className="hm-seg-btn" data-on={!scaleDoor && tool === 'scale'} onClick={() => { finishWall(); setTool('scale'); setScaleDoor(false); setPendingScale([]); }}>Known distance…</button>
+                  <button type="button" className="hm-seg-btn" data-on={!scaleDoor && tool === 'scale'} onClick={() => { finishWall(); setTool('scale'); setScaleDoor(false); setPendingScale([]); }}>Known Distance…</button>
                 </div>
                 <span className="hm-fieldmsg">Fastest: let AI read the plan. Or tap a doorway — pick single or double first.</span>
               </>)}
               {fieldStep === 'walls' && <>
-                <button className="hm-big" data-on={tool === 'wall'} onClick={() => setTool('wall')}>Trace walls</button>
+                <button className="hm-big" data-on={tool === 'wall'} onClick={() => setTool('wall')}>Trace Walls</button>
                 <select className="hm-sel" value={wallMat} onChange={(e) => setWallMat(e.target.value as WallMaterialId)} title="Wall material — sets how much signal it blocks">
                   {Object.entries(WALL_MATERIALS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
                 </select>
@@ -2235,7 +2235,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     <button key={b} type="button" className="hm-minichip" data-on={autoBand === b} onClick={() => setAutoBand(b)}>{b} GHz</button>
                   ))}
                 </div>
-                <button className="hm-big" data-alt="true" data-on={tool === 'place' && placeType === 'wifi_ap'} onClick={() => { finishWall(); setTool('place'); setPlaceType('wifi_ap'); }}>Place APs by hand</button>
+                <button className="hm-big" data-alt="true" data-on={tool === 'place' && placeType === 'wifi_ap'} onClick={() => { finishWall(); setTool('place'); setPlaceType('wifi_ap'); }}>Place APs by Hand</button>
                 <select className="hm-sel" value={placeType} title="Everything you can place — pick one, then click the plan"
                   onChange={(e) => { finishWall(); setTool('place'); setPlaceType(e.target.value as DeviceTypeId); }}>
                   {PLACEABLE.map((t) => <option key={t} value={t}>{DEVICE_REGISTRY[t].label}</option>)}
@@ -2249,16 +2249,16 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               {fieldStep === 'heatmap' && <>
                 <span className="hm-fieldstat" style={{ color: stats && stats.pctCovered > 90 ? '#30D158' : stats && stats.pctCovered > 75 ? GOLD : '#FF453A' }}>{stats ? `${stats.pctCovered.toFixed(0)}%` : '—'} <small>coverage</small></span>
                 <span className="hm-fieldstat">{stats ? stats.deadZones : '—'} <small>dead zone{stats?.deadZones === 1 ? '' : 's'}</small></span>
-                {fixableGaps.length > 0 && <button className="hm-big" onClick={doFixDeadZones}>Fix {fixableGaps.length} dead zone{fixableGaps.length === 1 ? '' : 's'}</button>}
+                {fixableGaps.length > 0 && <button className="hm-big" onClick={doFixDeadZones}>Fix {fixableGaps.length} Dead Zone{fixableGaps.length === 1 ? '' : 's'}</button>}
                 {fixableGaps.length === 0 && (coverage?.gaps?.length ?? 0) > 0 && <span className="hm-fieldmsg">Remaining pockets are too small for more hardware — drag an AP a few feet toward the worst one.</span>}
-                <button className="hm-big" data-alt="true" onClick={doChannels}>Plan channels</button>
-                <button className="hm-big" onClick={() => openStep('bid')}>Looks good → Bid</button>
+                <button className="hm-big" data-alt="true" onClick={doChannels}>Plan Channels</button>
+                <button className="hm-big" onClick={() => openStep('bid')}>Looks Good → Bid</button>
               </>}
               {fieldStep === 'bid' && <>
                 <span className="hm-fieldstat" style={{ color: GOLD }}>{bom ? `$${bom.turnkey.toLocaleString()}` : '—'} <small>turnkey install</small></span>
                 <button className="hm-big" onClick={sendToBidJacket}>→ Bid Jacket</button>
-                <button className="hm-big" data-alt="true" onClick={exportReport}>Client report</button>
-                <button className="hm-big" data-alt="true" onClick={openSaveModal}>Save design</button>
+                <button className="hm-big" data-alt="true" onClick={exportReport}>Client Report</button>
+                <button className="hm-big" data-alt="true" onClick={openSaveModal}>Save Design</button>
               </>}
             </div>
           )}
@@ -2318,14 +2318,14 @@ export default function Designer({ projectId }: { projectId: string | null }) {
           {densityFlag?.flagged && (
             <div className="hm-guardband">
               <span style={{ flex: 1, minWidth: 220 }}>This design has {densityFlag.apCount} APs — engineering cap for {densityFlag.areaFt2.toLocaleString()} ft² is {densityFlag.capAps} (1 AP / 1,500 ft²). Older auto-designs over-placed hardware.</span>
-              <button className="hm-btn" onClick={redesignCoverage}>Re-design coverage (replaces ALL APs)</button>
+              <button className="hm-btn" onClick={redesignCoverage}>Redesign Coverage (Replaces All APs)</button>
             </div>
           )}
 
           {/* multi-sheet PDF picker */}
           {pdfDoc && pdfDoc.pages > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderBottom: `1px solid ${BORDER}`, flexWrap: 'wrap', background: RAISED }}>
-              <span style={{ fontSize: 11, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.8, marginRight: 2 }}>{pdfDoc.name} · {pdfDoc.pages} sheets</span>
+              <span style={{ fontSize: 11, color: MUTED, marginRight: 2 }}>{pdfDoc.name} · {pdfDoc.pages} sheets</span>
               {Array.from({ length: pdfDoc.pages }, (_, i) => i + 1).map((n) => (
                 <button key={n} className="hm-sheet" data-on={project.name === `${pdfDoc.name} — Sheet ${n}`} disabled={!!busy}
                   onClick={() => renderPdfPage(pdfDoc.pdf, n, pdfDoc.name)}>Sheet {n}</button>
@@ -2352,7 +2352,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   </div>
                 </div>
               )}
-              {dragOver && <div className="hm-drop">Drop plan to replace</div>}
+              {dragOver && <div className="hm-drop">Drop Plan to Replace</div>}
               {/* how-to-edit hint bar — in Field mode it tells you the ONE next move */}
               <div style={{ position: 'absolute', left: 10, bottom: 10, display: 'flex', gap: 6, flexWrap: 'wrap', pointerEvents: 'none', zIndex: 5 }}>
                 {(fieldMode
@@ -2452,7 +2452,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   <Metric label="Health" big val={stats ? `${stats.healthScore}` : '—'} color={stats ? (stats.healthScore > 80 ? '#30D158' : stats.healthScore > 60 ? GOLD : '#FF453A') : DIM} />
                   <Metric label="Devices" big val={`${project.devices.length}`} />
                   {project.activeType === 'wifi_ap'
-                    ? <Metric label="Dead zones" big val={stats ? `${stats.deadZones}` : '—'} color={stats && stats.deadZones ? GOLD : DIM} />
+                    ? <Metric label="Dead Zones" big val={stats ? `${stats.deadZones}` : '—'} color={stats && stats.deadZones ? GOLD : DIM} />
                     : <Metric label="Cabling" big val={bom ? `${bom.cat6Runs} runs` : '—'} />}
                 </div>
                 <div className="hm-tabs" role="tablist">
@@ -2469,14 +2469,14 @@ export default function Designer({ projectId }: { projectId: string | null }) {
 
               {/* ═══ DESIGN ═══ plan layer · band · smart tools · device list ═══ */}
               {tab === 'design' && <>
-              <PanelSection title="Coverage layer">
+              <PanelSection title="Coverage Layer">
                 <select className="hm-sel" style={{ width: '100%' }} value={project.activeType} onChange={(e) => patch({ activeType: e.target.value as DeviceTypeId })}>
                   {COVERAGE_LAYERS.map((t) => <option key={t} value={t}>{DEVICE_REGISTRY[t].label}</option>)}
                 </select>
                 <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                   <label style={{ flex: 1, fontSize: 11, color: DIM }}>Environment
                     <select className="hm-sel" style={{ width: '100%' }} value={project.env} onChange={(e) => patch({ env: e.target.value as Env })}>
-                      <option value="open">Open / warehouse</option><option value="office">Office</option><option value="dense">Dense walls</option>
+                      <option value="open">Open / Warehouse</option><option value="office">Office</option><option value="dense">Dense Walls</option>
                     </select>
                   </label>
                   {project.activeType === 'wifi_ap' && <label style={{ flex: 1, fontSize: 11, color: DIM }}>Target
@@ -2487,7 +2487,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </div>
                 {project.activeType === 'wifi_ap' && <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
                   <span style={{ fontSize: 11, color: DIM }}>Band (all APs)</span>
-                  <div className="hm-seg" role="group" aria-label="Wi-Fi band" style={{ flex: 1 }}>
+                  <div className="hm-seg" role="group" aria-label="Wi-Fi Band" style={{ flex: 1 }}>
                     {(['2.4', '5', '6'] as Band[]).map((b) => (
                       <button key={b} type="button" className="hm-seg-btn" data-on={apBand === b} style={{ flex: 1 }}
                         onClick={() => setBandAll(b)} title={`Set all APs to ${b} GHz and recompute coverage`}>{b}</button>
@@ -2507,14 +2507,14 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </div>}
               </PanelSection>
 
-              {stats && <PanelSection title="Coverage detail">
+              {stats && <PanelSection title="Coverage Detail">
                 <div className="hm-metrics">
                   <Metric label="Coverage" val={`${stats.pctCovered.toFixed(0)}%`} big color={stats.pctCovered > 90 ? '#30D158' : stats.pctCovered > 75 ? GOLD : '#FF453A'} />
                   <Metric label="Health" val={`${stats.healthScore}`} big color={stats.healthScore > 80 ? '#30D158' : stats.healthScore > 60 ? GOLD : '#FF453A'} />
                   <Metric label="Avg" val={`${stats.avgValue.toFixed(0)} ${stats.valueUnit}`} />
                   <Metric label="Devices" val={`${stats.deviceCount}`} />
-                  {project.activeType === 'wifi_ap' && <Metric label="Dead zones" val={`${stats.deadZones}`} color={stats.deadZones ? GOLD : DIM} />}
-                  {project.activeType === 'wifi_ap' && <Metric label="Dead area" val={`${Math.round(stats.deadArea)} ft²`} />}
+                  {project.activeType === 'wifi_ap' && <Metric label="Dead Zones" val={`${stats.deadZones}`} color={stats.deadZones ? GOLD : DIM} />}
+                  {project.activeType === 'wifi_ap' && <Metric label="Dead Area" val={`${Math.round(stats.deadArea)} ft²`} />}
                   {project.activeType === 'wifi_ap' && stats.roamReadyPct != null && <Metric label="Roam-ready" val={`${stats.roamReadyPct.toFixed(0)}%`} color={stats.roamReadyPct > 80 ? '#30D158' : stats.roamReadyPct > 50 ? GOLD : '#FF453A'} />}
                   {project.activeType === 'wifi_ap' && stats.avgConfidence != null && <Metric label="Confidence" val={`${Math.round(stats.avgConfidence * 100)}%`} color={stats.avgConfidence > 0.7 ? '#30D158' : stats.avgConfidence > 0.45 ? GOLD : '#FF453A'} />}
                 </div>
@@ -2537,14 +2537,14 @@ export default function Designer({ projectId }: { projectId: string | null }) {
 
               {/* ═══ LAYERS ═══ map overlays + per-system show / hide ═══ */}
               {tab === 'layers' && <>
-              <PanelSection title="Map overlays">
+              <PanelSection title="Map Overlays">
                 <div className="hm-list">
                   <button className="hm-row" data-on={showHeat} onClick={() => setShowHeat((v) => !v)} style={{ width: '100%' }}>
-                    <i style={{ background: '#1cb052' }} /><span style={{ flex: 1 }}>Coverage heatmap</span>
+                    <i style={{ background: '#1cb052' }} /><span style={{ flex: 1 }}>Coverage Heatmap</span>
                     <span style={{ fontSize: 10.5, color: showHeat ? '#30D158' : MUTED, fontWeight: 700 }}>{showHeat ? 'ON' : 'OFF'}</span>
                   </button>
                   <div className="hm-row" style={{ width: '100%', cursor: 'default' }}>
-                    <i style={{ background: 'transparent' }} /><span style={{ flex: 1 }}>Heatmap opacity</span>
+                    <i style={{ background: 'transparent' }} /><span style={{ flex: 1 }}>Heatmap Opacity</span>
                     <input type="range" min={0.15} max={1} step={0.05} value={project.heatmapOpacity} onChange={(e) => patch({ heatmapOpacity: +e.target.value })} style={{ width: 96, accentColor: GOLD }} />
                   </div>
                   {project.activeType === 'wifi_ap' && (
@@ -2560,36 +2560,36 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     </button>
                   )}
                   <button className="hm-row" data-on={showDori} onClick={() => setShowDori((v) => !v)} style={{ width: '100%', opacity: showDori ? 1 : 0.6 }} title="Camera DORI zones (EN 62676-4)">
-                    <i style={{ background: SYSTEM_COLORS.camera }} /><span style={{ flex: 1 }}>Camera DORI cones</span>
+                    <i style={{ background: SYSTEM_COLORS.camera }} /><span style={{ flex: 1 }}>Camera DORI Cones</span>
                     <span style={{ fontSize: 10.5, color: showDori ? '#30D158' : MUTED, fontWeight: 700 }}>{showDori ? 'ON' : 'OFF'}</span>
                   </button>
                   <button className="hm-row" data-on={showCabling} onClick={() => setShowCabling((v) => !v)} style={{ width: '100%', opacity: showCabling ? 1 : 0.6 }} title="Structured cabling home-run lines to the rack/MDF">
-                    <i style={{ background: SYSTEM_COLORS.cabling }} /><span style={{ flex: 1 }}>Cabling runs</span>
+                    <i style={{ background: SYSTEM_COLORS.cabling }} /><span style={{ flex: 1 }}>Cabling Runs</span>
                     <span style={{ fontSize: 10.5, color: showCabling ? '#30D158' : MUTED, fontWeight: 700 }}>{showCabling ? 'ON' : 'OFF'}</span>
                   </button>
                   {project.activeType === 'wifi_ap' && measured.length > 0 && (
                     <button className="hm-row" data-on={showMeasured} onClick={() => setShowMeasured((v) => !v)} style={{ width: '100%', opacity: showMeasured ? 1 : 0.6 }}>
-                      <i style={{ background: '#F59E0B' }} /><span style={{ flex: 1 }}>Measured survey</span>
+                      <i style={{ background: 'var(--brand-primary)' }} /><span style={{ flex: 1 }}>Measured Survey</span>
                       <span style={{ fontSize: 11, color: MUTED, marginRight: 8, fontVariantNumeric: 'tabular-nums' }}>{measured.length}</span>
                       <span style={{ fontSize: 10.5, color: showMeasured ? '#30D158' : MUTED, fontWeight: 700 }}>{showMeasured ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showRoam} onClick={() => setShowRoam((v) => !v)} style={{ width: '100%', opacity: showRoam ? 1 : 0.6 }} title="Covered cells that can't reach a 2nd AP — a roaming risk">
-                      <i style={{ background: '#D4A017' }} /><span style={{ flex: 1 }}>Roaming risk</span>
+                      <i style={{ background: '#D4A017' }} /><span style={{ flex: 1 }}>Roaming Risk</span>
                       <span style={{ fontSize: 10.5, color: showRoam ? '#30D158' : MUTED, fontWeight: 700 }}>{showRoam ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                   {project.activeType === 'wifi_ap' && (
                     <button className="hm-row" data-on={showConfidence} onClick={() => setShowConfidence((v) => !v)} style={{ width: '100%', opacity: showConfidence ? 1 : 0.6 }} title="Veils areas the prediction is least sure about — import a survey to light it up">
-                      <i style={{ background: '#3f3f46' }} /><span style={{ flex: 1 }}>Confidence veil</span>
+                      <i style={{ background: '#3f3f46' }} /><span style={{ flex: 1 }}>Confidence Veil</span>
                       <span style={{ fontSize: 10.5, color: showConfidence ? '#30D158' : MUTED, fontWeight: 700 }}>{showConfidence ? 'ON' : 'OFF'}</span>
                     </button>
                   )}
                 </div>
               </PanelSection>
 
-              {project.devices.length > 0 && <PanelSection title="Systems — show / hide">
+              {project.devices.length > 0 && <PanelSection title="Systems — Show / Hide">
                 <div className="hm-list">
                   {LAYER_META.filter((l) => project.devices.some((d) => deviceLayerKey(d.typeId) === l.key)).map((l) => {
                     const count = project.devices.filter((d) => deviceLayerKey(d.typeId) === l.key).length;
@@ -2607,7 +2607,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
               </>}
 
               {/* ═══ BOM ═══ capacity · materials · network schedule ═══ */}
-              {tab === 'bom' && project.activeType === 'wifi_ap' && capAps.length > 0 && bom && <PanelSection title="Network capacity">
+              {tab === 'bom' && project.activeType === 'wifi_ap' && capAps.length > 0 && bom && <PanelSection title="Network Capacity">
                 <div className="hm-metrics">
                   <Metric label={`Mbps / client${apBand ? ` · ${apBand}GHz` : ' · mixed'}`} val={`${tpLow}–${tpHigh}`} big color={GOLD} />
                   <Metric label={`Clients (${capAps.length} AP × ${clientsPerAp})`} val={`${capTotal}`} big color={capTotal ? TEXT : DIM} />
@@ -2632,11 +2632,11 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </div>
               </PanelSection>}
 
-              {tab === 'design' && <PanelSection title="Smart tools">
-                {project.planDataUrl && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, #FBBF24)`, color: '#1c1c1e', border: 'none', fontWeight: 800, fontSize: 13.5, marginBottom: 8, textAlign: 'center' }} onClick={autopilot}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Design my building — AI reads the plan, designs &amp; prices it</button>}
-                {project.scale && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, #FBBF24)`, color: '#1c1c1e', border: 'none', fontWeight: 800, fontSize: 13, marginBottom: 10, textAlign: 'center' }} onClick={autoDesign}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-design coverage — place · close dead zones · price it</button>}
+              {tab === 'design' && <PanelSection title="Smart Tools">
+                {project.planDataUrl && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#0A0A00', border: 'none', fontWeight: 800, fontSize: 13.5, marginBottom: 8, textAlign: 'center' }} onClick={autopilot}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Design my building — AI reads the plan, designs &amp; prices it</button>}
+                {project.scale && <button className="hm-smart" style={{ background: `linear-gradient(135deg, ${GOLD}, var(--brand-primary-strong))`, color: '#0A0A00', border: 'none', fontWeight: 800, fontSize: 13, marginBottom: 10, textAlign: 'center' }} onClick={autoDesign}><Sparkle size={15} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-design coverage — place · close dead zones · price it</button>}
                 <button className="hm-smart" onClick={doAiScan}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />AI scan blueprint → read walls + place devices</button>
-                <div style={{ border: `1px solid rgba(245,158,11,0.25)`, borderRadius: 8, padding: 9, marginBottom: 7, background: 'rgba(245,158,11,0.05)' }}>
+                <div style={{ border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: 9, marginBottom: 7, background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 7 }}>
                     <label style={{ fontSize: 10.5, color: MUTED }}>Vendor
                       <select className="hm-sel-full" value={apVendor} onChange={(e) => { const v = e.target.value; setApVendor(v); const first = apModelsByVendor(v)[0]; if (first) setApCatId(first.id); }}>
@@ -2651,7 +2651,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                       </select>
                     </label>
                   </div>
-                  <label style={{ fontSize: 10.5, color: MUTED, display: 'block', marginBottom: 7 }}>AP model
+                  <label style={{ fontSize: 10.5, color: MUTED, display: 'block', marginBottom: 7 }}>AP Model
                     <select className="hm-sel-full" value={apCatId} onChange={(e) => setApCatId(e.target.value)}>
                       {apModelsByVendor(apVendor).map((m) => <option key={m.id} value={m.id}>{m.model}</option>)}
                     </select>
@@ -2660,15 +2660,15 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     <span>{apCat.wifiGen.replace('wifi', 'Wi-Fi ')} · {(apCat.maxTxPowerDbm[toDeviceRadio(apCat, autoBand).band] ?? 0)} dBm · {apCat.antennaGainDbi} dBi · {apCat.poeWatts} W PoE</span>
                     <span style={{ color: GOLD, fontWeight: 700 }}>{apCat.listPriceUsd ? '$' + apCat.listPriceUsd.toLocaleString() : '—'}</span>
                   </div>}
-                  <label style={{ fontSize: 10.5, color: MUTED, display: 'block' }}>Coverage target: <span style={{ color: GOLD, fontWeight: 700 }}>{Math.round(autoTarget * 100)}%</span> at {project.rssiTargetDbm} dBm
+                  <label style={{ fontSize: 10.5, color: MUTED, display: 'block' }}>Coverage Target: <span style={{ color: GOLD, fontWeight: 700 }}>{Math.round(autoTarget * 100)}%</span> at {project.rssiTargetDbm} dBm
                     <input type="range" min={70} max={99} step={1} value={Math.round(autoTarget * 100)} onChange={(e) => setAutoTarget(Number(e.target.value) / 100)} style={{ width: '100%', accentColor: GOLD, marginTop: 4 }} />
                   </label>
                   <button className="hm-smart" style={{ marginBottom: 0, marginTop: 4 }} onClick={doAutoPlace}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Auto-place {apCat ? apCat.model : apModel.replace('UniFi ', '')} → {Math.round(autoTarget * 100)}%</button>
                 </div>
-                {fixableGaps.length > 0 && <button className="hm-smart" style={{ borderColor: 'rgba(34,211,165,0.55)', color: '#22D3A5' }} onClick={doFixDeadZones}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Fix {fixableGaps.length} dead zone{fixableGaps.length === 1 ? '' : 's'} → place {fixableGaps.length} AP{fixableGaps.length === 1 ? '' : 's'}</button>}
+                {fixableGaps.length > 0 && <button className="hm-smart" style={{ borderColor: 'rgba(34,211,165,0.55)', color: '#22D3A5' }} onClick={doFixDeadZones}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Fix {fixableGaps.length} Dead Zone{fixableGaps.length === 1 ? '' : 's'} → place {fixableGaps.length} AP{fixableGaps.length === 1 ? '' : 's'}</button>}
                 {fixableGaps.length === 0 && (coverage?.gaps?.length ?? 0) > 0 && <div style={{ fontSize: 11.5, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.5 }}>Remaining dead pockets are too small to justify more hardware — drag an existing AP a few feet toward the worst one.</div>}
                 <button className="hm-smart" onClick={doChannels}><Sparkle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Plan WiFi channels (1/6/11)</button>
-                <button className="hm-smart" onClick={compute}><ArrowsClockwise size={14} weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} />Recompute heatmap</button>
+                <button className="hm-smart" onClick={compute}><ArrowsClockwise size={14} weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} />Recompute Heatmap</button>
                 {aiNotes.length > 0 && <div style={{ marginTop: 6, fontSize: 11.5, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.55 }}>{aiNotes.map((n, i) => <div key={i}>{n}</div>)}</div>}
               </PanelSection>}
 
@@ -2680,7 +2680,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     : <>No usable signal bleeds onto this floor — the slab isolates it well.</>}
                 </div>
                 {interFloorHits.length > 0 && <>
-                  <div style={{ fontSize: 10.5, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Same-channel vertical interference</div>
+                  <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 4 }}>Same-channel vertical interference</div>
                   <div className="hm-bom" style={{ maxHeight: 150, overflowY: 'auto' }}>
                     {interFloorHits.slice(0, 8).map((it, i) => (
                       <div key={i} className="hm-bom-row" style={{ gap: 8 }}>
@@ -2693,10 +2693,10 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </>}
               </PanelSection>}
 
-              {tab === 'survey' && chanInterference && <PanelSection title="Self-interference (your placed APs)">
-                <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Modeled from <b style={{ color: DIM }}>this design&apos;s own APs</b> and their planned channels — not a live neighbor scan. Run <b style={{ color: DIM }}>Plan WiFi channels</b> first if AP channels are unset.</div>
+              {tab === 'survey' && chanInterference && <PanelSection title="Self-Interference (Your Placed APs)">
+                <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Modeled from <b style={{ color: DIM }}>this design&apos;s own APs</b> and their planned channels — not a live neighbor scan. Run <b style={{ color: DIM }}>Plan WiFi Channels</b> first if AP channels are unset.</div>
                 {chanInterference.worstChannels.length > 0 ? <>
-                  <div style={{ fontSize: 10.5, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Most-loaded channels (modeled)</div>
+                  <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 4 }}>Most-loaded channels (modeled)</div>
                   <div className="hm-bom" style={{ maxHeight: 160, overflowY: 'auto', marginBottom: 10 }}>
                     {chanInterference.worstChannels.map((c, i) => (
                       <div key={i} className="hm-bom-row" style={{ gap: 8 }}>
@@ -2707,7 +2707,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     ))}
                   </div>
                 </> : <div style={{ fontSize: 11.5, color: DIM, marginBottom: 10 }}>No channel congestion detected across your placed APs.</div>}
-                <div style={{ fontSize: 10.5, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Recommended (cleanest first)</div>
+                <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 4 }}>Recommended (cleanest first)</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {(['2.4', '5', '6'] as Band[]).map((b) => (
                     <div key={b} style={{ display: 'flex', gap: 8, fontSize: 11.5, color: DIM, alignItems: 'baseline' }}>
@@ -2718,7 +2718,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </div>
               </PanelSection>}
 
-              {tab === 'survey' && project.activeType === 'wifi_ap' && <PanelSection title="Survey calibration">
+              {tab === 'survey' && project.activeType === 'wifi_ap' && <PanelSection title="Survey Calibration">
                 <div style={{ fontSize: 10.5, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>Fit the RF model to real measured readings — add a survey-meter dBm at a plan location (image px), or bulk-import a walk-test CSV.</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 5, alignItems: 'end' }}>
                   <label style={{ fontSize: 10, color: MUTED }}>X px<input className="hm-sel" style={{ width: '100%' }} inputMode="numeric" value={calM.x} onChange={(e) => setCalM((m) => ({ ...m, x: e.target.value }))} placeholder={project ? String(Math.round(project.imgW / 2)) : '0'} /></label>
@@ -2728,7 +2728,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                   <input ref={surveyCsvRef} type="file" accept=".csv,text/csv,text/plain" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) importSurveyCsv(f); e.currentTarget.value = ''; }} />
-                  <button className="hm-tool" onClick={() => surveyCsvRef.current?.click()} style={{ padding: '6px 10px', flex: 1 }}><UploadSimple size={13} weight="regular" style={{ verticalAlign: 'middle', marginRight: 5 }} />Import survey CSV</button>
+                  <button className="hm-tool" onClick={() => surveyCsvRef.current?.click()} style={{ padding: '6px 10px', flex: 1 }}><UploadSimple size={13} weight="regular" style={{ verticalAlign: 'middle', marginRight: 5 }} />Import Survey CSV</button>
                   {measured.length > 0 && <button className="hm-tool" title="Clear all readings on this floor" onClick={() => { updateMeasured(() => []); setCalResult(null); }} style={{ padding: '6px 10px' }}>Clear</button>}
                 </div>
                 <div style={{ fontSize: 9.5, color: MUTED, marginTop: 4 }}>CSV columns: x, y, dBm (image px) · optional 4th column servingApId. Header row auto-detected.</div>
@@ -2741,7 +2741,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                     </div>
                   ))}
                 </div>}
-                {accuracy && <div style={{ marginTop: 9, padding: '8px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.22)', fontSize: 11, color: DIM, lineHeight: 1.55 }}>
+                {accuracy && <div style={{ marginTop: 9, padding: '8px 10px', borderRadius: 8, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', fontSize: 11, color: DIM, lineHeight: 1.55 }}>
                   <div style={{ fontWeight: 700, color: TEXT, marginBottom: 2 }}>Model accuracy — validated vs {accuracy.n} reading{accuracy.n === 1 ? '' : 's'}</div>
                   <div>Mean abs. error <b style={{ color: accuracy.mae <= 3 ? '#30D158' : accuracy.mae <= 6 ? GOLD : '#FF453A', fontVariantNumeric: 'tabular-nums' }}>{accuracy.mae.toFixed(1)} dB</b> · worst <b style={{ fontVariantNumeric: 'tabular-nums' }}>{accuracy.worst.delta > 0 ? '+' : ''}{accuracy.worst.delta.toFixed(0)} dB</b> @ ({Math.round(accuracy.worst.mp.x)}, {Math.round(accuracy.worst.mp.y)})</div>
                   {calResult && <div style={{ marginTop: 1 }}>Calibration RMSE <b style={{ fontVariantNumeric: 'tabular-nums' }}>{calResult.rmseBefore.toFixed(1)} → {calResult.rmseAfter.toFixed(1)} dB</b></div>}
@@ -2751,15 +2751,15 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 {calResult && <div style={{ marginTop: 10 }}>
                   <div className="hm-metrics">
                     <Metric label="Samples" val={`${calResult.sampleCount}`} />
-                    <Metric label="RMSE improved" val={`${calResult.improvedPct.toFixed(0)}%`} big color={calResult.improvedPct > 0 ? '#30D158' : DIM} />
+                    <Metric label="RMSE Improved" val={`${calResult.improvedPct.toFixed(0)}%`} big color={calResult.improvedPct > 0 ? '#30D158' : DIM} />
                     <Metric label="Path-loss n" val={`${calResult.nBefore.toFixed(2)} → ${calResult.nAfter.toFixed(2)}`} />
                     <Metric label="RMSE dB" val={`${calResult.rmseBefore.toFixed(1)} → ${calResult.rmseAfter.toFixed(1)}`} />
                   </div>
-                  <button className="hm-smart" style={{ marginTop: 8, marginBottom: 0 }} onClick={applyCal}><CheckCircle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Apply calibration to this floor</button>
+                  <button className="hm-smart" style={{ marginTop: 8, marginBottom: 0 }} onClick={applyCal}><CheckCircle size={14} weight="fill" style={{ verticalAlign: 'middle', marginRight: 6 }} />Apply Calibration to This Floor</button>
                 </div>}
               </PanelSection>}
 
-              {tab === 'bom' && bom && project.devices.length > 0 && <PanelSection title="Bill of materials">
+              {tab === 'bom' && bom && project.devices.length > 0 && <PanelSection title="Bill of Materials">
                 <div className="hm-bom">
                   {bom.rows.map((r, i) => <div key={i} className="hm-bom-row"><span>{r.item}</span><span style={{ color: MUTED }}>×{r.qty}</span><span>{r.ext ? '$' + r.ext.toLocaleString() : '—'}</span></div>)}
                   <div className="hm-bom-row" style={{ borderTop: `1px solid ${BORDER}`, marginTop: 4, paddingTop: 6, color: MUTED }}><span>Hardware</span><span /><span>${bom.total.toLocaleString()}</span></div>
@@ -2767,9 +2767,9 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                   <div className="hm-bom-row" style={{ color: MUTED }}><span>Overhead + profit</span><span /><span>${(bom.overhead + bom.profit).toLocaleString()}</span></div>
                 </div>
                 {/* TURNKEY INSTALL PRICE — the number a GC bids. No competitor emits this. */}
-                <div style={{ marginTop: 10, background: 'rgba(245,158,11,0.10)', border: `1px solid ${GOLD}`, borderRadius: 12, padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ marginTop: 10, background: 'var(--brand-primary-12)', border: `1px solid ${GOLD}`, borderRadius: 12, padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: GOLD, fontWeight: 800, fontSize: 11, letterSpacing: 0.5 }}>TURNKEY INSTALL PRICE</div>
+                    <div style={{ color: GOLD, fontWeight: 800, fontSize: 11, letterSpacing: 0.5 }}>Turnkey Install Price</div>
                     <div style={{ color: MUTED, fontSize: 11, marginTop: 2 }}>Hardware + labor + O&amp;P — the number you bid</div>
                   </div>
                   <div style={{ color: GOLD, fontWeight: 900, fontSize: 23, fontVariantNumeric: 'tabular-nums' }}>${bom.turnkey.toLocaleString()}</div>
@@ -2778,7 +2778,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 <button className="hm-smart" style={{ marginTop: 10 }} onClick={exportReport}><DownloadSimple size={14} weight="regular" style={{ verticalAlign: 'middle', marginRight: 6 }} />Export GC report (plan + BOM)</button>
               </PanelSection>}
 
-              {tab === 'bom' && sched && project.devices.length > 0 && <PanelSection title="Network schedule (IP · VLAN · PoE)">
+              {tab === 'bom' && sched && project.devices.length > 0 && <PanelSection title="Network Schedule (IP · VLAN · PoE)">
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 6px', marginBottom: 8 }}>
                   {sched.vlans.map((v) => <span key={v.id} style={{ fontSize: 10.5, color: DIM, background: DARK, border: `1px solid ${BORDER}`, borderRadius: 6, padding: '2px 7px', fontVariantNumeric: 'tabular-nums' }}>VLAN {v.id} · {v.name} · {v.subnet}.0/24</span>)}
                 </div>
@@ -2796,7 +2796,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 {unifiMsg && <div style={{ marginTop: 6, fontSize: 11, color: unifiMsg.startsWith('✓') ? '#4ade80' : DIM, lineHeight: 1.5 }}>{unifiMsg}</div>}
               </PanelSection>}
 
-              {tab === 'bom' && <PanelSection title="Wi-Fi networks (SSIDs)">
+              {tab === 'bom' && <PanelSection title="Wi-Fi Networks (SSIDs)">
                 <SsidsPanel ssids={project.ssids && project.ssids.length ? project.ssids : DEFAULT_SSIDS} onCommit={(next) => { snapshot(); patch({ ssids: next }); }} />
               </PanelSection>}
 
@@ -2845,9 +2845,9 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         <div onClick={() => setModal('none')} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={(e) => e.stopPropagation()} style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 14, width: '100%', maxWidth: 440, padding: 22, boxShadow: '0 24px 60px rgba(0,0,0,0.6)' }}>
             {modal === 'save' ? <>
-              <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>Save coverage design</h3>
-              <label style={{ fontSize: 11, color: DIM }}>Design name<input className="hm-sel" style={{ width: '100%', marginTop: 4 }} value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Coverage design" /></label>
-              <label style={{ fontSize: 11, color: DIM, display: 'block', marginTop: 12 }}>Save to project
+              <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>Save Coverage Design</h3>
+              <label style={{ fontSize: 11, color: DIM }}>Design Name<input className="hm-sel" style={{ width: '100%', marginTop: 4 }} value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Coverage design" /></label>
+              <label style={{ fontSize: 11, color: DIM, display: 'block', marginTop: 12 }}>Save to Project
                 <select className="hm-sel" style={{ width: '100%', marginTop: 4 }} value={saveProj} onChange={(e) => setSaveProj(e.target.value)}>
                   <option value="">— Unassigned —</option>
                   {projList.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -2859,7 +2859,7 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 {saveMsg && <span style={{ fontSize: 12, color: saveMsg.startsWith('✓') ? '#30D158' : (saveMsg.startsWith('Error') || saveMsg.startsWith('Failed')) ? '#FF453A' : DIM }}>{saveMsg}</span>}
               </div>
             </> : modal === 'share' ? <>
-              <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700 }}>Share read-only design</h3>
+              <h3 style={{ margin: '0 0 8px', fontSize: 16, fontWeight: 700 }}>Share Read-Only Design</h3>
               <p style={{ fontSize: 12, color: DIM, margin: '0 0 14px', lineHeight: 1.5 }}>Anyone with this link can view the marked-up plan, coverage metrics, BOM &amp; network schedule — no login, no editing.</p>
               {busy ? <p style={{ color: GOLD, fontSize: 13 }}>{busy}</p> : shareUrl ? <>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -2868,13 +2868,13 @@ export default function Designer({ projectId }: { projectId: string | null }) {
                 </div>
                 <p style={{ fontSize: 11, color: DIM, margin: '10px 0 0' }}>Link expires in 30 days. Revoke any time to kill every copy instantly.</p>
                 <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                  <a className="hm-btn" href={shareUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Open preview <ArrowUpRight size={13} weight="bold" /></a>
-                  <button className="hm-tool" onClick={revokeShare} style={{ color: '#FF453A' }}>Revoke link</button>
+                  <a className="hm-btn" href={shareUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>Open Preview <ArrowUpRight size={13} weight="bold" /></a>
+                  <button className="hm-tool" onClick={revokeShare} style={{ color: '#FF453A' }}>Revoke Link</button>
                   <button className="hm-tool" onClick={() => setModal('none')}>Done</button>
                 </div>
               </> : <p style={{ color: '#FF453A', fontSize: 12 }}>{saveMsg || 'Could not create link.'}</p>}
             </> : <>
-              <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>Open a saved design</h3>
+              <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 700 }}>Open a Saved Design</h3>
               {saveMsg && <p style={{ fontSize: 12, color: '#FF453A', margin: '0 0 8px' }}>{saveMsg}</p>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 360, overflowY: 'auto' }}>
                 {designList.length === 0 && !saveMsg && <span style={{ color: MUTED, fontSize: 12 }}>No saved designs yet — save one first.</span>}
@@ -2900,24 +2900,24 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-hero-id { display: flex; align-items: center; gap: 12px; min-width: 0; }
         .hm-hero-ic { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: linear-gradient(160deg,#1b2330,#141b26); border: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 14px rgba(0,0,0,0.4); }
         .hm-hero-ic svg { display: block; }
-        .hm-hero-eyebrow { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; color: ${GOLD}; }
+        .hm-hero-eyebrow { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; color: ${GOLD}; }
         .hm-hero-title { display: flex; align-items: center; gap: 10px; min-width: 0; margin-top: 2px; }
         .hm-hero-name { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; color: ${TEXT}; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .hm-hero-cal { flex-shrink: 0; font-size: 10px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: rgba(245,158,11,0.14); color: ${GOLD}; border: 1px solid rgba(245,158,11,0.4); }
+        .hm-hero-cal { flex-shrink: 0; font-size: 10px; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--brand-primary-12); color: ${GOLD}; border: 1px solid var(--brand-primary-35); }
         .hm-hero-cal[data-ok="true"] { background: rgba(48,209,88,0.14); color: #30D158; border-color: rgba(48,209,88,0.4); }
         .hm-hero-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         @media (min-width: 1000px) { .hm-hero { padding: 16px 24px 12px; } }
         /* ── compact essential chips (coverage target / band) on the simple flow ── */
         .hm-chipset { display: inline-flex; align-items: center; gap: 5px; }
-        .hm-chipset > span { font-size: 10px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: ${MUTED}; margin-right: 2px; }
+        .hm-chipset > span { font-size: 10px; font-weight: 800; color: ${MUTED}; margin-right: 2px; }
         .hm-minichip { background: rgba(255,255,255,0.04); border: 1px solid ${BORDER}; color: ${DIM}; border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; transition: background .12s, border-color .12s, color .12s; }
         .hm-minichip:hover { background: rgba(255,255,255,0.08); color: ${TEXT}; }
-        .hm-minichip[data-on="true"] { background: rgba(245,158,11,0.16); border-color: rgba(245,158,11,0.5); color: ${GOLD}; }
-        .hm-cta { display: inline-block; background: linear-gradient(180deg, #FFC14D, #F59E0B 60%, #E08A00); color: #241500; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 16px rgba(245,158,11,0.3), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
-        .hm-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(245,158,11,0.4), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
-        .hm-cta:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(245,158,11,0.25), inset 0 1px 3px rgba(0,0,0,0.2); }
+        .hm-minichip[data-on="true"] { background: var(--brand-primary-18); border-color: color-mix(in srgb, var(--brand-primary) 50%, transparent); color: ${GOLD}; }
+        .hm-cta { display: inline-block; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #0A0A00; font-weight: 800; font-size: 14px; padding: 11px 22px; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 16px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
+        .hm-cta:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
+        .hm-cta:active { transform: translateY(0); box-shadow: 0 2px 8px var(--brand-primary-25), inset 0 1px 3px rgba(0,0,0,0.2); }
         .hm-tmpl { display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 2px; padding: 14px; border: 1px solid ${BORDER}; border-radius: 12px; background: ${RAISED}; cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s, background .15s; }
-        .hm-tmpl:hover { border-color: ${GOLD}; transform: translateY(-2px); background: #17181b; box-shadow: 0 10px 26px rgba(0,0,0,0.45), 0 0 0 1px rgba(245,158,11,0.12); }
+        .hm-tmpl:hover { border-color: ${GOLD}; transform: translateY(-2px); background: #17181b; box-shadow: 0 10px 26px rgba(0,0,0,0.45), 0 0 0 1px var(--brand-primary-12); }
         .hm-tmpl:active { transform: translateY(0); box-shadow: 0 3px 10px rgba(0,0,0,0.4); }
         .hm-tmpl-ic { width: 26px; height: 26px; margin-bottom: 6px; }
         .hm-tmpl-ic svg { width: 100%; height: 100%; }
@@ -2932,19 +2932,19 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-tool { background: rgba(255,255,255,0.05); border: 1px solid ${BORDER}; color: ${DIM}; border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .12s, border-color .12s, color .12s; }
         .hm-tool:hover:not(:disabled):not([data-on="true"]) { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.2); color: ${TEXT}; }
         .hm-tool:active:not(:disabled) { transform: translateY(1px); }
-        .hm-tool[data-on="true"] { background: rgba(245,158,11,0.16); border-color: ${GOLD}; color: ${GOLD}; }
+        .hm-tool[data-on="true"] { background: var(--brand-primary-18); border-color: ${GOLD}; color: ${GOLD}; }
         .hm-sep { width: 1px; height: 22px; background: ${BORDER}; }
         .hm-seg { display: inline-flex; border: 1px solid ${BORDER}; border-radius: 8px; overflow: hidden; }
         .hm-seg-btn { background: ${DARK}; color: ${DIM}; border: none; border-right: 1px solid ${BORDER}; padding: 6px 11px; font-size: 12px; font-weight: 700; cursor: pointer; font-variant-numeric: tabular-nums; transition: background .12s, color .12s; }
         .hm-seg-btn:last-child { border-right: none; }
         .hm-seg-btn:hover { background: rgba(255,255,255,0.06); color: ${TEXT}; }
-        .hm-seg-btn[data-on="true"] { background: rgba(245,158,11,0.16); color: ${GOLD}; }
+        .hm-seg-btn[data-on="true"] { background: var(--brand-primary-18); color: ${GOLD}; }
         .hm-sel { background-color: #131418; background-image: linear-gradient(180deg, #1a1b1f, #101114); border: 1px solid rgba(255,255,255,0.13); color: ${TEXT}; border-radius: 7px; padding: 5px 8px; font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05); }
         select.hm-sel, select.hm-sel-full { -webkit-appearance: none; appearance: none; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M1 1l4 4 4-4" fill="none" stroke="%23F59E0B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'), linear-gradient(180deg, #1a1b1f, #101114); background-repeat: no-repeat; background-position: right 9px center, 0 0; background-size: 10px 6px, 100% 100%; padding-right: 26px; cursor: pointer; }
-        .hm-sel:focus, .hm-sel-full:focus { outline: none; border-color: rgba(245,158,11,0.55); box-shadow: 0 0 0 3px rgba(245,158,11,0.15), inset 0 1px 0 rgba(255,255,255,0.05); }
+        .hm-sel:focus, .hm-sel-full:focus { outline: none; border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent); box-shadow: 0 0 0 3px var(--brand-primary-12), inset 0 1px 0 rgba(255,255,255,0.05); }
         .hm-chk { display: flex; align-items: center; gap: 5px; font-size: 12px; color: ${DIM}; }
         .hm-hint { font-size: 11px; color: ${MUTED}; }
-        .hm-btn { background: linear-gradient(180deg, #FFC14D, #F59E0B 60%, #E08A00); color: #241500; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.28); transition: filter .12s; }
+        .hm-btn { background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #0A0A00; border: none; border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 800; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.28); transition: filter .12s; }
         .hm-btn:hover { filter: brightness(1.07); }
         .hm-body { flex: 1; display: flex; min-height: 0; }
         .hm-canvas-wrap { flex: 1; overflow: hidden; position: relative; background: radial-gradient(ellipse 120% 90% at 50% 30%, #0b1017 0%, #05080d 100%); }
@@ -2962,64 +2962,64 @@ export default function Designer({ projectId }: { projectId: string | null }) {
         .hm-tabs { display: flex; gap: 4px; margin: 12px 0 0; padding: 4px; background: ${DARK}; border: 1px solid ${BORDER}; border-radius: 10px; }
         .hm-tabbtn { flex: 1; background: transparent; border: none; color: ${DIM}; border-radius: 7px; padding: 8px 6px; font-size: 12px; font-weight: 700; letter-spacing: .2px; cursor: pointer; transition: background .12s, color .12s; }
         .hm-tabbtn:hover { background: rgba(255,255,255,0.05); color: ${TEXT}; }
-        .hm-tabbtn[data-on="true"] { background: rgba(245,158,11,0.16); color: ${GOLD}; box-shadow: inset 0 0 0 1px rgba(245,158,11,0.35); }
+        .hm-tabbtn[data-on="true"] { background: var(--brand-primary-18); color: ${GOLD}; box-shadow: inset 0 0 0 1px var(--brand-primary-35); }
         .hm-legend { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 10px; }
         .hm-legend span { display: flex; align-items: center; gap: 5px; font-size: 11px; color: ${DIM}; }
         .hm-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
         .hm-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .hm-smart { width: 100%; text-align: left; background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); color: ${GOLD}; border-radius: 8px; padding: 9px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; margin-bottom: 7px; transition: background .12s, border-color .12s, box-shadow .12s; }
-        .hm-smart:hover:not(:disabled) { background: rgba(245,158,11,0.16); border-color: rgba(245,158,11,0.45); box-shadow: 0 2px 12px rgba(245,158,11,0.12); }
-        .hm-smart:active:not(:disabled) { background: rgba(245,158,11,0.22); }
+        .hm-smart { width: 100%; text-align: left; background: var(--brand-primary-08); border: 1px solid var(--brand-primary-25); color: ${GOLD}; border-radius: 8px; padding: 9px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; margin-bottom: 7px; transition: background .12s, border-color .12s, box-shadow .12s; }
+        .hm-smart:hover:not(:disabled) { background: var(--brand-primary-18); border-color: var(--brand-primary-35); box-shadow: 0 2px 12px var(--brand-primary-12); }
+        .hm-smart:active:not(:disabled) { background: var(--brand-primary-25); }
         .hm-smart:disabled { cursor: default; }
         .hm-sel-full { width: 100%; margin-top: 3px; background: ${DARK}; color: ${TEXT}; border: 1px solid ${BORDER}; border-radius: 6px; padding: 5px 6px; font-size: 11.5px; cursor: pointer; }
         .hm-sheet { background: ${DARK}; color: ${DIM}; border: 1px solid ${BORDER}; border-radius: 6px; padding: 4px 9px; font-size: 11px; cursor: pointer; font-variant-numeric: tabular-nums; }
-        .hm-sheet[data-on="true"] { background: rgba(245,158,11,0.16); color: ${GOLD}; border-color: rgba(245,158,11,0.4); font-weight: 700; }
+        .hm-sheet[data-on="true"] { background: var(--brand-primary-18); color: ${GOLD}; border-color: var(--brand-primary-35); font-weight: 700; }
         .hm-drop { position: absolute; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(13,17,23,0.86); border: 2px dashed ${GOLD}; border-radius: 12px; color: ${GOLD}; font-weight: 700; font-size: 15px; pointer-events: none; }
         .hm-list { display: flex; flex-direction: column; gap: 3px; max-height: 220px; overflow-y: auto; }
         .hm-row { display: flex; align-items: center; gap: 8px; background: none; border: none; color: ${TEXT}; border-radius: 7px; padding: 7px 9px; font-size: 12.5px; cursor: pointer; text-align: left; }
         .hm-row:hover { background: rgba(255,255,255,0.04); }
-        .hm-row[data-on="true"] { background: rgba(245,158,11,0.12); }
+        .hm-row[data-on="true"] { background: var(--brand-primary-12); }
         .hm-row i { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .hm-bom { display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
         .hm-bom-row { display: flex; justify-content: space-between; gap: 8px; color: #CBD5E1; }
         .hm-bom-row span:first-child { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         /* ── Field mode (guided jobsite flow — identical to the mobile app) ── */
         .hm-rail { display: flex; align-items: center; gap: 7px; padding: 11px 16px; border-top: 1px solid ${BORDER}; border-bottom: 1px solid rgba(0,0,0,0.55); background: linear-gradient(180deg, #17181b, #101114); flex-wrap: wrap; position: relative; z-index: 4; box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05); }
-        .hm-step { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px 8px 9px; border-radius: 999px; border: 1px solid ${BORDER}; background: rgba(255,255,255,0.03); color: ${DIM}; font-size: 11px; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; cursor: pointer; transition: border-color .15s, background .15s, color .15s, box-shadow .15s; }
+        .hm-step { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px 8px 9px; border-radius: 999px; border: 1px solid ${BORDER}; background: rgba(255,255,255,0.03); color: ${DIM}; font-size: 11px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s, color .15s, box-shadow .15s; }
         .hm-step:hover { background: rgba(255,255,255,0.06); }
-        .hm-step[data-on="true"] { background: linear-gradient(180deg, rgba(245,158,11,0.22), rgba(245,158,11,0.10)); color: #FFD98A; border-color: rgba(245,158,11,0.55); box-shadow: 0 0 0 3px rgba(245,158,11,0.10), 0 4px 14px rgba(245,158,11,0.12); }
+        .hm-step[data-on="true"] { background: linear-gradient(180deg, var(--brand-primary-25), var(--brand-primary-12)); color: #FFD98A; border-color: color-mix(in srgb, var(--brand-primary) 55%, transparent); box-shadow: 0 0 0 3px var(--brand-primary-12), 0 4px 14px var(--brand-primary-12); }
         .hm-step[data-done="true"] .hm-step-num { background: rgba(48,209,88,0.22); color: #30D158; box-shadow: inset 0 0 0 1px rgba(48,209,88,0.35); }
         .hm-step-num { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.09); font-size: 10.5px; font-variant-numeric: tabular-nums; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); transition: background .25s, color .25s, box-shadow .25s; }
         .hm-fieldbar { display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-bottom: 1px solid rgba(0,0,0,0.6); background: linear-gradient(180deg, #0d0e11, #0a0b0d); flex-wrap: wrap; position: relative; z-index: 3; box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04); }
-        .hm-big { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, #FFC14D, #F59E0B 60%, #E08A00); color: #241500; font-weight: 800; font-size: 14.5px; padding: 12px 21px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(245,158,11,0.28), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
-        .hm-big:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(245,158,11,0.36), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
-        .hm-big:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(245,158,11,0.25), inset 0 1px 3px rgba(0,0,0,0.2); }
+        .hm-big { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover)); color: #0A0A00; font-weight: 800; font-size: 14.5px; padding: 12px 21px; border-radius: 12px; border: none; cursor: pointer; box-shadow: 0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35); transition: transform .12s, box-shadow .12s, filter .12s; }
+        .hm-big:hover { transform: translateY(-1px); box-shadow: 0 8px 22px var(--brand-primary-35), inset 0 1px 0 rgba(255,255,255,0.35); filter: brightness(1.04); }
+        .hm-big:active { transform: translateY(0); box-shadow: 0 2px 8px var(--brand-primary-25), inset 0 1px 3px rgba(0,0,0,0.2); }
         .hm-big[data-alt="true"] { background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.05)); color: ${TEXT}; border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 2px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07); }
         .hm-big[data-on="true"] { outline: 2px solid ${GOLD}; outline-offset: 1px; }
         .hm-fieldmsg { font-size: 13.5px; color: #E2E8F0; font-weight: 600; line-height: 1.5; max-width: 560px; }
         .hm-fieldstat { font-size: 27px; font-weight: 900; letter-spacing: -0.5px; color: ${TEXT}; font-variant-numeric: tabular-nums; display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 16px; border-radius: 12px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), inset 0 0 0 1px rgba(255,255,255,0.07); }
-        .hm-fieldstat small { font-size: 10px; font-weight: 800; letter-spacing: 0.7px; text-transform: uppercase; color: rgba(255,255,255,0.62); }
-        .hm-fieldbusy { display: flex; align-items: center; gap: 9px; padding: 8px 16px; color: #FCD34D; font-size: 12.5px; font-weight: 700; background: linear-gradient(90deg, rgba(245,158,11,0.12), rgba(245,158,11,0.03) 55%, ${DARK}); border-bottom: 1px solid rgba(245,158,11,0.22); }
-        .hm-fieldbusy::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: ${GOLD}; box-shadow: 0 0 10px rgba(245,158,11,0.9); animation: hm-pulse 1.1s ease-in-out infinite; flex-shrink: 0; }
+        .hm-fieldstat small { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.62); }
+        .hm-fieldbusy { display: flex; align-items: center; gap: 9px; padding: 8px 16px; color: #FCD34D; font-size: 12.5px; font-weight: 700; background: linear-gradient(90deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 3%, transparent) 55%, ${DARK}); border-bottom: 1px solid var(--brand-primary-25); }
+        .hm-fieldbusy::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: ${GOLD}; box-shadow: 0 0 10px color-mix(in srgb, var(--brand-primary) 90%, transparent); animation: hm-pulse 1.1s ease-in-out infinite; flex-shrink: 0; }
         @keyframes hm-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.7); } }
-        .hm-fieldnote { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px 9px 14px; color: #FCD34D; font-size: 12.5px; font-weight: 600; line-height: 1.5; background: linear-gradient(180deg, rgba(245,158,11,0.11), rgba(245,158,11,0.05)); border-bottom: 1px solid rgba(245,158,11,0.25); box-shadow: inset 3px 0 0 ${GOLD}; }
+        .hm-fieldnote { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px 9px 14px; color: #FCD34D; font-size: 12.5px; font-weight: 600; line-height: 1.5; background: linear-gradient(180deg, var(--brand-primary-12), color-mix(in srgb, var(--brand-primary) 5%, transparent)); border-bottom: 1px solid var(--brand-primary-25); box-shadow: inset 3px 0 0 ${GOLD}; }
         .hm-fieldnote-x { background: none; border: none; color: ${MUTED}; font-size: 16px; font-weight: 800; cursor: pointer; line-height: 1; padding: 0 2px; }
         .hm-selcard { position: absolute; right: 14px; bottom: 14px; z-index: 7; background: rgba(13,17,23,0.88); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; padding: 11px 14px; display: flex; align-items: center; gap: 11px; backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); }
         /* ── Advisor right-rail card + legacy density guard band ── */
         .hm-advisor { position: absolute; right: 14px; top: 14px; z-index: 7; width: min(320px, calc(100% - 28px)); max-height: calc(100% - 96px); display: flex; flex-direction: column; background: rgba(13,17,23,0.90); border: 1px solid rgba(255,255,255,0.14); border-radius: 14px; backdrop-filter: blur(10px); box-shadow: 0 14px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08); overflow: hidden; }
-        .hm-advisor-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: none; border: none; color: ${TEXT}; cursor: pointer; padding: 10px 13px; font-size: 11px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; }
+        .hm-advisor-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: none; border: none; color: ${TEXT}; cursor: pointer; padding: 10px 13px; font-size: 11px; font-weight: 800; }
         .hm-advisor-head:hover { background: rgba(255,255,255,0.04); }
-        .hm-advdot { width: 8px; height: 8px; border-radius: 50%; background: ${GOLD}; box-shadow: 0 0 8px rgba(245,158,11,0.8); display: inline-block; }
+        .hm-advdot { width: 8px; height: 8px; border-radius: 50%; background: ${GOLD}; box-shadow: 0 0 8px color-mix(in srgb, var(--brand-primary) 80%, transparent); display: inline-block; }
         .hm-advdot[data-bad="true"] { background: #FF453A; box-shadow: 0 0 8px rgba(255,69,58,0.8); }
         .hm-advisor-body { overflow-y: auto; padding: 0 13px 13px; display: flex; flex-direction: column; gap: 8px; }
         .hm-advdict { font-size: 12px; font-weight: 700; line-height: 1.5; border-radius: 9px; padding: 9px 11px; background: rgba(48,209,88,0.10); border: 1px solid rgba(48,209,88,0.35); color: #8CE7A5; font-variant-numeric: tabular-nums; }
         .hm-advdict[data-bad="true"] { background: rgba(255,69,58,0.10); border-color: rgba(255,69,58,0.4); color: #FCA5A5; }
-        .hm-advlabel { font-size: 9.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: ${MUTED}; margin-top: 2px; }
+        .hm-advlabel { font-size: 9.5px; font-weight: 800; color: ${MUTED}; margin-top: 2px; }
         .hm-advrow { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: ${DIM}; }
         .hm-advrow b { color: ${TEXT}; font-weight: 700; }
-        .hm-advchip { flex-shrink: 0; font-size: 9.5px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
+        .hm-advchip { flex-shrink: 0; font-size: 9.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
         .hm-advchip[data-kind="ok"] { background: rgba(48,209,88,0.14); color: #30D158; box-shadow: inset 0 0 0 1px rgba(48,209,88,0.35); }
-        .hm-advchip[data-kind="crowded"], .hm-advchip[data-kind="warn"] { background: rgba(245,158,11,0.14); color: ${GOLD}; box-shadow: inset 0 0 0 1px rgba(245,158,11,0.4); }
+        .hm-advchip[data-kind="crowded"], .hm-advchip[data-kind="warn"] { background: var(--brand-primary-12); color: ${GOLD}; box-shadow: inset 0 0 0 1px var(--brand-primary-35); }
         .hm-advchip[data-kind="over"] { background: rgba(255,69,58,0.14); color: #FF453A; box-shadow: inset 0 0 0 1px rgba(255,69,58,0.4); }
         .hm-guardband { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 16px; font-size: 13px; font-weight: 700; color: #FECACA; line-height: 1.5; background: linear-gradient(180deg, rgba(255,69,58,0.14), rgba(255,69,58,0.06)); border-bottom: 1px solid rgba(255,69,58,0.35); box-shadow: inset 3px 0 0 #FF453A; }
         @media (max-width: 820px) {
@@ -3145,7 +3145,7 @@ const aimDir = (deg: number) => AIM_DIRS[Math.round((((deg % 360) + 360) % 360) 
 const rssiVerdict = (dbm: number) => (RSSI_ZONES.find((z) => dbm >= z.minDbm) || RSSI_ZONES[RSSI_ZONES.length - 1]).label;
 
 // SSID band / security display helpers ---------------------------------------------------
-const SSID_BAND_LABEL: Record<SsidBand, string> = { '2.4': '2.4 GHz', '5': '5 GHz', '6': '6 GHz', 'all': 'All bands' };
+const SSID_BAND_LABEL: Record<SsidBand, string> = { '2.4': '2.4 GHz', '5': '5 GHz', '6': '6 GHz', 'all': 'All Bands' };
 const SSID_SEC_LABEL: Record<SsidSecurity, string> = { wpa2: 'WPA2', wpa3: 'WPA3', 'wpa2/3': 'WPA2/3', open: 'Open' };
 const SSID_BANDS: SsidBand[] = ['all', '2.4', '5', '6'];
 const SSID_SECS: SsidSecurity[] = ['wpa3', 'wpa2/3', 'wpa2', 'open'];
@@ -3213,7 +3213,7 @@ function InspInput({ label, value, placeholder, onChange, type = 'text', suffix 
 function InspGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: GOLD, marginBottom: 5, opacity: 0.85 }}>{title}</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, marginBottom: 5, opacity: 0.85 }}>{title}</div>
       {children}
     </div>
   );
@@ -3335,7 +3335,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
           <InspInput label="Name" value={d.label || ''} placeholder={def.label} onChange={(v) => onChange({ label: v })} />
           <InspRow label="Manufacturer" value={ident.manufacturer} />
           <InspRow label="Model" value={ident.model} />
-          <InspInput label="MAC address" value={d.mac || ''} placeholder="— set at install" onChange={(v) => onChange({ mac: v || undefined })} />
+          <InspInput label="MAC Address" value={d.mac || ''} placeholder="— set at install" onChange={(v) => onChange({ mac: v || undefined })} />
           <InspInput label="Serial / S-N" value={d.serial || ''} placeholder="— set at install" onChange={(v) => onChange({ serial: v || undefined })} />
           <InspInput label="Firmware" value={d.firmware || ''} placeholder="— set at install" onChange={(v) => onChange({ firmware: v || undefined })} />
           <InspInput label="Notes" value={d.notes || ''} placeholder="install notes…" onChange={(v) => onChange({ notes: v })} />
@@ -3343,8 +3343,8 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
 
         {/* Placement */}
         <InspGroup title="Placement">
-          <InspRow label="Room / nearest" value={nearestRoom || '—'} />
-          <InspInput label="Mount height" type="number" value={d.mountHeightFt != null ? String(d.mountHeightFt) : ''} placeholder="9" suffix="ft" onChange={(v) => onChange({ mountHeightFt: v === '' ? undefined : Math.max(0, +v) })} />
+          <InspRow label="Room / Nearest" value={nearestRoom || '—'} />
+          <InspInput label="Mount Height" type="number" value={d.mountHeightFt != null ? String(d.mountHeightFt) : ''} placeholder="9" suffix="ft" onChange={(v) => onChange({ mountHeightFt: v === '' ? undefined : Math.max(0, +v) })} />
           {(def.modelType === 'camera' || def.modelType === 'fov') && (
             <label style={{ display: 'block', fontSize: 11, color: DIM, padding: '4px 2px' }}>Aim {(d.aimDeg ?? 0).toFixed(0)}° ({aimDir(d.aimDeg ?? 0)})
               <input type="range" min={0} max={360} value={d.aimDeg ?? 0} onChange={(e) => onChange({ aimDeg: +e.target.value })} style={{ width: '100%', accentColor: GOLD }} />
@@ -3354,22 +3354,22 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
 
         {/* Network */}
         {!isMarker && <InspGroup title="Network">
-          <InspInput label="IP address" value={d.ipOverride || ''} placeholder={netRow?.ip || 'DHCP'} onChange={(v) => onChange({ ipOverride: v || undefined })} />
+          <InspInput label="IP Address" value={d.ipOverride || ''} placeholder={netRow?.ip || 'DHCP'} onChange={(v) => onChange({ ipOverride: v || undefined })} />
           <InspRow label="VLAN" value={netRow ? `${netRow.vlan.id} · ${netRow.vlan.name}` : '—'} />
-          <InspRow label="Switch port" value={hasPort ? netRow!.port : '—'} onClick={hasPort ? () => setDrill('switch') : undefined} />
+          <InspRow label="Switch Port" value={hasPort ? netRow!.port : '—'} onClick={hasPort ? () => setDrill('switch') : undefined} />
           <InspRow label="Upstream" value="Gateway" onClick={() => setDrill('gateway')} />
         </InspGroup>}
 
         {/* Power / Cable */}
         {!isMarker && <InspGroup title="Power / Cable">
-          <InspRow label="PoE draw" value={cab.poeW ? `${cab.poeW} W` : '—'} />
+          <InspRow label="PoE Draw" value={cab.poeW ? `${cab.poeW} W` : '—'} />
           <InspRow label="Cable" value={cab.dataCable?.name || cab.powerCable?.name || '—'} />
-          <InspRow label="Run to rack" value={project.scale ? `${runFt} ft` : '—'} />
+          <InspRow label="Run to Rack" value={project.scale ? `${runFt} ft` : '—'} />
           <InspRow label="Jacket" value={cab.jacket} />
         </InspGroup>}
 
         {/* AP-only */}
-        {isAp && <InspGroup title="Wi-Fi radio">
+        {isAp && <InspGroup title="Wi-Fi Radio">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px' }}>
             <span style={{ fontSize: 11, color: MUTED, width: 96 }}>Band</span>
             <div className="hm-seg" role="group" aria-label="Band" style={{ flex: 1 }}>
@@ -3377,22 +3377,22 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 2px' }}>
-            <span style={{ fontSize: 11, color: MUTED, width: 96 }}>Tx power</span>
-            <div className="hm-seg" role="group" aria-label="Tx power" style={{ flex: 1 }}>
+            <span style={{ fontSize: 11, color: MUTED, width: 96 }}>Tx Power</span>
+            <div className="hm-seg" role="group" aria-label="Tx Power" style={{ flex: 1 }}>
               <button type="button" className="hm-seg-btn" data-on={!isHalf} style={{ flex: 1 }} onClick={() => onChange({ txPowerDbm: fullTx })}>Full</button>
               <button type="button" className="hm-seg-btn" data-on={isHalf} style={{ flex: 1 }} onClick={() => onChange({ txPowerDbm: halfTx })}>Half</button>
             </div>
           </div>
           <InspInput label="Channel" type="number" value={d.channel != null ? String(d.channel) : ''} placeholder="auto" onChange={(v) => onChange({ channel: v === '' ? undefined : Math.max(1, Math.round(+v)) })} />
-          <InspRow label="Antenna gain" value={`${d.antennaGainDbi ?? 3} dBi`} />
+          <InspRow label="Antenna Gain" value={`${d.antennaGainDbi ?? 3} dBi`} />
           {project.scale && <InspRow label="Signal at AP" value={`${apSignalDbm} dBm · ${rssiVerdict(apSignalDbm)}`} />}
-          {project.scale && <InspRow label="Coverage radius" value={`${apRadiusFt} ft`} />}
+          {project.scale && <InspRow label="Coverage Radius" value={`${apRadiusFt} ft`} />}
           <InspRow label="Capacity" value={`${clientsPerAp} clients`} />
           <InspRow label="Broadcasts" value={ssids.map((s) => s.name).join(', ') || '—'} onClick={() => setDrill('clients')} />
         </InspGroup>}
 
         {/* Camera-only */}
-        {isCam && <InspGroup title="Camera / optics">
+        {isCam && <InspGroup title="Camera / Optics">
           <InspRow label="Resolution" value={`${camMp} MP`} />
           <InspRow label="Lens / HFOV" value={`${hfov.toFixed(0)}°`} />
           {project.scale && <>
@@ -3401,12 +3401,12 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
             <InspRow label="Observe" value={`${doriFt(62)} ft`} />
             <InspRow label="Detect" value={`${doriFt(25)} ft`} />
           </>}
-          <InspRow label="Night vision" value="IR — yes" />
+          <InspRow label="Night Vision" value="IR — yes" />
           <InspRow label="Storage / NVR" value={bom?.recNvr?.model || 'NVR (planned)'} onClick={() => setDrill('nvr')} />
         </InspGroup>}
 
         {/* Marker rough-in */}
-        {isMarker && <InspGroup title="Rough-in">
+        {isMarker && <InspGroup title="Rough-In">
           {d.gang != null && <InspRow label="Gang" value={`${GANG_LABEL[d.gang] || d.gang}`} />}
           {d.ports != null && <InspRow label="Ports" value={`${d.ports}`} />}
           {d.gender && <InspRow label="Connector" value={d.gender === 'M' ? 'Plug (male)' : 'Jack (female)'} />}
@@ -3414,7 +3414,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         </InspGroup>}
 
         <div style={{ fontSize: 10, color: MUTED, lineHeight: 1.5, marginBottom: 8 }}>Values are from the <b>design</b> (plan model), not a live device. Verify against the installed hardware.</div>
-        <button className="hm-tool" style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.3)', width: '100%' }} onClick={onDelete}>Delete device</button>
+        <button className="hm-tool" style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.3)', width: '100%' }} onClick={onDelete}>Delete Device</button>
       </div>}
 
       {/* ── DRILL: switch ── */}
@@ -3424,10 +3424,10 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
           <DeviceThumb typeId="iot_gateway" size={32} />
           <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>{bom?.recSwitch?.model || 'PoE switch'}</div><div style={{ fontSize: 10.5, color: MUTED }}>Switch {swNum} · serves {d.label || def.label}</div></div>
         </div>
-        <InspRow label="This device port" value={netRow?.port || '—'} mono />
+        <InspRow label="This Device Port" value={netRow?.port || '—'} mono />
         <InspRow label="VLAN" value={netRow ? `${netRow.vlan.id} · ${netRow.vlan.name}` : '—'} />
-        <InspRow label="PoE ports used" value={sched ? `${sched.poePorts}` : '—'} />
-        <InspRow label="PoE budget" value={bom?.recSwitch ? `${sched?.poeTotal ?? 0} / ${bom.recSwitch.poeBudgetW} W` : '—'} />
+        <InspRow label="PoE Ports Used" value={sched ? `${sched.poePorts}` : '—'} />
+        <InspRow label="PoE Budget" value={bom?.recSwitch ? `${sched?.poeTotal ?? 0} / ${bom.recSwitch.poeBudgetW} W` : '—'} />
         <div style={{ fontSize: 10, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Planned switch + port assignment from the network schedule (design, not a live switch).</div>
       </div>}
 
@@ -3436,11 +3436,11 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         {backBar}
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 10 }}>
           <DeviceThumb typeId="iot_gateway" size={32} />
-          <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>Core gateway</div><div style={{ fontSize: 10.5, color: MUTED }}>Upstream of {d.label || def.label}</div></div>
+          <div><div style={{ fontSize: 13, fontWeight: 800, color: TEXT }}>Core Gateway</div><div style={{ fontSize: 10.5, color: MUTED }}>Upstream of {d.label || def.label}</div></div>
         </div>
         <InspRow label="Role" value="Router / firewall / DHCP" />
         <InspRow label="Mgmt IP" value={`${VLANS.mgmt.subnet}.1`} mono />
-        <InspRow label="VLANs routed" value={sched ? `${sched.vlans.length}` : '—'} />
+        <InspRow label="VLANs Routed" value={sched ? `${sched.vlans.length}` : '—'} />
         <InspRow label="Path" value={`${d.label || def.label} → ${swNum} → gateway`} />
         <div style={{ fontSize: 10, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Modeled upstream path from the design. Place an IoT gateway / switch to pin the physical rack location.</div>
       </div>}
@@ -3448,11 +3448,11 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
       {/* ── DRILL: this AP's networks + the real devices in the design ── */}
       {mode === 'advanced' && drill === 'clients' && <div>
         {backBar}
-        <InspRow label="Client capacity" value={`${clientsPerAp} client devices`} />
-        {project.scale && <InspRow label="Coverage radius" value={`${apRadiusFt} ft`} />}
+        <InspRow label="Client Capacity" value={`${clientsPerAp} client devices`} />
+        {project.scale && <InspRow label="Coverage Radius" value={`${apRadiusFt} ft`} />}
 
         {/* SSIDs this AP broadcasts — each with its VLAN / band / security + DHCP scope */}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: GOLD, margin: '12px 0 5px', opacity: 0.85 }}>Broadcasts ({ssids.length} SSID{ssids.length === 1 ? '' : 's'})</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, margin: '12px 0 5px', opacity: 0.85 }}>Broadcasts ({ssids.length} SSID{ssids.length === 1 ? '' : 's'})</div>
         {ssids.map((s, i) => {
           const v = vlanFor(s.vlanKey);
           return (
@@ -3471,7 +3471,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
         })}
 
         {/* the ACTUAL placed devices in this design that are on the network */}
-        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', color: GOLD, margin: '12px 0 5px', opacity: 0.85 }}>Devices on this network (from your design)</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, margin: '12px 0 5px', opacity: 0.85 }}>Devices on this network (from your design)</div>
         {sched && sched.rows.length > 0 ? (
           <div style={{ maxHeight: 240, overflowY: 'auto', border: `1px solid ${BORDER}`, borderRadius: 8 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
@@ -3480,7 +3480,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
               </tr></thead>
               <tbody>
                 {sched.rows.map((r) => (
-                  <tr key={r.id} style={{ background: r.id === d.id ? 'rgba(245,158,11,0.10)' : undefined }}>
+                  <tr key={r.id} style={{ background: r.id === d.id ? 'var(--brand-primary-12)' : undefined }}>
                     <td style={{ padding: '5px 8px', color: r.id === d.id ? GOLD : TEXT, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 110 }}>{r.label}</td>
                     <td style={{ padding: '5px 8px', color: DIM, borderBottom: `1px solid ${BORDER}` }}>{r.ip}</td>
                     <td style={{ padding: '5px 8px', color: DIM, borderBottom: `1px solid ${BORDER}` }}>{r.vlan.id}</td>
@@ -3505,10 +3505,10 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
           const brMbps = Math.max(2, Math.min(12, Math.round(camMp * 1.1)));
           const gbDay = Math.round(brMbps * 10.8);
           return <>
-            <InspRow label="This camera" value={`${camMp} MP · ${hfov.toFixed(0)}°`} />
+            <InspRow label="This Camera" value={`${camMp} MP · ${hfov.toFixed(0)}°`} />
             <InspRow label="Bitrate" value={`${brMbps} Mbps`} />
-            <InspRow label="Storage / day" value={`${gbDay} GB`} />
-            <InspRow label="14-day retention" value={`${Math.round(gbDay * 14 / 1000 * 10) / 10} TB`} />
+            <InspRow label="Storage / Day" value={`${gbDay} GB`} />
+            <InspRow label="14-Day Retention" value={`${Math.round(gbDay * 14 / 1000 * 10) / 10} TB`} />
           </>;
         })()}
         <div style={{ fontSize: 10, color: MUTED, marginTop: 8, lineHeight: 1.5 }}>Storage is a design estimate (H.265, continuous). Real usage depends on motion, scene and codec.</div>
@@ -3520,7 +3520,7 @@ function DeviceInspector({ d, project, sched, bom, clientsPerAp, onChange, onDel
 function PanelSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ padding: '14px 14px', borderBottom: `1px solid ${BORDER}` }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: MUTED, marginBottom: 10 }}>{title}</div>
+      <div style={{ fontSize: 10.5, fontWeight: 700, color: MUTED, marginBottom: 10 }}>{title}</div>
       {children}
     </div>
   );
@@ -3542,7 +3542,7 @@ function DeviceEditor({ d, onChange, onDelete }: { d: Device; onChange: (u: Part
       {def.modelType === 'camera' && <label style={{ fontSize: 11, color: DIM }}>HFOV {(d.hfovDeg ?? 68).toFixed(0)}°<input type="range" min={20} max={130} value={d.hfovDeg ?? 68} onChange={(e) => onChange({ hfovDeg: +e.target.value })} style={{ width: '100%' }} /></label>}
       {def.modelType === 'rf' && d.typeId === 'wifi_ap' && <label style={{ fontSize: 11, color: DIM }}>Tx {(d.txPowerDbm ?? 15)} dBm<input type="range" min={3} max={26} value={d.txPowerDbm ?? 15} onChange={(e) => onChange({ txPowerDbm: +e.target.value })} style={{ width: '100%' }} /></label>}
       {(def.modelType === 'radius' || def.modelType === 'spl' || def.modelType === 'fov') && <label style={{ fontSize: 11, color: DIM }}>Range {(d.rangeFt ?? (def.defaults.rangeFt as number))} ft<input type="range" min={4} max={120} value={d.rangeFt ?? (def.defaults.rangeFt as number)} onChange={(e) => onChange({ rangeFt: +e.target.value })} style={{ width: '100%' }} /></label>}
-      <button className="hm-tool" style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.3)' }} onClick={onDelete}>Delete device</button>
+      <button className="hm-tool" style={{ color: '#FF453A', borderColor: 'rgba(255,69,58,0.3)' }} onClick={onDelete}>Delete Device</button>
     </div>
   );
 }

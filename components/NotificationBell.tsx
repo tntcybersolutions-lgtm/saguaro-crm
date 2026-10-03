@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#c03030';
 
 interface Notification {
   id: string;
@@ -142,7 +142,7 @@ export default function NotificationBell() {
         <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 'min(380px, calc(100vw - 24px))', background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,.6)', zIndex: 1000, overflow: 'hidden' }}>
 
           {/* Dropdown Header */}
-          <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1c1c1e' }}>
+          <div style={{ padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface-2)' }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>Notifications</span>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               {displayCount > 0 && (
@@ -152,7 +152,7 @@ export default function NotificationBell() {
                 onClick={markAllRead}
                 disabled={markingAll || displayCount === 0}
                 style={{ background: 'none', border: 'none', color: DIM, fontSize: 11, cursor: 'pointer', opacity: displayCount === 0 ? 0.4 : 1 }}>
-                {markingAll ? 'Marking...' : 'Mark all read'}
+                {markingAll ? 'Marking…' : 'Mark All Read'}
               </button>
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function NotificationBell() {
           {/* Notification List */}
           <div style={{ maxHeight: 400, overflowY: 'auto' }}>
             {loadingList ? (
-              <div style={{ padding: 32, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading...</div>
+              <div style={{ padding: 32, textAlign: 'center', color: DIM, fontSize: 13 }}>Loading…</div>
             ) : notifications.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: DIM, fontSize: 13 }}>
                 <div style={{ fontSize: 28, marginBottom: 8 }}>🔔</div>
@@ -171,9 +171,9 @@ export default function NotificationBell() {
                 <div
                   key={n.id}
                   onClick={() => markRead(n.id, n.link)}
-                  style={{ padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, cursor: 'pointer', background: n.read ? 'transparent' : 'rgba(245, 158, 11,.04)', transition: 'background .15s' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = n.read ? 'rgba(255,255,255,.03)' : 'rgba(245, 158, 11,.08)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = n.read ? 'transparent' : 'rgba(245, 158, 11,.04)')}>
+                  style={{ padding: '12px 16px', borderBottom: `1px solid ${BORDER}`, cursor: 'pointer', background: n.read ? 'transparent' : 'color-mix(in srgb, var(--brand-primary) 4%, transparent)', transition: 'background .15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = n.read ? 'rgba(255,255,255,.03)' : 'var(--brand-primary-08)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = n.read ? 'transparent' : 'color-mix(in srgb, var(--brand-primary) 4%, transparent)')}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{TYPE_ICONS[n.type] || TYPE_ICONS.default}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>

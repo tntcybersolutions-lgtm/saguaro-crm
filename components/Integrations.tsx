@@ -32,7 +32,7 @@ function VendorLogo({ name, color, Icon }: Vendor) {
 }
 
 export function IntegrationStrip({
-  heading = 'Integrates with the tools you already use',
+  heading = 'Integrates with the Tools You Already Use',
 }: {
   heading?: string;
 }) {
@@ -43,9 +43,9 @@ export function IntegrationStrip({
           an implementation partner. That is the bill they have actually been
           handed before, so it is the one worth naming. */}
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
-        <ScribbleNote size={15} rotate={-4} color="#FBBF24">no implementation fee</ScribbleNote>
+        <ScribbleNote size={15} rotate={-4} color="var(--brand-primary-strong)">No implementation fee</ScribbleNote>
       </div>
-      <div style={{ textAlign: 'center', color: '#CBD5E1', fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 28, fontWeight: 600 }}>
+      <div style={{ textAlign: 'center', color: '#CBD5E1', fontSize: 12, marginBottom: 28, fontWeight: 600 }}>
         {heading}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 50, flexWrap: 'wrap', maxWidth: 1000, margin: '0 auto', padding: '0 24px' }}>

@@ -20,9 +20,9 @@ import {
 
 /* ─── Palette (dark, shared) ─────────────────────────────────────────── */
 export const W = {
-  GOLD: '#F59E0B', BG: '#0a0a0a', RAISED: '#141416', BORDER: 'rgba(255,255,255,0.12)',
+  GOLD: 'var(--brand-primary)', BG: 'var(--bg-base)', RAISED: 'var(--bg-surface)', BORDER: 'rgba(255,255,255,0.12)',
   TEXT: '#FFFFFF', DIM: '#CBD5E1', GREEN: '#22C55E', RED: '#EF4444',
-  AMBER: '#F59E0B', BLUE: '#F59E0B', PURPLE: '#8B5CF6',
+  AMBER: 'var(--warning)', BLUE: 'var(--brand-primary)', PURPLE: '#8B5CF6',
 } as const;
 
 /* ─── Widget settings & catalog ──────────────────────────────────────── */
@@ -389,7 +389,7 @@ export function ConfiguredDashboard({ layout }: { layout: SavedLayout }) {
               borderRadius: 14, padding: '16px 18px', boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: 'rgba(245,158,11,0.12)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: 'var(--brand-primary-12)' }}>
                   <Ico size={17} weight="duotone" color={W.GOLD} />
                 </span>
                 <span style={{ fontWeight: 700, fontSize: 15, color: W.TEXT, letterSpacing: '-0.01em' }}>{meta.name}</span>

@@ -3,8 +3,8 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useGuardedRouter } from '@/lib/navGuard';
 
 const GOLD   = 'var(--brand-primary)';
-const DARK   = '#0a0a0a';
-const RAISED = '#141416';
+const DARK   = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'var(--border-default)';
 const DIM    = '#CBD5E1';
 const TEXT   = '#FFFFFF';
@@ -45,10 +45,9 @@ const NAV_ITEMS: Omit<PaletteItem, 'section'>[] = [
 
 const ACTION_ITEMS: Omit<PaletteItem, 'section'>[] = [
   { id: 'act-new-project',  icon: '🏗️', label: 'New Project',     description: 'Create a new construction project',    shortcut: 'N', href: '/app/projects/new' },
-  { id: 'act-new-pay-app',  icon: '💰', label: 'New Pay App',      description: 'Select a project to create pay app',   shortcut: 'P', href: '/app/projects' },
-  { id: 'act-score-bid',    icon: '🎯', label: 'Score a Bid',      description: 'AI-powered bid scoring',               shortcut: 'S', href: '/app/bids' },
+  { id: 'act-new-pay-app',  icon: '💰', label: 'New Pay App',      description: 'Select a project to create a pay app',   shortcut: 'P', href: '/app/projects' },
   { id: 'act-new-rfi',      icon: '❓', label: 'New RFI',          description: 'Select a project to submit an RFI',    shortcut: 'R', href: '/app/projects' },
-  { id: 'act-create-bid',   icon: '📦', label: 'Create Bid Package', description: 'Select a project to start bid pkg', shortcut: 'B', href: '/app/projects' },
+  { id: 'act-create-bid',   icon: '📦', label: 'Create Bid Package', description: 'Select a project to start a bid package', shortcut: 'B', href: '/app/projects' },
   { id: 'act-gen-doc',      icon: '📄', label: 'Generate Document', description: 'AI-powered document generation',      shortcut: 'D', href: '/app/documents' },
   { id: 'act-invite-sub',   icon: '🤝', label: 'Invite Subcontractor', description: 'Send a sub portal invite',         shortcut: 'I', href: '/app/sub-portal?tab=invite' },
   { id: 'act-new-log',      icon: '📋', label: 'New Daily Log',   description: "Open today's field log composer",      shortcut: 'L', href: '/app/daily-logs?new=1' },
@@ -213,7 +212,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
             ref={inputRef}
             value={query}
             onChange={e => { setQuery(e.target.value); setFocused(0); }}
-            placeholder="Search actions, navigate, create..."
+            placeholder="Search actions, navigate, create…"
             style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: TEXT, fontSize: 15, fontWeight: 500 }}
           />
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
@@ -234,7 +233,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
             // Grouped sections when no query
             sections.map(section => (
               <div key={section.key}>
-                <div style={{ padding: '8px 18px 4px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, color: 'var(--text-tertiary)' }}>{section.label}</div>
+                <div style={{ padding: '8px 18px 4px', fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)' }}>{section.label}</div>
                 {section.items.map(({ item, idx }) => (
                   <ItemRow key={item.id} item={item} idx={idx} isFocused={idx === focused} onMouseEnter={() => setFocused(idx)} onClick={() => select(item)} />
                 ))}
@@ -252,7 +251,7 @@ export default function CommandPalette({ onScoreBid }: Props) {
         <div style={{ padding: '8px 18px', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 16, fontSize: 11, color: DIM, alignItems: 'center' }}>
           <span><kbd style={{ fontSize: 9, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>↑↓</kbd> navigate</span>
           <span><kbd style={{ fontSize: 9, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>↵</kbd> select</span>
-          <span><kbd style={{ fontSize: 9, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>ESC</kbd> close</span>
+          <span><kbd style={{ fontSize: 9, padding: '1px 5px', background: 'rgba(255,255,255,0.08)', border: `1px solid ${BORDER}`, borderRadius: 3 }}>Esc</kbd> close</span>
         </div>
       </div>
     </div>

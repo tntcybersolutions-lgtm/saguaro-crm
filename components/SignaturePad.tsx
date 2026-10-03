@@ -297,8 +297,6 @@ export default function SignaturePad({ onSave, onCancel, label = 'Signature', va
           fontSize: font.size.xs,
           fontWeight: font.weight.black,
           color: colors.gold,
-          textTransform: 'uppercase',
-          letterSpacing: 0.8,
         }}
       >
         {label}
@@ -330,7 +328,7 @@ export default function SignaturePad({ onSave, onCancel, label = 'Signature', va
           Cancel
         </button>
         <button type="button" onClick={save} disabled={!dirty} style={btn(dirty ? 'gold' : 'off')}>
-          Save signature
+          Save Signature
         </button>
       </div>
     </div>

@@ -16,8 +16,8 @@ import { Folder, MapPin, Buildings, Percent, Scales, Hash } from '@phosphor-icon
  * stays editable on the form beside it.
  */
 
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
 const TEXT = '#F0F4FF';
 const DIM = 'rgba(255,255,255,0.46)';
 
@@ -37,7 +37,7 @@ function Row({ icon, label, value }: { icon: React.ReactNode; label: string; val
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 9, padding: '7px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
       <span style={{ display: 'inline-flex', flexShrink: 0, transform: 'translateY(2px)' }}>{icon}</span>
-      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: DIM, minWidth: 92 }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: DIM, minWidth: 92 }}>
         {label}
       </span>
       <span style={{ fontSize: 13, fontWeight: 700, color: TEXT, minWidth: 0, wordBreak: 'break-word' }}>{value}</span>
@@ -58,8 +58,8 @@ export default function ProjectPreview({
         overflow: 'hidden',
         borderRadius: 16,
         padding: '20px 22px',
-        background: 'linear-gradient(160deg, rgba(245,158,11,0.09), rgba(13,29,46,0.5) 46%, rgba(10,10,12,0.92))',
-        border: '1px solid rgba(245,158,11,0.20)',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--brand-primary-18)',
         boxShadow: '0 20px 44px -28px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.05)',
       }}
     >
@@ -69,7 +69,7 @@ export default function ProjectPreview({
           position: 'absolute',
           inset: 0,
           backgroundImage:
-            'linear-gradient(rgba(245,158,11,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.045) 1px, transparent 1px)',
+            'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
           backgroundSize: '20px 20px',
           maskImage: 'radial-gradient(circle at 85% 0%, #000, transparent 70%)',
           WebkitMaskImage: 'radial-gradient(circle at 85% 0%, #000, transparent 70%)',
@@ -77,8 +77,8 @@ export default function ProjectPreview({
       />
 
       <div style={{ position: 'relative' }}>
-        <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, marginBottom: 8 }}>
-          What you are creating
+        <div style={{ fontSize: 10.5, fontWeight: 900, color: GOLD, marginBottom: 8 }}>
+          What You Are Creating
         </div>
 
         <div
@@ -100,7 +100,7 @@ export default function ProjectPreview({
 
         <Row icon={<Hash size={13} weight="bold" color={GOLD_HI} />} label="Number" value={projectNumber || '—'} />
         {templateName && (
-          <Row icon={<Buildings size={13} weight="duotone" color={GOLD_HI} />} label="Job type" value={templateName} />
+          <Row icon={<Buildings size={13} weight="duotone" color={GOLD_HI} />} label="Job Type" value={templateName} />
         )}
         <Row icon={<MapPin size={13} weight="duotone" color={GOLD_HI} />} label="Jurisdiction" value={jurisdiction || '—'} />
         <Row icon={<Percent size={13} weight="bold" color={GOLD_HI} />} label="Retainage" value={`${retainagePct}%`} />
@@ -110,7 +110,7 @@ export default function ProjectPreview({
           <div style={{ marginTop: 13, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 8 }}>
               <Folder size={13} weight="duotone" color={GOLD_HI} />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase', color: DIM }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: DIM }}>
                 {folders.length} folders · {divisionCount} CSI divisions
               </span>
             </div>

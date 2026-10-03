@@ -46,10 +46,10 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 16, width: 'min(720px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, padding: 16, width: 'min(720px,100%)', maxHeight: '92vh', overflow: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-          <Crop size={18} color="#F59E0B" weight="fill" />
-          <div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: '#fff' }}>Edit image</div>
+          <Crop size={18} color="var(--brand-primary)" weight="fill" />
+          <div style={{ fontWeight: 800, fontSize: 16, marginLeft: 8, flex: 1, color: '#fff' }}>Edit Image</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="#CBD5E1" /></button>
         </div>
         <div
@@ -62,21 +62,21 @@ export function FileCropper({ fileId, url, name, onDone, onClose }: {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img ref={imgRef} src={url} alt={name || ''} draggable={false} style={{ maxWidth: '100%', maxHeight: '58vh', transform: `rotate(${rotate}deg)`, transition: 'transform .15s' }} />
           {rect && rect.w > 2 && (
-            <div style={{ position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, border: '2px solid #F59E0B', background: 'rgba(245,158,11,0.14)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, border: '2px solid var(--brand-primary)', background: 'var(--brand-primary-12)', pointerEvents: 'none' }} />
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
-          <button onClick={() => setRotate((r) => (r - 90) % 360)} style={btn}><ArrowCounterClockwise size={16} />Rotate L</button>
-          <button onClick={() => setRotate((r) => (r + 90) % 360)} style={btn}><ArrowClockwise size={16} />Rotate R</button>
-          <button onClick={() => setRect(null)} style={btn}>Clear box</button>
+          <button onClick={() => setRotate((r) => (r - 90) % 360)} style={btn}><ArrowCounterClockwise size={16} />Rotate Left</button>
+          <button onClick={() => setRotate((r) => (r + 90) % 360)} style={btn}><ArrowClockwise size={16} />Rotate Right</button>
+          <button onClick={() => setRect(null)} style={btn}>Clear Box</button>
           <span style={{ color: '#64748B', fontSize: 12, marginLeft: 4 }}>Drag on the image to crop</span>
           <div style={{ flex: 1 }} />
           {err && <span style={{ color: '#FF6B6B', fontSize: 12 }}>{err}</span>}
-          <button onClick={apply} disabled={busy} style={{ ...btn, background: '#F59E0B', color: '#0a0a0a', fontWeight: 800, border: 'none' }}><Check size={16} weight="bold" />{busy ? 'Saving…' : 'Apply'}</button>
+          <button onClick={apply} disabled={busy} style={{ ...btn, background: 'var(--brand-primary)', color: '#0A0A00', fontWeight: 800, border: 'none' }}><Check size={16} weight="bold" />{busy ? 'Saving…' : 'Apply'}</button>
         </div>
       </div>
     </div>
   );
 }
 
-const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, background: '#1c1c1e', color: '#fff', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 13px', fontSize: 13, cursor: 'pointer' };
+const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 5, background: 'var(--bg-surface-2)', color: '#fff', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 13px', fontSize: 13, cursor: 'pointer' };
