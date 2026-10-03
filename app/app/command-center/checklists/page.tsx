@@ -61,7 +61,7 @@ export default function ChecklistsPage() {
         accent="Checklists"
         subtitle="The same Phase 1–4 playbook on every site."
         actions={
-          <select value={activeSite} onChange={(e) => setSite(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: '#1c1c1e', color: C.text, fontWeight: 600 }}>
+          <select value={activeSite} onChange={(e) => setSite(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: 'var(--bg-surface-2)', color: C.text, fontWeight: 600 }}>
             {(projects as any[]).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         } />
@@ -69,9 +69,9 @@ export default function ChecklistsPage() {
       {/* Playbook pulse — real counts for the selected site */}
       {!loading && groups.length > 0 && (
         <StatStrip items={[
-          {href: '/app/command-center/checklists',  label: 'Steps Complete', value: `${overall.done}/${overall.total}`, sub: 'on this site' },
-          {href: '/app/command-center/checklists',  label: 'Progress', value: `${overall.pct}%`, accent: overall.pct >= 100 ? C.green : C.gold, sub: overall.pct >= 100 ? 'playbook complete' : 'of the playbook' },
-          {href: '/app/command-center/checklists',  label: 'Phases', value: String(groups.length), sub: 'in the template' },
+          {href: '/app/command-center/checklists',  label: 'Steps Complete', value: `${overall.done}/${overall.total}`, sub: 'On this site' },
+          {href: '/app/command-center/checklists',  label: 'Progress', value: `${overall.pct}%`, accent: overall.pct >= 100 ? C.green : C.gold, sub: overall.pct >= 100 ? 'Playbook complete' : 'of the playbook' },
+          {href: '/app/command-center/checklists',  label: 'Phases', value: String(groups.length), sub: 'In the template' },
           {href: '/app/command-center/checklists',  label: 'Phases Complete', value: String(phasesComplete), accent: phasesComplete > 0 ? C.green : undefined, sub: `${groups.length - phasesComplete} still open` },
         ]} />
       )}
@@ -85,13 +85,13 @@ export default function ChecklistsPage() {
       ) : (
         <>
           <SectionCard flat
-            title="Overall progress"
+            title="Overall Progress"
             subtitle={`${overall.done} of ${overall.total} steps complete`}
             icon={<Flag size={16} weight="duotone" color={C.gold} />}
             action={<span style={{ fontSize: 20, fontWeight: 900, color: overall.pct >= 100 ? C.green : C.gold, fontVariantNumeric: 'tabular-nums' }}>{overall.pct}%</span>}
             style={{ marginBottom: 18 }}
           >
-            <div style={{ height: 8, borderRadius: 4, background: '#1c1c1e', overflow: 'hidden' }}>
+            <div style={{ height: 8, borderRadius: 4, background: 'var(--bg-surface-2)', overflow: 'hidden' }}>
               <div style={{ height: '100%', width: `${overall.pct}%`, background: overall.pct >= 100 ? C.green : C.gold, transition: 'width .3s' }} />
             </div>
           </SectionCard>
@@ -101,14 +101,14 @@ export default function ChecklistsPage() {
               <SectionCard
                 key={g.phase}
                 title={g.phase}
-                action={<Pill tone={g.pct >= 100 ? 'green' : 'neutral'} caps>{g.doneN}/{g.list.length}</Pill>}
+                action={<Pill tone={g.pct >= 100 ? 'green' : 'neutral'}>{g.doneN}/{g.list.length}</Pill>}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {g.list.map((it) => {
                     const d = isDone(it);
                     return (
                       <button key={it.id} onClick={() => check(it)} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', color: 'inherit', fontFamily: 'inherit' }}>
-                        <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 5, border: `2px solid ${d ? C.green : C.border}`, background: d ? C.green : '#1c1c1e', color: '#fff', flexShrink: 0, fontSize: 11, fontWeight: 900, lineHeight: '15px', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{d ? <Check size={12} weight="bold" color="#fff" /> : ''}</span>
+                        <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 5, border: `2px solid ${d ? C.green : C.border}`, background: d ? C.green : 'var(--bg-surface-2)', color: '#fff', flexShrink: 0, fontSize: 11, fontWeight: 900, lineHeight: '15px', textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>{d ? <Check size={12} weight="bold" color="#fff" /> : ''}</span>
                         <span style={{ fontSize: 14, color: d ? C.faint : C.text, textDecoration: d ? 'line-through' : 'none' }}>{it.title}</span>
                       </button>
                     );

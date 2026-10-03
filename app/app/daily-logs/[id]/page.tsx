@@ -201,7 +201,7 @@ export default function DailyLogDetailPage() {
   };
   const labelStyle: React.CSSProperties = {
     display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, fontWeight: 800,
-    textTransform: 'uppercase', letterSpacing: '0.09em', color: FAINT, marginBottom: 5,
+    letterSpacing: 'normal', color: FAINT, marginBottom: 5,
   };
   /** Uniform ghost icon Edit affordance — one shape on every editable card. */
   const editIconStyle: React.CSSProperties = {
@@ -232,7 +232,7 @@ export default function DailyLogDetailPage() {
         <SectionCard flat flush>
           <PremiumEmpty
             icon={<ClipboardText size={30} weight="duotone" color={ACCENT.hex} />}
-            title="Daily log not found"
+            title="Daily Log Not Found"
             description="This log may have been deleted, or the link is stale."
             action={backBtn}
           />
@@ -248,7 +248,7 @@ export default function DailyLogDetailPage() {
           <PremiumEmpty
             tone="error"
             icon={<Warning size={30} weight="duotone" color={RED} />}
-            title="Failed to load the daily log"
+            title="Failed to Load the Daily Log"
             description={error}
             action={backBtn}
           />
@@ -354,8 +354,8 @@ export default function DailyLogDetailPage() {
   // Hidden-when-empty sections (equipment, notes) surface through a composer
   // strip instead of rendering empty cards.
   const composerTargets: { k: EditKey; label: string; icon: React.ReactNode }[] = [];
-  if (!l.equipment && editKey !== 'equipment') composerTargets.push({ k: 'equipment', label: 'Add equipment on site', icon: <Wrench size={13} /> });
-  if (!l.notes && editKey !== 'notes') composerTargets.push({ k: 'notes', label: 'Add general notes', icon: <NotePencil size={13} /> });
+  if (!l.equipment && editKey !== 'equipment') composerTargets.push({ k: 'equipment', label: 'Add Equipment on Site', icon: <Wrench size={13} /> });
+  if (!l.notes && editKey !== 'notes') composerTargets.push({ k: 'notes', label: 'Add General Notes', icon: <NotePencil size={13} /> });
 
   return (
     <PremiumSurface maxWidth={1100}>
@@ -405,7 +405,7 @@ export default function DailyLogDetailPage() {
           auto-stamped at creation and intentionally not editable here. */}
       {editKey === 'header' && (
         <SectionCard
-          title="Edit report info"
+          title="Edit Report Info"
           subtitle="Superintendent, phase of work and crew count"
           icon={<HardHat size={16} weight="duotone" color={ACCENT.hex} />}
           accent={ACCENT.hex}
@@ -432,7 +432,7 @@ export default function DailyLogDetailPage() {
               />
             </div>
             <div>
-              <div style={labelStyle}><UsersThree size={12} color={FAINT} /> Crew on site</div>
+              <div style={labelStyle}><UsersThree size={12} color={FAINT} /> Crew on Site</div>
               <input
                 inputMode="numeric"
                 value={draft.crew ?? ''}
@@ -461,7 +461,7 @@ export default function DailyLogDetailPage() {
       {textSection({
         k: 'work', title: 'Work Performed', field: 'work_performed',
         icon: <ClipboardText size={16} weight="duotone" color={ACCENT.hex} />,
-        emptyText: 'No work recorded for this day.', addLabel: 'Add work note',
+        emptyText: 'No work recorded for this day.', addLabel: 'Add Work Note',
         placeholder: 'What did the crews get done today?',
       })}
 
@@ -470,7 +470,7 @@ export default function DailyLogDetailPage() {
       {(l.equipment || editKey === 'equipment') && textSection({
         k: 'equipment', title: 'Equipment On Site', field: 'equipment',
         icon: <Wrench size={16} weight="duotone" color={ACCENT.hex} />,
-        emptyText: 'No equipment recorded.', addLabel: 'Add equipment note',
+        emptyText: 'No equipment recorded.', addLabel: 'Add Equipment Note',
         placeholder: 'Excavator, lull, scissor lifts…',
       })}
 
@@ -478,7 +478,7 @@ export default function DailyLogDetailPage() {
       {textSection({
         k: 'delays', title: 'Delays', field: 'delays',
         icon: <HourglassMedium size={16} weight="duotone" color={ACCENT.hex} />,
-        emptyText: 'No delays reported.', addLabel: 'Add delays note',
+        emptyText: 'No delays reported.', addLabel: 'Add Delays Note',
         contentColor: ORANGE,
         placeholder: 'Weather hold, missed delivery, inspection slip…',
       })}
@@ -487,7 +487,7 @@ export default function DailyLogDetailPage() {
       {textSection({
         k: 'safety', title: 'Safety Notes', field: 'safety_notes',
         icon: <ShieldCheck size={16} weight="duotone" color={ACCENT.hex} />,
-        emptyText: 'No safety issues reported.', emptyColor: GREEN, addLabel: 'Add safety note',
+        emptyText: 'No safety issues reported.', emptyColor: GREEN, addLabel: 'Add Safety Note',
         placeholder: 'Incidents, near-misses, toolbox talks…',
       })}
 
@@ -560,7 +560,7 @@ export default function DailyLogDetailPage() {
       {(l.notes || editKey === 'notes') && textSection({
         k: 'notes', title: 'Notes', field: 'notes',
         icon: <NotePencil size={16} weight="duotone" color={ACCENT.hex} />,
-        emptyText: 'No notes recorded.', addLabel: 'Add notes',
+        emptyText: 'No notes recorded.', addLabel: 'Add Notes',
         placeholder: 'Anything else worth logging for the record',
       })}
 

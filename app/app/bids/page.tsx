@@ -58,7 +58,7 @@ const fmtDate = (d?: string | null) => {
   const dt = new Date(String(d).length <= 10 ? String(d) + 'T00:00:00' : String(d));
   return isNaN(dt.getTime()) ? '—' : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
-const spreadTone = (s: number) => (s <= 10 ? '#34D399' : s <= 25 ? '#FBBF24' : '#F87171');
+const spreadTone = (s: number) => (s <= 10 ? '#34D399' : s <= 25 ? 'var(--warning)' : '#F87171');
 
 function packageTone(status: string): BadgeTone {
   const st = status.toLowerCase();
@@ -144,7 +144,7 @@ function BidsPageInner() {
       const r = await fetch(`/api/bids/${editBid.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
       if (!r.ok) throw new Error('update failed');
       setHistoryBids((prev) => prev.map((b) => (b.id === editBid.id ? { ...b, bid_amount: amount, notes: (patch.notes as string | undefined) ?? b.notes } : b)));
-      showToast('Bid updated');
+      showToast('Bid updated.');
       setEditBid(null);
     } catch {
       setEditError('Could not save the bid. Try again.');
@@ -155,8 +155,8 @@ function BidsPageInner() {
 
   function copyAmount(b: BidRecord) {
     navigator.clipboard.writeText(fmt(b.bid_amount)).then(
-      () => showToast(`Copied ${fmt(b.bid_amount)}`),
-      () => showToast('Clipboard unavailable', 'bad'),
+      () => showToast(`Copied ${fmt(b.bid_amount)}.`),
+      () => showToast('Clipboard unavailable.', 'bad'),
     );
   }
 
@@ -237,9 +237,9 @@ function BidsPageInner() {
 
   function recLabel(rec: string): string {
     const r = String(rec || '').toUpperCase();
-    if (r === 'BID' || r.includes('STRONG')) return 'BID — strong fit';
-    if (r === 'PASS' || r.includes('LOW')) return 'PASS — low fit';
-    return 'BID WITH CAUTION — review scope';
+    if (r === 'BID' || r.includes('STRONG')) return 'Bid — strong fit';
+    if (r === 'PASS' || r.includes('LOW')) return 'Pass — low fit';
+    return 'Bid with caution — review scope';
   }
 
   async function submitScore(): Promise<boolean> {
@@ -389,7 +389,7 @@ function BidsPageInner() {
       showToast(`Duplicated as draft — "${cd.bidPackage.name}". Set a due date, then open it for bids.`);
       fetchPackages();
     } catch {
-      showToast('Could not duplicate the package', 'bad');
+      showToast('Could not duplicate the package.', 'bad');
     } finally {
       setBusyPkg(null);
     }
@@ -401,11 +401,11 @@ function BidsPageInner() {
     try {
       const r = await fetch(`/api/bid-packages/${op.id}/close`, { method: 'POST' });
       if (!r.ok) throw new Error('close failed');
-      showToast(`Closed "${op.name || 'package'}" — it's no longer taking bids`);
+      showToast(`Closed "${op.name || 'package'}" — it's no longer taking bids.`);
       setConfirmClose(null);
       fetchPackages();
     } catch {
-      showToast('Could not close the package', 'bad');
+      showToast('Could not close the package.', 'bad');
     } finally {
       setBusyPkg(null);
     }
@@ -420,10 +420,10 @@ function BidsPageInner() {
       if (!r.ok) throw new Error('delete failed');
       if (kind === 'package') setPackages((prev) => prev.filter((p) => p.id !== id));
       else setHistoryBids((prev) => prev.filter((b) => b.id !== id));
-      showToast(kind === 'package' ? 'Bid package deleted' : 'Bid deleted');
+      showToast(kind === 'package' ? 'Bid package deleted.' : 'Bid deleted.');
       setConfirmDelete(null);
     } catch {
-      showToast(kind === 'package' ? 'Could not delete — you may need Full access to Projects' : 'Could not delete the bid', 'bad');
+      showToast(kind === 'package' ? 'Could not delete — you may need Full access to Projects.' : 'Could not delete the bid.', 'bad');
     } finally {
       setDeleting(false);
     }
@@ -452,35 +452,35 @@ function BidsPageInner() {
   );
 
   const packageStats: StatItem[] = [
-    { label: 'Live packages', value: activePackages.length, sub: `${openNow.length} open for bids` },
-    { label: 'Bids in', value: `${respondedTotal} / ${invitedTotal}`, sub: 'responses vs invites', tone: respondedTotal > 0 ? 'good' : 'default' },
-    { label: 'Coverage', value: activePackages.length ? `${coveredCount}/${activePackages.length}` : '—', sub: activePackages.length - coveredCount > 0 ? `${activePackages.length - coveredCount} awaiting first bid` : 'every package has a bid' },
-    { label: 'Low-bid pipeline', value: fmt(lowBidPipeline), sub: 'sum of current low bids' },
+    { label: 'Live Packages', value: activePackages.length, sub: `${openNow.length} open for bids` },
+    { label: 'Bids In', value: `${respondedTotal} / ${invitedTotal}`, sub: 'Responses vs invites', tone: respondedTotal > 0 ? 'good' : 'default' },
+    { label: 'Coverage', value: activePackages.length ? `${coveredCount}/${activePackages.length}` : '—', sub: activePackages.length - coveredCount > 0 ? `${activePackages.length - coveredCount} awaiting first bid` : 'Every package has a bid' },
+    { label: 'Low-Bid Pipeline', value: fmt(lowBidPipeline), sub: 'Sum of current low bids' },
     { label: 'Awarded', value: fmt(awardedTotal), sub: `${awardedPkgs.length} package${awardedPkgs.length === 1 ? '' : 's'} placed` },
     {
-      label: 'Widest spread',
+      label: 'Widest Spread',
       value: widestSpread ? `${Math.round(Number(widestSpread.spread_pct))}%` : '—',
-      sub: widestSpread ? `${widestSpread.name || 'package'} — level before award` : 'needs 2+ bids on a package',
+      sub: widestSpread ? `${widestSpread.name || 'package'} — level before award` : 'Needs 2+ bids on a package',
       tone: widestSpread ? (Number(widestSpread.spread_pct) <= 10 ? 'good' : Number(widestSpread.spread_pct) <= 25 ? 'warn' : 'bad') : 'default',
     },
   ];
   const historyStatItems: StatItem[] = historyStats ? [
-    { label: 'Total bids', value: historyStats.totalBids ?? 0 },
+    { label: 'Total Bids', value: historyStats.totalBids ?? 0 },
     { label: 'Won', value: historyStats.wonBids ?? 0, tone: 'good' },
     { label: 'Lost', value: historyStats.lostBids ?? 0, tone: 'bad' },
-    { label: 'Win rate', value: `${historyStats.winRate ?? 0}%`, tone: (historyStats.winRate ?? 0) >= 50 ? 'good' : 'warn' },
-    { label: 'Avg margin', value: `${(Number(historyStats.avgMargin) || 0).toFixed(1)}%` },
-    { label: 'Total value', value: fmt(Number(historyStats.totalValue) || 0) },
+    { label: 'Win Rate', value: `${historyStats.winRate ?? 0}%`, tone: (historyStats.winRate ?? 0) >= 50 ? 'good' : 'warn' },
+    { label: 'Avg Margin', value: `${(Number(historyStats.avgMargin) || 0).toFixed(1)}%` },
+    { label: 'Total Value', value: fmt(Number(historyStats.totalValue) || 0) },
   ] : [];
 
   const pkgHref = (p: Pkg) => `/app/projects/${p.project_id}/bid-packages/${p.id}`;
 
   const pkgColumns: Column<Pkg>[] = [
-    { key: 'name', header: 'Package', primary: true, accessor: (p) => p.name || 'Untitled package' },
+    { key: 'name', header: 'Package', primary: true, accessor: (p) => p.name || 'Untitled Package' },
     { key: 'trade', header: 'Trade' },
-    { key: 'status', header: 'Status', render: (p) => <Badge tone={packageTone(String(p.status || ''))} dot>{String(p.status || '—').replace(/_/g, ' ')}</Badge> },
+    { key: 'status', header: 'Status', render: (p) => <Badge tone={packageTone(String(p.status || ''))} dot><span style={{ textTransform: 'capitalize' }}>{String(p.status || '—').replace(/_/g, ' ')}</span></Badge> },
     {
-      key: 'due', header: 'Bid due', accessor: (p) => p.bid_due_date || p.due_date,
+      key: 'due', header: 'Bid Due', accessor: (p) => p.bid_due_date || p.due_date,
       render: (p) => {
         const due = p.bid_due_date || p.due_date;
         const dd = daysUntil(due);
@@ -488,7 +488,7 @@ function BidsPageInner() {
           <>
             {fmtDate(due)}
             {dd != null && (
-              <span style={{ marginLeft: 6, fontSize: 'var(--fs-xs)', fontWeight: 700, color: dd < 0 ? '#F87171' : dd <= 3 ? '#FBBF24' : 'var(--text-tertiary)' }}>
+              <span style={{ marginLeft: 6, fontSize: 'var(--fs-xs)', fontWeight: 700, color: dd < 0 ? '#F87171' : dd <= 3 ? 'var(--warning)' : 'var(--text-tertiary)' }}>
                 {dd < 0 ? `${Math.abs(dd)}d overdue` : dd === 0 ? 'due today' : `${dd}d left`}
               </span>
             )}
@@ -497,14 +497,14 @@ function BidsPageInner() {
       },
     },
     {
-      key: 'responses', header: 'Bids in', align: 'right', accessor: (p) => Number(p.num_responded ?? p.bid_count) || 0,
+      key: 'responses', header: 'Bids In', align: 'right', accessor: (p) => Number(p.num_responded ?? p.bid_count) || 0,
       render: (p) => {
         const n = Number(p.num_responded ?? p.bid_count) || 0;
         return <><span style={{ color: n > 0 ? '#34D399' : undefined, fontWeight: 700 }}>{n}</span> / {Number(p.num_invited) || 0}</>;
       },
     },
     {
-      key: 'low', header: 'Low bid', align: 'right', accessor: (p) => Number(p.low_bid_amount) || null,
+      key: 'low', header: 'Low Bid', align: 'right', accessor: (p) => Number(p.low_bid_amount) || null,
       render: (p) => (p.low_bid_amount ? (
         <span title={p.low_bid_company || undefined}>{fmt(p.low_bid_amount)}</span>
       ) : '—'),
@@ -513,7 +513,7 @@ function BidsPageInner() {
       key: 'spread', header: 'Spread', align: 'right', accessor: (p) => (p.spread_pct != null ? Number(p.spread_pct) : null),
       render: (p) => {
         const s = p.spread_pct != null && Number.isFinite(Number(p.spread_pct)) ? Number(p.spread_pct) : null;
-        if (s == null) return <span style={{ color: 'var(--text-tertiary)' }}>{(Number(p.num_responded ?? p.bid_count) || 0) === 1 ? 'needs 2 bids' : '—'}</span>;
+        if (s == null) return <span style={{ color: 'var(--text-tertiary)' }}>{(Number(p.num_responded ?? p.bid_count) || 0) === 1 ? 'Needs 2 bids' : '—'}</span>;
         return <span style={{ fontWeight: 700, color: spreadTone(s) }}>{Math.round(s)}%</span>;
       },
     },
@@ -522,18 +522,18 @@ function BidsPageInner() {
   const historyColumns: Column<BidRecord>[] = [
     { key: 'project_name', header: 'Project', primary: true },
     { key: 'project_type', header: 'Type' },
-    { key: 'bid_date', header: 'Bid date', render: (b) => fmtDate(b.bid_date) },
-    { key: 'bid_amount', header: 'Bid amount', align: 'right', render: (b) => fmt(b.bid_amount) },
+    { key: 'bid_date', header: 'Bid Date', render: (b) => fmtDate(b.bid_date) },
+    { key: 'bid_amount', header: 'Bid Amount', align: 'right', render: (b) => fmt(b.bid_amount) },
     {
       key: 'margin_pct', header: 'Margin', align: 'right', accessor: (b) => Number(b.margin_pct) || 0,
       render: (b) => {
         const m = Number(b.margin_pct) || 0;
-        return <span style={{ fontWeight: 700, color: m >= 15 ? '#34D399' : m >= 10 ? '#FBBF24' : '#F87171' }}>{m}%</span>;
+        return <span style={{ fontWeight: 700, color: m >= 15 ? '#34D399' : m >= 10 ? 'var(--warning)' : '#F87171' }}>{m}%</span>;
       },
     },
     { key: 'location', header: 'Location' },
-    { key: 'outcome', header: 'Outcome', render: (b) => <Badge tone={OUTCOME_TONE[b.outcome] ?? 'neutral'} dot>{b.outcome}</Badge> },
-    { key: 'awarded_to', header: 'Awarded to / reason', accessor: (b) => b.awarded_to || b.loss_reason },
+    { key: 'outcome', header: 'Outcome', render: (b) => <Badge tone={OUTCOME_TONE[b.outcome] ?? 'neutral'} dot><span style={{ textTransform: 'capitalize' }}>{b.outcome}</span></Badge> },
+    { key: 'awarded_to', header: 'Awarded to / Reason', accessor: (b) => b.awarded_to || b.loss_reason },
   ];
 
   const historyLabel: Record<HistoryFilter, string> = { all: 'All', won: 'Won', lost: 'Lost', pending: 'Pending' };
@@ -545,9 +545,9 @@ function BidsPageInner() {
       actions={
         <>
           <Button href="/app/bid-intelligence" icon={<Brain size={15} />}>Bid Intelligence</Button>
-          <Button href="/app/bids/leveling" icon={<ArrowRight size={15} />}>Bid leveling</Button>
+          <Button href="/app/bids/leveling" icon={<ArrowRight size={15} />}>Bid Leveling</Button>
           {/* Score a Bid is de-featured: still reachable at /app/bids?tab=score (Bid Intelligence has its own scorer). */}
-          <Button variant="primary" href="/app/projects" title="Open a project to start a package." icon={<Plus size={15} weight="bold" />}>New bid package</Button>
+          <Button variant="primary" href="/app/projects" title="Open a project to start a package." icon={<Plus size={15} weight="bold" />}>New Bid Package</Button>
         </>
       }
     >
@@ -560,9 +560,9 @@ function BidsPageInner() {
             value={tab}
             onChange={(k) => setTab(k as Tab)}
             tabs={[
-              { key: 'active', label: 'Active packages', count: pkgLoading || pkgError ? undefined : activePackages.length },
-              { key: 'pipeline', label: 'Open for bids', count: pkgLoading || pkgError ? undefined : openNow.length },
-              { key: 'history', label: 'Bid history', count: historyStats?.totalBids },
+              { key: 'active', label: 'Active Packages', count: pkgLoading || pkgError ? undefined : activePackages.length },
+              { key: 'pipeline', label: 'Open for Bids', count: pkgLoading || pkgError ? undefined : openNow.length },
+              { key: 'history', label: 'Bid History', count: historyStats?.totalBids },
             ]}
           />
         </div>
@@ -599,9 +599,9 @@ function BidsPageInner() {
               loading={historyLoading}
               onRowClick={openEdit}
               rowActions={(b) => [
-                { label: 'Set outcome', icon: <Trophy size={14} />, inline: true, onClick: () => setOutcomeBid(b) },
-                { label: 'Edit amount & note', icon: <PencilSimple size={14} />, onClick: () => openEdit(b) },
-                { label: 'Copy amount', icon: <Clipboard size={14} />, onClick: () => copyAmount(b) },
+                { label: 'Set Outcome', icon: <Trophy size={14} />, inline: true, onClick: () => setOutcomeBid(b) },
+                { label: 'Edit Amount & Note', icon: <PencilSimple size={14} />, onClick: () => openEdit(b) },
+                { label: 'Copy Amount', icon: <Clipboard size={14} />, onClick: () => copyAmount(b) },
                 { label: 'Delete', icon: <Trash size={14} />, tone: 'danger', onClick: () => setConfirmDelete({ kind: 'bid', id: b.id, name: b.project_name }) },
               ]}
               empty={
@@ -635,7 +635,7 @@ function BidsPageInner() {
               const busy = busyPkg === p.id;
               return [
                 { label: 'View', icon: <Eye size={14} />, inline: true, href: pkgHref(p) },
-                { label: 'Level & award', icon: <Trophy size={14} />, href: pkgHref(p), hidden: (Number(p.num_responded ?? p.bid_count) || 0) === 0 },
+                { label: 'Level & Award', icon: <Trophy size={14} />, href: pkgHref(p), hidden: (Number(p.num_responded ?? p.bid_count) || 0) === 0 },
                 { label: busy ? 'Working…' : 'Duplicate', icon: <Copy size={14} />, onClick: () => duplicatePackage(p), disabled: busy },
                 { label: 'Close', icon: <Archive size={14} />, onClick: () => setConfirmClose(p), disabled: busy, hidden: st === 'closed' || st === 'awarded' },
                 { label: 'Delete', icon: <Trash size={14} />, tone: 'danger', onClick: () => setConfirmDelete({ kind: 'package', id: p.id, name: p.name || 'this package' }) },
@@ -647,7 +647,7 @@ function BidsPageInner() {
                 text={needle
                   ? 'Clear the search to see every package.'
                   : 'Create a bid package on a project. Invites go out with portal links, and sub bids come back priced against your line items.'}
-                action={<Button variant="primary" onClick={() => router.push('/app/projects')}>Go to projects</Button>}
+                action={<Button variant="primary" onClick={() => router.push('/app/projects')}>Go to Projects</Button>}
               />
             }
           />
@@ -658,24 +658,24 @@ function BidsPageInner() {
       <FormModal
         open={showScore}
         onClose={closeScore}
-        title="Score a bid"
-        subtitle="Fit score and win probability from your own bid history. The result is saved to Bid history as pending."
+        title="Score a Bid"
+        subtitle="Fit score and win probability from your own bid history. The result is saved to Bid History as pending."
         busy={scoring}
         error={scoreError}
         onSubmit={scoreResult ? undefined : async () => { await submitScore(); }}
-        submitLabel="Score this bid"
+        submitLabel="Score This Bid"
         footer={scoreResult ? (
           <>
-            <Button variant="ghost" onClick={resetScore}>Score another</Button>
-            <Button variant="primary" onClick={() => { setShowScore(false); resetScore(); setTab('history'); refreshHistory(); }}>View in history</Button>
+            <Button variant="ghost" onClick={resetScore}>Score Another</Button>
+            <Button variant="primary" onClick={() => { setShowScore(false); resetScore(); setTab('history'); refreshHistory(); }}>View in History</Button>
           </>
         ) : undefined}
       >
         {scoreResult ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <StatRow items={[
-              { label: 'Fit score', value: `${scoreResult.fitScore} / 100`, tone: scoreResult.fitScore >= 70 ? 'good' : scoreResult.fitScore >= 50 ? 'warn' : 'bad' },
-              { label: 'Win probability', value: `${scoreResult.winPct}%`, tone: scoreResult.winPct >= 60 ? 'good' : scoreResult.winPct >= 40 ? 'warn' : 'bad' },
+              { label: 'Fit Score', value: `${scoreResult.fitScore} / 100`, tone: scoreResult.fitScore >= 70 ? 'good' : scoreResult.fitScore >= 50 ? 'warn' : 'bad' },
+              { label: 'Win Probability', value: `${scoreResult.winPct}%`, tone: scoreResult.winPct >= 60 ? 'good' : scoreResult.winPct >= 40 ? 'warn' : 'bad' },
             ]} />
             <Card><strong>{scoreResult.recommendation}</strong></Card>
             <span className="k-hint" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -685,7 +685,7 @@ function BidsPageInner() {
         ) : (
           <FormGrid cols={2}>
             <Field
-              label="Auto-fill from a project"
+              label="Auto-Fill from a Project"
               span
               hint={autofilling ? 'Filling from the project…' : scoreMeta.historyHint || 'Sage pulls value, trade, location and due date from the project record.'}
             >
@@ -694,13 +694,13 @@ function BidsPageInner() {
                 {scoreProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </Field>
-            <Field label="Project name" required>
+            <Field label="Project Name" required>
               <Input value={scoreForm.projectName} onChange={(e) => setScoreForm((f) => ({ ...f, projectName: e.target.value }))} placeholder="e.g. Scottsdale Office Buildout" />
             </Field>
-            <Field label="Bid amount" required hint={scoreMeta.valueSource ? `Pulled from ${scoreMeta.valueSource}. Adjust before scoring.` : undefined}>
+            <Field label="Bid Amount" required hint={scoreMeta.valueSource ? `Pulled from ${scoreMeta.valueSource}. Adjust before scoring.` : undefined}>
               <Input inputMode="decimal" value={scoreForm.bidAmount} onChange={(e) => setScoreForm((f) => ({ ...f, bidAmount: e.target.value }))} placeholder="$2,500,000" />
             </Field>
-            <Field label="Target margin (%)">
+            <Field label="Target Margin (%)">
               <Input inputMode="decimal" value={scoreForm.margin} onChange={(e) => setScoreForm((f) => ({ ...f, margin: e.target.value }))} placeholder="15" />
             </Field>
             <Field label="Trade">
@@ -729,17 +729,17 @@ function BidsPageInner() {
       <FormModal
         open={!!editBid}
         onClose={() => setEditBid(null)}
-        title={`Edit bid — ${editBid?.project_name ?? ''}`}
+        title={`Edit Bid — ${editBid?.project_name ?? ''}`}
         busy={editBusy}
         error={editError}
         onSubmit={saveEdit}
-        submitLabel="Save bid"
+        submitLabel="Save Bid"
       >
         <FormGrid cols={2}>
-          <Field label="Bid amount" required>
+          <Field label="Bid Amount" required>
             <Input inputMode="decimal" value={editAmount} onChange={(e) => setEditAmount(e.target.value)} autoFocus />
           </Field>
-          <Field label="Quick adjust" hint="Applies to the amount above. Saved when you click Save bid.">
+          <Field label="Quick Adjust" hint="Applies to the amount above. Saved when you click Save Bid.">
             <div className="k-row-actions" style={{ justifyContent: 'flex-start' }}>
               {[-10, -5, 5, 10].map((pct) => (
                 <Button key={pct} size="sm" onClick={() => {
@@ -761,12 +761,12 @@ function BidsPageInner() {
         onClose={() => setConfirmClose(null)}
         size="sm"
         busy={!!confirmClose && busyPkg === confirmClose.id}
-        title="Close bid package?"
+        title="Close Bid Package?"
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirmClose(null)} disabled={!!busyPkg}>Cancel</Button>
             <Button variant="primary" icon={<Archive size={15} />} onClick={() => confirmClose && closePackage(confirmClose)} disabled={!!busyPkg}>
-              {confirmClose && busyPkg === confirmClose.id ? 'Closing…' : 'Close package'}
+              {confirmClose && busyPkg === confirmClose.id ? 'Closing…' : 'Close Package'}
             </Button>
           </>
         }
@@ -782,7 +782,7 @@ function BidsPageInner() {
         onClose={() => setConfirmDelete(null)}
         size="sm"
         busy={deleting}
-        title={confirmDelete?.kind === 'package' ? 'Delete bid package?' : 'Delete bid?'}
+        title={confirmDelete?.kind === 'package' ? 'Delete Bid Package?' : 'Delete Bid?'}
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirmDelete(null)} disabled={deleting}>Cancel</Button>

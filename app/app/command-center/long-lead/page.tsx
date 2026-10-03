@@ -73,11 +73,11 @@ export default function LongLeadPage() {
       {/* Procurement pulse — severity mix plus committed dollars, all Number()-coerced via num() */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/command-center/long-lead',  label: 'Long-Lead Items', value: String(summary.total), sub: 'across all sites' },
-          {href: '/app/command-center/long-lead',  label: 'On Track', value: String(summary.green), accent: C.green, sub: 'order date protected' },
-          {href: '/app/command-center/risks',  label: 'At Risk', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'order window closing' },
-          {href: '/app/command-center/long-lead',  label: 'Critical', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'order now' },
-          {href: '/app/command-center/budget',  label: 'Committed Value', value: fmtMoney(Number(summary.value) || 0), accent: C.gold, sub: 'qty times unit cost' },
+          {href: '/app/command-center/long-lead',  label: 'Long-Lead Items', value: String(summary.total), sub: 'Across all sites' },
+          {href: '/app/command-center/long-lead',  label: 'On Track', value: String(summary.green), accent: C.green, sub: 'Order date protected' },
+          {href: '/app/command-center/risks',  label: 'At Risk', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'Order window closing' },
+          {href: '/app/command-center/long-lead',  label: 'Critical', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'Order now' },
+          {href: '/app/command-center/budget',  label: 'Committed Value', value: fmtMoney(Number(summary.value) || 0), accent: C.gold, sub: 'Qty times unit cost' },
         ]} />
       )}
 
@@ -101,7 +101,7 @@ export default function LongLeadPage() {
           <SectionCard>
             <PremiumEmpty icon={<Package size={32} weight="duotone" color={C.gold} />} title="No long-lead items yet"
               description="Track switchgear, rooftop units, elevators, simulator bays — anything with a long lead time. The tracker computes each item's drop-dead order date and flags what to order now."
-              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add your first item</GoldButton>} />
+              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>Add Your First Item</GoldButton>} />
           </SectionCard>
         ) : (
           <SectionCard flat>
@@ -115,7 +115,7 @@ export default function LongLeadPage() {
             <LiftCard key={it.id} sev={h.severity}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.item_description || 'Untitled item'}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.item_description || 'Untitled Item'}</div>
                   <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
                     {it.project_id ? (
                       <Link href={`/app/projects/${it.project_id}`} style={{ color: C.blue, textDecoration: 'none' }}>{it.project_name || 'Project'}</Link>
@@ -128,7 +128,7 @@ export default function LongLeadPage() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 13 }}>
                 <Metric label="Order By" value={fmtDate(h.orderByDate)} color={h.daysToOrderBy != null && h.daysToOrderBy <= 0 ? C.red : h.daysToOrderBy != null && h.daysToOrderBy <= 14 ? C.yellow : C.text} />
-                <Metric label="Need On Site" value={fmtDate(it.needed_by_date)} />
+                <Metric label="Need on Site" value={fmtDate(it.needed_by_date)} />
                 <Metric label="Lead Time" value={it.lead_time_days != null ? `${it.lead_time_days}d` : '—'} />
                 <Metric label="ETA" value={fmtDate(h.eta)} />
                 <Metric label="Qty" value={it.quantity != null ? `${num(it.quantity)}${it.unit ? ' ' + it.unit : ''}` : '—'} />
@@ -143,14 +143,14 @@ export default function LongLeadPage() {
                 return (
                   <div style={{ marginTop: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: C.dim }}>{lc.label} · stage {lc.index + 1}/6</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: C.dim }}>{lc.label} · Stage {lc.index + 1}/6</span>
                       {!isLast && (
                         <button onClick={() => advance(it)} disabled={busy[it.id]} style={{ fontSize: 11, fontWeight: 700, color: busy[it.id] ? C.dim : C.blue, background: 'none', border: 'none', cursor: busy[it.id] ? 'default' : 'pointer' }}>Advance <ArrowRight size={12} weight="regular" color={busy[it.id] ? C.dim : C.blue} style={{ verticalAlign: 'middle' }} /></button>
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: 4 }}>
                       {LONGLEAD_LIFECYCLE.map((s, i) => (
-                        <div key={i} title={s} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= lc.index ? fill : '#1c1c1e' }} />
+                        <div key={i} title={s} style={{ flex: 1, height: 5, borderRadius: 3, background: i <= lc.index ? fill : 'var(--bg-surface-2)' }} />
                       ))}
                     </div>
                   </div>
@@ -178,22 +178,22 @@ function AddItemForm({ projects, onDone }: { projects: any[]; onDone: () => void
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
-  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: '#1c1c1e', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.item_description) { setErr('Site and item description are required.'); return; }
     setBusy(true); setErr('');
     try { await createLongLead(f); onDone(); }
-    catch (e: any) { setErr(e?.message || 'Failed to save'); }
+    catch (e: any) { setErr(e?.message || "Couldn't save the item. Please try again."); }
     finally { setBusy(false); }
   }
 
   return (
-    <SectionCard title="Add long-lead item" subtitle="The tracker computes the drop-dead order date from need-by minus lead time" icon={<Package size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+    <SectionCard title="Add Long-Lead Item" subtitle="The tracker computes the drop-dead order date from need-by minus lead time." icon={<Package size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={lbl}>Item description *</label>
+          <label style={lbl}>Item Description *</label>
           <input style={inp} placeholder="e.g. 2000A switchgear, Trackman sim bays" value={f.item_description || ''} onChange={(e) => set('item_description', e.target.value)} />
         </div>
         <div>
@@ -204,22 +204,22 @@ function AddItemForm({ projects, onDone }: { projects: any[]; onDone: () => void
           </select>
         </div>
         <div><label style={lbl}>Vendor / PO #</label><input style={inp} value={f.po_number || ''} onChange={(e) => set('po_number', e.target.value)} /></div>
-        <div><label style={lbl}>Needed on site</label><SaguaroDatePicker style={inp} value={f.needed_by_date || ''} onChange={(v) => set('needed_by_date', v)} /></div>
-        <div><label style={lbl}>Lead time (days)</label><input type="number" style={inp} value={f.lead_time_days || ''} onChange={(e) => set('lead_time_days', e.target.value)} /></div>
-        <div><label style={lbl}>Expected delivery</label><SaguaroDatePicker style={inp} value={f.expected_delivery_date || ''} onChange={(v) => set('expected_delivery_date', v)} /></div>
+        <div><label style={lbl}>Needed on Site</label><SaguaroDatePicker style={inp} value={f.needed_by_date || ''} onChange={(v) => set('needed_by_date', v)} /></div>
+        <div><label style={lbl}>Lead Time (Days)</label><input type="number" style={inp} value={f.lead_time_days || ''} onChange={(e) => set('lead_time_days', e.target.value)} /></div>
+        <div><label style={lbl}>Expected Delivery</label><SaguaroDatePicker style={inp} value={f.expected_delivery_date || ''} onChange={(v) => set('expected_delivery_date', v)} /></div>
         <div><label style={lbl}>Qty</label><input type="number" style={inp} value={f.quantity || ''} onChange={(e) => set('quantity', e.target.value)} /></div>
         <div><label style={lbl}>Unit</label><input style={inp} placeholder="ea / lot" value={f.unit || ''} onChange={(e) => set('unit', e.target.value)} /></div>
-        <div><label style={lbl}>Unit cost</label><input type="number" style={inp} value={f.unit_cost || ''} onChange={(e) => set('unit_cost', e.target.value)} /></div>
+        <div><label style={lbl}>Unit Cost</label><input type="number" style={inp} value={f.unit_cost || ''} onChange={(e) => set('unit_cost', e.target.value)} /></div>
         <div>
           <label style={lbl}>Status</label>
           <select style={inp} value={f.status || 'pending'} onChange={(e) => set('status', e.target.value)}>
-            {['pending', 'quoted', 'ordered', 'in production', 'shipped', 'delivered'].map((s) => <option key={s} value={s}>{s}</option>)}
+            {['pending', 'quoted', 'ordered', 'in production', 'shipped', 'delivered'].map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
           </select>
         </div>
       </div>
       {err && <div style={{ color: C.red, fontSize: 13, marginTop: 10 }}>{err}</div>}
       <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        <GoldButton size="md" onClick={submit} disabled={busy}>{busy ? 'Saving…' : 'Save item'}</GoldButton>
+        <GoldButton size="md" onClick={submit} disabled={busy}>{busy ? 'Saving…' : 'Save Item'}</GoldButton>
         <GhostButton size="md" onClick={onDone}>Cancel</GhostButton>
       </div>
     </SectionCard>

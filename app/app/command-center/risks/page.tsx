@@ -70,11 +70,11 @@ export default function RisksPage() {
       {/* Register pulse — where the exposure sits and what needs an owner or a date */}
       <StatStrip items={[
         {href: '/app/command-center/risks',  label: 'Total Risks', value: String(summary.total), sub: `${summary.open} open` },
-        {href: '/app/command-center/risks',  label: 'Critical / High', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'attack these first' },
-        {href: '/app/command-center/risks',  label: 'Medium', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'review weekly' },
-        {href: '/app/command-center/risks',  label: 'Low', value: String(summary.green), accent: C.green, sub: 'monitor' },
-        {href: '/app/command-center/risks',  label: 'Past Due', value: String(summary.overdue), accent: summary.overdue > 0 ? C.red : undefined, sub: 'mitigation date blown' },
-        {href: '/app/command-center/risks',  label: 'No Owner', value: String(summary.unowned), accent: summary.unowned > 0 ? C.yellow : undefined, sub: 'assign accountability' },
+        {href: '/app/command-center/risks',  label: 'Critical / High', value: String(summary.red), accent: summary.red > 0 ? C.red : undefined, sub: 'Attack these first' },
+        {href: '/app/command-center/risks',  label: 'Medium', value: String(summary.yellow), accent: summary.yellow > 0 ? C.yellow : undefined, sub: 'Review weekly' },
+        {href: '/app/command-center/risks',  label: 'Low', value: String(summary.green), accent: C.green, sub: 'Monitor' },
+        {href: '/app/command-center/risks',  label: 'Past Due', value: String(summary.overdue), accent: summary.overdue > 0 ? C.red : undefined, sub: 'Mitigation date blown' },
+        {href: '/app/command-center/risks',  label: 'No Owner', value: String(summary.unowned), accent: summary.unowned > 0 ? C.yellow : undefined, sub: 'Assign accountability' },
       ]} />
 
       <AttentionBanner red={summary.red} yellow={summary.yellow} noun="risk" />
@@ -96,7 +96,7 @@ export default function RisksPage() {
         rows.length === 0 ? (
           <PremiumEmpty icon={<ShieldWarning size={34} weight="duotone" color={C.gold} />} title="No risks logged yet"
             description="Capture what could derail each site — permitting delays, weather, long-lead gaps, design churn. The register scores every risk by likelihood × impact, ranks the portfolio worst-first, and rolls the counts up to the Command Center and KPI dashboard automatically."
-            action={<button onClick={() => setAdding(true)} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" /> Log your first risk</button>} />
+            action={<button onClick={() => setAdding(true)} className="pmBtn" style={goldButtonStyle}><Plus size={15} weight="bold" /> Log Your First Risk</button>} />
         ) : (
           <EmptyState title="Nothing matches this filter" />
         )
@@ -108,7 +108,7 @@ export default function RisksPage() {
               <LiftCard key={it.id} sev={h.severity}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.risk_title || 'Untitled risk'}</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.risk_title || 'Untitled Risk'}</div>
                     <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
                       {it.project_id ? (
                         <Link href={`/app/projects/${it.project_id}`} style={{ color: C.blue, textDecoration: 'none' }}>{it.project_name || 'Project'}</Link>
@@ -147,23 +147,23 @@ function AddRiskForm({ projects, onDone }: { projects: any[]; onDone: () => void
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
-  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: '#1c1c1e', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.risk_title) { setErr('Site and risk title are required.'); return; }
     setBusy(true); setErr('');
     try { await createRisk(f); onDone(); }
-    catch (e: any) { setErr(e?.message || 'Failed to save'); }
+    catch (e: any) { setErr(e?.message || "Couldn't save the risk. Please try again."); }
     finally { setBusy(false); }
   }
 
   return (
     <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: 18, marginBottom: 18 }}>
-      <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>Log a risk</div>
+      <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 12 }}>Log a Risk</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={lbl}>Risk title *</label>
+          <label style={lbl}>Risk Title *</label>
           <input style={inp} placeholder="e.g. Utility transformer lead time slipping" value={f.risk_title || ''} onChange={(e) => set('risk_title', e.target.value)} />
         </div>
         <div>
@@ -195,22 +195,22 @@ function AddRiskForm({ projects, onDone }: { projects: any[]; onDone: () => void
           </select>
         </div>
         <div><label style={lbl}>Owner</label><input style={inp} placeholder="Accountable person" value={f.owner || ''} onChange={(e) => set('owner', e.target.value)} /></div>
-        <div><label style={lbl}>Due date</label><SaguaroDatePicker style={inp} value={f.due_date || ''} onChange={(v) => set('due_date', v)} /></div>
+        <div><label style={lbl}>Due Date</label><SaguaroDatePicker style={inp} value={f.due_date || ''} onChange={(v) => set('due_date', v)} /></div>
         <div>
           <label style={lbl}>Status</label>
           <select style={inp} value={f.status || 'open'} onChange={(e) => set('status', e.target.value)}>
-            {['open', 'mitigating', 'monitoring', 'closed'].map((s) => <option key={s} value={s}>{s}</option>)}
+            {['open', 'mitigating', 'monitoring', 'closed'].map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
           </select>
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={lbl}>Mitigation plan</label>
+          <label style={lbl}>Mitigation Plan</label>
           <textarea style={{ ...inp, minHeight: 64, resize: 'vertical', fontFamily: font }} placeholder="How the team will reduce or absorb this risk…" value={f.mitigation_plan || ''} onChange={(e) => set('mitigation_plan', e.target.value)} />
         </div>
       </div>
       {err && <div style={{ color: C.red, fontSize: 13, marginTop: 10 }}>{err}</div>}
       <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        <button onClick={submit} disabled={busy} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: busy ? C.dim : C.gold, color: '#fff', fontWeight: 800, cursor: busy ? 'default' : 'pointer' }}>{busy ? 'Saving…' : 'Save risk'}</button>
-        <button onClick={onDone} style={{ padding: '9px 18px', borderRadius: 10, border: `1px solid ${C.border}`, background: '#1c1c1e', color: C.dim, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+        <button onClick={submit} disabled={busy} style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: busy ? C.dim : C.gold, color: '#0A0A00', fontWeight: 800, cursor: busy ? 'default' : 'pointer' }}>{busy ? 'Saving…' : 'Save Risk'}</button>
+        <button onClick={onDone} style={{ padding: '9px 18px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'var(--bg-surface-2)', color: C.dim, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
       </div>
     </div>
   );

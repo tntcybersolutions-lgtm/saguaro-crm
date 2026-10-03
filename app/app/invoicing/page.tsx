@@ -305,7 +305,7 @@ export default function InvoicingPage() {
       await fetchInvoices();
     } catch (e: any) {
       console.error(e);
-      setError(humanError(e, 'The invoice was NOT emailed. Nothing was sent to the vendor.'));
+      setError(humanError(e, 'The invoice was not emailed. Nothing was sent to the vendor.'));
       // Re-read so the row still shows its true (un-sent) status.
       await fetchInvoices();
     }
@@ -392,7 +392,7 @@ export default function InvoicingPage() {
         return (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <StatusPill module="invoices" status={s} size="sm" />
-            {overdue && <Pill tone="red" caps>Overdue</Pill>}
+            {overdue && <Pill tone="red">Overdue</Pill>}
           </span>
         );
       },
@@ -410,7 +410,7 @@ export default function InvoicingPage() {
               disabled={pdfBusy === inv.id}
               style={{ ...rowActionStyle, color: inv.pdf_url ? colors.gold : colors.textMuted, opacity: pdfBusy === inv.id ? 0.5 : 1 }}
             >
-              <FilePdf size={13} weight={inv.pdf_url ? 'fill' : 'regular'} /> {pdfBusy === inv.id ? '...' : 'PDF'}
+              <FilePdf size={13} weight={inv.pdf_url ? 'fill' : 'regular'} /> {pdfBusy === inv.id ? '…' : 'PDF'}
             </button>
             <button onClick={() => handleSend(inv.id)} title="Send" style={rowActionStyle}><PaperPlaneTilt size={13} /> Send</button>
             <button onClick={() => handleDelete(inv.id)} title="Delete" style={{ ...rowActionStyle, color: colors.red, border: '1px solid rgba(239,68,68,0.35)' }}><Trash size={13} /></button>
@@ -427,7 +427,7 @@ export default function InvoicingPage() {
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: colors.textMuted, marginBottom: 6, display: 'block',
+    fontSize: 10.5, fontWeight: 700, color: colors.textMuted, marginBottom: 6, display: 'block',
   };
 
   const hintStyle: React.CSSProperties = {
@@ -444,7 +444,7 @@ export default function InvoicingPage() {
         accentColor={INV_ACCENT.hex}
         title="Invoicing"
         subtitle="Manage invoices, track payments, and send to vendors."
-        note="money owed to you"
+        note="Money owed to you"
         actions={
           <button data-tour="new-invoice" onClick={() => (showCreate ? closeComposer() : setShowCreate(true))} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> New Invoice
@@ -454,11 +454,11 @@ export default function InvoicingPage() {
 
       {!loading && invoices.length > 0 && (
         <StatStrip items={[
-          {href: '/app/invoicing',  label: 'Total Billed', value: fmtUsd(pageBilled), sub: `across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` },
-          {href: '/app/invoicing',  label: 'Collected', value: fmtUsd(pagePaid), accent: '#3dd68c', sub: 'marked paid' },
-          {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(pageOutstanding), accent: pageOutstanding > 0 ? '#F59E0B' : undefined, sub: 'sent, awaiting payment' },
-          {href: '/app/invoicing',  label: 'Overdue', value: String(pageOverdue), accent: pageOverdue > 0 ? colors.red : undefined, sub: pageOverdue > 0 ? 'past due, excludes drafts' : 'nothing past due' },
-          {href: '/app/invoicing',  label: 'Drafts', value: String(pageDrafts), sub: 'not yet sent' },
+          {href: '/app/invoicing',  label: 'Total Billed', value: fmtUsd(pageBilled), sub: `Across ${invoices.length} invoice${invoices.length === 1 ? '' : 's'}` },
+          {href: '/app/invoicing',  label: 'Collected', value: fmtUsd(pagePaid), accent: '#3dd68c', sub: 'Marked paid' },
+          {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(pageOutstanding), accent: pageOutstanding > 0 ? 'var(--brand-primary)' : undefined, sub: 'Sent, awaiting payment' },
+          {href: '/app/invoicing',  label: 'Overdue', value: String(pageOverdue), accent: pageOverdue > 0 ? colors.red : undefined, sub: pageOverdue > 0 ? 'Past due, excludes drafts' : 'Nothing past due' },
+          {href: '/app/invoicing',  label: 'Drafts', value: String(pageDrafts), sub: 'Not yet sent' },
         ]} />
       )}
 
@@ -480,7 +480,7 @@ export default function InvoicingPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 18, alignItems: 'start', marginBottom: 24 }}>
           <SectionCard
             title="New Invoice"
-            icon={<Plus size={17} weight="bold" color="#F59E0B" />}
+            icon={<Plus size={17} weight="bold" color="var(--brand-primary)" />}
             subtitle="The server computes the total — amount + tax, every time."
             action={<button type="button" onClick={closeComposer} style={{ ...ghostButtonStyle, padding: '7px 14px', fontSize: 12.5 }} className="pmBtn">Close</button>}
           >
@@ -491,14 +491,14 @@ export default function InvoicingPage() {
                   {href: '/app/invoicing',  label: 'Approved COs', value: (cCoTotal >= 0 ? '+' : '') + fmtUsd(cCoTotal), accent: cCoTotal > 0 ? '#3dd68c' : undefined },
                   {href: '/app/invoicing',  label: 'Revised', value: fmtUsd(cRevised) },
                   {href: '/app/invoicing',  label: 'Billed to Date', value: fmtUsd(cBilled) },
-                  {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(Math.max(0, cBilled - cPaid)), accent: '#F59E0B' },
+                  {href: '/app/invoicing',  label: 'Outstanding', value: fmtUsd(Math.max(0, cBilled - cPaid)), accent: 'var(--brand-primary)' },
                 ]} />
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>Project *</label>
                   <select value={form.project_id} onChange={(e) => setForm({ ...form, project_id: e.target.value })} required style={inputStyle}>
-                    <option value="">Select project...</option>
+                    <option value="">Select project…</option>
                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                   <div style={hintStyle}>{ctx ? 'Snapshot loaded — fields below pre-fill from it.' : 'Pick one to pre-fill the rest.'}</div>
@@ -528,7 +528,7 @@ export default function InvoicingPage() {
                 </div>
                 <div>
                   <label style={labelStyle}>Invoice Total</label>
-                  <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', fontWeight: 800, color: colors.gold, background: 'rgba(245,158,11,0.07)', borderColor: 'rgba(245,158,11,0.35)' }}>
+                  <div style={{ ...inputStyle, display: 'flex', alignItems: 'center', fontWeight: 800, color: colors.gold, background: 'var(--brand-primary-08)', borderColor: 'var(--brand-primary-35)' }}>
                     {'$' + liveTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <div style={hintStyle}>Amount + tax — computed live.</div>
@@ -572,29 +572,29 @@ export default function InvoicingPage() {
               </div>
               <div>
                 <label style={labelStyle}>Description</label>
-                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Invoice description..." />
+                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Invoice description…" />
               </div>
               <div>
                 <label style={labelStyle}>Notes</label>
-                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Internal notes..." />
+                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Internal notes…" />
               </div>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
                 <button type="button" onClick={closeComposer} style={ghostButtonStyle}>Cancel</button>
                 <button type="submit" disabled={creating} className="pmBtn" style={{ ...goldButtonStyle, cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.6 : 1 }}>
-                  {creating ? 'Creating...' : 'Create Invoice'}
+                  {creating ? 'Creating…' : 'Create Invoice'}
                 </button>
               </div>
             </form>
           </SectionCard>
-          <SectionCard flat title="Project Intelligence" icon={<CurrencyDollar size={17} weight="duotone" color="#F59E0B" />}>
+          <SectionCard flat title="Project Intelligence" icon={<CurrencyDollar size={17} weight="duotone" color="var(--brand-primary)" />}>
             {ctx ? (
               <div>
-                <div style={{ fontSize: 10.5, fontWeight: 900, color: colors.textDim, textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>{ctx.project?.name || 'Project'}</div>
+                <div style={{ fontSize: 10.5, fontWeight: 900, color: colors.textDim, marginBottom: 10 }}>{ctx.project?.name || 'Project'}</div>
                 <InsightRow label="Owner" value={ctx.defaults?.ownerName || '—'} />
-                <InsightRow label="Invoices on project" value={String(Number(ctx.counts?.invoices) || 0)} />
-                <InsightRow label="Pay applications" value={String(Number(money?.payAppCount) || 0)} />
-                <InsightRow label="Known vendors" value={String(ctxVendors.length)} />
-                <InsightRow label="Budget cost codes" value={String(ctxCodes.length)} />
+                <InsightRow label="Invoices on Project" value={String(Number(ctx.counts?.invoices) || 0)} />
+                <InsightRow label="Pay Applications" value={String(Number(money?.payAppCount) || 0)} />
+                <InsightRow label="Known Vendors" value={String(ctxVendors.length)} />
+                <InsightRow label="Budget Cost Codes" value={String(ctxCodes.length)} />
               </div>
             ) : (
               <div style={{ fontSize: 12, color: colors.textMuted, lineHeight: 1.55 }}>
@@ -602,11 +602,11 @@ export default function InvoicingPage() {
               </div>
             )}
             <div style={{ height: 18 }} />
-            <FlowSteps title="After you create" steps={[
-              { title: 'Draft is saved', desc: 'Review and edit anything before it goes out.' },
+            <FlowSteps title="After You Create" steps={[
+              { title: 'Draft Is Saved', desc: 'Review and edit anything before it goes out.' },
               { title: 'Generate the PDF', desc: 'One click builds the document — the row keeps the real .pdf link.' },
-              { title: 'Send to owner', desc: 'One click emails it straight from the table.' },
-              { title: 'Payment is tracked', desc: 'Overdue flags itself from the due date — drafts never count.' },
+              { title: 'Send to Owner', desc: 'One click emails it straight from the table.' },
+              { title: 'Payment Is Tracked', desc: 'Overdue flags itself from the due date — drafts never count.' },
             ]} />
           </SectionCard>
         </div>
@@ -621,7 +621,7 @@ export default function InvoicingPage() {
           columns={columns}
           loading={loading}
           tableId="invoicing"
-          searchPlaceholder="Search invoices..."
+          searchPlaceholder="Search invoices…"
           emptyMessage={loadFailed
             ? 'Invoices could not be loaded — this is not an empty ledger. Reload to try again.'
             : 'No invoices yet. Create your first invoice to get started.'}

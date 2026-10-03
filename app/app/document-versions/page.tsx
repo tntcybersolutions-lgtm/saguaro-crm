@@ -16,9 +16,9 @@ import { PremiumSurface, ModuleHero, SectionCard, StatStrip, PremiumEmpty, goldB
 
 // ─── Color Palette ────────────────────────────────────────────────
 const C = {
-  GOLD: '#F59E0B', BG: '#0a0a0a', RAISED: '#141416', BORDER: 'rgba(255,255,255,0.12)',
+  GOLD: 'var(--brand-primary)', BG: 'var(--bg-base)', RAISED: 'var(--bg-surface)', BORDER: 'rgba(255,255,255,0.12)',
   TEXT: '#FFFFFF', DIM: '#8094B0', GREEN: '#22C55E', RED: '#EF4444',
-  AMBER: '#F59E0B', BLUE: '#F59E0B', PURPLE: '#8B5CF6',
+  AMBER: 'var(--warning)', BLUE: 'var(--brand-primary)', PURPLE: '#8B5CF6',
 };
 
 // The private `documents` bucket enforces this MIME allow-list on upload.
@@ -426,7 +426,7 @@ export default function DocumentVersionsPage() {
 
   // ─── Styles ─────────────────────────────────────────────────────
   const sBtn = (bg: string, small?: boolean): React.CSSProperties => ({
-    background: bg, color: bg === C.GOLD ? C.BG : '#fff', border: 'none', borderRadius: 6,
+    background: bg, color: bg === C.GOLD || bg === C.AMBER ? '#0A0A00' : '#fff', border: 'none', borderRadius: 6,
     padding: small ? '5px 10px' : '8px 16px', cursor: 'pointer',
     fontSize: small ? 12 : 13, fontWeight: 600, whiteSpace: 'nowrap',
     display: 'inline-flex', alignItems: 'center', gap: 6, opacity: busy ? 0.85 : 1,
@@ -438,7 +438,7 @@ export default function DocumentVersionsPage() {
   const sCard: React.CSSProperties = { background: C.RAISED, border: `1px solid ${C.BORDER}`, borderRadius: 10, padding: 16, marginBottom: 8 };
   const sOverlay: React.CSSProperties = { position: 'fixed', inset: 0, background: 'rgba(2,6,15,0.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 16 };
   const sModal: React.CSSProperties = { background: C.RAISED, border: `1px solid ${C.BORDER}`, borderRadius: 12, padding: 24, width: 660, maxWidth: '100%', maxHeight: '85vh', overflowY: 'auto', position: 'relative', boxShadow: 'var(--shadow-lg)' };
-  const sBadge = (color: string): React.CSSProperties => ({ display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: `${color}22`, color, border: `1px solid ${color}44` });
+  const sBadge = (color: string): React.CSSProperties => ({ display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 27%, transparent)` });
   const sLabel: React.CSSProperties = { fontSize: 12, color: C.DIM, display: 'block', marginBottom: 4 };
 
   const responsiveCSS = `
@@ -455,7 +455,7 @@ export default function DocumentVersionsPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: 40, height: 40, border: `3px solid ${C.BORDER}`, borderTopColor: C.GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-            <div style={{ color: C.DIM, fontSize: 14 }}>Loading documents...</div>
+            <div style={{ color: C.DIM, fontSize: 14 }}>Loading documents…</div>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
         </div>
@@ -512,7 +512,7 @@ export default function DocumentVersionsPage() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
         <div style={{ position: 'relative', maxWidth: 380, flex: 1 }}>
           <MagnifyingGlass size={16} color={C.DIM} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-          <input style={{ ...sInput, paddingLeft: 32 }} placeholder="Search by name, tags, description, or project..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input style={{ ...sInput, paddingLeft: 32 }} placeholder="Search by name, tags, description, or project…" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -522,7 +522,7 @@ export default function DocumentVersionsPage() {
           <button key={cat} onClick={() => setActiveCategory(cat)} style={{
             padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer',
             border: `1px solid ${activeCategory === cat ? C.GOLD : C.BORDER}`,
-            background: activeCategory === cat ? `${C.GOLD}22` : 'transparent',
+            background: activeCategory === cat ? 'color-mix(in srgb, var(--brand-primary) 13%, transparent)' : 'transparent',
             color: activeCategory === cat ? C.GOLD : C.DIM,
           }}>
             {cat} ({catCounts[cat] || 0})
@@ -537,13 +537,13 @@ export default function DocumentVersionsPage() {
             <PremiumEmpty
               compact
               icon={<MagnifyingGlass size={30} weight="duotone" color={C.GOLD} />}
-              title="No documents match"
+              title="No Documents Match"
               description="Try adjusting your search or category filter."
             />
           ) : (
             <PremiumEmpty
               icon={<FileText size={30} weight="duotone" color={C.GOLD} />}
-              title="Nothing under version control yet"
+              title="Nothing Under Version Control Yet"
               description="Contracts, drawings, specs, and submittals belong here. Every upload becomes v1; each revision after that is checksummed and comparable, approvals gate what's current, and check-out locks stop two people revising the same file."
               action={
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -556,7 +556,7 @@ export default function DocumentVersionsPage() {
         </SectionCard>
       ) : (
         <div className="dvc-tablewrap">
-          <div className="dvc-head" style={{ padding: '8px 16px', fontSize: 11, fontWeight: 700, color: C.DIM, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <div className="dvc-head" style={{ padding: '8px 16px', fontSize: 11, fontWeight: 700, color: C.DIM }}>
             <span>Document</span><span>Category</span><span>Version</span><span>Status</span><span>Modified</span><span>Actions</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -567,7 +567,7 @@ export default function DocumentVersionsPage() {
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
                     <span style={{ fontSize: 10, color: C.DIM }}>{doc.project}</span>
                     {doc.tags.map((t) => (
-                      <span key={t} style={{ fontSize: 10, color: C.BLUE, background: `${C.BLUE}18`, padding: '1px 6px', borderRadius: 4 }}>{t}</span>
+                      <span key={t} style={{ fontSize: 10, color: C.BLUE, background: 'color-mix(in srgb, var(--brand-primary) 9%, transparent)', padding: '1px 6px', borderRadius: 4 }}>{t}</span>
                     ))}
                     {doc.checkedOutBy && (
                       <span style={{ fontSize: 10, color: C.RED, background: `${C.RED}18`, padding: '1px 6px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
@@ -700,7 +700,7 @@ export default function DocumentVersionsPage() {
               const rows: [string, string, string][] = [
                 ['Version', vA.versionLabel, vB.versionLabel],
                 ['Revision', vA.revisionCode, vB.revisionCode],
-                ['Uploaded by', vA.uploadedBy, vB.uploadedBy],
+                ['Uploaded By', vA.uploadedBy, vB.uploadedBy],
                 ['Uploaded', fmtDateTime(vA.uploadedAt), fmtDateTime(vB.uploadedAt)],
                 ['File', vA.fileName, vB.fileName],
                 ['Size', fmtBytes(vA.fileSize), fmtBytes(vB.fileSize)],
@@ -719,7 +719,7 @@ export default function DocumentVersionsPage() {
                     </span>
                   </div>
                   <div style={{ border: `1px solid ${C.BORDER}`, borderRadius: 8, overflow: 'hidden' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr', background: C.BG, padding: '8px 12px', fontSize: 11, fontWeight: 700, color: C.DIM, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1.2fr', background: C.BG, padding: '8px 12px', fontSize: 11, fontWeight: 700, color: C.DIM }}>
                       <span>Field</span><span style={{ color: C.RED }}>{vA.versionLabel}</span><span style={{ color: C.GREEN }}>{vB.versionLabel}</span>
                     </div>
                     {rows.map(([label, a, b], i) => {
@@ -791,7 +791,7 @@ export default function DocumentVersionsPage() {
                   </div>
                   <div>
                     <label style={sLabel}>Description</label>
-                    <textarea style={{ ...sInput, minHeight: 56, resize: 'vertical' }} placeholder="Brief description..." value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)} />
+                    <textarea style={{ ...sInput, minHeight: 56, resize: 'vertical' }} placeholder="Brief description…" value={uploadDesc} onChange={(e) => setUploadDesc(e.target.value)} />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <div>
@@ -805,7 +805,7 @@ export default function DocumentVersionsPage() {
                     </div>
                   </div>
                   <div>
-                    <label style={sLabel}>Tags (comma separated)</label>
+                    <label style={sLabel}>Tags (Comma-Separated)</label>
                     <input style={sInput} placeholder="structural, concrete, phase-1" value={uploadTags} onChange={(e) => setUploadTags(e.target.value)} />
                   </div>
                 </>
@@ -813,7 +813,7 @@ export default function DocumentVersionsPage() {
 
               <div>
                 <label style={sLabel}>Revision Notes</label>
-                <textarea style={{ ...sInput, minHeight: 56, resize: 'vertical' }} placeholder="Describe what changed..." value={uploadNotes} onChange={(e) => setUploadNotes(e.target.value)} />
+                <textarea style={{ ...sInput, minHeight: 56, resize: 'vertical' }} placeholder="Describe what changed…" value={uploadNotes} onChange={(e) => setUploadNotes(e.target.value)} />
               </div>
 
               {selectedDoc && (
@@ -828,7 +828,7 @@ export default function DocumentVersionsPage() {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
                 <button style={sBtn('#334155')} onClick={closeModal} disabled={busy}>Cancel</button>
                 <button style={sBtn(C.GOLD)} onClick={handleUpload} disabled={busy}>
-                  {busy ? 'Uploading...' : selectedDoc ? 'Upload Version' : 'Create Document'}
+                  {busy ? 'Uploading…' : selectedDoc ? 'Upload Version' : 'Create Document'}
                 </button>
               </div>
             </div>
@@ -853,17 +853,17 @@ export default function DocumentVersionsPage() {
                 ['Checked Out', selectedDoc.checkedOutBy ? `${selectedDoc.checkedOutBy} (${fmtDateTime(selectedDoc.checkedOutAt)})` : 'No'],
               ] as [string, string][]).map(([label, val]) => (
                 <div key={label}>
-                  <div style={{ fontSize: 11, color: C.DIM, marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+                  <div style={{ fontSize: 11, color: C.DIM, marginBottom: 2 }}>{label}</div>
                   <div style={{ fontSize: 14, color: C.TEXT, fontWeight: 500 }}>{val}</div>
                 </div>
               ))}
             </div>
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 11, color: C.DIM, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Description</div>
+              <div style={{ fontSize: 11, color: C.DIM, marginBottom: 4 }}>Description</div>
               <div style={{ fontSize: 13, color: C.TEXT, lineHeight: 1.5 }}>{selectedDoc.description || '—'}</div>
             </div>
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 11, color: C.DIM, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Tags</div>
+              <div style={{ fontSize: 11, color: C.DIM, marginBottom: 6 }}>Tags</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {selectedDoc.tags.length ? selectedDoc.tags.map((t) => <span key={t} style={{ ...sBadge(C.BLUE), fontSize: 12 }}>{t}</span>) : <span style={{ color: C.DIM, fontSize: 12 }}>No tags</span>}
               </div>
@@ -884,7 +884,7 @@ export default function DocumentVersionsPage() {
                 <div key={a.userId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: C.BG, borderRadius: 6, marginBottom: 4, border: `1px solid ${C.BORDER}` }}>
                   <div>
                     <span style={{ fontSize: 13, color: C.TEXT, fontWeight: 500 }}>{a.name}</span>
-                    <span style={{ ...sBadge(a.role === 'admin' ? C.GOLD : a.role === 'editor' ? C.GREEN : C.DIM), marginLeft: 8, fontSize: 10 }}>{a.role}</span>
+                    <span style={{ ...sBadge(a.role === 'admin' ? C.GOLD : a.role === 'editor' ? C.GREEN : C.DIM), marginLeft: 8, fontSize: 10 }}>{a.role.charAt(0).toUpperCase() + a.role.slice(1)}</span>
                   </div>
                   <button style={{ ...sBtn(C.RED, true) }} onClick={() => removeAccess(a.userId)}><Trash size={12} weight="bold" /> Remove</button>
                 </div>
@@ -910,11 +910,11 @@ export default function DocumentVersionsPage() {
             <ModalHeader title="Bulk Upload" subtitle="Each file becomes a new document at v1" onClose={closeModal} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
-                <label style={sLabel}>Category for all</label>
+                <label style={sLabel}>Category for All</label>
                 <StandardSelect value={bulkCategory} onChange={setBulkCategory} ariaLabel="Category for all" width="100%" options={UPLOAD_CATS} />
               </div>
               <div>
-                <label style={sLabel}>Project for all</label>
+                <label style={sLabel}>Project for All</label>
                 <StandardSelect value={bulkProjectId} onChange={setBulkProjectId} ariaLabel="Project for all" placeholder="Unassigned" width="100%"
                   options={projects.map((p) => ({ value: p.id, label: p.name }))} />
               </div>
@@ -944,7 +944,7 @@ export default function DocumentVersionsPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button style={sBtn('#334155')} onClick={closeModal} disabled={busy}>Cancel</button>
               <button style={sBtn(C.PURPLE)} onClick={handleBulkUpload} disabled={bulkFiles.length === 0 || busy}>
-                {busy ? 'Uploading...' : `Upload ${bulkFiles.length} File${bulkFiles.length !== 1 ? 's' : ''}`}
+                {busy ? 'Uploading…' : `Upload ${bulkFiles.length} File${bulkFiles.length !== 1 ? 's' : ''}`}
               </button>
             </div>
           </div>
@@ -969,9 +969,9 @@ export default function DocumentVersionsPage() {
                 <div style={{ fontSize: 11.5, color: C.DIM, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{overlay.doc.title}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: C.RED, textTransform: 'uppercase', letterSpacing: 0.5 }}>Rev A · red</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.RED }}>Rev A · Red</span>
                 <StandardSelect value={overlay.aId} onChange={(v) => setOverlay({ ...overlay, aId: v })} ariaLabel="Revision A (red)" width={190} options={opts(overlay.bId)} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: 0.5 }}>Rev B · blue</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#3B82F6' }}>Rev B · Blue</span>
                 <StandardSelect value={overlay.bId} onChange={(v) => setOverlay({ ...overlay, bId: v })} ariaLabel="Revision B (blue)" width={190} options={opts(overlay.aId)} />
                 <button
                   style={sBtn('#334155', true)}

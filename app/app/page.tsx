@@ -28,10 +28,12 @@ const PieChart = dynamic(() => import('recharts').then(m => m.PieChart), { ssr: 
 const Pie = dynamic(() => import('recharts').then(m => m.Pie), { ssr: false });
 const Cell = dynamic(() => import('recharts').then(m => m.Cell), { ssr: false });
 
-const GOLD   = '#F59E0B';
-const DARK   = '#1c1c1e';
-const RAISED = '#141416';
-const RAISED_ALT = '#1c1c1e';
+const GOLD   = 'var(--brand-primary)';
+// Recharts writes `fill` as an SVG presentation attribute, which cannot take var().
+const GOLD_HEX = '#F59E0B';
+const DARK   = 'var(--bg-surface-2)';
+const RAISED = 'var(--bg-surface)';
+const RAISED_ALT = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const BORDER_SUBTLE = 'rgba(0,0,0,0.06)';
 const DIM    = '#CBD5E1';
@@ -41,8 +43,8 @@ const TEXT   = '#FFFFFF';
 // terracotta, amber are authentic Sonoran hues that sit on the dark bg).
 const GREEN  = '#45B37D'; // money / positive — muted emerald-sage
 const RED    = '#E0644E'; // alert / overdue  — terracotta
-const BLUE   = '#F59E0B'; // info / open bids — unified to brand gold (Chad's call)
-const ORANGE = '#F0A63C'; // warning / pending — warm amber (folds into gold)
+const BLUE   = 'var(--brand-primary)'; // info / open bids — unified to brand color (Chad's call)
+const ORANGE = 'var(--warning)'; // warning / pending
 const SHADOW_SM = '0 1px 2px rgba(0,0,0,0.06)';
 const SHADOW_MD = '0 4px 14px rgba(0,0,0,0.08)';
 const SHADOW_LG = '0 16px 44px rgba(0,0,0,0.10)';
@@ -83,7 +85,7 @@ function KPI({
       onMouseEnter={e => { if (onClick || href) { const t = e.currentTarget as HTMLDivElement; t.style.borderColor = 'rgba(0,0,0,0.14)'; t.style.boxShadow = SHADOW_LG; t.style.transform = 'translateY(-2px)'; } }}
       onMouseLeave={e => { if (onClick || href) { const t = e.currentTarget as HTMLDivElement; t.style.borderColor = BORDER; t.style.boxShadow = SHADOW_SM; t.style.transform = 'translateY(0)'; } }}
     >
-      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, color: DIM, marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 8 }}>{label}</div>
       <div style={{ fontSize: 28, fontWeight: 700, color: color ?? TEXT, lineHeight: 1, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: DIM, marginTop: 6 }}>{sub}</div>}
     </div>
@@ -132,15 +134,15 @@ function TodayActionCard({ item }: { item: TodayItem }) {
         <div style={{ fontWeight: 700, fontSize: 13, color: TEXT, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</div>
         <div style={{ fontSize: 12, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.subtitle}</div>
       </div>
-      <span style={{ fontSize: 10, fontWeight: 700, color: URGENCY_COLOR[item.urgency], textTransform: 'uppercase', letterSpacing: .5, flexShrink: 0, marginRight: 8 }}>
+      <span style={{ fontSize: 10, fontWeight: 700, color: URGENCY_COLOR[item.urgency], textTransform: 'capitalize', flexShrink: 0, marginRight: 8 }}>
         {item.urgency}
       </span>
       <Link
         href={item.actionUrl}
         style={{
           padding: '6px 14px', borderRadius: 6, fontSize: 12, fontWeight: 700,
-          background: `rgba(245, 158, 11,0.12)`, color: GOLD,
-          border: `1px solid rgba(245, 158, 11,0.3)`, textDecoration: 'none',
+          background: 'var(--brand-primary-12)', color: GOLD,
+          border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', textDecoration: 'none',
           whiteSpace: 'nowrap', flexShrink: 0,
         }}
       >
@@ -207,7 +209,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
                 { label: 'Our Target Margin (%)', field: 'targetMargin' as const, placeholder: 'e.g. 8.5' },
               ] as const).map(({ label, field, placeholder }) => (
                 <div key={field} style={{ marginBottom: 14 }}>
-                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 5 }}>{label}</label>
+                  <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>{label}</label>
                   <input
                     value={form[field]} onChange={f(field)} placeholder={placeholder} required
                     style={{ width: '100%', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7, padding: '9px 12px', color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
@@ -219,7 +221,7 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
               {error && <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: RED, fontSize: 12, fontWeight: 600, marginBottom: 12, padding: '10px 12px', borderRadius: 8, background: 'rgba(224,100,78,0.10)', border: '1px solid rgba(224,100,78,0.28)' }}><WarningCircle size={16} weight="duotone" /> {error}</div>}
               <button
                 type="submit" disabled={loading}
-                style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: loading ? '#1c1c1e' : 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', border: 'none', borderRadius: 'var(--radius-md)', color: loading ? DIM : '#241500', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4, boxShadow: loading ? 'none' : '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}
+                style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '11px', background: loading ? 'var(--bg-surface-2)' : 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', border: 'none', borderRadius: 'var(--radius-md)', color: loading ? DIM : '#0A0A00', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 4, boxShadow: loading ? 'none' : '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' }}
               >
                 {loading ? 'Analyzing…' : <>Score This Bid <ArrowRight size={15} weight="bold" /></>}
               </button>
@@ -228,21 +230,21 @@ function BidScoreModal({ onClose }: { onClose: () => void }) {
             <div>
               <div style={{ textAlign: 'center', marginBottom: 20 }}>
                 <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', background: DARK, border: `2px solid ${scoreColor}`, borderRadius: 14, padding: '18px 32px' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Bid Score</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 4 }}>Bid Score</div>
                   <div style={{ fontSize: 52, fontWeight: 900, color: scoreColor, lineHeight: 1 }}>{result.score}</div>
                   <div style={{ fontSize: 11, color: DIM, marginTop: 2 }}>out of 100</div>
                 </div>
               </div>
               <div style={{ background: DARK, borderRadius: 8, padding: '12px 16px', marginBottom: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 5 }}>Recommendation</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Recommendation</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: scoreColor }}>{result.recommendation}</div>
               </div>
               <div style={{ background: DARK, borderRadius: 8, padding: '12px 16px', marginBottom: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 5 }}>Reasoning</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>Reasoning</div>
                 <div style={{ fontSize: 13, color: TEXT, lineHeight: 1.6 }}>{result.reasoning}</div>
               </div>
-              <div style={{ background: `rgba(245, 158, 11,0.12)`, border: `1px solid rgba(245, 158, 11,0.2)`, borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: .5, marginBottom: 4 }}>Suggested Margin</div>
+              <div style={{ background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent)', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 4 }}>Suggested Margin</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: GOLD }}>{result.suggestedMargin}%</div>
               </div>
               <button
@@ -267,7 +269,7 @@ function LivePulse() {
         display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
         background: GREEN, animation: 'livePulse 2s ease-in-out infinite',
       }} />
-      LIVE
+      Live
     </span>
   );
 }
@@ -350,10 +352,10 @@ export default function DashboardPage() {
   // Time-based greeting is computed AFTER mount so the server-rendered HTML and
   // the first client render match (both 'Welcome back'); otherwise the UTC-vs-local
   // hour difference causes a React hydration mismatch (#418/#425) on /app.
-  const [greeting, setGreeting] = useState('Welcome back');
+  const [greeting, setGreeting] = useState('Welcome Back');
   useEffect(() => {
     const h = new Date().getHours();
-    setGreeting(h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
+    setGreeting(h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening');
   }, []);
 
   /* Greet the person by name — "Good evening, Rob".
@@ -554,16 +556,16 @@ export default function DashboardPage() {
              branch exists to prevent. Retitled so it reads as what it is:
              things worth doing that the journey does not cover. */
           <SectionCard
-            title="Worth doing anytime"
+            title="Worth Doing Anytime"
             subtitle="Neither of these needs a project first."
             icon={<Lightning size={16} weight="fill" color={GOLD} />}
             style={{ marginBottom: 28 }}
           >
             <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
               {[
-                { href: '/app/catalog',      Icon: Receipt,       title: 'Compare material pricing',
+                { href: '/app/catalog',      Icon: Receipt,       title: 'Compare Material Pricing',
                   desc: '223 items across 16 vendors, with the cheapest quote marked.' },
-                { href: '/app/people',       Icon: ShieldCheck,   title: 'Invite your team',
+                { href: '/app/people',       Icon: ShieldCheck,   title: 'Invite Your Team',
                   desc: 'Add your PM and super, and set what each role may touch.' },
               ].map(({ href, Icon, title, desc }) => (
                 <Link
@@ -579,7 +581,7 @@ export default function DashboardPage() {
                   <span style={{
                     flexShrink: 0, width: 34, height: 34, borderRadius: 9,
                     display: 'grid', placeItems: 'center',
-                    background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.28)',
+                    background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent)',
                   }}>
                     <Icon size={17} weight="duotone" color={GOLD} />
                   </span>
@@ -609,7 +611,7 @@ export default function DashboardPage() {
           style={{ marginBottom: 24 }}
           action={!todayLoading && !todayError && todayItems.filter((i: TodayItem) => i.urgency === 'high').length > 0 ? (
             <span style={{ fontSize: 11, fontWeight: 800, padding: '4px 11px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', color: RED, border: '1px solid rgba(255,59,48,0.3)' }}>
-              {todayItems.filter((i: TodayItem) => i.urgency === 'high').length} urgent
+              {todayItems.filter((i: TodayItem) => i.urgency === 'high').length} Urgent
             </span>
           ) : undefined}
         >
@@ -687,14 +689,14 @@ export default function DashboardPage() {
                   icon={<Buildings size={30} weight="duotone" color={GOLD} />}
                   title="No active projects yet"
                   description="Create your first project to start tracking your construction work."
-                  action={<Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create your first project</Link>}
+                  action={<Link href="/app/projects/new" style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Create Your First Project</Link>}
                   compact
                 />
               )}
               {!projectsLoading && !projectsError && projects.slice(0, 3).map(proj => (
                 <Link key={proj.id} href={`/app/projects/${proj.id}`} style={{ display: 'block', textDecoration: 'none', marginBottom: 10 }}>
                   <div className="lift" style={{ padding: '14px 16px', background: RAISED_ALT, borderRadius: 10, border: `1px solid ${BORDER_SUBTLE}`, cursor: 'pointer', boxShadow: 'var(--shadow-sm)' }}
-                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(245, 158, 11,0.5)')}
+                    onMouseEnter={e => (e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--brand-primary) 50%, transparent)')}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = BORDER_SUBTLE)}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -702,7 +704,7 @@ export default function DashboardPage() {
                         <div style={{ fontWeight: 700, color: TEXT, fontSize: 14, marginBottom: 2 }}>{proj.name}</div>
                         <div style={{ fontSize: 12, color: DIM }}>{proj.address}</div>
                       </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(52,199,89,0.14)', color: GREEN, border: '1px solid rgba(52,199,89,0.3)', height: 'fit-content', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'rgba(52,199,89,0.14)', color: GREEN, border: '1px solid rgba(52,199,89,0.3)', height: 'fit-content', textTransform: 'capitalize' }}>
                         {proj.status}
                       </span>
                     </div>
@@ -752,7 +754,7 @@ export default function DashboardPage() {
                   <thead>
                     <tr style={{ background: RAISED_ALT }}>
                       {['RFI #', 'Subject', 'Status', 'Due'].map(h => (
-                        <th key={h} style={{ padding: '9px 16px', textAlign: 'left', fontWeight: 700, color: DIM, fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                        <th key={h} style={{ padding: '9px 16px', textAlign: 'left', fontWeight: 700, color: DIM, fontSize: 10.5 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -780,7 +782,7 @@ export default function DashboardPage() {
                           <td style={{ padding: '10px 16px', color: DIM }}>{rfi.rfi_number}</td>
                           <td style={{ padding: '10px 16px', color: TEXT, maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rfi.subject}</td>
                           <td style={{ padding: '10px 16px' }}>
-                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,149,0,0.14)', color: ORANGE, border: `1px solid rgba(255,149,0,0.3)`, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,149,0,0.14)', color: ORANGE, border: `1px solid rgba(255,149,0,0.3)`, textTransform: 'capitalize' }}>
                               {rfi.status}
                             </span>
                           </td>
@@ -835,21 +837,21 @@ export default function DashboardPage() {
                   <StatCard
                     icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
                     label="Total Contract Value" value={formatCurrency(totalContract)}
-                    sub="active projects" interactive delay={0.06}
+                    sub="Active projects" interactive delay={0.06}
                   />
                 </Link>
               )}
               <StatCard
                 icon={<Gavel size={19} weight="duotone" color={BLUE} />}
                 label="Open Bids" value={String(openBids)} accent={BLUE}
-                sub="awaiting award"
+                sub="Awaiting award"
                 href="/app/bids" delay={0.10}
               />
               {hasPayApps && (
                 <StatCard
                   icon={<Receipt size={19} weight="duotone" color={ORANGE} />}
                   label="Pending Pay Apps" value={String(pendingPayApps)} accent={pendingPayApps > 0 ? ORANGE : undefined}
-                  sub="submitted / approved"
+                  sub="Submitted / approved"
                   href="/app/billing" delay={0.14}
                 />
               )}
@@ -857,7 +859,7 @@ export default function DashboardPage() {
                 icon={<ClipboardText size={19} weight="duotone" color={ORANGE} />}
                 label="Open RFIs"
                 value={rfisError ? '—' : rfisLoading ? '—' : String(openRFIs.length)}
-                sub={rfisError ? 'unavailable' : openRFIs.some(r => r.due_date && new Date(r.due_date) < new Date()) ? 'some overdue' : 'none overdue'}
+                sub={rfisError ? 'Unavailable' : openRFIs.some(r => r.due_date && new Date(r.due_date) < new Date()) ? 'Some overdue' : 'None overdue'}
                 accent={!rfisError && openRFIs.length ? ORANGE : undefined}
                 href="/app/projects" delay={0.18}
               />
@@ -895,13 +897,13 @@ export default function DashboardPage() {
                         labelStyle={{ color: GOLD, fontWeight: 700 }}
                         formatter={((v: number) => [`$${v.toLocaleString()}`, 'Budget']) as React.ComponentProps<typeof Tooltip>['formatter']}
                       />
-                      <Bar dataKey="budget" fill={GOLD} radius={[4, 4, 0, 0]} maxBarSize={48} />
+                      <Bar dataKey="budget" fill={GOLD_HEX} radius={[4, 4, 0, 0]} maxBarSize={48} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
                 <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, fontSize: 13 }}>
-                  Add your first project to see budgets here
+                  Add your first project to see budgets here.
                 </div>
               )}
             </SectionCard>
@@ -983,7 +985,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, fontSize: 13 }}>
-                  No bid outcomes recorded yet
+                  No bid outcomes recorded yet.
                 </div>
               )}
             </SectionCard>

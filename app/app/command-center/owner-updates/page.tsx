@@ -8,7 +8,7 @@ import { C, font, fmtDate, fmtMoneyShort, useFranchiseGate, GateLoading, SevBadg
 import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty, GoldButton, GhostButton } from '@/components/ui/premium';
 import { CheckCircle, Warning, EnvelopeSimple, Buildings } from '@phosphor-icons/react';
 
-const SEV_WORD: Record<Severity, string> = { green: 'On track', yellow: 'Needs attention', red: 'At risk' };
+const SEV_WORD: Record<Severity, string> = { green: 'On Track', yellow: 'Needs Attention', red: 'At Risk' };
 const weekEnding = () => { const d = new Date(); return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); };
 
 export default function OwnerUpdatesPage() {
@@ -32,7 +32,7 @@ export default function OwnerUpdatesPage() {
       setEmailState((s) => ({ ...s, [id]: 'sent' }));
       setTimeout(() => setEmailState((s) => ({ ...s, [id]: 'idle' })), 3000);
     } catch (e: any) {
-      setEmailState((s) => ({ ...s, [id]: 'error' })); setEmailErr((s) => ({ ...s, [id]: e?.message || 'Send failed' }));
+      setEmailState((s) => ({ ...s, [id]: 'error' })); setEmailErr((s) => ({ ...s, [id]: e?.message || "Couldn't send the update. Please try again." }));
     }
   }
 
@@ -110,7 +110,7 @@ export default function OwnerUpdatesPage() {
             {href: '/app/command-center/owner-updates',  label: 'Needs Attention', value: String(yellowCount), accent: yellowCount > 0 ? C.yellow : undefined },
             {href: '/app/command-center/risks',  label: 'At Risk', value: String(redCount), accent: redCount > 0 ? C.red : undefined },
             {href: '/app/command-center/milestones',  label: 'Milestones Slipping', value: String(slippingTotal), accent: slippingTotal > 0 ? C.yellow : undefined },
-            {href: '/app/command-center/escalations',  label: 'Escalations', value: String(escTotal), accent: escTotal > 0 ? C.red : undefined, sub: llTotal > 0 ? `${llTotal} long-lead at risk` : 'long-lead clear' },
+            {href: '/app/command-center/escalations',  label: 'Escalations', value: String(escTotal), accent: escTotal > 0 ? C.red : undefined, sub: llTotal > 0 ? `${llTotal} long-lead at risk` : 'Long-lead clear' },
           ]} />
         )}
 
@@ -140,14 +140,14 @@ export default function OwnerUpdatesPage() {
               >
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <GhostButton size="md" onClick={() => copy(p.id, text)} icon={copied === p.id ? <CheckCircle size={14} weight="fill" color={C.green} /> : undefined}>
-                    {copied === p.id ? 'Copied' : 'Copy update'}
+                    {copied === p.id ? 'Copied' : 'Copy Update'}
                   </GhostButton>
                   <input
                     type="email"
                     value={emailTo[p.id] || ''}
                     onChange={(e) => setEmailTo((s) => ({ ...s, [p.id]: e.target.value }))}
                     placeholder="owner@email.com"
-                    style={{ padding: '8px 11px', borderRadius: 10, border: `1px solid ${emailState[p.id] === 'error' ? C.red : C.border}`, fontSize: 13, width: 180, outline: 'none', background: '#1c1c1e', color: C.text, fontFamily: font }}
+                    style={{ padding: '8px 11px', borderRadius: 10, border: `1px solid ${emailState[p.id] === 'error' ? C.red : C.border}`, fontSize: 13, width: 180, outline: 'none', background: 'var(--bg-surface-2)', color: C.text, fontFamily: font }}
                   />
                   <GoldButton
                     size="md"
@@ -155,7 +155,7 @@ export default function OwnerUpdatesPage() {
                     disabled={emailState[p.id] === 'sending'}
                     icon={emailState[p.id] === 'sent' ? <CheckCircle size={14} weight="fill" /> : <EnvelopeSimple size={14} weight="bold" />}
                   >
-                    {emailState[p.id] === 'sending' ? 'Sending…' : emailState[p.id] === 'sent' ? 'Sent' : emailState[p.id] === 'error' ? 'Retry' : 'Email to owner'}
+                    {emailState[p.id] === 'sending' ? 'Sending…' : emailState[p.id] === 'sent' ? 'Sent' : emailState[p.id] === 'error' ? 'Retry' : 'Email to Owner'}
                   </GoldButton>
                 </div>
                 {emailState[p.id] === 'error' && emailErr[p.id] && (
@@ -164,9 +164,9 @@ export default function OwnerUpdatesPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px,1fr))', gap: 10, marginTop: 14 }}>
                   <Stat label="Complete" value={h.percentComplete != null ? `${Math.round(h.percentComplete)}%` : '—'} />
                   <Stat label="Budget" value={h.variancePct != null ? `${h.variancePct > 0 ? '+' : ''}${h.variancePct.toFixed(0)}%` : '—'} color={h.variancePct != null && h.variancePct > 5 ? C.red : h.variancePct != null && h.variancePct > 1 ? C.yellow : C.text} />
-                  <Stat label="Milestones slipping" value={slipping} color={slipping ? C.yellow : C.text} />
-                  <Stat label={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'middle' }}>Long-lead <Warning size={12} weight="fill" color={C.faint} /></span>} value={llRisk} color={llRisk ? C.red : C.text} />
-                  <Stat label="Open risks" value={`${openRisks}${critRisks ? ` (${critRisks}!)` : ''}`} color={critRisks ? C.red : C.text} />
+                  <Stat label="Milestones Slipping" value={slipping} color={slipping ? C.yellow : C.text} />
+                  <Stat label={<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, verticalAlign: 'middle' }}>Long-Lead <Warning size={12} weight="fill" color={C.faint} /></span>} value={llRisk} color={llRisk ? C.red : C.text} />
+                  <Stat label="Open Risks" value={`${openRisks}${critRisks ? ` (${critRisks}!)` : ''}`} color={critRisks ? C.red : C.text} />
                   <Stat label="Escalations" value={esc} color={esc ? C.red : C.text} />
                 </div>
                 {upcoming.length > 0 && (
@@ -186,7 +186,7 @@ export default function OwnerUpdatesPage() {
 function Stat({ label, value, color }: { label: React.ReactNode; value: React.ReactNode; color?: string }) {
   return (
     <div style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid rgba(255,255,255,0.07)`, borderRadius: 10, padding: '10px 12px' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.3, color: C.faint }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: C.faint }}>{label}</div>
       <div style={{ fontSize: 16, fontWeight: 800, color: color || C.text, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );
