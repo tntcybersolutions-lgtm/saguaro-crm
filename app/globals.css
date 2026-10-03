@@ -910,7 +910,7 @@ input:-webkit-autofill:focus {
 .k-btn-sm { height: 30px; padding: 0 10px; font-size: var(--fs-xs); }
 .k-btn-primary { background: var(--brand-primary); color: var(--on-brand); border-color: var(--brand-primary); }
 .k-btn-primary:hover { background: var(--brand-primary-strong); border-color: var(--brand-primary-strong); color: var(--on-brand); }
-.k-btn-secondary { background: var(--bg-surface-2); color: var(--text-primary); border-color: var(--glass-border); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
+.k-btn-secondary { background: var(--bg-surface-2); color: var(--text-primary); border-color: var(--glass-border); } /* no blur on buttons: stacked backdrop-filter layers make Chrome skip painting the label of every button after the first in a glass card */
 .k-btn-secondary:hover { background: rgba(255,255,255,0.11); border-color: var(--border-strong); color: var(--text-primary); }
 .k-btn-ghost { background: transparent; color: var(--text-primary); }
 .k-btn-ghost:hover { background: rgba(255,255,255,0.06); color: var(--text-primary); border-color: transparent; }
