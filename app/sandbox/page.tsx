@@ -299,7 +299,7 @@ export default function SandboxPage() {
               {/* Header */}
               <div style={{ marginBottom: 8 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: GOLD, marginBottom: 10 }}>
-                  Free 14-Day Trial
+                  Free {TRIAL_DAYS}-Day Trial
                 </div>
                 <h1 style={{ fontSize: 26, fontWeight: 900, color: TEXT, lineHeight: 1.2, margin: 0 }}>
                   Start Your Free AI Sandbox
