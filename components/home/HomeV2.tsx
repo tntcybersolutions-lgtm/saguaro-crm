@@ -12,7 +12,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MagnifyingGlass, Plus, ArrowRight, ArrowClockwise, CaretDown, CalendarBlank, WarningCircle } from '@phosphor-icons/react';
+import { Plus, ArrowRight, ArrowClockwise, CaretDown, CalendarBlank, WarningCircle } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
 import ActivityFeed from '@/components/ActivityFeed';
 import SalesOverview from '@/components/SalesOverview';
@@ -113,8 +113,18 @@ function MetricCard({ m }: { m: Metric }) {
   );
 }
 
+const DECISION_TYPES = ['change_order', 'pay_app', 'purchase_order', 'invoice'];
+/** Rows where "who owns it" is not an assignee question: decisions wait on an
+ *  approver with the right role, grouped rows stand for many records. Calling
+ *  either "Unassigned" read as a problem that wasn't there. */
+const ownerless = (it: QueueItem) => it.id.startsWith('group:') || DECISION_TYPES.includes(it.sourceType);
+
 function QueueRow({ it, today }: { it: QueueItem; today: string }) {
   const tone = TIER_TONE[it.tier];
+  const ownerCell = DECISION_TYPES.includes(it.sourceType)
+    ? <span>Your decision</span>
+    : it.id.startsWith('group:') ? null
+    : <span>{it.owner ? it.owner : <em className="hv2-unassigned">Unassigned</em>}</span>;
   return (
     <li className="hv2-qrow">
       <span className="hv2-tier" style={{ color: tone.fg, background: tone.bg }}>{TIER_LABEL[it.tier]}</span>
@@ -122,7 +132,7 @@ function QueueRow({ it, today }: { it: QueueItem; today: string }) {
         <div className="hv2-qtitle">{it.title}{it.count ? <span className="hv2-count">{it.count}</span> : null}</div>
         <div className="hv2-qmeta">
           {it.projectName ? <span>{it.projectName}</span> : null}
-          <span>{it.owner ? it.owner : <em className="hv2-unassigned">Unassigned</em>}</span>
+          {ownerCell}
           <span>{it.reason}</span>
           {it.dueAt ? <span>Due {fmtDay(it.dueAt, today)}</span> : null}
         </div>
@@ -147,10 +157,10 @@ function NeedsAttention({ data }: { data: HomePayload }) {
     critical: items.filter(i => i.tier <= 1).length,
     overdue: items.filter(i => i.tier === 2).length,
     today: items.filter(i => i.tier === 3).length,
-    unassigned: items.filter(i => !i.owner && !i.id.startsWith('group:')).length,
+    unassigned: items.filter(i => !i.owner && !ownerless(i)).length,
   };
   const filtered = items.filter(i =>
-    filter === 'all' ? true : filter === 'critical' ? i.tier <= 1 : filter === 'overdue' ? i.tier === 2 : filter === 'today' ? i.tier === 3 : !i.owner && !i.id.startsWith('group:'));
+    filter === 'all' ? true : filter === 'critical' ? i.tier <= 1 : filter === 'overdue' ? i.tier === 2 : filter === 'today' ? i.tier === 3 : !i.owner && !ownerless(i));
   const shown = expanded ? filtered : filtered.slice(0, 6);
   const opts: Array<{ key: QFilter; label: string }> = [
     { key: 'all', label: `All ${data.queue.total}` },
@@ -346,9 +356,7 @@ function HomeInner() {
           {ctx?.firstName && <span className="hv2-greet">Hi {ctx.firstName}</span>}
         </div>
         <div className="hv2-actions">
-          <button type="button" className="hv2-btn hv2-btn-ghost" onClick={() => window.dispatchEvent(new Event('open-command-palette'))} aria-label="Search">
-            <MagnifyingGlass size={15} weight="bold" /> <span className="hv2-hide-sm">Search</span>
-          </button>
+          {/* Search lives in the app top bar (⌘K) — one search box, not two. */}
           <QuickCreate view={(ctx?.view || 'operations') as HomeView} projectId={sp.get('project')} />
         </div>
       </header>
