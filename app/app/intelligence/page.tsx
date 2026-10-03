@@ -1,27 +1,28 @@
 'use client';
+/**
+ * Project Intelligence — cross-project comparison, Pass 4 on the kit.
+ *
+ * Anatomy: title + one primary action (Select Projects) → the live suggestion
+ * ticker → Portfolio Insights (the honest sentences, severity first) → one
+ * comparison card per selected project (health ring, cost burn vs schedule,
+ * money, field signals) → StatRow of portfolio totals summed over the projects
+ * that actually report each figure.
+ *
+ * Reads (unchanged): useProjects for the roster, SWR on
+ * /api/intelligence/summary?projectIds= for the comparison set. Every figure
+ * is real or absent — `null` renders as an em-dash, never a fake zero.
+ */
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { ChartLineUp, Lightbulb, SquaresFour, Selection, ArrowsClockwise } from '@phosphor-icons/react';
+import { Lightbulb, SquaresFour, Selection, ArrowsClockwise, Robot, Check } from '@phosphor-icons/react';
 import {
-  PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip,
-  InsightRow, Pill, GoldButton, GhostButton, goldButtonStyle,
-} from '@/components/ui/premium';
+  PageShell, Card, StatRow, Badge, Button, EmptyState, Toast, useToast,
+  type BadgeTone, type StatItem,
+} from '@/components/ui/kit';
+import { InsightRow } from '@/components/ui/premium';
 import { useProjects } from '@/lib/hooks/useProjects';
-import { Skeleton } from '@/components/ui/Skeleton';
-import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import SuggestionTicker from '@/components/intelligence/SuggestionTicker';
-
-// No 'intelligence' key exists in lib/module-identity — this surface stays on
-// the gold ground (money + flagship voice) rather than inventing a module hue.
-const GOLD = 'var(--brand-primary)', DIM = '#D4D4D8', TEXT = '#FFFFFF';
-// Desert-dusk semantic palette — harmonized with the dashboard (muted emerald,
-// terracotta, warm amber) so severity accents sit on the aurora bg.
-const GREEN = '#2CFF7A', RED = '#FF3B30', AMBER = 'var(--warning)';
-// Nested surfaces layered on the PremiumSurface aurora (white-alpha glass —
-// dark-shell surfaces never take black alphas).
-const NEST = 'rgba(20,20,22,0.55)', NEST_BORDER = 'rgba(255,255,255,0.08)';
-const HAIR = 'rgba(255,255,255,0.06)';
 
 // ─── Honest number handling ──────────────────────────────────────────────────
 // NUMERIC columns round-trip as strings; Number() ALWAYS. `null` means "the
@@ -32,13 +33,8 @@ const num = (v: unknown): number | null => {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 };
-const fmt = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtK = (n: number) => {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return (n < 0 ? '-' : '') + '$' + (abs / 1_000_000).toFixed(1) + 'M';
-  if (abs >= 1_000) return (n < 0 ? '-' : '') + '$' + (abs / 1_000).toFixed(0) + 'K';
-  return fmt(n);
-};
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt = (n: number) => money.format(n);
 
 // Local date-only parsing — never new Date('YYYY-MM-DD') (UTC shift). Full
 // timestamps go through Date directly; bare dates parse as local midnight.
@@ -55,12 +51,12 @@ function daysAgo(iso?: string | null): number | null {
 // Verdict bands over the server's 0–100 healthScore: >=85 Excellent, >=70
 // Healthy (both green), >=50 Watch (amber), <50 At Risk (red). No score ⇒ no
 // verdict — the ring stays empty rather than pretending.
-function healthGrade(score: number | null): { color: string; verdict: string } {
-  if (score == null) return { color: 'rgba(255,255,255,0.35)', verdict: 'No Score' };
-  if (score >= 85) return { color: GREEN, verdict: 'Excellent' };
-  if (score >= 70) return { color: GREEN, verdict: 'Healthy' };
-  if (score >= 50) return { color: AMBER, verdict: 'Watch' };
-  return { color: RED, verdict: 'At Risk' };
+function healthGrade(score: number | null): { color: string; verdict: string; tone: BadgeTone } {
+  if (score == null) return { color: 'var(--text-tertiary)', verdict: 'No Score', tone: 'neutral' };
+  if (score >= 85) return { color: 'var(--status-ongoing)', verdict: 'Excellent', tone: 'ongoing' };
+  if (score >= 70) return { color: 'var(--status-ongoing)', verdict: 'Healthy', tone: 'ongoing' };
+  if (score >= 50) return { color: 'var(--status-under-contract)', verdict: 'Watch', tone: 'under_contract' };
+  return { color: 'var(--status-overdue)', verdict: 'At Risk', tone: 'overdue' };
 }
 
 // healthComponents arrives in whatever shape the server settles on — tolerate
@@ -89,20 +85,18 @@ function componentLines(hc: unknown): string[] {
 // ─── Insight severity ────────────────────────────────────────────────────────
 const SEV_RED = ['red', 'critical', 'high', 'severe', 'danger', 'error'];
 const SEV_AMBER = ['amber', 'yellow', 'warn', 'warning', 'medium', 'moderate', 'caution'];
-function sevRail(s?: string): { rail: string; rank: number } {
+function sevRail(s?: string): { tone: 'late' | 'warn' | 'info'; rank: number } {
   const k = String(s || '').toLowerCase();
-  if (SEV_RED.includes(k)) return { rail: RED, rank: 0 };
-  if (SEV_AMBER.includes(k)) return { rail: AMBER, rank: 1 };
-  return { rail: 'rgba(255,255,255,0.25)', rank: 2 };
+  if (SEV_RED.includes(k)) return { tone: 'late', rank: 0 };
+  if (SEV_AMBER.includes(k)) return { tone: 'warn', rank: 1 };
+  return { tone: 'info', rank: 2 };
 }
 
 // ─── API shapes (every key optional — the page tolerates partial payloads) ───
 interface SummaryProject {
   /* /api/intelligence/summary returns these FLAT — { projectId, name, status,
-     money, … }. This file read a nested `project` object that the route has
-     never sent, so every comparison card rendered "Untitled Project" with
-     "status unknown" underneath it. The nested shape is kept as a fallback in
-     case an older payload is ever served. */
+     money, … }. The nested shape is kept as a fallback in case an older
+     payload is ever served. */
   projectId?: string;
   name?: string;
   status?: string;
@@ -167,6 +161,55 @@ const fetcher = async (url: string) => {
   return r.json();
 };
 
+const CSS = `
+.igWs > .k-page { max-width: none; }
+.igActions { position: relative; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.igPop { position: absolute; top: 100%; right: 0; margin-top: 8px; z-index: 100; width: min(360px, calc(100vw - 32px)); max-height: 420px; overflow-y: auto; background: var(--bg-solid); border: 1px solid var(--border-strong); border-radius: var(--radius-md); padding: 10px; box-shadow: 0 24px 60px -20px rgba(0,0,0,.8); }
+.igPopHead { font-size: var(--fs-xs); font-weight: 700; color: var(--text-tertiary); padding: 4px 8px 8px; }
+.igOpt { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer; min-height: 44px; }
+.igOpt:hover { background: rgba(255,255,255,0.05); }
+.igOpt[data-on="true"] { background: var(--brand-primary-08); }
+.igOpt input { accent-color: var(--brand-primary); width: 16px; height: 16px; flex-shrink: 0; }
+.igOptName { font-size: var(--fs-sm); color: var(--text-primary); font-weight: 600; }
+.igOptSub { font-size: var(--fs-xs); color: var(--text-tertiary); }
+.igStack { display: flex; flex-direction: column; gap: 16px; }
+.igInsights { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; }
+.igInsight { position: relative; overflow: hidden; background: var(--bg-surface-2); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px 14px 12px 18px; }
+.igInsight::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border-strong); }
+.igInsight[data-tone="late"]::before { background: var(--status-overdue); }
+.igInsight[data-tone="warn"]::before { background: var(--status-under-contract); }
+.igInsightProj { font-size: var(--fs-xs); font-weight: 800; color: var(--text-tertiary); margin-bottom: 4px; }
+.igInsightText { font-size: var(--fs-sm); color: var(--text-primary); line-height: 1.5; }
+.igGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.igHead { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.igName { font-size: var(--fs-lg); font-weight: 800; color: var(--text-primary); text-decoration: none; letter-spacing: -0.01em; }
+.igName:hover { color: var(--brand-primary); }
+.igRing { text-align: center; flex-shrink: 0; cursor: help; }
+.igRingWrap { position: relative; width: 64px; height: 64px; margin: 0 auto; }
+.igRingVal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.igRingVerdict { font-size: 10px; font-weight: 800; margin-top: 4px; }
+.igBurnHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 6px; font-size: var(--fs-xs); }
+.igBurnHead b { color: var(--text-tertiary); font-weight: 700; }
+.igBurnDelta { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.igBurnDelta[data-ahead="true"] { color: var(--status-ongoing); }
+.igBurnDelta[data-ahead="false"] { color: var(--status-overdue); }
+.igBurnTrack { position: relative; height: 12px; }
+.igBurnBg { position: absolute; inset: 0; background: rgba(255,255,255,0.08); border-radius: 6px; overflow: hidden; }
+.igBurnFill { height: 100%; border-radius: 6px; background: var(--brand-primary); }
+.igBurnMark { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text-primary); opacity: .9; border-radius: 1px; box-shadow: 0 0 6px rgba(255,255,255,.55); }
+.igBurnFoot { display: flex; justify-content: space-between; margin-top: 5px; font-size: var(--fs-xs); color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+.igRule { font-size: var(--fs-xs); color: var(--text-tertiary); font-weight: 800; margin: 14px 0 4px; padding-top: 12px; border-top: 1px solid var(--border-subtle); }
+.igPills { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
+.igSkel { border-radius: var(--radius-md); background: var(--bg-surface); border: 1px solid var(--glass-border); padding: 18px 20px; }
+.igSkel div { border-radius: 6px; background: rgba(255,255,255,0.06); }
+.igSection { display: flex; align-items: center; gap: 8px; font-size: var(--fs-xs); font-weight: 800; color: var(--text-tertiary); }
+.igMuted { color: var(--text-tertiary); }
+@media (max-width: 640px) {
+  .igWs .k-btn, .igWs .k-stat { min-height: 44px; }
+  .igGrid { grid-template-columns: minmax(0, 1fr); }
+}
+`;
+
 // ─── Health ring — color-graded score dial with a component tooltip ──────────
 function HealthRing({ score, components }: { score: number | null; components: string[] }) {
   const g = healthGrade(score);
@@ -176,30 +219,17 @@ function HealthRing({ score, components }: { score: number | null; components: s
     ? `Health components:\n${components.join('\n')}`
     : score != null ? 'No component breakdown provided' : 'No health score for this project yet';
   return (
-    <div title={tip} style={{ textAlign: 'center' as const, flexShrink: 0, cursor: 'help' }}>
-      <div style={{ position: 'relative' as const, width: 64, height: 64, margin: '0 auto' }}>
+    <div title={tip} className="igRing">
+      <div className="igRingWrap">
         <svg width="64" height="64" viewBox="0 0 64 64">
           <circle cx="32" cy="32" r={R} fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="6" />
           {score != null && (
-            <circle
-              cx="32" cy="32" r={R} fill="none"
-              style={{ stroke: g.color }} strokeWidth="6"
-              strokeDasharray={`${frac * C} ${C}`}
-              strokeLinecap="round"
-              transform="rotate(-90 32 32)"
-            />
+            <circle cx="32" cy="32" r={R} fill="none" style={{ stroke: g.color }} strokeWidth="6" strokeDasharray={`${frac * C} ${C}`} strokeLinecap="round" transform="rotate(-90 32 32)" />
           )}
         </svg>
-        <div style={{
-          position: 'absolute' as const, top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          fontSize: 16, fontWeight: 800, color: score == null ? DIM : g.color, fontVariantNumeric: 'tabular-nums',
-        }}>
-          {score == null ? '—' : Math.round(score)}
-        </div>
+        <div className="igRingVal" style={{ color: g.color }}>{score == null ? '—' : Math.round(score)}</div>
       </div>
-      <div style={{ fontSize: 10, fontWeight: 800, color: g.color, marginTop: 4 }}>
-        {g.verdict}
-      </div>
+      <div className="igRingVerdict" style={{ color: g.color }}>{g.verdict}</div>
     </div>
   );
 }
@@ -212,41 +242,19 @@ function BurnBar({ actual, expected, delta }: { actual: number | null; expected:
   const ahead = delta != null && delta >= 0;
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
-        <span style={{ fontSize: 10, color: DIM, fontWeight: 700 }}>
-          {/* This plots actualBurnPct, which is invoicedCosts / contract — what
-              has been SPENT, not what has been billed to the owner. Calling it
-              billing burn put a cost ratio under a revenue heading. */}
-          Cost Burn vs Schedule
-        </span>
-        {delta != null ? (
-          <span style={{ fontSize: 11, fontWeight: 800, color: ahead ? GREEN : RED, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' as const }}>
-            {ahead ? '+' : '-'}{Math.abs(delta).toFixed(1)} pts {ahead ? 'ahead' : 'behind'}
-          </span>
-        ) : (
-          <span style={{ fontSize: 11, color: DIM, whiteSpace: 'nowrap' as const }}>No schedule dates</span>
-        )}
+      <div className="igBurnHead">
+        {/* This plots actualBurnPct, which is invoicedCosts / contract — what
+            has been SPENT, not what has been billed to the owner. */}
+        <b>Cost Burn vs Schedule</b>
+        {delta != null
+          ? <span className="igBurnDelta" data-ahead={ahead ? 'true' : 'false'}>{ahead ? '+' : '-'}{Math.abs(delta).toFixed(1)} pts {ahead ? 'ahead' : 'behind'}</span>
+          : <span className="igMuted" style={{ whiteSpace: 'nowrap' }}>No schedule dates</span>}
       </div>
-      <div style={{ position: 'relative' as const, height: 12 }}>
-        <div style={{ position: 'absolute' as const, inset: 0, background: 'rgba(255,255,255,0.08)', borderRadius: 6, overflow: 'hidden' }}>
-          {actual != null && (
-            <div style={{
-              height: '100%', width: `${aw}%`, borderRadius: 6,
-              background: 'linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 50%, transparent), var(--brand-primary))',
-            }} />
-          )}
-        </div>
-        {ew != null && (
-          <div
-            title={`Expected ${expected!.toFixed(1)}% burned by today (share of schedule elapsed)`}
-            style={{
-              position: 'absolute' as const, left: `calc(${ew}% - 1px)`, top: -3, bottom: -3, width: 2,
-              background: TEXT, opacity: 0.9, borderRadius: 1, boxShadow: '0 0 6px rgba(255,255,255,0.55)',
-            }}
-          />
-        )}
+      <div className="igBurnTrack">
+        <div className="igBurnBg">{actual != null && <div className="igBurnFill" style={{ width: `${aw}%` }} />}</div>
+        {ew != null && <div className="igBurnMark" title={`Expected ${expected!.toFixed(1)}% burned by today (share of schedule elapsed)`} style={{ left: `calc(${ew}% - 1px)` }} />}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5, fontSize: 10.5, color: DIM, fontVariantNumeric: 'tabular-nums' }}>
+      <div className="igBurnFoot">
         <span>Actual {actual == null ? '— no billing data' : `${actual.toFixed(1)}%`}</span>
         <span>Expected {expected == null ? '—' : `${expected.toFixed(1)}%`}</span>
       </div>
@@ -254,40 +262,30 @@ function BurnBar({ actual, expected, delta }: { actual: number | null; expected:
   );
 }
 
-// Money row — value gold when real, em-dash when the API had nothing.
+// Money row — value bright when real, em-dash when the API had nothing.
 function moneyVal(v: number | null, suffix?: React.ReactNode): { value: React.ReactNode; accent?: string } {
-  if (v == null) return { value: '—', accent: 'rgba(255,255,255,0.35)' };
-  return { value: <>{fmtK(v)}{suffix}</>, accent: GOLD };
+  if (v == null) return { value: '—', accent: 'var(--text-tertiary)' };
+  return { value: <>{fmt(v)}{suffix}</>, accent: 'var(--brand-primary)' };
 }
-
-const RULE_LABEL: React.CSSProperties = {
-  fontSize: 10, color: DIM, fontWeight: 800,
-  margin: '14px 0 4px', paddingTop: 12, borderTop: `1px solid ${HAIR}`,
-};
 
 // ─── Per-project comparison card ─────────────────────────────────────────────
 function ProjectCard({ r }: { r: Row }) {
-  const co = moneyVal(r.coValue, r.coCount != null ? (
-    <span style={{ color: DIM, fontWeight: 600, fontSize: 11 }}> ({r.coCount})</span>
-  ) : undefined);
-  const marginAccent = r.margin == null ? 'rgba(255,255,255,0.35)' : r.margin < 0 ? RED : GOLD;
+  const co = moneyVal(r.coValue, r.coCount != null ? <span className="igMuted" style={{ fontWeight: 600, fontSize: 'var(--fs-xs)' }}> ({r.coCount})</span> : undefined);
+  const marginAccent = r.margin == null ? 'var(--text-tertiary)' : r.margin < 0 ? 'var(--status-overdue)' : 'var(--brand-primary)';
   // Overdue = the oldest open RFI has aged past 14 days — that age reads red.
   const rfiOverdue = r.openRfis != null && r.openRfis > 0 && r.oldestRfiDays != null && r.oldestRfiDays > 14;
   const noField = r.openRfis == null && r.openPunch == null && r.logStreak == null && r.lastActivityDays == null;
+  const g = healthGrade(r.health);
   return (
-    <SectionCard bodyStyle={{ padding: '18px 20px' }}>
-      {/* Header: identity left, health ring right */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14, marginBottom: 16 }}>
+    <Card>
+      <div className="igHead">
         <div style={{ minWidth: 0 }}>
-          <Link href={`/app/projects/${r.id}`} style={{ fontSize: 15.5, fontWeight: 800, color: TEXT, textDecoration: 'none', letterSpacing: '-0.01em' }}>
-            {r.name}
-          </Link>
-          <div style={{ marginTop: 6 }}>
-            {r.status ? (
-              <Pill tone={r.status === 'active' ? 'green' : 'neutral'}>{r.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</Pill>
-            ) : (
-              <span style={{ fontSize: 11, color: DIM }}>Status unknown</span>
-            )}
+          <Link href={`/app/projects/${r.id}`} className="igName">{r.name}</Link>
+          <div style={{ marginTop: 6, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {r.status
+              ? <Badge tone={r.status === 'active' ? 'ongoing' : 'neutral'}>{r.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</Badge>
+              : <span className="igMuted" style={{ fontSize: 'var(--fs-xs)' }}>Status unknown</span>}
+            <Badge tone={g.tone}>{g.verdict}</Badge>
           </div>
         </div>
         <HealthRing score={r.health} components={r.components} />
@@ -295,65 +293,44 @@ function ProjectCard({ r }: { r: Row }) {
 
       <BurnBar actual={r.actual} expected={r.expected} delta={r.delta} />
 
-      {/* Money — gold, Number()-guarded upstream, em-dash when absent */}
-      <div style={RULE_LABEL}>Money</div>
+      <div className="igRule">Money</div>
       <InsightRow label="Contract" {...moneyVal(r.contract)} />
       <InsightRow label="Billed to Date" {...moneyVal(r.billed)} />
       <InsightRow label="Invoiced Costs" {...moneyVal(r.invoiced)} />
       <InsightRow label="Approved COs" value={co.value} accent={co.accent} />
-      <InsightRow label="Margin" value={r.margin == null ? '—' : fmtK(r.margin)} accent={marginAccent} strong />
+      <InsightRow label="Margin" value={r.margin == null ? '—' : fmt(r.margin)} accent={marginAccent} strong />
 
-      {/* Field signals */}
-      <div style={RULE_LABEL}>Field</div>
+      <div className="igRule">Field</div>
       {noField ? (
-        <div style={{ fontSize: 11.5, color: DIM, padding: '4px 0' }}>{'—'} No field telemetry yet</div>
+        <div className="igMuted" style={{ fontSize: 'var(--fs-xs)', padding: '4px 0' }}>— No field telemetry yet</div>
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 6, paddingTop: 4 }}>
+        <div className="igPills">
           {r.openRfis != null && (
-            <Pill tone={rfiOverdue ? 'red' : r.openRfis > 0 ? 'amber' : 'green'}>
-              {r.openRfis} Open RFI{r.openRfis === 1 ? '' : 's'}
-              {r.openRfis > 0 && r.oldestRfiDays != null ? ` · Oldest ${r.oldestRfiDays}d` : ''}
-            </Pill>
+            <Badge tone={rfiOverdue ? 'overdue' : r.openRfis > 0 ? 'under_contract' : 'ongoing'}>
+              {r.openRfis} Open RFI{r.openRfis === 1 ? '' : 's'}{r.openRfis > 0 && r.oldestRfiDays != null ? ` · Oldest ${r.oldestRfiDays}d` : ''}
+            </Badge>
           )}
-          {r.openPunch != null && (
-            <Pill tone={r.openPunch > 0 ? 'amber' : 'green'}>{r.openPunch} Punch Open</Pill>
-          )}
-          {r.logStreak != null && (
-            <Pill tone={r.logStreak >= 3 ? 'green' : 'neutral'}>{r.logStreak}d Log Streak</Pill>
-          )}
-          {r.lastActivityDays != null && (
-            <Pill tone="neutral">
-              {r.lastActivityDays === 0 ? 'Active Today' : `Active ${r.lastActivityDays}d Ago`}
-            </Pill>
-          )}
+          {r.openPunch != null && <Badge tone={r.openPunch > 0 ? 'under_contract' : 'ongoing'}>{r.openPunch} Punch Open</Badge>}
+          {r.logStreak != null && <Badge tone={r.logStreak >= 3 ? 'ongoing' : 'neutral'}>{r.logStreak}d Log Streak</Badge>}
+          {r.lastActivityDays != null && <Badge tone="neutral">{r.lastActivityDays === 0 ? 'Active Today' : `Active ${r.lastActivityDays}d Ago`}</Badge>}
         </div>
       )}
-    </SectionCard>
+    </Card>
   );
 }
 
 // Grid-shaped loading skeleton — same card silhouette as ProjectCard.
 function GridSkeleton({ count }: { count: number }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginBottom: 24 }}>
+    <div className="igGrid" aria-busy="true" aria-label="Loading comparison">
       {Array.from({ length: Math.max(count, 1) }).map((_, i) => (
-        <div key={i} style={{ background: NEST, border: `1px solid ${NEST_BORDER}`, borderRadius: 16, padding: '18px 20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
-            <div>
-              <Skeleton width={150} height={16} />
-              <div style={{ height: 8 }} />
-              <Skeleton width={64} height={12} />
-            </div>
-            <Skeleton width={64} height={64} borderRadius={32} />
+        <div key={i} className="igSkel">
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 18, background: 'none' }}>
+            <div style={{ width: 150, height: 16 }} />
+            <div style={{ width: 64, height: 64, borderRadius: 32 }} />
           </div>
-          <Skeleton height={12} />
-          <div style={{ height: 16 }} />
-          {[0, 1, 2, 3].map((k) => (
-            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-              <Skeleton width={90} height={11} />
-              <Skeleton width={64} height={11} />
-            </div>
-          ))}
+          <div style={{ height: 12, marginBottom: 16 }} />
+          {[0, 1, 2, 3].map((k) => <div key={k} style={{ height: 11, marginBottom: 10, maxWidth: `${80 - k * 8}%` }} />)}
         </div>
       ))}
     </div>
@@ -366,6 +343,8 @@ export default function IntelligencePage() {
   const projects = useMemo(() => liveProjects.filter((p) => p.status !== 'archived'), [liveProjects]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const { toast, show } = useToast(3000);
+  const popRef = useRef<HTMLDivElement>(null);
 
   // Auto-select the first 3 projects once the (cached) list is in.
   const autoSelectedRef = useRef(false);
@@ -374,6 +353,16 @@ export default function IntelligencePage() {
     autoSelectedRef.current = true;
     setSelectedIds(new Set(projects.slice(0, 3).map((p) => p.id)));
   }, [projects]);
+
+  // Close the picker on outside click / Escape.
+  useEffect(() => {
+    if (!selectorOpen) return;
+    const onDown = (e: MouseEvent) => { if (popRef.current && !popRef.current.contains(e.target as Node)) setSelectorOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectorOpen(false); };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [selectorOpen]);
 
   const ids = useMemo(() => Array.from(selectedIds).sort(), [selectedIds]);
   const { data, error, isLoading, mutate } = useSWR<SummaryResponse>(
@@ -413,7 +402,7 @@ export default function IntelligencePage() {
       if (next.has(pid)) {
         next.delete(pid);
       } else {
-        if (next.size >= 5) return prev; // max 5
+        if (next.size >= 5) { show('Compare up to 5 projects at a time.', 'bad'); return prev; } // max 5
         next.add(pid);
       }
       return next;
@@ -436,212 +425,134 @@ export default function IntelligencePage() {
   const tRfi = sum((r) => r.openRfis);
   const tPunch = sum((r) => r.openPunch);
   const coverage = (s: { n: number }) => s.n === rows.length ? `Across ${rows.length} project${rows.length === 1 ? '' : 's'}` : `${s.n} of ${rows.length} reporting`;
-  const moneyStat = (label: string, s: { total: number; n: number }, sub?: string) =>
-    s.n > 0
-      ? { label, href: '/app/intelligence', value: fmtK(s.total), sub: sub ?? coverage(s), accent: GOLD }
-      : { label, href: '/app/intelligence', value: '—', sub: 'No data yet' };
+  const moneyStat = (label: string, s: { total: number; n: number }, sub?: string): StatItem =>
+    s.n > 0 ? { label, value: fmt(s.total), sub: sub ?? coverage(s) } : { label, value: '—', sub: 'No data yet' };
 
-  if (loading) {
-    return (
-      <PremiumSurface maxWidth={2200}>
-        <ModuleSkeleton kpis={4} rows={5} />
-      </PremiumSurface>
-    );
-  }
+  const totals: StatItem[] = [
+    moneyStat('Combined Contract', tContract),
+    moneyStat('Billed to Date', tBilled, tContract.n > 0 && tContract.total > 0 && tBilled.n > 0 ? `${((tBilled.total / tContract.total) * 100).toFixed(1)}% of combined contract` : undefined),
+    moneyStat('Invoiced Costs', tInvoiced),
+    moneyStat('Approved COs', tCO, tCOCount.n > 0 ? `${tCOCount.total} approved change order${tCOCount.total === 1 ? '' : 's'}` : undefined),
+    tMargin.n > 0 ? { label: 'Portfolio Margin', value: fmt(tMargin.total), sub: coverage(tMargin), tone: tMargin.total < 0 ? 'bad' : 'good' } : { label: 'Portfolio Margin', value: '—', sub: 'No data yet' },
+    tRfi.n > 0 ? { label: 'Open RFIs', value: tRfi.total, sub: tRfi.total > 0 ? 'Awaiting answers' : 'All answered', tone: tRfi.total > 10 ? 'bad' : tRfi.total > 5 ? 'warn' : 'default' } : { label: 'Open RFIs', value: '—', sub: 'No data yet' },
+    tPunch.n > 0 ? { label: 'Open Punch', value: tPunch.total, sub: coverage(tPunch), tone: tPunch.total > 0 ? 'warn' : 'default' } : { label: 'Open Punch', value: '—', sub: 'No data yet' },
+  ];
+
+  const selector = (
+    <div className="igActions" ref={popRef}>
+      {/* Autopilot's only nav entry (de-featured from the sidebar). */}
+      <Button icon={<Robot size={15} weight="fill" />} href="/app/autopilot" title="Overdue RFIs, expiring insurance, stale change orders — flagged across every project">Autopilot Alerts</Button>
+      {ids.length > 0 && <Button variant="ghost" icon={<ArrowsClockwise size={14} weight="bold" />} onClick={() => void mutate()}>Refresh</Button>}
+      <Button variant="primary" icon={<Selection size={15} weight="bold" />} onClick={() => setSelectorOpen(!selectorOpen)} aria-expanded={selectorOpen} aria-haspopup="dialog">Select Projects ({selectedIds.size})</Button>
+      {selectorOpen && (
+        <div className="igPop" role="dialog" aria-label="Select projects to compare">
+          <div className="igPopHead">Select up to 5 projects — {selectedIds.size} selected</div>
+          {projects.map((p) => (
+            <label key={p.id} className="igOpt" data-on={selectedIds.has(p.id) ? 'true' : undefined}>
+              <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleProject(p.id)} />
+              <div style={{ minWidth: 0 }}>
+                <div className="igOptName">{p.name}</div>
+                <div className="igOptSub">{fmt(Number(p.contract_amount) || 0)} · {p.status}</div>
+              </div>
+            </label>
+          ))}
+          <Button variant="primary" icon={<Check size={14} weight="bold" />} onClick={() => setSelectorOpen(false)} style={{ width: '100%', marginTop: 8 }}>Done</Button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <PremiumSurface maxWidth={2200}>
-      {/* Header */}
-      <ModuleHero
-        eyebrow="Cross-Project Analytics"
-        eyebrowIcon={<ChartLineUp size={13} weight="fill" color={GOLD} />}
-        title="Project"
-        accent="Intelligence"
+    <div className="igWs">
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <PageShell
+        crumbs={[{ label: 'Home', href: '/app' }, { label: 'Intelligence' }]}
+        title="Project Intelligence"
         subtitle={`Health, burn, money, and field signals for ${ids.length} selected project${ids.length !== 1 ? 's' : ''} — every figure real or absent.`}
-        actions={
-          <div style={{ position: 'relative' as const, display: 'flex', gap: 10, alignItems: 'center' }}>
-            {/* Autopilot's only nav entry (de-featured from the sidebar). */}
-            <GhostButton size="md" href="/app/autopilot" title="Overdue RFIs, expiring insurance, stale change orders — flagged across every project">
-              Autopilot Alerts
-            </GhostButton>
-            {ids.length > 0 && (
-              <GhostButton size="md" icon={<ArrowsClockwise size={14} weight="bold" />} onClick={() => void mutate()}>
-                Refresh
-              </GhostButton>
-            )}
-            <GoldButton size="md" onClick={() => setSelectorOpen(!selectorOpen)}>
-              Select Projects ({selectedIds.size})
-            </GoldButton>
+        actions={selector}
+      >
+        {/* Live suggestion ticker — the same feed the module NudgeRings sync to:
+            every item is a real row with an honest $ figure, deep-linked. */}
+        <SuggestionTicker />
 
-            {/* Project selector dropdown */}
-            {selectorOpen && (
-              <div style={{
-                position: 'absolute' as const, top: '100%', right: 0, marginTop: 8,
-                background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14,
-                padding: 12, minWidth: 320, maxHeight: 400, overflowY: 'auto' as const,
-                zIndex: 100, boxShadow: '0 24px 60px -20px rgba(4,6,10,0.8)',
-              }}>
-                <div style={{ fontSize: 11, color: DIM, fontWeight: 700, marginBottom: 8 }}>
-                  Select up to 5 Projects
-                </div>
-                {projects.map((p) => (
-                  <label
-                    key={p.id}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
-                      borderRadius: 8, cursor: 'pointer',
-                      background: selectedIds.has(p.id) ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'transparent',
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'color-mix(in srgb, var(--brand-primary) 15%, transparent)' : 'rgba(255,255,255,0.05)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = selectedIds.has(p.id) ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'transparent'}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(p.id)}
-                      onChange={() => toggleProject(p.id)}
-                      style={{ accentColor: GOLD, width: 16, height: 16 }}
-                    />
-                    <div>
-                      <div style={{ fontSize: 13, color: TEXT, fontWeight: 600 }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: DIM }}>
-                        {fmt(Number(p.contract_amount) || 0)} &middot; {p.status}
-                      </div>
-                    </div>
-                  </label>
-                ))}
-                <GoldButton size="md" onClick={() => setSelectorOpen(false)} style={{ width: '100%', marginTop: 8 }}>
-                  Done
-                </GoldButton>
-              </div>
-            )}
-          </div>
-        }
-      />
+        {loading && <GridSkeleton count={3} />}
 
-      {/* Live suggestion ticker — the same feed the module NudgeRings sync to:
-          every item is a real row with an honest $ figure, deep-linked. */}
-      <SuggestionTicker style={{ marginBottom: 24 }} />
-
-      {/* Empty portfolio / empty selection */}
-      {ids.length === 0 && (
-        <SectionCard>
-          {projects.length === 0 ? (
-            <PremiumEmpty
-              icon={<Selection size={30} weight="duotone" color={GOLD} />}
-              title="No projects to analyze yet"
-              description="Intelligence scores every project from its pay apps, invoices, change orders, RFIs, punch list, and daily logs — then compares them side by side. Create your first project and this page builds itself. No setup needed."
-              action={<Link href="/app/projects" style={goldButtonStyle} className="pmBtn">Go to Projects</Link>}
-            />
-          ) : (
-            <PremiumEmpty
-              icon={<Selection size={30} weight="duotone" color={GOLD} />}
-              title="No projects selected"
-              description={`You have ${projects.length} project${projects.length === 1 ? '' : 's'} available — pick up to 5 to compare health scores, cost burn vs schedule, money position, and field signals side by side.`}
-              action={<GoldButton onClick={() => setSelectorOpen(true)}>Select Projects</GoldButton>}
-            />
-          )}
-        </SectionCard>
-      )}
-
-      {/* Summary failed and we have nothing cached to show */}
-      {ids.length > 0 && error && rows.length === 0 && (
-        <SectionCard>
-          <PremiumEmpty
-            tone="error"
-            icon={<Lightbulb size={30} weight="duotone" color={RED} />}
-            title="Couldn't load the intelligence summary"
-            description="The portfolio summary request failed. Your project data is untouched — retry when ready."
-            action={<GhostButton icon={<ArrowsClockwise size={15} weight="bold" />} onClick={() => void mutate()}>Retry</GhostButton>}
-          />
-        </SectionCard>
-      )}
-
-      {/* Loading — skeletons shaped like the surface they become */}
-      {summaryLoading && !error && (
-        <>
-          <SectionCard flat
-            title="Portfolio Insights"
-            icon={<Lightbulb size={17} weight="duotone" color={GOLD} />}
-            style={{ marginBottom: 24 }}
-          >
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
-              {ids.map((id) => <Skeleton key={id} height={54} borderRadius={12} />)}
-            </div>
-          </SectionCard>
-          <GridSkeleton count={ids.length} />
-        </>
-      )}
-
-      {rows.length > 0 && (
-        <>
-          {/* 1 — INSIGHTS: the honest sentences, severity first */}
-          <SectionCard flat
-            title="Portfolio Insights"
-            subtitle="What the numbers say across your selected projects."
-            icon={<Lightbulb size={17} weight="duotone" color={GOLD} />}
-            style={{ marginBottom: 24 }}
-          >
-            {insights.length === 0 ? (
-              <div style={{ fontSize: 13, color: DIM, padding: '2px 0' }}>
-                All projects tracking clean — nothing needs your attention right now.
-              </div>
+        {/* Empty portfolio / empty selection */}
+        {!loading && ids.length === 0 && (
+          <Card flush>
+            {projects.length === 0 ? (
+              <EmptyState
+                icon={<Selection size={22} />}
+                title="No projects to analyze yet"
+                text="Intelligence scores every project from its pay apps, invoices, change orders, RFIs, punch list, and daily logs — then compares them side by side. Create your first project and this page builds itself. No setup needed."
+                action={<Button variant="primary" href="/app/projects">Go to Projects</Button>}
+              />
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
-                {insights.map((ins, i) => {
-                  const { rail } = sevRail(ins.severity);
-                  const pname = ins.projectId ? nameOf.get(String(ins.projectId)) : undefined;
-                  return (
-                    <div key={i} style={{
-                      position: 'relative' as const, overflow: 'hidden',
-                      background: NEST, border: `1px solid ${NEST_BORDER}`, borderRadius: 12,
-                      padding: '12px 14px 12px 18px',
-                    }}>
-                      <div aria-hidden style={{ position: 'absolute' as const, left: 0, top: 0, bottom: 0, width: 3, background: rail }} />
-                      {pname && (
-                        <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 4 }}>
-                          {pname}
-                        </div>
-                      )}
-                      <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.88)', lineHeight: 1.5 }}>{ins.text}</div>
-                    </div>
-                  );
-                })}
-              </div>
+              <EmptyState
+                icon={<Selection size={22} />}
+                title="No projects selected"
+                text={`You have ${projects.length} project${projects.length === 1 ? '' : 's'} available — pick up to 5 to compare health scores, cost burn vs schedule, money position, and field signals side by side.`}
+                action={<Button onClick={() => setSelectorOpen(true)}>Select Projects</Button>}
+              />
             )}
-          </SectionCard>
+          </Card>
+        )}
 
-          {/* 2 — Comparison grid: one machined card per project */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <SquaresFour size={15} weight="duotone" color={GOLD} />
-            <span style={{ fontSize: 11, fontWeight: 800, color: DIM }}>
-              Project Comparison
-            </span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginBottom: 24 }}>
-            {rows.map((r) => <ProjectCard key={r.id || r.name} r={r} />)}
-          </div>
+        {/* Summary failed and we have nothing cached to show */}
+        {ids.length > 0 && error && rows.length === 0 && (
+          <Card flush>
+            <EmptyState
+              icon={<Lightbulb size={22} />}
+              title="Couldn't load the intelligence summary"
+              text="The portfolio summary request failed. Your project data is untouched — retry when ready."
+              action={<Button icon={<ArrowsClockwise size={15} weight="bold" />} onClick={() => void mutate()}>Retry</Button>}
+            />
+          </Card>
+        )}
 
-          {/* 3 — Portfolio totals: sums over projects that report the figure */}
-          <StatStrip items={[
-            moneyStat('Combined Contract', tContract),
-            moneyStat('Billed to Date', tBilled,
-              tContract.n > 0 && tContract.total > 0 && tBilled.n > 0
-                ? `${((tBilled.total / tContract.total) * 100).toFixed(1)}% of combined contract`
-                : undefined),
-            moneyStat('Invoiced Costs', tInvoiced),
-            moneyStat('Approved COs', tCO, tCOCount.n > 0 ? `${tCOCount.total} approved change order${tCOCount.total === 1 ? '' : 's'}` : undefined),
-            tMargin.n > 0
-              ? { label: 'Portfolio Margin', value: fmtK(tMargin.total), sub: coverage(tMargin), accent: tMargin.total < 0 ? RED : GOLD }
-              : { label: 'Portfolio Margin', value: '—', sub: 'No data yet' },
-            tRfi.n > 0
-              ? { label: 'Open RFIs', value: String(tRfi.total), sub: tRfi.total > 0 ? 'Awaiting answers' : 'All answered', accent: tRfi.total > 10 ? RED : tRfi.total > 5 ? AMBER : undefined }
-              : { label: 'Open RFIs', value: '—', sub: 'No data yet' },
-            tPunch.n > 0
-              ? { label: 'Open Punch', value: String(tPunch.total), sub: coverage(tPunch), accent: tPunch.total > 0 ? AMBER : undefined }
-              : { label: 'Open Punch', value: '—', sub: 'No data yet' },
-          ]} />
-        </>
-      )}
-    </PremiumSurface>
+        {/* Loading — skeletons shaped like the surface they become */}
+        {summaryLoading && !error && (
+          <div className="igStack">
+            <Card title="Portfolio Insights" subtitle="Reading the numbers…"><div className="igInsights">{ids.map((id) => <div key={id} className="igSkel" style={{ height: 54, padding: 0 }} />)}</div></Card>
+            <GridSkeleton count={ids.length} />
+          </div>
+        )}
+
+        {rows.length > 0 && (
+          <div className="igStack">
+            {/* 1 — INSIGHTS: the honest sentences, severity first */}
+            <Card title="Portfolio Insights" subtitle="What the numbers say across your selected projects — computed from the records, not guessed.">
+              {insights.length === 0 ? (
+                <div className="igMuted" style={{ fontSize: 'var(--fs-sm)' }}>All projects tracking clean — nothing needs your attention right now.</div>
+              ) : (
+                <div className="igInsights">
+                  {insights.map((ins, i) => {
+                    const { tone } = sevRail(ins.severity);
+                    const pname = ins.projectId ? nameOf.get(String(ins.projectId)) : undefined;
+                    return (
+                      <div key={i} className="igInsight" data-tone={tone}>
+                        {pname && <div className="igInsightProj">{pname}</div>}
+                        <div className="igInsightText">{ins.text}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+
+            {/* 2 — Comparison grid: one card per project */}
+            <div className="igSection"><SquaresFour size={15} weight="bold" /> Project Comparison</div>
+            <div className="igGrid">
+              {rows.map((r) => <ProjectCard key={r.id || r.name} r={r} />)}
+            </div>
+
+            {/* 3 — Portfolio totals: sums over projects that report the figure */}
+            <div className="igSection"><Lightbulb size={15} weight="bold" /> Portfolio Totals</div>
+            <StatRow items={totals} />
+          </div>
+        )}
+      </PageShell>
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </div>
   );
 }
