@@ -17,9 +17,9 @@ import {
 } from '@/components/ui/premium';
 import { SHEET_DISCIPLINES } from '@/lib/construction-intelligence';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -484,13 +484,13 @@ function EstimatePage() {
             user just typed (review finding). And the label names where it
             actually goes — the project takeoff, not the global Studio. */}
         <Link href={`/app/projects/${projectId}/takeoff`} style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>
-          ← Back to project takeoff
+          ← Back to Project Takeoff
         </Link>
       </div>
       <ModuleHero
         eyebrow="Takeoff Estimate"
         eyebrowIcon={<Calculator size={13} weight="fill" color={GOLD} />}
-        title={project?.name || 'Loading...'}
+        title={project?.name || 'Loading…'}
         subtitle="Sheet-by-sheet quantity takeoff and live cost estimating."
         actions={<>
           <select
@@ -517,9 +517,9 @@ function EstimatePage() {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<Calculator size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={currency(grandTotal)} accent={GOLD} sub="material + labor" delay={0.02}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
-        <StatCard icon={<Cube size={19} weight="duotone" color="#61afef" />} label="Material" value={currency(totalMaterial)} accent="#61afef" sub="rolled up" delay={0.06}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
-        <StatCard icon={<Users size={19} weight="duotone" color="#98c379" />} label="Labor" value={currency(totalLabor)} accent="#98c379" sub="rolled up" delay={0.10}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
+        <StatCard icon={<Calculator size={19} weight="duotone" color={GOLD} />} label="Total Cost" value={currency(grandTotal)} accent={GOLD} sub="Material + labor" delay={0.02}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
+        <StatCard icon={<Cube size={19} weight="duotone" color="#61afef" />} label="Material" value={currency(totalMaterial)} accent="#61afef" sub="Rolled up" delay={0.06}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
+        <StatCard icon={<Users size={19} weight="duotone" color="#98c379" />} label="Labor" value={currency(totalLabor)} accent="#98c379" sub="Rolled up" delay={0.10}  href={`/app/projects/${projectId}/takeoff/estimate`}/>
       </div>
 
       {/* WORKSPACE */}
@@ -578,7 +578,7 @@ function EstimatePage() {
                     padding: '10px 16px',
                     cursor: 'pointer',
                     borderBottom: `1px solid rgba(255,255,255,0.06)`,
-                    background: selectedSheet?.id === s.id ? 'rgba(245, 158, 11,0.12)' : 'transparent',
+                    background: selectedSheet?.id === s.id ? 'var(--brand-primary-12)' : 'transparent',
                     borderLeft: selectedSheet?.id === s.id ? `3px solid ${GOLD}` : '3px solid transparent',
                     display: 'flex',
                     alignItems: 'center',
@@ -652,7 +652,7 @@ function EstimatePage() {
             <SectionCard flat flush>
               <PremiumEmpty
                 icon={<FileText size={30} weight="duotone" color={GOLD} />}
-                title="Select or add a sheet to begin"
+                title="Select or Add a Sheet to Begin"
                 description="Choose a sheet from the left, or add a new one to start capturing quantities and line-item costs."
               />
             </SectionCard>
@@ -685,7 +685,7 @@ function EstimatePage() {
                     <thead>
                       <tr>
                         {['#', 'CSI Code', 'Description', 'Qty', 'Unit', 'Unit Cost', 'Extended', 'Labor Hrs', 'Actions'].map(h => (
-                          <th key={h} style={{ textAlign: 'left', padding: '8px 10px', borderBottom: `2px solid ${BORDER}`, color: DIM, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>{h}</th>
+                          <th key={h} style={{ textAlign: 'left', padding: '8px 10px', borderBottom: `2px solid ${BORDER}`, color: DIM, fontSize: 11, whiteSpace: 'nowrap' }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -727,7 +727,7 @@ function EstimatePage() {
                             onClick={() => { setSelectedItem(item); setDetailDraft({ ...item }); setRightOpen(true); }}
                             style={{
                               borderBottom: `1px solid rgba(255,255,255,0.06)`,
-                              background: selectedItem?.id === item.id ? 'rgba(245, 158, 11,0.06)' : 'transparent',
+                              background: selectedItem?.id === item.id ? 'var(--brand-primary-08)' : 'transparent',
                               cursor: 'pointer',
                             }}
                           >
@@ -753,7 +753,7 @@ function EstimatePage() {
                       })}
                       {/* Add Row */}
                       {addingRow && (
-                        <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.06)`, background: 'rgba(245, 158, 11,0.08)' }}>
+                        <tr style={{ borderBottom: `1px solid rgba(255,255,255,0.06)`, background: 'var(--brand-primary-08)' }}>
                           <td style={{ padding: '8px 10px', color: DIM }}>+</td>
                           <td style={{ padding: '8px 10px' }}>
                             <input value={newRow.csi_code} onChange={e => setNewRow(r => ({ ...r, csi_code: e.target.value }))} placeholder="CSI Code" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 100, fontSize: 13 }} />
@@ -775,7 +775,7 @@ function EstimatePage() {
                             <input type="number" value={newRow.labor_hours || ''} onChange={e => setNewRow(r => ({ ...r, labor_hours: num(e.target.value) }))} placeholder="0" style={{ background: DARK, color: TEXT, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '3px 6px', width: 60, fontSize: 13 }} />
                           </td>
                           <td style={{ padding: '8px 10px', display: 'flex', gap: 4 }}>
-                            <button onClick={addLineItem} style={{ background: GOLD, color: '#000', border: 'none', borderRadius: 3, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Save</button>
+                            <button onClick={addLineItem} style={{ background: GOLD, color: '#0A0A00', border: 'none', borderRadius: 3, padding: '4px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Save</button>
                             <button onClick={() => { setAddingRow(false); setNewRow({ ...emptyLineItem }); }} style={{ background: RAISED, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 3, padding: '4px 8px', fontSize: 11, cursor: 'pointer' }}>Cancel</button>
                           </td>
                         </tr>
@@ -823,10 +823,10 @@ function EstimatePage() {
                   { label: 'Labor Cost', field: 'labor_cost', type: 'number' },
                   { label: 'Labor Hours', field: 'labor_hours', type: 'number' },
                   { label: 'Crew Size', field: 'crew_size', type: 'number' },
-                  { label: 'Duration (days)', field: 'duration', type: 'number' },
+                  { label: 'Duration (Days)', field: 'duration', type: 'number' },
                 ].map(({ label, field, type }) => (
                   <div key={field}>
-                    <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</label>
+                    <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>{label}</label>
                     <input
                       type={type}
                       value={(detailDraft as unknown as Record<string, unknown>)[field] as string | number || ''}
@@ -836,7 +836,7 @@ function EstimatePage() {
                   </div>
                 ))}
                 <div>
-                  <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Notes</label>
+                  <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>Notes</label>
                   <textarea
                     value={detailDraft.notes || ''}
                     onChange={e => setDetailDraft(d => d ? { ...d, notes: e.target.value } : d)}
@@ -845,7 +845,7 @@ function EstimatePage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Subcontractor</label>
+                  <label style={{ fontSize: 11, color: DIM, display: 'block', marginBottom: 4, fontWeight: 700 }}>Subcontractor</label>
                   <input
                     value={detailDraft.subcontractor || ''}
                     onChange={e => setDetailDraft(d => d ? { ...d, subcontractor: e.target.value } : d)}
@@ -896,7 +896,7 @@ function EstimatePage() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 12, color: DIM }}>Gross Margin:</span>
-              <span style={{ fontSize: 15, fontWeight: 800, color: grossMargin > 20 ? '#98c379' : grossMargin > 10 ? '#e5c07b' : '#e06c75' }}>{grossMargin.toFixed(1)}%</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: grossMargin > 20 ? '#98c379' : grossMargin > 10 ? 'var(--warning)' : '#e06c75' }}>{grossMargin.toFixed(1)}%</span>
             </div>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               {selectedTakeoff && (
@@ -927,7 +927,7 @@ function EstimatePage() {
                 style={{ ...goldButtonStyle, padding: '9px 20px', opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}
                 className="pmBtn"
               >
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>
@@ -940,8 +940,8 @@ function EstimatePage() {
 export default function EstimatePageWrapper() {
   return (
     <Suspense fallback={
-      <div style={{ background: '#0a0a0a', color: '#CBD5E1', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-        Loading estimate workspace...
+      <div style={{ background: 'var(--bg-base)', color: '#CBD5E1', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+        Loading estimate workspace…
       </div>
     }>
       <EstimatePage />

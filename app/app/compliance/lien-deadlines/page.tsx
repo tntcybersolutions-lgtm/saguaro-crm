@@ -28,9 +28,10 @@ import {
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
+const AMBER = 'var(--warning)';
 const GREEN = '#34C759';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
@@ -83,7 +84,7 @@ function daysUntil(dateStr: string): number {
 
 function urgencyColor(days: number): string {
   if (days < 0) return RED;
-  if (days <= 7) return GOLD;
+  if (days <= 7) return AMBER;
   if (days <= 30) return BLUE;
   return GRAY;
 }
@@ -227,7 +228,7 @@ export default function LienDeadlinePage() {
   const futureCount = sorted.filter(d => daysUntil(d.due_date) > 30).length;
 
   const inputStyle: React.CSSProperties = {
-    background: '#1c1c1e',
+    background: 'var(--bg-surface-2)',
     border: `1px solid ${BORDER}`,
     borderRadius: 10,
     padding: '10px 14px',
@@ -243,7 +244,7 @@ export default function LienDeadlinePage() {
     <PremiumSurface maxWidth={1120}>
       {/* Header */}
       <ModuleHero
-        eyebrow="COMPLIANCE"
+        eyebrow="Compliance"
         eyebrowIcon={<Gavel size={13} weight="fill" color={GOLD} />}
         title="Lien Deadline"
         accent="Tracker"
@@ -268,19 +269,19 @@ export default function LienDeadlinePage() {
           delay={0.02}
          href="/app/compliance/lien-deadlines"/>
         <StatCard
-          icon={<Clock size={19} weight="duotone" color={GOLD} />}
-          label="Due in 7 Days" value={String(due7Count)} accent={GOLD}
-          sub="needs action" delay={0.06}
+          icon={<Clock size={19} weight="duotone" color={AMBER} />}
+          label="Due in 7 Days" value={String(due7Count)} accent={AMBER}
+          sub="Needs action" delay={0.06}
          href="/app/compliance/lien-deadlines"/>
         <StatCard
           icon={<CalendarCheck size={19} weight="duotone" color={BLUE} />}
           label="Due in 30 Days" value={String(due30Count)} accent={BLUE}
-          sub="upcoming" delay={0.10}
+          sub="Upcoming" delay={0.10}
          href="/app/compliance/lien-deadlines"/>
         <StatCard
           icon={<CalendarDots size={19} weight="duotone" color={GRAY} />}
           label="Future" value={String(futureCount)} accent={GRAY}
-          sub="beyond 30 days" delay={0.14}
+          sub="Beyond 30 days" delay={0.14}
          href="/app/compliance/lien-deadlines"/>
       </div>
 
@@ -320,7 +321,7 @@ export default function LienDeadlinePage() {
 
             {/* AZ-specific auto-calculation inputs */}
             {formState === 'AZ' && (
-              <div style={{ marginTop: 20, padding: 16, background: 'rgba(245, 158, 11,0.06)', borderRadius: 12, border: `1px solid rgba(245, 158, 11,0.15)` }}>
+              <div style={{ marginTop: 20, padding: 16, background: 'var(--brand-primary-08)', borderRadius: 12, border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)' }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: GOLD, marginBottom: 12 }}>AZ Auto-Calculated Deadlines</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
                   <div>
@@ -365,7 +366,7 @@ export default function LienDeadlinePage() {
                   ...(submitDisabled ? { opacity: 0.5, cursor: 'not-allowed', boxShadow: 'none' } : {}),
                 }}
               >
-                {saving ? 'Saving...' : 'Add Deadline'}
+                {saving ? 'Saving…' : 'Add Deadline'}
               </button>
             </div>
           </SectionCard>
@@ -376,7 +377,7 @@ export default function LienDeadlinePage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60, color: DIM }}>
           <div style={{ width: 32, height: 32, border: '3px solid rgba(255,255,255,0.12)', borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          Loading deadlines...
+          Loading deadlines…
         </div>
       ) : sorted.length === 0 ? (
         <SectionCard>
@@ -421,14 +422,14 @@ export default function LienDeadlinePage() {
                   width: 56,
                   height: 56,
                   borderRadius: 12,
-                  background: color + '15',
+                  background: `color-mix(in srgb, ${color} 8%, transparent)`,
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color }}>
                     {new Date(dl.due_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short' })}
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 800, color, lineHeight: 1 }}>
@@ -444,10 +445,8 @@ export default function LienDeadlinePage() {
                       fontWeight: 700,
                       padding: '2px 8px',
                       borderRadius: 4,
-                      background: color + '18',
+                      background: `color-mix(in srgb, ${color} 9%, transparent)`,
                       color,
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.3,
                     }}>
                       {deadlineTypeLabel(dl.deadline_type)}
                     </span>
@@ -456,14 +455,14 @@ export default function LienDeadlinePage() {
                       fontWeight: 700,
                       padding: '2px 8px',
                       borderRadius: 4,
-                      background: 'rgba(245,158,11,0.12)',
+                      background: 'var(--brand-primary-12)',
                       color: BLUE,
                     }}>
                       {dl.state}
                     </span>
                     {/* Reminder badges */}
                     {dl.reminder_sent_30 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(107,114,128,0.12)', color: GRAY }}>30d sent</span>}
-                    {dl.reminder_sent_14 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(245, 158, 11,0.12)', color: GOLD }}>14d sent</span>}
+                    {dl.reminder_sent_14 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--brand-primary-12)', color: GOLD }}>14d sent</span>}
                     {dl.reminder_sent_7 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(239,68,68,0.12)', color: RED }}>7d sent</span>}
                   </div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: TEXT, marginBottom: 2 }}>{dl.description || deadlineTypeLabel(dl.deadline_type)}</div>
@@ -476,7 +475,7 @@ export default function LienDeadlinePage() {
                 <div style={{
                   padding: '8px 16px',
                   borderRadius: 10,
-                  background: color + '15',
+                  background: `color-mix(in srgb, ${color} 8%, transparent)`,
                   color,
                   fontSize: 13,
                   fontWeight: 700,

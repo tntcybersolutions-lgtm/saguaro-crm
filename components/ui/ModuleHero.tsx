@@ -1,9 +1,8 @@
 'use client';
 
 /**
- * <ModuleHero> — cinematic page header codifying the Takeoff aesthetic:
- * aurora/radial-gradient backdrop + ambient gold glow, an optional eyebrow
- * pill, a bold title with an optional gradient accent word, a subtitle, and a
+ * <ModuleHero> — page header on a glass panel over the jet-black page
+ * (docs/COPY-STYLE.md §6), an optional Title Case eyebrow pill, a bold title with an optional gradient accent word, a subtitle, and a
  * right-aligned `actions` slot. Drop it at the top of any module page.
  *
  * Renders <UiFx/> itself, so the shared stylesheet + heading size-cap
@@ -18,7 +17,7 @@
  */
 
 import React from 'react';
-import { Aurora, UiFx, gold, GOLD_HI, GOLD_TEXT_GRADIENT } from './fx';
+import { Aurora, UiFx, gold, GOLD, GOLD_TEXT_GRADIENT } from './fx';
 
 type Align = 'left' | 'center';
 type Size = 'sm' | 'md' | 'lg';
@@ -86,7 +85,14 @@ export function ModuleHero({
   return (
     <div
       className={`sgUi${className ? ` ${className}` : ''}`}
-      style={{ position: 'relative', overflow: 'hidden', borderRadius: 20, ...style }}
+      style={{
+        position: 'relative', overflow: 'hidden', borderRadius: 20,
+        background: 'rgba(255,255,255,0.045)',
+        backdropFilter: 'blur(16px) saturate(140%)', WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+        border: '1px solid rgba(255,255,255,0.09)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+        ...style,
+      }}
     >
       <UiFx />
       <Aurora soft={soft} grid={grid} />
@@ -124,10 +130,9 @@ export function ModuleHero({
                   borderRadius: 14,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: `linear-gradient(150deg, ${gold(22)}, ${gold(6)})`,
+                  background: `linear-gradient(150deg, ${gold(18)}, ${gold(6)})`,
                   border: `1px solid ${gold(35)}`,
-                  color: GOLD_HI,
-                  boxShadow: `0 0 34px -8px ${gold(55)}`,
+                  color: GOLD,
                   marginTop: 4,
                 }}
               >
@@ -146,14 +151,12 @@ export function ModuleHero({
                     padding: '6px 14px',
                     borderRadius: 999,
                     marginBottom: 14,
-                    background: `linear-gradient(90deg, ${gold(18)}, ${gold(6)})`,
-                    border: `1px solid ${gold(40)}`,
-                    color: GOLD_HI,
-                    fontSize: 11,
-                    fontWeight: 800,
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    boxShadow: `0 0 30px -10px ${gold(55)}`,
+                    background: gold(12),
+                    border: `1px solid ${gold(35)}`,
+                    color: GOLD,
+                    fontSize: 12.5,
+                    fontWeight: 700,
+                    letterSpacing: 'normal',
                   }}
                 >
                   {eyebrowIcon}

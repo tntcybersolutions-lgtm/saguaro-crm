@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { Robot, Laptop, Phone, Printer, VideoCamera, WifiHigh, Plug, Gear, CheckCircle, SlidersHorizontal, Sparkle, TreeStructure, Package, Globe, ShieldCheck, Path, Ruler, CurrencyDollar } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, goldButtonStyle } from '@/components/ui/premium';
 
-const BASE = '#1c1c1e';
-const GOLD = '#F59E0B';
+const BASE = 'var(--bg-surface-2)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
@@ -165,13 +165,13 @@ export default function NetworkWizardPage() {
     <PremiumSurface maxWidth={2200}>
       {/* Breadcrumb */}
       <div style={{ marginBottom: 14 }}>
-        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network &gt;</Link>
+        <Link href={`/app/projects/${projectId}/network`} style={{ color: DIM, fontSize: 12, textDecoration: 'none' }}>Network →</Link>
         <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>AI Wizard</span>
       </div>
 
       {/* Header */}
       <ModuleHero
-        eyebrow="AI WIZARD"
+        eyebrow="AI Wizard"
         eyebrowIcon={<Robot size={13} weight="fill" color={GOLD} />}
         title="AI Network"
         accent="Wizard"
@@ -203,7 +203,7 @@ export default function NetworkWizardPage() {
           </div>
         </div>
 
-        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px', textTransform: 'uppercase' }}>Device Counts</h4>
+        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px' }}>Device Counts</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
           {[
             { key: 'workstations', label: 'Workstations', icon: <Laptop size={14} weight="regular" color={DIM} style={{ verticalAlign: 'middle' }} /> },
@@ -225,7 +225,7 @@ export default function NetworkWizardPage() {
           ))}
         </div>
 
-        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px', textTransform: 'uppercase' }}>Features</h4>
+        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px' }}>Features</h4>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: TEXT, fontSize: 13, cursor: 'pointer' }}>
             <input type="checkbox" checked={form.guest_wifi} onChange={e => setForm({ ...form, guest_wifi: e.target.checked })} />
@@ -237,7 +237,7 @@ export default function NetworkWizardPage() {
           </label>
         </div>
 
-        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px', textTransform: 'uppercase' }}>Budget Range (Optional)</h4>
+        <h4 style={{ color: DIM, fontSize: 12, fontWeight: 700, margin: '16px 0 8px' }}>Budget Range (Optional)</h4>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, maxWidth: 400 }}>
           <div>
             <label style={labelStyle}>Min ($)</label>
@@ -256,12 +256,12 @@ export default function NetworkWizardPage() {
         }}>
           {generating ? (
             <>
-              <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}><Gear size={16} weight="regular" color="#1A1206" /></span>
-              Generating Network Design...
+              <span style={{ display: 'inline-flex', animation: 'spin 1s linear infinite' }}><Gear size={16} weight="regular" color="#0A0A00" /></span>
+              Generating Network Design…
             </>
           ) : (
             <>
-              <Robot size={16} weight="regular" color="#1A1206" />
+              <Robot size={16} weight="regular" color="#0A0A00" />
               Generate Network Design
             </>
           )}
@@ -312,7 +312,7 @@ export default function NetworkWizardPage() {
                         <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontFamily: 'monospace' }}>{v.subnet}</td>
                         <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontFamily: 'monospace' }}>{v.gateway}</td>
                         <td style={{ padding: '8px 12px', borderBottom: `1px solid ${BORDER}` }}>
-                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: `${BLUE}15`, color: BLUE, textTransform: 'capitalize' }}>{v.purpose}</span>
+                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'var(--brand-primary-08)', color: BLUE, textTransform: 'capitalize' }}>{v.purpose}</span>
                         </td>
                       </tr>
                     ))}
@@ -392,7 +392,7 @@ export default function NetworkWizardPage() {
                   <span style={{
                     fontSize: 10, padding: '2px 8px', borderRadius: 8, fontWeight: 700,
                     background: rule.action === 'allow' ? `${GREEN}15` : `${RED}15`,
-                    color: rule.action === 'allow' ? GREEN : RED, textTransform: 'uppercase',
+                    color: rule.action === 'allow' ? GREEN : RED, textTransform: 'capitalize',
                   }}>{rule.action}</span>
                   <span style={{ color: TEXT, fontSize: 12 }}>{rule.name}</span>
                   <span style={{ color: DIM, fontSize: 11 }}>{rule.source} → {rule.destination} ({rule.protocol}/{rule.port})</span>
@@ -445,9 +445,9 @@ export default function NetworkWizardPage() {
             }}>
               {applied ? (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, verticalAlign: 'middle' }}>
-                  <CheckCircle size={16} weight="fill" color={GREEN} /> Applied to Project!
+                  <CheckCircle size={16} weight="fill" color={GREEN} /> Applied to Project
                 </span>
-              ) : applying ? 'Applying...' : 'Apply All to Project'}
+              ) : applying ? 'Applying…' : 'Apply All to Project'}
             </button>
           </div>
         </>

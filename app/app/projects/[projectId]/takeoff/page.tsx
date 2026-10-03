@@ -3,6 +3,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo, memo } from 'react';
 import { useParams } from 'next/navigation';
 import { applyMarkupStack } from '@/lib/takeoff/engine';
+import { laborAllocation, lineDirectCost, lineLabor, type LaborAllocation } from '@/lib/takeoff-line-cost';
+import { QTY_CHECK_TAG } from '@/lib/takeoff-quantity-sanity';
 import { parsePastedLines, looksLikeGrid } from '@/lib/estimating/paste';
 import { humanError } from '@/lib/errors';
 import { useToast } from '../../../../../components/Toast';
@@ -73,6 +75,11 @@ const fmt$ = (n: number) => CURRENCY_FMT.format(Number.isFinite(n) ? n : 0);
 const fmtN = (n: number) => NUMBER_FMT.format(Number.isFinite(n) ? n : 0);
 // Safe numeric coercion for SSE done-payload fields (which arrive as unknown JSON).
 const num = (v: unknown) => (Number.isFinite(Number(v)) ? Number(v) : 0);
+/** Human file size — a 3 KB drawing used to read "0.0 MB". KB under 1 MB, MB above. */
+const fmtFileSize = (bytes: number) =>
+  bytes < 1024 * 1024
+    ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+    : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
 // The compliance chain endpoint (task 2). SSE — SAME contract as sage-auto-docs:
 //   progress { step, pct, message } · error { message } · done { ...counts }
@@ -83,6 +90,8 @@ interface AutoBuildSummary {
   packages: number;
   jackets: number;
   sov: boolean;
+  /** Project is still bidding — the pay app / SOV wait for the award (not a failure). */
+  sovDeferred?: boolean;
   lienWaivers: number;
   w9s: number;
   filed: number;
@@ -121,9 +130,9 @@ const CSI_DIVISION_NAMES: Record<string, string> = {
   '33': 'Utilities',
 };
 
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
-const AMBER = '#D97706';
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
+const AMBER = 'var(--brand-primary-hover)';
 const GREEN = '#22C55E';
 const SURFACE = 'rgba(255,255,255,0.02)';
 const BORDER = 'rgba(255,255,255,0.05)';
@@ -182,7 +191,7 @@ const FX_KEYFRAMES = `
 @keyframes tkPop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
 @keyframes tkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes tkScanV{0%{transform:translateY(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(var(--tkScanH,420px));opacity:0}}
-@keyframes tkGlow{0%,100%{box-shadow:0 0 0 1px rgba(245,158,11,.30),0 22px 60px -18px rgba(245,158,11,.20),inset 0 0 60px rgba(245,158,11,.045)}50%{box-shadow:0 0 0 1px rgba(245,158,11,.55),0 26px 90px -14px rgba(245,158,11,.34),inset 0 0 90px rgba(245,158,11,.08)}}
+@keyframes tkGlow{0%,100%{box-shadow:0 0 0 1px color-mix(in srgb, var(--brand-primary) 30%, transparent),0 22px 60px -18px color-mix(in srgb, var(--brand-primary) 20%, transparent),inset 0 0 60px color-mix(in srgb, var(--brand-primary) 4.5%, transparent)}50%{box-shadow:0 0 0 1px color-mix(in srgb, var(--brand-primary) 55%, transparent),0 26px 90px -14px color-mix(in srgb, var(--brand-primary) 34%, transparent),inset 0 0 90px var(--brand-primary-08)}}
 @keyframes tkRing{0%{transform:scale(.85);opacity:.75}70%{opacity:0}100%{transform:scale(1.75);opacity:0}}
 @keyframes tkAur1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(7%,5%) scale(1.14)}}
 @keyframes tkAur2{0%,100%{transform:translate(0,0) scale(1.06)}50%{transform:translate(-8%,6%) scale(1)}}
@@ -191,11 +200,11 @@ const FX_KEYFRAMES = `
 @keyframes tkShimmer{from{background-position:180% 0}to{background-position:-180% 0}}
 @keyframes tkSpin{to{transform:rotate(360deg)}}
 @keyframes tkSweep{0%{top:-8%}100%{top:108%}}
-@keyframes tkPulseA{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.34)}50%{box-shadow:0 0 0 22px rgba(245,158,11,0)}}
+@keyframes tkPulseA{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--brand-primary) 34%, transparent)}50%{box-shadow:0 0 0 22px transparent}}
 @keyframes tkBarShine{0%{transform:translateX(-140%)}55%,100%{transform:translateX(360%)}}
 .tkHover{transition:transform .2s cubic-bezier(.2,.7,.3,1),box-shadow .2s ease,border-color .2s ease,background .2s ease}
-.tkHover:hover{transform:translateY(-5px);border-color:rgba(245,158,11,.45)}
-.tkHover:hover .tkIcon{box-shadow:0 0 22px rgba(245,158,11,.34)}
+.tkHover:hover{transform:translateY(-5px);border-color:color-mix(in srgb, var(--brand-primary) 45%, transparent)}
+.tkHover:hover .tkIcon{box-shadow:0 0 22px color-mix(in srgb, var(--brand-primary) 34%, transparent)}
 .tkBtn{transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
 .tkBtn:hover{transform:translateY(-2px);filter:brightness(1.06)}
 .tkShine{background-size:200% 100%;animation:tkShimmer 3.4s linear infinite}
@@ -209,16 +218,16 @@ h2.tkH2{font-size:clamp(22px,3vw,30px)!important;font-weight:800!important;line-
 .tkRange::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid currentColor;box-shadow:0 0 10px currentColor,0 2px 6px rgba(0,0,0,.55);cursor:pointer}
 /* Inline line-item editing */
 .tkEditable{border-radius:6px;padding:2px 6px;margin:-2px -6px;cursor:text;transition:background .15s ease,box-shadow .15s ease}
-.tkEditable:hover{background:rgba(245,158,11,0.10);box-shadow:inset 0 0 0 1px rgba(245,158,11,0.35)}
+.tkEditable:hover{background:color-mix(in srgb, var(--brand-primary) 10%, transparent);box-shadow:inset 0 0 0 1px var(--brand-primary-35)}
 /* The selected cell has to be obvious — keyboard navigation is useless if
    you cannot see where you are. Solid ring, not the hover tint. */
-.tkEditable:focus{outline:none;background:rgba(245,158,11,0.14);box-shadow:inset 0 0 0 2px rgba(245,158,11,0.9)}
-.tkEditable:focus-visible{outline:none;background:rgba(245,158,11,0.14);box-shadow:inset 0 0 0 2px rgba(245,158,11,0.9)}
-.tkCellInput{width:100%;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.5);border-radius:6px;color:#fff;font-size:13px;padding:4px 7px;outline:none;font-family:inherit}
-.tkCellInput:focus{box-shadow:0 0 0 2px rgba(245,158,11,0.25)}
+.tkEditable:focus{outline:none;background:color-mix(in srgb, var(--brand-primary) 14%, transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--brand-primary) 90%, transparent)}
+.tkEditable:focus-visible{outline:none;background:color-mix(in srgb, var(--brand-primary) 14%, transparent);box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--brand-primary) 90%, transparent)}
+.tkCellInput{width:100%;background:var(--brand-primary-08);border:1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent);border-radius:6px;color:#fff;font-size:13px;padding:4px 7px;outline:none;font-family:inherit}
+.tkCellInput:focus{box-shadow:0 0 0 2px var(--brand-primary-25)}
 .tkCellInput::placeholder{color:rgba(255,255,255,0.35)}
 .tkIconBtn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);cursor:pointer;transition:border-color .15s ease,background .15s ease}
-.tkIconBtn:hover{border-color:rgba(245,158,11,0.5);background:rgba(245,158,11,0.12)}
+.tkIconBtn:hover{border-color:color-mix(in srgb, var(--brand-primary) 50%, transparent);background:var(--brand-primary-12)}
 .tkIconBtn:disabled{opacity:.35;cursor:default}
 @keyframes tkUndoIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
 @media (prefers-reduced-motion: reduce){
@@ -230,18 +239,24 @@ h2.tkH2{font-size:clamp(22px,3vw,30px)!important;font-weight:800!important;line-
 // Scoped animated backdrop — aurora gold blobs + drifting blueprint grid + vignette.
 // position:absolute so it fills only the page's content column (never bleeds under the
 // project sidebar). Purely decorative; pointer-events:none keeps the dropzone clickable.
-function Aurora({ soft = false }: { soft?: boolean }) {
+/* `still` drops every infinite animation. The results page is tall (a 55-line table,
+   cards, charts) and this backdrop is absolutely positioned over ALL of it: three
+   600px blobs under 30-42px blur, transform-animated forever, plus a masked grid
+   whose background-position pans every frame — background-position is not a
+   compositor property, so that layer was repainted (mask + gradients) on the main
+   thread 60 times a second across the full page height. That is the renderer stall
+   seen after results render. The hero screens keep the motion; the work screen
+   does not need it. */
+function Aurora({ soft = false, still = false }: { soft?: boolean; still?: boolean }) {
   const grid =
-    'linear-gradient(rgba(245,158,11,0.055) 1px, transparent 1px),' +
-    'linear-gradient(90deg, rgba(245,158,11,0.055) 1px, transparent 1px)';
+    'linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),' +
+    'linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)';
   const gridMask = 'radial-gradient(120% 78% at 50% 14%, #000 24%, transparent 76%)';
   return (
     <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% -8%, rgba(245,158,11,0.10), transparent 55%)' }} />
-      <div style={{ position: 'absolute', width: 680, height: 680, left: '-16%', top: '-26%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.20), transparent 62%)', filter: 'blur(30px)', animation: 'tkAur1 17s ease-in-out infinite', opacity: soft ? 0.55 : 1 }} />
-      <div style={{ position: 'absolute', width: 560, height: 560, right: '-12%', top: '0%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,119,6,0.17), transparent 60%)', filter: 'blur(38px)', animation: 'tkAur2 21s ease-in-out infinite', opacity: soft ? 0.5 : 1 }} />
-      <div style={{ position: 'absolute', width: 540, height: 540, left: '28%', bottom: '-28%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(251,191,36,0.12), transparent 60%)', filter: 'blur(42px)', animation: 'tkAur3 24s ease-in-out infinite', opacity: soft ? 0.45 : 1 }} />
-      <div style={{ position: 'absolute', inset: -24, backgroundImage: grid, backgroundSize: '34px 34px', animation: 'tkGridPan 9s linear infinite', maskImage: gridMask, WebkitMaskImage: gridMask, opacity: soft ? 0.35 : 0.65 }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 90% at 50% -8%, rgba(255,255,255,0.04), transparent 55%)' }} />
+      {/* Warm aurora blobs removed — jet black + glass (docs/COPY-STYLE.md §6). */}
+      <div style={{ position: 'absolute', inset: -24, backgroundImage: grid, backgroundSize: '34px 34px', animation: still ? 'none' : 'tkGridPan 9s linear infinite', maskImage: gridMask, WebkitMaskImage: gridMask, opacity: soft ? 0.35 : 0.65 }} />
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(130% 100% at 50% -6%, transparent 50%, rgba(2,4,8,0.62))' }} />
     </div>
   );
@@ -333,10 +348,12 @@ function EditableCell({ rawValue, display, align, numeric, disabled, cellStyle, 
 
 /** One editable takeoff line: inline edit on description / qty / unit / $/unit,
  *  a note editor (indicator dot when a note exists), and delete-with-undo. */
-const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, onDuplicate, onInsertBelow, onDelete }: {
+const EditableRow = memo(function EditableRow({ item, idx, sellMult, laborAlloc, onPatch, onDuplicate, onInsertBelow, onDelete }: {
   item: TakeoffItem;
   idx: number;
+  /** Bid price ÷ direct cost — applied to the line's DIRECT cost (material + labor). */
   sellMult: number;
+  laborAlloc: LaborAllocation;
   onPatch: (item: TakeoffItem, patch: LinePatch) => void;
   onDuplicate: (item: TakeoffItem) => void;
   onInsertBelow: (item: TakeoffItem) => void;
@@ -346,6 +363,12 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, on
   const [noteDraft, setNoteDraft] = useState('');
   const editable = isSavedRow(item);
   const hasNote = !!item.notes && item.notes.trim().length > 0;
+  /* The analyzer's quantity sanity check (lib/takeoff-quantity-sanity) writes a
+     QTY_CHECK_TAG note when it corrected or doubts a line. Surfaced on the row
+     itself — a note hidden behind the note button is not a warning. */
+  const qtyCheck = hasNote && item.notes.includes(QTY_CHECK_TAG);
+  const labor = lineLabor(item, laborAlloc);
+  const direct = item.totalCost + labor;
 
   const commitNum = (field: 'quantity' | 'unitCost') => (raw: string) => {
     const n = Number(raw);
@@ -361,7 +384,14 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, on
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: ROW_GRID, padding: '8px 16px', borderBottom: `1px solid rgba(255,255,255,0.04)`, fontSize: 13, alignItems: 'center', background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}>
-        <div style={{ color: GOLD, fontFamily: 'monospace', fontSize: 12 }}>{item.csiCode}</div>
+        <div style={{ color: GOLD, fontFamily: 'monospace', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+          {item.csiCode}
+          {qtyCheck && (
+            <span title={item.notes} aria-label="Quantity flagged for review" style={{ display: 'inline-flex', cursor: 'help' }}>
+              <Warning size={14} weight="fill" color="#F87171" />
+            </span>
+          )}
+        </div>
         <EditableCell rawValue={item.description} display={item.description} align="left" disabled={!editable}
           cellStyle={{ color: 'rgba(255,255,255,0.85)', marginRight: 8 }} onCommit={commitText('description')} />
         <EditableCell rawValue={String(item.quantity)} display={fmtN(item.quantity)} align="right" numeric disabled={!editable}
@@ -370,13 +400,16 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, on
           cellStyle={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }} onCommit={commitText('unit')} />
         <EditableCell rawValue={String(item.unitCost)} display={`$${item.unitCost.toFixed(2)}`} align="right" numeric disabled={!editable}
           cellStyle={{ color: 'rgba(255,255,255,0.6)' }} onCommit={commitNum('unitCost')} />
-        <div style={{ textAlign: 'right', color: GOLD, fontWeight: 600 }}>{fmt$(item.totalCost)}</div>
-        <div style={{ textAlign: 'right', color: '#22C55E', fontWeight: 600 }}>{fmt$(item.totalCost * sellMult)}</div>
+        <div style={{ textAlign: 'right', color: GOLD, fontWeight: 600 }}
+          title={`Material ${fmt$(item.totalCost)} + labor ${fmt$(labor)}${item.laborHours ? ` (${fmtN(item.laborHours)} hrs)` : ''}`}>
+          {fmt$(direct)}
+        </div>
+        <div style={{ textAlign: 'right', color: '#22C55E', fontWeight: 600 }}>{fmt$(direct * sellMult)}</div>
         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
           <button className="tkIconBtn" disabled={!editable} title={hasNote ? 'Edit note' : 'Add note'}
             onClick={() => { setNoteDraft(item.notes || ''); setNoteOpen((o) => !o); }}>
             <NotePencil size={14} weight="duotone" color={hasNote ? GOLD_HI : 'rgba(255,255,255,0.55)'} />
-            {hasNote && <span aria-hidden style={{ position: 'absolute', top: 2, right: 2, width: 6, height: 6, borderRadius: '50%', background: GOLD, boxShadow: '0 0 6px rgba(245,158,11,0.9)' }} />}
+            {hasNote && <span aria-hidden style={{ position: 'absolute', top: 2, right: 2, width: 6, height: 6, borderRadius: '50%', background: GOLD, boxShadow: '0 0 6px color-mix(in srgb, var(--brand-primary) 90%, transparent)' }} />}
           </button>
           <button className="tkIconBtn" disabled={!editable} title="Duplicate this line below"
             onClick={() => onDuplicate(item)}>
@@ -392,7 +425,7 @@ const EditableRow = memo(function EditableRow({ item, idx, sellMult, onPatch, on
         </div>
       </div>
       {noteOpen && (
-        <div style={{ padding: '8px 16px 12px', borderBottom: `1px solid rgba(255,255,255,0.04)`, background: 'rgba(245,158,11,0.04)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+        <div style={{ padding: '8px 16px 12px', borderBottom: `1px solid rgba(255,255,255,0.04)`, background: 'color-mix(in srgb, var(--brand-primary) 4%, transparent)', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
           <NotePencil size={15} weight="duotone" color={GOLD_HI} style={{ marginTop: 8, flexShrink: 0 }} />
           <textarea
             className="tkCellInput"
@@ -447,7 +480,7 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
   return (
     <div style={{ padding: '10px 16px 14px', borderBottom: `1px solid ${BORDER}` }}>
       <SectionCard
-        title={`Add line — Division ${div}`}
+        title={`Add Line — Division ${div}`}
         subtitle={`${divName} · the server recomputes qty × $/unit and reconfirms the takeoff totals on save`}
         icon={<Plus size={18} weight="bold" />}
         accentBar
@@ -468,8 +501,8 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
           onChange={(e) => setNotes(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submit(); }} style={{ marginTop: 8, textAlign: 'left' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
           <button onClick={submit} disabled={!valid || busy} className="tkBtn"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 9, border: 'none', background: valid ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.06)', color: valid ? '#1A1206' : 'rgba(255,255,255,0.35)', fontWeight: 800, fontSize: 12.5, cursor: valid && !busy ? 'pointer' : 'not-allowed' }}>
-            {busy ? <CircleNotch size={14} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> : <Plus size={14} weight="bold" />} Add line
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 9, border: 'none', background: valid ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.06)', color: valid ? '#0A0A00' : 'rgba(255,255,255,0.35)', fontWeight: 800, fontSize: 12.5, cursor: valid && !busy ? 'pointer' : 'not-allowed' }}>
+            {busy ? <CircleNotch size={14} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> : <Plus size={14} weight="bold" />} Add Line
           </button>
           <span style={{ fontSize: 12, fontWeight: 700, color: valid ? GOLD : 'rgba(255,255,255,0.35)' }}>
             {valid ? `= ${fmt$(preview)} cost` : 'Description, qty > 0 and $/unit > 0 required'}
@@ -489,9 +522,10 @@ function DivisionComposer({ div, divName, onAdd, onClose }: {
  * Every row is inline-editable (qty / unit / $/unit / description / notes / delete),
  * and each division header carries an add-line composer.
  */
-const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPatch, onAdd, onPaste, onDuplicate, onInsertBelow, onDelete }: {
+const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, laborAlloc, onPatch, onAdd, onPaste, onDuplicate, onInsertBelow, onDelete }: {
   groupedItems: Record<string, TakeoffItem[]>;
   sellMult: number;
+  laborAlloc: LaborAllocation;
   onPatch: (item: TakeoffItem, patch: LinePatch) => void;
   onAdd: (div: string, draft: LineDraft) => Promise<boolean>;
   onPaste: (div: string, text: string) => Promise<number>;
@@ -515,7 +549,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
         if (budget <= 0) return null;
         const shown = budget === Infinity ? items : items.slice(0, budget);
         budget -= shown.length;
-        const divTotal = items.reduce((s, i) => s + i.totalCost, 0);
+        const divTotal = items.reduce((s, i) => s + lineDirectCost(i, laborAlloc), 0);
         const divName = CSI_DIVISION_NAMES[div] || `Division ${div}`;
         return (
           <div
@@ -529,14 +563,14 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
               void onPaste(div, text);
             }}
           >
-            <div style={{ padding: '8px 16px', background: 'rgba(245, 158, 11,0.06)', borderBottom: `1px solid ${BORDER}`, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+            <div style={{ padding: '8px 16px', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', borderBottom: `1px solid ${BORDER}`, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontWeight: 700, color: GOLD }}>
               <span>Division {div} — {divName}</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 12 }}>
                 <button
                   onClick={() => setComposerDiv((d) => (d === div ? null : div))}
                   title={`Add a line to Division ${div}`}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(245,158,11,0.35)', background: composerDiv === div ? 'rgba(245,158,11,0.16)' : 'rgba(245,158,11,0.06)', color: GOLD_HI, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  <Plus size={11} weight="bold" color={GOLD_HI} /> Add line
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid var(--brand-primary-35)', background: composerDiv === div ? 'color-mix(in srgb, var(--brand-primary) 16%, transparent)' : 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', color: GOLD_HI, fontSize: 10.5, fontWeight: 800, cursor: 'pointer' }}>
+                  <Plus size={11} weight="bold" color={GOLD_HI} /> Add Line
                 </button>
                 {/* Estimators arrive with a block of cells already copied. Reading
                     it here is the difference between this grid being usable and
@@ -553,8 +587,8 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
                     }
                   }}
                   title={`Paste rows from a spreadsheet into Division ${div} — description, quantity, unit, unit cost`}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.62)', fontSize: 10.5, fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Paste rows
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.18)', background: 'transparent', color: 'rgba(255,255,255,0.62)', fontSize: 10.5, fontWeight: 800, cursor: 'pointer' }}>
+                  Paste Rows
                 </button>
                 <span>{fmt$(divTotal)}</span>
               </span>
@@ -563,7 +597,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
               <DivisionComposer div={div} divName={divName} onAdd={onAdd} onClose={() => setComposerDiv(null)} />
             )}
             {shown.map((item, idx) => (
-              <EditableRow key={item.id ?? `${div}-${idx}`} item={item} idx={idx} sellMult={sellMult} onPatch={onPatch} onDuplicate={onDuplicate} onInsertBelow={onInsertBelow} onDelete={onDelete} />
+              <EditableRow key={item.id ?? `${div}-${idx}`} item={item} idx={idx} sellMult={sellMult} laborAlloc={laborAlloc} onPatch={onPatch} onDuplicate={onDuplicate} onInsertBelow={onInsertBelow} onDelete={onDelete} />
             ))}
           </div>
         );
@@ -571,7 +605,7 @@ const LineItemTable = memo(function LineItemTable({ groupedItems, sellMult, onPa
       {capped && (
         <button
           onClick={() => setShowAll(true)}
-          style={{ width: '100%', padding: '12px', background: 'rgba(245, 158, 11,0.08)', border: 'none', borderTop: `1px solid ${BORDER}`, color: GOLD, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+          style={{ width: '100%', padding: '12px', background: 'var(--brand-primary-08)', border: 'none', borderTop: `1px solid ${BORDER}`, color: GOLD, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
         >
           Showing the first {fmtN(ROW_RENDER_CAP)} of {fmtN(totalRows)} lines — show all
         </button>
@@ -705,6 +739,11 @@ export default function TakeoffPage() {
         recommendations:   Array.isArray(data.recommendations) ? data.recommendations : [],
         itemCount:         items.length,
       });
+      /* The analyzer picked a contingency for this job and folded it into
+         takeoffs.total_cost. The slider is now the ONE place contingency is
+         applied, so it starts at the analyzer's number instead of a flat 10%
+         stacked on top of a total that already carried it. */
+      setContingencyPct(Math.min(25, Math.max(0, Math.round(contingencyPct))));
       if (cancelled) return;
       setTakeoffId(String(data.id));
       setState('results');
@@ -1053,7 +1092,7 @@ export default function TakeoffPage() {
     if (!existingTakeoffId && !selectedFile) return;
     setState('analyzing');
     setLane(null);
-    setProgress({ step: 1, message: 'Creating takeoff record...', pct: 5 });
+    setProgress({ step: 1, message: 'Creating takeoff record…', pct: 5 });
 
     try {
       /* Re-reading a takeoff that already has its sheets skips straight to the
@@ -1081,7 +1120,7 @@ export default function TakeoffPage() {
          platform rejected it at the edge with a non-JSON 413, which this code
          could only report as "Upload failed" — the exact thing the GC hit.
          A signed URL has no such ceiling, and the PUT still reports progress. */
-      setProgress({ step: 2, message: 'Uploading blueprint...', pct: 10 });
+      setProgress({ step: 2, message: 'Uploading blueprint…', pct: 10 });
       setUploadPct(0);
 
       const urlRes = await fetch(`/api/takeoff/${analysisId}/upload-url`, {
@@ -1101,7 +1140,7 @@ export default function TakeoffPage() {
           if (e.lengthComputable) {
             const pct = Math.round((e.loaded / e.total) * 100);
             setUploadPct(pct);
-            setProgress({ step: 2, message: `Uploading blueprint... ${pct}%`, pct: 10 + Math.round(pct * 0.05) });
+            setProgress({ step: 2, message: `Uploading blueprint… ${pct}%`, pct: 10 + Math.round(pct * 0.05) });
           }
         };
         xhr.onload = () => {
@@ -1137,7 +1176,7 @@ export default function TakeoffPage() {
       }
 
       // 3. Connect SSE analysis stream
-      setProgress({ step: 3, message: 'Connecting to AI...', pct: 15 });
+      setProgress({ step: 3, message: 'Connecting to AI…', pct: 15 });
       const eventSource = new EventSource(`/api/takeoff/${analysisId}/analyze`);
       let analysisResolved = false;
 
@@ -1157,6 +1196,9 @@ export default function TakeoffPage() {
             analysisResolved = true;
             eventSource.close();
             setResult(data as TakeoffResult);
+            if (Number.isFinite(Number(data.contingency))) {
+              setContingencyPct(Math.min(25, Math.max(0, Math.round(Number(data.contingency)))));
+            }
             setState('results');
             // hydrate DB row ids in the background so every line is editable
             void hydrateIds(String(analysisId));
@@ -1246,7 +1288,7 @@ export default function TakeoffPage() {
         if (res.ok) created++;
       }
 
-      showToast(`${created} bid package${created !== 1 ? 's' : ''} created!`, 'success');
+      showToast(`${created} bid package${created !== 1 ? 's' : ''} created.`, 'success');
     } catch (err: unknown) {
       console.error(err); showToast(humanError(err, 'Failed to create bid packages. Please try again.'), 'error');
     } finally {
@@ -1269,13 +1311,14 @@ export default function TakeoffPage() {
           projectId,
           periodFrom:    new Date().toISOString().split('T')[0],
           periodTo:      new Date().toISOString().split('T')[0],
-          contractSum:   result.totalProjectCost,
+          contractSum:   bidPrice,
           // lineItems is what the API reads — each item maps to a schedule_of_values row
           lineItems: result.items.map(i => ({
             description:    `${i.csiCode} — ${i.description}`,
-            scheduledValue: i.totalCost,
+            // Each line's share of the bid, so the G703 column foots to contractSum.
+            scheduledValue: Math.round(lineDirectCost(i, laborAlloc) * bidRatio * 100) / 100,
             csiCode:        i.csiCode,
-            balanceToFinish: i.totalCost,
+            balanceToFinish: Math.round(lineDirectCost(i, laborAlloc) * bidRatio * 100) / 100,
           })),
         }),
       });
@@ -1369,6 +1412,7 @@ export default function TakeoffPage() {
         packages:    num(docs.packagesCreated),
         jackets:     num(docs.jacketsGenerated),
         sov:         !!docs.sovCreated,
+        sovDeferred: !!docs.sovDeferred,
         lienWaivers: num(docs.lienWaiversFiled ?? docs.lienWaiversCreated ?? docs.waiversCreated ?? docs.lienWaivers),
         w9s:         num(docs.w9RequestsFiled ?? docs.w9RequestsCreated ?? docs.w9sCreated ?? docs.w9Requests ?? docs.w9s),
         filed:       num(docs.coiRequestsFiled ?? docs.filedCount ?? docs.documentsFiled ?? docs.filed),
@@ -1381,13 +1425,14 @@ export default function TakeoffPage() {
       (budgetOk ? built : failed).push('budget');
       if (summary.packages) built.push(`${summary.packages} bid packages`); else failed.push('bid packages');
       if (summary.jackets) built.push(`${summary.jackets} jacket PDFs`); else failed.push('jacket PDFs');
-      if (summary.sov) built.push('schedule of values'); else failed.push('schedule of values');
+      if (summary.sov) built.push('schedule of values');
+      else if (!summary.sovDeferred) failed.push('schedule of values');
       if (summary.lienWaivers) built.push(`${summary.lienWaivers} lien waivers`);
       if (summary.w9s) built.push(`${summary.w9s} W-9 requests`);
 
       showToast(
         failed.length
-          ? `Built ${built.join(', ')}. Did NOT build: ${failed.join(', ')}.`
+          ? `Built ${built.join(', ')}. Did not build: ${failed.join(', ')}.`
           : `Sage built it all — ${built.join(', ')}.`,
         failed.length ? 'error' : 'success',
       );
@@ -1442,11 +1487,11 @@ export default function TakeoffPage() {
     if (!result) return false;
     if (!nested) setGenerating('budget');
     try {
-      const subtotal = result.totalMaterialCost + result.totalLaborCost;
-      const overhead = Math.round(subtotal * (overheadPct / 100));
-      const profit = Math.round(subtotal * (profitPct / 100));
-      const contingency = Math.round(subtotal * (contingencyPct / 100));
-      const total = subtotal + overhead + profit + contingency;
+      /* The budget's header total is the SAME bid price the screen shows (engine
+         markup stack), and each line carries its FULL direct cost — material plus
+         its share of labor. It used to send material only, so a budget built from
+         a $1.8M takeoff showed $1.17M and every dollar of labor was missing. */
+      const total = Math.round(bidPrice);
 
       const res = await fetch('/api/budgets/create', {
         method: 'POST',
@@ -1463,12 +1508,12 @@ export default function TakeoffPage() {
             costCode: i.csiCode,
             csiDivision: i.csiDivision,
             description: i.description,
-            category: 'material',
+            category: 'material_labor',
             unit: i.unit,
             quantity: i.quantity,
             unitCost: i.unitCost,
-            originalAmount: i.totalCost,
-            revisedAmount: i.totalCost,
+            originalAmount: Math.round(lineDirectCost(i, laborAlloc) * 100) / 100,
+            revisedAmount: Math.round(lineDirectCost(i, laborAlloc) * 100) / 100,
           })),
         }),
       });
@@ -1554,10 +1599,29 @@ export default function TakeoffPage() {
     const overhead = mk.overheadCents / 100;
     const profit = mk.profitCents / 100;
     const contingency = mk.contingencyCents / 100;
-    const totalJobCost = mk.sellCents / 100;        // the sell price (engine stack)
+    const totalJobCost = mk.sellCents / 100;        // THE bid price (engine stack)
+    /* Direct cost = material + labor = Σ line costs (each line carries its share
+       of labor, lib/takeoff-line-cost). This is the base every markup rides on —
+       NOT result.totalProjectCost, which the analyzer stores with the AI's own
+       contingency already baked in. Showing that number as "Total Project Cost"
+       and then adding the contingency slider on top is how the screen ended up
+       with four totals that did not reconcile. */
+    const directCost = matCost + labCost;
     const costPerSF = result.estimatedSF > 0 ? totalJobCost / result.estimatedSF : 0;
-    return { matCost, labCost, subtotal, materialTax, laborBurden, generalConditions, overhead, profit, contingency, bond, totalJobCost, costPerSF };
+    return { matCost, labCost, directCost, subtotal, materialTax, laborBurden, generalConditions, overhead, profit, contingency, bond, totalJobCost, costPerSF };
   }, [result, ...[overheadPct, profitPct, contingencyPct, salesTaxPct, laborBurdenPct, generalConditionsPct, bondPct]]);
+
+  /** How the takeoff's labor total is spread over its lines (by hours). */
+  const laborAlloc = useMemo<LaborAllocation>(
+    () => laborAllocation(result?.items ?? [], result?.totalLaborCost ?? 0),
+    [result],
+  );
+  /** The bid price, everywhere: header, package button, chart, table footer, Cost/SF. */
+  const bidPrice = computedCosts?.totalJobCost ?? 0;
+  /** Bid ÷ direct cost — a line's (or division's) share of the bid is its direct
+   *  cost × this ratio, so the Sell column sums EXACTLY to the bid price even when
+   *  tax/burden ride only one bucket. Falls back to the slider-only multiplier. */
+  const bidRatio = computedCosts && computedCosts.directCost > 0 ? bidPrice / computedCosts.directCost : sellMult;
 
   // Group items by CSI division. Memoized on `result` ONLY — moving a markup slider
   // no longer rebuilds this map, so the giant line-item table is never re-derived on drag.
@@ -1573,7 +1637,7 @@ export default function TakeoffPage() {
 
   // Copy values for the autonomous Sage card ("$X sell across N divisions, M items").
   const divCount = Object.keys(groupedItems).length;
-  const sellTotal = (result?.totalProjectCost || 0) * sellMult;
+  const sellTotal = bidPrice;
 
   // ── STATE A0: MEASURED HAND-OFF ──────────────────────────────────────────────
   // The newest takeoff was measured by hand in Takeoff Studio. Its conditions,
@@ -1586,11 +1650,11 @@ export default function TakeoffPage() {
         <Aurora />
         <div style={{ position: 'relative', zIndex: 1, padding: '64px 24px', maxWidth: 680, margin: '0 auto' }}>
           <div style={{ animation: 'tkRise .5s ease both', textAlign: 'center', marginBottom: 24 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(90deg, rgba(245,158,11,0.18), rgba(245,158,11,0.06))', border: '1px solid rgba(245,158,11,0.45)', color: GOLD_HI, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase' }}>
-              <Ruler size={13} weight="bold" /> Measured takeoff
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(90deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 6%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', color: GOLD_HI, fontSize: 11, fontWeight: 800 }}>
+              <Ruler size={13} weight="bold" /> Measured Takeoff
             </div>
           </div>
-          <div style={{ animation: 'tkRise .55s ease .05s both', borderRadius: 20, border: '1px solid rgba(245,158,11,0.3)', background: SURFACE, padding: '36px 28px', textAlign: 'center' }}>
+          <div style={{ animation: 'tkRise .55s ease .05s both', borderRadius: 20, border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', background: SURFACE, padding: '36px 28px', textAlign: 'center' }}>
             <h1 style={{ color: '#fff', fontSize: 26, fontWeight: 800, margin: 0, lineHeight: 1.25 }}>{measuredHandoff.name}</h1>
             <p style={{ color: 'rgba(255,255,255,0.62)', fontSize: 14.5, lineHeight: 1.6, margin: '14px auto 0', maxWidth: 460 }}>
               The latest takeoff on this project was traced and priced in Takeoff Studio.
@@ -1598,16 +1662,16 @@ export default function TakeoffPage() {
             </p>
             {measuredHandoff.total > 0 && (
               <div style={{ marginTop: 18 }}>
-                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Sell price</div>
+                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 700 }}>Sell Price</div>
                 <div style={{ color: GREEN, fontSize: 32, fontWeight: 800, marginTop: 4 }}>{fmt$(measuredHandoff.total)}</div>
               </div>
             )}
             <div style={{ marginTop: 26, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <a href="/app/takeoff/measured" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderRadius: 12, background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: '#0B0E15', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
+              <a href="/app/takeoff/measured" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 22px', borderRadius: 12, background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: '#0A0A00', fontWeight: 800, fontSize: 14, textDecoration: 'none' }}>
                 Open in Takeoff Studio <ArrowRight size={16} weight="bold" />
               </a>
               <button onClick={() => setMeasuredHandoff(null)} style={{ padding: '12px 22px', borderRadius: 12, background: 'transparent', border: `1px solid ${BORDER}`, color: 'rgba(255,255,255,0.72)', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-                Start an AI blueprint takeoff instead
+                Start an AI Blueprint Takeoff Instead
               </button>
             </div>
           </div>
@@ -1626,12 +1690,12 @@ export default function TakeoffPage() {
 
           {/* Cinematic hero */}
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ animation: 'tkRise .5s ease both', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(90deg, rgba(245,158,11,0.18), rgba(245,158,11,0.06))', border: '1px solid rgba(245,158,11,0.45)', color: GOLD_HI, fontSize: 11, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', boxShadow: '0 0 34px -8px rgba(245,158,11,0.55)' }}>
+            <div style={{ animation: 'tkRise .5s ease both', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', borderRadius: 999, background: 'linear-gradient(90deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 6%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', color: GOLD_HI, fontSize: 11, fontWeight: 800, boxShadow: '0 0 34px -8px color-mix(in srgb, var(--brand-primary) 55%, transparent)' }}>
               <Sparkle size={13} weight="fill" /> AI Blueprint Takeoff
             </div>
             <h1 className="tkH1" style={{ animation: 'tkRise .55s ease .05s both', color: '#fff', margin: '18px 0 0' }}>
               Drop a plan.<br />
-              <span className="tkShine" style={{ background: `linear-gradient(100deg, ${GOLD} 8%, ${GOLD_HI} 40%, #FDE68A 58%, ${GOLD} 90%)`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
+              <span className="tkShine" style={{ background: `linear-gradient(100deg, ${GOLD} 8%, ${GOLD_HI} 40%, var(--brand-primary-hover) 58%, ${GOLD} 90%)`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>
                 Get a priced bid in minutes.
               </span>
             </h1>
@@ -1642,7 +1706,7 @@ export default function TakeoffPage() {
                 results-only placement left it unreachable for any project that
                 hadn't finished an analysis (review finding). */}
             <p style={{ marginTop: 14 }}>
-              <a href={`/app/projects/${projectId}/takeoff/estimate`} style={{ color: 'rgba(245,158,11,0.9)', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>
+              <a href={`/app/projects/${projectId}/takeoff/estimate`} style={{ color: 'color-mix(in srgb, var(--brand-primary) 90%, transparent)', fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>
                 Prefer to build it by hand? Open the estimate workspace →
               </a>
             </p>
@@ -1668,7 +1732,7 @@ export default function TakeoffPage() {
                 ? `linear-gradient(135deg, ${GOLD}, ${GOLD_HI})`
                 : selectedFile
                   ? 'linear-gradient(135deg, rgba(34,197,94,0.6), rgba(34,197,94,0.14))'
-                  : 'linear-gradient(135deg, rgba(245,158,11,0.5), rgba(245,158,11,0.12))',
+                  : 'linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 50%, transparent), var(--brand-primary-12))',
             }}
           >
             <div style={{
@@ -1677,11 +1741,11 @@ export default function TakeoffPage() {
               padding: '60px 32px',
               textAlign: 'center',
               background: isDragging
-                ? 'radial-gradient(circle at 50% 32%, rgba(245,158,11,0.22), rgba(11,14,21,0.97))'
-                : 'radial-gradient(circle at 50% 26%, rgba(245,158,11,0.08), rgba(10,13,20,0.97))',
+                ? 'radial-gradient(circle at 50% 32%, color-mix(in srgb, var(--brand-primary) 22%, transparent), rgba(0,0,0,0.97))'
+                : 'radial-gradient(circle at 50% 26%, var(--brand-primary-08), rgba(0,0,0,0.97))',
             }}>
               {/* Blueprint grid interior */}
-              <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(245,158,11,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.10) 1px, transparent 1px)', backgroundSize: '26px 26px', maskImage: 'radial-gradient(80% 72% at 50% 42%, #000, transparent 78%)', WebkitMaskImage: 'radial-gradient(80% 72% at 50% 42%, #000, transparent 78%)', opacity: isDragging ? 0.95 : 0.5 }} />
+              <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(color-mix(in srgb, var(--brand-primary) 10%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 10%, transparent) 1px, transparent 1px)', backgroundSize: '26px 26px', maskImage: 'radial-gradient(80% 72% at 50% 42%, #000, transparent 78%)', WebkitMaskImage: 'radial-gradient(80% 72% at 50% 42%, #000, transparent 78%)', opacity: isDragging ? 0.95 : 0.5 }} />
               {/* CAD corner brackets */}
               <div aria-hidden style={{ position: 'absolute', left: 14, top: 14, width: 22, height: 22, borderLeft: `2px solid ${GOLD}`, borderTop: `2px solid ${GOLD}`, borderRadius: 3, opacity: 0.7 }} />
               <div aria-hidden style={{ position: 'absolute', right: 14, top: 14, width: 22, height: 22, borderRight: `2px solid ${GOLD}`, borderTop: `2px solid ${GOLD}`, borderRadius: 3, opacity: 0.7 }} />
@@ -1689,7 +1753,7 @@ export default function TakeoffPage() {
               <div aria-hidden style={{ position: 'absolute', right: 14, bottom: 14, width: 22, height: 22, borderRight: `2px solid ${GOLD}`, borderBottom: `2px solid ${GOLD}`, borderRadius: 3, opacity: 0.7 }} />
               {/* Scan beam — soft glow band that sweeps the plan (never a hard line) */}
               {!selectedFile && (
-                <div aria-hidden style={{ position: 'absolute', left: 20, right: 20, top: -40, height: 90, background: 'linear-gradient(180deg, transparent, rgba(245,158,11,0.16) 45%, rgba(251,191,36,0.28) 50%, rgba(245,158,11,0.16) 55%, transparent)', filter: 'blur(1px)', animation: 'tkScanV 4s ease-in-out infinite', zIndex: 0 }} />
+                <div aria-hidden style={{ position: 'absolute', left: 20, right: 20, top: -40, height: 90, background: 'linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand-primary) 16%, transparent) 45%, color-mix(in srgb, var(--brand-primary) 28%, transparent) 50%, color-mix(in srgb, var(--brand-primary) 16%, transparent) 55%, transparent)', filter: 'blur(1px)', animation: 'tkScanV 4s ease-in-out infinite', zIndex: 0 }} />
               )}
 
               <input
@@ -1710,26 +1774,26 @@ export default function TakeoffPage() {
                   </div>
                   <div style={{ color: GREEN, fontWeight: 800, fontSize: 18, wordBreak: 'break-word' }}>{selectedFile.name}</div>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 6 }}>
-                    {(selectedFile.size / 1024 / 1024).toFixed(1)} MB · ready to analyze — click to change
+                    {fmtFileSize(selectedFile.size)} · ready to analyze — click to change
                   </div>
                 </div>
               ) : (
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ position: 'relative', display: 'inline-flex', width: 104, height: 104, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(245,158,11,0.24), rgba(245,158,11,0.04))', border: '1px solid rgba(245,158,11,0.42)', marginBottom: 20, animation: 'tkFloat 5s ease-in-out infinite' }}>
+                  <div style={{ position: 'relative', display: 'inline-flex', width: 104, height: 104, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 42%, transparent)', marginBottom: 20, animation: 'tkFloat 5s ease-in-out infinite' }}>
                     <div aria-hidden style={{ position: 'absolute', inset: -1, borderRadius: '50%', border: `1px solid ${GOLD}`, animation: 'tkRing 3s ease-out infinite' }} />
                     <Blueprint size={46} weight="duotone" color={GOLD_HI} />
                   </div>
                   <div style={{ color: '#fff', fontWeight: 800, fontSize: 24, marginBottom: 8, letterSpacing: '-0.02em' }}>
-                    {isDragging ? 'Release to upload' : 'Drop your blueprint here'}
+                    {isDragging ? 'Release to Upload' : 'Drop Your Blueprint Here'}
                   </div>
                   <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14.5 }}>
                     or <span style={{ color: GOLD_HI, fontWeight: 800 }}>click to browse</span>
                   </div>
                   <div style={{ display: 'inline-flex', gap: 7, flexWrap: 'wrap', justifyContent: 'center', marginTop: 18 }}>
                     {['PDF', 'PNG', 'JPG', 'TIFF', 'WEBP'].map((x) => (
-                      <span key={x} style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.72)', padding: '4px 11px', borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(245,158,11,0.22)', letterSpacing: '0.04em' }}>{x}</span>
+                      <span key={x} style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.72)', padding: '4px 11px', borderRadius: 7, background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)' }}>{x}</span>
                     ))}
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', padding: '4px 6px' }}>up to 200MB</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.4)', padding: '4px 6px' }}>Up to 200 MB</span>
                   </div>
                 </div>
               )}
@@ -1743,12 +1807,12 @@ export default function TakeoffPage() {
               // actual elapsed instead of a marketing promise.
               result?.elapsedSec
                 ? { icon: <Timer size={18} weight="duotone" color={GOLD_HI} />, big: `${result.elapsedSec < 90 ? `${Math.round(result.elapsedSec)}s` : `${(result.elapsedSec / 60).toFixed(1)} min`}`, small: 'Your last run, measured' }
-                : { icon: <Timer size={18} weight="duotone" color={GOLD_HI} />, big: 'Minutes, not hours', small: 'Full plan set → priced bid' },
+                : { icon: <Timer size={18} weight="duotone" color={GOLD_HI} />, big: 'Minutes, Not Hours', small: 'Full plan set → priced bid' },
               { icon: <Stack size={18} weight="duotone" color={GOLD_HI} />, big: '16 Divisions', small: 'CSI, ground to finish' },
               { icon: <ShieldCheck size={18} weight="duotone" color={GOLD_HI} />, big: '100% Traceable', small: 'Every qty to the sheet' },
             ].map((s, i) => (
-              <div key={s.big} className="tkHover" style={{ animation: `tkRise .5s ease ${(0.12 + i * 0.07).toFixed(2)}s both`, display: 'flex', alignItems: 'center', gap: 12, background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))', border: '1px solid rgba(245,158,11,0.18)', borderRadius: 14, padding: '14px 16px' }}>
-                <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 40, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', transition: 'box-shadow .2s' }}>{s.icon}</div>
+              <div key={s.big} className="tkHover" style={{ animation: `tkRise .5s ease ${(0.12 + i * 0.07).toFixed(2)}s both`, display: 'flex', alignItems: 'center', gap: 12, background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))', border: '1px solid var(--brand-primary-18)', borderRadius: 14, padding: '14px 16px' }}>
+                <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 40, height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', transition: 'box-shadow .2s' }}>{s.icon}</div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ color: '#fff', fontWeight: 800, fontSize: 16, letterSpacing: '-0.01em' }}>{s.big}</div>
                   <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 1 }}>{s.small}</div>
@@ -1759,21 +1823,21 @@ export default function TakeoffPage() {
 
           {/* What AI extracts — premium cards */}
           <div style={{ marginBottom: 30 }}>
-            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', marginBottom: 16, fontWeight: 800 }}>
-              What the AI extracts
+            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.55)', fontSize: 11, marginBottom: 16, fontWeight: 800 }}>
+              What the AI Extracts
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(248px,1fr))', gap: 12 }}>
               {[
-                { icon: <Blueprint size={20} weight="duotone" color={GOLD_HI} />, t: 'Every material by CSI division', s: '16 divisions, ground to finish' },
-                { icon: <Ruler size={20} weight="duotone" color={GOLD_HI} />, t: 'Quantities with real units', s: 'SF · LF · CY · EA, measured' },
-                { icon: <CurrencyDollar size={20} weight="duotone" color={GOLD_HI} />, t: 'Priced by trade', s: 'Your rates override the book' },
-                { icon: <Lightning size={20} weight="duotone" color={GOLD_HI} />, t: 'Labor hours + burden', s: 'Crew productivity built in' },
-                { icon: <Buildings size={20} weight="duotone" color={GOLD_HI} />, t: 'Building area & floors', s: 'Auto scale + $/SF' },
-                { icon: <Package size={20} weight="duotone" color={GOLD_HI} />, t: 'Bid-package ready', s: 'One tap to a priced jacket' },
+                { icon: <Blueprint size={20} weight="duotone" color={GOLD_HI} />, t: 'Every Material by CSI Division', s: '16 divisions, ground to finish' },
+                { icon: <Ruler size={20} weight="duotone" color={GOLD_HI} />, t: 'Quantities with Real Units', s: 'SF · LF · CY · EA, measured' },
+                { icon: <CurrencyDollar size={20} weight="duotone" color={GOLD_HI} />, t: 'Priced by Trade', s: 'Your rates override the book' },
+                { icon: <Lightning size={20} weight="duotone" color={GOLD_HI} />, t: 'Labor Hours + Burden', s: 'Crew productivity built in' },
+                { icon: <Buildings size={20} weight="duotone" color={GOLD_HI} />, t: 'Building Area & Floors', s: 'Auto scale + $/SF' },
+                { icon: <Package size={20} weight="duotone" color={GOLD_HI} />, t: 'Bid-Package Ready', s: 'One tap to a priced jacket' },
               ].map((c, i) => (
                 <div key={c.t} className="tkHover" style={{ animation: `tkRise .5s ease ${(0.18 + i * 0.06).toFixed(2)}s both`, position: 'relative', overflow: 'hidden', display: 'flex', gap: 13, alignItems: 'flex-start', background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: `1px solid ${BORDER}`, borderRadius: 14, padding: '16px 18px' }}>
                   <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${GOLD}, transparent)` }} />
-                  <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, rgba(245,158,11,0.18), rgba(245,158,11,0.05))', border: '1px solid rgba(245,158,11,0.3)', transition: 'box-shadow .2s' }}>{c.icon}</div>
+                  <div className="tkIcon" style={{ flex: '0 0 auto', display: 'inline-flex', width: 42, height: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(150deg, var(--brand-primary-18), color-mix(in srgb, var(--brand-primary) 5%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', transition: 'box-shadow .2s' }}>{c.icon}</div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ color: '#fff', fontWeight: 700, fontSize: 14, lineHeight: 1.3 }}>{c.t}</div>
                     <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12.5, marginTop: 3 }}>{c.s}</div>
@@ -1795,17 +1859,17 @@ export default function TakeoffPage() {
               background: selectedFile ? `linear-gradient(135deg, ${GOLD}, ${AMBER})` : 'rgba(255,255,255,0.05)',
               border: selectedFile ? 'none' : '1px solid rgba(255,255,255,0.08)',
               borderRadius: 14,
-              color: selectedFile ? '#1A1206' : 'rgba(255,255,255,0.35)',
+              color: selectedFile ? '#0A0A00' : 'rgba(255,255,255,0.35)',
               fontSize: 16,
               fontWeight: 800,
               cursor: selectedFile ? 'pointer' : 'not-allowed',
               letterSpacing: '0.02em',
-              boxShadow: selectedFile ? '0 18px 46px -14px rgba(245,158,11,0.7)' : 'none',
+              boxShadow: selectedFile ? '0 18px 46px -14px color-mix(in srgb, var(--brand-primary) 70%, transparent)' : 'none',
             }}
           >
             {selectedFile && <span aria-hidden className="tkShine" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.45) 50%, transparent 70%)' }} />}
             <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}>
-              {selectedFile ? <><MagicWand size={19} weight="fill" color="#1A1206" /> Start AI Analysis <ArrowRight size={18} weight="bold" color="#1A1206" /></> : 'Select a blueprint to continue'}
+              {selectedFile ? <><MagicWand size={19} weight="fill" color="#0A0A00" /> Start AI Analysis <ArrowRight size={18} weight="bold" color="#0A0A00" /></> : 'Select a Blueprint to Continue'}
             </span>
           </button>
         </div>
@@ -1833,18 +1897,18 @@ export default function TakeoffPage() {
         <div style={{ position: 'relative', zIndex: 1, padding: '60px 24px', maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
 
           {/* Blueprint scan motif */}
-          <div style={{ position: 'relative', margin: '0 auto 30px', width: '100%', maxWidth: 440, borderRadius: 22, padding: 2, background: 'linear-gradient(135deg, rgba(245,158,11,0.5), rgba(245,158,11,0.12))', animation: 'tkGlow 3.6s ease-in-out infinite' }}>
-            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 20, height: 190, background: 'radial-gradient(circle at 50% 42%, rgba(245,158,11,0.10), rgba(10,13,20,0.98))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(245,158,11,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.10) 1px, transparent 1px)', backgroundSize: '24px 24px', maskImage: 'radial-gradient(78% 78% at 50% 50%, #000, transparent 82%)', WebkitMaskImage: 'radial-gradient(78% 78% at 50% 50%, #000, transparent 82%)' }} />
+          <div style={{ position: 'relative', margin: '0 auto 30px', width: '100%', maxWidth: 440, borderRadius: 22, padding: 2, background: 'linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 50%, transparent), var(--brand-primary-12))', animation: 'tkGlow 3.6s ease-in-out infinite' }}>
+            <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 20, height: 190, background: 'radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--brand-primary) 10%, transparent), rgba(0,0,0,0.98))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(color-mix(in srgb, var(--brand-primary) 10%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 10%, transparent) 1px, transparent 1px)', backgroundSize: '24px 24px', maskImage: 'radial-gradient(78% 78% at 50% 50%, #000, transparent 82%)', WebkitMaskImage: 'radial-gradient(78% 78% at 50% 50%, #000, transparent 82%)' }} />
               {/* CAD corner brackets */}
               <div aria-hidden style={{ position: 'absolute', left: 12, top: 12, width: 18, height: 18, borderLeft: `2px solid ${GOLD}`, borderTop: `2px solid ${GOLD}`, opacity: 0.65 }} />
               <div aria-hidden style={{ position: 'absolute', right: 12, top: 12, width: 18, height: 18, borderRight: `2px solid ${GOLD}`, borderTop: `2px solid ${GOLD}`, opacity: 0.65 }} />
               <div aria-hidden style={{ position: 'absolute', left: 12, bottom: 12, width: 18, height: 18, borderLeft: `2px solid ${GOLD}`, borderBottom: `2px solid ${GOLD}`, opacity: 0.65 }} />
               <div aria-hidden style={{ position: 'absolute', right: 12, bottom: 12, width: 18, height: 18, borderRight: `2px solid ${GOLD}`, borderBottom: `2px solid ${GOLD}`, opacity: 0.65 }} />
               {/* Horizontal scanning sweep */}
-              <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 64, background: 'linear-gradient(180deg, transparent, rgba(245,158,11,0.24) 50%, transparent)', animation: 'tkSweep 1.9s linear infinite' }} />
+              <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 64, background: 'linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand-primary) 24%, transparent) 50%, transparent)', animation: 'tkSweep 1.9s linear infinite' }} />
               {/* Pulsing robot */}
-              <div style={{ position: 'relative', display: 'inline-flex', width: 94, height: 94, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(245,158,11,0.24), rgba(245,158,11,0.04))', border: '1px solid rgba(245,158,11,0.42)', animation: 'tkPulseA 1.9s ease-out infinite' }}>
+              <div style={{ position: 'relative', display: 'inline-flex', width: 94, height: 94, borderRadius: '50%', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 42%, transparent)', animation: 'tkPulseA 1.9s ease-out infinite' }}>
                 <Robot size={46} weight="duotone" color={GOLD_HI} />
               </div>
             </div>
@@ -1862,8 +1926,8 @@ export default function TakeoffPage() {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 9, marginBottom: 28,
               padding: '8px 16px', borderRadius: 999,
-              background: lane.fast ? 'rgba(69,179,125,0.12)' : 'rgba(245,158,11,0.10)',
-              border: `1px solid ${lane.fast ? 'rgba(69,179,125,0.42)' : 'rgba(245,158,11,0.28)'}`,
+              background: lane.fast ? 'rgba(69,179,125,0.12)' : 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+              border: `1px solid ${lane.fast ? 'rgba(69,179,125,0.42)' : 'color-mix(in srgb, var(--brand-primary) 28%, transparent)'}`,
             }}>
               {lane.fast
                 ? <MagicWand size={16} weight="fill" color={GREEN} />
@@ -1880,7 +1944,7 @@ export default function TakeoffPage() {
           <div style={{
             position: 'relative',
             background: 'rgba(255,255,255,0.07)',
-            border: '1px solid rgba(245,158,11,0.15)',
+            border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)',
             borderRadius: 999, height: 10, marginBottom: 10, overflow: 'hidden',
           }}>
             <div style={{
@@ -1889,7 +1953,7 @@ export default function TakeoffPage() {
               background: `linear-gradient(90deg, ${AMBER}, ${GOLD}, ${GOLD_HI})`,
               borderRadius: 999,
               transition: 'width 0.5s ease',
-              boxShadow: '0 0 16px rgba(245,158,11,0.6)',
+              boxShadow: '0 0 16px color-mix(in srgb, var(--brand-primary) 60%, transparent)',
             }} />
           </div>
           <div style={{ color: GOLD_HI, fontWeight: 800, fontSize: 22, marginBottom: 30, letterSpacing: '-0.02em' }}>
@@ -1909,7 +1973,7 @@ export default function TakeoffPage() {
                   fontSize: 13.5,
                   borderBottom: i < steps.length - 1 ? `1px solid ${BORDER}` : 'none',
                 }}>
-                  <span style={{ width: 22, height: 22, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', borderRadius: '50%', background: active ? 'rgba(245,158,11,0.14)' : 'transparent', boxShadow: active ? '0 0 0 1px rgba(245,158,11,0.4)' : 'none' }}>
+                  <span style={{ width: 22, height: 22, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', borderRadius: '50%', background: active ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', boxShadow: active ? '0 0 0 1px color-mix(in srgb, var(--brand-primary) 40%, transparent)' : 'none' }}>
                     {done ? <CheckCircle size={16} weight="fill" color={GREEN} /> : active ? <CircleNotch size={16} weight="bold" style={{ animation: 'tkSpin 0.9s linear infinite' }} /> : <Circle size={13} weight="regular" />}
                   </span>
                   <span style={{ fontWeight: active ? 700 : 500 }}>{step}</span>
@@ -1927,29 +1991,29 @@ export default function TakeoffPage() {
     <div className="tkRoot" style={{ position: 'relative', overflow: 'hidden', minHeight: 'calc(100vh - 56px)' }}>
       <style>{FX_KEYFRAMES}</style>
       <UiFx />
-      <Aurora soft />
+      <Aurora soft still />
       <div style={{ position: 'relative', zIndex: 1, padding: '24px', maxWidth: 1180, margin: '0 auto' }}>
 
       {/* Summary header — hero sell number */}
       <div style={{
         position: 'relative', overflow: 'hidden',
-        background: 'linear-gradient(135deg, rgba(245,158,11,0.14), rgba(245,158,11,0.04))',
-        border: `1px solid rgba(245,158,11,0.28)`,
+        background: 'linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 14%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))',
+        border: `1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent)`,
         borderRadius: 18, padding: '24px 28px', marginBottom: 20,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: 20,
-        boxShadow: '0 20px 60px -24px rgba(245,158,11,0.35)',
+        boxShadow: '0 20px 60px -24px var(--brand-primary-35)',
         animation: 'tkPop .5s ease both',
       }}>
-        <div aria-hidden style={{ position: 'absolute', width: 260, height: 260, right: '18%', top: '-70%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,158,11,0.22), transparent 62%)', filter: 'blur(24px)', pointerEvents: 'none' }} />
+        <div aria-hidden style={{ position: 'absolute', width: 260, height: 260, right: '18%', top: '-70%', borderRadius: '50%', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent 62%)', filter: 'blur(24px)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', minWidth: 200 }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: GOLD_HI, fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            <CheckCircle size={13} weight="fill" color={GREEN} /> Takeoff complete
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: GOLD_HI, fontSize: 11, fontWeight: 800 }}>
+            <CheckCircle size={13} weight="fill" color={GREEN} /> Takeoff Complete
           </div>
           <div style={{ color: '#fff', fontWeight: 800, fontSize: 22, marginTop: 6, letterSpacing: '-0.02em' }}>
             {result?.projectName || 'Material Takeoff'}
           </div>
-          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12.5, marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12.5, marginTop: 3 }}>
             {result?.buildingType || 'Building'} · {fmtN(result?.estimatedSF || 0)} SF
           </div>
           {result?.summary && (
@@ -1961,19 +2025,19 @@ export default function TakeoffPage() {
           {(result?.sheetsAnalyzed || result?.elapsedSec) && (
             <div style={{ display: 'inline-flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
               {result?.sheetsAnalyzed != null && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(245,158,11,0.24)', borderRadius: 8, padding: '4px 10px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
                   <Stack size={13} weight="duotone" color={GOLD_HI} />
                   {result.sheetsAnalyzed}{result.sheetsTotal && result.sheetsTotal !== result.sheetsAnalyzed ? ` of ${result.sheetsTotal}` : ''} sheet{result.sheetsAnalyzed === 1 ? '' : 's'} analyzed
                 </span>
               )}
               {result?.elapsedSec != null && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(245,158,11,0.24)', borderRadius: 8, padding: '4px 10px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
                   <Timer size={13} weight="duotone" color={GOLD_HI} />
                   {result.elapsedSec < 90 ? `${Math.round(result.elapsedSec)}s` : `${(result.elapsedSec / 60).toFixed(1)} min`}
                 </span>
               )}
               {result?.disciplines && result.disciplines.length > 0 && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(245,158,11,0.24)', borderRadius: 8, padding: '4px 10px' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: 'rgba(255,255,255,0.72)', background: 'rgba(255,255,255,0.06)', border: '1px solid color-mix(in srgb, var(--brand-primary) 24%, transparent)', borderRadius: 8, padding: '4px 10px' }}>
                   {result.disciplines.join(' · ')}
                 </span>
               )}
@@ -1990,12 +2054,12 @@ export default function TakeoffPage() {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 44,
                   padding: '0 22px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                  background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                  color: '#1A1206', fontSize: 14, fontWeight: 800,
+                  background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
+                  color: '#0A0A00', fontSize: 14, fontWeight: 800,
                 }}
               >
-                <MagicWand size={16} weight="fill" color="#1A1206" />
-                Build the bid + compliance package
+                <MagicWand size={16} weight="fill" color="#0A0A00" />
+                Build the Bid + Compliance Package
               </button>
               <button
                 onClick={() => { setAutoSummary(null); setPickMode(true); }}
@@ -2005,36 +2069,41 @@ export default function TakeoffPage() {
                   color: 'rgba(255,255,255,0.72)', fontSize: 13.5, fontWeight: 700,
                 }}
               >
-                Let me pick
+                Let Me Pick
               </button>
               <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, lineHeight: 1.5 }}>
-                {divCount} divisions · {result.itemCount} lines · {fmt$(sellTotal)} sell
+                {divCount} divisions · {result.itemCount} lines · {fmt$(sellTotal)} bid price
                 <br />
-                bid packages, jacket PDFs, schedule of values, lien waivers and W-9 requests
+                Bid packages, jacket PDFs, schedule of values, lien waivers and W-9 requests
               </span>
             </div>
           )}
 
           {result?.truncated && result?.truncationNote && (
-            <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', marginTop: 12, maxWidth: 500, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.35)', borderRadius: 10, padding: '10px 12px' }}>
+            <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', marginTop: 12, maxWidth: 500, background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid var(--brand-primary-35)', borderRadius: 10, padding: '10px 12px' }}>
               <Warning size={16} weight="fill" color={GOLD_HI} style={{ flex: '0 0 auto', marginTop: 1 }} />
               <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, lineHeight: 1.5 }}>{result.truncationNote}</div>
             </div>
           )}
         </div>
         <div style={{ position: 'relative', textAlign: 'right', flex: '1 1 auto', minWidth: 220 }}>
-          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 700 }}>Total Project Cost</div>
-          <div style={{ fontWeight: 900, fontSize: 'clamp(38px,5vw,56px)', lineHeight: 1.02, letterSpacing: '-0.03em', background: `linear-gradient(100deg, ${GOLD}, ${GOLD_HI} 55%, #FDE68A)`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', textShadow: '0 0 50px rgba(245,158,11,0.3)', animation: 'tkPop .6s ease .1s both' }}>
-            {fmt$(result?.totalProjectCost || 0)}
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 700 }}>Bid Price</div>
+          <div style={{ fontWeight: 900, fontSize: 'clamp(38px,5vw,56px)', lineHeight: 1.02, letterSpacing: '-0.03em', background: `linear-gradient(100deg, ${GOLD}, ${GOLD_HI} 55%, var(--brand-primary-hover))`, WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent', textShadow: '0 0 50px color-mix(in srgb, var(--brand-primary) 30%, transparent)', animation: 'tkPop .6s ease .1s both' }}>
+            {fmt$(bidPrice)}
           </div>
+          {computedCosts && (
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, marginTop: 4 }}>
+              {fmt$(computedCosts.directCost)} direct cost + markups below
+            </div>
+          )}
           <div style={{ display: 'inline-flex', gap: 8, marginTop: 10, justifyContent: 'flex-end' }}>
             <div style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.35)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
               <div style={{ color: GREEN, fontWeight: 800, fontSize: 16 }}>{result?.confidence ?? 0}%</div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Confidence</div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5 }}>Confidence</div>
             </div>
-            <div style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.28)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
+            <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 28%, transparent)', borderRadius: 9, padding: '6px 12px', textAlign: 'center' }}>
               <div style={{ color: GOLD_HI, fontWeight: 800, fontSize: 16 }}>{result?.itemCount ?? 0}</div>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Line Items</div>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9.5 }}>Line Items</div>
             </div>
           </div>
         </div>
@@ -2047,13 +2116,15 @@ export default function TakeoffPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 12 }}>
             {[
               { label: 'Material Cost', value: computedCosts.matCost, color: GOLD, icon: <Package size={15} weight="duotone" color={GOLD} /> },
-              { label: 'Labor Cost', value: computedCosts.labCost, color: '#FBBF24', icon: <Lightning size={15} weight="duotone" color="#FBBF24" /> },
-              { label: 'Subtotal', value: computedCosts.subtotal, color: '#fff', icon: <Table size={15} weight="duotone" color="rgba(255,255,255,0.8)" /> },
-              { label: 'Total Job Cost', value: computedCosts.totalJobCost, color: '#22C55E', icon: <TrendUp size={15} weight="duotone" color={GREEN} /> },
+              { label: 'Labor Cost', value: computedCosts.labCost, color: 'var(--brand-primary-strong)', icon: <Lightning size={15} weight="duotone" color="var(--brand-primary-strong)" /> },
+              /* Direct cost = material + labor = the Cost column's footer. Tax and
+                 burden (when set) are markups below, not part of this number. */
+              { label: 'Direct Cost', value: computedCosts.directCost, color: '#fff', icon: <Table size={15} weight="duotone" color="rgba(255,255,255,0.8)" /> },
+              { label: 'Bid Price', value: computedCosts.totalJobCost, color: '#22C55E', icon: <TrendUp size={15} weight="duotone" color={GREEN} /> },
             ].map((card, ci) => (
               <div key={card.label} className="tkHover" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '15px 16px', animation: `tkPop .45s ease ${(0.05 * ci).toFixed(2)}s both` }}>
                 <div aria-hidden style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${card.color}, transparent)` }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.5)', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{card.icon}{card.label}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'rgba(255,255,255,0.5)', fontSize: 10.5, marginBottom: 8 }}>{card.icon}{card.label}</div>
                 <div style={{ color: card.color, fontWeight: 800, fontSize: 22, letterSpacing: '-0.01em' }}>{fmt$(card.value)}</div>
               </div>
             ))}
@@ -2065,17 +2136,17 @@ export default function TakeoffPage() {
                  the way the arithmetic actually runs: tax rides material,
                  burden rides labor, GC on direct, OH on cost-of-work,
                  contingency on that, fee pre-bond, bond on contract value. */
-              { label: 'Sales tax', pct: salesTaxPct, setPct: setSalesTaxPct, value: computedCosts.materialTax, color: '#38BDF8', max: 15 },
-              { label: 'Labor burden', pct: laborBurdenPct, setPct: setLaborBurdenPct, value: computedCosts.laborBurden, color: '#818CF8', max: 60 },
-              { label: 'General conditions', pct: generalConditionsPct, setPct: setGeneralConditionsPct, value: computedCosts.generalConditions, color: '#F472B6', max: 25 },
+              { label: 'Sales Tax', pct: salesTaxPct, setPct: setSalesTaxPct, value: computedCosts.materialTax, color: '#38BDF8', max: 15 },
+              { label: 'Labor Burden', pct: laborBurdenPct, setPct: setLaborBurdenPct, value: computedCosts.laborBurden, color: '#818CF8', max: 60 },
+              { label: 'General Conditions', pct: generalConditionsPct, setPct: setGeneralConditionsPct, value: computedCosts.generalConditions, color: '#F472B6', max: 25 },
               { label: 'Overhead', pct: overheadPct, setPct: setOverheadPct, value: computedCosts.overhead, color: '#F97316', max: 25 },
               { label: 'Contingency', pct: contingencyPct, setPct: setContingencyPct, value: computedCosts.contingency, color: '#A78BFA', max: 25 },
               { label: 'Profit', pct: profitPct, setPct: setProfitPct, value: computedCosts.profit, color: '#22C55E', max: 25 },
-              { label: 'Bond', pct: bondPct, setPct: setBondPct, value: computedCosts.bond, color: '#FBBF24', max: 5 },
+              { label: 'Bond', pct: bondPct, setPct: setBondPct, value: computedCosts.bond, color: 'var(--brand-primary-strong)', max: 5 },
             ].map((ctrl) => (
               <div key={ctrl.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{ctrl.label}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: 600 }}>{ctrl.label}</span>
                   <span style={{ color: ctrl.color, fontWeight: 800, fontSize: 17 }}>{ctrl.pct}%</span>
                 </div>
                 <input
@@ -2094,7 +2165,7 @@ export default function TakeoffPage() {
           {/* Cost per SF */}
           {computedCosts.costPerSF > 0 && (
             <div style={{ marginTop: 8, textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>
-              Cost/SF: <span style={{ color: GOLD, fontWeight: 600 }}>${computedCosts.costPerSF.toFixed(2)}</span> · {fmtN(result?.estimatedSF || 0)} SF
+              Bid Price/SF: <span style={{ color: GOLD, fontWeight: 600 }}>${computedCosts.costPerSF.toFixed(2)}</span> · {fmtN(result?.estimatedSF || 0)} SF
             </div>
           )}
         </div>
@@ -2121,14 +2192,14 @@ export default function TakeoffPage() {
         const padX    = 20;
         const padY    = 20;
         const svgH    = bldgH + padY * 2 + 40;
-        const totalSell = (result.totalProjectCost || 0) * sellMult;
+        const totalSell = bidPrice;
 
         // Compute division breakdown for bar chart
         const divTotals = Object.entries(groupedItems)
           .map(([div, items]) => ({
             div,
             name: CSI_DIVISION_NAMES[div] || `Div ${div}`,
-            total: items.reduce((s, i) => s + i.totalCost, 0),
+            total: items.reduce((s, i) => s + lineDirectCost(i, laborAlloc), 0),
           }))
           .sort((a, b) => b.total - a.total)
           .slice(0, 8);
@@ -2144,7 +2215,7 @@ export default function TakeoffPage() {
               background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: `1px solid ${BORDER}`,
               borderRadius: 14, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center',
             }}>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8, fontWeight: 700 }}>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, marginBottom: 8, fontWeight: 700 }}>
                 Building Profile
               </div>
               <svg width={bldgW + padX * 2} height={svgH} viewBox={`0 0 ${bldgW + padX * 2} ${svgH}`}>
@@ -2158,8 +2229,7 @@ export default function TakeoffPage() {
                   return (
                     <g key={fi}>
                       <rect x={padX} y={y} width={bldgW} height={floorH}
-                        fill={isGround ? 'rgba(245, 158, 11,0.12)' : `rgba(245, 158, 11,${0.04 + (displayFloors - fi) * 0.01})`}
-                        stroke="rgba(245, 158, 11,0.25)" strokeWidth={1} />
+                        style={{ fill: isGround ? 'var(--brand-primary-12)' : `color-mix(in srgb, var(--brand-primary) ${Math.round((0.04 + (displayFloors - fi) * 0.01) * 100)}%, transparent)`, stroke: 'var(--brand-primary-25)' }} strokeWidth={1} />
                       {/* Windows */}
                       {[0.2, 0.45, 0.7].map((wx, wi) => (
                         <rect key={wi}
@@ -2178,7 +2248,7 @@ export default function TakeoffPage() {
                 {/* Roof triangle */}
                 <polygon
                   points={`${padX},${padY} ${padX + bldgW / 2},${padY - 24} ${padX + bldgW},${padY}`}
-                  fill="rgba(245, 158, 11,0.18)" stroke="rgba(245, 158, 11,0.4)" strokeWidth={1.5} />
+                  style={{ fill: 'var(--brand-primary-18)', stroke: 'color-mix(in srgb, var(--brand-primary) 40%, transparent)' }} strokeWidth={1.5} />
                 {/* SF label */}
                 <text x={padX + bldgW / 2} y={svgH - 6}
                   fill="rgba(255,255,255,0.3)" fontSize={10} textAnchor="middle">
@@ -2197,12 +2267,12 @@ export default function TakeoffPage() {
               background: 'linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))', border: `1px solid ${BORDER}`,
               borderRadius: 14, padding: '16px 20px',
             }}>
-              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14, fontWeight: 700 }}>
+              <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, marginBottom: 14, fontWeight: 700 }}>
                 Cost by CSI Division
               </div>
               {divTotals.map(({ div, name, total }, bi) => {
                 const pct = total / maxDiv;
-                const sellAmt = total * sellMult;
+                const sellAmt = total * bidRatio;
                 return (
                   <div key={div} style={{ marginBottom: 11 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -2216,7 +2286,7 @@ export default function TakeoffPage() {
                       </span>
                     </div>
                     <div style={{ position: 'relative', height: 8, background: 'rgba(255,255,255,0.07)', borderRadius: 999, overflow: 'hidden' }}>
-                      <div style={{ position: 'relative', overflow: 'hidden', height: '100%', width: `${pct * 100}%`, background: `linear-gradient(90deg, ${GOLD}, ${GREEN})`, borderRadius: 999, transition: 'width 0.6s ease', boxShadow: '0 0 12px rgba(245,158,11,0.4)' }}>
+                      <div style={{ position: 'relative', overflow: 'hidden', height: '100%', width: `${pct * 100}%`, background: `linear-gradient(90deg, ${GOLD}, ${GREEN})`, borderRadius: 999, transition: 'width 0.6s ease', boxShadow: '0 0 12px color-mix(in srgb, var(--brand-primary) 40%, transparent)' }}>
                         <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%)', backgroundSize: '200% 100%', animation: `tkBarShine 2.8s ease-in-out ${(bi * 0.15).toFixed(2)}s infinite` }} />
                       </div>
                     </div>
@@ -2225,7 +2295,7 @@ export default function TakeoffPage() {
               })}
               <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
                 <span style={{ color: 'rgba(255,255,255,0.4)' }}>Cost → Sell breakdown across {Object.keys(groupedItems).length} divisions</span>
-                <span style={{ color: '#22C55E', fontWeight: 600 }}>Sell Total: {fmt$(totalSell)}</span>
+                <span style={{ color: '#22C55E', fontWeight: 600 }}>Bid Price: {fmt$(totalSell)}</span>
               </div>
             </div>
           </div>
@@ -2259,42 +2329,40 @@ export default function TakeoffPage() {
           gridTemplateColumns: ROW_GRID,
           padding: '11px 16px',
           background: 'rgba(0,0,0,0.34)',
-          borderBottom: '2px solid rgba(245, 158, 11,0.2)',
+          borderBottom: '2px solid color-mix(in srgb, var(--brand-primary) 20%, transparent)',
           fontSize: 10.5, fontWeight: 700,
-          letterSpacing: '0.06em',
           color: 'var(--text-tertiary)',
-          textTransform: 'uppercase',
         }}>
           <div>CSI Code</div>
           <div>Description</div>
           <div style={{ textAlign: 'right' }}>Qty</div>
           <div style={{ textAlign: 'right' }}>Unit</div>
           <div style={{ textAlign: 'right' }}>$/Unit</div>
-          <div style={{ textAlign: 'right' }}>Cost</div>
-          <div style={{ textAlign: 'right', color: '#22C55E' }}>Sell</div>
+          <div style={{ textAlign: 'right' }} title="Material + labor">Cost (M+L)</div>
+          <div style={{ textAlign: 'right', color: '#22C55E' }} title="This line's share of the bid price">Bid</div>
           <div aria-hidden />
         </div>
 
         {/* Grouped rows — memoized + row-capped so slider drags and huge extractions don't freeze */}
-        <LineItemTable groupedItems={groupedItems} sellMult={sellMult} onPatch={patchLine} onAdd={addLine} onPaste={pasteLines} onDuplicate={duplicateLine} onInsertBelow={insertLineBelow} onDelete={deleteLine} />
+        <LineItemTable groupedItems={groupedItems} sellMult={bidRatio} laborAlloc={laborAlloc} onPatch={patchLine} onAdd={addLine} onPaste={pasteLines} onDuplicate={duplicateLine} onInsertBelow={insertLineBelow} onDelete={deleteLine} />
 
         {/* Grand total row */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: ROW_GRID,
           padding: '12px 16px',
-          background: 'rgba(245, 158, 11,0.08)',
-          borderTop: `2px solid rgba(245, 158, 11,0.3)`,
+          background: 'var(--brand-primary-08)',
+          borderTop: `2px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)`,
           fontSize: 14, fontWeight: 700,
         }}>
-          <div style={{ gridColumn: '1 / 6', color: GOLD, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ gridColumn: '1 / 6', color: GOLD }}>
             Total — {result?.itemCount ?? 0} Line Items
           </div>
-          <div style={{ textAlign: 'right', color: GOLD, fontSize: 16 }}>
-            {fmt$(result?.totalProjectCost || 0)}
+          <div style={{ textAlign: 'right', color: GOLD, fontSize: 16 }} title="Direct cost — material + labor">
+            {fmt$(computedCosts?.directCost ?? 0)}
           </div>
-          <div style={{ textAlign: 'right', color: '#22C55E', fontSize: 16 }}>
-            {fmt$((result?.totalProjectCost || 0) * sellMult)}
+          <div style={{ textAlign: 'right', color: '#22C55E', fontSize: 16 }} title="Bid price — direct cost with every markup above">
+            {fmt$(bidPrice)}
           </div>
           <div aria-hidden />
         </div>
@@ -2304,12 +2372,12 @@ export default function TakeoffPage() {
 
       {/* Delete undo bar — the DELETE only fires after this 6s window passes */}
       {undoDelete && (
-        <div style={{ position: 'fixed', left: '50%', bottom: 26, transform: 'translateX(-50%)', zIndex: 60, display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', borderRadius: 14, background: 'rgba(24,18,8,0.94)', border: '1px solid rgba(245,158,11,0.45)', boxShadow: '0 18px 50px -12px rgba(245,158,11,0.35)', animation: 'tkUndoIn .25s ease both', maxWidth: 'min(92vw, 560px)' }}>
+        <div style={{ position: 'fixed', left: '50%', bottom: 26, transform: 'translateX(-50%)', zIndex: 60, display: 'flex', alignItems: 'center', gap: 14, padding: '12px 18px', borderRadius: 14, background: 'rgba(0,0,0,0.94)', border: '1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)', boxShadow: '0 18px 50px -12px var(--brand-primary-35)', animation: 'tkUndoIn .25s ease both', maxWidth: 'min(92vw, 560px)' }}>
           <Trash size={16} weight="duotone" color="#F87171" style={{ flexShrink: 0 }} />
           <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             Deleted “{undoDelete.item.description}” — {fmt$(Number(undoDelete.item.totalCost) || 0)}
           </span>
-          <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: '#1A1206', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
+          <button onClick={undoPendingDelete} className="tkBtn" style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, color: '#0A0A00', fontWeight: 800, fontSize: 12.5, cursor: 'pointer' }}>
             Undo
           </button>
         </div>
@@ -2319,13 +2387,13 @@ export default function TakeoffPage() {
       {(result?.recommendations?.length ?? 0) > 0 && (
         <div style={{
           borderLeft: `3px solid ${GOLD}`,
-          background: 'rgba(245, 158, 11,0.05)',
+          background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)',
           borderRadius: '0 12px 12px 0',
           padding: '16px 20px',
           marginBottom: 20,
           boxShadow: 'var(--shadow-sm)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: GOLD, fontWeight: 800, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: GOLD, fontWeight: 800, fontSize: 11, marginBottom: 10 }}>
             <Sparkle size={13} weight="fill" color={GOLD} /> Estimator Recommendations
           </div>
           {result!.recommendations.map((rec, i) => (
@@ -2346,8 +2414,8 @@ export default function TakeoffPage() {
               <SealCheck size={30} weight="fill" color={GREEN} />
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ color: GREEN, fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>Package complete</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', marginTop: 2 }}>Sage built your full bid + compliance package</div>
+              <div style={{ color: GREEN, fontSize: 11, fontWeight: 800 }}>Package Complete</div>
+              <div style={{ color: '#fff', fontWeight: 800, fontSize: 20, letterSpacing: '-0.01em', marginTop: 2 }}>Sage Built Your Full Bid + Compliance Package</div>
             </div>
           </div>
           <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
@@ -2361,17 +2429,17 @@ export default function TakeoffPage() {
                 Each tile now carries the reason when its count is zero, so the
                 number stops being an accusation. */}
             {[
-              { icon: <Package size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.jackets || autoSummary.packages, label: 'Bid jackets',
-                zeroNote: 'no packages to jacket yet' },
-              { icon: <Scroll size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.lienWaivers, label: 'Lien waivers',
-                zeroNote: 'filed once a package is awarded' },
-              { icon: <FileText size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.w9s, label: 'W-9 requests',
-                zeroNote: 'none to send — add subcontractors first' },
+              { icon: <Package size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.jackets || autoSummary.packages, label: 'Bid Jackets',
+                zeroNote: 'No packages to jacket yet.' },
+              { icon: <Scroll size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.lienWaivers, label: 'Lien Waivers',
+                zeroNote: 'Filed once a package is awarded.' },
+              { icon: <FileText size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.w9s, label: 'W-9 Requests',
+                zeroNote: 'None to send — add subcontractors first.' },
               { icon: <FolderSimple size={16} weight="duotone" color={GOLD_HI} />, big: autoSummary.filed, label: 'Filed to Compliance',
-                zeroNote: 'nothing needed filing' },
+                zeroNote: 'Nothing needed filing.' },
             ].map((s) => (
               <div key={s.label} style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014))', border: `1px solid ${BORDER}`, borderRadius: 12, padding: '14px 16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'rgba(255,255,255,0.55)', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8, fontWeight: 700 }}>{s.icon}{s.label}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'rgba(255,255,255,0.55)', fontSize: 10.5, marginBottom: 8, fontWeight: 700 }}>{s.icon}{s.label}</div>
                 <div style={{ color: s.big ? '#fff' : 'rgba(255,255,255,0.45)', fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em' }}>{fmtN(s.big)}</div>
                 {!s.big && (
                   <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: 11, lineHeight: 1.35, marginTop: 4 }}>{s.zeroNote}</div>
@@ -2381,20 +2449,20 @@ export default function TakeoffPage() {
           </div>
           <div style={{ position: 'relative', color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <CheckCircle size={15} weight="fill" color={GREEN} />
-            {autoSummary.packages} bid package{autoSummary.packages !== 1 ? 's' : ''} written{autoSummary.sov ? ', Schedule of Values built' : ''} — everything filed to Documents / Compliance.
+            {autoSummary.packages} bid package{autoSummary.packages !== 1 ? 's' : ''} written{autoSummary.sov ? ', Schedule of Values built' : autoSummary.sovDeferred ? ' (pay application waits until the job is won)' : ''} — everything filed to Documents / Compliance.
           </div>
           <div style={{ position: 'relative', display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 18 }}>
-            <a href={`/app/projects/${projectId}/bid-packages`} className="tkBtn" style={{ textDecoration: 'none', padding: '11px 20px', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, borderRadius: 10, color: '#1A1206', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 12px 30px -12px rgba(245,158,11,0.6)' }}>
-              <Package size={15} weight="duotone" color="#1A1206" /> View bid packages
+            <a href={`/app/projects/${projectId}/bid-packages`} className="tkBtn" style={{ textDecoration: 'none', padding: '11px 20px', background: `linear-gradient(135deg, ${GOLD}, ${AMBER})`, borderRadius: 10, color: '#0A0A00', fontWeight: 800, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 12px 30px -12px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
+              <Package size={15} weight="duotone" color="#0A0A00" /> View Bid Packages
             </a>
             <a href={`/app/projects/${projectId}/compliance`} style={{ textDecoration: 'none', padding: '11px 18px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, color: '#fff', fontWeight: 700, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-              <ShieldCheck size={15} weight="duotone" color="#fff" /> View compliance
+              <ShieldCheck size={15} weight="duotone" color="#fff" /> View Compliance
             </a>
             <button onClick={() => { setAutoSummary(null); setPickMode(true); }} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 10, color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-              Add more manually
+              Add More Manually
             </button>
-            <button onClick={() => addSheetsRef.current?.click()} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid rgba(245,158,11,0.5)', borderRadius: 10, color: '#F59E0B', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              + Add sheets to this set
+            <button onClick={() => addSheetsRef.current?.click()} style={{ padding: '11px 18px', background: 'transparent', border: '1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)', borderRadius: 10, color: GOLD, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              + Add Sheets to This Set
             </button>
             <input
               ref={addSheetsRef}
@@ -2404,17 +2472,17 @@ export default function TakeoffPage() {
               onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) addSheets(f); }}
             />
             <button onClick={() => { if (confirm('Start a new takeoff? Previous results are saved.')) { setAutoSummary(null); setState('upload'); setSelectedFile(null); setResult(null); setTakeoffId(null); } }} style={{ padding: '11px 18px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 13, cursor: 'pointer', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <Plus size={13} weight="bold" color="rgba(255,255,255,0.4)" /> New analysis
+              <Plus size={13} weight="bold" color="rgba(255,255,255,0.4)" /> New Analysis
             </button>
           </div>
         </div>
       ) : generating === 'auto' ? (
         /* ── STREAMING: cinematic combined progress (phase 1 = 0-50%, phase 2 = 50-100%) ── */
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 18, padding: 2, background: 'linear-gradient(135deg, rgba(245,158,11,0.55), rgba(245,158,11,0.14))', animation: 'tkGlow 3.4s ease-in-out infinite' }}>
-          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: '24px 26px', background: 'radial-gradient(120% 130% at 50% -10%, rgba(245,158,11,0.12), rgba(10,13,20,0.97))' }}>
-            <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(245,158,11,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.06) 1px, transparent 1px)', backgroundSize: '26px 26px', maskImage: 'radial-gradient(80% 80% at 50% 30%, #000, transparent 78%)', WebkitMaskImage: 'radial-gradient(80% 80% at 50% 30%, #000, transparent 78%)' }} />
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 18, padding: 2, background: 'linear-gradient(135deg, color-mix(in srgb, var(--brand-primary) 55%, transparent), color-mix(in srgb, var(--brand-primary) 14%, transparent))', animation: 'tkGlow 3.4s ease-in-out infinite' }}>
+          <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 16, padding: '24px 26px', background: 'radial-gradient(120% 130% at 50% -10%, var(--brand-primary-12), rgba(0,0,0,0.97))' }}>
+            <div aria-hidden style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(color-mix(in srgb, var(--brand-primary) 6%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--brand-primary) 6%, transparent) 1px, transparent 1px)', backgroundSize: '26px 26px', maskImage: 'radial-gradient(80% 80% at 50% 30%, #000, transparent 78%)', WebkitMaskImage: 'radial-gradient(80% 80% at 50% 30%, #000, transparent 78%)' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
-              <div style={{ flex: '0 0 auto', width: 56, height: 56, borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, rgba(245,158,11,0.24), rgba(245,158,11,0.04))', border: '1px solid rgba(245,158,11,0.42)', animation: 'tkPulseA 1.9s ease-out infinite' }}>
+              <div style={{ flex: '0 0 auto', width: 56, height: 56, borderRadius: 16, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 24%, transparent), color-mix(in srgb, var(--brand-primary) 4%, transparent))', border: '1px solid color-mix(in srgb, var(--brand-primary) 42%, transparent)', animation: 'tkPulseA 1.9s ease-out infinite' }}>
                 <Robot size={30} weight="duotone" color={GOLD_HI} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -2423,17 +2491,17 @@ export default function TakeoffPage() {
               </div>
               <div style={{ color: GOLD_HI, fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em' }}>{progress.pct}%</div>
             </div>
-            <div style={{ position: 'relative', height: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 999, overflow: 'hidden' }}>
-              <div style={{ position: 'relative', height: '100%', width: `${progress.pct}%`, background: `linear-gradient(90deg, ${AMBER}, ${GOLD}, ${GOLD_HI})`, borderRadius: 999, transition: 'width .5s ease', boxShadow: '0 0 16px rgba(245,158,11,0.6)' }}>
+            <div style={{ position: 'relative', height: 10, background: 'rgba(255,255,255,0.07)', border: '1px solid color-mix(in srgb, var(--brand-primary) 15%, transparent)', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{ position: 'relative', height: '100%', width: `${progress.pct}%`, background: `linear-gradient(90deg, ${AMBER}, ${GOLD}, ${GOLD_HI})`, borderRadius: 999, transition: 'width .5s ease', boxShadow: '0 0 16px color-mix(in srgb, var(--brand-primary) 60%, transparent)' }}>
                 <div aria-hidden style={{ position: 'absolute', inset: 0, background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.5) 50%, transparent 60%)', backgroundSize: '200% 100%', animation: 'tkBarShine 2.4s ease-in-out infinite' }} />
               </div>
             </div>
             <div style={{ position: 'relative', display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-              {[{ label: 'Bid jackets + SOV', phase: 0 }, { label: 'Compliance package', phase: 1 }].map(({ label, phase }) => {
+              {[{ label: 'Bid Jackets + SOV', phase: 0 }, { label: 'Compliance Package', phase: 1 }].map(({ label, phase }) => {
                 const done = progress.pct >= (phase === 0 ? 50 : 100);
                 const active = phase === 0 ? progress.pct < 50 : (progress.pct >= 50 && progress.pct < 100);
                 return (
-                  <div key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 700, color: done ? GREEN : active ? GOLD_HI : 'rgba(255,255,255,0.4)', background: active ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${active ? 'rgba(245,158,11,0.3)' : BORDER}` }}>
+                  <div key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 10, fontSize: 12.5, fontWeight: 700, color: done ? GREEN : active ? GOLD_HI : 'rgba(255,255,255,0.4)', background: active ? 'color-mix(in srgb, var(--brand-primary) 10%, transparent)' : 'rgba(255,255,255,0.03)', border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-primary) 30%, transparent)' : BORDER}` }}>
                     {done ? <CheckCircle size={15} weight="fill" color={GREEN} /> : active ? <CircleNotch size={15} weight="bold" style={{ animation: 'tkSpin .9s linear infinite' }} /> : <Circle size={12} weight="regular" />}
                     {label}
                   </div>
@@ -2463,26 +2531,26 @@ export default function TakeoffPage() {
               anyone who genuinely wants one piece. */}
           <button onClick={exportXLS} disabled={!!generating}
             style={{ padding: '11px 22px', background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', borderRadius: 8, color: '#22C55E', fontWeight: 600, fontSize: 13, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'xls') ? 0.5 : 1 }}>
-            {generating === 'xls' ? 'Generating...' : <><FileXls size={16} weight="duotone" color="#22C55E" style={{marginRight:4, verticalAlign:'middle'}} /> Export Excel</>}
+            {generating === 'xls' ? 'Generating…' : <><FileXls size={16} weight="duotone" color="#22C55E" style={{marginRight:4, verticalAlign:'middle'}} /> Export Excel</>}
           </button>
           {/* The sheet-by-sheet estimate workspace shipped UNREACHABLE — no link
               anywhere in the app pointed at it (takeoff/estimate). This is its door. */}
           <a href={generating ? undefined : `/app/projects/${projectId}/takeoff/estimate`}
             aria-disabled={!!generating}
             onClick={(e) => { if (generating) e.preventDefault(); }}
-            style={{ padding: '11px 22px', background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.32)', borderRadius: 8, color: '#F59E0B', fontWeight: 600, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', opacity: generating ? 0.5 : 1, cursor: generating ? 'wait' : 'pointer' }}>
-            <Calculator size={16} weight="duotone" color="#F59E0B" style={{marginRight:4, verticalAlign:'middle'}} /> Estimate workspace
+            style={{ padding: '11px 22px', background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 32%, transparent)', borderRadius: 8, color: GOLD, fontWeight: 600, fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', opacity: generating ? 0.5 : 1, cursor: generating ? 'wait' : 'pointer' }}>
+            <Calculator size={16} weight="duotone" color={GOLD} style={{marginRight:4, verticalAlign:'middle'}} /> Estimate Workspace
           </a>
         </div>
         {/* Secondary actions */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <button onClick={handleGenerateBidPackages} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'bid-packages') ? 0.5 : 1 }}>
-            {generating === 'bid-packages' ? 'Creating...' : <><Package size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Bid Packages</>}
+            {generating === 'bid-packages' ? 'Creating…' : <><Package size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Bid Packages</>}
           </button>
           <button onClick={handleGenerateSOV} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'sov') ? 0.5 : 1 }}>
-            {generating === 'sov' ? 'Creating...' : <><Table size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> SOV</>}
+            {generating === 'sov' ? 'Creating…' : <><Table size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> SOV</>}
           </button>
           {/* Wrapped, not passed by reference: React hands an onClick handler the
               MouseEvent as its first argument, which would arrive as `nested`
@@ -2490,11 +2558,11 @@ export default function TakeoffPage() {
               one that never shows its own progress. */}
           <button onClick={() => handleCreateBudget()} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'budget') ? 0.5 : 1 }}>
-            {generating === 'budget' ? 'Creating...' : <><CurrencyDollar size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Budget</>}
+            {generating === 'budget' ? 'Creating…' : <><CurrencyDollar size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Budget</>}
           </button>
           <button onClick={handleGenerateLienWaivers} disabled={!!generating}
             style={{ padding: '9px 18px', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 12, cursor: generating ? 'wait' : 'pointer', opacity: (generating && generating !== 'lien-waivers') ? 0.5 : 1 }}>
-            {generating === 'lien-waivers' ? 'Creating...' : <><Blueprint size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Lien Waivers</>}
+            {generating === 'lien-waivers' ? 'Creating…' : <><Blueprint size={16} weight="duotone" color="#fff" style={{marginRight:4, verticalAlign:'middle'}} /> Lien Waivers</>}
           </button>
           <button
             onClick={() => {

@@ -96,7 +96,7 @@ function TickerItem({ a, ghost = false }: { a: ActivityRow; ghost?: boolean }) {
       }}
     >
       <span aria-hidden style={{ width: 7, height: 7, borderRadius: 999, flexShrink: 0, background: st.color, boxShadow: `0 0 8px ${st.color}` }} />
-      <span style={{ fontSize: 9.5, fontWeight: 900, color: st.color, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>
+      <span style={{ fontSize: 9.5, fontWeight: 900, color: st.color, flexShrink: 0 }}>
         {st.label}
       </span>
       <span style={{ fontSize: 12.5, fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>{label}</span>
@@ -137,7 +137,7 @@ export default function StatusTicker({ style }: { style?: React.CSSProperties })
         background: 'rgba(20,20,22,0.6)', position: 'relative', zIndex: 1,
       }}>
         <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: '#34D399', boxShadow: '0 0 10px #34D399', animation: 'stTickerDot 2s ease-in-out infinite' }} />
-        <span style={{ fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.8)', textTransform: 'uppercase', letterSpacing: '0.12em', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
           New Activity
         </span>
       </div>

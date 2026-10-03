@@ -14,7 +14,7 @@ import { Plus, DownloadSimple, CheckCircle, FloppyDisk, Receipt, Calculator, Lis
 import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
-const PANEL = '#161b22', LINE = 'rgba(255,255,255,0.09)', GOLD = '#F59E0B', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399';
+const PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const c = (dollars: string) => Math.round((parseFloat(dollars) || 0) * 100);
 const d = (cents: number) => (cents / 100).toFixed(2);
@@ -51,7 +51,7 @@ export default function PayAppPage() {
       const sov = estimateToSov([...byTrade.entries()].map(([trade, totalCents]) => ({ trade, totalCents })), sell || subtotal, subtotal);
       setContract(d(sell || subtotal));
       setLines(sov.map((l) => ({ ...l, _sv: d(l.scheduledValueCents), _prev: '0', _this: '0', _stored: '0' })));
-      setMsg(`✓ Seeded ${sov.length} SOV lines from takeoff — contract ${usd(sell || subtotal)}`);
+      setMsg(`✓ Seeded ${sov.length} SOV lines from takeoff — contract ${usd(sell || subtotal)}.`);
     } catch (e) { console.error(e); setMsg(humanError(e, "Couldn't seed from takeoff. Please try again.")); }
   };
 
@@ -83,14 +83,14 @@ export default function PayAppPage() {
     const json = await res.json().catch(() => ({}));
     if (!res.ok || json.error) { console.error('pay app save failed', res.status, json.error); throw new Error(json.error || 'Save failed'); }
     const pa = json.payApp;
-    if (!pa?.id) throw new Error('the saved pay application could not be read back');
+    if (!pa?.id) throw new Error('The saved pay application could not be read back.');
     return pa;
   };
 
   // Save, then jump into the project pay-app detail page for submit → approve → certify.
   const save = async () => {
-    if (!projectId) { setMsg('Pick a project first'); return; }
-    if (!lines.length) { setMsg('Add at least one SOV line'); return; }
+    if (!projectId) { setMsg('Pick a project first.'); return; }
+    if (!lines.length) { setMsg('Add at least one SOV line.'); return; }
     setSaving(true); setMsg('Saving pay application…');
     try {
       const pa = await createPayApp();
@@ -106,8 +106,8 @@ export default function PayAppPage() {
   // route so the button produces the stored, numbered G702/G703 the Documents
   // library and the detail page serve — not a window.print approximation.
   const generatePdfs = async () => {
-    if (!projectId) { setMsg('Pick a project first'); return; }
-    if (!lines.length) { setMsg('Add at least one SOV line'); return; }
+    if (!projectId) { setMsg('Pick a project first.'); return; }
+    if (!lines.length) { setMsg('Add at least one SOV line.'); return; }
     setGenerating(true); setMsg('Saving pay application…');
     try {
       const pa = await createPayApp();
@@ -121,7 +121,7 @@ export default function PayAppPage() {
       if (!res.ok || json.error || !json.g702Url) throw new Error(json.error || 'PDF generation failed');
       openPdf({ url: json.g702Url });
       if (json.g703Url) openPdf({ url: json.g703Url });
-      setMsg(`✓ Application #${pa.app_number} G702/G703 generated — stored on the pay application`);
+      setMsg(`✓ Application #${pa.app_number} G702/G703 generated — stored on the pay application.`);
       router.push(`/app/projects/${pa.project_id || projectId}/pay-apps/${pa.id}`);
     } catch (e) {
       console.error(e);
@@ -162,7 +162,7 @@ export default function PayAppPage() {
     w.document.close(); setTimeout(() => { try { w.print(); } catch { /* */ } }, 500);
   };
 
-  const inp: React.CSSProperties = { background: '#0a0a0a', border: `1px solid ${LINE}`, borderRadius: 6, color: TEXT, padding: '7px 9px', fontSize: 13, width: '100%' };
+  const inp: React.CSSProperties = { background: 'var(--bg-base)', border: `1px solid ${LINE}`, borderRadius: 6, color: TEXT, padding: '7px 9px', fontSize: 13, width: '100%' };
   const num: React.CSSProperties = { ...inp, textAlign: 'right' as const };
 
   // G702 summary metrics → premium StatCards (values still computed live by the finance engine).
@@ -197,7 +197,7 @@ export default function PayAppPage() {
         {/* contract terms */}
         <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
           {[['App #', appNo, setAppNo, 60], ['Period', period, setPeriod, 130], ['Contract $', contract, setContract, 130], ['Change Orders $', cos, setCos, 130], ['Retainage %', ret, setRet, 90], ['Prev. Certs $', prevCerts, setPrevCerts, 130]].map(([lbl, val, set, w]: any) => (
-            <label key={lbl} style={{ fontSize: 11, color: DIM, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{lbl}<input value={val} onChange={(e) => set(e.target.value)} style={{ ...inp, marginTop: 5, width: w }} /></label>
+            <label key={lbl} style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>{lbl}<input value={val} onChange={(e) => set(e.target.value)} style={{ ...inp, marginTop: 5, width: w }} /></label>
           ))}
         </div>
       </SectionCard>
@@ -209,8 +209,8 @@ export default function PayAppPage() {
             <StatCard key={s.label} label={s.label} value={s.value} icon={s.icon} accent={s.accent}  href="/app/billing/payapp"/>
           ))}
         </div>
-        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '16px 20px', borderRadius: 14, background: 'linear-gradient(90deg, rgba(245,158,11,0.14), rgba(245,158,11,0.04))', border: '1px solid rgba(245,158,11,0.4)' }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Current Payment Due This Period</div>
+        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '16px 20px', borderRadius: 14, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-35)' }}>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.72)', fontWeight: 800 }}>Current Payment Due This Period</div>
           <div style={{ fontSize: 32, fontWeight: 900, color: GOLD, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{usd(result.currentPaymentDueCents)}</div>
         </div>
       </SectionCard>
@@ -221,7 +221,7 @@ export default function PayAppPage() {
         icon={<ListNumbers size={17} weight="duotone" color={GOLD} />}
         flush
         style={{ marginBottom: 20 }}
-        action={lines.length > 0 ? <button onClick={addLine} style={{ ...ghostButtonStyle, padding: '8px 14px', fontSize: 12.5 }} className="pmBtn"><Plus size={14} weight="bold" /> Add SOV line</button> : undefined}
+        action={lines.length > 0 ? <button onClick={addLine} style={{ ...ghostButtonStyle, padding: '8px 14px', fontSize: 12.5 }} className="pmBtn"><Plus size={14} weight="bold" /> Add SOV Line</button> : undefined}
       >
         {lines.length === 0 ? (
           <PremiumEmpty
@@ -229,11 +229,11 @@ export default function PayAppPage() {
             icon={<ListNumbers size={30} weight="duotone" color={GOLD} />}
             title="No schedule of values yet"
             description="Add lines manually or seed the SOV straight from a takeoff above to skip the re-keying."
-            action={<button onClick={addLine} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add SOV line</button>}
+            action={<button onClick={addLine} style={goldButtonStyle} className="pmBtn"><Plus size={15} weight="bold" /> Add SOV Line</button>}
           />
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 0.9fr 0.6fr', background: PANEL, padding: '9px 12px', fontSize: 10.5, color: DIM, fontWeight: 700, textTransform: 'uppercase', minWidth: 780 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 0.9fr 0.6fr', background: PANEL, padding: '9px 12px', fontSize: 10.5, color: DIM, fontWeight: 700, minWidth: 780 }}>
               <span>Description</span><span style={{ textAlign: 'right' }}>Sched. Value</span><span style={{ textAlign: 'right' }}>Prev</span><span style={{ textAlign: 'right' }}>This Period</span><span style={{ textAlign: 'right' }}>Stored</span><span style={{ textAlign: 'right' }}>Total</span><span style={{ textAlign: 'right' }}>%</span>
             </div>
             {lines.map((l) => {
@@ -257,9 +257,9 @@ export default function PayAppPage() {
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <button onClick={save} disabled={saving || generating || !lines.length || !projectId} style={{ ...goldButtonStyle, padding: '12px 24px', fontSize: 15, cursor: saving ? 'default' : 'pointer', opacity: (saving || generating || !lines.length || !projectId) ? 0.5 : 1 }} className="pmBtn"><FloppyDisk size={16} weight="bold" /> {saving ? 'Saving…' : 'Save Pay Application'}</button>
         <button onClick={generatePdfs} disabled={saving || generating || !lines.length || !projectId} style={{ ...ghostButtonStyle, padding: '12px 24px', fontSize: 15, opacity: (saving || generating || !lines.length || !projectId) ? 0.5 : 1 }} className="pmBtn"><DownloadSimple size={16} weight="bold" /> {generating ? 'Generating…' : 'Generate AIA G702 / G703 (PDF)'}</button>
-        <button onClick={printForm} disabled={!lines.length} title="Unsaved on-screen preview for review only — the PDF button produces the stored, numbered document." style={{ ...ghostButtonStyle, padding: '10px 18px', fontSize: 13, opacity: lines.length ? 0.85 : 0.5 }} className="pmBtn">Print preview</button>
+        <button onClick={printForm} disabled={!lines.length} title="Unsaved on-screen preview for review only — the PDF button produces the stored, numbered document." style={{ ...ghostButtonStyle, padding: '10px 18px', fontSize: 13, opacity: lines.length ? 0.85 : 0.5 }} className="pmBtn">Print Preview</button>
       </div>
-      <p style={{ color: DIM, fontSize: 12, marginTop: 12 }}>Save records the pay application against the project (numbers computed server-side by the shared finance engine) and opens it for submit, approve &amp; certify. Generate saves it, then produces the stored, numbered G702/G703 PDFs through the pdf engine; Print preview is an unsaved approximation for review only.</p>
+      <p style={{ color: DIM, fontSize: 12, marginTop: 12 }}>Save records the pay application against the project (numbers computed server-side by the shared finance engine) and opens it for submit, approve &amp; certify. Generate saves it, then produces the stored, numbered G702/G703 PDFs through the pdf engine; Print Preview is an unsaved approximation for review only.</p>
     </PremiumSurface>
   );
 }

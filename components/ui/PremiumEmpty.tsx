@@ -21,9 +21,9 @@ type Tone = 'gold' | 'green' | 'red' | 'blue';
 
 const TONES: Record<Tone, string> = {
   gold: 'var(--brand-primary)',
-  green: '#22C55E',
-  red: '#EF4444',
-  blue: '#F59E0B',
+  green: '#2EE59D',
+  red: '#FF4D5E',
+  blue: '#3DA9FF',
 };
 
 export interface PremiumEmptyProps {
@@ -125,7 +125,7 @@ export function PremiumEmpty({
             background: `radial-gradient(circle, ${toneMix(24)}, ${toneMix(4)})`,
             border: `1px solid ${toneMix(42)}`,
             color: tone === 'gold' ? GOLD_HI : toneColor,
-            boxShadow: `0 0 44px -8px ${toneMix(60)}`,
+            boxShadow: `0 0 0 6px ${toneMix(8)}`,
             animation: 'sgFloat 5s ease-in-out infinite',
           }}
         >

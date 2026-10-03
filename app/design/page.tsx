@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 
 /* ─── Palette — Sonoran minimal (gold on navy) ─── */
-const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#16A34A';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#16A34A';
 const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1';
 const RED = '#DC2626';
 
@@ -60,14 +60,14 @@ const STEP_ORDER: Step[] = ['upload', 'room', 'style', 'customize', 'generating'
 
 /* ─── Progress messages ─── */
 const GEN_MESSAGES = [
-  'Analyzing room dimensions...',
-  'Detecting existing features...',
-  'Applying design style...',
-  'Rendering materials and textures...',
-  'Adding lighting and shadows...',
-  'Refining photorealistic details...',
-  'Calculating renovation costs...',
-  'Finalizing your design...',
+  'Analyzing room dimensions…',
+  'Detecting existing features…',
+  'Applying design style…',
+  'Rendering materials and textures…',
+  'Adding lighting and shadows…',
+  'Refining photorealistic details…',
+  'Calculating renovation costs…',
+  'Finalizing your design…',
 ];
 
 /* ─── Inline SVG Icons ─── */
@@ -184,7 +184,7 @@ export default function DesignStudioPage() {
   const handleGenerate = async () => {
     if (!photoFile || !room || !style) return;
     setStep('generating'); setResult(null); setGenMsgIdx(0);
-    setProgress({ message: 'Starting...', pct: 0 });
+    setProgress({ message: 'Starting…', pct: 0 });
 
     try {
       const formData = new FormData();
@@ -266,15 +266,15 @@ export default function DesignStudioPage() {
   const sectionTitle: React.CSSProperties = { fontSize: 22, fontWeight: 600, textAlign: 'center', marginBottom: 12, lineHeight: 1.25, letterSpacing: '-0.01em' };
   const sectionSub: React.CSSProperties = { fontSize: 15, color: DIM, textAlign: 'center', maxWidth: 560, margin: '0 auto 56px', lineHeight: 1.6 };
   const card: React.CSSProperties = { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, overflow: 'hidden' };
-  const goldBtn: React.CSSProperties = { padding: '10px 22px', background: GOLD, color: '#0a0a0a', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13.5, cursor: 'pointer', transition: 'opacity .15s' };
+  const goldBtn: React.CSSProperties = { padding: '10px 22px', background: GOLD, color: '#0A0A00', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13.5, cursor: 'pointer', transition: 'opacity .15s' };
   const outlineBtn: React.CSSProperties = { padding: '10px 22px', background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: DIM, borderRadius: 8, fontWeight: 500, fontSize: 13.5, cursor: 'pointer', transition: 'all .15s' };
 
   return (
-    <div style={{ background: '#0a0a0a', color: '#FFFFFF', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
-      {/* ── subtle ambient warmth — minimal, no stock photo ── */}
+    <div style={{ background: 'var(--bg-base)', color: '#FFFFFF', minHeight: '100vh', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+      {/* ── ambient layer — warm glow removed (jet-black standard) ── */}
       <div style={{
         position: 'fixed', top: -120, right: -60, width: 520, height: 520, zIndex: 0, pointerEvents: 'none',
-        background: 'radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 68%)',
+        background: 'none',
       }} />
       <svg style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 0, opacity: 0.03, pointerEvents: 'none' }} viewBox="0 0 1440 200" preserveAspectRatio="none">
         <path d="M0,200 L0,120 L120,60 L200,90 L280,40 L360,80 L440,20 L520,70 L600,30 L680,60 L760,10 L840,50 L920,25 L1000,65 L1080,15 L1160,55 L1240,35 L1320,70 L1440,45 L1440,200 Z" fill="#8B7355"/>
@@ -290,7 +290,7 @@ export default function DesignStudioPage() {
         padding: '0 24px', height: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <style>{`@media (max-width: 768px){ .dstudio-nav-links{ display:none !important } }`}</style>
-        <Link href="/" style={{ color: GOLD, fontWeight: 700, fontSize: 14, letterSpacing: '0.14em', textDecoration: 'none' }}>SAGUARO</Link>
+        <Link href="/" style={{ color: GOLD, fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', textDecoration: 'none' }}>Saguaro</Link>
         <div className="dstudio-nav-links" style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
           {['How It Works', 'Examples', 'Pricing', 'Compare'].map(link => (
             <a key={link} href={`#${link.toLowerCase().replace(/\s+/g, '-')}`} style={{ color: 'rgba(255,255,255,0.65)', fontSize: 13, fontWeight: 400, letterSpacing: '0.02em', textDecoration: 'none', transition: 'color .2s' }}
@@ -312,11 +312,11 @@ export default function DesignStudioPage() {
         {/* ════════════════════════════════════════════════════════════════ */}
         <section style={{ ...sectionPad, paddingTop: 100, paddingBottom: 100, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
           <div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: DIM, fontSize: 10.5, fontWeight: 500, letterSpacing: 0.8, padding: '5px 12px', borderRadius: 999, marginBottom: 24, textTransform: 'uppercase' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: DIM, fontSize: 10.5, fontWeight: 500, padding: '5px 12px', borderRadius: 999, marginBottom: 24 }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD }} />AI-Powered Design Studio
             </span>
             <h1 style={{ fontSize: 30, fontWeight: 600, lineHeight: 1.15, letterSpacing: '-0.03em', marginBottom: 20 }}>
-              Redesign any room<br />in seconds
+              Redesign Any Room<br />in Seconds
             </h1>
             <p style={{ fontSize: 15, color: DIM, lineHeight: 1.7, marginBottom: 32, maxWidth: 460 }}>
               Upload a photo of your space. Pick a style. Get a photorealistic AI redesign &mdash; with instant cost estimates and contractor-ready specs.
@@ -339,7 +339,7 @@ export default function DesignStudioPage() {
               overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)',
               background: 'linear-gradient(135deg, #161d2b 0%, #1e2636 100%)', zIndex: 1,
             }}>
-              <span style={{ position: 'absolute', bottom: 20, left: 20, background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, letterSpacing: 1 }}>BEFORE</span>
+              <span style={{ position: 'absolute', bottom: 20, left: 20, background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500 }}>Before</span>
             </div>
             {/* After panel */}
             <div style={{
@@ -347,7 +347,7 @@ export default function DesignStudioPage() {
               overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)',
               background: 'linear-gradient(135deg, #22242f 0%, #2c2a22 100%)', zIndex: 2,
             }}>
-              <span style={{ position: 'absolute', bottom: 20, right: 20, background: 'rgba(255,255,255,0.92)', color: '#0a0a0a', padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600, letterSpacing: 1 }}>AFTER</span>
+              <span style={{ position: 'absolute', bottom: 20, right: 20, background: 'rgba(255,255,255,0.92)', color: '#0a0a0a', padding: '5px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600 }}>After</span>
             </div>
             {/* Slider line */}
             <div style={{
@@ -357,10 +357,10 @@ export default function DesignStudioPage() {
             }}>
               <div style={{
                 position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-                width: 34, height: 34, borderRadius: '50%', background: '#141416', border: `1.5px solid ${GOLD}`,
+                width: 34, height: 34, borderRadius: '50%', background: 'var(--bg-surface)', border: `1.5px solid ${GOLD}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
               }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ stroke: GOLD }} strokeWidth="2.5" strokeLinecap="round">
                   <path d="M18 8l4 4-4 4"/><path d="M6 8l-4 4 4 4"/>
                 </svg>
               </div>
@@ -423,7 +423,7 @@ export default function DesignStudioPage() {
         {/* 5. BEFORE/AFTER GALLERY                                        */}
         {/* ════════════════════════════════════════════════════════════════ */}
         <section id="gallery" style={{ ...sectionPad, background: 'rgba(255,255,255,0.03)' }}>
-          <h2 style={sectionTitle}>See The Transformation</h2>
+          <h2 style={sectionTitle}>See the Transformation</h2>
           <p style={sectionSub}>Real results from our AI design engine</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
             {[
@@ -485,7 +485,7 @@ export default function DesignStudioPage() {
               { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.5" strokeLinecap="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>, title: 'Instant Cost Estimate', desc: 'Know renovation costs before calling a contractor' },
               { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.5" strokeLinecap="round"><circle cx="13.5" cy="6.5" r=".5" fill={TEXT}/><circle cx="17.5" cy="10.5" r=".5" fill={TEXT}/><circle cx="8.5" cy="7.5" r=".5" fill={TEXT}/><circle cx="6.5" cy="12" r=".5" fill={TEXT}/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 011.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>, title: '18 Design Styles', desc: 'Modern to Mediterranean, Farmhouse to Art Deco' },
               { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.5" strokeLinecap="round"><path d="M2 20h20"/><path d="M5 20V8l7-5 7 5v12"/><path d="M9 20v-5h6v5"/></svg>, title: 'Construction-Ready', desc: 'Designs link directly to material takeoffs and contractor bids' },
-              { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>, title: 'Exterior + Interior', desc: 'Redesign kitchens, bathrooms, yards, facades -- any space' },
+              { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.5" strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>, title: 'Exterior + Interior', desc: 'Redesign kitchens, bathrooms, yards, facades — any space' },
               { icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={TEXT} strokeWidth="1.5" strokeLinecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>, title: 'Smart Upsells', desc: 'AI suggests upgrades based on your location and lifestyle' },
             ].map((f, i) => (
               <div key={i}>
@@ -578,8 +578,8 @@ export default function DesignStudioPage() {
         {/* 10. CTA SECTION                                                */}
         {/* ════════════════════════════════════════════════════════════════ */}
         <section style={{ ...sectionPad, textAlign: 'center' }}>
-          <h2 style={{ ...sectionTitle, fontSize: 24 }}>Ready to transform your space?</h2>
-          <p style={{ ...sectionSub, marginBottom: 32 }}>Join 2,400+ homeowners and contractors using AI to visualize renovations</p>
+          <h2 style={{ ...sectionTitle, fontSize: 24 }}>Ready to Transform Your Space?</h2>
+          <p style={{ ...sectionSub, marginBottom: 32 }}>Join 2,400+ homeowners and contractors using AI to visualize renovations.</p>
           <button onClick={scrollToStudio} style={{ ...goldBtn, padding: '12px 28px', fontSize: 14 }}>
             Start Designing &mdash; It&apos;s Free
           </button>
@@ -591,11 +591,11 @@ export default function DesignStudioPage() {
         {/* ════════════════════════════════════════════════════════════════ */}
         <section ref={studioRef} id="studio" style={{ ...sectionPad, paddingTop: 40, paddingBottom: 100 }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: DIM, fontSize: 10.5, fontWeight: 500, letterSpacing: 0.8, padding: '5px 12px', borderRadius: 999, marginBottom: 16, textTransform: 'uppercase' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', color: DIM, fontSize: 10.5, fontWeight: 500, padding: '5px 12px', borderRadius: 999, marginBottom: 16 }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: GOLD }} />Design Studio
             </span>
-            <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 8 }}>Create your AI design</h2>
-            <p style={{ color: DIM, fontSize: 15, maxWidth: 480, margin: '0 auto' }}>Upload a photo, pick your style, and watch AI transform your space</p>
+            <h2 style={{ fontSize: 22, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 8 }}>Create Your AI Design</h2>
+            <p style={{ color: DIM, fontSize: 15, maxWidth: 480, margin: '0 auto' }}>Upload a photo, pick your style, and watch AI transform your space.</p>
           </div>
 
           {/* Progress Steps */}
@@ -608,7 +608,7 @@ export default function DesignStudioPage() {
                       width: 26, height: 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 12, fontWeight: 600,
                       background: i < stepIdx ? GREEN : i === stepIdx ? GOLD : 'transparent',
-                      color: i <= stepIdx ? '#0a0a0a' : DIM,
+                      color: i <= stepIdx ? '#0A0A00' : DIM,
                       border: i <= stepIdx ? 'none' : '1px solid rgba(255,255,255,0.14)',
                       transition: 'all .3s',
                     }}>
@@ -630,9 +630,9 @@ export default function DesignStudioPage() {
               <div style={{ animation: 'fadeInUp .25s ease-out' }}>
                 <div style={{ textAlign: 'center', marginBottom: 32 }}>
                   <h3 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 8 }}>
-                    Upload your space
+                    Upload Your Space
                   </h3>
-                  <p style={{ color: DIM, fontSize: 15 }}>Take a photo or upload an image of the room you want to redesign</p>
+                  <p style={{ color: DIM, fontSize: 15 }}>Take a photo or upload an image of the room you want to redesign.</p>
                 </div>
 
                 <div
@@ -641,7 +641,7 @@ export default function DesignStudioPage() {
                   onDrop={handleDrop}
                   onClick={() => fileRef.current?.click()}
                   style={{
-                    background: isDragging ? 'rgba(245,158,11,0.05)' : 'rgba(255,255,255,0.02)',
+                    background: isDragging ? 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' : 'rgba(255,255,255,0.02)',
                     border: `1px dashed ${isDragging ? GOLD : 'rgba(255,255,255,0.14)'}`,
                     borderRadius: 16, padding: photo ? 0 : '72px 40px', cursor: 'pointer',
                     transition: 'all .2s', overflow: 'hidden', maxWidth: 640, margin: '0 auto',
@@ -690,14 +690,14 @@ export default function DesignStudioPage() {
             {step === 'room' && (
               <div style={{ animation: 'fadeInUp .25s ease-out' }}>
                 <div style={{ textAlign: 'center', marginBottom: 28 }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 6 }}>What type of space is this?</h3>
-                  <p style={{ color: DIM, fontSize: 14 }}>Select the room type for the best AI results</p>
+                  <h3 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 6 }}>What Type of Space Is This?</h3>
+                  <p style={{ color: DIM, fontSize: 14 }}>Select the room type for the best AI results.</p>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, maxWidth: 700, margin: '0 auto' }}>
                   {ROOMS.map(r => (
                     <button key={r.id} onClick={() => { setRoom(r.id); setTimeout(goNext, 200); }} style={{
-                      background: room === r.id ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)',
+                      background: room === r.id ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'rgba(255,255,255,0.02)',
                       border: `1px solid ${room === r.id ? GOLD : 'rgba(255,255,255,0.08)'}`,
                       borderRadius: 14, padding: '20px 12px', cursor: 'pointer', transition: 'all .15s',
                       textAlign: 'center',
@@ -712,7 +712,7 @@ export default function DesignStudioPage() {
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 28 }}>
                   <button onClick={goBack} style={{ padding: '10px 24px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: DIM, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>&larr; Back</button>
-                  {room && <button onClick={goNext} style={{ padding: '10px 32px', background: GOLD, color: '#0a0a0a', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Continue &rarr;</button>}
+                  {room && <button onClick={goNext} style={{ padding: '10px 32px', background: GOLD, color: '#0A0A00', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Continue &rarr;</button>}
                 </div>
               </div>
             )}
@@ -721,14 +721,14 @@ export default function DesignStudioPage() {
             {step === 'style' && (
               <div style={{ animation: 'fadeInUp .25s ease-out' }}>
                 <div style={{ textAlign: 'center', marginBottom: 28 }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 6 }}>Choose your style</h3>
-                  <p style={{ color: DIM, fontSize: 14 }}>Pick the design aesthetic you love</p>
+                  <h3 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 6 }}>Choose Your Style</h3>
+                  <p style={{ color: DIM, fontSize: 14 }}>Pick the design aesthetic you love.</p>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
                   {STYLES.map(s => (
                     <button key={s.id} onClick={() => { setStyle(s.id); setTimeout(goNext, 200); }} style={{
-                      background: style === s.id ? 'rgba(245,158,11,0.06)' : 'rgba(255,255,255,0.02)',
+                      background: style === s.id ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'rgba(255,255,255,0.02)',
                       border: `1px solid ${style === s.id ? GOLD : 'rgba(255,255,255,0.08)'}`,
                       borderRadius: 14, padding: '16px', cursor: 'pointer', transition: 'all .15s',
                       textAlign: 'left',
@@ -746,7 +746,7 @@ export default function DesignStudioPage() {
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 28 }}>
                   <button onClick={goBack} style={{ padding: '10px 24px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, color: DIM, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>&larr; Back</button>
-                  {style && <button onClick={goNext} style={{ padding: '10px 32px', background: GOLD, color: '#0a0a0a', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Continue &rarr;</button>}
+                  {style && <button onClick={goNext} style={{ padding: '10px 32px', background: GOLD, color: '#0A0A00', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Continue &rarr;</button>}
                 </div>
               </div>
             )}
@@ -755,8 +755,8 @@ export default function DesignStudioPage() {
             {step === 'customize' && (
               <div style={{ animation: 'fadeInUp .25s ease-out' }}>
                 <div style={{ textAlign: 'center', marginBottom: 28 }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 6 }}>Fine-tune your design</h3>
-                  <p style={{ color: DIM, fontSize: 14 }}>Adjust settings or add custom instructions</p>
+                  <h3 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 6 }}>Fine-Tune Your Design</h3>
+                  <p style={{ color: DIM, fontSize: 14 }}>Adjust settings or add custom instructions.</p>
                 </div>
 
                 {/* Preview strip */}
@@ -784,8 +784,8 @@ export default function DesignStudioPage() {
                       onChange={(e) => setIntensity(Number(e.target.value) / 100)}
                       style={{ width: '100%', accentColor: GOLD, cursor: 'pointer', height: 6 }} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: DIM, marginTop: 6 }}>
-                      <span>Subtle refresh</span>
-                      <span>Complete reimagine</span>
+                      <span>Subtle Refresh</span>
+                      <span>Complete Reimagine</span>
                     </div>
                   </div>
 
@@ -796,7 +796,7 @@ export default function DesignStudioPage() {
                       {[1, 2, 3].map(n => (
                         <button key={n} onClick={() => setNumOutputs(n)} style={{
                           flex: 1, padding: '12px', borderRadius: 8, border: `1px solid ${numOutputs === n ? GOLD : 'rgba(255,255,255,0.12)'}`,
-                          background: numOutputs === n ? 'rgba(245,158,11,0.06)' : 'transparent', color: numOutputs === n ? TEXT : DIM,
+                          background: numOutputs === n ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent', color: numOutputs === n ? TEXT : DIM,
                           fontWeight: 600, fontSize: 16, cursor: 'pointer', transition: 'all .15s',
                         }}>{n}</button>
                       ))}
@@ -813,7 +813,7 @@ export default function DesignStudioPage() {
                     Custom Instructions <span style={{ fontWeight: 400, color: DIM }}>(optional)</span>
                   </div>
                   <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)}
-                    placeholder="Add specific details... e.g., 'I want a large island with seating for 4, pendant lights, and a wine fridge'"
+                    placeholder="Add specific details… e.g., 'I want a large island with seating for 4, pendant lights, and a wine fridge'"
                     rows={3} style={{
                       width: '100%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10,
                       padding: 14, color: TEXT, fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit',
@@ -835,11 +835,11 @@ export default function DesignStudioPage() {
                 <div style={{ width: 100, height: 100, borderRadius: '50%', margin: '0 auto 32px', position: 'relative' }}>
                   <div style={{
                     width: '100%', height: '100%', borderRadius: '50%',
-                    background: `conic-gradient(${GOLD}, rgba(245,158,11,0.08))`,
+                    background: `conic-gradient(${GOLD}, color-mix(in srgb, var(--brand-primary) 8%, transparent))`,
                     animation: 'spin 3s linear infinite', opacity: 0.9,
                   }} />
                   <div style={{
-                    position: 'absolute', inset: 8, borderRadius: '50%', background: '#141416',
+                    position: 'absolute', inset: 8, borderRadius: '50%', background: 'var(--bg-surface)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <SparkleIcon />
@@ -847,7 +847,7 @@ export default function DesignStudioPage() {
                 </div>
 
                 <h2 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 8 }}>
-                  Creating your design
+                  Creating Your Design
                 </h2>
                 <p style={{ color: DIM, fontSize: 14, marginBottom: 32, minHeight: 20, transition: 'all .3s' }}>
                   {progress.message || GEN_MESSAGES[genMsgIdx]}
@@ -867,7 +867,7 @@ export default function DesignStudioPage() {
                 </div>
 
                 <div style={{ marginTop: 48, ...card, padding: '16px 24px', maxWidth: 500, margin: '48px auto 0', textAlign: 'left' }}>
-                  <div style={{ fontSize: 11, color: DIM, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Did you know?</div>
+                  <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 8 }}>Did You Know?</div>
                   <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
                     Saguaro uses ControlNet AI to preserve your room&apos;s structure while completely transforming the style. Walls, windows, and doors stay in place &mdash; only the design changes.
                   </div>
@@ -881,7 +881,7 @@ export default function DesignStudioPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                   <div>
                     <h3 style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em' }}>
-                      Your {STYLES.find(s => s.id === style)?.label} design
+                      Your {STYLES.find(s => s.id === style)?.label} Design
                     </h3>
                     <p style={{ color: DIM, fontSize: 13 }}>{ROOMS.find(r => r.id === room)?.label} Redesign</p>
                   </div>
@@ -918,12 +918,12 @@ export default function DesignStudioPage() {
                       </div>
                       <div style={{ position: 'absolute', top: 0, left: `${sliderPos}%`, width: 2, height: '100%', background: '#fff', transform: 'translateX(-1px)', zIndex: 10, boxShadow: '0 0 12px rgba(0,0,0,0.5)' }} />
                       <div style={{ position: 'absolute', top: '50%', left: `${sliderPos}%`, width: 36, height: 36, borderRadius: '50%', background: '#fff', border: `3px solid ${GOLD}`, transform: 'translate(-50%,-50%)', zIndex: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 16px rgba(0,0,0,0.4)', cursor: 'ew-resize' }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2.5" strokeLinecap="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ stroke: GOLD }} strokeWidth="2.5" strokeLinecap="round">
                           <path d="M18 8l4 4-4 4"/><path d="M6 8l-4 4 4 4"/>
                         </svg>
                       </div>
-                      <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,.6)', color: '#fff', padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 500, zIndex: 5, backdropFilter: 'blur(4px)' }}>BEFORE</div>
-                      <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(255,255,255,0.92)', color: '#0a0a0a', padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, zIndex: 5 }}>AFTER</div>
+                      <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,.6)', color: '#fff', padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 500, zIndex: 5, backdropFilter: 'blur(4px)' }}>Before</div>
+                      <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(255,255,255,0.92)', color: '#0a0a0a', padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600, zIndex: 5 }}>After</div>
                     </div>
                   </div>
                 )}
@@ -943,17 +943,17 @@ export default function DesignStudioPage() {
                 {result.costEstimate && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 20 }}>
                     <div style={{ ...card, padding: '16px 20px' }}>
-                      <div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Estimated Cost</div>
+                      <div style={{ fontSize: 11, color: DIM, marginBottom: 6 }}>Estimated Cost</div>
                       <div style={{ fontSize: 20, fontWeight: 600, color: GREEN }}>
                         {fmt$(result.costEstimate.cost_low || 0)} &ndash; {fmt$(result.costEstimate.cost_high || 0)}
                       </div>
                     </div>
                     <div style={{ ...card, padding: '16px 20px' }}>
-                      <div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Timeline</div>
+                      <div style={{ fontSize: 11, color: DIM, marginBottom: 6 }}>Timeline</div>
                       <div style={{ fontSize: 20, fontWeight: 600 }}>{result.costEstimate.timeline_weeks || '?'} <span style={{ fontSize: 14, fontWeight: 400, color: DIM }}>weeks</span></div>
                     </div>
                     <div style={{ ...card, padding: '16px 20px' }}>
-                      <div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Difficulty</div>
+                      <div style={{ fontSize: 11, color: DIM, marginBottom: 6 }}>Difficulty</div>
                       <div style={{ fontSize: 20, fontWeight: 600, color: result.costEstimate.difficulty === 'complex' ? RED : result.costEstimate.difficulty === 'moderate' ? GOLD : GREEN }}>
                         {(result.costEstimate.difficulty || 'moderate').charAt(0).toUpperCase() + (result.costEstimate.difficulty || 'moderate').slice(1)}
                       </div>
@@ -1016,7 +1016,7 @@ export default function DesignStudioPage() {
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="1.5" strokeLinecap="round" style={{ marginBottom: 16 }}>
                   <circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>
                 </svg>
-                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>Something went wrong</h2>
+                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>Something Went Wrong</h2>
                 <p style={{ color: DIM, fontSize: 14, marginBottom: 24 }}>{result.error}</p>
                 <button onClick={() => setStep('customize')} style={{ ...goldBtn, padding: '12px 32px', fontSize: 14 }}>Try Again</button>
               </div>
@@ -1027,7 +1027,7 @@ export default function DesignStudioPage() {
         {/* ════════════════════════════════════════════════════════════════ */}
         {/* 12. FOOTER                                                     */}
         {/* ════════════════════════════════════════════════════════════════ */}
-        <footer style={{ background: '#0b0e13', borderTop: '1px solid rgba(255,255,255,0.08)', color: '#A3A3A3', padding: '64px 24px 32px' }}>
+        <footer style={{ background: 'var(--bg-base)', borderTop: '1px solid rgba(255,255,255,0.08)', color: '#A3A3A3', padding: '64px 24px 32px' }}>
           <div style={{ maxWidth: 1160, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 40, marginBottom: 48 }}>
             {/* Every one of these was href="#" — fourteen footer links that took
                 a click and did nothing. Each now points at the page it names.
@@ -1051,7 +1051,7 @@ export default function DesignStudioPage() {
             ))}
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: GOLD, fontWeight: 700, fontSize: 14, letterSpacing: '0.14em' }}>SAGUARO</span>
+            <span style={{ color: GOLD, fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em' }}>Saguaro</span>
             <span style={{ fontSize: 13, color: '#666' }}>&copy; 2026 Saguaro Control Systems. All rights reserved.</span>
           </div>
         </footer>

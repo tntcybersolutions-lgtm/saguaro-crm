@@ -6,8 +6,8 @@ import { PremiumSurface, ModuleHero, StatStrip, SectionCard, PremiumEmpty } from
 import { UsersThree, ChatCircleDots, Buildings, ClockCounterClockwise, ListChecks } from '@phosphor-icons/react';
 
 /* ── palette ──────────────────────────────────────────── */
-const GOLD='#F59E0B',BG='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#CBD5E1';
-const GREEN='#22C55E',RED='#EF4444',AMBER='#F59E0B',BLUE='#F59E0B',PURPLE='#8B5CF6';
+const GOLD='var(--brand-primary)',BG='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',TEXT='#FFFFFF',DIM='#CBD5E1';
+const GREEN='#22C55E',RED='#EF4444',AMBER='var(--warning)',BLUE='var(--brand-primary)',PURPLE='#8B5CF6';
 
 /* ── types ────────────────────────────────────────────── */
 type PortalStatus = 'active' | 'pending' | 'disabled';
@@ -65,13 +65,13 @@ function defaultPerms(): Record<string, boolean> {
 
 /* ── shared inline styles ─────────────────────────────── */
 const card: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: 20 };
-const btnGold: React.CSSProperties = { padding: '9px 20px', background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: '#241500', borderRadius: 8, fontWeight: 800, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' };
+const btnGold: React.CSSProperties = { padding: '9px 20px', background: 'linear-gradient(180deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))', color: '#0A0A00', borderRadius: 8, fontWeight: 800, fontSize: 13, border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)' };
 const btnOutline: React.CSSProperties = { padding: '8px 16px', background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, cursor: 'pointer' };
 const btnDanger: React.CSSProperties = { padding: '8px 16px', background: 'transparent', border: `1px solid ${RED}`, borderRadius: 8, color: RED, fontSize: 13, cursor: 'pointer' };
-const inputS: React.CSSProperties = { padding: '9px 14px', background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const };
+const inputS: React.CSSProperties = { padding: '9px 14px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const };
 const badge = (c: string, bg: string): React.CSSProperties => ({ padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, color: c, background: bg, display: 'inline-block' });
-const thS: React.CSSProperties = { padding: '10px 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase' as const, letterSpacing: '.06em', textAlign: 'left' as const, borderBottom: `1px solid ${BORDER}` };
-const tdS: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid ${BORDER}22` };
+const thS: React.CSSProperties = { padding: '10px 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--text-tertiary)', textAlign: 'left' as const, borderBottom: `1px solid ${BORDER}` };
+const tdS: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: TEXT, borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` };
 
 /* ── modal ────────────────────────────────────────────── */
 function Modal({ open, onClose, title, children, width = 540 }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; width?: number }) {
@@ -105,7 +105,7 @@ function Toggle({ on, onToggle, label }: { on: boolean; onToggle: () => void; la
 function Stat({ label, value, color = GOLD }: { label: string; value: string | number; color?: string }) {
   return (
     <div style={{ ...card, flex: 1, minWidth: 150 }}>
-      <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)', marginBottom: 6, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '.06em' }}>{label}</div>
+      <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)', marginBottom: 6, fontWeight: 700 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 800, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );
@@ -305,10 +305,10 @@ export default function ClientPortalPage() {
   /* ── actions ────────────────────────────────────────── */
   async function inviteUser() {
     setInvError('');
-    if (!invName.trim()) { setInvError('Name is required'); return; }
-    if (!invEmail.trim() || !invEmail.includes('@')) { setInvError('Valid email is required'); return; }
-    if (!invCompany.trim()) { setInvError('Company is required'); return; }
-    if (invProjects.size === 0 && projects.length > 0) { setInvError('Select at least one project'); return; }
+    if (!invName.trim()) { setInvError('Name is required.'); return; }
+    if (!invEmail.trim() || !invEmail.includes('@')) { setInvError('A valid email is required.'); return; }
+    if (!invCompany.trim()) { setInvError('Company is required.'); return; }
+    if (invProjects.size === 0 && projects.length > 0) { setInvError('Select at least one project.'); return; }
     setInvSaving(true);
     try {
       const payload = {
@@ -366,7 +366,7 @@ export default function ClientPortalPage() {
       });
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
       setConfirmDisable(null);
-    } catch { setError('Failed to update user status'); }
+    } catch { setError("Couldn't update the user status. Please try again."); }
   }
 
   async function updatePermission(userId: string, perm: string) {
@@ -440,7 +440,7 @@ export default function ClientPortalPage() {
     return (<>
       {/* toolbar */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, or company..."
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, or company…"
           style={{ ...inputS, width: 280, flex: 'none' }} />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)}
           style={{ ...inputS, width: 140, flex: 'none', cursor: 'pointer' }}>
@@ -492,7 +492,7 @@ export default function ClientPortalPage() {
             {filteredUsers.length === 0 && (
               <tr><td colSpan={8} style={{ ...tdS, borderBottom: 'none' }}>
                 {search || statusFilter !== 'all' || roleFilter !== 'all' ? (
-                  <div style={{ textAlign: 'center', color: DIM, padding: 32 }}>No users match your filters</div>
+                  <div style={{ textAlign: 'center', color: DIM, padding: 32 }}>No users match your filters.</div>
                 ) : (
                   <PremiumEmpty
                     icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
@@ -516,11 +516,11 @@ export default function ClientPortalPage() {
                 <td style={tdS}>
                   <span style={badge(
                     u.role === 'Owner' ? GOLD : u.role === 'Architect' ? BLUE : u.role === 'Investor' ? PURPLE : AMBER,
-                    u.role === 'Owner' ? 'rgba(245, 158, 11,.14)' : u.role === 'Architect' ? 'rgba(245,158,11,.14)' : u.role === 'Investor' ? 'rgba(139,92,246,.14)' : 'rgba(245,158,11,.14)'
+                    u.role === 'Owner' ? 'var(--brand-primary-12)' : u.role === 'Architect' ? 'var(--brand-primary-12)' : u.role === 'Investor' ? 'rgba(139,92,246,.14)' : 'color-mix(in srgb, var(--warning) 14%, transparent)'
                   )}>{u.role}</span>
                 </td>
                 <td style={tdS}>
-                  <span style={badge(STATUS_COLORS[u.status], STATUS_COLORS[u.status] + '22')}>
+                  <span style={badge(STATUS_COLORS[u.status], `color-mix(in srgb, ${STATUS_COLORS[u.status]} 13%, transparent)`)}>
                     {STATUS_LABELS[u.status]}
                   </span>
                 </td>
@@ -637,7 +637,7 @@ export default function ClientPortalPage() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
             <button onClick={() => setInviteOpen(false)} style={btnOutline}>Cancel</button>
             <button onClick={inviteUser} style={{ ...btnGold, opacity: invSaving ? 0.6 : 1 }} disabled={invSaving}>
-              {invSaving ? 'Sending...' : 'Send Invitation'}
+              {invSaving ? 'Sending…' : 'Send Invitation'}
             </button>
           </div>
         </div>
@@ -646,7 +646,7 @@ export default function ClientPortalPage() {
       {/* bulk invite modal */}
       <Modal open={bulkOpen} onClose={() => setBulkOpen(false)} title="Bulk Invite Clients" width={620}>
         <p style={{ color: DIM, fontSize: 13, margin: '0 0 12px' }}>
-          One client per line: <span style={{ color: TEXT, fontWeight: 600 }}>Name, Email, Company, Role</span> (company/role optional)
+          One client per line: <span style={{ color: TEXT, fontWeight: 600 }}>Name, Email, Company, Role</span> (company and role optional)
         </p>
         <textarea value={bulkText} onChange={e => setBulkText(e.target.value)} rows={10}
           style={{ ...inputS, resize: 'vertical', fontFamily: 'monospace', lineHeight: 1.6 }}
@@ -657,7 +657,7 @@ export default function ClientPortalPage() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 14 }}>
           <button onClick={() => setBulkOpen(false)} style={btnOutline}>Cancel</button>
           <button onClick={bulkInvite} style={{ ...btnGold, opacity: bulkSaving ? 0.6 : 1 }} disabled={bulkSaving}>
-            {bulkSaving ? 'Inviting...' : 'Invite All'}
+            {bulkSaving ? 'Inviting…' : 'Invite All'}
           </button>
         </div>
       </Modal>
@@ -696,7 +696,7 @@ export default function ClientPortalPage() {
                   });
                   setUsers(prev => prev.map(u => u.id === editUser.id ? editUser : u));
                   setEditUser(null);
-                } catch { setError('Failed to update user'); }
+                } catch { setError("Couldn't update the user. Please try again."); }
               }} style={btnGold}>Save Changes</button>
             </div>
           </div>
@@ -749,7 +749,7 @@ export default function ClientPortalPage() {
               <div key={t.user.id}
                 onClick={() => setSelectedThread(t.user.id)}
                 style={{
-                  padding: '12px 16px', cursor: 'pointer', borderBottom: `1px solid ${BORDER}22`,
+                  padding: '12px 16px', cursor: 'pointer', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`,
                   background: selectedThread === t.user.id ? 'rgba(255,255,255,0.06)' : 'transparent',
                   transition: 'background .15s',
                 }}
@@ -758,7 +758,7 @@ export default function ClientPortalPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                   <span style={{ fontWeight: 600, fontSize: 13, color: TEXT }}>{t.user.name}</span>
                   {t.unread > 0 && (
-                    <span style={{ width: 20, height: 20, borderRadius: 10, background: GOLD, color: '#1C1C1E', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ width: 20, height: 20, borderRadius: 10, background: GOLD, color: '#0A0A00', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {t.unread}
                     </span>
                   )}
@@ -793,7 +793,7 @@ export default function ClientPortalPage() {
             <>
               {/* thread header */}
               <div style={{ padding: '14px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 18, background: `${GOLD}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: GOLD }}>
+                <div style={{ width: 36, height: 36, borderRadius: 18, background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: GOLD }}>
                   {(users.find(u => u.id === selectedThread)?.name || '?')[0]}
                 </div>
                 <div>
@@ -817,11 +817,11 @@ export default function ClientPortalPage() {
                   <div key={m.id} style={{ display: 'flex', justifyContent: m.fromRole === 'client' ? 'flex-start' : 'flex-end' }}>
                     <div style={{
                       maxWidth: '70%', padding: '10px 16px', borderRadius: 12,
-                      background: m.fromRole === 'client' ? BG : `${GOLD}18`,
-                      border: `1px solid ${m.fromRole === 'client' ? BORDER : GOLD + '33'}`,
+                      background: m.fromRole === 'client' ? BG : 'color-mix(in srgb, var(--brand-primary) 9%, transparent)',
+                      border: `1px solid ${m.fromRole === 'client' ? BORDER : 'color-mix(in srgb, var(--brand-primary) 20%, transparent)'}`,
                     }}>
                       <div style={{ fontSize: 11, color: DIM, marginBottom: 4, fontWeight: 600 }}>
-                        {m.from} <span style={{ fontWeight: 400 }}>- {relTime(m.ts)}</span>
+                        {m.from} <span style={{ fontWeight: 400 }}>· {relTime(m.ts)}</span>
                       </div>
                       <div style={{ fontSize: 14, color: TEXT, lineHeight: 1.5 }}>{m.text}</div>
                     </div>
@@ -834,10 +834,10 @@ export default function ClientPortalPage() {
               <div style={{ padding: '12px 20px', borderTop: `1px solid ${BORDER}`, display: 'flex', gap: 10 }}>
                 <input value={newMsg} onChange={e => setNewMsg(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                  style={{ ...inputS, flex: 1 }} placeholder="Type a message..." />
+                  style={{ ...inputS, flex: 1 }} placeholder="Type a message…" />
                 <button onClick={sendMessage}
                   style={{ ...btnGold, opacity: sendingMsg ? 0.6 : 1 }} disabled={sendingMsg}>
-                  {sendingMsg ? 'Sending...' : 'Send'}
+                  {sendingMsg ? 'Sending…' : 'Send'}
                 </button>
               </div>
             </>
@@ -860,7 +860,7 @@ export default function ClientPortalPage() {
       </p>
       <SectionCard
         title="Section Permissions"
-        subtitle="Toggle what each client can see"
+        subtitle="Toggle what each client can see."
         icon={<ListChecks size={17} weight="duotone" color={GOLD} />}
         flush
         bodyStyle={{ overflow: 'auto' }}
@@ -887,7 +887,7 @@ export default function ClientPortalPage() {
               <tr key={u.id}>
                 <td style={{ ...tdS, position: 'sticky', left: 0, background: RAISED, zIndex: 1 }}>
                   <div style={{ fontWeight: 600 }}>{u.name}</div>
-                  <div style={{ fontSize: 11, color: DIM }}>{u.role} - {u.company}</div>
+                  <div style={{ fontSize: 11, color: DIM }}>{u.role} · {u.company}</div>
                 </td>
                 {PERM_KEYS.map(k => (
                   <td key={k} style={{ ...tdS, textAlign: 'center' }}>
@@ -903,16 +903,16 @@ export default function ClientPortalPage() {
       {/* quick presets */}
       <SectionCard
         title="Quick Permission Presets"
-        subtitle="Apply a preset to every active user in one click"
+        subtitle="Apply a preset to every active user in one click."
         icon={<ListChecks size={17} weight="duotone" color={GOLD} />}
         style={{ marginTop: 20 }}
       >
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[
-            { label: 'Full Access', desc: 'Enable all permissions', perms: PERM_KEYS.reduce((a, k) => ({ ...a, [k]: true }), {} as Record<string, boolean>) },
-            { label: 'View Only', desc: 'Photos, Schedule, Documents only', perms: PERM_KEYS.reduce((a, k) => ({ ...a, [k]: ['Photos', 'Schedule', 'Documents'].includes(k) }), {} as Record<string, boolean>) },
-            { label: 'Financial', desc: 'Budget, Invoices, Change Orders', perms: PERM_KEYS.reduce((a, k) => ({ ...a, [k]: ['Budget', 'Invoices', 'Change Orders'].includes(k) }), {} as Record<string, boolean>) },
-            { label: 'Minimal', desc: 'Photos and Messages only', perms: PERM_KEYS.reduce((a, k) => ({ ...a, [k]: ['Photos', 'Messages'].includes(k) }), {} as Record<string, boolean>) },
+            { label: 'Full Access', desc: 'Enable all permissions.', perms: PERM_KEYS.reduce((a, k) => ({ ...a, [k]: true }), {} as Record<string, boolean>) },
+            { label: 'View Only', desc: 'Photos, schedule, and documents only.', perms: PERM_KEYS.reduce((a, k) => ({ ...a, [k]: ['Photos', 'Schedule', 'Documents'].includes(k) }), {} as Record<string, boolean>) },
+            { label: 'Financial', desc: 'Budget, invoices, and change orders.', perms: PERM_KEYS.reduce((a, k) => ({ ...a, [k]: ['Budget', 'Invoices', 'Change Orders'].includes(k) }), {} as Record<string, boolean>) },
+            { label: 'Minimal', desc: 'Photos and messages only.', perms: PERM_KEYS.reduce((a, k) => ({ ...a, [k]: ['Photos', 'Messages'].includes(k) }), {} as Record<string, boolean>) },
           ].map(preset => (
             <div key={preset.label}
               style={{ ...card, padding: '12px 18px', cursor: 'pointer', flex: '0 0 auto', transition: 'border-color .15s' }}
@@ -1011,7 +1011,7 @@ export default function ClientPortalPage() {
           const count = activeUsers.filter(u => u.projectIds.includes(p.id)).length;
           return (
             <div key={p.id} style={{ ...card, minWidth: 180, flex: '0 0 auto' }}>
-              <div style={{ fontSize: 11, color: DIM, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '.5px', marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 11, color: DIM, fontWeight: 600, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {p.name}
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, color: count > 0 ? GREEN : DIM }}>
@@ -1032,7 +1032,7 @@ export default function ClientPortalPage() {
       {/* filters */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         <input value={logSearch} onChange={e => setLogSearch(e.target.value)}
-          placeholder="Search activity..." style={{ ...inputS, width: 260, flex: 'none' }} />
+          placeholder="Search activity…" style={{ ...inputS, width: 260, flex: 'none' }} />
         <select value={logSection} onChange={e => setLogSection(e.target.value)}
           style={{ ...inputS, width: 160, flex: 'none', cursor: 'pointer' }}>
           <option value="all">All Sections</option>
@@ -1056,7 +1056,7 @@ export default function ClientPortalPage() {
       {/* log entries — re-housed in the kit's SectionCard */}
       <SectionCard flat
         title="Audit Trail"
-        subtitle="Logins, page views, and approvals — timestamped with IP"
+        subtitle="Logins, page views, and approvals — timestamped with IP."
         icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}
         bodyStyle={{ maxHeight: 520, overflowY: 'auto' }}
       >
@@ -1077,11 +1077,11 @@ export default function ClientPortalPage() {
         {filteredLog.slice(0, 100).map((e, i) => (
           <div key={e.id || i} style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '10px 0', borderBottom: i < filteredLog.length - 1 ? `1px solid ${BORDER}22` : 'none',
+            padding: '10px 0', borderBottom: i < filteredLog.length - 1 ? `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` : 'none',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
               <div style={{
-                width: 32, height: 32, borderRadius: 16, background: `${BLUE}22`,
+                width: 32, height: 32, borderRadius: 16, background: 'color-mix(in srgb, var(--brand-primary) 13%, transparent)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 12, fontWeight: 700, color: BLUE, flexShrink: 0,
               }}>
@@ -1094,7 +1094,7 @@ export default function ClientPortalPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 12, marginTop: 2 }}>
                   {e.section && (
-                    <span style={badge(BLUE, `${BLUE}18`)}>{e.section}</span>
+                    <span style={badge(BLUE, 'color-mix(in srgb, var(--brand-primary) 9%, transparent)')}>{e.section}</span>
                   )}
                   {e.ip && (
                     <span style={{ fontSize: 11, color: DIM }}>IP: {e.ip}</span>
@@ -1109,7 +1109,7 @@ export default function ClientPortalPage() {
         ))}
         {filteredLog.length > 100 && (
           <div style={{ textAlign: 'center', padding: 14, color: DIM, fontSize: 12 }}>
-            Showing first 100 of {filteredLog.length} entries
+            Showing the first 100 of {filteredLog.length} entries.
           </div>
         )}
       </SectionCard>
@@ -1117,7 +1117,7 @@ export default function ClientPortalPage() {
       {/* top users by activity */}
       <SectionCard flat
         title="Most Active Users"
-        subtitle="Ranked by total portal actions"
+        subtitle="Ranked by total portal actions."
         icon={<UsersThree size={17} weight="duotone" color={GOLD} />}
         style={{ marginTop: 22 }}
       >
@@ -1130,9 +1130,9 @@ export default function ClientPortalPage() {
             });
             const sorted = Array.from(counts.values()).sort((a, b) => b.count - a.count).slice(0, 10);
             const max = sorted[0]?.count || 1;
-            if (sorted.length === 0) return <div style={{ color: DIM, fontSize: 13 }}>No activity data</div>;
+            if (sorted.length === 0) return <div style={{ color: DIM, fontSize: 13 }}>No activity data yet.</div>;
             return sorted.map((item, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '8px 0', borderBottom: i < sorted.length - 1 ? `1px solid ${BORDER}22` : 'none' }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '8px 0', borderBottom: i < sorted.length - 1 ? `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` : 'none' }}>
                 <div style={{ width: 140, fontWeight: 600, fontSize: 13, color: TEXT }}>{item.name}</div>
                 <div style={{ flex: 1, height: 8, borderRadius: 4, background: BG, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${Math.round(item.count / max * 100)}%`, background: `linear-gradient(90deg,${GOLD},${AMBER})`, borderRadius: 4, transition: 'width .4s' }} />
@@ -1162,11 +1162,11 @@ export default function ClientPortalPage() {
       {/* Portal intelligence strip — what the system already knows */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/client-portal',  label: 'Portal Users', value: String(users.length), sub: users.length ? `${portalStats.active} active${portalStats.pending ? ` · ${portalStats.pending} pending` : ''}` : 'invite your first client' },
-          {href: '/app/client-portal',  label: 'Unread From Clients', value: String(portalStats.unread), accent: portalStats.unread > 0 ? GOLD : undefined, sub: portalStats.unread > 0 ? `across ${portalStats.unreadThreads} conversation${portalStats.unreadThreads === 1 ? '' : 's'}` : 'inbox clear' },
-          {href: '/app/client-portal',  label: 'Projects Shared', value: String(portalStats.sharedProjects), sub: projects.length ? `of ${projects.length} project${projects.length === 1 ? '' : 's'}` : 'no projects yet' },
-          {href: '/app/client-portal',  label: 'Activity (7 Days)', value: String(portalStats.weekActivity), accent: portalStats.weekActivity > 0 ? GREEN : undefined, sub: 'client actions logged' },
-          {href: '/app/client-portal',  label: 'Last Client Login', value: portalStats.lastLogin ? relTime(portalStats.lastLogin.ts) : 'Never', sub: portalStats.lastLogin ? portalStats.lastLogin.name : 'no logins recorded yet' },
+          {href: '/app/client-portal',  label: 'Portal Users', value: String(users.length), sub: users.length ? `${portalStats.active} active${portalStats.pending ? ` · ${portalStats.pending} pending` : ''}` : 'Invite your first client' },
+          {href: '/app/client-portal',  label: 'Unread From Clients', value: String(portalStats.unread), accent: portalStats.unread > 0 ? GOLD : undefined, sub: portalStats.unread > 0 ? `across ${portalStats.unreadThreads} conversation${portalStats.unreadThreads === 1 ? '' : 's'}` : 'Inbox clear' },
+          {href: '/app/client-portal',  label: 'Projects Shared', value: String(portalStats.sharedProjects), sub: projects.length ? `of ${projects.length} project${projects.length === 1 ? '' : 's'}` : 'No projects yet' },
+          {href: '/app/client-portal',  label: 'Activity (7 Days)', value: String(portalStats.weekActivity), accent: portalStats.weekActivity > 0 ? GREEN : undefined, sub: 'Client actions logged' },
+          {href: '/app/client-portal',  label: 'Last Client Login', value: portalStats.lastLogin ? relTime(portalStats.lastLogin.ts) : 'Never', sub: portalStats.lastLogin ? portalStats.lastLogin.name : 'No logins recorded yet' },
         ]} />
       )}
 
@@ -1174,7 +1174,7 @@ export default function ClientPortalPage() {
       {error && (
         <div style={{ padding: '12px 18px', background: `${RED}15`, border: `1px solid ${RED}44`, borderRadius: 10, color: RED, fontSize: 13, marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>{error}</span>
-          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', fontSize: 16 }}>x</button>
+          <button onClick={() => setError('')} style={{ background: 'none', border: 'none', color: RED, cursor: 'pointer', fontSize: 16 }} aria-label="Dismiss">×</button>
         </div>
       )}
 
@@ -1197,7 +1197,7 @@ export default function ClientPortalPage() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80 }}>
           <div style={{ display: 'inline-block', width: 40, height: 40, border: `3px solid ${BORDER}`, borderTopColor: GOLD, borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          <div style={{ color: DIM, fontSize: 14, marginTop: 16 }}>Loading portal data...</div>
+          <div style={{ color: DIM, fontSize: 14, marginTop: 16 }}>Loading portal data…</div>
           <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
         </div>
       ) : (

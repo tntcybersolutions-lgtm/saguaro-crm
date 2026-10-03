@@ -62,8 +62,6 @@ const TH_BASE: React.CSSProperties = {
   fontSize: 10.5,
   fontWeight: 800,
   color: 'rgba(255,255,255,0.42)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.09em',
   userSelect: 'none',
   whiteSpace: 'nowrap',
 };

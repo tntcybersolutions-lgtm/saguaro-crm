@@ -14,7 +14,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='#F59E0B', DARK='#0a0a0a', RAISED='#141416', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', DARK='var(--bg-base)', RAISED='var(--bg-surface)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
 interface Contract {
   id: string;
@@ -59,9 +59,9 @@ function normalizeContract(r: any): Contract {
 function statusBadge(status: string) {
   const map: Record<string, { bg: string; color: string }> = {
     Draft: { bg: 'rgba(143,163,192,.2)', color: DIM },
-    Sent: { bg: 'rgba(245,158,11,.2)', color: '#FBBF24' },
+    Sent: { bg: 'var(--brand-primary-18)', color: 'var(--brand-primary-strong)' },
     Executed: { bg: 'rgba(61,214,140,.2)', color: GREEN },
-    Complete: { bg: 'rgba(245, 158, 11,.2)', color: GOLD },
+    Complete: { bg: 'var(--brand-primary-18)', color: GOLD },
   };
   const s = map[status] || { bg: 'rgba(143,163,192,.2)', color: DIM };
   return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{status}</span>;
@@ -209,7 +209,7 @@ export default function ContractsPage() {
         }),
       });
       const json = await res.json();
-      if (!res.ok || !json.contract) throw new Error(json.error || 'Failed to save contract');
+      if (!res.ok || !json.contract) throw new Error(json.error || 'Failed to save the contract.');
       setContracts(prev => [normalizeContract(json.contract), ...prev]);
       setShowForm(false);
       setForm(freshForm(ctx));
@@ -275,7 +275,7 @@ export default function ContractsPage() {
       default:       return (c as unknown as Record<string, unknown>)[key];
     }
   });
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#1c1c1e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
   // Compact ghost action buttons for in-row actions (View PDF / Upload Signed).
@@ -297,9 +297,9 @@ export default function ContractsPage() {
                 elsewhere, which is a different thing and stays available. */}
             {([
               ['subcontract', 'Subcontract'],
-              ['purchase-order', 'Purchase order'],
-              ['change-order', 'Change order'],
-              ['prime-contract', 'Prime contract'],
+              ['purchase-order', 'Purchase Order'],
+              ['change-order', 'Change Order'],
+              ['prime-contract', 'Prime Contract'],
             ] as const).map(([slug, label], i) => (
               <a
                 key={slug}
@@ -316,7 +316,7 @@ export default function ContractsPage() {
               onClick={() => { setShowForm(p => !p); setErrorMsg(''); }}
               style={{ minHeight: 44, padding: '0 16px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: '#8BAAC8', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
             >
-              Record existing
+              Record Existing
             </button>
           </div>
         }
@@ -325,12 +325,12 @@ export default function ContractsPage() {
       {/* What the system already knows — money, roster, awards */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Prime Contract', value: fmt(money?.revisedContract || 0), sub: (money?.approvedCoCount || 0) > 0 ? `${fmt(money?.originalContract || 0)} + ${money.approvedCoCount} approved CO${money.approvedCoCount === 1 ? '' : 's'}` : 'original + approved COs' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Prime Contract', value: fmt(money?.revisedContract || 0), sub: (money?.approvedCoCount || 0) > 0 ? `${fmt(money?.originalContract || 0)} + ${money.approvedCoCount} approved CO${money.approvedCoCount === 1 ? '' : 's'}` : 'Original + approved COs' },
           {href: `/app/projects/${projectId}/subs`,  label: 'Sub Commitments', value: fmt(total), sub: `${contracts.length} contract${contracts.length === 1 ? '' : 's'} on the ledger` },
-          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Roster', value: String(roster.length), sub: 'available as contract parties' },
+          {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Roster', value: String(roster.length), sub: 'Available as contract parties' },
           {href: `/app/projects/${projectId}/bid-packages`,  label: 'Awarded Packages', value: String(awardedPkgs.length), sub: `${fmt(awardedPkgs.reduce((s, b) => s + (Number(b.awardedAmount) || 0), 0))} awarded` },
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Ready to Paper', value: String(unpapered.length), accent: unpapered.length > 0 ? '#FBBF24' : GREEN, sub: unpapered.length > 0 ? 'awards without a contract' : 'every award is contracted' },
-          {href: `/app/projects/${projectId}/contracts`,  label: 'Default Retainage', value: `${Number(ctx.defaults?.retainagePct) || 10}%`, sub: 'from project contract terms' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Ready to Paper', value: String(unpapered.length), accent: unpapered.length > 0 ? 'var(--brand-primary-strong)' : GREEN, sub: unpapered.length > 0 ? 'Awards without a contract' : 'Every award is contracted' },
+          {href: `/app/projects/${projectId}/contracts`,  label: 'Default Retainage', value: `${Number(ctx.defaults?.retainagePct) || 10}%`, sub: 'From project contract terms' },
         ]} />
       )}
 
@@ -346,16 +346,16 @@ export default function ContractsPage() {
                 <select value={party} onChange={e => pickParty(e.target.value)} style={{ ...inp, cursor: 'pointer' }}>
                   <option value="">Type a new party manually…</option>
                   {roster.length > 0 && (
-                    <optgroup label={`Subs on this project (${roster.length})`}>
+                    <optgroup label={`Subs on This Project (${roster.length})`}>
                       {roster.map((s: any) => (
                         <option key={`sub-${s.membershipId}`} value={`sub:${s.membershipId}`}>
-                          {s.companyName || 'Unnamed sub'}{s.trade ? ` — ${s.trade}` : ''}{Number(s.contractAmount) > 0 ? ` — ${fmt(Number(s.contractAmount))}` : ''}
+                          {s.companyName || 'Unnamed Sub'}{s.trade ? ` — ${s.trade}` : ''}{Number(s.contractAmount) > 0 ? ` — ${fmt(Number(s.contractAmount))}` : ''}
                         </option>
                       ))}
                     </optgroup>
                   )}
                   {awardedPkgs.length > 0 && (
-                    <optgroup label={`Awarded bid packages (${awardedPkgs.length})`}>
+                    <optgroup label={`Awarded Bid Packages (${awardedPkgs.length})`}>
                       {awardedPkgs.map((b: any) => (
                         <option key={`pkg-${b.id}`} value={`pkg:${b.id}`}>
                           {b.name} — {b.awardedTo}{Number(b.awardedAmount) > 0 ? ` — ${fmt(Number(b.awardedAmount))}` : ''}
@@ -407,7 +407,7 @@ export default function ContractsPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} className="pmBtn">
-                {saving ? 'Saving...' : 'Save Contract'}
+                {saving ? 'Saving…' : 'Save Contract'}
               </button>
               <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
@@ -419,30 +419,30 @@ export default function ContractsPage() {
                 <>
                   <InsightRow label="Company" value={selSub.companyName || '—'} strong/>
                   <InsightRow label="Trade" value={selSub.trade || '—'}/>
-                  <InsightRow label="Roster commitment" value={fmt(Number(selSub.contractAmount) || 0)} accent={GOLD}/>
-                  <InsightRow label="Email" value={selSub.email || 'not on file'}/>
-                  <InsightRow label="Roster status" value={String(selSub.status || '—')}/>
+                  <InsightRow label="Roster Commitment" value={fmt(Number(selSub.contractAmount) || 0)} accent={GOLD}/>
+                  <InsightRow label="Email" value={selSub.email || 'Not on file'}/>
+                  <InsightRow label="Roster Status" value={String(selSub.status || '—').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}/>
                 </>
               ) : selPkg ? (
                 <>
                   <InsightRow label="Package" value={selPkg.name} strong/>
-                  <InsightRow label="Awarded to" value={selPkg.awardedTo || '—'}/>
-                  <InsightRow label="Awarded amount" value={fmt(Number(selPkg.awardedAmount) || 0)} accent={GOLD} strong/>
-                  {Number(selPkg.budgetEstimate) > 0 && <InsightRow label="Budget estimate" value={fmt(Number(selPkg.budgetEstimate) || 0)}/>}
+                  <InsightRow label="Awarded To" value={selPkg.awardedTo || '—'}/>
+                  <InsightRow label="Awarded Amount" value={fmt(Number(selPkg.awardedAmount) || 0)} accent={GOLD} strong/>
+                  {Number(selPkg.budgetEstimate) > 0 && <InsightRow label="Budget Estimate" value={fmt(Number(selPkg.budgetEstimate) || 0)}/>}
                   {Number(selPkg.budgetEstimate) > 0 && (
                     <InsightRow
-                      label="Vs. estimate"
+                      label="vs. Estimate"
                       value={`${Number(selPkg.awardedAmount) - Number(selPkg.budgetEstimate) > 0 ? '+' : ''}${fmt(Number(selPkg.awardedAmount) - Number(selPkg.budgetEstimate))}`}
-                      accent={Number(selPkg.awardedAmount) - Number(selPkg.budgetEstimate) > 0 ? '#FBBF24' : GREEN}
+                      accent={Number(selPkg.awardedAmount) - Number(selPkg.budgetEstimate) > 0 ? 'var(--brand-primary-strong)' : GREEN}
                     />
                   )}
-                  {selPkg.csiDivision && <InsightRow label="CSI division" value={String(selPkg.csiDivision)}/>}
+                  {selPkg.csiDivision && <InsightRow label="CSI Division" value={String(selPkg.csiDivision)}/>}
                 </>
               ) : ctx ? (
                 <>
-                  <InsightRow label="Subs on roster" value={String(roster.length)}/>
-                  <InsightRow label="Awarded packages" value={String(awardedPkgs.length)}/>
-                  <InsightRow label="Awards w/o contract" value={String(unpapered.length)} accent={unpapered.length > 0 ? '#FBBF24' : GREEN} strong/>
+                  <InsightRow label="Subs on Roster" value={String(roster.length)}/>
+                  <InsightRow label="Awarded Packages" value={String(awardedPkgs.length)}/>
+                  <InsightRow label="Awards Without Contract" value={String(unpapered.length)} accent={unpapered.length > 0 ? 'var(--brand-primary-strong)' : GREEN} strong/>
                   {unpapered.slice(0, 3).map((b: any) => (
                     <div key={b.id} style={{ fontSize: 11.5, color: DIM, padding: '5px 0', borderTop: '1px solid rgba(255,255,255,0.06)', lineHeight: 1.5 }}>
                       {b.name} — <span style={{ color: TEXT, fontWeight: 700 }}>{b.awardedTo}</span> ({fmt(Number(b.awardedAmount) || 0)})
@@ -455,8 +455,8 @@ export default function ContractsPage() {
             </SectionCard>
             <SectionCard flat title="After You Save" icon={<Signature size={17} weight="duotone" color={GOLD} />}>
               <FlowSteps title="" steps={[
-                { title: 'Draft on the ledger', desc: 'The contract lands here as a Draft, counted in sub commitments.' },
-                { title: 'Send for signature', desc: 'Send the package out — status moves to Sent while you wait on ink.' },
+                { title: 'Draft on the Ledger', desc: 'The contract lands here as a Draft, counted in sub commitments.' },
+                { title: 'Send for Signature', desc: 'Send the package out — status moves to Sent while you wait on ink.' },
                 { title: 'Executed', desc: 'Upload the signed copy; the linked bid package flips to contracted and committed costs update.' },
               ]}/>
             </SectionCard>
@@ -472,14 +472,14 @@ export default function ContractsPage() {
             label="Total Contracts"
             value={String(contracts.length)}
             accent={GOLD}
-            sub="on this project"
+            sub="On this project"
            href={`/app/projects/${projectId}/contracts`}/>
           <StatCard
             icon={<CurrencyDollar size={19} weight="duotone" color={GOLD} />}
             label="Total Value"
             value={`$${total.toLocaleString()}`}
             accent={GOLD}
-            sub="combined contract value"
+            sub="Combined contract value"
            href={`/app/projects/${projectId}/contracts`}/>
         </div>
       )}
@@ -490,7 +490,7 @@ export default function ContractsPage() {
           module="contracts"
           search={search}
           onSearch={setSearch}
-          searchPlaceholder="Search contracts by party, trade, or scope..."
+          searchPlaceholder="Search contracts by party, trade, or scope…"
           filters={[
             { key: 'status', label: 'Status', value: filterStatus, onChange: setFilterStatus, allLabel: 'All Statuses',
               options: ['Draft', 'Sent', 'Executed', 'Complete'] },
@@ -505,13 +505,13 @@ export default function ContractsPage() {
       {/* Contract table */}
       <SectionCard title="Contracts" subtitle="Subcontractor and vendor contracts" icon={<FileText size={17} weight="duotone" color={GOLD} />}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
         ) : contracts.length === 0 ? (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: TEXT }}>
                 <FileDashed size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
-                No contracts yet
+                No Contracts Yet
                 <span style={{ fontWeight: 400, color: DIM }}>
                   {unpapered.length > 0
                     ? ` — ${unpapered.length} awarded bid package${unpapered.length === 1 ? ' is' : 's are'} ready to paper: pick one in the form ${showForm ? 'above' : 'here'} and it fills itself in.`
@@ -525,10 +525,10 @@ export default function ContractsPage() {
               )}
             </div>
             <FlowStrip steps={[
-              { title: 'Pick the party', desc: 'roster sub or awarded package' },
-              { title: 'Draft on the ledger', desc: 'counted in commitments' },
-              { title: 'Send for signature' },
-              { title: 'Executed', desc: 'committed costs update' },
+              { title: 'Pick the Party', desc: 'Roster sub or awarded package' },
+              { title: 'Draft on the Ledger', desc: 'Counted in commitments' },
+              { title: 'Send for Signature' },
+              { title: 'Executed', desc: 'Committed costs update' },
             ]} />
           </div>
         ) : (
@@ -560,7 +560,7 @@ export default function ContractsPage() {
                         <button onClick={() => openPdf({ url: c.pdf_url! })} style={{ ...rowBtn, marginRight: 6 }}><Eye size={13} weight="bold" /> View PDF</button>
                       )}
                       <label style={rowBtn}>
-                        <FileArrowUp size={13} weight="bold" /> {uploadingId === c.id ? 'Uploading...' : 'Upload Signed'}
+                        <FileArrowUp size={13} weight="bold" /> {uploadingId === c.id ? 'Uploading…' : 'Upload Signed'}
                         <input type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={e => { if (e.target.files?.[0]) handleUpload(c.id, e.target.files[0]); }} />
                       </label>
                     </td>

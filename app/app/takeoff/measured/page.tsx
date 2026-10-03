@@ -33,7 +33,7 @@ type TracerTargetingProps = {
 };
 const PlanTracer = dynamic<React.ComponentProps<(typeof import('./PlanTracer'))['default']> & TracerTargetingProps>(() => import('./PlanTracer'), { ssr: false });
 
-const BG = '#0a0a0a', PANEL = '#161b22', LINE = 'rgba(255,255,255,0.09)', GOLD = '#F59E0B';
+const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
 const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', RED = '#f87171';
 const uid = () => Math.random().toString(36).slice(2, 9);
 // Bespoke "Crafted Two-Tone" icon (steel + gold) — the approved family, never emoji glyphs.
@@ -746,8 +746,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
     setMsg('Excel workbook downloaded — the Line Items sheet re-imports here after you edit it');
   };
 
-  const inp: React.CSSProperties = { background: '#0a0a0a', border: `1px solid ${LINE}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
-  const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg,#F59E0B,#FBBF24)', color: '#1A1206', fontWeight: 800, border: 'none', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
+  const inp: React.CSSProperties = { background: 'var(--bg-base)', border: `1px solid ${LINE}`, borderRadius: 8, color: TEXT, padding: '9px 11px', fontSize: 14, width: '100%' };
+  const btn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(135deg,var(--brand-primary),var(--brand-primary-strong))', color: '#0A0A00', fontWeight: 800, border: 'none', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14 };
   const pillBtn: React.CSSProperties = { background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 20, padding: '5px 12px', cursor: 'pointer', fontWeight: 700, fontSize: 12 };
   const wizRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', width: '100%', border: `1px solid ${LINE}`, background: BG, borderRadius: 12, padding: '13px 14px', cursor: 'pointer' };
   const wizRowT: React.CSSProperties = { fontWeight: 800, fontSize: 14, color: TEXT };
@@ -765,7 +765,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           accent="Takeoff"
           subtitle="Add conditions; each explodes into a priced bill and rolls up live."
           actions={<>
-            <button onClick={openWizard} title="First-takeoff guide" style={ghostButtonStyle} className="pmBtn"><Question size={16} weight="bold" color={GOLD} />Guide</button>
+            <button onClick={openWizard} title="First-Takeoff Guide" style={ghostButtonStyle} className="pmBtn"><Question size={16} weight="bold" color={GOLD} />Guide</button>
             <a href="/app/takeoff/rates" style={{ ...ghostButtonStyle, color: tenantRateCount ? GREEN : 'rgba(255,255,255,0.82)' }} className="pmBtn"><Ic name="costBook" s={18} k="hdr" />Cost catalog{tenantRateCount ? ` · ${tenantRateCount} your rates` : ''}</a>
             <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inp, width: 'auto' }}>
               {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -780,7 +780,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           const busy = !ok && /…$/.test(msg);
           const tone = ok ? GREEN : busy ? GOLD : RED;
           return (
-            <div role="status" style={{ marginTop: 14, display: 'flex', alignItems: 'flex-start', gap: 10, border: `1px solid ${tone}55`, background: `${tone}14`, borderRadius: 12, padding: '11px 14px' }}>
+            <div role="status" style={{ marginTop: 14, display: 'flex', alignItems: 'flex-start', gap: 10, border: `1px solid color-mix(in srgb, ${tone} 33%, transparent)`, background: `color-mix(in srgb, ${tone} 8%, transparent)`, borderRadius: 12, padding: '11px 14px' }}>
               {busy
                 ? <span style={{ width: 15, height: 15, borderRadius: 8, border: `2px solid ${GOLD}`, borderTopColor: 'transparent', display: 'inline-block', flexShrink: 0, marginTop: 1, animation: 'spin 0.7s linear infinite' }} />
                 : ok
@@ -793,15 +793,15 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         })()}
 
         {/* building-type templates — the 60-second cold start */}
-        <SectionCard title="Start from a building type" subtitle="Drops a curated condition set — trace each to price it live" icon={<Stack size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 8 }}>
+        <SectionCard title="Start from a Building Type" subtitle="Drops a curated condition set — trace each to price it live" icon={<Stack size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 8 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(188px,1fr))', gap: 10 }}>
             {BUILDING_TEMPLATES.map((t) => {
               const IconC = TPL_ICON[t.id] || Buildings;
               const active = activeTemplate === t.id;
               return (
-                <button key={t.id} onClick={() => dropTemplate(t.id)} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'rgba(245,158,11,0.10)' : PANEL, borderRadius: 14, padding: '13px 14px', cursor: 'pointer' }}>
+                <button key={t.id} onClick={() => dropTemplate(t.id)} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'var(--brand-primary-12)' : PANEL, borderRadius: 14, padding: '13px 14px', cursor: 'pointer' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <span style={{ width: 34, height: 34, borderRadius: 9, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(245,158,11,0.12)', flexShrink: 0 }}><IconC size={21} weight="duotone" color={GOLD} /></span>
+                    <span style={{ width: 34, height: 34, borderRadius: 9, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', flexShrink: 0 }}><IconC size={21} weight="duotone" color={GOLD} /></span>
                     <div style={{ fontWeight: 800, fontSize: 14.5, color: TEXT }}>{t.name}</div>
                   </div>
                   <div style={{ fontSize: 12, color: DIM, lineHeight: 1.4 }}>{t.blurb}</div>
@@ -820,12 +820,12 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* AI plan-reading — two crisp entry points */}
-        <SectionCard title="AI plan reading" subtitle="Extract conditions, count symbols, or compare revisions." icon={<Sparkle size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 16 }}>
+        <SectionCard title="AI Plan Reading" subtitle="Extract conditions, count symbols, or compare revisions." icon={<Sparkle size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 12 }}>
-          <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(245,158,11,0.55)`, background: 'linear-gradient(180deg,rgba(245,158,11,0.10),rgba(245,158,11,0.03))', borderRadius: 14, padding: '15px 16px', cursor: reading ? 'wait' : 'pointer' }}>
+          <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid color-mix(in srgb, var(--brand-primary) 55%, transparent)`, background: 'linear-gradient(180deg,var(--brand-primary-12),color-mix(in srgb, var(--brand-primary) 3%, transparent))', borderRadius: 14, padding: '15px 16px', cursor: reading ? 'wait' : 'pointer' }}>
             <Ic name="drawings" s={34} k="hero1" />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>{reading ? 'Reading every sheet…' : 'Read full blueprint'}</div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>{reading ? 'Reading every sheet…' : 'Read Full Blueprint'}</div>
               <div style={{ fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload the whole plan-set PDF — AI reads every sheet, extracts all conditions, the engine prices them.</div>
             </div>
             <input ref={blueprintInputRef} type="file" accept="application/pdf,.pdf" disabled={reading} style={{ display: 'none' }} onChange={(e) => { readBlueprint(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
@@ -833,7 +833,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(56,189,248,0.5)`, background: 'linear-gradient(180deg,rgba(56,189,248,0.10),rgba(56,189,248,0.03))', borderRadius: 14, padding: '15px 16px', cursor: counting ? 'wait' : 'pointer' }}>
             <Ic name="aiCount" s={34} k="hero2" />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>{counting ? 'Counting symbols…' : 'Count symbols + auto-scale'}</div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>{counting ? 'Counting symbols…' : 'Count Symbols + Auto-Scale'}</div>
               <div style={{ fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload one sheet — AI counts doors, fixtures &amp; receptacles, reads the scale, and auto-calibrates the tracer.</div>
             </div>
             <input type="file" accept="image/*" disabled={counting} style={{ display: 'none' }} onChange={(e) => { countSymbols(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
@@ -841,7 +841,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           <button onClick={() => { setRevResult(null); setComparing(true); }} style={{ display: 'flex', gap: 13, alignItems: 'flex-start', textAlign: 'left', border: `1.5px solid rgba(167,139,250,0.5)`, background: 'linear-gradient(180deg,rgba(167,139,250,0.10),rgba(167,139,250,0.03))', borderRadius: 14, padding: '15px 16px', cursor: 'pointer' }}>
             <Ic name="compareRevs" s={34} k="hero3" />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Compare revisions</div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Compare Revisions</div>
               <div style={{ fontSize: 12.5, color: DIM, marginTop: 3, lineHeight: 1.4 }}>Upload old + new sheet — AI reports exactly what changed and the cost direction, so nothing slips through.</div>
             </div>
           </button>
@@ -849,7 +849,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* Import an existing takeoff — CSV/Excel quantities + DXF CAD (the migration wedge) */}
-        <SectionCard title="Bring an existing takeoff" subtitle="CSV/Excel quantities or AutoCAD DXF — mapped to assemblies & priced live" icon={<FileArrowUp size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 16 }}>
+        <SectionCard title="Bring an Existing Takeoff" subtitle="CSV/Excel quantities or AutoCAD DXF — mapped to assemblies & priced live" icon={<FileArrowUp size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 12 }}>
             <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(52,211,153,0.5)`, background: 'linear-gradient(180deg,rgba(52,211,153,0.10),rgba(52,211,153,0.03))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
               <FileCsv size={34} weight="duotone" color={GREEN} />
@@ -859,7 +859,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               </div>
               <input type="file" accept=".csv,.tsv,.txt,.xlsx,.xls,.xlsm" disabled={!!importing} style={{ display: 'none' }} onChange={(e) => { importQuantities(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
             </label>
-            <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid rgba(245,158,11,0.5)`, background: 'linear-gradient(180deg,rgba(245,158,11,0.10),rgba(245,158,11,0.03))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
+            <label style={{ display: 'flex', gap: 13, alignItems: 'flex-start', border: `1.5px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)`, background: 'linear-gradient(180deg,var(--brand-primary-12),color-mix(in srgb, var(--brand-primary) 3%, transparent))', borderRadius: 14, padding: '15px 16px', cursor: importing ? 'wait' : 'pointer' }}>
               <Cube size={34} weight="duotone" color={GOLD} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: 15, color: TEXT }}>Import CAD (DXF)</div>
@@ -873,10 +873,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
         {/* live estimate — the fixed bottom bar keeps sell + Save in view; position:sticky here was
             dead (killed by PremiumSurface's overflow:hidden ancestor) */}
-        <div style={{ background: 'rgba(245,158,11,0.06)', border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 14, padding: 20, marginTop: 20 }}>
+        <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: `1px solid var(--brand-primary-25)`, borderRadius: 14, padding: 20, marginTop: 20 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 180 }}>
-              <div style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>Estimate — computed live</div>
+              <div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>Estimate — Computed Live</div>
               <div style={{ fontSize: 44, fontWeight: 800, color: GOLD, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</div>
               {(() => { const band = ({ 1: [-3, 8], 2: [-5, 12], 3: [-10, 15], 4: [-20, 30], 5: [-30, 50] } as Record<number, number[]>)[aaceClass]; const lo = Math.round(r.sellCents * (1 + band[0] / 100)); const hi = Math.round(r.sellCents * (1 + band[1] / 100)); return (
                 <div style={{ fontSize: 12, color: GOLD, fontWeight: 600, marginTop: 2 }}>Range {usd(lo)} – {usd(hi)} · AACE Class {aaceClass}</div>
@@ -885,7 +885,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
               <ConfidenceRing score={confidence.score} />
               <div style={{ maxWidth: 168 }}>
-                <div style={{ fontSize: 10.5, letterSpacing: 0.8, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>Estimate confidence</div>
+                <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700 }}>Estimate Confidence</div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: TEXT }}>{confidence.score}%</div>
                 <div style={{ fontSize: 11.5, color: DIM, lineHeight: 1.35, marginTop: 2 }}>{confidence.reasons[0]}</div>
               </div>
@@ -893,7 +893,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 22, marginTop: 10 }}>
             {[['Material', usd(r.materialCents)], ['Labor', `${usd(r.laborCents)} · ${r.laborHrs}h`], ['Line items', `${r.lines.length}`], ...(r.costPerSf ? [['$/SF', `$${r.costPerSf}`]] : [])].map(([k, v]) => (
-              <div key={k}><div style={{ fontSize: 11, color: DIM, textTransform: 'uppercase', fontWeight: 700 }}>{k}</div><div style={{ fontSize: 16, fontWeight: 800 }}>{v}</div></div>
+              <div key={k}><div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 16, fontWeight: 800 }}>{v}</div></div>
             ))}
           </div>
           <div style={{ color: DIM, fontSize: 12.5, marginTop: 10 }}>{conditions.length} conditions → {r.lines.length} priced components · no AI round-trip</div>
@@ -923,8 +923,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   </div>
                 ));
               })()}
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: '#0a0a0a', background: 'linear-gradient(135deg,#F7C948,#D4A017)' }}>
-                <span>Sell price</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', fontSize: 14, fontWeight: 800, color: '#0A0A00', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))' }}>
+                <span>Sell Price</span><span style={{ fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</span>
               </div>
             </div>
           )}
@@ -932,7 +932,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           {/* Location breakdown (#11) + alternates (#4) — surfaced from the engine rollups */}
           {r.byLocation.length > 0 && (
             <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 10.5, letterSpacing: 0.8, textTransform: 'uppercase', color: DIM, fontWeight: 700, marginBottom: 5 }}>Cost by location</div>
+              <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700, marginBottom: 5 }}>Cost by Location</div>
               {r.byLocation.map((l) => (
                 <div key={l.key} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '3px 0', color: TEXT }}>
                   <span style={{ color: DIM }}>{[l.building && `Bldg ${l.building}`, l.level && `Lvl ${l.level}`, l.zone && `Zone ${l.zone}`].filter(Boolean).join(' · ') || 'Unassigned'}</span>
@@ -943,7 +943,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           )}
           {r.alternates.length > 0 && (
             <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 10.5, letterSpacing: 0.8, textTransform: 'uppercase', color: DIM, fontWeight: 700, marginBottom: 5 }}>Alternates</div>
+              <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700, marginBottom: 5 }}>Alternates</div>
               {r.alternates.map((a) => (
                 <div key={a.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, padding: '3px 0' }}>
                   <span style={{ color: DIM }}>{a.label}</span>
@@ -954,7 +954,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           )}
 
           <button onClick={exportEstimate} disabled={!conditions.length} title="Cover, executive summary, division rollup, full line items, transparent markup stack & basis of estimate"
-            style={{ marginTop: 14, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: '#0a0a0a', background: 'linear-gradient(135deg,#F7C948,#D4A017)', boxShadow: '0 6px 18px rgba(212,160,23,0.35)' }}>
+            style={{ marginTop: 14, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: '#0A0A00', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))', boxShadow: '0 6px 18px var(--brand-primary-35)' }}>
             <Ic name="documents" s={20} k="estpdf" />Client Estimate PDF
             <span style={{ fontWeight: 600, fontSize: 12, color: 'rgba(13,17,23,0.7)' }}>· one-tap proposal</span>
           </button>
@@ -977,62 +977,62 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           </div>
 
           {/* One-tap downstream chain — takeoff → bid packages + pay app (SOV), same estimate, zero re-keying */}
-          <div style={{ marginTop: 12, borderTop: '1px solid rgba(245,158,11,0.22)', paddingTop: 12 }}>
+          <div style={{ marginTop: 12, borderTop: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)', paddingTop: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
               <Path size={16} weight="duotone" color={GOLD} />
-              <span style={{ fontSize: 10.5, letterSpacing: 0.8, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>Estimate → bid packages → pay app · one tap</span>
+              <span style={{ fontSize: 10.5, color: DIM, fontWeight: 700 }}>Estimate → bid packages → pay app · one tap</span>
               {savedTakeoffId ? <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: GREEN }}><CheckCircle size={13} weight="fill" />saved</span> : null}
             </div>
             <button onClick={runChain} disabled={chainBusy || (!conditions.length && !savedTakeoffId)}
               title="Sage writes a bid package per CSI division (scope, insurance, due dates) + a Schedule of Values tied to a new pay application"
-              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: '1px solid rgba(245,158,11,0.5)', borderRadius: 10, padding: '12px', cursor: (chainBusy || (!conditions.length && !savedTakeoffId)) ? 'not-allowed' : 'pointer', opacity: (chainBusy || (!conditions.length && !savedTakeoffId)) ? 0.55 : 1, fontWeight: 800, fontSize: 14.5, color: TEXT, background: 'linear-gradient(135deg,#1b2230,#232c3d)' }}>
+              style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: '1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)', borderRadius: 10, padding: '12px', cursor: (chainBusy || (!conditions.length && !savedTakeoffId)) ? 'not-allowed' : 'pointer', opacity: (chainBusy || (!conditions.length && !savedTakeoffId)) ? 0.55 : 1, fontWeight: 800, fontSize: 14.5, color: TEXT, background: 'linear-gradient(135deg,#1b2230,#232c3d)' }}>
               {chainBusy
                 ? <><CircleNotch size={18} weight="bold" color={GOLD} style={{ animation: 'spin 0.7s linear infinite' }} />Generating bid + billing docs…</>
-                : <><Package size={19} weight="duotone" color={GOLD} />Generate bid packages + pay app<Lightning size={15} weight="fill" color={GOLD} /></>}
+                : <><Package size={19} weight="duotone" color={GOLD} />Generate Bid Packages + Pay App<Lightning size={15} weight="fill" color={GOLD} /></>}
             </button>
             {chainBusy && (
               <div style={{ marginTop: 9 }}>
-                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${chainPct}%`, background: 'linear-gradient(90deg,#F7C948,#D4A017)', transition: 'width .3s ease' }} /></div>
+                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}><div style={{ height: '100%', width: `${chainPct}%`, background: 'linear-gradient(90deg,var(--brand-primary-strong),var(--brand-primary))', transition: 'width .3s ease' }} /></div>
                 {chainMsg && <div style={{ fontSize: 12, color: DIM, marginTop: 5 }}>{chainMsg}</div>}
               </div>
             )}
             {!chainBusy && chainMsg && <div style={{ marginTop: 8, fontSize: 12.5, color: (chainMsg.startsWith('Sage:') || chainMsg.startsWith("Couldn't")) ? RED : DIM }}>{chainMsg}</div>}
             {chainResult && (
               <div style={{ marginTop: 10, border: '1px solid rgba(52,211,153,0.4)', background: 'rgba(52,211,153,0.06)', borderRadius: 10, padding: '12px 13px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, color: TEXT }}><CheckCircle size={18} weight="fill" color={GREEN} />Documents generated</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, color: TEXT }}><CheckCircle size={18} weight="fill" color={GREEN} />Documents Generated</div>
                 <div style={{ fontSize: 12.5, color: DIM, marginTop: 3 }}>{chainResult.packagesCreated} bid package{chainResult.packagesCreated === 1 ? '' : 's'} · {chainResult.jacketsGenerated} jacket PDF{chainResult.jacketsGenerated === 1 ? '' : 's'}{chainResult.sovCreated ? ' · Schedule of Values + pay application' : ''}</div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-                  <a href={`/app/projects/${chainResult.projectId}/bid-packages`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#0a0a0a', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Package size={15} weight="bold" />View bid packages<ArrowRight size={14} weight="bold" /></a>
-                  {chainResult.sovCreated && <a href={`/app/projects/${chainResult.projectId}/pay-apps`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Receipt size={15} weight="bold" color={GOLD} />View pay app (SOV)<ArrowRight size={14} weight="bold" /></a>}
+                  <a href={`/app/projects/${chainResult.projectId}/bid-packages`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: '#0A0A00', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Package size={15} weight="bold" />View Bid Packages<ArrowRight size={14} weight="bold" /></a>
+                  {chainResult.sovCreated && <a href={`/app/projects/${chainResult.projectId}/pay-apps`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><Receipt size={15} weight="bold" color={GOLD} />View Pay App (SOV)<ArrowRight size={14} weight="bold" /></a>}
                 </div>
               </div>
             )}
           </div>
 
           {/* Read-only estimate share link — send a client a live, token-gated, revocable estimate URL */}
-          <div style={{ marginTop: 12, borderTop: '1px solid rgba(245,158,11,0.22)', paddingTop: 12 }}>
+          <div style={{ marginTop: 12, borderTop: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)', paddingTop: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 9 }}>
               <ArrowSquareOut size={16} weight="duotone" color={GOLD} />
-              <span style={{ fontSize: 10.5, letterSpacing: 0.8, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>Send the client a read-only estimate link</span>
+              <span style={{ fontSize: 10.5, color: DIM, fontWeight: 700 }}>Send the Client a Read-Only Estimate Link</span>
             </div>
             <button onClick={shareEstimate} disabled={shareBusy || !conditions.length}
               title="Mint a token-gated, read-only URL of this estimate deliverable — no login for the client, expires in 30 days, revocable any time"
               style={{ width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, border: `1px solid ${LINE}`, borderRadius: 10, padding: '12px', cursor: (shareBusy || !conditions.length) ? 'not-allowed' : 'pointer', opacity: (shareBusy || !conditions.length) ? 0.55 : 1, fontWeight: 800, fontSize: 14.5, color: TEXT, background: 'transparent' }}>
               {shareBusy
                 ? <><CircleNotch size={18} weight="bold" color={GOLD} style={{ animation: 'spin 0.7s linear infinite' }} />Preparing link…</>
-                : <><ArrowSquareOut size={18} weight="duotone" color={GOLD} />{shareUrl ? 'Copy estimate link again' : 'Create shareable estimate link'}</>}
+                : <><ArrowSquareOut size={18} weight="duotone" color={GOLD} />{shareUrl ? 'Copy Estimate Link Again' : 'Create Shareable Estimate Link'}</>}
             </button>
             {shareUrl && (
-              <div style={{ marginTop: 10, border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.06)', borderRadius: 10, padding: '11px 12px' }}>
+              <div style={{ marginTop: 10, border: '1px solid var(--brand-primary-35)', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', borderRadius: 10, padding: '11px 12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <input readOnly value={shareUrl} onFocus={(ev) => ev.currentTarget.select()}
-                    style={{ flex: 1, minWidth: 180, background: '#0a0a0a', border: `1px solid ${LINE}`, borderRadius: 8, color: TEXT, padding: '8px 10px', fontSize: 12, fontFamily: 'ui-monospace,monospace' }} />
-                  <a href={shareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, color: '#0a0a0a', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><ArrowSquareOut size={14} weight="bold" />Preview</a>
+                    style={{ flex: 1, minWidth: 180, background: 'var(--bg-base)', border: `1px solid ${LINE}`, borderRadius: 8, color: TEXT, padding: '8px 10px', fontSize: 12, fontFamily: 'ui-monospace,monospace' }} />
+                  <a href={shareUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontWeight: 700, color: '#0A0A00', background: GOLD, borderRadius: 8, padding: '8px 12px', textDecoration: 'none' }}><ArrowSquareOut size={14} weight="bold" />Preview</a>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, color: GREEN, fontWeight: 700 }}>{shareCopied ? <><CheckCircle size={13} weight="fill" />Copied</> : <>Link ready</>}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, color: GREEN, fontWeight: 700 }}>{shareCopied ? <><CheckCircle size={13} weight="fill" />Copied</> : <>Link Ready</>}</span>
                   {shareExp && <span style={{ fontSize: 11.5, color: DIM }}>· valid to {new Date(shareExp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
-                  <button onClick={revokeShare} disabled={shareBusy} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: RED, background: 'transparent', border: `1px solid ${RED}55`, borderRadius: 8, padding: '6px 11px', cursor: shareBusy ? 'not-allowed' : 'pointer' }}><XCircle size={13} weight="bold" />Revoke</button>
+                  <button onClick={revokeShare} disabled={shareBusy} style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 700, color: RED, background: 'transparent', border: `1px solid color-mix(in srgb, ${RED} 33%, transparent)`, borderRadius: 8, padding: '6px 11px', cursor: shareBusy ? 'not-allowed' : 'pointer' }}><XCircle size={13} weight="bold" />Revoke</button>
                 </div>
               </div>
             )}
@@ -1042,9 +1042,9 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         {/* ── ASSEMBLY (SYMBOL) LIBRARY — browse the full priced catalog and one-click add a condition ── */}
         <SectionCard style={{ marginTop: 14 }} bodyStyle={{ padding: 18 }}>
           <button onClick={() => setLibOpen((o) => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
-            <span style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(245,158,11,0.14)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Stack size={22} weight="duotone" color={GOLD} /></span>
+            <span style={{ width: 40, height: 40, borderRadius: 10, background: 'color-mix(in srgb, var(--brand-primary) 14%, transparent)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Stack size={22} weight="duotone" color={GOLD} /></span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontWeight: 800, fontSize: 15.5, color: TEXT }}>Assembly library</span>
+              <span style={{ display: 'block', fontWeight: 800, fontSize: 15.5, color: TEXT }}>Assembly Library</span>
               <span style={{ display: 'block', fontSize: 12.5, color: DIM, marginTop: 2 }}>{LIBRARY.length} priced assemblies across {LIBRARY_TRADES.length} trades — browse & drop, each explodes into real line items</span>
             </span>
             {libOpen ? <ArrowLeft size={18} weight="bold" color={DIM} style={{ transform: 'rotate(90deg)' }} /> : <ArrowRight size={18} weight="bold" color={DIM} style={{ transform: 'rotate(90deg)' }} />}
@@ -1057,7 +1057,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 <div style={{ display: 'inline-flex', gap: 6 }}>
                   {(['all', 'area', 'linear', 'count'] as const).map((k) => {
                     const on = libKind === k;
-                    return <button key={k} onClick={() => setLibKind(k)} style={{ ...pillBtn, background: on ? GOLD : 'transparent', color: on ? '#0a0a0a' : TEXT, border: on ? 'none' : `1px solid ${LINE}`, textTransform: 'capitalize' }}>{k === 'all' ? 'All' : k === 'area' ? 'Area (SF)' : k === 'linear' ? 'Linear (LF)' : 'Count (EA)'}</button>;
+                    return <button key={k} onClick={() => setLibKind(k)} style={{ ...pillBtn, background: on ? GOLD : 'transparent', color: on ? '#0A0A00' : TEXT, border: on ? 'none' : `1px solid ${LINE}`, textTransform: 'capitalize' }}>{k === 'all' ? 'All' : k === 'area' ? 'Area (SF)' : k === 'linear' ? 'Linear (LF)' : 'Count (EA)'}</button>;
                   })}
                 </div>
               </div>
@@ -1071,12 +1071,12 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   <div style={{ marginTop: 12, maxHeight: 380, overflowY: 'auto', paddingRight: 4 }}>
                     {byTrade.map((g) => (
                       <div key={g.trade} style={{ marginBottom: 14 }}>
-                        <div style={{ fontSize: 10.5, letterSpacing: 0.8, textTransform: 'uppercase', color: DIM, fontWeight: 700, marginBottom: 7 }}>{g.trade} · {g.items.length}</div>
+                        <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700, marginBottom: 7 }}>{g.trade} · {g.items.length}</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(230px,1fr))', gap: 8 }}>
                           {g.items.map((l) => (
                             <button key={l.id} onClick={() => addFromLibrary(l.id)} title={`Add ${l.name} — ${l.parts} priced components`}
-                              style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', border: `1px solid ${LINE}`, borderRadius: 10, padding: '9px 11px', cursor: 'pointer', background: '#0a0a0a', color: TEXT }}>
-                              <span style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(245,158,11,0.12)', color: GOLD, fontWeight: 800, fontSize: 11 }}>{l.unit}</span>
+                              style={{ display: 'flex', alignItems: 'center', gap: 9, textAlign: 'left', border: `1px solid ${LINE}`, borderRadius: 10, padding: '9px 11px', cursor: 'pointer', background: 'var(--bg-base)', color: TEXT }}>
+                              <span style={{ width: 34, height: 34, borderRadius: 8, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--brand-primary-12)', color: GOLD, fontWeight: 800, fontSize: 11 }}>{l.unit}</span>
                               <span style={{ flex: 1, minWidth: 0 }}>
                                 <span style={{ display: 'block', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.name}</span>
                                 <span style={{ display: 'block', fontSize: 11, color: DIM }}>{l.parts} components{l.div ? ` · CSI ${l.div}` : ''}</span>
@@ -1095,7 +1095,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* ── PRICED REVISION COMPARE — pick a prior saved takeoff, diff it against the current one, price the delta ── */}
-        <SectionCard icon={<GitDiff size={20} weight="duotone" color="#A78BFA" />} title="Compare to a prior revision" subtitle="Price only what changed against a saved baseline." accent="#A78BFA" style={{ marginTop: 14 }}>
+        <SectionCard icon={<GitDiff size={20} weight="duotone" color="#A78BFA" />} title="Compare to a Prior Revision" subtitle="Price only what changed against a saved baseline." accent="#A78BFA" style={{ marginTop: 14 }}>
 
           {!projectId ? (
             <div style={{ marginTop: 12, fontSize: 12.5, color: DIM }}>Open from a project to compare against its prior takeoffs.</div>
@@ -1115,9 +1115,9 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
           {revDiff && (() => {
             const groups = [
-              { key: 'added', label: 'Added scope', rows: revDiff.lines.filter((l) => l.status === 'added'), tone: GREEN },
+              { key: 'added', label: 'Added Scope', rows: revDiff.lines.filter((l) => l.status === 'added'), tone: GREEN },
               { key: 'changed', label: 'Changed', rows: revDiff.lines.filter((l) => l.status === 'changed'), tone: GOLD },
-              { key: 'removed', label: 'Removed · credit', rows: revDiff.lines.filter((l) => l.status === 'removed'), tone: RED },
+              { key: 'removed', label: 'Removed · Credit', rows: revDiff.lines.filter((l) => l.status === 'removed'), tone: RED },
             ];
             const changedCount = groups.reduce((s, g) => s + g.rows.length, 0);
             if (!changedCount) return <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, color: GREEN }}><CheckCircle size={17} weight="fill" />No priced change between these two revisions.</div>;
@@ -1127,7 +1127,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   <div key={g.key} style={{ marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
                       <span style={{ width: 8, height: 8, borderRadius: 4, background: g.tone }} />
-                      <span style={{ fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', fontWeight: 800, color: g.tone }}>{g.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: g.tone }}>{g.label}</span>
                       <span style={{ fontSize: 11.5, color: DIM }}>{g.rows.length} item{g.rows.length === 1 ? '' : 's'}</span>
                     </div>
                     {g.rows.map((l) => {
@@ -1152,7 +1152,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                     {revDiff.netDeltaCents >= 0 ? <TrendUp size={22} weight="duotone" color={GREEN} /> : <TrendDown size={22} weight="duotone" color={RED} />}
                     <div>
-                      <div style={{ fontSize: 10.5, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>Net change</div>
+                      <div style={{ fontSize: 10.5, color: DIM, fontWeight: 700 }}>Net Change</div>
                       <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', color: deltaColor(revDiff.netDeltaCents) }}>{netStr(revDiff.netDeltaCents)}</div>
                     </div>
                   </div>
@@ -1165,8 +1165,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 {/* Draft change order (real route) + printable fallback */}
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
                   <button onClick={draftChangeOrder} disabled={coBusy || !projectId}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: '#0a0a0a', background: 'linear-gradient(135deg,#C4B5FD,#A78BFA)' }}>
-                    {coBusy ? <><CircleNotch size={16} weight="bold" color="#0a0a0a" style={{ animation: 'spin 0.7s linear infinite' }} />Filing…</> : <><Note size={17} weight="bold" color="#0a0a0a" />Draft change order</>}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '11px 16px', cursor: (coBusy || !projectId) ? 'not-allowed' : 'pointer', opacity: (coBusy || !projectId) ? 0.55 : 1, fontWeight: 800, fontSize: 13.5, color: '#0A0A00', background: 'linear-gradient(135deg,#C4B5FD,#A78BFA)' }}>
+                    {coBusy ? <><CircleNotch size={16} weight="bold" color="#0A0A00" style={{ animation: 'spin 0.7s linear infinite' }} />Filing…</> : <><Note size={17} weight="bold" color="#0A0A00" />Draft Change Order</>}
                   </button>
                   <button onClick={printChangeOrder} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 9, padding: '11px 14px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Printer size={16} weight="duotone" color="#A78BFA" />Print CO</button>
                   {coResult && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: GREEN }}><CheckCircle size={16} weight="fill" />CO{coResult.coNumber != null ? ` #${coResult.coNumber}` : ''} filed{projectId ? <a href={`/app/projects/${projectId}/change-orders`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#A78BFA', textDecoration: 'none', marginLeft: 2 }}>· view<ArrowRight size={13} weight="bold" /></a> : null}</span>}
@@ -1178,10 +1178,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* SPEC-AWARE CROSS-CHECK — your counted quantities vs the scheduled quantities on file (the edge nobody has) */}
-        <SectionCard icon={<ClipboardText size={20} weight="duotone" color="#FBBF24" />} title="Check against schedules" subtitle="Cross-check counted quantities against the schedules on file." accent="#FBBF24" style={{ marginTop: 14 }} action={
+        <SectionCard icon={<ClipboardText size={20} weight="duotone" color="var(--brand-primary-strong)" />} title="Check Against Schedules" subtitle="Cross-check counted quantities against the schedules on file." accent="var(--brand-primary-strong)" style={{ marginTop: 14 }} action={
           <button onClick={runSpecCheck} disabled={specBusy || !projectId || !specItems.length} title={!projectId ? 'Open from a project to cross-check' : !specItems.length ? 'Add a counted condition first' : ''}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: '#0a0a0a', background: 'linear-gradient(135deg,#7DD3FC,#FBBF24)', flexShrink: 0 }}>
-              {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #0a0a0a', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="#0a0a0a" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 9, padding: '10px 16px', cursor: (specBusy || !projectId || !specItems.length) ? 'not-allowed' : 'pointer', opacity: (specBusy || !projectId || !specItems.length) ? 0.5 : 1, fontWeight: 800, fontSize: 13.5, color: '#0A0A00', background: 'linear-gradient(135deg,#7DD3FC,var(--brand-primary-strong))', flexShrink: 0 }}>
+              {specBusy ? <><span style={{ width: 13, height: 13, borderRadius: 7, border: '2px solid #0A0A00', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />Checking…</> : <><SealCheck size={17} weight="bold" color="#0A0A00" />Cross-check{specItems.length ? ` ${specItems.length} item${specItems.length === 1 ? '' : 's'}` : ''}</>}
             </button>
         }>
           {!projectId && <div style={{ marginTop: 10, fontSize: 12.5, color: DIM }}>Open from a project to cross-check.</div>}
@@ -1221,12 +1221,12 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                             {row.note && <span style={{ color: DIM }}>· {row.note}</span>}
                           </div>
                           {row.source?.route && (
-                            <a href={row.source.route} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, fontSize: 12, fontWeight: 700, color: '#FBBF24', textDecoration: 'none' }}>
+                            <a href={row.source.route} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 6, fontSize: 12, fontWeight: 700, color: 'var(--brand-primary-strong)', textDecoration: 'none' }}>
                               <ArrowSquareOut size={13} weight="bold" />{row.source.source || 'View source'}
                             </a>
                           )}
                         </div>
-                        <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: col, flexShrink: 0 }}>{ok ? 'Match' : bad ? 'Mismatch' : 'Not found'}</span>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: col, flexShrink: 0 }}>{ok ? 'Match' : bad ? 'Mismatch' : 'Not Found'}</span>
                       </div>
                     );
                   })}
@@ -1237,16 +1237,16 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* markup — full defensible stack */}
-        <SectionCard title="Markup & basis of estimate" subtitle="Overhead, profit, contingency, tax, burden, bond, and region index." icon={<Receipt size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 14 }}>
+        <SectionCard title="Markup & Basis of Estimate" subtitle="Overhead, profit, contingency, tax, burden, bond, and region index." icon={<Receipt size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 14 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           {[['OH %', oh, setOh], ['Profit %', pr, setPr], ['Cont %', cont, setCont], ['Tax %', taxP, setTaxP], ['Burden %', burdenP, setBurdenP], ['Gen Cond %', gcP, setGcP], ['Bond %', bondP, setBondP], ['Bldg SF', bsf, setBsf]].map(([lbl, val, set]: any) => (
             <label key={lbl} style={{ flex: 1, minWidth: 84 }}><span style={{ fontSize: 12, color: DIM }}>{lbl}</span><input value={val} onChange={(e) => set(e.target.value)} style={{ ...inp, marginTop: 4 }} /></label>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <label style={{ flex: 1, minWidth: 110 }}><span style={{ fontSize: 12, color: DIM }}>Region index (CCI)</span><input placeholder="1.00" value={regMult} onChange={(e) => setRegMult(e.target.value)} title="City cost index — scales the national catalog + default crew wages; your own rates stay untouched" style={{ ...inp, marginTop: 4 }} /></label>
-          <label style={{ flex: 2, minWidth: 150 }}><span style={{ fontSize: 12, color: DIM }}>Region label</span><input placeholder="Phoenix, AZ · CCI 0.96" value={regLabel} onChange={(e) => setRegLabel(e.target.value)} style={{ ...inp, marginTop: 4 }} /></label>
-          <label style={{ flex: 1, minWidth: 120 }}><span style={{ fontSize: 12, color: DIM }}>AACE class</span>
+          <label style={{ flex: 1, minWidth: 110 }}><span style={{ fontSize: 12, color: DIM }}>Region Index (CCI)</span><input placeholder="1.00" value={regMult} onChange={(e) => setRegMult(e.target.value)} title="City cost index — scales the national catalog + default crew wages; your own rates stay untouched" style={{ ...inp, marginTop: 4 }} /></label>
+          <label style={{ flex: 2, minWidth: 150 }}><span style={{ fontSize: 12, color: DIM }}>Region Label</span><input placeholder="Phoenix, AZ · CCI 0.96" value={regLabel} onChange={(e) => setRegLabel(e.target.value)} style={{ ...inp, marginTop: 4 }} /></label>
+          <label style={{ flex: 1, minWidth: 120 }}><span style={{ fontSize: 12, color: DIM }}>AACE Class</span>
             <select value={aaceClass} onChange={(e) => setAaceClass(+e.target.value as 1 | 2 | 3 | 4 | 5)} style={{ ...inp, marginTop: 4 }}>
               {[[5, 'Class 5 · Concept'], [4, 'Class 4 · Schematic'], [3, 'Class 3 · Budget/DD'], [2, 'Class 2 · Control'], [1, 'Class 1 · Bid/GMP']].map(([v, l]) => <option key={v as number} value={v as number}>{l}</option>)}
             </select>
@@ -1255,7 +1255,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
         {/* editable proposal fine print (one item per line) — the GC submits THEIR qualifications */}
         <details style={{ marginTop: 10 }}>
-          <summary style={{ cursor: 'pointer', fontSize: 12.5, color: DIM, fontWeight: 700 }}>Proposal fine print — allowances · clarifications · exclusions</summary>
+          <summary style={{ cursor: 'pointer', fontSize: 12.5, color: DIM, fontWeight: 700 }}>Proposal Fine Print — Allowances · Clarifications · Exclusions</summary>
           <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
             {[['Allowances', allowancesTxt, setAllowancesTxt, '$25,000 owner-selected fixtures'], ['Clarifications', clarifTxt, setClarifTxt, 'Normal hours, unrestricted access'], ['Exclusions', exclusionsTxt, setExclusionsTxt, 'Permits & impact fees']].map(([lbl, val, set, ph]: any) => (
               <label key={lbl} style={{ flex: 1, minWidth: 180 }}><span style={{ fontSize: 11.5, color: DIM, fontWeight: 700 }}>{lbl} (one per line)</span>
@@ -1266,7 +1266,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         </SectionCard>
 
         {/* sanity */}
-        {r.sanity.map((f, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 8, padding: '9px 12px', borderRadius: 8, border: `1px solid ${f.level === 'warn' ? 'rgba(245,158,11,0.4)' : LINE}`, background: PANEL, fontSize: 13, color: f.level === 'warn' ? GOLD : DIM }}>{f.level === 'warn' ? <Ic name="warnTri" s={17} k={`sn${i}`} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: DIM, flexShrink: 0 }} />}{f.message}</div>)}
+        {r.sanity.map((f, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 8, padding: '9px 12px', borderRadius: 8, border: `1px solid ${f.level === 'warn' ? 'var(--brand-primary-35)' : LINE}`, background: PANEL, fontSize: 13, color: f.level === 'warn' ? GOLD : DIM }}>{f.level === 'warn' ? <Ic name="warnTri" s={17} k={`sn${i}`} /> : <span style={{ width: 7, height: 7, borderRadius: 4, background: DIM, flexShrink: 0 }} />}{f.message}</div>)}
 
         {/* divisions */}
         {r.byDivision.length > 0 && (
@@ -1278,7 +1278,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         {/* add condition */}
         <SectionCard title="Add Condition" icon={<Ruler size={17} weight="duotone" color={GOLD} />} style={{ marginTop: 18 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-            {KINDS.map((k) => <button key={k.k} onClick={() => { setCKind(k.k); setCAsm(asmList(k.k)[0]?.id || ''); setCPts(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 8, border: `1px solid ${cKind === k.k ? GOLD : LINE}`, background: cKind === k.k ? 'rgba(245,158,11,0.14)' : 'transparent', color: cKind === k.k ? GOLD : TEXT, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Ic name={k.k === 'area' ? 'areaPoly' : k.k === 'linear' ? 'ruler' : 'aiCount'} s={17} k={`kind${k.k}`} />{k.label} · {k.unit}</button>)}
+            {KINDS.map((k) => <button key={k.k} onClick={() => { setCKind(k.k); setCAsm(asmList(k.k)[0]?.id || ''); setCPts(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 8, border: `1px solid ${cKind === k.k ? GOLD : LINE}`, background: cKind === k.k ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', color: cKind === k.k ? GOLD : TEXT, cursor: 'pointer', fontWeight: 700, fontSize: 13 }}><Ic name={k.k === 'area' ? 'areaPoly' : k.k === 'linear' ? 'ruler' : 'aiCount'} s={17} k={`kind${k.k}`} />{k.label} · {k.unit}</button>)}
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input placeholder="Name (optional)" value={cName} onChange={(e) => setCName(e.target.value)} style={{ ...inp, flex: 2, minWidth: 160 }} />
@@ -1300,7 +1300,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: 11.5, color: DIM, fontWeight: 700, minWidth: 66 }}>Typical ×</span>
                 <input placeholder="1" value={cInst} onChange={(e) => setCInst(e.target.value)} title="Measure one, apply to N identical — multiplies qty + labor" style={{ ...inp, width: 70 }} />
-                <span style={{ fontSize: 11.5, color: DIM }}>identical instances</span>
+                <span style={{ fontSize: 11.5, color: DIM }}>Identical Instances</span>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <input placeholder="Building" value={cBldg} onChange={(e) => setCBldg(e.target.value)} style={{ ...inp, flex: 1, minWidth: 80 }} />
@@ -1317,9 +1317,9 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             </div>
           )}
 
-          <button onClick={openTracer} style={{ marginTop: 8, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid rgba(245,158,11,0.35)`, background: 'rgba(245,158,11,0.08)', color: GOLD, borderRadius: 8, padding: '10px', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}><Ic name="penTrace" s={18} k="tracebtn" />Open Plan Tracer → zoom, snap, measure &amp; price on the drawing</button>
+          <button onClick={openTracer} style={{ marginTop: 8, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, border: `1px solid var(--brand-primary-35)`, background: 'var(--brand-primary-08)', color: GOLD, borderRadius: 8, padding: '10px', cursor: 'pointer', fontWeight: 700, fontSize: 14 }}><Ic name="penTrace" s={18} k="tracebtn" />Open Plan Tracer → zoom, snap, measure &amp; price on the drawing</button>
           {cPts && cPts.length ? <div style={{ color: DIM, fontSize: 12, marginTop: 4 }}><Check size={12} weight="bold" style={{ verticalAlign: '-1px', marginRight: 4 }} />Traced from plan ({cPts.length} points) — value + geometry saved</div> : null}
-          <button onClick={addCond} style={{ ...btn, marginTop: 10 }}>+ Add condition manually</button>
+          <button onClick={addCond} style={{ ...btn, marginTop: 10 }}>+ Add Condition Manually</button>
         </SectionCard>
 
         {/* conditions list */}
@@ -1337,10 +1337,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       {c.instanceCount && c.instanceCount > 1 ? <span style={{ marginLeft: 7, fontSize: 10.5, fontWeight: 800, color: '#16794a', background: '#eef7ee', borderRadius: 5, padding: '1px 6px' }}>×{c.instanceCount}</span> : null}
                       {(c.building || c.level || c.zone) ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: DIM, border: `1px solid ${LINE}`, borderRadius: 5, padding: '1px 6px' }}>{[c.building, c.level && `L${c.level}`, c.zone].filter(Boolean).join('·')}</span> : null}
                       {c.alternate ? <span style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 800, color: c.alternateType === 'deduct' ? '#c0392b' : '#2f6bff', background: c.alternateType === 'deduct' ? 'rgba(192,57,43,0.12)' : 'rgba(47,107,255,0.12)', borderRadius: 5, padding: '1px 6px' }}>ALT {c.alternateType === 'deduct' ? '−' : '+'}</span> : null}
-                      {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: GOLD, border: `1px solid rgba(245,158,11,0.35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
+                      {c.note ? <span title={c.note} style={{ marginLeft: 6, fontSize: 10.5, fontWeight: 700, color: GOLD, border: `1px solid var(--brand-primary-35)`, borderRadius: 5, padding: '1px 6px' }}>note</span> : null}
                       <div style={{ color: DIM, fontSize: 13, marginTop: 2, display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>{c.value > 0
                       ? <span>{c.value} {unit}{c.heightFt ? ` · ${c.heightFt}′` : ''}{c.thicknessIn ? ` · ${c.thicknessIn}″` : ''} → {lines.length} items</span>
-                      : <><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: GOLD, background: 'rgba(245,158,11,0.12)', border: `1px solid rgba(245,158,11,0.35)`, borderRadius: 20, padding: '2px 8px' }}><Ruler size={12} weight="bold" />needs measurement</span><span>{ASSEMBLIES[c.assemblyId]?.name}</span></>}</div></div>
+                      : <><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: GOLD, background: 'var(--brand-primary-12)', border: `1px solid var(--brand-primary-35)`, borderRadius: 20, padding: '2px 8px' }}><Ruler size={12} weight="bold" />needs measurement</span><span>{ASSEMBLIES[c.assemblyId]?.name}</span></>}</div></div>
                     {/* inline qty editor + targeted Trace — a template/library condition is never a dead end */}
                     <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: 6, marginRight: 12, flexShrink: 0 }}>
                       {/* Unassigned row (e.g. promoted from Drawings without an assembly) — pick one to
@@ -1348,7 +1348,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       {!ASSEMBLIES[c.assemblyId] && (
                         <select value="" title="No assembly yet — pick one to price this measurement"
                           onChange={(e) => { const v = e.target.value; if (!v) return; setConditions((cs) => cs.map((x) => (x.id === c.id ? { ...x, assemblyId: v } : x))); }}
-                          style={{ ...inp, width: 168, padding: '7px 9px', fontSize: 12, fontWeight: 700, color: GOLD, border: '1px solid rgba(245,158,11,0.5)' }}>
+                          style={{ ...inp, width: 168, padding: '7px 9px', fontSize: 12, fontWeight: 700, color: GOLD, border: '1px solid color-mix(in srgb, var(--brand-primary) 50%, transparent)' }}>
                           <option value="">Assembly…</option>
                           {asmList(c.kind).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </select>
@@ -1358,7 +1358,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                         style={{ ...inp, width: 84, padding: '7px 9px', fontSize: 13, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }} />
                       <span style={{ fontSize: 11, color: DIM, fontWeight: 700, minWidth: 18 }}>{unit}</span>
                       <button onClick={() => traceCondition(c.id)} title="Open the tracer targeted at this condition — the next finished trace sets its quantity"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid rgba(245,158,11,0.4)', background: 'rgba(245,158,11,0.08)', color: GOLD, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: '1px solid var(--brand-primary-35)', background: 'var(--brand-primary-08)', color: GOLD, borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
                         <Ic name="penTrace" s={14} k={`tr_${c.id}`} />Trace
                       </button>
                     </div>
@@ -1371,7 +1371,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             })}
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
               <input value={name} onChange={(e) => setName(e.target.value)} style={{ ...inp, flex: 1, minWidth: 180 }} />
-              <button onClick={save} disabled={saving} style={{ ...btn, opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save measured takeoff'}</button>
+              <button onClick={save} disabled={saving} style={{ ...btn, opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save Measured Takeoff'}</button>
             </div>
           </SectionCard>
           </div>
@@ -1384,7 +1384,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
           <div style={{ width: '100%', maxWidth: 720, maxHeight: '92vh', overflowY: 'auto', background: PANEL, border: `1px solid ${LINE}`, borderRadius: 18, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
             {/* step rail */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}`, position: 'sticky', top: 0, background: PANEL, borderTopLeftRadius: 18, borderTopRightRadius: 18 }}>
-              <div style={{ fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: GOLD, fontWeight: 800 }}>First takeoff · 60-second start</div>
+              <div style={{ fontSize: 11, color: GOLD, fontWeight: 800 }}>First Takeoff · 60-Second Start</div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
                 {WIZ_STEPS.map((s, i) => <span key={s} title={s} style={{ width: i === wizStep ? 22 : 8, height: 8, borderRadius: 4, background: i === wizStep ? GOLD : i < wizStep ? GREEN : 'rgba(255,255,255,0.15)', transition: 'all .2s' }} />)}
               </div>
@@ -1394,18 +1394,18 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ padding: 20 }}>
               {wizStep === 0 && (
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Pick a starting point</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Pick a Starting Point</div>
                   <div style={{ fontSize: 13.5, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Choose the building type — we drop the conditions that type almost always needs (value 0, ready to measure). Or start blank.</div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 9, marginTop: 14 }}>
                     {BUILDING_TEMPLATES.map((t) => { const IconC = TPL_ICON[t.id] || Buildings; const active = activeTemplate === t.id; return (
-                      <button key={t.id} onClick={() => { dropTemplate(t.id); setWizStep(1); }} style={{ textAlign: 'left', display: 'flex', gap: 10, alignItems: 'center', border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'rgba(245,158,11,0.10)' : BG, borderRadius: 12, padding: '11px 12px', cursor: 'pointer' }}>
+                      <button key={t.id} onClick={() => { dropTemplate(t.id); setWizStep(1); }} style={{ textAlign: 'left', display: 'flex', gap: 10, alignItems: 'center', border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'var(--brand-primary-12)' : BG, borderRadius: 12, padding: '11px 12px', cursor: 'pointer' }}>
                         <IconC size={22} weight="duotone" color={GOLD} />
                         <div style={{ minWidth: 0 }}><div style={{ fontWeight: 800, fontSize: 13.5, color: TEXT }}>{t.name}</div><div style={{ fontSize: 11, color: DIM }}>{t.conditions.length} conditions</div></div>
                       </button>
                     ); })}
                     <button onClick={() => { chooseBlank(); setWizStep(1); }} style={{ textAlign: 'left', display: 'flex', gap: 10, alignItems: 'center', border: `1px dashed ${LINE}`, background: 'transparent', borderRadius: 12, padding: '11px 12px', cursor: 'pointer' }}>
                       <FileDashed size={22} weight="duotone" color={DIM} />
-                      <div><div style={{ fontWeight: 800, fontSize: 13.5, color: TEXT }}>Blank</div><div style={{ fontSize: 11, color: DIM }}>Start empty</div></div>
+                      <div><div style={{ fontWeight: 800, fontSize: 13.5, color: TEXT }}>Blank</div><div style={{ fontSize: 11, color: DIM }}>Start Empty</div></div>
                     </button>
                   </div>
                 </div>
@@ -1413,12 +1413,12 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
               {wizStep === 1 && (
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Bring your plans</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Bring Your Plans</div>
                   <div style={{ fontSize: 13.5, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Get the drawing in three ways — or skip and key quantities in by hand.</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
                     <button onClick={() => blueprintInputRef.current?.click()} style={wizRow}>
                       <FilePdf size={26} weight="duotone" color={GOLD} />
-                      <div style={{ flex: 1 }}><div style={wizRowT}>Read the full blueprint (AI)</div><div style={wizRowD}>Upload the whole plan-set PDF — every sheet read, all conditions extracted &amp; priced.</div></div>
+                      <div style={{ flex: 1 }}><div style={wizRowT}>Read the Full Blueprint (AI)</div><div style={wizRowD}>Upload the whole plan-set PDF — every sheet read, all conditions extracted &amp; priced.</div></div>
                       <ArrowRight size={16} color={DIM} />
                     </button>
                     <button onClick={() => { closeWizard(); openTracer(); }} style={wizRow}>
@@ -1428,7 +1428,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                     </button>
                     <button onClick={() => setWizStep(3)} style={wizRow}>
                       <Stack size={26} weight="duotone" color={GOLD} />
-                      <div style={{ flex: 1 }}><div style={wizRowT}>Enter quantities manually</div><div style={wizRowD}>Already have your numbers? Skip ahead and type them into the add-condition form.</div></div>
+                      <div style={{ flex: 1 }}><div style={wizRowT}>Enter Quantities Manually</div><div style={wizRowD}>Already have your numbers? Skip ahead and type them into the add-condition form.</div></div>
                       <ArrowRight size={16} color={DIM} />
                     </button>
                   </div>
@@ -1437,7 +1437,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
               {wizStep === 2 && (
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Set the scale</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Set the Scale</div>
                   <div style={{ fontSize: 13.5, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Two clicks a known distance apart calibrate the drawing so every trace prices in real feet.</div>
                   {ppf > 0 ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginTop: 14, padding: 14, borderRadius: 12, border: `1px solid rgba(52,211,153,0.4)`, background: 'rgba(52,211,153,0.06)' }}>
@@ -1447,7 +1447,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                   ) : (
                     <button onClick={() => { closeWizard(); openTracer(); }} style={{ ...wizRow, marginTop: 14 }}>
                       <Ruler size={26} weight="duotone" color={GOLD} />
-                      <div style={{ flex: 1 }}><div style={wizRowT}>Open the Plan Tracer on the Scale tool</div><div style={wizRowD}>Click two points a known distance apart, type the feet — a sanity check catches a fat-fingered scale.</div></div>
+                      <div style={{ flex: 1 }}><div style={wizRowT}>Open the Plan Tracer on the Scale Tool</div><div style={wizRowD}>Click two points a known distance apart, type the feet — a sanity check catches a fat-fingered scale.</div></div>
                       <ArrowRight size={16} color={DIM} />
                     </button>
                   )}
@@ -1456,9 +1456,9 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
               {wizStep === 3 && (
                 <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Your live estimate</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: TEXT }}>Your Live Estimate</div>
                   <div style={{ fontSize: 13.5, color: DIM, marginTop: 4, lineHeight: 1.5 }}>Every measured condition rolls up here instantly. Hand a client-ready proposal PDF in one tap.</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14, padding: 16, borderRadius: 12, border: `1px solid rgba(245,158,11,0.3)`, background: 'rgba(245,158,11,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14, padding: 16, borderRadius: 12, border: `1px solid var(--brand-primary-25)`, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' }}>
                     <ConfidenceRing score={confidence.score} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 30, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums' }}>{usd(r.sellCents)}</div>
@@ -1466,8 +1466,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                       <div style={{ fontSize: 12, color: DIM, marginTop: 2 }}>{confidence.reasons[0]}</div>
                     </div>
                   </div>
-                  <button onClick={exportEstimate} disabled={!conditions.length} style={{ marginTop: 12, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: '#0a0a0a', background: 'linear-gradient(135deg,#F7C948,#D4A017)' }}>
-                    <Receipt size={19} weight="bold" color="#0a0a0a" />Client Estimate PDF
+                  <button onClick={exportEstimate} disabled={!conditions.length} style={{ marginTop: 12, width: '100%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 9, border: 'none', borderRadius: 10, padding: '13px', cursor: conditions.length ? 'pointer' : 'not-allowed', opacity: conditions.length ? 1 : 0.5, fontWeight: 800, fontSize: 15, color: '#0A0A00', background: 'linear-gradient(135deg,var(--brand-primary-strong),var(--brand-primary))' }}>
+                    <Receipt size={19} weight="bold" color="#0A0A00" />Client Estimate PDF
                   </button>
                 </div>
               )}
@@ -1478,8 +1478,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <button onClick={() => (wizStep === 0 ? closeWizard() : setWizStep((s) => s - 1))} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>{wizStep === 0 ? 'Skip' : <><ArrowLeft size={15} weight="bold" />Back</>}</button>
               <span style={{ marginLeft: 'auto', fontSize: 12.5, color: DIM }}>Step {wizStep + 1} of {WIZ_STEPS.length} · {WIZ_STEPS[wizStep]}</span>
               {wizStep < 3
-                ? <button onClick={() => setWizStep((s) => s + 1)} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Next<ArrowRight size={15} weight="bold" color="#0a0a0a" /></button>
-                : <button onClick={closeWizard} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><CheckCircle size={16} weight="bold" color="#0a0a0a" />Start estimating</button>}
+                ? <button onClick={() => setWizStep((s) => s + 1)} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}>Next<ArrowRight size={15} weight="bold" color="#0A0A00" /></button>
+                : <button onClick={closeWizard} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 6 }}><CheckCircle size={16} weight="bold" color="#0A0A00" />Start Estimating</button>}
             </div>
           </div>
         </div>
@@ -1489,7 +1489,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 50, display: 'flex', flexDirection: 'column', padding: 16, overflow: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
             <button onClick={() => setComparing(false)} style={{ ...btn, background: 'transparent', color: TEXT, border: `1px solid ${LINE}` }}>Close</button>
-            <b style={{ fontSize: 17 }}>Compare plan revisions</b>
+            <b style={{ fontSize: 17 }}>Compare Plan Revisions</b>
             <button onClick={runCompare} disabled={!revA || !revB || revBusy} style={{ ...btn, marginLeft: 'auto', opacity: (!revA || !revB || revBusy) ? 0.5 : 1 }}>{revBusy ? 'Comparing…' : 'Compare'}</button>
           </div>
           <div style={{ maxWidth: 920, margin: '0 auto', width: '100%' }}>
@@ -1498,7 +1498,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                 const url = w === 'A' ? revA : revB;
                 return (
                   <label key={w} style={{ border: `1.5px dashed ${url ? GOLD : LINE}`, borderRadius: 12, minHeight: 170, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden', background: PANEL, padding: 8 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: url ? GOLD : DIM, textTransform: 'uppercase', marginBottom: 6 }}>{w === 'A' ? 'Old revision' : 'New revision'}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: url ? GOLD : DIM, marginBottom: 6 }}>{w === 'A' ? 'Old Revision' : 'New Revision'}</div>
                     {url ? <img src={url} alt={w} style={{ maxWidth: '100%', maxHeight: 230, display: 'block', borderRadius: 6 }} /> : <span style={{ color: DIM, fontSize: 13 }}>Click to upload a sheet image</span>}
                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { pickRev(w, e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
                   </label>
@@ -1508,14 +1508,14 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             {revResult && (
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', padding: '4px 10px', borderRadius: 20, background: revResult.netScope === 'increase' ? 'rgba(248,113,113,0.15)' : revResult.netScope === 'decrease' ? 'rgba(52,211,153,0.15)' : 'rgba(139,148,158,0.15)', color: revResult.netScope === 'increase' ? RED : revResult.netScope === 'decrease' ? GREEN : DIM }}>Net scope: {revResult.netScope}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 20, background: revResult.netScope === 'increase' ? 'rgba(248,113,113,0.15)' : revResult.netScope === 'decrease' ? 'rgba(52,211,153,0.15)' : 'rgba(139,148,158,0.15)', color: revResult.netScope === 'increase' ? RED : revResult.netScope === 'decrease' ? GREEN : DIM }}>Net scope: {revResult.netScope}</span>
                   <span style={{ color: DIM, fontSize: 13 }}>{revResult.changes.length} changes found</span>
                 </div>
                 <div style={{ color: TEXT, fontSize: 14, marginBottom: 12, lineHeight: 1.5 }}>{revResult.summary}</div>
                 {revResult.changes.map((c, i) => (
                   <div key={i} style={{ background: PANEL, border: `1px solid ${LINE}`, borderLeft: `3px solid ${impactColor(c.costImpact)}`, borderRadius: 8, padding: 12, marginBottom: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', color: c.type === 'added' ? GREEN : c.type === 'removed' ? RED : GOLD }}>{c.type}</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: c.type === 'added' ? GREEN : c.type === 'removed' ? RED : GOLD }}>{c.type}</span>
                       {c.trade ? <span style={{ color: DIM, fontSize: 12 }}>{c.trade}</span> : null}
                       <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: impactColor(c.costImpact) }}>{c.costImpact === 'increase' ? 'adds cost' : c.costImpact === 'decrease' ? 'saves cost' : 'neutral'}{c.confidence != null ? ` · ${c.confidence}%` : ''}</span>
                     </div>
@@ -1542,7 +1542,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <button onClick={() => setQtyReview(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
             </div>
             {qtyReview.warnings.length > 0 && (
-              <div style={{ padding: '10px 20px', borderBottom: `1px solid ${LINE}`, background: 'rgba(245,158,11,0.06)', maxHeight: 96, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ padding: '10px 20px', borderBottom: `1px solid ${LINE}`, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', maxHeight: 96, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {qtyReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12, color: GOLD, lineHeight: 1.4 }}><WarningCircle size={15} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
               </div>
             )}
@@ -1550,7 +1550,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr>
-                    {['Description', 'Qty', 'Unit', 'CSI', 'Assembly (prices live)'].map((h) => <th key={h} style={{ position: 'sticky', top: 0, background: PANEL, textAlign: 'left', padding: '9px 12px', fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', color: DIM, fontWeight: 700, borderBottom: `1px solid ${LINE}`, zIndex: 1 }}>{h}</th>)}
+                    {['Description', 'Qty', 'Unit', 'CSI', 'Assembly (prices live)'].map((h) => <th key={h} style={{ position: 'sticky', top: 0, background: PANEL, textAlign: 'left', padding: '9px 12px', fontSize: 11, color: DIM, fontWeight: 700, borderBottom: `1px solid ${LINE}`, zIndex: 1 }}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -1577,7 +1577,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
               <div style={{ fontSize: 12.5, color: DIM }}>Unmatched rows are highlighted — pick an assembly to include them.</div>
               <button onClick={() => setQtyReview(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
-              <button onClick={addQtyConditions} disabled={!qtyAddable} style={{ ...btn, opacity: qtyAddable ? 1 : 0.5, cursor: qtyAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0a0a0a" />Add {qtyAddable} condition{qtyAddable === 1 ? '' : 's'}</button>
+              <button onClick={addQtyConditions} disabled={!qtyAddable} style={{ ...btn, opacity: qtyAddable ? 1 : 0.5, cursor: qtyAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0A0A00" />Add {qtyAddable} condition{qtyAddable === 1 ? '' : 's'}</button>
             </div>
           </div>
         </div>
@@ -1596,10 +1596,10 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <button onClick={() => setDxfReview(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {dxfReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12.5, color: GOLD, background: 'rgba(245,158,11,0.06)', border: `1px solid rgba(245,158,11,0.3)`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.4 }}><WarningCircle size={16} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
+              {dxfReview.warnings.map((w, i) => <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 7, fontSize: 12.5, color: GOLD, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: `1px solid var(--brand-primary-25)`, borderRadius: 8, padding: '8px 10px', lineHeight: 1.4 }}><WarningCircle size={16} weight="bold" style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>)}
 
               {/* Areas bucket */}
-              <div style={{ border: `1px solid ${dxfInc.area && dxfReview.areas.length ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.area && dxfReview.areas.length ? 'rgba(245,158,11,0.06)' : 'transparent', opacity: dxfReview.areas.length ? 1 : 0.5 }}>
+              <div style={{ border: `1px solid ${dxfInc.area && dxfReview.areas.length ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.area && dxfReview.areas.length ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent', opacity: dxfReview.areas.length ? 1 : 0.5 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: dxfReview.areas.length ? 'pointer' : 'not-allowed' }}>
                   <input type="checkbox" checked={dxfInc.area && dxfReview.areas.length > 0} disabled={!dxfReview.areas.length} onChange={(e) => setDxfInc((s) => ({ ...s, area: e.target.checked }))} style={{ accentColor: GOLD, width: 16, height: 16, flexShrink: 0 }} />
                   <Polygon size={20} weight="duotone" color={GOLD} />
@@ -1616,7 +1616,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               </div>
 
               {/* Linear bucket */}
-              <div style={{ border: `1px solid ${dxfInc.linear && dxfReview.linearLF > 0 ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.linear && dxfReview.linearLF > 0 ? 'rgba(245,158,11,0.06)' : 'transparent', opacity: dxfReview.linearLF > 0 ? 1 : 0.5 }}>
+              <div style={{ border: `1px solid ${dxfInc.linear && dxfReview.linearLF > 0 ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.linear && dxfReview.linearLF > 0 ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent', opacity: dxfReview.linearLF > 0 ? 1 : 0.5 }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: dxfReview.linearLF > 0 ? 'pointer' : 'not-allowed' }}>
                   <input type="checkbox" checked={dxfInc.linear && dxfReview.linearLF > 0} disabled={dxfReview.linearLF <= 0} onChange={(e) => setDxfInc((s) => ({ ...s, linear: e.target.checked }))} style={{ accentColor: GOLD, width: 16, height: 16, flexShrink: 0 }} />
                   <Ruler size={20} weight="duotone" color={GOLD} />
@@ -1634,7 +1634,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
               {/* Count bucket (optional) */}
               {(dxfReview.circleCount + dxfReview.arcCount) > 0 && (
-                <div style={{ border: `1px solid ${dxfInc.count ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.count ? 'rgba(245,158,11,0.06)' : 'transparent' }}>
+                <div style={{ border: `1px solid ${dxfInc.count ? GOLD : LINE}`, borderRadius: 12, padding: 14, background: dxfInc.count ? 'color-mix(in srgb, var(--brand-primary) 6%, transparent)' : 'transparent' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                     <input type="checkbox" checked={dxfInc.count} onChange={(e) => setDxfInc((s) => ({ ...s, count: e.target.checked }))} style={{ accentColor: GOLD, width: 16, height: 16, flexShrink: 0 }} />
                     <Stack size={20} weight="duotone" color={GOLD} />
@@ -1654,7 +1654,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, position: 'sticky', bottom: 0, background: PANEL, borderBottomLeftRadius: 16, borderBottomRightRadius: 16, flexWrap: 'wrap' }}>
               <div style={{ fontSize: 12, color: DIM, display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: 320 }}><MagicWand size={15} weight="duotone" color={GOLD} />DXF gives exact quantities — no scale or tracing needed.</div>
               <button onClick={() => setDxfReview(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
-              <button onClick={addDxfConditions} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0a0a0a" />Add conditions</button>
+              <button onClick={addDxfConditions} style={{ ...btn, display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0A0A00" />Add Conditions</button>
             </div>
           </div>
         </div>
@@ -1665,7 +1665,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(3,5,8,0.86)', zIndex: 79, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ width: '100%', maxWidth: 820, maxHeight: '92vh', display: 'flex', flexDirection: 'column', background: PANEL, border: `1px solid ${LINE}`, borderRadius: 16, boxShadow: '0 24px 70px rgba(0,0,0,0.6)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderBottom: `1px solid ${LINE}` }}>
-              <span style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(56,189,248,0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={21} weight="duotone" color="#FBBF24" /></span>
+              <span style={{ width: 38, height: 38, borderRadius: 10, background: 'rgba(56,189,248,0.12)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={21} weight="duotone" color="var(--brand-primary-strong)" /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 800, fontSize: 16, color: TEXT, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Review AI counts · {reviewQueue.source}</div>
                 <div style={{ fontSize: 12.5, color: DIM }}>AI proposed {reviewQueue.items.length} count{reviewQueue.items.length === 1 ? '' : 's'} — confirm, remap, or reject. Only accepted, mapped rows are added.</div>
@@ -1673,8 +1673,8 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
               <button onClick={() => setReviewQueue(null)} title="Close" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex' }}><IconX size={20} /></button>
             </div>
             <div style={{ padding: '10px 14px', borderBottom: `1px solid ${LINE}`, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button onClick={() => setReviewQueue((q) => q ? { ...q, items: q.items.map((it) => ({ ...it, accept: !!(it.assemblyId && ASSEMBLIES[it.assemblyId] && it.count > 0) })) } : q)} style={pillBtn}>Accept all mappable</button>
-              <button onClick={() => setReviewQueue((q) => q ? { ...q, items: q.items.map((it) => ({ ...it, accept: false })) } : q)} style={pillBtn}>Reject all</button>
+              <button onClick={() => setReviewQueue((q) => q ? { ...q, items: q.items.map((it) => ({ ...it, accept: !!(it.assemblyId && ASSEMBLIES[it.assemblyId] && it.count > 0) })) } : q)} style={pillBtn}>Accept All Mappable</button>
+              <button onClick={() => setReviewQueue((q) => q ? { ...q, items: q.items.map((it) => ({ ...it, accept: false })) } : q)} style={pillBtn}>Reject All</button>
               <span style={{ marginLeft: 'auto', fontSize: 11.5, color: DIM }}>Confidence: AI-reported where available, else estimated from assembly match + qty.</span>
             </div>
             <div style={{ overflow: 'auto', flex: 1, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1691,7 +1691,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
                         <div style={{ fontWeight: 700, fontSize: 14, color: TEXT }}>{it.label}</div>
                         <div style={{ fontSize: 12, color: DIM }}>{it.count} EA{it.csi ? ` · CSI ${it.csi}` : ''}</div>
                       </div>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 800, color: confColor(it.confidence), background: 'rgba(255,255,255,0.04)', border: `1px solid ${confColor(it.confidence)}55`, borderRadius: 20, padding: '3px 9px', flexShrink: 0 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 800, color: confColor(it.confidence), background: 'rgba(255,255,255,0.04)', border: `1px solid color-mix(in srgb, ${confColor(it.confidence)} 33%, transparent)`, borderRadius: 20, padding: '3px 9px', flexShrink: 0 }}>
                         {it.confidence < 45 && <WarningCircle size={12} weight="bold" />}{it.aiConf ? 'AI' : 'est.'} {it.confidence}%
                       </span>
                     </div>
@@ -1708,7 +1708,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 20px', borderTop: `1px solid ${LINE}`, flexWrap: 'wrap' }}>
               <div style={{ fontSize: 12.5, color: DIM }}>{reviewAddable} of {reviewQueue.items.length} ready to add.</div>
               <button onClick={() => setReviewQueue(null)} style={{ marginLeft: 'auto', background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>Cancel</button>
-              <button onClick={commitReview} disabled={!reviewAddable} style={{ ...btn, opacity: reviewAddable ? 1 : 0.5, cursor: reviewAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0a0a0a" />Add {reviewAddable} accepted</button>
+              <button onClick={commitReview} disabled={!reviewAddable} style={{ ...btn, opacity: reviewAddable ? 1 : 0.5, cursor: reviewAddable ? 'pointer' : 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: 7 }}><CheckCircle size={17} weight="bold" color="#0A0A00" />Add {reviewAddable} accepted</button>
             </div>
           </div>
         </div>
@@ -1716,14 +1716,14 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 
       {/* fixed bottom estimate bar — sell + Save stay in view once conditions exist (replaces the dead sticky) */}
       {conditions.length > 0 && (
-        <div style={{ position: 'fixed', bottom: 0, left: barRect.left, ...(barRect.width ? { width: barRect.width } : { right: 0 }), zIndex: 40, background: 'rgba(13,17,23,0.94)', backdropFilter: 'blur(8px)', borderTop: '1px solid rgba(245,158,11,0.4)', boxShadow: '0 -10px 30px rgba(0,0,0,0.45)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+        <div style={{ position: 'fixed', bottom: 0, left: barRect.left, ...(barRect.width ? { width: barRect.width } : { right: 0 }), zIndex: 40, background: 'rgba(13,17,23,0.94)', backdropFilter: 'blur(8px)', borderTop: '1px solid var(--brand-primary-35)', boxShadow: '0 -10px 30px rgba(0,0,0,0.45)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 10, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>Sell price · live</div>
+            <div style={{ fontSize: 10, color: DIM, fontWeight: 700 }}>Sell Price · Live</div>
             <div style={{ fontSize: 22, fontWeight: 800, color: GOLD, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>{usd(r.sellCents)}</div>
           </div>
           <div style={{ fontSize: 11.5, color: DIM }}>{conditions.length} condition{conditions.length === 1 ? '' : 's'} · {r.lines.length} items</div>
           {savedTakeoffId ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700, color: GREEN }}><CheckCircle size={13} weight="fill" />saved</span> : null}
-          <button onClick={save} disabled={saving} style={{ ...btn, marginLeft: 'auto', padding: '10px 16px', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save takeoff'}</button>
+          <button onClick={save} disabled={saving} style={{ ...btn, marginLeft: 'auto', padding: '10px 16px', opacity: saving ? 0.6 : 1 }}>{saving ? 'Saving…' : 'Save Takeoff'}</button>
         </div>
       )}
 
@@ -1752,7 +1752,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}td.v{font-weight:700;color:#444
 // useSearchParams requires a Suspense boundary (Next.js CSR bailout) — same pattern as /app/bids.
 export default function MeasuredTakeoffPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0a0a0a' }} />}>
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: 'var(--bg-base)' }} />}>
       <MeasuredTakeoffInner />
     </Suspense>
   );

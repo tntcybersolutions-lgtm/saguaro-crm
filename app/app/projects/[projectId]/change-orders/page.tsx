@@ -14,12 +14,12 @@ import { moduleAccent } from '@/lib/module-identity';
 import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
-const AMBER='#d97706';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const AMBER='var(--warning)';
 const fmt = (n:number) => '$'+((n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
-const INP:React.CSSProperties = {padding:'8px 12px',background:'#1c1c1e',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
-const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6};
+const INP:React.CSSProperties = {padding:'8px 12px',background:'var(--bg-surface-2)',border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,fontSize:13,outline:'none',width:'100%',boxSizing:'border-box'};
+const LBL:React.CSSProperties = {display:'block',fontSize:11,fontWeight:700,color:DIM, marginBottom:6};
 const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:5,lineHeight:1.45};
 const fmtDate = (d?:string|null) => d ? new Date(String(d).slice(0,10)+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
 const padCo = (n:number|string) => String(n??0).padStart(3,'0');
@@ -34,12 +34,12 @@ interface AIRiskResult {
 
 function RiskBadge({ level }: { level: 'LOW' | 'MEDIUM' | 'HIGH' }) {
   const cfg = {
-    LOW:    { bg:'rgba(26,138,74,.18)',  color:'#3dd68c', label:'LOW RISK' },
-    MEDIUM: { bg:'rgba(217,119,6,.18)',  color:AMBER,     label:'MEDIUM RISK' },
-    HIGH:   { bg:'rgba(192,48,48,.18)',  color:RED,       label:'HIGH RISK' },
+    LOW:    { bg:'rgba(26,138,74,.18)', color:'#3dd68c', label:'Low Risk' },
+    MEDIUM: { bg:'color-mix(in srgb, var(--warning) 18%, transparent)', color:AMBER, label:'Medium Risk' },
+    HIGH:   { bg:'rgba(192,48,48,.18)', color:RED, label:'High Risk' },
   }[level];
   return (
-    <span style={{fontSize:12,fontWeight:800,padding:'4px 12px',borderRadius:6,background:cfg.bg,color:cfg.color,textTransform:'uppercase',letterSpacing:.5}}>
+    <span style={{fontSize:12,fontWeight:800,padding:'4px 12px',borderRadius:6,background:cfg.bg,color:cfg.color}}>
       {cfg.label}
     </span>
   );
@@ -48,7 +48,7 @@ function RiskBadge({ level }: { level: 'LOW' | 'MEDIUM' | 'HIGH' }) {
 function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () => void }) {
   const approvalColor = result.approval_likelihood >= 70 ? '#3dd68c' : result.approval_likelihood >= 40 ? AMBER : RED;
   return (
-    <div style={{marginTop:12,background:'#141416',border:`1px solid rgba(245, 158, 11,.25)`,borderRadius:12,padding:20,animation:'slideDown .25s ease'}}>
+    <div style={{marginTop:12,background:'var(--bg-surface)',border:`1px solid var(--brand-primary-25)`,borderRadius:12,padding:20,animation:'slideDown .25s ease'}}>
       <style>{`@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}`}</style>
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
         <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -62,7 +62,7 @@ function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () =>
       {/* Approval Likelihood */}
       <div style={{marginBottom:16}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
-          <span style={{fontSize:12,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5}}>Approval Likelihood</span>
+          <span style={{fontSize:12,fontWeight:700,color:DIM}}>Approval Likelihood</span>
           <span style={{fontSize:18,fontWeight:800,color:approvalColor}}>{result.approval_likelihood}%</span>
         </div>
         <div style={{height:8,background:BORDER,borderRadius:4,overflow:'hidden'}}>
@@ -71,7 +71,7 @@ function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () =>
       </div>
 
       {/* Summary */}
-      <div style={{background:'rgba(245, 158, 11,.06)',border:`1px solid rgba(245, 158, 11,.12)`,borderRadius:8,padding:'12px 14px',marginBottom:14,fontSize:13,color:TEXT,lineHeight:1.6}}>
+      <div style={{background:'var(--brand-primary-08)',border:`1px solid var(--brand-primary-12)`,borderRadius:8,padding:'12px 14px',marginBottom:14,fontSize:13,color:TEXT,lineHeight:1.6}}>
         {result.summary}
       </div>
 
@@ -79,7 +79,7 @@ function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () =>
         {/* Flags */}
         {result.flags.length > 0 && (
           <div>
-            <div style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:8}}>Flags / Concerns</div>
+            <div style={{fontSize:11,fontWeight:700,color:DIM, marginBottom:8}}>Flags / Concerns</div>
             <ul style={{margin:0,padding:0,listStyle:'none',display:'flex',flexDirection:'column',gap:5}}>
               {result.flags.map((f) => (
                 <li key={f} style={{display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:'#f87171'}}>
@@ -93,7 +93,7 @@ function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () =>
         {/* Recommendations */}
         {result.recommendations.length > 0 && (
           <div>
-            <div style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:8}}>Recommendations</div>
+            <div style={{fontSize:11,fontWeight:700,color:DIM, marginBottom:8}}>Recommendations</div>
             <ul style={{margin:0,padding:0,listStyle:'none',display:'flex',flexDirection:'column',gap:5}}>
               {result.recommendations.map((r) => (
                 <li key={r} style={{display:'flex',gap:7,alignItems:'flex-start',fontSize:12,color:'#86efac'}}>
@@ -111,8 +111,8 @@ function AIRiskPanel({ result, onClose }: { result: AIRiskResult; onClose: () =>
 
 function statusStyle(s:string):{c:string,bg:string}{
   if(s==='approved') return {c:'#3dd68c',bg:'rgba(26,138,74,.14)'};
-  if(s==='rejected') return {c:RED,    bg:'rgba(192,48,48,.14)'};
-  return {c:GOLD,bg:'rgba(245, 158, 11,.14)'};
+  if(s==='rejected') return {c:RED, bg:'rgba(192,48,48,.14)'};
+  return {c:GOLD,bg:'var(--brand-primary-12)'};
 }
 
 export default function ChangeOrdersPage() {
@@ -202,7 +202,7 @@ export default function ChangeOrdersPage() {
       if (d.error) throw new Error(d.error);
       setRiskResult(d);
     } catch(e: unknown) {
-      setRiskError((e as Error).message || 'AI analysis failed');
+      setRiskError((e as Error).message || 'AI analysis failed.');
     } finally {
       setRiskLoading(false);
     }
@@ -242,7 +242,7 @@ export default function ChangeOrdersPage() {
 
   /** POST the composer — shared by the Create button and the guard's "Save & leave". */
   async function submitCO(): Promise<boolean>{
-    if(!fTitle.trim()){ setError('Title is required'); return false; }
+    if(!fTitle.trim()){ setError('Title is required.'); return false; }
     setSaving(true); setError('');
     try{
       const r = await fetch('/api/change-orders/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
@@ -309,7 +309,7 @@ export default function ChangeOrdersPage() {
     try {
       const r = await fetch(`/api/change-orders/${id}/update`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cost_impact: amount }) });
       if (!r.ok) throw new Error('update failed');
-      setToast({ msg: 'Cost impact updated', type: 'success' });
+      setToast({ msg: 'Cost impact updated.', type: 'success' });
     } catch {
       setToast({ msg: 'Could not update the change order. Please try again.', type: 'error' });
       load();
@@ -328,8 +328,8 @@ export default function ChangeOrdersPage() {
     try {
       const r = await fetch(`/api/change-orders/${id}`, { method: 'DELETE' });
       if (!r.ok) throw new Error('Delete failed');
-      setToast({msg:'Change order deleted',type:'success'});
-    } catch { setToast({msg:'Failed to delete',type:'error'}); load(); }
+      setToast({msg:'Change order deleted.',type:'success'});
+    } catch { setToast({msg:'Failed to delete the change order. Please try again.',type:'error'}); load(); }
   }
 
   // Running totals — exact-cents engine. Revised contract = original + APPROVED
@@ -381,7 +381,7 @@ export default function ChangeOrdersPage() {
           title="Change"
           accent="Orders"
           subtitle={loading ? 'Loading…' : `${cos.length} change order${cos.length!==1?'s':''} — track scope changes, owner requests, and unforeseen conditions.`}
-          note="price it BEFORE you build it"
+          note="Price it before you build it"
           actions={
             <button onClick={()=>{ if(showForm) closeCoForm(); else setShowForm(true); }} style={goldButtonStyle} className="pmBtn">
               {showForm
@@ -394,11 +394,11 @@ export default function ChangeOrdersPage() {
         {/* Contract intelligence strip — what the system already knows */}
         {(ctx || !loading) && (
           <StatStrip items={[
-            {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(contractSum), sub:'prime contract baseline'},
+            {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(contractSum), sub:'Prime contract baseline'},
             {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(approvedCOs>=0?'+':'')+fmt(approvedCOs), accent:approvedCOs>0?'#3dd68c':approvedCOs<0?RED:undefined, sub:`${approvedCount} approved`},
-            {href: `/app/projects/${projectId}/change-orders`, label:'Pending COs', value:(pendingCOs>=0?'+':'')+fmt(pendingCOs), accent:pendingCount>0?GOLD:undefined, sub:pendingCount>0?`${pendingCount} awaiting decision`:'none awaiting decision'},
-            {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(currentContract), accent:GOLD, sub:'original + approved COs'},
-            {href: `/app/projects/${projectId}/change-orders`, label:'Next CO', value:`CO-${padCo(nextCoNumber)}`, sub:lastCo?`follows CO-${padCo(lastCo.co_number)}`:'first on this project'},
+            {href: `/app/projects/${projectId}/change-orders`, label:'Pending COs', value:(pendingCOs>=0?'+':'')+fmt(pendingCOs), accent:pendingCount>0?GOLD:undefined, sub:pendingCount>0?`${pendingCount} awaiting decision`:'None awaiting decision'},
+            {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(currentContract), accent:GOLD, sub:'Original + approved COs'},
+            {href: `/app/projects/${projectId}/change-orders`, label:'Next CO', value:`CO-${padCo(nextCoNumber)}`, sub:lastCo?`Follows CO-${padCo(lastCo.co_number)}`:'First on this project'},
           ]}/>
         )}
 
@@ -484,28 +484,28 @@ export default function ChangeOrdersPage() {
             {/* Context rail — live contract position, prior CO, downstream automation */}
             <div style={{display:'flex',flexDirection:'column',gap:16}}>
               <SectionCard flat title="Contract Position" icon={<CurrencyDollar size={17} weight="duotone" color={GOLD} />}>
-                <InsightRow label="Original contract" value={fmt(contractSum)}/>
+                <InsightRow label="Original Contract" value={fmt(contractSum)}/>
                 <InsightRow label={`Approved COs (${approvedCount})`} value={(approvedCOs>=0?'+':'')+fmt(approvedCOs)} accent={approvedCOs>0?'#3dd68c':undefined}/>
                 {pendingCount>0 && <InsightRow label={`Pending COs (${pendingCount})`} value={(pendingCOs>=0?'+':'')+fmt(pendingCOs)} accent={GOLD}/>}
                 <InsightRow label="This CO" value={(fCostNum>=0?'+':'')+fmt(fCostNum)} accent={fCostNum>0?ORANGE:fCostNum<0?RED:undefined}/>
                 <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'8px 0'}}/>
-                <InsightRow label="New contract sum" value={fmt(newContractSum)} accent={GREEN} strong/>
-                {fSchedNum>0 && <InsightRow label="Schedule impact" value={`+${fSchedNum} day${fSchedNum===1?'':'s'}`} accent={ORANGE}/>}
+                <InsightRow label="New Contract Sum" value={fmt(newContractSum)} accent={GREEN} strong/>
+                {fSchedNum>0 && <InsightRow label="Schedule Impact" value={`+${fSchedNum} day${fSchedNum===1?'':'s'}`} accent={ORANGE}/>}
               </SectionCard>
               {lastCo && (
                 <SectionCard flat title={`Last CO — CO-${padCo(lastCo.co_number)}`} icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
                   <InsightRow label="Title" value={<span style={{display:'inline-block',maxWidth:170,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',verticalAlign:'bottom'}}>{lastCo.title||'—'}</span>}/>
-                  <InsightRow label="Status" value={String(lastCo.status||'pending')} accent={statusStyle(lastCo.status||'pending').c}/>
-                  <InsightRow label="Cost impact" value={(Number(lastCo.cost_impact||0)>=0?'+':'')+fmt(Number(lastCo.cost_impact)||0)} accent={Number(lastCo.cost_impact||0)>0?ORANGE:undefined}/>
+                  <InsightRow label="Status" value={String(lastCo.status||'pending').replace(/^\w/,(c:string)=>c.toUpperCase())} accent={statusStyle(lastCo.status||'pending').c}/>
+                  <InsightRow label="Cost Impact" value={(Number(lastCo.cost_impact||0)>=0?'+':'')+fmt(Number(lastCo.cost_impact)||0)} accent={Number(lastCo.cost_impact||0)>0?ORANGE:undefined}/>
                   <InsightRow label="Schedule" value={Number(lastCo.schedule_impact||0)>0?`+${Number(lastCo.schedule_impact)||0} days`:'—'}/>
                 </SectionCard>
               )}
               <SectionCard flat title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={GOLD} />}>
                 <FlowSteps title="" steps={[
-                  {title:'CO logged as pending', desc:`Numbered CO-${padCo(nextCoNumber)} automatically and queued for a decision.`},
-                  {title:'Owner approval', desc:'Approve or reject right from this list — status flips instantly.'},
-                  {title:'Contract sum auto-updates', desc:`On approval the revised contract and prime contract move to ${fmt(newContractSum)} on their own.`},
-                  {title:'Budget line syncs', desc:'The matching budget line absorbs the approved amount — nothing re-typed in Budget.'},
+                  {title:'CO Logged as Pending', desc:`Numbered CO-${padCo(nextCoNumber)} automatically and queued for a decision.`},
+                  {title:'Owner Approval', desc:'Approve or reject right from this list — status flips instantly.'},
+                  {title:'Contract Sum Auto-Updates', desc:`On approval the revised contract and prime contract move to ${fmt(newContractSum)} on their own.`},
+                  {title:'Budget Line Syncs', desc:'The matching budget line absorbs the approved amount — nothing re-typed in Budget.'},
                 ]}/>
               </SectionCard>
             </div>
@@ -536,7 +536,7 @@ export default function ChangeOrdersPage() {
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap',marginBottom:12}}>
               <div style={{fontSize:13.5,fontWeight:800,color:TEXT}}>
                 <Clipboard size={16} weight="duotone" color={GOLD} style={{marginRight:7,verticalAlign:'text-bottom'}} />
-                No change orders yet
+                No Change Orders Yet
                 <span style={{fontWeight:400,color:DIM}}>{showForm ? ` — CO-${padCo(nextCoNumber)} is numbered and ready in the form above.` : ' — log scope changes, owner requests, and unforeseen conditions.'}</span>
               </div>
               {!showForm && (
@@ -546,10 +546,10 @@ export default function ChangeOrdersPage() {
               )}
             </div>
             <FlowStrip steps={[
-              {title:'Log the CO',desc:'numbered automatically'},
-              {title:'Pending decision',desc:'approve or reject inline'},
-              {title:'Contract sum updates',desc:'on approval, automatically'},
-              {title:'Budget line syncs',desc:'nothing re-typed'},
+              {title:'Log the CO',desc:'Numbered automatically'},
+              {title:'Pending Decision',desc:'Approve or reject inline'},
+              {title:'Contract Sum Updates',desc:'On approval, automatically'},
+              {title:'Budget Line Syncs',desc:'Nothing re-typed'},
             ]} />
           </SectionCard>
         )}
@@ -560,7 +560,7 @@ export default function ChangeOrdersPage() {
             module="change-orders"
             search={coSearch}
             onSearch={setCoSearch}
-            searchPlaceholder="Search change orders..."
+            searchPlaceholder="Search change orders…"
             filters={[{ key: 'status', label: 'Status', value: coStatusFilter, onChange: setCoStatusFilter, allLabel: 'All Statuses', options: [
               { value: 'pending', label: 'Pending' },
               { value: 'approved', label: 'Approved' },
@@ -575,7 +575,7 @@ export default function ChangeOrdersPage() {
               <thead>
                 <tr style={{background:DARK}}>
                   {['CO #','Title','Status','Cost Impact','Schedule Impact','Reason','Actions'].map(h=>(
-                    <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700,textTransform:'uppercase' as const,letterSpacing:.5,color:DIM,borderBottom:`1px solid ${BORDER}`}}>
+                    <th key={h} style={{padding:'10px 14px',textAlign:'left' as const,fontSize:11,fontWeight:700, color:DIM,borderBottom:`1px solid ${BORDER}`}}>
                       {h}
                     </th>
                   ))}
@@ -599,8 +599,8 @@ export default function ChangeOrdersPage() {
                       <td style={{padding:'12px 14px',position:'relative' as const}}>
                         {coEditId===co.id ? (
                           <div style={{display:'flex',alignItems:'center',gap:4}}>
-                            <input value={coEditVal} onChange={e=>setCoEditVal(e.target.value)} type="number" autoFocus onKeyDown={e=>{if(e.key==='Enter')handleEditCO(co.id);if(e.key==='Escape')setCoEditId(null);}} style={{width:100,padding:'4px 8px',background:'#1c1c1e',border:`1px solid ${GOLD}`,borderRadius:5,color:TEXT,fontSize:12,outline:'none',textAlign:'right' as const}}/>
-                            <button onClick={()=>handleEditCO(co.id)} style={{padding:'3px 8px',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,border:'none',borderRadius:5,color:'#1C1C1E',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
+                            <input value={coEditVal} onChange={e=>setCoEditVal(e.target.value)} type="number" autoFocus onKeyDown={e=>{if(e.key==='Enter')handleEditCO(co.id);if(e.key==='Escape')setCoEditId(null);}} style={{width:100,padding:'4px 8px',background:'var(--bg-surface-2)',border:`1px solid ${GOLD}`,borderRadius:5,color:TEXT,fontSize:12,outline:'none',textAlign:'right' as const}}/>
+                            <button onClick={()=>handleEditCO(co.id)} style={{padding:'3px 8px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:5,color:'#0A0A00',fontSize:11,fontWeight:700,cursor:'pointer'}}>Save</button>
                             <button onClick={()=>setCoEditId(null)} style={{padding:'3px 8px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:5,color:DIM,fontSize:11,cursor:'pointer'}}>Cancel</button>
                           </div>
                         ) : (
@@ -638,7 +638,7 @@ export default function ChangeOrdersPage() {
                           {co.status==='pending' && (
                             <>
                               <button onClick={()=>approveCO(co.id)} disabled={approvingId===co.id}
-                                style={{background:`linear-gradient(135deg,${GOLD},#FBBF24)`,border:'none',borderRadius:5,color:'#1C1C1E',fontSize:11,padding:'4px 12px',fontWeight:800,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?0.6:1}}>
+                                style={{background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:5,color:'#0A0A00',fontSize:11,padding:'4px 12px',fontWeight:800,cursor:approvingId===co.id?'wait':'pointer',opacity:approvingId===co.id?0.6:1}}>
                                 {approvingId===co.id ? '…' : 'Approve'}
                               </button>
                               <button onClick={()=>rejectCO(co.id)} disabled={approvingId===co.id}
@@ -655,7 +655,7 @@ export default function ChangeOrdersPage() {
                               else analyzeRisk({title:co.title,description:co.description,reason:co.reason,cost_impact:co.cost_impact,schedule_impact:co.schedule_impact,status:co.status},co.id);
                             }}
                             disabled={riskLoading&&riskTarget===co.id}
-                            style={{background:'rgba(245, 158, 11,.08)',border:`1px solid rgba(245, 158, 11,.25)`,borderRadius:5,color:GOLD,fontSize:11,padding:'4px 10px',fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
+                            style={{background:'var(--brand-primary-08)',border:`1px solid var(--brand-primary-25)`,borderRadius:5,color:GOLD,fontSize:11,padding:'4px 10px',fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}>
                             <Robot size={12} color={GOLD} weight="regular" />
                             {riskLoading&&riskTarget===co.id ? '…' : 'Risk'}
                           </button>

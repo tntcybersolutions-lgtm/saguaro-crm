@@ -85,7 +85,7 @@ export function GradientButton({
   const variantStyle: React.CSSProperties =
     variant === 'primary'
       ? {
-          color: '#241500',
+          color: 'var(--on-brand)',
           border: '1px solid transparent',
           background: `linear-gradient(180deg, ${GOLD_HI}, ${GOLD} 60%, var(--brand-primary-hover))`,
           boxShadow: hover && !isDisabled

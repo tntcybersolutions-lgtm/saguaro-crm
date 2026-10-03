@@ -25,7 +25,7 @@ export interface SectionCardProps {
    * Content on the page rather than an object on a tray.
    *
    * Same meaning as the `flat` on the premium SectionCard, and written to match
-   * it: header kept as a small uppercase label over a hairline, tray dropped —
+   * it: header kept as a small Title Case label over a hairline, tray dropped —
    * no fill, no border, no radius, no shadow. Raised is reserved for things you
    * would point at and name.
    */
@@ -69,12 +69,12 @@ export function SectionCard({
             {icon != null && <span style={{ display: 'inline-flex', flexShrink: 0, opacity: 0.9, color: GOLD }}>{icon}</span>}
             <div style={{ minWidth: 0, flex: 1 }}>
               {title != null && (
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: 'var(--sg-text-2)', lineHeight: 1.3 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--sg-text-2)', lineHeight: 1.3 }}>
                   {title}
                 </div>
               )}
               {subtitle != null && (
-                <div style={{ fontSize: 12.5, color: 'var(--sg-text-2)', marginTop: 3, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--sg-text-3)', marginTop: 3, fontWeight: 400 }}>
                   {subtitle}
                 </div>
               )}
@@ -108,6 +108,8 @@ export function SectionCard({
         borderRadius: 16,
         border: `1px solid ${lift ? gold(45) : 'var(--sg-border)'}`,
         background: 'linear-gradient(160deg, var(--sg-surface-from), var(--sg-surface-to))',
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
         boxShadow,
         cursor: onClick ? 'pointer' : undefined,
         transform: lift ? 'translateY(-4px)' : 'none',

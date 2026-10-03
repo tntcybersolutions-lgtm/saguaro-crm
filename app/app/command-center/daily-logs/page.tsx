@@ -47,9 +47,9 @@ export default function DailyLogsPage() {
       {!loading && (
         <StatStrip items={[
           {href: '/app/command-center/daily-logs',  label: 'Reported Today', value: String(compliance.reported), accent: compliance.total > 0 && compliance.reported === compliance.total ? C.green : undefined, sub: `of ${compliance.total} active site${compliance.total === 1 ? '' : 's'}` },
-          {href: '/app/command-center/daily-logs',  label: 'Awaiting', value: String(compliance.total - compliance.reported), accent: compliance.total - compliance.reported ? C.red : C.green, sub: compliance.total - compliance.reported ? 'no report yet' : 'all sites in' },
-          {href: '/app/command-center/daily-logs',  label: 'Late (after 4 PM)', value: String(compliance.late), accent: compliance.late ? C.yellow : C.green, sub: 'site local time' },
-          {href: '/app/command-center/daily-logs',  label: 'Reports (21d)', value: String((logs as any[]).length), sub: 'across all sites' },
+          {href: '/app/command-center/daily-logs',  label: 'Awaiting', value: String(compliance.total - compliance.reported), accent: compliance.total - compliance.reported ? C.red : C.green, sub: compliance.total - compliance.reported ? 'No report yet' : 'All sites in' },
+          {href: '/app/command-center/daily-logs',  label: 'Late (after 4 PM)', value: String(compliance.late), accent: compliance.late ? C.yellow : C.green, sub: 'Site local time' },
+          {href: '/app/command-center/daily-logs',  label: 'Reports (21d)', value: String((logs as any[]).length), sub: 'Across all sites' },
         ]} />
       )}
 
@@ -69,7 +69,7 @@ export default function DailyLogsPage() {
             const bd = !ok ? 'rgba(255,59,48,0.25)' : late ? 'rgba(255,149,0,0.3)' : 'rgba(52,199,89,0.3)';
             return (
               <span key={p.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '5px 11px', borderRadius: 999, background: bg, color: fg, border: `1px solid ${bd}` }}>
-                {!ok ? <Circle size={13} weight="regular" color={fg} style={{ verticalAlign: 'middle' }} /> : late ? <Warning size={13} weight="fill" color={fg} style={{ verticalAlign: 'middle' }} /> : <CheckCircle size={13} weight="fill" color={fg} style={{ verticalAlign: 'middle' }} />} {p.name}{late ? ' · late' : ''}
+                {!ok ? <Circle size={13} weight="regular" color={fg} style={{ verticalAlign: 'middle' }} /> : late ? <Warning size={13} weight="fill" color={fg} style={{ verticalAlign: 'middle' }} /> : <CheckCircle size={13} weight="fill" color={fg} style={{ verticalAlign: 'middle' }} />} {p.name}{late ? ' · Late' : ''}
               </span>
             );
           })}
@@ -82,7 +82,7 @@ export default function DailyLogsPage() {
         : (logs as any[]).length === 0 ? (
           <PremiumEmpty icon={<Clipboard size={32} weight="duotone" color={C.gold} />} title="No daily reports yet"
             description="Every superintendent submits a daily report — photos, manpower, weather, progress, and problems — by 4 PM local. They roll up here across all sites."
-            action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setSubmitting(true)}>Submit the first</GoldButton>} />
+            action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setSubmitting(true)}>Submit the First</GoldButton>} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 12 }}>
             {(logs as any[]).map((l) => {
@@ -119,34 +119,34 @@ function SubmitForm({ projects, onDone }: { projects: any[]; onDone: () => void 
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
-  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: '#1c1c1e', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id) { setErr('Pick a site.'); return; }
     setBusy(true); setErr('');
-    try { await submitDailyLog(f); onDone(); } catch (e: any) { setErr(e?.message || 'Failed'); } finally { setBusy(false); }
+    try { await submitDailyLog(f); onDone(); } catch (e: any) { setErr(e?.message || "Couldn't submit the report. Please try again."); } finally { setBusy(false); }
   }
 
   return (
-    <SectionCard title="Daily superintendent report" subtitle="Photos, manpower, weather, progress, problems — the whole day in one entry" icon={<HardHat size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+    <SectionCard title="Daily Superintendent Report" subtitle="Photos, manpower, weather, progress, problems — the whole day in one entry." icon={<HardHat size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select…</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
         <div><label style={lbl}>Date</label><SaguaroDatePicker style={inp} value={f.log_date} onChange={(v) => set('log_date', v)} /></div>
         <div><label style={lbl}>Superintendent</label><input style={inp} value={f.superintendent_name || ''} onChange={(e) => set('superintendent_name', e.target.value)} /></div>
-        <div><label style={lbl}>Manpower count</label><input type="number" style={inp} value={f.manpower_count || ''} onChange={(e) => set('manpower_count', e.target.value)} /></div>
+        <div><label style={lbl}>Manpower Count</label><input type="number" style={inp} value={f.manpower_count || ''} onChange={(e) => set('manpower_count', e.target.value)} /></div>
         <div><label style={lbl}>Weather</label><input style={inp} placeholder="Clear, 104°F" value={f.weather || ''} onChange={(e) => set('weather', e.target.value)} /></div>
-        <div><label style={lbl}>Photos count</label><input type="number" style={inp} value={f.photos_count || ''} onChange={(e) => set('photos_count', e.target.value)} /></div>
-        <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Work performed today</label><textarea style={{ ...inp, minHeight: 54, resize: 'vertical', fontFamily: font }} value={f.work_performed || ''} onChange={(e) => set('work_performed', e.target.value)} /></div>
-        <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Tomorrow's work</label><textarea style={{ ...inp, minHeight: 44, resize: 'vertical', fontFamily: font }} value={f.tomorrow || ''} onChange={(e) => set('tomorrow', e.target.value)} /></div>
-        <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Problems / delays</label><input style={inp} value={f.problems || ''} onChange={(e) => set('problems', e.target.value)} /></div>
+        <div><label style={lbl}>Photos Count</label><input type="number" style={inp} value={f.photos_count || ''} onChange={(e) => set('photos_count', e.target.value)} /></div>
+        <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Work Performed Today</label><textarea style={{ ...inp, minHeight: 54, resize: 'vertical', fontFamily: font }} value={f.work_performed || ''} onChange={(e) => set('work_performed', e.target.value)} /></div>
+        <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Tomorrow's Work</label><textarea style={{ ...inp, minHeight: 44, resize: 'vertical', fontFamily: font }} value={f.tomorrow || ''} onChange={(e) => set('tomorrow', e.target.value)} /></div>
+        <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Problems / Delays</label><input style={inp} value={f.problems || ''} onChange={(e) => set('problems', e.target.value)} /></div>
         <div><label style={lbl}>Deliveries</label><input style={inp} value={f.materials_delivered || ''} onChange={(e) => set('materials_delivered', e.target.value)} /></div>
         <div><label style={lbl}>Inspections</label><input style={inp} value={f.inspections_text || ''} onChange={(e) => set('inspections_text', e.target.value)} /></div>
         <div><label style={lbl}>Safety</label><input style={inp} value={f.safety_notes || ''} onChange={(e) => set('safety_notes', e.target.value)} /></div>
       </div>
       {err && <div style={{ color: C.red, fontSize: 13, marginTop: 10 }}>{err}</div>}
       <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        <GoldButton size="md" onClick={submit} disabled={busy}>{busy ? 'Submitting…' : 'Submit report'}</GoldButton>
+        <GoldButton size="md" onClick={submit} disabled={busy}>{busy ? 'Submitting…' : 'Submit Report'}</GoldButton>
         <GhostButton size="md" onClick={onDone}>Cancel</GhostButton>
       </div>
     </SectionCard>

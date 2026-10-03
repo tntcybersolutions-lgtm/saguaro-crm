@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 
-const GOLD = '#F59E0B';
-const DARK = '#1c1c1e';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-surface-2)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -131,7 +131,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
   if (loading) {
     return (
       <div style={{ padding: 16, color: DIM, fontSize: 13 }}>
-        Loading audit trail...
+        Loading audit trail…
       </div>
     );
   }
@@ -188,7 +188,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
                 width: 40,
                 height: 40,
                 borderRadius: '50%',
-                background: color + '22',
+                background: `color-mix(in srgb, ${color} 13%, transparent)`,
                 border: `2px solid ${color}`,
                 display: 'flex',
                 alignItems: 'center',
@@ -216,7 +216,7 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
                     fontSize: 11,
                     fontWeight: 600,
                     color: color,
-                    background: color + '18',
+                    background: `color-mix(in srgb, ${color} 9%, transparent)`,
                     padding: '1px 8px',
                     borderRadius: 10,
                     textTransform: 'capitalize',
@@ -307,8 +307,8 @@ export default function AuditTimeline({ entityType, entityId }: AuditTimelinePro
             }}
           >
             {expanded
-              ? 'Show less'
-              : `Show all ${entries.length} entries`}
+              ? 'Show Less'
+              : `Show All ${entries.length} Entries`}
           </button>
         </div>
       )}

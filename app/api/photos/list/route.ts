@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient, getUser } from '@/lib/supabase-server';
-import { signFields } from '@/lib/storage-signing';
+import { signFields, storageObjectKey } from '@/lib/storage-signing';
+import { apiError } from '@/lib/api-error';
+
+/** Album the Files-library images are grouped under in the gallery. */
+const FILES_ALBUM = 'From Files';
+
+/** "ZZ-AUDIT_jobsite-photo-1.jpg" -> "ZZ AUDIT jobsite photo 1". */
+function titleFromFileName(name: string): string {
+  return name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim() || name;
+}
 
 /**
  * Photos for ONE project.
@@ -60,12 +69,75 @@ export async function GET(req: NextRequest) {
     // 'project-files' bucket is private — sign photo URLs on read. signFields is
     // strict: if an object we were supposed to sign doesn't sign, it throws into
     // the catch below rather than returning URLs that 400 on load.
-    return NextResponse.json({ photos: await signFields(data || [], ['url', 'thumbnail_url', 'markup_url']) });
+    const photos = await signFields((data || []) as Record<string, any>[], ['url', 'thumbnail_url', 'markup_url']);
+
+    /* ONE PICTURE OF THE JOB. A photo dropped into Files & Media lives in
+       project_files, not photos, so the gallery used to say "No photos yet"
+       while the library held two jobsite shots. `?include=files` (the web
+       gallery sends it) merges the project's image files in as READ-ONLY
+       entries: same storage object, no copy, clearly sourced (`source:'files'`,
+       album FILES_ALBUM, id prefixed `file:`) so no client mistakes one for a
+       photos row it can PUT or DELETE. Opt-in, so callers that write back by
+       id (the field app) never see a synthetic id. De-duplicated against photos
+       by storage object and by content hash. */
+    const includeFiles = projectId && (searchParams.get('include') || '').split(',').includes('files');
+    if (!includeFiles) return NextResponse.json({ photos });
+
+    const { data: fileRows, error: filesErr } = await (db as any)
+      .from('project_files')
+      .select('id, project_id, file_name, file_url, poster_url, mime_type, kind, file_size, file_hash, uploaded_by_name, created_at')
+      .eq('tenant_id', user.tenantId)
+      .eq('project_id', projectId)
+      .eq('kind', 'image')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (filesErr) throw filesErr;
+
+    const seenObjects = new Set<string>();
+    const seenHashes = new Set<string>();
+    for (const p of (data || []) as Record<string, any>[]) {
+      const k = storageObjectKey(p.url);
+      if (k) seenObjects.add(k);
+      if (p.file_hash) seenHashes.add(String(p.file_hash));
+    }
+    const fromFiles = ((fileRows || []) as Record<string, any>[])
+      .filter((f) => {
+        const k = storageObjectKey(f.file_url);
+        if (k && seenObjects.has(k)) return false;
+        if (f.file_hash && seenHashes.has(String(f.file_hash))) return false;
+        return true;
+      })
+      .map((f) => ({
+        id: `file:${f.id}`,
+        file_id: f.id,
+        source: 'files',
+        read_only: true,
+        project_id: f.project_id,
+        title: titleFromFileName(String(f.file_name || 'Photo')),
+        filename: f.file_name,
+        url: f.file_url,
+        // poster_url is the Files library's stored small variant (see /api/files/upload).
+        thumbnail_url: f.poster_url || null,
+        album: FILES_ALBUM,
+        taken_at: f.created_at,
+        created_at: f.created_at,
+        taken_by: f.uploaded_by_name || null,
+        mime_type: f.mime_type,
+        file_size: f.file_size,
+        tags: [],
+      }));
+    // Partial beats nothing here: one unsignable library file must not blank the
+    // gallery's real photos. Failures are logged by the signer and come back ''.
+    const signedFiles = await signFields(fromFiles, ['url', 'thumbnail_url'], 3600, { strict: false });
+    const merged = [...photos, ...signedFiles.filter((f) => f.url)].sort((a, b) =>
+      String(b.taken_at || b.created_at || '').localeCompare(String(a.taken_at || a.created_at || '')),
+    );
+    return NextResponse.json({ photos: merged, fromFiles: signedFiles.length });
   } catch (e: unknown) {
     // Never a silent empty gallery: say it failed so the UI can show a retry
     // instead of an indistinguishable "no photos yet". A signing failure lands
     // here too — a broken-image grid reads as "the photos are gone".
-    console.error('[photos/list] failed:', e instanceof Error ? e.message : e);
-    return NextResponse.json({ error: "Couldn't load photos", photos: [] }, { status: 500 });
+    return apiError('photos/list', e, "Couldn't load photos");
   }
 }

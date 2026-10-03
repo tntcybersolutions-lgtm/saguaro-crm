@@ -6,7 +6,7 @@
  *
  *   OVERDUE         red     — anything late / past due / needs action now
  *   LEADS           blue    — a lead / opportunity / deal in the pipeline
- *   UNDER CONTRACT  yellow  — awarded / under contract / bidding won, pre-build
+ *   UNDER CONTRACT  amber   — awarded / under contract / bidding won, pre-build
  *   ONGOING         green   — active / in progress on site
  *   COMPLETED       orange  — finished / substantially complete
  *   CLOSED          grey    — closed / cancelled / archived / lost
@@ -26,7 +26,7 @@ export type StatusKind =
 
 export interface StatusStyle {
   kind: StatusKind;
-  /** Short uppercase label for a ticker chip / badge. */
+  /** Title Case display label for a ticker chip / badge (COPY-STYLE §1). */
   label: string;
   /** The indicator color — the one the GC reads at a glance. */
   color: string;
@@ -35,15 +35,20 @@ export interface StatusStyle {
   border: string;
 }
 
-/* Hues chosen distinct from the brand gold so none of the six reads as
-   "the app's accent" rather than a status. */
+/* One bright, clean neon-on-black family (owner decision 2026-10-02 — jet
+   black + glass + neon yellow, uniform end to end). Same saturation and
+   lightness band for all six so no status shouts over another; fills are
+   ~16% and borders ~50% of the hue so a pill reads on glass and on black.
+   Under Contract is a warm AMBER (#FFC53D), deliberately apart from the lemon
+   brand yellow (#FFE600) so a status never reads as "the app's accent".
+   Mirrored as --status-* in app/globals.css. */
 export const STATUS_COLORS: Record<StatusKind, StatusStyle> = {
-  overdue:        { kind: 'overdue',        label: 'OVERDUE',        color: '#F87171', bg: 'rgba(239,68,68,0.14)',  border: 'rgba(248,113,113,0.45)' },
-  lead:           { kind: 'lead',           label: 'LEAD',           color: '#60A5FA', bg: 'rgba(59,130,246,0.14)', border: 'rgba(96,165,250,0.45)' },
-  under_contract: { kind: 'under_contract', label: 'UNDER CONTRACT', color: '#FACC15', bg: 'rgba(234,179,8,0.14)',  border: 'rgba(250,204,21,0.45)' },
-  ongoing:        { kind: 'ongoing',        label: 'ONGOING',        color: '#34D399', bg: 'rgba(16,185,129,0.14)', border: 'rgba(52,211,153,0.45)' },
-  completed:      { kind: 'completed',      label: 'COMPLETED',      color: '#FB923C', bg: 'rgba(249,115,22,0.14)', border: 'rgba(251,146,60,0.45)' },
-  closed:         { kind: 'closed',         label: 'CLOSED',         color: '#94A3B8', bg: 'rgba(100,116,139,0.16)', border: 'rgba(148,163,184,0.45)' },
+  overdue:        { kind: 'overdue',        label: 'Overdue',        color: '#FF4D5E', bg: 'rgba(255,77,94,0.16)',   border: 'rgba(255,77,94,0.50)' },
+  lead:           { kind: 'lead',           label: 'Lead',           color: '#3DA9FF', bg: 'rgba(61,169,255,0.16)',  border: 'rgba(61,169,255,0.50)' },
+  under_contract: { kind: 'under_contract', label: 'Under Contract', color: '#FFC53D', bg: 'rgba(255,197,61,0.16)',  border: 'rgba(255,197,61,0.50)' },
+  ongoing:        { kind: 'ongoing',        label: 'Ongoing',        color: '#2EE59D', bg: 'rgba(46,229,157,0.16)',  border: 'rgba(46,229,157,0.50)' },
+  completed:      { kind: 'completed',      label: 'Completed',      color: '#FF8A3D', bg: 'rgba(255,138,61,0.16)',  border: 'rgba(255,138,61,0.50)' },
+  closed:         { kind: 'closed',         label: 'Closed',         color: '#A3ACBB', bg: 'rgba(163,172,187,0.16)', border: 'rgba(163,172,187,0.45)' },
 };
 
 const norm = (v: unknown) => String(v ?? '').toLowerCase().trim();

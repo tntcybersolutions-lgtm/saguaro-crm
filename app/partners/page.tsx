@@ -3,16 +3,16 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 const C = {
-  dark: '#0B0B0F',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
   dim: '#A1A1AA',
   border: 'rgba(255,255,255,0.10)',
   hairline: 'rgba(255,255,255,0.08)',
   cardBg: 'rgba(255,255,255,0.02)',
-  raised: '#131318',
-  raisedAlt: '#1A1A21',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface-2)',
   green: '#22C55E',
   blue: '#6366F1',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
@@ -212,7 +212,7 @@ const FAQS = [
 function CheckIcon({ size = 16, color = C.green }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginTop: 1 }}>
-      <circle cx="8" cy="8" r="8" fill={`${color}22`} />
+      <circle cx="8" cy="8" r="8" fill={`color-mix(in srgb, ${color} 13%, transparent)`} />
       <path d="M4.5 8l2.5 2.5 4-5" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -282,7 +282,7 @@ export default function PartnersPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 16px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -296,16 +296,16 @@ export default function PartnersPage() {
           </div>
 
           <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
-            Connect the tools{' '}
+            Connect the Tools{' '}
             <span style={{ color: C.text }}>
-              your crews already run on.
+              Your Crews Already Run On
             </span>
           </h1>
           <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', color: C.dim, maxWidth: 620, margin: '0 auto 36px', lineHeight: 1.65 }}>
             Saguaro Control Systems connects to QuickBooks, Stripe, DocuSign, and Autodesk — and the Open API lets anyone build more. Integrate, resell, or refer, and grow alongside the AI-powered construction platform.
           </p>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
               Start Free — Connect Your Stack
             </Link>
             <a href="#become-a-partner" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>
@@ -317,10 +317,10 @@ export default function PartnersPage() {
         {/* Integrations */}
         <section style={{ padding: '0 24px 96px', maxWidth: 1160, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>
               Integrations
             </div>
-            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Works with the tools you already use</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Works with the Tools You Already Use</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 560, margin: '0 auto' }}>Push pay apps to your books, collect payments, sign documents, and pull drawings — without leaving the project.</p>
           </div>
 
@@ -351,7 +351,7 @@ export default function PartnersPage() {
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 16, fontWeight: 600, color: C.text }}>{intg.name}</span>
-                        <span style={{ fontSize: 10, fontWeight: 500, color: s.color, background: s.bg, border: `1px solid ${s.border}`, borderRadius: 999, padding: '2px 8px', letterSpacing: 0.5, textTransform: 'uppercase' }}>{intg.status}</span>
+                        <span style={{ fontSize: 10, fontWeight: 500, color: s.color, background: s.bg, border: `1px solid ${s.border}`, borderRadius: 999, padding: '2px 8px' }}>{intg.status}</span>
                       </div>
                       <div style={{ fontSize: 12, color: C.dim, marginTop: 3 }}>{intg.category}</div>
                     </div>
@@ -374,10 +374,10 @@ export default function PartnersPage() {
         {/* Partner program tiers */}
         <section id="become-a-partner" style={{ padding: '0 24px 96px', maxWidth: 1160, margin: '0 auto', scrollMarginTop: 80 }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>
               Partner Program
             </div>
-            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Three ways to partner with Saguaro</h2>
+            <h2 style={{ fontWeight: 600, margin: '0 0 12px', letterSpacing: -0.3 }}>Three Ways to Partner with Saguaro</h2>
             <p style={{ fontSize: 16, color: C.dim, maxWidth: 540, margin: '0 auto' }}>Refer business, resell under your own brand, or build on our API. Free to join — every tier.</p>
           </div>
 
@@ -385,13 +385,13 @@ export default function PartnersPage() {
             {PARTNER_TIERS.map(tier => (
               <div key={tier.name} style={{
                 background: C.cardBg,
-                border: tier.popular ? `1px solid rgba(245,158,11,0.45)` : `1px solid ${C.hairline}`,
+                border: tier.popular ? `1px solid color-mix(in srgb, var(--brand-primary) 45%, transparent)` : `1px solid ${C.hairline}`,
                 borderRadius: 14, overflow: 'hidden', position: 'relative',
                 marginTop: 0,
                 boxShadow: 'none',
               }}>
                 {tier.popular && (
-                  <div style={{ background: C.gold, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 600, color: '#0B0B0F', letterSpacing: 1.5, textTransform: 'uppercase' }}>
+                  <div style={{ background: C.gold, textAlign: 'center', padding: '7px 0', fontSize: 11, fontWeight: 600, color: '#0A0A00' }}>
                     Most Popular
                   </div>
                 )}
@@ -415,7 +415,7 @@ export default function PartnersPage() {
                     display: 'block', textAlign: 'center', padding: '12px 0',
                     background: tier.popular ? C.gold : 'transparent',
                     border: tier.popular ? '1px solid transparent' : `1px solid ${C.hairline}`,
-                    borderRadius: 8, color: tier.popular ? '#0B0B0F' : C.text,
+                    borderRadius: 8, color: tier.popular ? '#0A0A00' : C.text,
                     fontWeight: 600, fontSize: 14, textDecoration: 'none', letterSpacing: 0.2,
                     boxShadow: 'none',
                   }}>
@@ -431,8 +431,8 @@ export default function PartnersPage() {
         <section style={{ padding: '0 24px 96px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ background: 'transparent', border: 'none', borderRadius: 0, padding: 0 }}>
             <div style={{ textAlign: 'center', marginBottom: 40 }}>
-              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>How it works</div>
-              <h2 style={{ fontSize: 22, fontWeight: 600, color: C.text, margin: 0 }}>From application to recurring revenue</h2>
+              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 8 }}>How It Works</div>
+              <h2 style={{ fontSize: 22, fontWeight: 600, color: C.text, margin: 0 }}>From Application to Recurring Revenue</h2>
               <p style={{ fontSize: 14, color: C.dim, margin: '8px 0 0' }}>A straightforward path. Most partners are live within a week.</p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 0 }}>
@@ -453,8 +453,8 @@ export default function PartnersPage() {
         <section style={{ padding: '0 24px 96px', maxWidth: 900, margin: '0 auto' }}>
           <div style={{ background: C.cardBg, border: `1px solid ${C.hairline}`, borderRadius: 14, padding: '40px 48px', display: 'flex', gap: 48, alignItems: 'center', flexWrap: 'wrap', boxShadow: 'none' }}>
             <div style={{ flex: 1, minWidth: 280 }}>
-              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Become a Partner</div>
-              <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25 }}>Build a business on the construction platform GCs love</h2>
+              <div style={{ fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 12 }}>Become a Partner</div>
+              <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 12px', lineHeight: 1.25 }}>Build a Business on the Construction Platform GCs Love</h2>
               <p style={{ fontSize: 15, color: C.dim, margin: '0 0 24px', lineHeight: 1.65 }}>
                 Whether you serve general contractors as a consultant, run a software company, or want to refer the firms in your network, there is a tier for you. Free migration for every customer you bring. Recurring revenue for you.
               </p>
@@ -469,11 +469,11 @@ export default function PartnersPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', minWidth: 220 }}>
               <div style={{ fontSize: 44, fontWeight: 600, color: C.text, lineHeight: 1 }}>20%</div>
-              <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>Recurring commission<br />for 12 months</div>
-              <a href="mailto:partners@saguarocontrol.net" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
+              <div style={{ fontSize: 14, color: C.dim, textAlign: 'center' }}>Recurring Commission<br />for 12 Months</div>
+              <a href="mailto:partners@saguarocontrol.net" style={{ padding: '12px 24px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 14, textDecoration: 'none', textAlign: 'center' }}>
                 Apply to Partner
               </a>
-              <Link href="/signup" style={{ fontSize: 13, color: C.gold, textDecoration: 'none', fontWeight: 500 }}>Or start a free trial first →</Link>
+              <Link href="/signup" style={{ fontSize: 13, color: C.gold, textDecoration: 'none', fontWeight: 500 }}>Or Start a Free Trial First →</Link>
             </div>
           </div>
         </section>
@@ -481,8 +481,8 @@ export default function PartnersPage() {
         {/* FAQ */}
         <section style={{ padding: '0 24px 96px', maxWidth: 760, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 16 }}>FAQ</div>
-            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Partner program questions</h2>
+            <div style={{ display: 'inline-block', padding: '5px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 11, fontWeight: 500, color: C.dim, marginBottom: 16 }}>FAQ</div>
+            <h2 style={{ fontWeight: 600, margin: 0, letterSpacing: -0.3 }}>Partner Program Questions</h2>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {FAQS.map((faq, i) => (
@@ -505,14 +505,14 @@ export default function PartnersPage() {
         <section style={{ padding: '112px 24px', background: 'transparent', borderTop: `1px solid ${C.hairline}`, textAlign: 'center' }}>
           <div style={{ maxWidth: 640, margin: '0 auto' }}>
             <h2 style={{ fontWeight: 600, margin: '0 0 16px', lineHeight: 1.2, letterSpacing: -0.4 }}>
-              Let&apos;s build{' '}
-              <span style={{ color: C.text }}>something together.</span>
+              Let&apos;s Build{' '}
+              <span style={{ color: C.text }}>Something Together</span>
             </h2>
             <p style={{ fontSize: 16, color: C.dim, margin: '0 0 36px', lineHeight: 1.6 }}>
               Connect your stack on a free trial, or apply to the partner program and grow with the AI-powered construction platform.
             </p>
             <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+              <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
                 Start Free Trial — No CC Required
               </Link>
               <a href="mailto:partners@saguarocontrol.net" style={{ display: 'inline-block', padding: '12px 28px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontWeight: 500, fontSize: 15, textDecoration: 'none' }}>
@@ -520,7 +520,7 @@ export default function PartnersPage() {
               </a>
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {['Free to join', 'Recurring commission', 'White-label ready', 'Open REST API', 'Free customer migration'].map(pill => (
+              {['Free to Join', 'Recurring Commission', 'White-Label Ready', 'Open REST API', 'Free Customer Migration'].map(pill => (
                 <div key={pill} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim }}>
                   <CheckIcon size={12} color={C.dim} />
                   {pill}

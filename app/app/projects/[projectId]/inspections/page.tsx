@@ -11,7 +11,7 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 import { StatusPill } from '@/components/ui/Status';
 
-const GOLD='#F59E0B', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
+const GOLD='var(--brand-primary)', BORDER='rgba(255,255,255,0.12)', DIM='#CBD5E1', TEXT='#FFFFFF', GREEN='#3dd68c', RED='#ef4444';
 
 interface Inspection {
   id: string;
@@ -64,8 +64,8 @@ function resultBadge(result: string) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
     'passed': { bg: 'rgba(61,214,140,.2)', color: GREEN, label: 'Passed' },
     'failed': { bg: 'rgba(239,68,68,.2)', color: RED, label: 'Failed' },
-    'pending': { bg: 'rgba(245,158,11,.2)', color: '#f59e0b', label: 'Pending' },
-    'conditional pass': { bg: 'rgba(245,158,11,.2)', color: GOLD, label: 'Conditional Pass' },
+    'pending': { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Pending' },
+    'conditional pass': { bg: 'color-mix(in srgb, var(--warning) 20%, transparent)', color: 'var(--warning)', label: 'Conditional Pass' },
   };
   const s = map[canonResult(result)] || { bg: 'rgba(143,163,192,.2)', color: DIM, label: result || '—' };
   return <span style={{ padding: '3px 10px', borderRadius: 20, background: s.bg, color: s.color, fontSize: 11, fontWeight: 700 }}>{s.label}</span>;
@@ -213,7 +213,7 @@ export default function InspectionsPage() {
     }
   }
 
-  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: '#1c1c1e', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
+  const inp: React.CSSProperties = { width: '100%', padding: '8px 10px', background: 'var(--bg-surface-2)', border: '1px solid ' + BORDER, borderRadius: 6, color: TEXT, fontSize: 13 };
   const label: React.CSSProperties = { fontSize: 12, color: DIM, marginBottom: 4, display: 'block' };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
@@ -222,9 +222,9 @@ export default function InspectionsPage() {
       {/* Header */}
       <ModuleHero
         eyebrow={ctx?.project?.name || 'Quality Assurance'}
-        eyebrowIcon={<ClipboardText size={13} weight="fill" color={GOLD} />}
+        eyebrowIcon={<ClipboardText size={13} weight="fill" style={{ color: GOLD }} />}
         title="Inspections"
-        subtitle="Building inspections and approval records"
+        subtitle="Building inspections and approval records."
         actions={
           <button onClick={() => { if (showForm) { setShowForm(false); setErrorMsg(''); } else { openCreate(); } }} style={goldButtonStyle} className="pmBtn">
             <Plus size={15} weight="bold" /> Schedule Inspection
@@ -235,22 +235,22 @@ export default function InspectionsPage() {
       {/* Inspection intelligence strip — what the record already shows */}
       {!loading && (ctx || inspections.length > 0) && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Pass Rate', value: resulted > 0 ? `${passRate}%` : '—', accent: resulted > 0 ? (passRate >= 80 ? GREEN : passRate >= 60 ? GOLD : RED) : undefined, sub: resulted > 0 ? `${passed} passed of ${resulted} resulted` : 'no results recorded yet' },
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Deficiencies', value: String(deficiencies), accent: deficiencies > 0 ? '#F0A63C' : undefined, sub: deficiencies > 0 ? 'flagged on inspection checklists' : 'none flagged' },
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Re-Inspections Due', value: String(awaitingReinspection.length), accent: awaitingReinspection.length > 0 ? RED : GREEN, sub: awaitingReinspection.length > 0 ? awaitingReinspection.slice(0, 2).map(f => f.type).join(', ') : 'every failure re-passed' },
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Next Scheduled', value: nextUp ? fmtDate(nextUp.date) : '—', sub: nextUp ? nextUp.type : 'nothing on the calendar' },
-          {href: `/app/projects/${projectId}/inspections`,  label: 'Project Progress', value: `${pctComplete}%`, sub: `next milestone: ${suggestedType}` },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch Items', value: String(openPunch), accent: openPunch > 0 ? GOLD : undefined, sub: openPunch > 0 ? 'clear before final inspections' : 'nothing blocking finals' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Pass Rate', value: resulted > 0 ? `${passRate}%` : '—', accent: resulted > 0 ? (passRate >= 80 ? GREEN : passRate >= 60 ? GOLD : RED) : undefined, sub: resulted > 0 ? `${passed} passed of ${resulted} resulted` : 'No results recorded yet' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Deficiencies', value: String(deficiencies), accent: deficiencies > 0 ? 'var(--warning)' : undefined, sub: deficiencies > 0 ? 'Flagged on inspection checklists' : 'None flagged' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Re-Inspections Due', value: String(awaitingReinspection.length), accent: awaitingReinspection.length > 0 ? RED : GREEN, sub: awaitingReinspection.length > 0 ? awaitingReinspection.slice(0, 2).map(f => f.type).join(', ') : 'Every failure re-passed' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Next Scheduled', value: nextUp ? fmtDate(nextUp.date) : '—', sub: nextUp ? nextUp.type : 'Nothing on the calendar' },
+          {href: `/app/projects/${projectId}/inspections`,  label: 'Project Progress', value: `${pctComplete}%`, sub: `Next milestone: ${suggestedType}` },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch Items', value: String(openPunch), accent: openPunch > 0 ? GOLD : undefined, sub: openPunch > 0 ? 'Clear before final inspections' : 'Nothing blocking finals' },
         ]} />
       )}
 
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Passed" value={String(passed)} accent={GREEN} sub={resulted > 0 ? `${passRate}% pass rate` : undefined} delay={0.02}  href={`/app/projects/${projectId}/inspections`}/>
-        <StatCard icon={<XCircle size={19} weight="duotone" color={RED} />} label="Failed" value={String(failed)} accent={failed > 0 ? RED : undefined} sub={awaitingReinspection.length > 0 ? `${awaitingReinspection.length} awaiting re-inspection` : undefined} delay={0.06}  href={`/app/projects/${projectId}/inspections`}/>
-        <StatCard icon={<Warning size={19} weight="duotone" color={deficiencies > 0 ? '#F0A63C' : GOLD} />} label="Deficiencies" value={String(deficiencies)} accent={deficiencies > 0 ? '#F0A63C' : undefined} sub="checklist items flagged" delay={0.10}  href={`/app/projects/${projectId}/inspections`}/>
-        <StatCard icon={<CalendarCheck size={19} weight="duotone" color={GOLD} />} label="Scheduled" value={String(scheduled)} accent={GOLD} sub={nextUp ? `next: ${fmtDate(nextUp.date)}` : undefined} delay={0.14}  href={`/app/projects/${projectId}/inspections`}/>
-        <StatCard icon={<ClipboardText size={19} weight="duotone" color={GOLD} />} label="Total" value={String(inspections.length)} sub={lastRecord ? `last: ${fmtDate(lastRecord.date)}` : undefined} delay={0.18}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" style={{ color: GREEN }} />} label="Passed" value={String(passed)} accent={GREEN} sub={resulted > 0 ? `${passRate}% pass rate` : undefined} delay={0.02}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<XCircle size={19} weight="duotone" style={{ color: RED }} />} label="Failed" value={String(failed)} accent={failed > 0 ? RED : undefined} sub={awaitingReinspection.length > 0 ? `${awaitingReinspection.length} awaiting re-inspection` : undefined} delay={0.06}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<Warning size={19} weight="duotone" style={{ color: deficiencies > 0 ? 'var(--warning)' : GOLD }} />} label="Deficiencies" value={String(deficiencies)} accent={deficiencies > 0 ? 'var(--warning)' : undefined} sub="Checklist items flagged" delay={0.10}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<CalendarCheck size={19} weight="duotone" style={{ color: GOLD }} />} label="Scheduled" value={String(scheduled)} accent={GOLD} sub={nextUp ? `Next: ${fmtDate(nextUp.date)}` : undefined} delay={0.14}  href={`/app/projects/${projectId}/inspections`}/>
+        <StatCard icon={<ClipboardText size={19} weight="duotone" style={{ color: GOLD }} />} label="Total" value={String(inspections.length)} sub={lastRecord ? `Last: ${fmtDate(lastRecord.date)}` : undefined} delay={0.18}  href={`/app/projects/${projectId}/inspections`}/>
       </div>
 
       {successMsg && <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(61,214,140,.15)', border: '1px solid rgba(61,214,140,.4)', borderRadius: 10, color: GREEN, fontSize: 13 }}>{successMsg}</div>}
@@ -258,13 +258,13 @@ export default function InspectionsPage() {
 
       {showForm && (
         <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 320px' : '1fr', gap: 18, alignItems: 'start', marginBottom: 24 }}>
-          <SectionCard title="Schedule Inspection" icon={<CalendarCheck size={17} weight="duotone" color={GOLD} />}>
+          <SectionCard title="Schedule Inspection" icon={<CalendarCheck size={17} weight="duotone" style={{ color: GOLD }} />}>
             {awaitingReinspection.length > 0 && (
               <div style={{ marginBottom: 14, padding: '10px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', fontSize: 12, color: '#fca5a5', lineHeight: 1.6 }}>
                 <ArrowsClockwise size={13} weight="bold" color="#fca5a5" style={{ verticalAlign: 'middle', marginRight: 6 }} />
                 {awaitingReinspection.length} failed inspection{awaitingReinspection.length === 1 ? '' : 's'} awaiting re-inspection:{' '}
                 {awaitingReinspection.slice(0, 3).map(f => (
-                  <span key={f.id} onClick={() => openCreate(f.type)} style={{ color: '#FBBF24', fontWeight: 700, cursor: 'pointer', marginRight: 10 }}>
+                  <span key={f.id} onClick={() => openCreate(f.type)} style={{ color: 'var(--brand-primary-strong)', fontWeight: 700, cursor: 'pointer', marginRight: 10 }}>
                     {f.type} (failed {fmtDate(f.date)})
                   </span>
                 ))}
@@ -279,7 +279,7 @@ export default function InspectionsPage() {
               </div>
               <div><label style={label}>Date *{auto.date && <AutoChip />}</label>
                 <SaguaroDatePicker value={form.date} onChange={v => setForm(p => ({ ...p, date: v }))} style={inp} />
-                <div style={hint}>Defaulted to today — most agencies need 24-48h notice.</div>
+                <div style={hint}>Defaulted to today — most agencies need 24–48h notice.</div>
               </div>
               <div><label style={label}>Inspector *{auto.insp && <AutoChip />}</label>
                 <Suggest type="text" value={form.inspector} onChange={e => setForm(p => ({ ...p, inspector: e.target.value }))} style={inp} options={['n']} />
@@ -290,40 +290,40 @@ export default function InspectionsPage() {
                 <div style={hint}>{auto.agency ? 'Same authority as the last inspection.' : 'The authority having jurisdiction.'}</div>
               </div>
               <div style={{ gridColumn: 'span 2' }}><label style={label}>Notes</label>
-                <input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Gate code, area under inspection, permit reference..." style={inp} />
+                <input type="text" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Gate code, area under inspection, permit reference…" style={inp} />
                 <div style={hint}>Anything the inspector needs on arrival.</div>
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button onClick={handleSave} disabled={saving} style={{ ...goldButtonStyle, opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} className="pmBtn">
-                {saving ? 'Saving...' : 'Schedule Inspection'}
+                {saving ? 'Saving…' : 'Schedule Inspection'}
               </button>
               <button onClick={() => { setShowForm(false); setErrorMsg(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
             </div>
           </SectionCard>
           {ctx && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="What Saguaro Knows" icon={<ClockCounterClockwise size={17} weight="duotone" style={{ color: GOLD }} />}>
                 <InsightRow label="Project" value={`${pctComplete}% complete`} />
-                <InsightRow label="Inspections held" value={String(inspections.length)} />
-                <InsightRow label="Pass rate" value={resulted > 0 ? `${passRate}%` : '—'} accent={resulted > 0 && passRate >= 80 ? GREEN : undefined} />
-                <InsightRow label="Open punch items" value={String(openPunch)} accent={openPunch > 0 ? GOLD : undefined} />
-                <InsightRow label="Subs on the job" value={String((ctx?.subs || []).length)} />
+                <InsightRow label="Inspections Held" value={String(inspections.length)} />
+                <InsightRow label="Pass Rate" value={resulted > 0 ? `${passRate}%` : '—'} accent={resulted > 0 && passRate >= 80 ? GREEN : undefined} />
+                <InsightRow label="Open Punch Items" value={String(openPunch)} accent={openPunch > 0 ? GOLD : undefined} />
+                <InsightRow label="Subs on the Job" value={String((ctx?.subs || []).length)} />
                 {lastRecord && (
                   <>
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '8px 0' }} />
-                    <InsightRow label="Last inspection" value={lastRecord.type} />
+                    <InsightRow label="Last Inspection" value={lastRecord.type} />
                     <InsightRow label="Held" value={fmtDate(lastRecord.date)} />
                     <InsightRow label="Result" value={lastRecord.result || 'Pending'} strong />
                   </>
                 )}
               </SectionCard>
-              <SectionCard flat title="After You Schedule" icon={<CalendarCheck size={17} weight="duotone" color={GOLD} />}>
+              <SectionCard flat title="After You Schedule" icon={<CalendarCheck size={17} weight="duotone" style={{ color: GOLD }} />}>
                 <FlowSteps title="" steps={[
-                  { title: 'Inspection is on the calendar', desc: 'Saved as Scheduled with the inspector and agency of record.' },
-                  { title: 'Record the result', desc: 'Pass, fail, or conditional — checklist deficiencies are counted per inspection.' },
-                  { title: 'Failures queue a re-inspection', desc: 'A failed type stays flagged here until a later inspection of that type passes.' },
-                  { title: 'Records feed closeout', desc: 'Passed finals roll into the project closeout package.' },
+                  { title: 'Inspection Is on the Calendar', desc: 'Saved as Scheduled with the inspector and agency of record.' },
+                  { title: 'Record the Result', desc: 'Pass, fail, or conditional — checklist deficiencies are counted per inspection.' },
+                  { title: 'Failures Queue a Re-Inspection', desc: 'A failed type stays flagged here until a later inspection of that type passes.' },
+                  { title: 'Records Feed Closeout', desc: 'Passed finals roll into the project closeout package.' },
                 ]} />
               </SectionCard>
             </div>
@@ -337,7 +337,7 @@ export default function InspectionsPage() {
           module="inspections"
           search={search}
           onSearch={setSearch}
-          searchPlaceholder="Search by type, inspector, agency, or notes..."
+          searchPlaceholder="Search by type, inspector, agency, or notes…"
           filters={[
             {key:'result',label:'Result',value:filterResult,onChange:setFilterResult,allLabel:'All Results',
               options:[
@@ -355,14 +355,14 @@ export default function InspectionsPage() {
       )}
 
       {/* Records */}
-      <SectionCard title="Inspection Records" icon={<ClipboardText size={17} weight="duotone" color={GOLD} />} flush>
+      <SectionCard title="Inspection Records" icon={<ClipboardText size={17} weight="duotone" style={{ color: GOLD }} />} flush>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 40, color: DIM }}>Loading…</div>
         ) : inspections.length === 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: ctx ? 'minmax(0, 1fr) 360px' : '1fr', alignItems: 'stretch' }}>
             <PremiumEmpty
-              icon={<ClipboardText size={30} weight="duotone" color={GOLD} />}
-              title="No inspections on record"
+              icon={<ClipboardText size={30} weight="duotone" style={{ color: GOLD }} />}
+              title="No Inspections on Record"
               description={pctComplete > 0
                 ? `${ctx?.project?.name || 'This project'} is ${pctComplete}% complete — inspection records are how the work gets signed off. ${suggestedType} is the next milestone in a typical sequence.`
                 : 'Every passed inspection becomes part of the permanent project record — and failed ones are tracked until they re-pass. Schedule the first one to start the log.'}
@@ -370,17 +370,17 @@ export default function InspectionsPage() {
             />
             {ctx && (
               <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', padding: '22px 24px' }}>
-                <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: '0.09em', marginBottom: 10 }}>The Typical Sequence</div>
+                <div style={{ fontSize: 10.5, fontWeight: 900, color: 'rgba(255,255,255,0.45)', marginBottom: 10 }}>The Typical Sequence</div>
                 {INSPECTION_TYPES.map((t, idx) => (
-                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '3.5px 0', fontSize: 12.5, color: t === suggestedType ? '#FBBF24' : DIM, fontWeight: t === suggestedType ? 700 : 400 }}>
-                    <span style={{ width: 17, height: 17, borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, background: t === suggestedType ? 'rgba(245,158,11,0.18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${t === suggestedType ? 'rgba(245,158,11,0.45)' : 'rgba(255,255,255,0.12)'}`, color: t === suggestedType ? '#FBBF24' : 'rgba(255,255,255,0.45)' }}>{idx + 1}</span>
+                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '3.5px 0', fontSize: 12.5, color: t === suggestedType ? 'var(--brand-primary-strong)' : DIM, fontWeight: t === suggestedType ? 700 : 400 }}>
+                    <span style={{ width: 17, height: 17, borderRadius: 999, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 800, background: t === suggestedType ? 'var(--brand-primary-18)' : 'rgba(255,255,255,0.05)', border: `1px solid ${t === suggestedType ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : 'rgba(255,255,255,0.12)'}`, color: t === suggestedType ? 'var(--brand-primary-strong)' : 'rgba(255,255,255,0.45)' }}>{idx + 1}</span>
                     {t}
                   </div>
                 ))}
                 <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '10px 0' }} />
-                <InsightRow label="Project progress" value={`${pctComplete}%`} />
-                <InsightRow label="Open punch items" value={String(openPunch)} accent={openPunch > 0 ? GOLD : undefined} />
-                <InsightRow label="Subs on the job" value={String((ctx?.subs || []).length)} />
+                <InsightRow label="Project Progress" value={`${pctComplete}%`} />
+                <InsightRow label="Open Punch Items" value={String(openPunch)} accent={openPunch > 0 ? GOLD : undefined} />
+                <InsightRow label="Subs on the Job" value={String((ctx?.subs || []).length)} />
               </div>
             )}
           </div>
@@ -390,7 +390,7 @@ export default function InspectionsPage() {
               <thead>
                 <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
                   {['Type','Date','Inspector','Agency','Result','Deficiencies','Notes','Status'].map(h => (
-                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: DIM, borderBottom: '1px solid ' + BORDER, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -407,10 +407,10 @@ export default function InspectionsPage() {
                     <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                       {resultBadge(i.result)}
                       {awaitingReinspection.some(f => f.id === i.id) && (
-                        <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.06em', color: '#fca5a5' }}>RE-INSPECT</span>
+                        <span style={{ marginLeft: 6, fontSize: 9.5, fontWeight: 800, color: '#fca5a5' }}>Re-Inspect</span>
                       )}
                     </td>
-                    <td style={{ padding: '10px 14px', color: (Number(i.deficiency_count) || 0) > 0 ? '#F0A63C' : DIM, fontWeight: (Number(i.deficiency_count) || 0) > 0 ? 700 : 400 }}>
+                    <td style={{ padding: '10px 14px', color: (Number(i.deficiency_count) || 0) > 0 ? 'var(--warning)' : DIM, fontWeight: (Number(i.deficiency_count) || 0) > 0 ? 700 : 400 }}>
                       {(Number(i.deficiency_count) || 0) > 0 ? i.deficiency_count : '—'}
                     </td>
                     <td style={{ padding: '10px 14px', color: DIM }}>{i.notes || '—'}</td>

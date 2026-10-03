@@ -21,7 +21,7 @@ import { moduleAccent } from '@/lib/module-identity';
 import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 
 const ACCENT = moduleAccent('schedule'); // sage — chips, eyebrow, section markers only
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#FFFFFF';
 const DIM = 'rgba(255,255,255,0.62)';
 const FAINT = 'rgba(255,255,255,0.45)';
@@ -126,8 +126,8 @@ export default function ScheduleTaskDetailPage() {
     </button>
   );
   const fieldLabelStyle: React.CSSProperties = {
-    fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase',
-    letterSpacing: '0.09em', color: FAINT, marginBottom: 5,
+    fontSize: 10.5, fontWeight: 800,
+    color: FAINT, marginBottom: 5,
   };
   const fieldValueStyle: React.CSSProperties = {
     fontSize: 13.5, color: TEXT, wordBreak: 'break-word',
@@ -201,8 +201,8 @@ export default function ScheduleTaskDetailPage() {
         aux={
           <span style={{
             display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999,
-            fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
-            background: `${cfg.color}1F`, border: `1px solid ${cfg.color}59`, color: cfg.color,
+            fontSize: 10.5, fontWeight: 800,
+            background: `color-mix(in srgb, ${cfg.color} 12%, transparent)`, border: `1px solid color-mix(in srgb, ${cfg.color} 35%, transparent)`, color: cfg.color,
           }}>
             {cfg.label}
           </span>
@@ -220,7 +220,7 @@ export default function ScheduleTaskDetailPage() {
       {/* Timeline band */}
       <StatStrip items={[
         {href: '/app/schedule',  label: 'Start Date', value: dateStr(t.start_date), icon: <CalendarBlank size={12} weight="fill" color={ACCENT.hex} /> },
-        {href: '/app/schedule',  label: 'End Date', value: dateStr(t.end_date), accent: overdue ? RED : undefined, sub: overdue ? 'overdue' : undefined, icon: <CalendarBlank size={12} weight="fill" color={ACCENT.hex} /> },
+        {href: '/app/schedule', label: 'End Date', value: dateStr(t.end_date), accent: overdue ? RED : undefined, sub: overdue ? 'Overdue' : undefined, icon: <CalendarBlank size={12} weight="fill" color={ACCENT.hex} /> },
         {href: '/app/schedule',  label: 'Duration', value: t.duration != null ? `${Number(t.duration) || 0}d` : '—', icon: <ChartBar size={12} weight="fill" color={ACCENT.hex} /> },
         {href: '/app/schedule',  label: '% Complete', value: `${pct}%`, accent: GOLD, icon: <ChartBar size={12} weight="fill" color={ACCENT.hex} /> },
         {href: '/app/schedule',  label: 'Status', value: cfg.label, accent: cfg.color, icon: <ClipboardText size={12} weight="fill" color={ACCENT.hex} /> },

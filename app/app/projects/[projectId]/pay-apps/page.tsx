@@ -17,8 +17,8 @@ import { ANCHOR_PAY_APPS_DUE } from '@/lib/suggestions';
 import { ScribbleNote } from '@/components/Scribble';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
-const SAGE='#45B37D',AMBER='#F0A63C';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A';
+const SAGE='#45B37D',AMBER='var(--warning)';
 // MONEY: several DB numerics round-trip as strings — coerce before any math/format.
 const fmt = (n:number|string|null|undefined) => '$'+((Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
 
@@ -27,13 +27,13 @@ function statusBadge(s:string){
     draft:      {c:'#CBD5E1',bg:'rgba(148,163,184,.14)'},
     submitted:  {c:'#4a9de8',bg:'rgba(74,157,232,.14)'},
     approved:   {c:'#3dd68c',bg:'rgba(26,138,74,.14)'},
-    certified:  {c:GOLD,    bg:'rgba(245, 158, 11,.14)'},
+    certified:  {c:GOLD,    bg:'var(--brand-primary-12)'},
     paid:       {c:'#3dd68c',bg:'rgba(26,138,74,.14)'},
   };
   const st = map[s]||{c:DIM,bg:'rgba(143,163,192,.12)'};
   return (
-    <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c,textTransform:'uppercase' as const,letterSpacing:.3}}>
-      {s}
+    <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:4,background:st.bg,color:st.c}}>
+      {s.charAt(0).toUpperCase()+s.slice(1)}
     </span>
   );
 }
@@ -134,7 +134,7 @@ export default function PayAppsPage() {
     }
     setPayApps(prev => prev.map(p => bulkSelected.has(p.id) ? { ...p, status: 'approved' } : p));
     setBulkSelected(new Set());
-    setToast({ msg: `${bulkSelected.size} pay app(s) approved`, type: 'success' });
+    setToast({ msg: `${bulkSelected.size} pay app(s) approved.`, type: 'success' });
   };
 
   const handleBulkExport = async () => {
@@ -218,7 +218,7 @@ export default function PayAppsPage() {
     try {
       const r = await fetch(`/api/pay-apps/${id}`, { method: 'DELETE' });
       if (!r.ok) throw new Error('delete failed');
-      setToast({ msg: 'Pay app deleted', type: 'success' });
+      setToast({ msg: 'Pay app deleted.', type: 'success' });
     } catch {
       setToast({ msg: 'Could not delete the pay app. Please try again.', type: 'error' });
       load();
@@ -275,12 +275,12 @@ export default function PayAppsPage() {
 
       {/* Header */}
       <ModuleHero
-        eyebrow="AIA BILLING"
+        eyebrow="AIA Billing"
         eyebrowIcon={<Receipt size={13} weight="fill" color={moduleAccent('payapps').hex} />}
         title="Pay"
         accent="Applications"
         subtitle="AIA G702/G703 — Application and Certificate for Payment"
-          note="retainage comes off the top"
+          note="Retainage comes off the top"
         actions={
           <Link data-tour="new-pay-app"
             href={`/app/projects/${projectId}/pay-apps/new`}
@@ -297,10 +297,10 @@ export default function PayAppsPage() {
         <StatStrip items={[
           {href: `/app/projects/${projectId}/contracts`, label:'Original Contract', value:fmt(original), sub:'G702 line 1'},
           {href: `/app/projects/${projectId}/change-orders`, label:'Approved COs', value:(coTotal>=0?'+':'')+fmt(coTotal), accent:coTotal>0?'#3dd68c':undefined, sub:`${Number(money?.approvedCoCount)||0} approved${Number(money?.pendingCoCount)?` · ${money.pendingCoCount} pending`:''}`},
-          {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'contract sum to date'},
+          {href: `/app/projects/${projectId}/contracts`, label:'Revised Contract', value:fmt(revised), sub:'Contract sum to date'},
           {href: `/app/projects/${projectId}/pay-apps`, label:'Billed to Date', value:fmt(ctxBilled), sub:`${Number(money?.billedPct)||0}% of revised`},
-          {href: `/app/projects/${projectId}/pay-apps`, label:'Retainage Held', value:fmt(retainageHeld), sub:`held to date · ${Number(money?.retainagePct)||10}% per contract`},
-          {href: `/app/projects/${projectId}/pay-apps`, label:'Paid to Date', value:fmt(ctxPaid), accent:ctxPaid>0?'#3dd68c':undefined, sub:outstandingCertified>0?`${fmt(outstandingCertified)} certified, unpaid`:'all certified money collected'},
+          {href: `/app/projects/${projectId}/pay-apps`, label:'Retainage Held', value:fmt(retainageHeld), sub:`Held to date · ${Number(money?.retainagePct)||10}% per contract`},
+          {href: `/app/projects/${projectId}/pay-apps`, label:'Paid to Date', value:fmt(ctxPaid), accent:ctxPaid>0?'#3dd68c':undefined, sub:outstandingCertified>0?`${fmt(outstandingCertified)} certified, unpaid`:'All certified money collected'},
         ]}/>
       )}
 
@@ -316,25 +316,25 @@ export default function PayAppsPage() {
         <StatCard
           icon={<ClipboardText size={19} weight="duotone" color={moduleAccent('payapps').hex} />}
           label="Total Apps" value={String(payApps.length)} accent={GOLD}
-          sub={money?.lastPayApp?`latest #${money.lastPayApp.appNumber} · ${String(money.lastPayApp.status||'draft').replace(/_/g,' ')}`:(payApps.length===1?'1 application':`${payApps.length} applications`)} delay={0.02}
+          sub={money?.lastPayApp?`Latest #${money.lastPayApp.appNumber} · ${String(money.lastPayApp.status||'draft').replace(/_/g,' ')}`:(payApps.length===1?'1 application':`${payApps.length} applications`)} delay={0.02}
          href={`/app/projects/${projectId}/pay-apps`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={SAGE} />}
           label="Total Certified" value={fmt(totalCertified)} accent={SAGE}
-          sub={ctxPaid>0?`${fmt(ctxPaid)} of it collected`:'approved / paid'} delay={0.06}
+          sub={ctxPaid>0?`${fmt(ctxPaid)} of it collected`:'Approved / paid'} delay={0.06}
          href={`/app/projects/${projectId}/pay-apps`}/>
         <StatCard
           icon={<FileText size={19} weight="duotone" color={waiverTotals.total>0&&waiverTotals.signed===waiverTotals.total?SAGE:AMBER} />}
           label="Lien Waivers" value={waiverTotals.total>0?`${waiverTotals.signed}/${waiverTotals.total}`:'—'}
           accent={waiverTotals.total>0?(waiverTotals.signed===waiverTotals.total?SAGE:AMBER):undefined}
-          sub={waiverTotals.total>0?'signed — payment is waiver-gated':'generate at owner approval'} delay={0.10}
+          sub={waiverTotals.total>0?'Signed — payment is waiver-gated':'Generate at owner approval'} delay={0.10}
          href={`/app/projects/${projectId}/lien-waivers`}/>
         <StatCard
           icon={<Hourglass size={19} weight="duotone" color={AMBER} />}
           label="Pending Approval"
           value={String(pendingApproval)}
           accent={pendingApproval>0?AMBER:undefined}
-          sub={pendingApproval>0?'awaiting owner sign-off':'nothing awaiting the owner'} delay={0.14}
+          sub={pendingApproval>0?'Awaiting owner sign-off':'Nothing awaiting the owner'} delay={0.14}
          href={`/app/projects/${projectId}/pay-apps`}/>
       </div>
 
@@ -371,16 +371,16 @@ export default function PayAppsPage() {
             />
             {ctx && (
               <div style={{borderLeft:'1px solid rgba(255,255,255,0.08)',padding:'22px 24px'}}>
-                <FlowSteps title="How G702 billing works" steps={[
-                  {title:'Build the SOV & bill the period',desc:'Scheduled values, work completed, stored materials — retainage and payment due compute themselves.'},
-                  {title:'Submit to the owner',desc:'The G702/G703 packet goes out with a one-click owner approval link.'},
-                  {title:'Approval generates lien waivers',desc: subCount>0?`Conditional waivers for your ${subCount} sub${subCount===1?'':'s'}, each sized to their share of the period.`:'Conditional waivers for every sub on the job, sized to their share of the period.'},
-                  {title:'Payment is waiver-gated',desc:'Mark Paid is blocked until required waivers are signed — then paid-to-date and retainage update the ledger.'},
+                <FlowSteps title="How G702 Billing Works" steps={[
+                  {title:'Build the SOV & Bill the Period',desc:'Scheduled values, work completed, stored materials — retainage and payment due compute themselves.'},
+                  {title:'Submit to the Owner',desc:'The G702/G703 packet goes out with a one-click owner approval link.'},
+                  {title:'Approval Generates Lien Waivers',desc: subCount>0?`Conditional waivers for your ${subCount} sub${subCount===1?'':'s'}, each sized to their share of the period.`:'Conditional waivers for every sub on the job, sized to their share of the period.'},
+                  {title:'Payment Is Waiver-Gated',desc:'Mark Paid is blocked until required waivers are signed — then paid-to-date and retainage update the ledger.'},
                 ]}/>
                 <div style={{height:1,background:'rgba(255,255,255,0.08)',margin:'16px 0 10px'}}/>
-                <InsightRow label="Revised contract" value={fmt(revised)} strong/>
-                <InsightRow label="Retainage rate" value={`${Number(money?.retainagePct)||10}%`}/>
-                <InsightRow label="Subs on the job" value={String(subCount)}/>
+                <InsightRow label="Revised Contract" value={fmt(revised)} strong/>
+                <InsightRow label="Retainage Rate" value={`${Number(money?.retainagePct)||10}%`}/>
+                <InsightRow label="Subs on the Job" value={String(subCount)}/>
               </div>
             )}
           </div>
@@ -396,10 +396,10 @@ export default function PayAppsPage() {
           <div style={{overflowX:'auto',padding:16}}>
             {/* Bulk action bar */}
             {bulkSelected.size > 0 && (
-              <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',background:'rgba(245, 158, 11,0.08)',border:`1px solid rgba(245, 158, 11,0.2)`,borderRadius:8,marginBottom:12}}>
+              <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 16px',background:'var(--brand-primary-08)',border:`1px solid var(--brand-primary-18)`,borderRadius:8,marginBottom:12}}>
                 <span style={{color:GOLD,fontWeight:700,fontSize:13}}>{bulkSelected.size} selected</span>
                 <button onClick={handleBulkApprove} style={{padding:'6px 14px',background:'rgba(34,197,94,0.15)',border:'1px solid rgba(34,197,94,0.3)',borderRadius:6,color:'#22C55E',fontSize:12,fontWeight:700,cursor:'pointer'}}><CheckCircle size={13} weight="fill" color="#22C55E" style={{verticalAlign:'middle'}} /> Approve All</button>
-                <button onClick={handleBulkExport} style={{padding:'6px 14px',background:'rgba(245, 158, 11,0.15)',border:`1px solid rgba(245, 158, 11,0.3)`,borderRadius:6,color:GOLD,fontSize:12,fontWeight:700,cursor:'pointer'}}><FileText size={13} color={GOLD} style={{verticalAlign:'middle'}} /> Export All PDFs</button>
+                <button onClick={handleBulkExport} style={{padding:'6px 14px',background:'var(--brand-primary-18)',border:`1px solid var(--brand-primary-25)`,borderRadius:6,color:GOLD,fontSize:12,fontWeight:700,cursor:'pointer'}}><FileText size={13} color={GOLD} style={{verticalAlign:'middle'}} /> Export All PDFs</button>
                 <button onClick={()=>setBulkSelected(new Set())} style={{padding:'6px 14px',background:RAISED,border:`1px solid ${BORDER}`,borderRadius:6,color:DIM,fontSize:12,cursor:'pointer'}}>Clear</button>
               </div>
             )}
@@ -428,7 +428,7 @@ export default function PayAppsPage() {
                     key={pa.id}
                     onClick={()=>router.push(`/app/projects/${projectId}/pay-apps/${pa.id}`)}
                     style={{borderBottom:`1px solid rgba(229,229,234,.5)`,cursor:'pointer',transition:'background .15s',opacity:!sort&&draggingIndex===idx?0.5:1}}
-                    onMouseEnter={e=>(e.currentTarget.style.background='rgba(245, 158, 11,.06)')}
+                    onMouseEnter={e=>(e.currentTarget.style.background='var(--brand-primary-08)')}
                     onMouseLeave={e=>(e.currentTarget.style.background='')}
                     {...(handlers||{})}
                   >
@@ -465,7 +465,7 @@ export default function PayAppsPage() {
                       ) : (
                         <div style={{display:'flex',alignItems:'center',gap:4}}>
                           <span style={{color:TEXT,fontWeight:700}}>{fmt(pa.current_payment_due||0)}</span>
-                          {copiedId===pa.id&&<span style={{fontSize:10,color:'#3dd68c',fontWeight:600}}>Copied!</span>}
+                          {copiedId===pa.id&&<span style={{fontSize:10,color:'#3dd68c',fontWeight:600}}>Copied</span>}
                           <button onClick={()=>openPayMenu(pa.id)} style={{background:'none',border:'none',color:DIM,cursor:'pointer',fontSize:10,padding:'2px 4px',lineHeight:1,opacity:0.6}} onMouseEnter={e=>(e.currentTarget.style.opacity='1')} onMouseLeave={e=>(e.currentTarget.style.opacity='0.6')}><span style={{display:'inline-flex',verticalAlign:'middle'}}><CaretDown size={12} color={DIM} /></span></button>
                           {menuId===pa.id&&(
                             <div style={{position:'absolute',top:36,right:14,background:RAISED,border:`1px solid ${BORDER}`,borderRadius:'var(--radius-md)',padding:6,zIndex:100,minWidth:150,boxShadow:'var(--shadow-lg)'}}>

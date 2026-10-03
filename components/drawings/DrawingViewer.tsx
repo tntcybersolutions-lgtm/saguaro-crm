@@ -32,12 +32,12 @@ import { measureCondition } from '@/lib/takeoff/measure';
 import { ASSEMBLY_MENU } from '@/lib/takeoff/assemblies';
 
 /* ── palette (machined dark; brand accent rides the white-label token) ──── */
-const RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1';
+const RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1';
 const CANVAS_BG = '#0b0e13';
-const ACCENT = 'var(--brand-primary, #F59E0B)';
-const ACCENT_12 = 'var(--brand-primary-12, rgba(245,158,11,0.12))';
-const ACCENT_25 = 'var(--brand-primary-25, rgba(245,158,11,0.25))';
-const RED = '#EF4444', GREEN = '#22C55E', AMBER = '#F59E0B';
+const ACCENT = 'var(--brand-primary)';
+const ACCENT_12 = 'var(--brand-primary-12, var(--brand-primary-12))';
+const ACCENT_25 = 'var(--brand-primary-25, var(--brand-primary-25))';
+const RED = '#EF4444', GREEN = '#22C55E', AMBER = 'var(--warning)';
 const INK_COLORS = ['#EF4444', '#F97316', '#FBBF24', '#22C55E', '#38BDF8', '#A78BFA', '#EC4899', '#FFFFFF'];
 const CATEGORY_COLORS: Record<string, string> = { RFI: '#38BDF8', Punch: '#EF4444', Safety: '#FBBF24', Other: '#CBD5E1' };
 
@@ -161,7 +161,7 @@ const TOOLS: { t: Tool; g: Glyph; label: string; key?: string; hint: string }[] 
   { t: 'measure', g: 'measure', label: 'Measure', key: 'M', hint: 'Pick Linear, Area, or Count, then click points. Calibrate the sheet for real feet.' },
   { t: 'stamp',   g: 'stamp',   label: 'Stamp',  hint: 'Pick a stamp, then click to place it. PUNCH creates a punch item + pin.' },
   { t: 'pin',     g: 'pin',     label: 'Pin',    hint: 'Click to drop a categorized field pin.' },
-  { t: 'eraser',  g: 'eraser',  label: 'Erase',  hint: 'Click one of YOUR markups to delete it.' },
+  { t: 'eraser',  g: 'eraser',  label: 'Erase',  hint: 'Click one of your markups to delete it.' },
 ];
 
 type UndoAction = {
@@ -171,7 +171,7 @@ type UndoAction = {
   row?: MarkupRow;
 };
 
-const inp: React.CSSProperties = { width: '100%', background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '11px 14px', color: TEXT, fontSize: 15, outline: 'none', boxSizing: 'border-box' };
+const inp: React.CSSProperties = { width: '100%', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '11px 14px', color: TEXT, fontSize: 15, outline: 'none', boxSizing: 'border-box' };
 const panelStyle: React.CSSProperties = { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 14, marginTop: 10 };
 
 export default function DrawingViewer({ projectId, drawing, me, online, initialPin }: Props) {
@@ -957,7 +957,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       }), punchColor);
 
       setPunchModal(null);
-      showToast(`Punch created — "${title}"`, `/app/projects/${projectId}/punch-list`, 'Open punch list');
+      showToast(`Punch created — "${title}"`, `/app/projects/${projectId}/punch-list`, 'Open Punch List');
     } catch (e) {
       console.error('[DrawingViewer] punch trio failed:', e);
       setPunchModal((m) => (m ? { ...m, saving: false } : m));
@@ -1287,7 +1287,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
         if (tool === 'measure' && measureMode === 'count' && measurePtsRef.current.length) { commitMeasurePts(); return; }
         if (measurePtsRef.current.length || calibPts.length || penRef.current.length || dragShapeRef.current) {
           setMeasurePts([]); setCalibPts([]); penRef.current = []; dragShapeRef.current = null; setDragShape(null); setPenTick((t) => t + 1);
-          setMsg('Cancelled.');
+          setMsg('Canceled.');
           return;
         }
         setSelId(null); setSelectedPin(null);
@@ -1804,7 +1804,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
               }} />
             ))}
             <span style={{ fontSize: 11, color: DIM, marginLeft: 6 }}>Width</span>
-            <input type="range" min={1} max={10} value={inkWidth} onChange={(e) => setInkWidth(Number(e.target.value))} style={{ width: 80, accentColor: 'var(--brand-primary, #F59E0B)' }} />
+            <input type="range" min={1} max={10} value={inkWidth} onChange={(e) => setInkWidth(Number(e.target.value))} style={{ width: 80, accentColor: 'var(--brand-primary)' }} />
             {tool === 'measure' && (
               <div style={{ display: 'inline-flex', border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden', marginLeft: 10 }}>
                 {MEASURE_MODES.map((mm, i) => (
@@ -1955,7 +1955,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {/* author layers */}
       {authors.length > 0 && (
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 4 }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: DIM }}>
             <G g="layers" s={13} /> Layers
           </span>
           {authors.map(([name, count]) => {
@@ -2019,7 +2019,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             ) : (
               <div style={{ display: 'flex', gap: 6 }}>
                 <input value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Add a comment…" style={{ ...inp, fontSize: 12, padding: '8px 10px' }} onKeyDown={(e) => { if (e.key === 'Enter') submitComment(); }} />
-                <button onClick={submitComment} disabled={postingComment || !commentText.trim()} style={{ background: commentText.trim() ? 'var(--brand-primary, #F59E0B)' : 'transparent', border: `1px solid ${commentText.trim() ? 'var(--brand-primary, #F59E0B)' : BORDER}`, borderRadius: 8, padding: '6px 12px', color: commentText.trim() ? '#241500' : DIM, fontSize: 12, fontWeight: 700, cursor: commentText.trim() ? 'pointer' : 'default', flexShrink: 0 }}>
+                <button onClick={submitComment} disabled={postingComment || !commentText.trim()} style={{ background: commentText.trim() ? 'var(--brand-primary)' : 'transparent', border: `1px solid ${commentText.trim() ? 'var(--brand-primary)' : BORDER}`, borderRadius: 8, padding: '6px 12px', color: commentText.trim() ? '#0A0A00' : DIM, fontSize: 12, fontWeight: 700, cursor: commentText.trim() ? 'pointer' : 'default', flexShrink: 0 }}>
                   {postingComment ? '…' : 'Post'}
                 </button>
               </div>
@@ -2034,7 +2034,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           <button onClick={() => setSelectedPin(null)} style={{ ...iconBtn, position: 'absolute', top: 10, right: 10, border: 'none' }}><G g="close" s={15} /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, paddingRight: 32 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: CATEGORY_COLORS[selectedPin.category || ''] || DIM }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: CATEGORY_COLORS[selectedPin.category || ''] || DIM, textTransform: 'uppercase' }}>{selectedPin.category || selectedPin.pin_type || 'Pin'}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: CATEGORY_COLORS[selectedPin.category || ''] || DIM }}>{selectedPin.category || selectedPin.pin_type || 'Pin'}</span>
             <span style={{ fontSize: 11, color: DIM, marginLeft: 'auto' }}>{relTime(selectedPin.created_at)}</span>
           </div>
           <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: TEXT }}>{selectedPin.title}</p>
@@ -2050,7 +2050,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {/* pin form */}
       {pendingPin && (
         <form onSubmit={submitPin} style={panelStyle}>
-          <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: TEXT }}>Drop a pin</p>
+          <p style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: TEXT }}>Drop a Pin</p>
           <div style={{ marginBottom: 10 }}>
             <label style={{ display: 'block', fontSize: 12, color: DIM, marginBottom: 4 }}>Title *</label>
             <input value={pinTitle} onChange={(e) => setPinTitle(e.target.value)} placeholder="e.g. Missing anchor bolt" style={inp} required autoFocus />
@@ -2073,8 +2073,8 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button type="button" onClick={() => setPendingPin(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '12px', color: DIM, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
-            <button type="submit" disabled={savingPin} style={{ flex: 2, background: savingPin ? 'rgba(255,255,255,0.12)' : 'var(--brand-primary, #F59E0B)', border: 'none', borderRadius: 10, padding: '12px', color: savingPin ? DIM : '#241500', fontSize: 14, fontWeight: 800, cursor: savingPin ? 'wait' : 'pointer' }}>
-              {savingPin ? 'Saving…' : 'Save pin'}
+            <button type="submit" disabled={savingPin} style={{ flex: 2, background: savingPin ? 'rgba(255,255,255,0.12)' : 'var(--brand-primary)', border: 'none', borderRadius: 10, padding: '12px', color: savingPin ? DIM : '#0A0A00', fontSize: 14, fontWeight: 800, cursor: savingPin ? 'wait' : 'pointer' }}>
+              {savingPin ? 'Saving…' : 'Save Pin'}
             </button>
           </div>
         </form>
@@ -2083,7 +2083,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {/* text / callout modal */}
       {textModal && (
         <div style={{ ...panelStyle, borderColor: ACCENT_25 }}>
-          <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: TEXT }}>{textModal.from ? 'Callout text' : 'Text note'}</p>
+          <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: TEXT }}>{textModal.from ? 'Callout Text' : 'Text Note'}</p>
           <textarea
             value={textModal.value}
             onChange={(e) => setTextModal((m) => (m ? { ...m, value: e.target.value } : m))}
@@ -2095,7 +2095,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           />
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
             <button onClick={() => setTextModal(null)} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px', color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={confirmText} disabled={!textModal.value.trim()} style={{ flex: 2, background: textModal.value.trim() ? 'var(--brand-primary, #F59E0B)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: textModal.value.trim() ? '#241500' : DIM, fontSize: 13, fontWeight: 800, cursor: textModal.value.trim() ? 'pointer' : 'default' }}>Place</button>
+            <button onClick={confirmText} disabled={!textModal.value.trim()} style={{ flex: 2, background: textModal.value.trim() ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: textModal.value.trim() ? '#0A0A00' : DIM, fontSize: 13, fontWeight: 800, cursor: textModal.value.trim() ? 'pointer' : 'default' }}>Place</button>
           </div>
         </div>
       )}
@@ -2105,7 +2105,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
         <div style={{ ...panelStyle, border: `1.5px solid ${CATEGORY_COLORS.Punch}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <span style={{ background: 'rgba(239,68,68,0.14)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 5, padding: '3px 9px', fontSize: 11, fontWeight: 800, letterSpacing: 1, color: CATEGORY_COLORS.Punch }}>PUNCH</span>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>New punch item from this drawing</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>New Punch Item from This Drawing</p>
           </div>
           <label style={{ display: 'block', fontSize: 12, color: DIM, marginBottom: 4 }}>Title *</label>
           <input
@@ -2122,7 +2122,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button onClick={() => setPunchModal(null)} disabled={punchModal.saving} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px', color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
             <button onClick={confirmPunch} disabled={punchModal.saving || !punchModal.title.trim()} style={{ flex: 2, background: punchModal.title.trim() && !punchModal.saving ? CATEGORY_COLORS.Punch : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: punchModal.title.trim() && !punchModal.saving ? '#fff' : DIM, fontSize: 13, fontWeight: 800, cursor: punchModal.title.trim() && !punchModal.saving ? 'pointer' : 'default' }}>
-              {punchModal.saving ? 'Creating…' : 'Create punch'}
+              {punchModal.saving ? 'Creating…' : 'Create Punch'}
             </button>
           </div>
         </div>
@@ -2131,7 +2131,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
       {/* calibration distance modal */}
       {calibModal && (
         <div style={{ ...panelStyle, borderColor: ACCENT_25 }}>
-          <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: TEXT }}>Known distance between the two points</p>
+          <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: TEXT }}>Known Distance Between the Two Points</p>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input
               value={calibModal.ft}
@@ -2146,7 +2146,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button onClick={() => { setCalibModal(null); setCalibPts([]); setTool('measure'); }} style={{ flex: 1, background: 'transparent', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px', color: DIM, fontSize: 13, cursor: 'pointer' }}>Cancel</button>
-            <button onClick={confirmCalibration} disabled={!(parseFloat(calibModal.ft) > 0)} style={{ flex: 2, background: parseFloat(calibModal.ft) > 0 ? 'var(--brand-primary, #F59E0B)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: parseFloat(calibModal.ft) > 0 ? '#241500' : DIM, fontSize: 13, fontWeight: 800, cursor: parseFloat(calibModal.ft) > 0 ? 'pointer' : 'default' }}>Set scale</button>
+            <button onClick={confirmCalibration} disabled={!(parseFloat(calibModal.ft) > 0)} style={{ flex: 2, background: parseFloat(calibModal.ft) > 0 ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: parseFloat(calibModal.ft) > 0 ? '#0A0A00' : DIM, fontSize: 13, fontWeight: 800, cursor: parseFloat(calibModal.ft) > 0 ? 'pointer' : 'default' }}>Set Scale</button>
           </div>
         </div>
       )}
@@ -2179,9 +2179,9 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                     checked={r.include && calibrated}
                     disabled={!calibrated}
                     onChange={(e) => setPromoteModal((rows) => rows ? rows.map((x, i) => (i === idx ? { ...x, include: e.target.checked } : x)) : rows)}
-                    style={{ accentColor: 'var(--brand-primary, #F59E0B)', width: 16, height: 16, flexShrink: 0 }}
+                    style={{ accentColor: 'var(--brand-primary)', width: 16, height: 16, flexShrink: 0 }}
                   />
-                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 0.8, textTransform: 'uppercase', color: DIM, border: `1px solid ${BORDER}`, borderRadius: 5, padding: '2px 7px', flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: DIM, border: `1px solid ${BORDER}`, borderRadius: 5, padding: '2px 7px', flexShrink: 0, textTransform: 'capitalize' }}>
                     {r.kind}
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: calibrated ? GREEN : AMBER, whiteSpace: 'nowrap', flexShrink: 0, minWidth: 76 }}>
@@ -2205,7 +2205,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                       </select>
                     </>
                   ) : (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: AMBER }}>calibrate first</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: AMBER }}>Calibrate First</span>
                   )}
                 </div>
               );
@@ -2219,9 +2219,9 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                 <button
                   onClick={confirmPromote}
                   disabled={!n}
-                  style={{ flex: 2, background: n ? 'var(--brand-primary, #F59E0B)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: n ? '#241500' : DIM, fontSize: 13, fontWeight: 800, cursor: n ? 'pointer' : 'default' }}
+                  style={{ flex: 2, background: n ? 'var(--brand-primary)' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 10, padding: '10px', color: n ? '#0A0A00' : DIM, fontSize: 13, fontWeight: 800, cursor: n ? 'pointer' : 'default' }}
                 >
-                  {n ? `Send ${n} to Takeoff` : 'Nothing selected'}
+                  {n ? `Send ${n} to Takeoff` : 'Nothing Selected'}
                 </button>
               );
             })()}
@@ -2235,7 +2235,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           <button onClick={() => setShareOpen(false)} style={{ ...iconBtn, position: 'absolute', top: 10, right: 10, border: 'none' }} title="Close"><G g="close" s={15} /></button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, paddingRight: 32 }}>
             <G g="share" s={16} />
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>Share for review — {drawing.sheet || drawing.name || 'this drawing'}</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: TEXT }}>Share for Review — {drawing.sheet || drawing.name || 'this drawing'}</p>
           </div>
           <p style={{ margin: '0 0 10px', fontSize: 12, color: DIM }}>
             Anyone with a link sees this drawing and its markups, read-only — no sign-in, no editing. Revoke a link to cut off access instantly.
@@ -2251,9 +2251,9 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
             <button
               onClick={createShareLink}
               disabled={shareBusy}
-              style={{ background: shareBusy ? 'rgba(255,255,255,0.08)' : 'var(--brand-primary, #F59E0B)', border: 'none', borderRadius: 10, padding: '8px 14px', color: shareBusy ? DIM : '#241500', fontSize: 12, fontWeight: 800, cursor: shareBusy ? 'wait' : 'pointer', flexShrink: 0 }}
+              style={{ background: shareBusy ? 'rgba(255,255,255,0.08)' : 'var(--brand-primary)', border: 'none', borderRadius: 10, padding: '8px 14px', color: shareBusy ? DIM : '#0A0A00', fontSize: 12, fontWeight: 800, cursor: shareBusy ? 'wait' : 'pointer', flexShrink: 0 }}
             >
-              {shareBusy ? 'Creating…' : 'Create link'}
+              {shareBusy ? 'Creating…' : 'Create Link'}
             </button>
           </div>
           {shareCreated && (
@@ -2271,7 +2271,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
           )}
           {shareLinks.length > 0 && (
             <div style={{ marginTop: 12, paddingTop: 10, borderTop: `1px solid ${BORDER}` }}>
-              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.8 }}>Active links</p>
+              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: DIM }}>Active Links</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {shareLinks.map((l) => {
                   const url = reviewUrl(l);
@@ -2279,7 +2279,7 @@ export default function DrawingViewer({ projectId, drawing, me, online, initialP
                     <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(11,14,19,0.55)', border: `1px solid ${BORDER}`, borderRadius: 10, padding: '7px 10px' }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {l.label || 'Review link'}
+                          {l.label || 'Review Link'}
                         </p>
                         <p style={{ margin: '1px 0 0', fontSize: 11, color: DIM, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {l.created_at ? `created ${relTime(l.created_at)}` : 'active'}{l.expires_at ? ` · expires ${relTime(l.expires_at)}` : ''}

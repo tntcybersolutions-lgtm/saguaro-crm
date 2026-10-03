@@ -14,9 +14,9 @@ import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { StatusPill } from '@/components/ui/Status';
 
 /* ───── PALETTE ───── */
-const GOLD = '#F59E0B', BG = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)',
+const GOLD = 'var(--brand-primary)', BG = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)',
   TEXT = '#FFFFFF', DIM = '#CBD5E1', GREEN = '#22C55E', RED = '#EF4444',
-  AMBER = '#F59E0B', BLUE = '#F59E0B', PURPLE = '#8B5CF6';
+  AMBER = 'var(--warning)', BLUE = 'var(--brand-primary)', PURPLE = '#8B5CF6';
 
 /* ───── TYPES ───── */
 interface WarrantyClaim {
@@ -99,9 +99,9 @@ const css = {
   row: { display: 'flex', gap: 16, flexWrap: 'wrap' as const } as React.CSSProperties,
   stat: (accent: string) => ({ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '16px 20px', flex: '1 1 160px', borderLeft: `4px solid ${accent}` }) as React.CSSProperties,
   statVal: { fontSize: 28, fontWeight: 700, color: TEXT } as React.CSSProperties,
-  statLbl: { fontSize: 12, color: DIM, marginTop: 4, textTransform: 'uppercase' as const, letterSpacing: 1 } as React.CSSProperties,
-  badge: (c: string) => ({ display: 'inline-block', padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: c + '22', color: c, border: `1px solid ${c}44`, textTransform: 'capitalize' as const }) as React.CSSProperties,
-  btn: (bg: string) => ({ padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13, color: '#FFF', background: bg, transition: 'opacity .15s' }) as React.CSSProperties,
+  statLbl: { fontSize: 12, color: DIM, marginTop: 4} as React.CSSProperties,
+  badge: (c: string) => ({ display: 'inline-block', padding: '2px 10px', borderRadius: 12, fontSize: 11, fontWeight: 600, background: `color-mix(in srgb, ${c} 13%, transparent)`, color: c, border: `1px solid color-mix(in srgb, ${c} 27%, transparent)`, textTransform: 'capitalize' as const }) as React.CSSProperties,
+  btn: (bg: string) => ({ padding: '8px 18px', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13, color: bg === GOLD || bg === AMBER ? '#0A0A00' : '#FFF', background: bg, transition: 'opacity .15s' }) as React.CSSProperties,
   btnOutline: (c: string) => ({ padding: '6px 14px', border: `1px solid ${c}`, borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 12, color: c, background: 'transparent' }) as React.CSSProperties,
   input: { width: '100%', padding: '8px 12px', borderRadius: 6, border: `1px solid ${BORDER}`, background: BG, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const } as React.CSSProperties,
   select: { width: '100%', padding: '8px 12px', borderRadius: 6, border: `1px solid ${BORDER}`, background: BG, color: TEXT, fontSize: 13, outline: 'none', boxSizing: 'border-box' as const } as React.CSSProperties,
@@ -109,17 +109,17 @@ const css = {
   label: { fontSize: 12, color: DIM, marginBottom: 4, display: 'block', fontWeight: 500 } as React.CSSProperties,
   field: { flex: '1 1 220px', marginBottom: 12 } as React.CSSProperties,
   table: { width: '100%', borderCollapse: 'collapse' as const, fontSize: 13 } as React.CSSProperties,
-  th: { textAlign: 'left' as const, padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, textTransform: 'uppercase' as const, letterSpacing: 1 } as React.CSSProperties,
-  td: { padding: '10px 12px', borderBottom: `1px solid ${BORDER}15` } as React.CSSProperties,
+  th: { textAlign: 'left' as const, padding: '10px 12px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11} as React.CSSProperties,
+  td: { padding: '10px 12px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 8%, transparent)` } as React.CSSProperties,
   trHover: { cursor: 'pointer', transition: 'background .15s' } as React.CSSProperties,
-  overlay: { position: 'fixed' as const, inset: 0, background: '#0a0a0a', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' } as React.CSSProperties,
+  overlay: { position: 'fixed' as const, inset: 0, background: 'var(--bg-base)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' } as React.CSSProperties,
   modal: { background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 12, padding: 28, width: '90%', maxWidth: 820, maxHeight: '90vh', overflowY: 'auto' as const, position: 'relative' as const } as React.CSSProperties,
   close: { position: 'absolute' as const, top: 12, right: 16, background: 'none', border: 'none', color: DIM, fontSize: 22, cursor: 'pointer' } as React.CSSProperties,
   tab: (active: boolean) => ({ padding: '8px 18px', border: 'none', borderBottom: active ? `2px solid ${GOLD}` : '2px solid transparent', background: 'transparent', color: active ? GOLD : DIM, fontWeight: active ? 700 : 500, fontSize: 13, cursor: 'pointer' }) as React.CSSProperties,
   photoThumb: { width: 64, height: 64, objectFit: 'cover' as const, borderRadius: 6, border: `1px solid ${BORDER}`, cursor: 'pointer' } as React.CSSProperties,
   timeline: { borderLeft: `2px solid ${BORDER}`, marginLeft: 8, paddingLeft: 20 } as React.CSSProperties,
   timelineDot: (c: string) => ({ width: 12, height: 12, borderRadius: '50%', background: c, position: 'absolute' as const, left: -27, top: 4 }) as React.CSSProperties,
-  expiredTag: { display: 'inline-block', padding: '2px 8px', borderRadius: 8, fontSize: 10, fontWeight: 700, background: RED + '22', color: RED, border: `1px solid ${RED}44`, marginLeft: 8 } as React.CSSProperties,
+  expiredTag: { display: 'inline-block', padding: '2px 8px', borderRadius: 8, fontSize: 10, fontWeight: 700, background: `color-mix(in srgb, ${RED} 13%, transparent)`, color: RED, border: `1px solid color-mix(in srgb, ${RED} 27%, transparent)`, marginLeft: 8 } as React.CSSProperties,
 };
 
 /* ───── COMPONENT ───── */
@@ -408,7 +408,7 @@ export default function WarrantyClaimsPage() {
         subtitle="Track, manage, and resolve warranty claims across all projects"
         actions={<>
           <select style={{ ...css.select, width: 240 }} value={selectedProject} onChange={e => setSelectedProject(e.target.value)}>
-            <option value="">Select a project...</option>
+            <option value="">Select a project…</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <button style={goldButtonStyle} className="pmBtn" onClick={() => { setForm(EMPTY_FORM); setActiveTab('create'); }}>
@@ -438,11 +438,11 @@ export default function WarrantyClaimsPage() {
         <>
           <StatStrip items={[
             {href: '/app/warranty-claims',  label: 'Claims', value: stats.total, sub: `${stats.open} open · ${stats.closed} closed` },
-            {href: '/app/warranty-claims',  label: 'Emergency', value: stats.emergency, accent: stats.emergency > 0 ? RED : undefined, sub: stats.emergency > 0 ? 'need immediate action' : 'none outstanding' },
-            {href: '/app/warranty-claims',  label: 'Avg Resolution', value: `${stats.avgDays}d`, sub: 'reported to completed' },
+            {href: '/app/warranty-claims', label: 'Emergency', value: stats.emergency, accent: stats.emergency > 0 ? RED : undefined, sub: stats.emergency > 0 ? 'Need immediate action' : 'None outstanding' },
+            {href: '/app/warranty-claims', label: 'Avg Resolution', value: `${stats.avgDays}d`, sub: 'Reported to completed' },
             {href: '/app/warranty-claims',  label: 'Warranty Cost', value: `$${(Number(stats.totalCost) || 0).toLocaleString()}`, sub: `${claims.filter(c => c.covered_under_warranty).length} covered · ${claims.filter(c => !c.covered_under_warranty).length} not covered` },
-            {href: '/app/warranty-claims',  label: 'Expired Coverage', value: stats.expiredCount, accent: stats.expiredCount > 0 ? RED : undefined, sub: stats.expiredCount > 0 ? 'claims past warranty' : 'all inside warranty' },
-            {href: '/app/warranty-claims',  label: 'Denied', value: stats.denied, sub: `of ${stats.total} total claim${stats.total === 1 ? '' : 's'}` },
+            {href: '/app/warranty-claims', label: 'Expired Coverage', value: stats.expiredCount, accent: stats.expiredCount > 0 ? RED : undefined, sub: stats.expiredCount > 0 ? 'Claims past warranty' : 'All inside warranty' },
+            {href: '/app/warranty-claims', label: 'Denied', value: stats.denied, sub: `Of ${stats.total} total claim${stats.total === 1 ? '' : 's'}` },
           ]} />
           <StatusPipeline
             byStatus={stats.byStatus}
@@ -463,7 +463,7 @@ export default function WarrantyClaimsPage() {
       )}
 
       {selectedProject && loading && (
-        <div style={{ textAlign: 'center', padding: 60, color: DIM }}>Loading warranty claims...</div>
+        <div style={{ textAlign: 'center', padding: 60, color: DIM }}>Loading warranty claims…</div>
       )}
 
       {/* A failed read is its OWN state — visually distinct from a project that
@@ -536,10 +536,10 @@ export default function WarrantyClaimsPage() {
             module="warranty-claims"
             search={fSearch}
             onSearch={setFSearch}
-            searchPlaceholder="Title, claim #, reporter..."
+            searchPlaceholder="Title, claim #, reporter…"
             filters={[
               { key: 'category', label: 'Category', value: fCategory, onChange: setFCategory, allValue: '', allLabel: 'All Categories', options: CATEGORIES },
-              { key: 'status', label: 'Status', value: fStatus, onChange: setFStatus, allValue: '', allLabel: 'All Statuses', options: STATUSES.map(s => ({ value: s, label: s.replace('_', ' ') })) },
+              { key: 'status', label: 'Status', value: fStatus, onChange: setFStatus, allValue: '', allLabel: 'All Statuses', options: STATUSES.map(s => ({ value: s, label: s.replace('_', ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()) })) },
               { key: 'priority', label: 'Priority', value: fPriority, onChange: setFPriority, allValue: '', allLabel: 'All Priorities', options: PRIORITIES },
             ]}
             count={{ shown: filtered.length, total: claims.length }}
@@ -549,7 +549,7 @@ export default function WarrantyClaimsPage() {
               <span style={{ color: DIM, fontSize: 12 }}>to</span>
               <SaguaroDatePicker style={{ ...css.input, width: 130 }} value={fDateTo} onChange={v => setFDateTo(v)} />
               {(fDateFrom || fDateTo) && (
-                <button style={css.btnOutline(DIM)} onClick={() => { setFDateFrom(''); setFDateTo(''); }}>Clear dates</button>
+                <button style={css.btnOutline(DIM)} onClick={() => { setFDateFrom(''); setFDateTo(''); }}>Clear Dates</button>
               )}
             </div>}
           />
@@ -583,7 +583,7 @@ export default function WarrantyClaimsPage() {
                 <tbody>
                   {filtered.map(c => (
                     <tr key={c.id} style={css.trHover} onClick={() => setDetailClaim(c)}
-                      onMouseEnter={e => (e.currentTarget.style.background = BORDER + '33')}
+                      onMouseEnter={e => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td style={css.td}><span style={{ fontFamily: 'monospace', color: GOLD }}>{c.claim_number}</span></td>
                       <td style={css.td}><span title={c.category} style={{ fontSize: 16 }}>{CATEGORY_ICONS[c.category] || '\u2731'}</span></td>
@@ -591,10 +591,10 @@ export default function WarrantyClaimsPage() {
                       <td style={css.td}><span style={css.badge(PRIORITY_COLORS[c.priority] || DIM)}>{c.priority}</span></td>
                       <td style={css.td}><StatusPill module="warranty_claims" status={c.status} size="sm" /></td>
                       <td style={{ ...css.td, fontSize: 12, color: DIM }}>{c.reported_date}</td>
-                      <td style={{ ...css.td, fontSize: 12 }}>{c.assigned_contractor || <span style={{ color: DIM }}>---</span>}</td>
-                      <td style={{ ...css.td, fontFamily: 'monospace' }}>{Number(c.cost) ? `$${(Number(c.cost) || 0).toLocaleString()}` : '---'}</td>
+                      <td style={{ ...css.td, fontSize: 12 }}>{c.assigned_contractor || <span style={{ color: DIM }}>—</span>}</td>
+                      <td style={{ ...css.td, fontFamily: 'monospace' }}>{Number(c.cost) ? `$${(Number(c.cost) || 0).toLocaleString()}` : '—'}</td>
                       <td style={css.td}>
-                        {isExpired(c.warranty_expiry) ? <span style={css.expiredTag}>EXPIRED</span> : c.warranty_expiry ? <span style={{ fontSize: 11, color: GREEN }}>Active</span> : <span style={{ color: DIM, fontSize: 11 }}>N/A</span>}
+                        {isExpired(c.warranty_expiry) ? <span style={css.expiredTag}>Expired</span> : c.warranty_expiry ? <span style={{ fontSize: 11, color: GREEN }}>Active</span> : <span style={{ color: DIM, fontSize: 11 }}>N/A</span>}
                       </td>
                       <td style={css.td} onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: 6 }}>
@@ -669,7 +669,7 @@ export default function WarrantyClaimsPage() {
           </div>
 
           <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-            <button style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} className="pmBtn" disabled={saving} onClick={handleCreate}>{saving ? 'Saving...' : 'Create Claim'}</button>
+            <button style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} className="pmBtn" disabled={saving} onClick={handleCreate}>{saving ? 'Saving…' : 'Create Claim'}</button>
             <button style={ghostButtonStyle} className="pmBtn" onClick={() => setActiveTab('claims')}>Cancel</button>
           </div>
         </SectionCard>
@@ -677,11 +677,11 @@ export default function WarrantyClaimsPage() {
         {/* Context rail — what the program already knows + what happens next */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <SectionCard flat title="Program Snapshot" icon={<ChartBar size={17} weight="duotone" color={GOLD} />}>
-            <InsightRow label="Open claims" value={stats.open} />
+            <InsightRow label="Open Claims" value={stats.open} />
             <InsightRow label="Emergency" value={stats.emergency} accent={stats.emergency > 0 ? RED : undefined} />
-            <InsightRow label="Avg resolution" value={`${stats.avgDays} days`} />
-            <InsightRow label="Warranty cost" value={`$${(Number(stats.totalCost) || 0).toLocaleString()}`} accent={GOLD} />
-            {Object.keys(stats.byCat).length > 0 && <InsightRow label="Most reported" value={Object.entries(stats.byCat).sort((a, b) => b[1] - a[1])[0][0]} />}
+            <InsightRow label="Avg Resolution" value={`${stats.avgDays} days`} />
+            <InsightRow label="Warranty Cost" value={`$${(Number(stats.totalCost) || 0).toLocaleString()}`} accent={GOLD} />
+            {Object.keys(stats.byCat).length > 0 && <InsightRow label="Most Reported" value={Object.entries(stats.byCat).sort((a, b) => b[1] - a[1])[0][0]} />}
           </SectionCard>
           <SectionCard flat title="After You Create" icon={<Timer size={17} weight="duotone" color={GOLD} />}>
             <FlowSteps title="" steps={[
@@ -710,7 +710,7 @@ export default function WarrantyClaimsPage() {
                   <StatusPill module="warranty_claims" status={detailClaim.status} />
                   <span style={css.badge(PRIORITY_COLORS[detailClaim.priority] || DIM)}>{detailClaim.priority}</span>
                   <span style={{ ...css.badge(GOLD), fontSize: 13 }}>{CATEGORY_ICONS[detailClaim.category] || ''} {detailClaim.category}</span>
-                  {isExpired(detailClaim.warranty_expiry) && <span style={css.expiredTag}>WARRANTY EXPIRED</span>}
+                  {isExpired(detailClaim.warranty_expiry) && <span style={css.expiredTag}>Warranty Expired</span>}
                 </div>
               </div>
               <button style={css.btnOutline(GOLD)} onClick={() => exportClaimPDF(detailClaim)}>Export PDF</button>
@@ -748,7 +748,7 @@ export default function WarrantyClaimsPage() {
                     <React.Fragment key={s}>
                       {i > 0 && <div style={{ width: 24, height: 2, background: isPast ? GREEN : BORDER }} />}
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: isCurrent ? GOLD : isPast ? GREEN + '33' : BG, border: `2px solid ${c}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: isCurrent ? BG : isPast ? GREEN : DIM }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: isCurrent ? GOLD : isPast ? `color-mix(in srgb, ${GREEN} 20%, transparent)` : BG, border: `2px solid ${c}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: isCurrent ? BG : isPast ? GREEN : DIM }}>
                           {isPast ? '\u2713' : i + 1}
                         </div>
                         <span style={{ fontSize: 9, color: isCurrent ? GOLD : DIM, textTransform: 'capitalize', maxWidth: 60, textAlign: 'center' }}>{s.replace('_', ' ')}</span>
@@ -763,7 +763,7 @@ export default function WarrantyClaimsPage() {
                   <span style={{ color: DIM, fontSize: 12, lineHeight: '32px' }}>Move to:</span>
                   {STATUS_FLOW[detailClaim.status].map(ns => (
                     <button key={ns} style={css.btn(STATUS_COLORS[ns] || BLUE)} onClick={() => updateStatus(detailClaim, ns)}>
-                      {ns.replace('_', ' ')}
+                      {ns.replace('_', ' ').replace(/\b\w/g, (ch) => ch.toUpperCase())}
                     </button>
                   ))}
                 </div>
@@ -825,7 +825,7 @@ export default function WarrantyClaimsPage() {
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <input style={{ ...css.input, flex: 1 }} placeholder="Add communication entry..." value={commMsg} onChange={e => setCommMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCommEntry()} />
+                <input style={{ ...css.input, flex: 1 }} placeholder="Add communication entry…" value={commMsg} onChange={e => setCommMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && addCommEntry()} />
                 <button style={css.btn(BLUE)} onClick={addCommEntry}>Send</button>
               </div>
             </div>
@@ -852,14 +852,14 @@ export default function WarrantyClaimsPage() {
               <div style={css.field}>
                 <label style={css.label}>Trade</label>
                 <select style={css.select} value={dispatchForm.assigned_trade} onChange={e => setDispatchForm({ ...dispatchForm, assigned_trade: e.target.value })}>
-                  <option value="">Select a trade...</option>
+                  <option value="">Select a trade…</option>
                   {SUB_TRADES.map(t => <option key={t} value={t}>{t}</option>)}
                   {dispatchForm.assigned_trade && !SUB_TRADES.includes(dispatchForm.assigned_trade) && <option value={dispatchForm.assigned_trade}>{dispatchForm.assigned_trade}</option>}
                 </select>
               </div>
               <div style={css.field}>
                 <label style={css.label}>Contractor</label>
-                <input style={css.input} value={dispatchForm.assigned_contractor} onChange={e => setDispatchForm({ ...dispatchForm, assigned_contractor: e.target.value })} placeholder="Contractor name..." />
+                <input style={css.input} value={dispatchForm.assigned_contractor} onChange={e => setDispatchForm({ ...dispatchForm, assigned_contractor: e.target.value })} placeholder="Contractor name…" />
               </div>
             </div>
             <div style={{ ...css.field, marginTop: 4 }}>
@@ -889,25 +889,25 @@ export default function WarrantyClaimsPage() {
         <SectionCard style={{ marginTop: 16 }} bodyStyle={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', gap: 24 }}>
             <div>
-              <span style={{ color: DIM, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Filtered Total Cost</span>
+              <span style={{ color: DIM, fontSize: 11}}>Filtered Total Cost</span>
               <div style={{ fontSize: 18, fontWeight: 700, fontFamily: 'monospace', color: GOLD }}>
                 ${filtered.reduce((s, c) => s + (Number(c.cost) || 0), 0).toLocaleString()}
               </div>
             </div>
             <div>
-              <span style={{ color: DIM, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Covered Claims</span>
+              <span style={{ color: DIM, fontSize: 11}}>Covered Claims</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: GREEN }}>
                 {filtered.filter(c => c.covered_under_warranty).length}
               </div>
             </div>
             <div>
-              <span style={{ color: DIM, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Not Covered</span>
+              <span style={{ color: DIM, fontSize: 11}}>Not Covered</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: RED }}>
                 {filtered.filter(c => !c.covered_under_warranty).length}
               </div>
             </div>
             <div>
-              <span style={{ color: DIM, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>Expired Warranties</span>
+              <span style={{ color: DIM, fontSize: 11}}>Expired Warranties</span>
               <div style={{ fontSize: 18, fontWeight: 700, color: AMBER }}>
                 {filtered.filter(c => isExpired(c.warranty_expiry)).length}
               </div>
@@ -981,7 +981,7 @@ export default function WarrantyClaimsPage() {
                   const daysLeft = Math.ceil((new Date(c.warranty_expiry).getTime() - Date.now()) / 86400000);
                   return (
                     <tr key={c.id} style={css.trHover} onClick={() => { setDetailClaim(c); setActiveTab('claims'); }}
-                      onMouseEnter={e => (e.currentTarget.style.background = BORDER + '33')}
+                      onMouseEnter={e => (e.currentTarget.style.background = `color-mix(in srgb, ${BORDER} 20%, transparent)`)}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
                       <td style={css.td}><span style={{ fontFamily: 'monospace', color: GOLD }}>{c.claim_number}</span></td>
                       <td style={css.td}>{c.title}</td>
@@ -1021,10 +1021,10 @@ function StatusPipeline({ byStatus, active, onPick }: { byStatus: Record<string,
             <button
               onClick={() => onPick(s)}
               title={`${n} ${s.replace('_', ' ')} claim${n === 1 ? '' : 's'} — click to filter the list`}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 10, cursor: 'pointer', flexShrink: 0, background: on ? 'rgba(245,158,11,0.14)' : 'transparent', border: `1px solid ${on ? 'rgba(245,158,11,0.45)' : 'transparent'}` }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 10, cursor: 'pointer', flexShrink: 0, background: on ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', border: `1px solid ${on ? 'color-mix(in srgb, var(--brand-primary) 45%, transparent)' : 'transparent'}` }}
             >
               <span style={{ fontSize: 17, fontWeight: 800, color: n > 0 ? c : DIM, fontVariantNumeric: 'tabular-nums' }}>{n}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: on ? GOLD : DIM, whiteSpace: 'nowrap' }}>{s.replace('_', ' ')}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: on ? GOLD : DIM, whiteSpace: 'nowrap', textTransform: 'capitalize' }}>{s.replace('_', ' ')}</span>
             </button>
           </React.Fragment>
         );

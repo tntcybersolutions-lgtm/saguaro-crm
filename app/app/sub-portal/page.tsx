@@ -7,16 +7,16 @@ import { ModuleSkeleton } from '@/components/ui/PageSkeleton';
 import { UsersThree, CheckCircle, Clock, Prohibit, WarningCircle, XCircle, FileX, Plus, UploadSimple, ListChecks, ClockCounterClockwise, FileText, ShieldCheck, AddressBook, Megaphone, Envelope } from '@phosphor-icons/react';
 
 /* ── palette ── */
-const GOLD = '#F59E0B';
-const BG = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const BG = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const GREEN = '#22C55E';
 const RED = '#EF4444';
-const AMBER = '#F59E0B';
-const BLUE = '#F59E0B';
+const AMBER = 'var(--warning)';
+const BLUE = 'var(--brand-primary)';
 const PURPLE = '#8B5CF6';
 
 /* ── types ── */
@@ -174,7 +174,7 @@ const inputStyle: React.CSSProperties = {
 };
 const selectStyle: React.CSSProperties = { ...inputStyle, appearance: 'auto' as React.CSSProperties['appearance'] };
 const btnPrimary: React.CSSProperties = {
-  padding: '9px 20px', background: GOLD, color: '#1C1C1E', border: 'none', borderRadius: 6,
+  padding: '9px 20px', background: GOLD, color: '#0A0A00', border: 'none', borderRadius: 6,
   fontWeight: 600, cursor: 'pointer', fontSize: 14,
 };
 const btnSecondary: React.CSSProperties = {
@@ -190,7 +190,7 @@ function StatusBadge({ status }: { status: string }) {
   };
   const c = colorMap[status] || DIM;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 12, background: c + '18', color: c, fontSize: 12, fontWeight: 600, textTransform: 'capitalize' }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 12, background: `color-mix(in srgb, ${c} 9%, transparent)`, color: c, fontSize: 12, fontWeight: 600, textTransform: 'capitalize' }}>
       <span style={{ width: 6, height: 6, borderRadius: '50%', background: c }} />
       {status}
     </span>
@@ -567,18 +567,18 @@ export default function SubPortalPage() {
           {href: '/app/sub-portal', 
             label: 'Never Logged In', value: String(intel.neverLogged),
             accent: intel.neverLogged > 0 ? AMBER : GREEN,
-            sub: intel.neverLogged > 0 ? 'active accounts, zero visits — resend the link' : 'every active sub has visited',
+            sub: intel.neverLogged > 0 ? 'Active accounts, zero visits — resend the link' : 'Every active sub has visited',
           },
-          {href: '/app/sub-portal',  label: 'Trades Onboarded', value: String(intel.uniqueTrades), sub: 'distinct trades across the roster' },
+          {href: '/app/sub-portal', label: 'Trades Onboarded', value: String(intel.uniqueTrades), sub: 'Distinct trades across the roster' },
           {href: '/app/sub-portal', 
             label: 'Compliance Health', value: compliance.length > 0 ? `${intel.compPct}%` : '—',
             accent: compliance.length === 0 ? undefined : intel.compPct >= 80 ? GREEN : intel.needAttention > 0 ? RED : AMBER,
-            sub: compliance.length > 0 ? `${intel.needAttention} document${intel.needAttention === 1 ? '' : 's'} need attention` : 'no compliance docs tracked yet',
+            sub: compliance.length > 0 ? `${intel.needAttention} document${intel.needAttention === 1 ? '' : 's'} need attention` : 'No compliance docs tracked yet',
           },
-          {href: '/app/sub-portal',  label: 'Docs Shared', value: String(docs.length), sub: docs.length > 0 ? `${intel.docsAll} visible to all subs` : 'nothing shared to the portal yet' },
+          {href: '/app/sub-portal', label: 'Docs Shared', value: String(docs.length), sub: docs.length > 0 ? `${intel.docsAll} visible to all subs` : 'Nothing shared to the portal yet' },
           {href: '/app/sub-portal', 
             label: 'Activity (7d)', value: String(intel.events7),
-            sub: intel.lastEventTs > 0 ? `last event ${fmtDateTime(new Date(intel.lastEventTs).toISOString())}` : 'no portal events yet',
+            sub: intel.lastEventTs > 0 ? `Last event ${fmtDateTime(new Date(intel.lastEventTs).toISOString())}` : 'No portal events yet',
           },
         ]} />
       )}
@@ -597,7 +597,7 @@ export default function SubPortalPage() {
       {/* ── filters (shared) ── */}
       {['users', 'permissions', 'directory', 'compliance'].includes(tab) && (
         <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-          <input placeholder="Search name, company, email..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+          <input placeholder="Search name, company, email…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
             style={{ ...inputStyle, maxWidth: 280 }} />
           <select value={filterTrade} onChange={e => setFilterTrade(e.target.value)} style={{ ...selectStyle, maxWidth: 180 }}>
             <option value="">All Trades</option>
@@ -626,7 +626,7 @@ export default function SubPortalPage() {
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 {['Contact', 'Company', 'Trade', 'Status', 'Last Login', 'Projects', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{h}</th>
+                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600}}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -635,11 +635,11 @@ export default function SubPortalPage() {
                 <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<UsersThree size={30} weight="duotone" color={GOLD} />} title="No subcontractors found" description="No subs match your current filters. Adjust the filters or invite a subcontractor." /></td></tr>
               )}
               {filteredUsers.map(u => (
-                <tr key={u.id} style={{ borderBottom: `1px solid ${BORDER}22`, cursor: 'pointer' }}
+                <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`, cursor: 'pointer' }}
                   onClick={() => setUserDetailModal(u)}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: '50%', background: u.avatarColor + '30', display: 'flex', alignItems: 'center', justifyContent: 'center', color: u.avatarColor, fontWeight: 700, fontSize: 14 }}>
+                      <div style={{ width: 34, height: 34, borderRadius: '50%', background: `color-mix(in srgb, ${u.avatarColor} 19%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: u.avatarColor, fontWeight: 700, fontSize: 14 }}>
                         {u.contactName.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
@@ -650,7 +650,7 @@ export default function SubPortalPage() {
                   </td>
                   <td style={{ padding: '12px 16px', color: DIM, fontSize: 14 }}>{u.company}</td>
                   <td style={{ padding: '12px 16px' }}>
-                    <span style={{ padding: '3px 10px', borderRadius: 6, background: PURPLE + '18', color: PURPLE, fontSize: 12 }}>{u.trade}</span>
+                    <span style={{ padding: '3px 10px', borderRadius: 6, background: `color-mix(in srgb, ${PURPLE} 9%, transparent)`, color: PURPLE, fontSize: 12 }}>{u.trade}</span>
                   </td>
                   <td style={{ padding: '12px 16px' }}><StatusBadge status={u.status} /></td>
                   <td style={{ padding: '12px 16px', color: DIM, fontSize: 13 }}>{u.lastLogin ? fmtDateTime(u.lastLogin) : 'Never'}</td>
@@ -661,12 +661,12 @@ export default function SubPortalPage() {
                         <button onClick={() => resendInvite(u.id)} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12 }}>Resend</button>
                       )}
                       {u.status === 'active' && (
-                        <button onClick={() => toggleUserStatus(u.id, 'disabled')} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12, color: RED, borderColor: RED + '50' }}>Disable</button>
+                        <button onClick={() => toggleUserStatus(u.id, 'disabled')} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12, color: RED, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)` }}>Disable</button>
                       )}
                       {u.status === 'disabled' && (
-                        <button onClick={() => toggleUserStatus(u.id, 'active')} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12, color: GREEN, borderColor: GREEN + '50' }}>Enable</button>
+                        <button onClick={() => toggleUserStatus(u.id, 'active')} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12, color: GREEN, borderColor: `color-mix(in srgb, ${GREEN} 31%, transparent)` }}>Enable</button>
                       )}
-                      <button onClick={() => setPermModal(u)} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12 }}>Perms</button>
+                      <button onClick={() => setPermModal(u)} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12 }}>Permissions</button>
                     </div>
                   </td>
                 </tr>
@@ -689,7 +689,7 @@ export default function SubPortalPage() {
               <div><label style={labelStyle}>Contact Name *</label><input value={invContact} onChange={e => setInvContact(e.target.value)} style={inputStyle} placeholder="Full name" /></div>
               <div>
                 <label style={labelStyle}>Email Address *</label>
-                <input type="email" value={invEmail} onChange={e => setInvEmail(e.target.value)} style={{ ...inputStyle, borderColor: invEmailTrim && !invEmailValid ? RED + '80' : BORDER }} placeholder="email@company.com" />
+                <input type="email" value={invEmail} onChange={e => setInvEmail(e.target.value)} style={{ ...inputStyle, borderColor: invEmailTrim && !invEmailValid ? `color-mix(in srgb, ${RED} 50%, transparent)` : BORDER }} placeholder="email@company.com" />
                 {invEmailTrim && !invEmailValid && <div style={{ color: RED, fontSize: 11.5, marginTop: 4 }}>Enter a valid email — the invitation and the portal login both use it.</div>}
                 {invDup && <div style={{ color: AMBER, fontSize: 11.5, marginTop: 4 }}>{invDup.company || invDup.contactName} is already on the roster ({invDup.status}) — sending again creates a duplicate. Use Resend from the Sub Users tab instead.</div>}
               </div>
@@ -715,12 +715,12 @@ export default function SubPortalPage() {
                   ))}
                 </div>
               </div>
-              <div style={{ color: DIM, fontSize: 11.5, lineHeight: 1.5, padding: '9px 12px', background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.22)', borderRadius: 8 }}>
+              <div style={{ color: DIM, fontSize: 11.5, lineHeight: 1.5, padding: '9px 12px', background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent)', borderRadius: 8 }}>
                 New subs start with <b style={{ color: TEXT }}>Their Contract + Schedule</b> visible. Fine-tune everything else in the Permissions tab after inviting.
               </div>
               <button onClick={handleInvite} disabled={invDisabled}
                 style={{ ...goldButtonStyle, width: '100%', opacity: invDisabled ? 0.5 : 1, marginTop: 8, cursor: invDisabled ? 'not-allowed' : 'pointer' }} className="pmBtn">
-                {invSending ? 'Sending...' : 'Send Invitation'}
+                {invSending ? 'Sending…' : 'Send Invitation'}
               </button>
             </div>
           </SectionCard>
@@ -738,7 +738,7 @@ export default function SubPortalPage() {
               </span>
               <button onClick={handleBulkInvite} disabled={bulkSending || !bulkText.trim()}
                 style={{ ...goldButtonStyle, opacity: (bulkSending || !bulkText.trim()) ? 0.5 : 1 }} className="pmBtn">
-                {bulkSending ? 'Sending...' : 'Send All Invitations'}
+                {bulkSending ? 'Sending…' : 'Send All Invitations'}
               </button>
             </div>
 
@@ -749,7 +749,7 @@ export default function SubPortalPage() {
                 <p style={{ color: DIM, fontSize: 13 }}>No pending invitations.</p>
               )}
               {users.filter(u => u.status === 'pending').map(u => (
-                <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid ${BORDER}22` }}>
+                <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <div>
                     <span style={{ color: TEXT, fontSize: 14 }}>{u.contactName}</span>
                     <span style={{ color: DIM, fontSize: 12, marginLeft: 8 }}>{u.company}</span>
@@ -784,9 +784,9 @@ export default function SubPortalPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
-                <th style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>Subcontractor</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600}}>Subcontractor</th>
                 {ALL_PERMISSIONS_LIST.map(p => (
-                  <th key={p.key} style={{ padding: '12px 10px', textAlign: 'center', color: DIM, fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>{p.label}</th>
+                  <th key={p.key} style={{ padding: '12px 10px', textAlign: 'center', color: DIM, fontSize: 11, fontWeight: 600}}>{p.label}</th>
                 ))}
                 <th style={{ padding: '12px 16px', textAlign: 'center', color: DIM, fontSize: 12, fontWeight: 600 }}>Actions</th>
               </tr>
@@ -796,7 +796,7 @@ export default function SubPortalPage() {
                 <tr><td colSpan={ALL_PERMISSIONS_LIST.length + 2} style={{ padding: 0 }}><PremiumEmpty compact icon={<ListChecks size={30} weight="duotone" color={GOLD} />} title="No subs found" description="Invite a subcontractor to manage their portal permissions here." /></td></tr>
               )}
               {filteredUsers.map(u => (
-                <tr key={u.id} style={{ borderBottom: `1px solid ${BORDER}22` }}>
+                <tr key={u.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '10px 16px' }}>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{u.contactName}</div>
                     <div style={{ color: DIM, fontSize: 12 }}>{u.company}</div>
@@ -813,9 +813,9 @@ export default function SubPortalPage() {
                   <td style={{ padding: '10px 16px', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                       <button onClick={() => updatePermissions(u.id, ALL_PERMISSIONS_LIST.map(p => p.key))}
-                        style={{ ...btnSecondary, padding: '3px 8px', fontSize: 11, color: GREEN, borderColor: GREEN + '50' }}>All</button>
+                        style={{ ...btnSecondary, padding: '3px 8px', fontSize: 11, color: GREEN, borderColor: `color-mix(in srgb, ${GREEN} 31%, transparent)` }}>All</button>
                       <button onClick={() => updatePermissions(u.id, [])}
-                        style={{ ...btnSecondary, padding: '3px 8px', fontSize: 11, color: RED, borderColor: RED + '50' }}>None</button>
+                        style={{ ...btnSecondary, padding: '3px 8px', fontSize: 11, color: RED, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)` }}>None</button>
                     </div>
                   </td>
                 </tr>
@@ -845,9 +845,9 @@ export default function SubPortalPage() {
               <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color={GOLD} />} title="No portal activity yet" description="Sub logins and document views will appear here." />
             )}
             {activity.map((a, i) => (
-              <div key={a.id} style={{ display: 'flex', gap: 14, padding: '14px 20px', borderBottom: `1px solid ${BORDER}22`,
-                background: i % 2 === 0 ? 'transparent' : BG + '40' }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: BLUE + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', color: BLUE, fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+              <div key={a.id} style={{ display: 'flex', gap: 14, padding: '14px 20px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)`,
+                background: i % 2 === 0 ? 'transparent' : `color-mix(in srgb, ${BG} 25%, transparent)` }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: `color-mix(in srgb, ${BLUE} 13%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: BLUE, fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
                   {a.subName.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -878,7 +878,7 @@ export default function SubPortalPage() {
             <thead>
               <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                 {['Document', 'Category', 'Project', 'Size', 'Uploaded', 'Visibility', 'Actions'].map(h => (
-                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>{h}</th>
+                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600}}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -887,7 +887,7 @@ export default function SubPortalPage() {
                 <tr><td colSpan={7} style={{ padding: 0 }}><PremiumEmpty compact icon={<FileText size={30} weight="duotone" color={GOLD} />} title="No shared documents yet" description="Documents shared to the sub portal will appear here." /></td></tr>
               )}
               {docs.map(d => (
-                <tr key={d.id} style={{ borderBottom: `1px solid ${BORDER}22` }}>
+                <tr key={d.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <FileText size={16} weight="duotone" color={GOLD} />
@@ -911,9 +911,9 @@ export default function SubPortalPage() {
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => setDocShareModal(d)} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12 }}>Manage</button>
                       {d.visibleToSubs.includes('all') ? (
-                        <button onClick={() => toggleDocVisibility(d.id, [])} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12, color: RED, borderColor: RED + '50' }}>Hide</button>
+                        <button onClick={() => toggleDocVisibility(d.id, [])} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12, color: RED, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)` }}>Hide</button>
                       ) : (
-                        <button onClick={() => toggleDocVisibility(d.id, ['all'])} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12, color: GREEN, borderColor: GREEN + '50' }}>Show All</button>
+                        <button onClick={() => toggleDocVisibility(d.id, ['all'])} style={{ ...btnSecondary, padding: '4px 10px', fontSize: 12, color: GREEN, borderColor: `color-mix(in srgb, ${GREEN} 31%, transparent)` }}>Show All</button>
                       )}
                     </div>
                   </td>
@@ -948,7 +948,7 @@ export default function SubPortalPage() {
               <thead>
                 <tr style={{ borderBottom: `1px solid ${BORDER}` }}>
                   {['Subcontractor', 'Company', 'Document Type', 'Status', 'Expiration', 'File', 'Uploaded'].map(h => (
-                    <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600, textTransform: 'uppercase' }}>{h}</th>
+                    <th key={h} style={{ padding: '12px 16px', textAlign: 'left', color: DIM, fontSize: 12, fontWeight: 600}}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -965,12 +965,12 @@ export default function SubPortalPage() {
                     return true;
                   })
                   .map(c => (
-                  <tr key={c.id} style={{ borderBottom: `1px solid ${BORDER}22` }}>
+                  <tr key={c.id} style={{ borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                     <td style={{ padding: '10px 16px', fontWeight: 500, fontSize: 14 }}>{c.subName}</td>
                     <td style={{ padding: '10px 16px', color: DIM, fontSize: 13 }}>{c.company}</td>
                     <td style={{ padding: '10px 16px' }}>
                       <span style={{ padding: '3px 10px', borderRadius: 6, fontSize: 12,
-                        background: c.docType === 'insurance' ? BLUE + '18' : c.docType === 'w9' ? PURPLE + '18' : GOLD + '18',
+                        background: c.docType === 'insurance' ? `color-mix(in srgb, ${BLUE} 9%, transparent)` : c.docType === 'w9' ? `color-mix(in srgb, ${PURPLE} 9%, transparent)` : `color-mix(in srgb, ${GOLD} 9%, transparent)`,
                         color: c.docType === 'insurance' ? BLUE : c.docType === 'w9' ? PURPLE : GOLD }}>
                         {c.docType === 'w9' ? 'W-9' : c.docType.charAt(0).toUpperCase() + c.docType.slice(1)}
                       </span>
@@ -979,7 +979,7 @@ export default function SubPortalPage() {
                     <td style={{ padding: '10px 16px', color: c.status === 'expired' ? RED : c.status === 'expiring' ? AMBER : DIM, fontSize: 13 }}>
                       {c.expirationDate ? fmtDate(c.expirationDate) : 'N/A'}
                     </td>
-                    <td style={{ padding: '10px 16px', color: DIM, fontSize: 13 }}>{c.fileName || '--'}</td>
+                    <td style={{ padding: '10px 16px', color: DIM, fontSize: 13 }}>{c.fileName || '—'}</td>
                     <td style={{ padding: '10px 16px', color: DIM, fontSize: 13 }}>{fmtDate(c.uploadedDate)}</td>
                   </tr>
                 ))}
@@ -1007,7 +1007,7 @@ export default function SubPortalPage() {
               onMouseEnter={e => (e.currentTarget.style.borderColor = GOLD)}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)')}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-                <div style={{ width: 48, height: 48, borderRadius: '50%', background: u.avatarColor + '25', display: 'flex', alignItems: 'center', justifyContent: 'center', color: u.avatarColor, fontWeight: 700, fontSize: 18 }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: `color-mix(in srgb, ${u.avatarColor} 15%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: u.avatarColor, fontWeight: 700, fontSize: 18 }}>
                   {u.contactName.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
@@ -1061,7 +1061,7 @@ export default function SubPortalPage() {
               <div><label style={labelStyle}>Subject</label><input value={annSubject} onChange={e => setAnnSubject(e.target.value)} style={inputStyle} placeholder="Announcement subject" /></div>
               <div>
                 <label style={labelStyle}>Message</label>
-                <textarea value={annBody} onChange={e => setAnnBody(e.target.value)} style={{ ...inputStyle, height: 100, resize: 'vertical' }} placeholder="Write your announcement..." />
+                <textarea value={annBody} onChange={e => setAnnBody(e.target.value)} style={{ ...inputStyle, height: 100, resize: 'vertical' }} placeholder="Write your announcement…" />
               </div>
               <div>
                 <label style={labelStyle}>Recipients</label>
@@ -1086,7 +1086,7 @@ export default function SubPortalPage() {
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <button onClick={sendAnnouncement} disabled={annSending || !annSubject || !annBody}
                   style={{ ...goldButtonStyle, opacity: (annSending || !annSubject || !annBody) ? 0.5 : 1 }} className="pmBtn">
-                  {annSending ? 'Sending...' : 'Send Broadcast'}
+                  {annSending ? 'Sending…' : 'Send Broadcast'}
                 </button>
               </div>
             </div>
@@ -1098,7 +1098,7 @@ export default function SubPortalPage() {
               <PremiumEmpty compact icon={<Envelope size={30} weight="duotone" color={GOLD} />} title="No announcements sent yet" description="Broadcasts you send to your subcontractors will appear here." />
             )}
             {announcements.map(a => (
-              <div key={a.id} style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}22` }}>
+              <div key={a.id} style={{ padding: '16px 20px', borderBottom: `1px solid color-mix(in srgb, ${BORDER} 13%, transparent)` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <span style={{ fontWeight: 600, fontSize: 15, color: TEXT }}>{a.subject}</span>
                   <span style={{ color: DIM, fontSize: 12 }}>{fmtDateTime(a.sentDate)}</span>
@@ -1125,7 +1125,7 @@ export default function SubPortalPage() {
           <div><label style={labelStyle}>Contact Name *</label><input value={invContact} onChange={e => setInvContact(e.target.value)} style={inputStyle} /></div>
           <div>
             <label style={labelStyle}>Email *</label>
-            <input type="email" value={invEmail} onChange={e => setInvEmail(e.target.value)} style={{ ...inputStyle, borderColor: invEmailTrim && !invEmailValid ? RED + '80' : BORDER }} />
+            <input type="email" value={invEmail} onChange={e => setInvEmail(e.target.value)} style={{ ...inputStyle, borderColor: invEmailTrim && !invEmailValid ? `color-mix(in srgb, ${RED} 50%, transparent)` : BORDER }} />
             {invEmailTrim && !invEmailValid && <div style={{ color: RED, fontSize: 11.5, marginTop: 4 }}>Enter a valid email — the invitation and the portal login both use it.</div>}
             {invDup && <div style={{ color: AMBER, fontSize: 11.5, marginTop: 4 }}>{invDup.company || invDup.contactName} is already on the roster ({invDup.status}) — use Resend from Sub Users instead.</div>}
           </div>
@@ -1158,7 +1158,7 @@ export default function SubPortalPage() {
             <button onClick={() => setInviteModal(false)} style={btnSecondary}>Cancel</button>
             <button onClick={handleInvite} disabled={invDisabled}
               style={{ ...btnPrimary, opacity: invDisabled ? 0.5 : 1, cursor: invDisabled ? 'not-allowed' : 'pointer' }}>
-              {invSending ? 'Sending...' : 'Send Invitation'}
+              {invSending ? 'Sending…' : 'Send Invitation'}
             </button>
           </div>
         </div>
@@ -1185,7 +1185,7 @@ export default function SubPortalPage() {
             <button onClick={() => setBulkInviteModal(false)} style={btnSecondary}>Cancel</button>
             <button onClick={handleBulkInvite} disabled={bulkSending || !bulkText.trim()}
               style={{ ...btnPrimary, opacity: (bulkSending || !bulkText.trim()) ? 0.5 : 1 }}>
-              {bulkSending ? 'Sending...' : 'Send All'}
+              {bulkSending ? 'Sending…' : 'Send All'}
             </button>
           </div>
         </div>
@@ -1194,13 +1194,13 @@ export default function SubPortalPage() {
       {/* ════════════════════════════════════════════ */}
       {/*  MODAL: PERMISSIONS                         */}
       {/* ════════════════════════════════════════════ */}
-      <Modal open={!!permModal} onClose={() => setPermModal(null)} title={`Permissions - ${permModal?.contactName || ''}`}>
+      <Modal open={!!permModal} onClose={() => setPermModal(null)} title={`Permissions — ${permModal?.contactName || ''}`}>
         {permModal && (
           <div>
             <p style={{ color: DIM, fontSize: 13, margin: '0 0 16px' }}>Select what <strong style={{ color: TEXT }}>{permModal.contactName}</strong> can see in their portal:</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {ALL_PERMISSIONS_LIST.map(p => (
-                <label key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: BG, borderRadius: 8, border: `1px solid ${permModal.permissions.includes(p.key) ? GREEN + '50' : BORDER}`, cursor: 'pointer' }}>
+                <label key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: BG, borderRadius: 8, border: `1px solid ${permModal.permissions.includes(p.key) ? `color-mix(in srgb, ${GREEN} 31%, transparent)` : BORDER}`, cursor: 'pointer' }}>
                   <input type="checkbox" checked={permModal.permissions.includes(p.key)}
                     onChange={() => {
                       const next = permModal.permissions.includes(p.key) ? permModal.permissions.filter(x => x !== p.key) : [...permModal.permissions, p.key];
@@ -1231,11 +1231,11 @@ export default function SubPortalPage() {
       {/* ════════════════════════════════════════════ */}
       {/*  MODAL: DOC SHARING                         */}
       {/* ════════════════════════════════════════════ */}
-      <Modal open={!!docShareModal} onClose={() => setDocShareModal(null)} title={`Document Sharing - ${docShareModal?.name || ''}`}>
+      <Modal open={!!docShareModal} onClose={() => setDocShareModal(null)} title={`Document Sharing — ${docShareModal?.name || ''}`}>
         {docShareModal && (
           <div>
             <p style={{ color: DIM, fontSize: 13, margin: '0 0 16px' }}>Select who can view <strong style={{ color: TEXT }}>{docShareModal.name}</strong>:</p>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, color: GREEN, fontSize: 14, cursor: 'pointer', padding: '10px 14px', background: BG, borderRadius: 8, border: `1px solid ${docShareModal.visibleToSubs.includes('all') ? GREEN + '50' : BORDER}` }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, color: GREEN, fontSize: 14, cursor: 'pointer', padding: '10px 14px', background: BG, borderRadius: 8, border: `1px solid ${docShareModal.visibleToSubs.includes('all') ? `color-mix(in srgb, ${GREEN} 31%, transparent)` : BORDER}` }}>
               <input type="checkbox" checked={docShareModal.visibleToSubs.includes('all')}
                 onChange={() => {
                   setDocShareModal({ ...docShareModal, visibleToSubs: docShareModal.visibleToSubs.includes('all') ? [] : ['all'] });
@@ -1273,7 +1273,7 @@ export default function SubPortalPage() {
           <div><label style={labelStyle}>Subject *</label><input value={annSubject} onChange={e => setAnnSubject(e.target.value)} style={inputStyle} placeholder="Announcement subject" /></div>
           <div>
             <label style={labelStyle}>Message *</label>
-            <textarea value={annBody} onChange={e => setAnnBody(e.target.value)} style={{ ...inputStyle, height: 140, resize: 'vertical' }} placeholder="Write your message..." />
+            <textarea value={annBody} onChange={e => setAnnBody(e.target.value)} style={{ ...inputStyle, height: 140, resize: 'vertical' }} placeholder="Write your message…" />
           </div>
           <div>
             <label style={labelStyle}>Recipients</label>
@@ -1300,7 +1300,7 @@ export default function SubPortalPage() {
             <button onClick={() => setAnnounceModal(false)} style={btnSecondary}>Cancel</button>
             <button onClick={sendAnnouncement} disabled={annSending || !annSubject || !annBody}
               style={{ ...btnPrimary, opacity: (annSending || !annSubject || !annBody) ? 0.5 : 1 }}>
-              {annSending ? 'Sending...' : 'Send Announcement'}
+              {annSending ? 'Sending…' : 'Send Announcement'}
             </button>
           </div>
         </div>
@@ -1313,7 +1313,7 @@ export default function SubPortalPage() {
         {userDetailModal && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: userDetailModal.avatarColor + '25', display: 'flex', alignItems: 'center', justifyContent: 'center', color: userDetailModal.avatarColor, fontWeight: 700, fontSize: 22 }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: `color-mix(in srgb, ${userDetailModal.avatarColor} 15%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: userDetailModal.avatarColor, fontWeight: 700, fontSize: 22 }}>
                 {userDetailModal.contactName.split(' ').map(n => n[0]).join('')}
               </div>
               <div>
@@ -1325,38 +1325,38 @@ export default function SubPortalPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
               {[
                 { label: 'Email', value: userDetailModal.email },
-                { label: 'Phone', value: userDetailModal.phone || '--' },
+                { label: 'Phone', value: userDetailModal.phone || '—' },
                 { label: 'Trade', value: userDetailModal.trade },
                 { label: 'Invited', value: fmtDate(userDetailModal.invitedDate) },
                 { label: 'Last Login', value: userDetailModal.lastLogin ? fmtDateTime(userDetailModal.lastLogin) : 'Never' },
               ].map((item, i) => (
                 <div key={i} style={{ padding: '10px 14px', background: BG, borderRadius: 8, border: `1px solid ${BORDER}` }}>
-                  <p style={{ color: DIM, fontSize: 11, margin: '0 0 2px', textTransform: 'uppercase' }}>{item.label}</p>
+                  <p style={{ color: DIM, fontSize: 11, margin: '0 0 2px'}}>{item.label}</p>
                   <p style={{ color: TEXT, fontSize: 14, margin: 0, wordBreak: 'break-all' }}>{item.value}</p>
                 </div>
               ))}
               <div style={{ padding: '10px 14px', background: BG, borderRadius: 8, border: `1px solid ${BORDER}` }}>
-                <p style={{ color: DIM, fontSize: 11, margin: '0 0 4px', textTransform: 'uppercase' }}>Status</p>
+                <p style={{ color: DIM, fontSize: 11, margin: '0 0 4px'}}>Status</p>
                 <StatusBadge status={userDetailModal.status} />
               </div>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <p style={{ color: DIM, fontSize: 12, margin: '0 0 6px', textTransform: 'uppercase', fontWeight: 600 }}>Project Access</p>
+              <p style={{ color: DIM, fontSize: 12, margin: '0 0 6px', fontWeight: 600 }}>Project Access</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {userDetailModal.projectAccess.length === 0 && <span style={{ color: DIM, fontSize: 13 }}>No projects assigned</span>}
                 {userDetailModal.projectAccess.map(p => (
-                  <span key={p} style={{ padding: '4px 10px', background: BLUE + '18', color: BLUE, borderRadius: 6, fontSize: 12 }}>{p}</span>
+                  <span key={p} style={{ padding: '4px 10px', background: `color-mix(in srgb, ${BLUE} 9%, transparent)`, color: BLUE, borderRadius: 6, fontSize: 12 }}>{p}</span>
                 ))}
               </div>
             </div>
 
             <div style={{ marginBottom: 16 }}>
-              <p style={{ color: DIM, fontSize: 12, margin: '0 0 6px', textTransform: 'uppercase', fontWeight: 600 }}>Portal Permissions</p>
+              <p style={{ color: DIM, fontSize: 12, margin: '0 0 6px', fontWeight: 600 }}>Portal Permissions</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {userDetailModal.permissions.length === 0 && <span style={{ color: DIM, fontSize: 13 }}>No permissions</span>}
                 {userDetailModal.permissions.map(p => (
-                  <span key={p} style={{ padding: '4px 10px', background: GREEN + '18', color: GREEN, borderRadius: 6, fontSize: 12 }}>
+                  <span key={p} style={{ padding: '4px 10px', background: `color-mix(in srgb, ${GREEN} 9%, transparent)`, color: GREEN, borderRadius: 6, fontSize: 12 }}>
                     {ALL_PERMISSIONS_LIST.find(x => x.key === p)?.label || p}
                   </span>
                 ))}
@@ -1365,7 +1365,7 @@ export default function SubPortalPage() {
 
             {/* compliance for this user */}
             <div style={{ marginBottom: 16 }}>
-              <p style={{ color: DIM, fontSize: 12, margin: '0 0 8px', textTransform: 'uppercase', fontWeight: 600 }}>Compliance</p>
+              <p style={{ color: DIM, fontSize: 12, margin: '0 0 8px', fontWeight: 600 }}>Compliance</p>
               {compliance.filter(c => c.subName === userDetailModal.contactName).map(c => (
                 <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: BG, borderRadius: 6, border: `1px solid ${BORDER}`, marginBottom: 6 }}>
                   <span style={{ color: TEXT, fontSize: 13 }}>{c.docType === 'w9' ? 'W-9' : c.docType.charAt(0).toUpperCase() + c.docType.slice(1)}</span>
@@ -1380,11 +1380,11 @@ export default function SubPortalPage() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20, borderTop: `1px solid ${BORDER}`, paddingTop: 16 }}>
               {userDetailModal.status === 'active' && (
                 <button onClick={() => { toggleUserStatus(userDetailModal.id, 'disabled'); setUserDetailModal(null); }}
-                  style={{ ...btnSecondary, color: RED, borderColor: RED + '50' }}>Disable Access</button>
+                  style={{ ...btnSecondary, color: RED, borderColor: `color-mix(in srgb, ${RED} 31%, transparent)` }}>Disable Access</button>
               )}
               {userDetailModal.status === 'disabled' && (
                 <button onClick={() => { toggleUserStatus(userDetailModal.id, 'active'); setUserDetailModal(null); }}
-                  style={{ ...btnSecondary, color: GREEN, borderColor: GREEN + '50' }}>Enable Access</button>
+                  style={{ ...btnSecondary, color: GREEN, borderColor: `color-mix(in srgb, ${GREEN} 31%, transparent)` }}>Enable Access</button>
               )}
               {userDetailModal.status === 'pending' && (
                 <button onClick={() => resendInvite(userDetailModal.id)} style={btnSecondary}>Resend Invite</button>

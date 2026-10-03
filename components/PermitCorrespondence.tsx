@@ -27,7 +27,7 @@ interface Corr {
   created_by_name: string | null;
 }
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.1)';
 const PARTIES = ['Architect', 'City / AHJ', 'Engineer', 'Owner', 'Other'];
 
@@ -83,7 +83,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
       icon={<PaperPlaneTilt size={17} weight="duotone" color={GOLD} />}
       action={
         <button onClick={() => setOpen((v) => !v)} className="pmBtn" style={open ? ghostButtonStyle : goldButtonStyle}>
-          {open ? 'Cancel' : <><Plus size={15} weight="bold" /> Log correspondence</>}
+          {open ? 'Cancel' : <><Plus size={15} weight="bold" /> Log Correspondence</>}
         </button>
       }
       style={{ marginBottom: 24 }}
@@ -105,7 +105,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
           <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject — e.g. Revised structural set, RFI response" />
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (optional)" rows={3} style={{ padding: '10px 12px', resize: 'vertical' }} />
           <div>
-            <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>Attach documents / drawings</div>
+            <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-tertiary)', marginBottom: 6 }}>Attach Documents / Drawings</div>
             <FileDropzone
               projectId={projectId}
               category="permit-correspondence"
@@ -117,7 +117,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
             <button onClick={submit} disabled={saving} className="pmBtn" style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'wait' : 'pointer' }}>
-              {saving ? 'Saving…' : 'Log it'}
+              {saving ? 'Saving…' : 'Log It'}
             </button>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function PermitCorrespondence({ projectId }: { projectId: string 
       {loading ? (
         <div style={{ padding: 24, color: 'var(--text-tertiary)', fontSize: 13 }}>Loading…</div>
       ) : items.length === 0 ? (
-        <div style={{ padding: 24, color: 'var(--text-tertiary)', fontSize: 13 }}>No correspondence logged yet. Use “Log correspondence” to record what you send to and receive from the architect or the city.</div>
+        <div style={{ padding: 24, color: 'var(--text-tertiary)', fontSize: 13 }}>No correspondence logged yet. Use “Log Correspondence” to record what you send to and receive from the architect or the city.</div>
       ) : (
         <div style={{ display: 'grid', gap: 8 }}>
           {items.map((c) => {

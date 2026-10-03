@@ -36,14 +36,14 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { VectorSegment } from '@/lib/heatmap/vector-pdf';
 
 /* ── palette (machined dark; accent rides the white-label token) ─────────── */
-const RAISED = '#141416';
-const PANEL = '#1c1c1e';
+const RAISED = 'var(--bg-surface)';
+const PANEL = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF';
 const DIM = '#8094B0';
 const CANVAS_BG = '#0b0e13';
-const ACCENT = 'var(--brand-primary, #F59E0B)';
-const ACCENT_12 = 'var(--brand-primary-12, rgba(245,158,11,0.12))';
+const ACCENT = 'var(--brand-primary)';
+const ACCENT_12 = 'var(--brand-primary-12, var(--brand-primary-12))';
 const A_RED = '#EF4444';
 const B_BLUE = '#3B82F6';
 
@@ -458,7 +458,7 @@ export default function RevisionCompare({ a, b }: Props) {
     cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
   });
   const grp: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6 };
-  const lbl: React.CSSProperties = { fontSize: 11, color: DIM, fontWeight: 600, letterSpacing: 0.4, textTransform: 'uppercase' };
+  const lbl: React.CSSProperties = { fontSize: 11, color: DIM, fontWeight: 600 };
   const sep: React.CSSProperties = { width: 1, alignSelf: 'stretch', background: BORDER, margin: '2px 2px' };
 
   const vecTotal = vec ? vec.added.length + vec.removed.length : 0;
@@ -485,9 +485,9 @@ export default function RevisionCompare({ a, b }: Props) {
       <div style={{ background: RAISED, borderBottom: `1px solid ${BORDER}`, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', flex: 'none' }}>
         {/* layer toggle */}
         <span style={grp}>
-          <button style={ghost(mode === 'A', A_RED)} onClick={() => setMode('A')}>A only</button>
+          <button style={ghost(mode === 'A', A_RED)} onClick={() => setMode('A')}>A Only</button>
           <button style={ghost(mode === 'both')} onClick={() => setMode('both')}>Overlay</button>
-          <button style={ghost(mode === 'B', B_BLUE)} onClick={() => setMode('B')}>B only</button>
+          <button style={ghost(mode === 'B', B_BLUE)} onClick={() => setMode('B')}>B Only</button>
         </span>
         <span style={sep} />
         {/* opacity */}
@@ -524,7 +524,7 @@ export default function RevisionCompare({ a, b }: Props) {
           <button style={ghost()} onClick={fitView}>Fit</button>
         </span>
         {/* vector assist — only ever shown when BOTH sides truly parsed */}
-        {vecBusy && <span style={{ fontSize: 11, color: DIM }}>analyzing linework…</span>}
+        {vecBusy && <span style={{ fontSize: 11, color: DIM }}>Analyzing linework…</span>}
         {vec && (
           <span style={grp}>
             <span style={{
@@ -538,11 +538,11 @@ export default function RevisionCompare({ a, b }: Props) {
             </span>
             {vecTotal > 0 && (
               <button style={ghost(showVec)} onClick={() => setShowVec((s) => !s)}>
-                {showVec ? 'Hide highlight' : 'Highlight'}
+                {showVec ? 'Hide Highlight' : 'Highlight'}
               </button>
             )}
             {showVec && highlightCapped && (
-              <span style={{ fontSize: 10.5, color: DIM }}>highlight capped at {MAX_HIGHLIGHT_LINES} lines/side</span>
+              <span style={{ fontSize: 10.5, color: DIM }}>Highlight capped at {MAX_HIGHLIGHT_LINES} lines/side</span>
             )}
           </span>
         )}
@@ -598,7 +598,7 @@ export default function RevisionCompare({ a, b }: Props) {
             </span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
               <span style={{ width: 10, height: 10, borderRadius: 2, background: '#26262a', border: `1px solid ${BORDER}`, display: 'inline-block' }} />
-              <span>dark — unchanged</span>
+              <span>Dark — unchanged</span>
             </span>
           </div>
         )}

@@ -18,20 +18,20 @@ export default function BackToTop() {
       style={{
         position: 'fixed', bottom: '32px', right: '32px',
         width: '48px', height: '48px', borderRadius: '50%',
-        background: 'linear-gradient(135deg, #F59E0B, #FBBF24)',
+        background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-strong))',
         border: 'none', cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: '20px', color: '#0A0E14', fontWeight: '900',
-        boxShadow: '0 4px 20px rgba(245, 158, 11,0.4)', zIndex: 9997,
+        boxShadow: '0 4px 20px var(--brand-primary-35)', zIndex: 9997,
         transition: 'transform 0.2s, box-shadow 0.2s',
       }}
       onMouseEnter={e => {
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.1)';
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 6px 28px rgba(245, 158, 11,0.6)';
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 6px 28px color-mix(in srgb, var(--brand-primary) 60%, transparent)';
       }}
       onMouseLeave={e => {
         (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)';
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 20px rgba(245, 158, 11,0.4)';
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 20px var(--brand-primary-35)';
       }}
       aria-label="Back to top"
     >↑</button>

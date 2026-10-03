@@ -9,10 +9,10 @@ import { PremiumSurface, ModuleHero, SectionCard, StatCard, PremiumEmpty, FlowSt
 import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 
-const BASE = '#1c1c1e';
-const GOLD = '#F59E0B';
+const BASE = 'var(--bg-surface-2)';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#34C759';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 const RED = '#FF3B30';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
@@ -49,6 +49,16 @@ const MANUFACTURERS = [
   'cisco', 'ubiquiti', 'meraki', 'aruba', 'fortinet', 'sonicwall', 'hp', 'dell', 'other',
 ];
 
+const DEVICE_TYPE_LABELS: Record<string, string> = {
+  router: 'Router', switch: 'Switch', firewall: 'Firewall', access_point: 'Access Point',
+  printer: 'Printer', camera: 'Camera', server: 'Server', workstation: 'Workstation',
+  voip_phone: 'VoIP Phone', iot: 'IoT', modem: 'Modem', ups: 'UPS',
+};
+const deviceTypeLabel = (t: string) => DEVICE_TYPE_LABELS[t] || t.replace(/_/g, ' ');
+
+const MANUFACTURER_LABELS: Record<string, string> = { hp: 'HP', sonicwall: 'SonicWall' };
+const manufacturerLabel = (m: string) => MANUFACTURER_LABELS[m] || m.charAt(0).toUpperCase() + m.slice(1);
+
 const TYPE_ICONS: Record<string, React.ComponentType<any>> = {
   router: Globe, switch: ArrowsLeftRight, firewall: Shield, access_point: WifiHigh,
   printer: Printer, camera: VideoCamera, server: HardDrives, workstation: Laptop,
@@ -61,7 +71,7 @@ function DeviceTypeIcon({ type, size, color }: { type: string; size: number; col
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  online: GREEN, offline: RED, planned: '#6B7280', warning: GOLD, maintenance: BLUE,
+  online: GREEN, offline: RED, planned: '#6B7280', warning: 'var(--warning)', maintenance: BLUE,
 };
 
 const inputStyle: React.CSSProperties = {
@@ -188,15 +198,15 @@ export default function DeviceInventoryPage() {
       {/* Breadcrumb */}
       <div style={{ marginBottom: 14 }}>
         <Link href={`/app/projects/${projectId}/network`} style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, textDecoration: 'none' }}>
-          Network &gt;
+          Network →
         </Link>
         <span style={{ color: TEXT, fontSize: 12, marginLeft: 4 }}>Devices</span>
       </div>
 
       {/* Header */}
       <ModuleHero
-        eyebrow="NETWORK"
-        eyebrowIcon={<HardDrives size={13} weight="fill" color="#F59E0B" />}
+        eyebrow="Network"
+        eyebrowIcon={<HardDrives size={13} weight="fill" color={GOLD} />}
         title="Device"
         accent="Inventory"
         subtitle="Routers, switches, access points, and endpoints."
@@ -216,22 +226,22 @@ export default function DeviceInventoryPage() {
         <StatCard
           icon={<Package size={19} weight="duotone" color={GOLD} />}
           label="Total Devices" value={String(devices.length)} accent={GOLD}
-          sub="in inventory" delay={0.02}
+          sub="In inventory" delay={0.02}
          href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
           icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
           label="Online" value={String(onlineCount)} accent={onlineCount ? GREEN : undefined}
-          sub="reporting up" delay={0.06}
+          sub="Reporting up" delay={0.06}
          href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
           icon={<WarningCircle size={19} weight="duotone" color={RED} />}
           label="Offline" value={String(offlineCount)} accent={offlineCount ? RED : undefined}
-          sub="not reporting" delay={0.10}
+          sub="Not reporting" delay={0.10}
          href={`/app/projects/${projectId}/network/devices`}/>
         <StatCard
           icon={<Clock size={19} weight="duotone" color="#94A3B8" />}
           label="Planned" value={String(plannedCount)} accent={plannedCount ? '#94A3B8' : undefined}
-          sub="not yet deployed" delay={0.14}
+          sub="Not yet deployed" delay={0.14}
          href={`/app/projects/${projectId}/network/devices`}/>
       </div>
 
@@ -243,13 +253,13 @@ export default function DeviceInventoryPage() {
               <div>
                 <label style={labelStyle}>Device Type</label>
                 <select value={form.device_type} onChange={e => setForm({ ...form, device_type: e.target.value })} style={inputStyle}>
-                  {DEVICE_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+                  {DEVICE_TYPES.map(t => <option key={t} value={t}>{deviceTypeLabel(t)}</option>)}
                 </select>
               </div>
               <div>
                 <label style={labelStyle}>Manufacturer</label>
                 <select value={form.manufacturer} onChange={e => setForm({ ...form, manufacturer: e.target.value })} style={inputStyle}>
-                  {MANUFACTURERS.map(m => <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>)}
+                  {MANUFACTURERS.map(m => <option key={m} value={m}>{manufacturerLabel(m)}</option>)}
                 </select>
               </div>
               <div>
@@ -312,7 +322,7 @@ export default function DeviceInventoryPage() {
                 cursor: saving || !form.hostname ? 'not-allowed' : 'pointer',
               }}
             >
-              {saving ? 'Saving...' : 'Save Device'}
+              {saving ? 'Saving…' : 'Save Device'}
             </button>
           </SectionCard>
         </div>
@@ -324,12 +334,12 @@ export default function DeviceInventoryPage() {
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             <input
               value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search hostname or IP..."
+              placeholder="Search hostname or IP…"
               style={{ ...inputStyle, width: 240, flex: 'none' }}
             />
             <select value={filterType} onChange={e => setFilterType(e.target.value)} style={{ ...inputStyle, width: 160, flex: 'none' }}>
               <option value="">All Types</option>
-              {DEVICE_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+              {DEVICE_TYPES.map(t => <option key={t} value={t}>{deviceTypeLabel(t)}</option>)}
             </select>
             <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{ ...inputStyle, width: 140, flex: 'none' }}>
               <option value="">All Statuses</option>
@@ -350,9 +360,9 @@ export default function DeviceInventoryPage() {
         <div style={{ marginBottom: 24 }}>
           <SectionCard flat
             title={selectedDevice.hostname}
-            subtitle={`${selectedDevice.manufacturer} ${selectedDevice.model} · ${selectedDevice.device_type.replace(/_/g, ' ')}`}
+            subtitle={`${selectedDevice.manufacturer} ${selectedDevice.model} · ${deviceTypeLabel(selectedDevice.device_type)}`}
             icon={<DeviceTypeIcon type={selectedDevice.device_type} size={18} color={GOLD} />}
-            style={{ borderColor: 'rgba(245,158,11,0.35)' }}
+            style={{ borderColor: 'var(--brand-primary-35)' }}
             action={
               <button
                 onClick={() => setSelectedDevice(null)}
@@ -379,14 +389,14 @@ export default function DeviceInventoryPage() {
                 { label: 'Firmware', value: selectedDevice.firmware_version || 'N/A' },
               ].map(item => (
                 <div key={item.label}>
-                  <div style={{ color: DIM, fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>{item.label}</div>
+                  <div style={{ color: DIM, fontSize: 11, fontWeight: 600 }}>{item.label}</div>
                   <div style={{ color: TEXT, fontSize: 14, fontWeight: 500, marginTop: 2 }}>{item.value}</div>
                 </div>
               ))}
             </div>
             {selectedDevice.notes && (
               <div style={{ marginTop: 12, padding: 12, background: 'rgba(255,255,255,0.04)', borderRadius: 8 }}>
-                <div style={{ color: DIM, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>NOTES</div>
+                <div style={{ color: DIM, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Notes</div>
                 <div style={{ color: TEXT, fontSize: 13 }}>{selectedDevice.notes}</div>
               </div>
             )}
@@ -414,10 +424,10 @@ export default function DeviceInventoryPage() {
             </div>
             {devices.length === 0 && (
               <FlowStrip steps={[
-                { title: 'Add devices', desc: 'planned before install day' },
-                { title: 'Assign VLANs and IPs', desc: 'from the IP plan' },
-                { title: 'Flip to online', desc: 'as gear is deployed' },
-                { title: 'Reports auto-build', desc: 'IP schedule and as-builts' },
+                { title: 'Add Devices', desc: 'Planned before install day' },
+                { title: 'Assign VLANs and IPs', desc: 'From the IP plan' },
+                { title: 'Flip to Online', desc: 'As gear is deployed' },
+                { title: 'Reports Auto-Build', desc: 'IP schedule and as-builts' },
               ]} />
             )}
           </div>
@@ -427,7 +437,7 @@ export default function DeviceInventoryPage() {
               <thead>
                 <tr>
                   {['', 'Hostname', 'Type', 'Manufacturer', 'Model', 'IP Address', 'MAC', 'VLAN', 'Location', 'Status'].map(col => (
-                    <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
+                    <th key={col} style={{ padding: '12px 14px', textAlign: 'left', color: DIM, fontSize: 11, fontWeight: 700, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{col}</th>
                   ))}
                 </tr>
               </thead>
@@ -442,8 +452,8 @@ export default function DeviceInventoryPage() {
                   >
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, fontSize: 18 }}><DeviceTypeIcon type={dev.device_type} size={18} color={TEXT} /></td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 13, fontWeight: 600 }}>{dev.hostname}</td>
-                    <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, textTransform: 'capitalize' }}>{dev.device_type.replace(/_/g, ' ')}</td>
-                    <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12, textTransform: 'capitalize' }}>{dev.manufacturer}</td>
+                    <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{deviceTypeLabel(dev.device_type)}</td>
+                    <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{manufacturerLabel(dev.manufacturer)}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 12 }}>{dev.model}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: TEXT, fontSize: 12, fontFamily: 'monospace' }}>{dev.ip_address || '—'}</td>
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}`, color: DIM, fontSize: 11, fontFamily: 'monospace' }}>{dev.mac_address || '—'}</td>
@@ -452,7 +462,7 @@ export default function DeviceInventoryPage() {
                     <td style={{ padding: '12px 14px', borderBottom: `1px solid ${BORDER}` }}>
                       <span style={{
                         fontSize: 11, padding: '3px 10px', borderRadius: 10, fontWeight: 600,
-                        background: `${STATUS_COLORS[dev.status] || '#6B7280'}15`,
+                        background: `color-mix(in srgb, ${STATUS_COLORS[dev.status] || '#6B7280'} 8%, transparent)`,
                         color: STATUS_COLORS[dev.status] || '#6B7280',
                         textTransform: 'capitalize',
                       }}>{dev.status}</span>

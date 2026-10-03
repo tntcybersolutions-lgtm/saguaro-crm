@@ -62,14 +62,14 @@ const PIPELINE: TrendPoint[] = [
 const STAGE_MIX: DonutSlice[] = [
   { label: 'Qualified', value: 2_100_000 },
   { label: 'Estimating', value: 1_750_000 },
-  { label: 'Bid submitted', value: 1_480_000 },
+  { label: 'Bid Submitted', value: 1_480_000 },
   { label: 'Negotiation', value: 840_000 },
-  { label: 'Verbal win', value: 310_000 },
+  { label: 'Verbal Win', value: 310_000 },
 ];
 
 const PROJECT_TYPE: DonutSlice[] = [
   { label: 'Commercial TI', value: 4_200_000 },
-  { label: 'Ground-up', value: 3_100_000 },
+  { label: 'Ground-Up', value: 3_100_000 },
   { label: 'Healthcare', value: 1_900_000 },
   { label: 'Education', value: 1_200_000 },
   { label: 'Civic', value: 640_000 },
@@ -89,7 +89,7 @@ export default function ChartShowcasePage() {
   return (
     <PremiumSurface>
       <ModuleHero
-        eyebrow="Financial tracking"
+        eyebrow="Financial Tracking"
         title="Reporting"
         accent="charts"
         subtitle="Real tracking graphs at a glance — hover left-to-right for every value, watch trends move up and down with live percentage deltas, and read win / loss at a ratio. Sample data shown for preview."
@@ -113,7 +113,7 @@ export default function ChartShowcasePage() {
           delay={0}
         />
         <MetricTrendCard
-          label="Open pipeline"
+          label="Open Pipeline"
           value={formatCurrency(PIPELINE[PIPELINE.length - 1].value)}
           sub="Weighted by stage"
           spark={pipelineSpark}
@@ -121,7 +121,7 @@ export default function ChartShowcasePage() {
           delay={0.05}
         />
         <MetricTrendCard
-          label="Win rate"
+          label="Win Rate"
           value={`${winRateSpark[winRateSpark.length - 1]}%`}
           sub="Trailing 90 days"
           spark={winRateSpark}
@@ -129,7 +129,7 @@ export default function ChartShowcasePage() {
           delay={0.1}
         />
         <MetricTrendCard
-          label="Avg deal size"
+          label="Avg Deal Size"
           value={formatCurrency(avgDealSpark[avgDealSpark.length - 1] * 1000)}
           sub="Per awarded job"
           spark={avgDealSpark}
@@ -147,7 +147,7 @@ export default function ChartShowcasePage() {
           ...sectionGap,
         }}
       >
-        <SectionCard title="Revenue trend" subtitle="Booked revenue, trailing 12 months" flush>
+        <SectionCard title="Revenue Trend" subtitle="Booked revenue, trailing 12 months" flush>
           <div style={{ padding: 16 }}>
             <TrendArea
               data={REVENUE}
@@ -159,7 +159,7 @@ export default function ChartShowcasePage() {
             />
           </div>
         </SectionCard>
-        <SectionCard title="Pipeline trend" subtitle="Open opportunity value over time" flush>
+        <SectionCard title="Pipeline Trend" subtitle="Open opportunity value over time" flush>
           <div style={{ padding: 16 }}>
             <TrendArea
               data={PIPELINE}
@@ -182,10 +182,10 @@ export default function ChartShowcasePage() {
           ...sectionGap,
         }}
       >
-        <SectionCard title="Win / loss" subtitle="Bids decided this quarter" flush>
+        <SectionCard title="Win / Loss" subtitle="Bids decided this quarter" flush>
           <div style={{ padding: 16 }}>
             <WinLossBar
-              title="Bid outcomes"
+              title="Bid Outcomes"
               subtitle="Awarded vs lost (open deals excluded from rate)"
               won={46}
               lost={54}
@@ -193,11 +193,11 @@ export default function ChartShowcasePage() {
             />
           </div>
         </SectionCard>
-        <SectionCard title="Pipeline by stage" subtitle="Where open value sits right now" flush>
+        <SectionCard title="Pipeline by Stage" subtitle="Where open value sits right now" flush>
           <div style={{ padding: 16 }}>
             <DonutRatio
               data={STAGE_MIX}
-              title="Pipeline by stage"
+              title="Pipeline by Stage"
               centerLabel="Pipeline"
               format="currency"
             />
@@ -214,11 +214,11 @@ export default function ChartShowcasePage() {
           ...sectionGap,
         }}
       >
-        <SectionCard title="Revenue by project type" subtitle="Share of booked revenue, trailing 12 months" flush>
+        <SectionCard title="Revenue by Project Type" subtitle="Share of booked revenue, trailing 12 months" flush>
           <div style={{ padding: 16 }}>
             <DonutRatio
               data={PROJECT_TYPE}
-              title="Revenue by type"
+              title="Revenue by Type"
               centerLabel="Revenue"
               format="currency"
             />
@@ -229,8 +229,8 @@ export default function ChartShowcasePage() {
             {[
               { label: 'Revenue', data: revenueSpark },
               { label: 'Pipeline', data: pipelineSpark },
-              { label: 'Win rate', data: winRateSpark },
-              { label: 'Avg deal', data: avgDealSpark },
+              { label: 'Win Rate', data: winRateSpark },
+              { label: 'Avg Deal', data: avgDealSpark },
             ].map((row) => (
               <div
                 key={row.label}
@@ -247,8 +247,7 @@ export default function ChartShowcasePage() {
                   style={{
                     fontSize: 11,
                     fontWeight: 700,
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
+
                     color: 'var(--text-tertiary, #8094B0)',
                   }}
                 >

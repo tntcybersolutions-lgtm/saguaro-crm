@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Cactus, Check, Lock, Warning } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#1a8a4a',RED='#c03030';
 
 export default function W9Portal() {
   const { token } = useParams<{ token: string }>();
@@ -49,7 +49,7 @@ export default function W9Portal() {
 
   const inp = (label: string, key: string, placeholder?: string, type?: string) => (
     <div style={{ marginBottom: 16 }}>
-      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5, textTransform: 'uppercase', letterSpacing: .5 }}>{label}</label>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>{label}</label>
       <input
         type={type || 'text'}
         value={(form as any)[key]}
@@ -62,7 +62,7 @@ export default function W9Portal() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: DARK, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DIM, fontFamily: 'system-ui,sans-serif' }}>
-      Loading...
+      Loading…
     </div>
   );
 
@@ -93,13 +93,13 @@ export default function W9Portal() {
       {/* Header */}
       <div style={{ background: 'rgba(20,20,22,.96)', borderBottom: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <Cactus size={22} weight="fill" color={GOLD} />
-        <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: 1 }}>SAGUARO CONTROL SYSTEMS</span>
+        <span style={{ fontWeight: 800, fontSize: 16, color: GOLD, letterSpacing: '-0.01em' }}>Saguaro Control Systems</span>
         <span style={{ fontSize: 11, color: DIM, marginLeft: 8 }}>Secure W-9 Collection Portal</span>
       </div>
 
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '32px 24px' }}>
         {/* Banner */}
-        <div style={{ background: 'rgba(245, 158, 11,.06)', border: `1px solid rgba(245, 158, 11,.2)`, borderRadius: 10, padding: '16px 20px', marginBottom: 28 }}>
+        <div style={{ background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', border: '1px solid var(--brand-primary-18)', borderRadius: 10, padding: '16px 20px', marginBottom: 28 }}>
           <div style={{ fontWeight: 800, fontSize: 16, color: GOLD, marginBottom: 4 }}>W-9 Request — {info.projectName}</div>
           <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
             You have been requested to provide W-9 tax information for <strong style={{ color: TEXT }}>{info.vendorName}</strong>. This form is required to process payments. All information is transmitted securely and encrypted.
@@ -111,10 +111,10 @@ export default function W9Portal() {
           <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', marginBottom: 20 }}>
             <div style={{ padding: '12px 20px', borderBottom: `1px solid ${BORDER}`, fontWeight: 700, fontSize: 14 }}>Part I — Identification</div>
             <div style={{ padding: 20 }}>
-              {inp('Legal Name (as shown on income tax return)', 'legalName', 'John Smith or ABC Construction LLC')}
-              {inp('Business / DBA Name (if different)', 'businessName', 'Trade name or DBA')}
+              {inp('Legal Name (As Shown on Income Tax Return)', 'legalName', 'John Smith or ABC Construction LLC')}
+              {inp('Business / DBA Name (If Different)', 'businessName', 'Trade name or DBA')}
               <div style={{ marginBottom: 16 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5, textTransform: 'uppercase', letterSpacing: .5 }}>Federal Tax Classification</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>Federal Tax Classification</label>
                 <select
                   value={form.taxClassification}
                   onChange={e => setForm(f => ({ ...f, taxClassification: e.target.value }))}
@@ -132,12 +132,12 @@ export default function W9Portal() {
                 </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                {inp('Exempt Payee Code (if applicable)', 'exemptPayeeCode', 'See instructions')}
+                {inp('Exempt Payee Code (If Applicable)', 'exemptPayeeCode', 'See instructions')}
                 {inp('Exemption from FATCA Reporting Code', 'exemptFromFatca', 'See instructions')}
               </div>
-              {inp('Address (number, street, apt or suite)', 'address', '123 Main St Suite 100')}
+              {inp('Address (Number, Street, Apt or Suite)', 'address', '123 Main St Suite 100')}
               {inp('City, State, ZIP Code', 'cityStateZip', 'Phoenix, AZ 85001')}
-              {inp('Account Number(s) (optional)', 'accountNumbers', 'Optional — leave blank if not applicable')}
+              {inp('Account Number(s) (Optional)', 'accountNumbers', 'Optional — leave blank if not applicable')}
             </div>
           </div>
 
@@ -154,7 +154,7 @@ export default function W9Portal() {
                 ))}
               </div>
               <div style={{ marginBottom: 8 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5, textTransform: 'uppercase', letterSpacing: .5 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: DIM, marginBottom: 5 }}>
                   {form.tinType === 'ssn' ? 'SSN (XXX-XX-XXXX)' : 'EIN (XX-XXXXXXX)'}
                 </label>
                 <input
@@ -182,7 +182,7 @@ export default function W9Portal() {
                 <span style={{ fontSize: 13, color: TEXT, lineHeight: 1.5 }}>I certify under penalty of perjury that the above information is true and correct.</span>
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                {inp('Signature (type your full legal name)', 'signatureName', 'John Smith')}
+                {inp('Signature (Type Your Full Legal Name)', 'signatureName', 'John Smith')}
                 {inp('Date', 'signatureDate', '', 'date')}
               </div>
             </div>
@@ -191,9 +191,9 @@ export default function W9Portal() {
           <button
             type="submit"
             disabled={saving}
-            style={{ width: '100%', padding: '14px', background: saving ? '#6E6E73' : `linear-gradient(135deg,${GOLD},#FBBF24)`, border: 'none', borderRadius: 9, color: '#1C1C1E', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
+            style={{ width: '100%', padding: '14px', background: saving ? '#6E6E73' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`, border: 'none', borderRadius: 9, color: '#0A0A00', fontWeight: 800, fontSize: 16, cursor: saving ? 'not-allowed' : 'pointer', letterSpacing: .5 }}
           >
-            {saving ? 'Submitting...' : 'Submit W-9 Securely →'}
+            {saving ? 'Submitting…' : 'Submit W-9 Securely →'}
           </button>
 
           <div style={{ textAlign: 'center', marginTop: 16, fontSize: 11, color: DIM }}>

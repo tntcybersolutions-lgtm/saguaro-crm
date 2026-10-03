@@ -3,9 +3,9 @@
 /**
  * Saguaro premium UI kit — shared FX layer.
  *
- * Codifies the "AI Blueprint Takeoff" aesthetic (aurora backdrop, ambient gold
- * glow, breathing cards, cinematic entrance motion) as reusable primitives so
- * every module can adopt the same look with a few components.
+ * Codifies the shared premium look — jet black page, glass cards, neon-yellow
+ * brand accent, entrance motion (docs/COPY-STYLE.md §6–§7) — as reusable
+ * primitives so every module can adopt the same look with a few components.
  *
  * PURELY PRESENTATIONAL. No data, routing, or business logic lives here.
  *
@@ -33,7 +33,7 @@ export const GOLD_HI = 'var(--brand-primary-strong)';
 
 /** The gold → light-gold shimmer gradient used for accent words + shine. */
 export const GOLD_TEXT_GRADIENT =
-  'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 42%, #FDE68A 60%, var(--brand-primary) 92%)';
+  'linear-gradient(100deg, var(--brand-primary) 6%, var(--brand-primary-strong) 42%, #FFF7A8 60%, var(--brand-primary) 92%)';
 
 /* ── Shared stylesheet ─────────────────────────────────────────────────
  * Injected once per page via <UiFx/> (which <ModuleHero> and <PremiumEmpty>
@@ -45,14 +45,14 @@ export const UI_FX_CSS = `
 /* Theme-aware tokens (dark default; flip under light) */
 .sgUi{
   --sg-text:#ffffff;
-  --sg-text-2:rgba(255,255,255,0.66);
-  --sg-text-3:rgba(255,255,255,0.44);
+  --sg-text-2:#D7DEE8;
+  --sg-text-3:#A9B4C4;
   --sg-surface-from:rgba(255,255,255,0.055);
-  --sg-surface-to:rgba(255,255,255,0.014);
-  --sg-surface-solid:#141416;
-  --sg-border:rgba(255,255,255,0.08);
-  --sg-border-strong:rgba(255,255,255,0.14);
-  --sg-page-fade:rgba(2,4,8,0.55);
+  --sg-surface-to:rgba(255,255,255,0.03);
+  --sg-surface-solid:#0E0F12;
+  --sg-border:rgba(255,255,255,0.09);
+  --sg-border-strong:rgba(255,255,255,0.16);
+  --sg-page-fade:rgba(0,0,0,0);
   --sg-inner-glow:rgba(255,255,255,0.045);
   --sg-shadow:0 24px 60px -24px rgba(0,0,0,0.55);
 }
@@ -118,27 +118,18 @@ export function UiFx() {
 }
 
 /* ── Aurora backdrop ───────────────────────────────────────────────────
- * Scoped, position:absolute so it fills only its positioned parent (never
- * bleeds under a sidebar). Aurora gold blobs + drifting blueprint grid +
- * vignette. Decorative; pointer-events:none keeps content interactive. */
-export function Aurora({ soft = false, grid = true }: { soft?: boolean; grid?: boolean }) {
-  const gridImg =
-    `linear-gradient(${gold(5.5)} 1px, transparent 1px),` +
-    `linear-gradient(90deg, ${gold(5.5)} 1px, transparent 1px)`;
-  const gridMask = 'radial-gradient(120% 78% at 50% 12%, #000 24%, transparent 76%)';
+ * Jet black (COPY-STYLE §6). The animated gold blobs, drifting blueprint grid
+ * and vignette sat behind text and hurt legibility, so the backdrop is now a
+ * single faint, static, COOL sheen at the top. Props kept (`grid` is accepted
+ * and ignored) so every caller keeps compiling. position:absolute so it fills
+ * only its positioned parent; pointer-events:none keeps content interactive. */
+export function Aurora({ soft = false }: { soft?: boolean; grid?: boolean }) {
   return (
     <div
       aria-hidden
       style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}
     >
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 90% at 50% -8%, ${gold(10)}, transparent 55%)` }} />
-      <div style={{ position: 'absolute', width: 620, height: 620, left: '-16%', top: '-28%', borderRadius: '50%', background: `radial-gradient(circle, ${gold(20)}, transparent 62%)`, filter: 'blur(32px)', animation: 'sgAur1 17s ease-in-out infinite', opacity: soft ? 0.5 : 0.95 }} />
-      <div style={{ position: 'absolute', width: 520, height: 520, right: '-12%', top: '-4%', borderRadius: '50%', background: `radial-gradient(circle, ${gold(15)}, transparent 60%)`, filter: 'blur(40px)', animation: 'sgAur2 21s ease-in-out infinite', opacity: soft ? 0.45 : 0.9 }} />
-      <div style={{ position: 'absolute', width: 500, height: 500, left: '30%', bottom: '-30%', borderRadius: '50%', background: `radial-gradient(circle, ${gold(12)}, transparent 60%)`, filter: 'blur(44px)', animation: 'sgAur3 24s ease-in-out infinite', opacity: soft ? 0.4 : 0.85 }} />
-      {grid && (
-        <div style={{ position: 'absolute', inset: -24, backgroundImage: gridImg, backgroundSize: '34px 34px', animation: 'sgGridPan 9s linear infinite', maskImage: gridMask, WebkitMaskImage: gridMask, opacity: soft ? 0.3 : 0.55 }} />
-      )}
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(130% 100% at 50% -6%, transparent 52%, var(--sg-page-fade))' }} />
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(120% 60% at 50% -12%, rgba(170,195,255,${soft ? 0.035 : 0.05}), transparent 60%)` }} />
     </div>
   );
 }

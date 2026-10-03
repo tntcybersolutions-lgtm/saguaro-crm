@@ -55,8 +55,8 @@ export const PHASE_LABEL: Record<ProjectPhase, string> = {
 
 /** What the choice says, in a GC's words, at project creation. */
 export const PHASE_CHOICES: { value: ProjectPhase; title: string; detail: string }[] = [
-  { value: 'bidding',  title: "We're bidding it", detail: 'Takeoff, estimate, bid packages, proposal' },
-  { value: 'building', title: 'We won it',        detail: 'Budget, subs, schedule, field, pay apps' },
+  { value: 'bidding',  title: "We're Bidding It", detail: 'Takeoff, estimate, bid packages, proposal' },
+  { value: 'building', title: 'We Won It',        detail: 'Budget, subs, schedule, field, pay apps' },
 ];
 
 export interface PhaseStep {
@@ -74,15 +74,15 @@ export interface PhaseStep {
  * pretending a bid flows into billing is what made the single journey wrong.
  */
 export const BIDDING_STEPS: PhaseStep[] = [
-  { key: 'takeoff',      title: 'Measure the drawings', desc: 'Upload the plans and the system measures and prices every trade from them.', href: '/takeoff' },
-  { key: 'estimate',     title: 'Price it',              desc: 'The estimate builds from the takeoff, rolled up by CSI division.', href: '/estimate' },
+  { key: 'takeoff',      title: 'Measure the Drawings', desc: 'Upload the plans and the system measures and prices every trade from them.', href: '/takeoff' },
+  { key: 'estimate',     title: 'Price It',              desc: 'The estimate builds from the takeoff, rolled up by CSI division.', href: '/estimate' },
   /* Levelling is FOLDED IN here rather than being its own step. It has no
      standalone screen — you level a specific package, from that package —
      so a separate step would have carried a number the navigation could
      never show, and a sequence whose numbers do not match the menu is the
      problem this file exists to solve. */
-  { key: 'bid-packages', title: 'Send bid packages',     desc: 'Scoped packages go out to your subs. Levelling compares what comes back — spread, gaps, coverage.', href: '/bid-packages' },
-  { key: 'proposal',     title: 'Submit the proposal',   desc: 'The jacket: scope, quantities and your number in one document.', href: '/proposal' },
+  { key: 'bid-packages', title: 'Send Bid Packages',     desc: 'Scoped packages go out to your subs. Levelling compares what comes back — spread, gaps, coverage.', href: '/bid-packages' },
+  { key: 'proposal',     title: 'Submit the Proposal',   desc: 'The jacket: scope, quantities and your number in one document.', href: '/proposal' },
 ];
 
 /**
@@ -91,12 +91,12 @@ export const BIDDING_STEPS: PhaseStep[] = [
  * right sequence for a job in hand.
  */
 export const BUILDING_STEPS: PhaseStep[] = [
-  { key: 'budget',     title: 'Set contract & budget', desc: 'Confirm the contract sum. Budget lines come from the takeoff.', href: '/budget' },
-  { key: 'subs',       title: 'Award & onboard subs',  desc: 'Award the winners — contracts, insurance and W-9s collect themselves.', href: '/subs' },
-  { key: 'schedule',   title: 'Build the schedule',    desc: 'Sequence the work. The critical path drives field priorities.', href: '/schedule' },
-  { key: 'daily-logs', title: 'Run the field',         desc: 'Daily logs capture crews, weather and progress from the site.', href: '/daily-logs' },
-  { key: 'pay-apps',   title: 'Bill the owner',        desc: 'The G702/G703 builds itself from live project data.', href: '/pay-apps' },
-  { key: 'closeout',   title: 'Close it out',          desc: 'Punch, closeout documents, and the job comes off your active list.', href: '/closeout' },
+  { key: 'budget',     title: 'Set Contract & Budget', desc: 'Confirm the contract sum. Budget lines come from the takeoff.', href: '/budget' },
+  { key: 'subs',       title: 'Award & Onboard Subs',  desc: 'Award the winners — contracts, insurance and W-9s collect themselves.', href: '/subs' },
+  { key: 'schedule',   title: 'Build the Schedule',    desc: 'Sequence the work. The critical path drives field priorities.', href: '/schedule' },
+  { key: 'daily-logs', title: 'Run the Field',         desc: 'Daily logs capture crews, weather and progress from the site.', href: '/daily-logs' },
+  { key: 'pay-apps',   title: 'Bill the Owner',        desc: 'The G702/G703 builds itself from live project data.', href: '/pay-apps' },
+  { key: 'closeout',   title: 'Close It Out',          desc: 'Punch, closeout documents, and the job comes off your active list.', href: '/closeout' },
 ];
 
 export const stepsForPhase = (phase: ProjectPhase): PhaseStep[] =>
@@ -151,38 +151,69 @@ export function stepNumber(href: string, phase: ProjectPhase): number | null {
  *  a context that failed to load must leave steps unticked, never crash. */
 export interface PhaseContextLike {
   project?: { phase?: unknown; status?: unknown } | null;
-  takeoff?: { completed?: unknown; totalCost?: unknown } | null;
+  takeoff?: { completed?: unknown; pricedTotal?: unknown } | null;
   budget?: { lineCount?: number } | null;
   bidPackages?: Array<Record<string, unknown>> | null;
   subs?: unknown[] | null;
   counts?: { scheduleTasks?: number } | null;
-  recent?: { lastDailyLogDate?: unknown } | null;
+  recent?: { lastDailyLogDate?: unknown; dailyLogDays?: unknown } | null;
 }
 
 export interface PhaseMoneyLike {
   originalContract?: unknown;
   payAppCount?: unknown;
+  submittedPayAppCount?: unknown;
 }
 
+/** "Run the field" is a habit, not an entry: daily logs on at least this many
+ *  distinct days. One log on day one used to tick the step, which told a GC
+ *  their field reporting was done the first afternoon. Three days is the
+ *  smallest number that reads as "the crew is logging" rather than "someone
+ *  tried the screen", and it is reachable inside the first week of a job. */
+export const FIELD_LOG_DAYS_DONE = 3;
+
+/**
+ * WHAT "DONE" MEANS — each test is the thing actually having happened, not a
+ * record existing. A tick the user did not earn is worse than no tick: it
+ * tells them to skip a step they still owe.
+ *
+ *   budget        contract sum > 0 AND at least one budget line. Winning a
+ *                 job with a $0 contract and no lines used to tick this.
+ *   bid-packages  at least one sub INVITED on some package. A package that
+ *                 was drafted and never sent to anyone is not "sent".
+ *   daily-logs    logs on >= FIELD_LOG_DAYS_DONE distinct days.
+ *   pay-apps      a pay app SUBMITTED to the owner (submitted / approved /
+ *                 certified / paid). The draft auto-created on win is not a
+ *                 bill.
+ */
 export function stepsDone(
   ctx: PhaseContextLike | null | undefined,
   money: PhaseMoneyLike | null | undefined,
   isClosed: (status: unknown) => boolean,
 ): Record<string, boolean> {
   const contract = Number(money?.originalContract) || 0;
-  const lineCount = ctx?.budget?.lineCount || 0;
+  const lineCount = Number(ctx?.budget?.lineCount) || 0;
   const packages = ctx?.bidPackages || [];
+  /* A closed job's journey is over. Scoring it step by step left a closed
+     project's rail and "you are here" bar still pointing at "Set contract &
+     budget" — the building checklist outliving the building. Every step reads
+     as behind you, so the rail steps aside and the bar says the job is done. */
+  if (isClosed(ctx?.project?.status)) {
+    return Object.fromEntries(
+      [...BIDDING_STEPS, ...BUILDING_STEPS, { key: 'leveling' }].map((s) => [s.key, true]),
+    );
+  }
   return {
     takeoff:        Boolean(ctx?.takeoff?.completed),
-    estimate:       (Number(ctx?.takeoff?.totalCost) || 0) > 0 || lineCount > 0,
-    'bid-packages': packages.length > 0,
-    leveling:       packages.some((p) => Boolean(p?.leveling_complete || p?.awarded_to)),
+    estimate:       (Number(ctx?.takeoff?.pricedTotal) || 0) > 0 || lineCount > 0,
+    'bid-packages': packages.some((p) => (Number(p?.invitedCount) || 0) > 0),
+    leveling:       packages.some((p) => Boolean(p?.awardedTo)),
     proposal:       contract > 0,
-    budget:         contract > 0 || lineCount > 0,
+    budget:         contract > 0 && lineCount > 0,
     subs:           (ctx?.subs || []).length > 0,
-    schedule:       (ctx?.counts?.scheduleTasks || 0) > 0,
-    'daily-logs':   ctx?.recent?.lastDailyLogDate != null,
-    'pay-apps':     (Number(money?.payAppCount) || 0) > 0,
+    schedule:       (Number(ctx?.counts?.scheduleTasks) || 0) > 0,
+    'daily-logs':   (Number(ctx?.recent?.dailyLogDays) || 0) >= FIELD_LOG_DAYS_DONE,
+    'pay-apps':     (Number(money?.submittedPayAppCount) || 0) > 0,
     closeout:       isClosed(ctx?.project?.status),
   };
 }

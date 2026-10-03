@@ -18,11 +18,11 @@ import { ArrowsLeftRight, FileText, X } from '@phosphor-icons/react';
  * pretending otherwise would be worse than showing them side by side.
  */
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
-const CARD = '#0D1D2E';
+const CARD = 'var(--bg-surface)';
 
 interface FileRow {
   id: string;
@@ -75,9 +75,9 @@ export default function ContractCompare({ projectId, pdfUrl, title, entityId }: 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: GOLD, fontSize: 11, fontWeight: 800 }}>
         <ArrowsLeftRight size={14} weight="bold" color={GOLD} />
-        Compare with a returned copy
+        Compare with a Returned Copy
       </div>
 
       <FileDropzone
@@ -105,7 +105,7 @@ export default function ContractCompare({ projectId, pdfUrl, title, entityId }: 
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 40,
                   padding: '0 13px', borderRadius: 8, cursor: 'pointer',
-                  background: on ? 'rgba(245,158,11,0.14)' : 'transparent',
+                  background: on ? 'var(--brand-primary-12)' : 'transparent',
                   border: `1px solid ${on ? GOLD : BORDER}`,
                   color: on ? GOLD : DIM, fontSize: 12.5, fontWeight: 700,
                 }}

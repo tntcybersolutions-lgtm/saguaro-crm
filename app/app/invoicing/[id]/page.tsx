@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 
 interface Invoice {
   id: string;
@@ -245,7 +245,7 @@ export default function InvoiceDetailPage() {
       const data = await res.json();
       setInvoice(data.invoice ?? data);
       setEditing(false);
-      showToast('Invoice updated');
+      showToast('Invoice updated.');
       return true;
     } catch (e: any) {
       console.error(e); showToast(humanError(e, 'Update failed. Please try again.'), colors.red);
@@ -270,7 +270,7 @@ export default function InvoiceDetailPage() {
         // email, provider rejected) instead of a phantom "sent" toast.
         throw new Error(data?.error || 'Failed to send invoice');
       }
-      showToast(data?.to ? `Invoice emailed to ${data.to}` : 'Invoice sent to vendor');
+      showToast(data?.to ? `Invoice emailed to ${data.to}.` : 'Invoice sent to vendor.');
       await loadInvoice();
     } catch (e: any) {
       console.error(e); showToast(humanError(e, 'Send failed. Please try again.'), colors.red);
@@ -290,7 +290,7 @@ export default function InvoiceDetailPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data?.pdfUrl) throw new Error(data?.error || 'PDF generation failed');
       openPdf({ url: data.pdfUrl });
-      showToast(regenerate ? 'PDF regenerated' : 'PDF generated');
+      showToast(regenerate ? 'PDF regenerated.' : 'PDF generated.');
       await loadInvoice();
     } catch (e: any) {
       console.error(e); showToast(humanError(e, 'PDF failed. Please try again.'), colors.red);
@@ -399,17 +399,17 @@ export default function InvoiceDetailPage() {
 
       {/* Header */}
       <ModuleHero
-        eyebrow="INVOICE"
+        eyebrow="Invoice"
         eyebrowIcon={<Receipt size={13} weight="fill" color={GOLD} />}
         aux={
           <>
             <span style={{
               padding: '3px 12px', borderRadius: 999, fontSize: font.size.xs, fontWeight: font.weight.bold,
-              textTransform: 'uppercase', letterSpacing: 0.5, background: `${sc}20`, color: sc,
+              background: `${sc}20`, color: sc,
             }}>
-              {statusLabel}
+              {statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}
             </span>
-            {overdue && <Pill tone="red" caps>Overdue</Pill>}
+            {overdue && <Pill tone="red">Overdue</Pill>}
           </>
         }
         title={inv.invoice_number || 'Invoice'}
@@ -430,7 +430,7 @@ export default function InvoiceDetailPage() {
               style={{ ...ghostButtonStyle, opacity: busy === 'pdf' ? 0.6 : 1, cursor: busy === 'pdf' ? 'not-allowed' : 'pointer' }}
               className="pmBtn"
             >
-              <FilePdf size={14} /> {busy === 'pdf' ? 'Generating...' : 'PDF'}
+              <FilePdf size={14} /> {busy === 'pdf' ? 'Generating…' : 'PDF'}
             </button>
             <button
               onClick={handleSend}
@@ -438,7 +438,7 @@ export default function InvoiceDetailPage() {
               style={{ ...goldButtonStyle, opacity: busy === 'send' ? 0.6 : 1, cursor: busy === 'send' ? 'not-allowed' : 'pointer' }}
               className="pmBtn"
             >
-              <PaperPlaneTilt size={14} /> {busy === 'send' ? 'Sending...' : 'Send'}
+              <PaperPlaneTilt size={14} /> {busy === 'send' ? 'Sending…' : 'Send'}
             </button>
             <button
               onClick={handleDelete}
@@ -446,7 +446,7 @@ export default function InvoiceDetailPage() {
               style={{ ...ghostButtonStyle, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: colors.red, opacity: busy === 'delete' ? 0.6 : 1, cursor: busy === 'delete' ? 'not-allowed' : 'pointer' }}
               className="pmBtn"
             >
-              <Trash size={14} /> {busy === 'delete' ? 'Deleting...' : 'Delete'}
+              <Trash size={14} /> {busy === 'delete' ? 'Deleting…' : 'Delete'}
             </button>
           </>
         }
@@ -467,7 +467,7 @@ export default function InvoiceDetailPage() {
             <thead>
               <tr style={{ background: colors.darkAlt }}>
                 {['Description', 'Category', 'Cost Code', 'Amount', 'Tax', 'Total'].map(h => (
-                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: font.size.xs, fontWeight: font.weight.bold, textTransform: 'uppercase', letterSpacing: 0.5, color: colors.textMuted, borderBottom: `1px solid ${colors.border}` }}>{h}</th>
+                  <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, borderBottom: `1px solid ${colors.border}` }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -480,8 +480,8 @@ export default function InvoiceDetailPage() {
                 <td style={{ padding: '12px 16px', color: colors.text, fontVariantNumeric: 'tabular-nums' }}>{money(inv.tax)}</td>
                 <td style={{ padding: '12px 16px', color: colors.gold, fontWeight: font.weight.semibold, fontVariantNumeric: 'tabular-nums' }}>{money(computedTotal)}</td>
               </tr>
-              <tr style={{ background: 'rgba(245, 158, 11,.05)' }}>
-                <td colSpan={5} style={{ padding: '12px 16px', color: colors.textMuted, fontWeight: font.weight.bold, textTransform: 'uppercase', fontSize: font.size.xs, letterSpacing: 0.5, textAlign: 'right' }}>Total Due</td>
+              <tr style={{ background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
+                <td colSpan={5} style={{ padding: '12px 16px', color: colors.textMuted, fontWeight: font.weight.bold, fontSize: font.size.xs, textAlign: 'right' }}>Total Due</td>
                 <td style={{ padding: '12px 16px', color: colors.gold, fontWeight: font.weight.black, fontSize: font.size.xl, fontVariantNumeric: 'tabular-nums' }}>{money(computedTotal)}</td>
               </tr>
             </tbody>
@@ -494,7 +494,7 @@ export default function InvoiceDetailPage() {
         {inv.pdf_url ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '1 1 260px', minWidth: 0 }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.35)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)' }}>
                 <FilePdf size={20} weight="duotone" color={GOLD} />
               </span>
               <div style={{ minWidth: 0 }}>
@@ -509,7 +509,7 @@ export default function InvoiceDetailPage() {
                 <ArrowSquareOut size={14} /> Open PDF
               </button>
               <button onClick={() => handlePdf(true)} disabled={busy === 'pdf'} style={{ ...ghostButtonStyle, padding: '9px 16px', fontSize: 13, opacity: busy === 'pdf' ? 0.6 : 1, cursor: busy === 'pdf' ? 'not-allowed' : 'pointer' }} className="pmBtn">
-                <ArrowsClockwise size={14} /> {busy === 'pdf' ? 'Regenerating...' : 'Regenerate'}
+                <ArrowsClockwise size={14} /> {busy === 'pdf' ? 'Regenerating…' : 'Regenerate'}
               </button>
             </div>
           </div>
@@ -519,7 +519,7 @@ export default function InvoiceDetailPage() {
               No PDF yet — generate one to get a document you can open, attach, or send.
             </div>
             <button onClick={() => handlePdf()} disabled={busy === 'pdf'} style={{ ...goldButtonStyle, padding: '9px 16px', fontSize: 13, opacity: busy === 'pdf' ? 0.6 : 1, cursor: busy === 'pdf' ? 'not-allowed' : 'pointer' }} className="pmBtn">
-              <FilePdf size={14} /> {busy === 'pdf' ? 'Generating...' : 'Generate PDF'}
+              <FilePdf size={14} /> {busy === 'pdf' ? 'Generating…' : 'Generate PDF'}
             </button>
           </div>
         )}
@@ -536,7 +536,7 @@ export default function InvoiceDetailPage() {
             { l: 'Last Updated', v: dateStr(inv.updated_at) },
           ].map(f => (
             <div key={f.l}>
-              <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, textTransform: 'uppercase', letterSpacing: 0.5, color: colors.textMuted, marginBottom: 4 }}>{f.l}</div>
+              <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, marginBottom: 4 }}>{f.l}</div>
               <div style={{ fontSize: font.size.md, color: colors.text, wordBreak: 'break-word' }}>{f.v}</div>
             </div>
           ))}
@@ -554,7 +554,7 @@ export default function InvoiceDetailPage() {
               { l: 'Check #', v: inv.check_number || '—' },
             ].map(f => (
               <div key={f.l}>
-                <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, textTransform: 'uppercase', letterSpacing: 0.5, color: colors.textMuted, marginBottom: 4 }}>{f.l}</div>
+                <div style={{ fontSize: font.size.xs, fontWeight: font.weight.bold, color: colors.textMuted, marginBottom: 4 }}>{f.l}</div>
                 <div style={{ fontSize: font.size.md, color: colors.text }}>{f.v}</div>
               </div>
             ))}
@@ -634,16 +634,16 @@ export default function InvoiceDetailPage() {
               </div>
               <div>
                 <label style={labelStyle}>Description</label>
-                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Invoice description..." />
+                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Invoice description…" />
               </div>
               <div>
                 <label style={labelStyle}>Notes</label>
-                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Internal notes..." />
+                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Internal notes…" />
               </div>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
                 <button type="button" onClick={closeEdit} style={{ padding: '10px 20px', background: 'none', border: `1px solid ${colors.border}`, borderRadius: radius.lg, color: colors.textMuted, fontSize: font.size.md, fontWeight: font.weight.semibold, cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" disabled={busy === 'save'} style={{ padding: '10px 24px', background: colors.gold, border: 'none', borderRadius: radius.lg, color: colors.dark, fontSize: font.size.md, fontWeight: font.weight.black, cursor: busy === 'save' ? 'not-allowed' : 'pointer', opacity: busy === 'save' ? 0.6 : 1 }}>
-                  {busy === 'save' ? 'Saving...' : 'Save Changes'}
+                <button type="submit" disabled={busy === 'save'} style={{ padding: '10px 24px', background: colors.gold, border: 'none', borderRadius: radius.lg, color: '#0A0A00', fontSize: font.size.md, fontWeight: font.weight.black, cursor: busy === 'save' ? 'not-allowed' : 'pointer', opacity: busy === 'save' ? 0.6 : 1 }}>
+                  {busy === 'save' ? 'Saving…' : 'Save Changes'}
                 </button>
               </div>
             </form>

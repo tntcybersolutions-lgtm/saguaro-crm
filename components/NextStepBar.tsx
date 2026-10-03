@@ -44,18 +44,48 @@ import { SALES_STEPS, salesStepsDone, type SalesSignals } from '@/lib/sales-jour
    disagreeing on screen. */
 const LS_PROJECT_KEY = 'sag_journey_project';
 
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
-const BLUE = '#3B82F6';
-const BLUE_HI = '#60A5FA';
+/* Literal hexes (not CSS vars) because the tone is suffixed with hex alpha
+   below (`${tone}14`). Brand neon yellow for a job, Lead blue for sales. */
+const GOLD = '#FFE600';
+const GOLD_HI = '#FFF04A';
+const BLUE = '#3DA9FF';
+const BLUE_HI = '#7CC4FF';
 const TEXT = '#FFFFFF';
-const MUTED = 'rgba(255,255,255,0.62)';
+const MUTED = '#D7DEE8';
 
 const fetcher = async (url: string) => {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`Request failed (${r.status})`);
   return r.json();
 };
+
+/* THE BAR'S HEIGHT IS RESERVED BEFORE ITS DATA ARRIVES.
+   This strip sits in the fixed header and publishes its height as
+   --sag-nextstep-h, which the page's top padding reads. It used to render
+   nothing until /api/project-context (or /api/sales-journey) answered, then
+   appear — so a few hundred milliseconds after every page load the whole
+   page jumped down by the bar's height. A click aimed at a button in that
+   window landed where the button USED to be: mousedown on one spot, the
+   page moves, mouseup somewhere else, no click. That is the "first click is
+   ignored, second one works" report on Daily Logs "Auto-fill Today" and
+   Closeout "Generate G706". Reserving the same height while loading means
+   the page never moves when the bar fills in. */
+const BAR_H = 48; // 9px padding x2 + 1px borders x2 + the 28px CTA row
+
+function Reserve({ boxRef }: { boxRef: React.MutableRefObject<HTMLDivElement | null> }) {
+  return (
+    <div
+      ref={boxRef}
+      aria-hidden
+      style={{
+        minHeight: BAR_H, boxSizing: 'border-box',
+        background: 'var(--bg-base, #000000)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+      }}
+    />
+  );
+}
 
 /** /app/projects/<id>/... — the id, or null anywhere else. `new` is the
  *  creation form, not a project, and must not be treated as one. */
@@ -89,15 +119,23 @@ export default function NextStepBar() {
   }, [inProject]);
 
   const pickedExists = picked && projects.some((p: { id: string }) => p.id === picked);
-  const dashboardProjectId = inProject ? null : ((pickedExists ? picked : projects[0]?.id) ?? null);
+  /* ONLY ON THE DASHBOARD. The rule above exists so the bar agrees with
+     GettingStartedRail, and that rail lives on /app. On every other
+     company-level screen (People, Settings, CRM...) there is no job on the
+     page and the header picker says "Choose a job" — a bar announcing
+     "YOU ARE HERE: Send bid packages" for some job the user is not in
+     contradicted it. Off the dashboard and outside a job, the bar speaks for
+     the company-level sales journey instead. */
+  const onDashboard = pathname === '/app' || pathname === '/app/';
+  const dashboardProjectId = inProject || !onDashboard ? null : ((pickedExists ? picked : projects[0]?.id) ?? null);
   const journeyId = projectId ?? dashboardProjectId;
   /* Gold whenever a job is driving the bar, whether or not we are standing on
      that job's page — the color states which half of the product is speaking,
      and it would be lying if the bar said "build" in blue. */
   const onBuildJourney = Boolean(journeyId);
 
-  const { ctx } = useProjectContext(journeyId);
-  const { data: salesData } = useSWR<{ signals: SalesSignals }>(
+  const { ctx, error: ctxError } = useProjectContext(journeyId);
+  const { data: salesData, error: salesError } = useSWR<{ signals: SalesSignals }>(
     onBuildJourney ? null : '/api/sales-journey',
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 300_000 },
@@ -128,19 +166,22 @@ export default function NextStepBar() {
 
   if (onBuildJourney) {
     tone = GOLD; toneHi = GOLD_HI;
-    if (!ctx) return null; // nothing to say until the job's own data is in
+    if (!ctx) return ctxError ? null : <Reserve boxRef={boxRef} />; // nothing to say until the job's own data is in
     const phase = normalisePhase(ctx?.project?.phase);
     const steps = stepsForPhase(phase);
     const done = stepsDone(ctx, ctx?.money, isClosedStatus);
     const i = steps.findIndex((s) => !done[s.key]);
-    side = PHASE_LABEL[phase];
+    /* Off the job's own pages (the dashboard), name the job — a step with no
+       job attached reads as if it were about whatever screen you are on. */
+    const jobName = !inProject ? String(ctx?.project?.name || '').trim() : '';
+    side = jobName ? `${jobName} · ${PHASE_LABEL[phase]}` : PHASE_LABEL[phase];
     const base = `/app/projects/${journeyId}`;
     if (i === -1) {
       complete = true;
       here = 'Every stage of this job is done';
       next = 'Nothing is outstanding. Open the closeout record or go back to your portfolio.';
       href = `${base}/closeout`;
-      cta = 'Open closeout';
+      cta = 'Open Closeout';
       position = `${steps.length} of ${steps.length}`;
     } else {
       const s = steps[i];
@@ -151,7 +192,7 @@ export default function NextStepBar() {
       position = `${i + 1} of ${steps.length}`;
     }
   } else {
-    if (!salesData?.signals) return null;
+    if (!salesData?.signals) return salesError || salesData ? null : <Reserve boxRef={boxRef} />;
     const done = salesStepsDone(salesData.signals);
     const i = SALES_STEPS.findIndex((s) => !done[s.key]);
     if (i === -1) {
@@ -183,20 +224,21 @@ export default function NextStepBar() {
            so scrolled page content (hero titles, tables) bled straight through
            it — the garbled overlap on every screen. Layer the gradient over the
            page base so the bar is fully opaque and nothing shows through. */
-        background: `linear-gradient(90deg, ${tone}1A, rgba(0,0,0,0) 65%), var(--bg-base, #0a0a0a)`,
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        borderBottom: `1px solid ${tone}33`,
+        background: `linear-gradient(90deg, ${tone}14, rgba(0,0,0,0) 55%), var(--bg-base, #000000)`,
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderBottom: `1px solid ${tone}40`,
         minWidth: 0,
+        minHeight: BAR_H, boxSizing: 'border-box',
       }}
     >
       <span style={{
         display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
-        color: toneHi, fontSize: 10, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase',
+        color: tone, fontSize: 12.5, fontWeight: 800,
       }}>
         {complete
-          ? <CheckCircle size={13} weight="fill" color={toneHi} />
-          : <MapPin size={13} weight="fill" color={toneHi} />}
-        You are here
+          ? <CheckCircle size={14} weight="fill" color={tone} />
+          : <MapPin size={14} weight="fill" color={tone} />}
+        You Are Here
       </span>
 
       <span aria-hidden style={{ width: 1, height: 18, background: 'rgba(255,255,255,0.12)', flexShrink: 0 }} />
@@ -210,9 +252,10 @@ export default function NextStepBar() {
       </span>
 
       <span style={{
-        flexShrink: 0, fontSize: 10, fontWeight: 800, letterSpacing: '0.06em',
-        color: 'rgba(255,255,255,0.45)', whiteSpace: 'nowrap',
-      }}>
+        flexShrink: 0, fontSize: 11.5, fontWeight: 700,
+        color: '#A9B4C4', whiteSpace: 'nowrap',
+        maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis',
+      }} title={`${side} · ${position}`}>
         {side} · {position}
       </span>
 
@@ -223,12 +266,12 @@ export default function NextStepBar() {
           flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '6px 13px', borderRadius: 8, textDecoration: 'none',
           background: `linear-gradient(180deg, ${toneHi}, ${tone})`,
-          color: onBuildJourney ? '#241500' : '#04121F',
-          fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap',
+          color: onBuildJourney ? '#0A0A00' : '#04121F',
+          fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap',
           boxShadow: `0 2px 10px ${tone}44`,
         }}
       >
-        {cta} <ArrowRight size={12} weight="bold" color={onBuildJourney ? '#241500' : '#04121F'} />
+        {cta} <ArrowRight size={12} weight="bold" color={onBuildJourney ? '#0A0A00' : '#04121F'} />
       </Link>
     </div>
   );

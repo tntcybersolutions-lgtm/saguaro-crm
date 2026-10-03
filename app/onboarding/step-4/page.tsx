@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Cactus, Check, Confetti } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',RED='#ef4444',GREEN='#22c55e';
 
 const STEPS = [
   { num: 1, label: 'Welcome', done: true },
@@ -81,7 +81,7 @@ export default function OnboardingStep4() {
         <div style={{textAlign:'center',marginBottom:36}}>
           <a href="/" style={{textDecoration:'none',display:'inline-flex',alignItems:'center',gap:8}}>
             <Cactus size={28} weight="fill" color={GOLD} />
-            <span style={{fontWeight:900,fontSize:20,color:GOLD,letterSpacing:1}}>SAGUARO</span>
+            <span style={{fontWeight:900,fontSize:20,color:GOLD}}>Saguaro</span>
           </a>
         </div>
 
@@ -94,7 +94,7 @@ export default function OnboardingStep4() {
                   width:36,height:36,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',
                   fontSize:14,fontWeight:800,
                   background: s.done ? GREEN : s.active ? GOLD : 'rgba(0,0,0,.06)',
-                  color: (s.done||s.active) ? '#1C1C1E' : DIM,
+                  color: (s.done||s.active) ? '#0A0A00' : DIM,
                   border:`2px solid ${s.done ? GREEN : s.active ? GOLD : BORDER}`,
                 }}>
                   {s.done ? <Check size={16} weight="bold" /> : s.num}
@@ -112,7 +112,7 @@ export default function OnboardingStep4() {
         {success ? (
           <div style={{background:RAISED,border:`1px solid rgba(34,197,94,.3)`,borderRadius:16,padding:40,textAlign:'center'}}>
             <div style={{marginBottom:20}}><Confetti size={56} weight="fill" color={GOLD} /></div>
-            <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 12px',color:TEXT}}>You're all set!</h1>
+            <h1 style={{fontSize:28,fontWeight:900,margin:'0 0 12px',color:TEXT}}>You're All Set</h1>
             <p style={{color:DIM,fontSize:15,margin:'0 0 8px',lineHeight:1.6}}>
               Invites sent. Your team members will receive an email with instructions to create their account.
             </p>
@@ -121,7 +121,7 @@ export default function OnboardingStep4() {
             </p>
             <a
               href="/app"
-              style={{display:'inline-block',padding:'14px 40px',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,borderRadius:10,color:'#1C1C1E',fontWeight:800,fontSize:15,textDecoration:'none'}}
+              style={{display:'inline-block',padding:'14px 40px',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,borderRadius:10,color:'#0A0A00',fontWeight:800,fontSize:15,textDecoration:'none'}}
             >
               Go to Dashboard →
             </a>
@@ -129,7 +129,7 @@ export default function OnboardingStep4() {
         ) : (
           <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:16,padding:40}}>
             <div style={{marginBottom:28}}>
-              <div style={{fontSize:11,fontWeight:700,color:GOLD,textTransform:'uppercase',letterSpacing:1,marginBottom:8}}>Step 4 of 4</div>
+              <div style={{fontSize:12,fontWeight:700,color:GOLD,marginBottom:8}}>Step 4 of 4</div>
               <h1 style={{fontSize:26,fontWeight:900,margin:'0 0 6px',color:TEXT}}>Invite Your Team</h1>
               <p style={{color:DIM,fontSize:14,margin:0}}>Everyone gets unlimited access — no extra charge per user.</p>
             </div>
@@ -141,8 +141,8 @@ export default function OnboardingStep4() {
             <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:20}}>
               {/* Column headers */}
               <div style={{display:'flex',gap:10}}>
-                <div style={{flex:1,fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5}}>Email Address</div>
-                <div style={{minWidth:160,fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5}}>Role</div>
+                <div style={{flex:1,fontSize:11,fontWeight:700,color:DIM}}>Email Address</div>
+                <div style={{minWidth:160,fontSize:11,fontWeight:700,color:DIM}}>Role</div>
               </div>
 
               {invites.map((inv,i)=>(
@@ -176,9 +176,9 @@ export default function OnboardingStep4() {
               <button
                 onClick={handleSendInvites}
                 disabled={loading}
-                style={{padding:'14px 0',background:`linear-gradient(135deg,${GOLD},#FBBF24)`,border:'none',borderRadius:10,color:'#1C1C1E',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
+                style={{padding:'14px 0',background:`linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,border:'none',borderRadius:10,color:'#0A0A00',fontSize:15,fontWeight:800,cursor:loading?'wait':'pointer',opacity:loading?.7:1}}
               >
-                {loading?'Sending Invites...':'Send Invites'}
+                {loading?'Sending Invites…':'Send Invites'}
               </button>
               <a
                 href="/app"
@@ -188,8 +188,8 @@ export default function OnboardingStep4() {
               </a>
             </div>
 
-            <div style={{marginTop:24,padding:'12px 16px',background:'rgba(245, 158, 11,.06)',border:'1px solid rgba(245, 158, 11,.2)',borderRadius:8,fontSize:12,color:DIM,textAlign:'center'}}>
-              You can invite more team members anytime from <strong style={{color:TEXT}}>Settings → Team</strong>
+            <div style={{marginTop:24,padding:'12px 16px',background:'color-mix(in srgb, var(--brand-primary) 6%, transparent)',border:'1px solid var(--brand-primary-18)',borderRadius:8,fontSize:12,color:DIM,textAlign:'center'}}>
+              You can invite more team members anytime from <strong style={{color:TEXT}}>Settings → Team</strong>.
             </div>
           </div>
         )}

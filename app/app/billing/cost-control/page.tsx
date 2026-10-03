@@ -17,7 +17,7 @@ import { costControl, usd, type CostLine } from '@/lib/finance';
 import { humanError } from '@/lib/errors';
 import { PremiumSurface, ModuleHero, StatCard, SectionCard, PremiumEmpty, goldButtonStyle, ghostButtonStyle } from '@/components/ui/premium';
 
-const BG = '#0a0a0a', PANEL = '#161b22', LINE = 'rgba(255,255,255,0.09)', GOLD = '#F59E0B', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', RED = '#f87171';
+const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface-2)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)', TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', RED = '#f87171';
 const uid = () => Math.random().toString(36).slice(2, 9);
 const c = (s: string) => Math.round((parseFloat(s) || 0) * 100);   // dollars string → cents
 const d = (cents: number) => (cents / 100).toFixed(2);             // cents → dollars string
@@ -97,7 +97,7 @@ export default function CostControlPage() {
         return next;
       });
       setViewingId(null);
-      setMsg(`Merged ${byCode.size} budget lines from takeoff`);
+      setMsg(`Merged ${byCode.size} budget lines from takeoff.`);
     } catch (e) { console.error(e); setErr(humanError(e, "Something went wrong. Please try again.")); }
   };
 
@@ -126,7 +126,7 @@ export default function CostControlPage() {
       const totals = { revisedBudgetCents: r.revisedBudgetCents, committedCents: r.committedCents, actualCents: r.actualCents, projectedFinalCents: r.projectedFinalCents, varianceCents: r.varianceCents };
       const res = await fetch('/api/cost-control/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id: projectId, report_date: reportDate, lines: payloadLines, totals }) }).then((x) => x.json());
       if (res.error) throw new Error(res.error);
-      setMsg('Cost report saved');
+      setMsg('Cost report saved.');
       loadReports(projectId);
     } catch (e) { console.error(e); setErr(humanError(e, "Something went wrong. Please try again.")); }
     finally { setSaving(false); }
@@ -151,7 +151,7 @@ export default function CostControlPage() {
     <PremiumSurface maxWidth={1240} pad="40px 24px 90px">
       {/* Header */}
       <ModuleHero
-        eyebrow="Cost control · budget vs. committed vs. actual"
+        eyebrow="Cost Control · Budget vs. Committed vs. Actual"
         eyebrowIcon={<ChartLineUp size={13} weight="fill" color={GOLD} />}
         title="Cost"
         accent="Control"
@@ -162,13 +162,13 @@ export default function CostControlPage() {
       <SectionCard style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <select value={projectId} onChange={(e) => setProjectId(e.target.value)} style={{ ...inp, textAlign: 'left', width: 'auto' }}>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
-          <button onClick={() => loadLive(projectId)} style={{ ...toolBtn, opacity: loading ? 0.6 : 1 }} className="pmBtn" disabled={loading}><ArrowClockwise size={14} weight="bold" />{loading ? 'Loading…' : viewingId ? 'Back to live' : 'Refresh'}</button>
+          <button onClick={() => loadLive(projectId)} style={{ ...toolBtn, opacity: loading ? 0.6 : 1 }} className="pmBtn" disabled={loading}><ArrowClockwise size={14} weight="bold" />{loading ? 'Loading…' : viewingId ? 'Back to Live' : 'Refresh'}</button>
           <select onChange={(e) => { seedFromTakeoff(e.target.value); e.currentTarget.selectedIndex = 0; }} defaultValue="" style={{ ...inp, textAlign: 'left', width: 'auto' }}><option value="">Merge budget from takeoff…</option>{takeoffs.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select>
           <div style={{ flex: 1 }} />
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: DIM }}>Report date
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: DIM }}>Report Date
             <SaguaroDatePicker value={reportDate} onChange={(v) => setReportDate(v)} style={{ ...inp, width: 'auto', textAlign: 'left' }} />
           </label>
-          <button onClick={saveReport} style={{ ...toolGold, opacity: (saving || !rows.length) ? 0.55 : 1 }} className="pmBtn" disabled={saving || !rows.length}><FloppyDisk size={14} weight="fill" />{saving ? 'Saving…' : 'Save cost report'}</button>
+          <button onClick={saveReport} style={{ ...toolGold, opacity: (saving || !rows.length) ? 0.55 : 1 }} className="pmBtn" disabled={saving || !rows.length}><FloppyDisk size={14} weight="fill" />{saving ? 'Saving…' : 'Save Cost Report'}</button>
           <button onClick={() => setShowHistory((s) => !s)} style={toolBtn} className="pmBtn"><ClockCounterClockwise size={14} weight="bold" />History{reports.length ? ` (${reports.length})` : ''}</button>
         </div>
       </SectionCard>
@@ -178,11 +178,11 @@ export default function CostControlPage() {
           {err ? <X size={14} weight="bold" /> : <CheckCircle size={14} weight="fill" />}{err || msg}
         </div>
       )}
-      {viewingId && <div style={{ marginBottom: 12, fontSize: 12.5, color: GOLD, display: 'inline-flex', alignItems: 'center', gap: 6 }}><ClockCounterClockwise size={14} weight="bold" />Viewing a saved snapshot — read-only figures. Press &ldquo;Back to live&rdquo; to edit.</div>}
+      {viewingId && <div style={{ marginBottom: 12, fontSize: 12.5, color: GOLD, display: 'inline-flex', alignItems: 'center', gap: 6 }}><ClockCounterClockwise size={14} weight="bold" />Viewing a saved snapshot — read-only figures. Press &ldquo;Back to Live&rdquo; to edit.</div>}
 
       {/* history panel */}
       {showHistory && (
-        <SectionCard title="Saved cost reports" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />} flush style={{ marginBottom: 16 }}>
+        <SectionCard title="Saved Cost Reports" icon={<ClockCounterClockwise size={17} weight="duotone" color={GOLD} />} flush style={{ marginBottom: 16 }}>
           {reports.length === 0 ? (
             <PremiumEmpty compact icon={<ClockCounterClockwise size={30} weight="duotone" color={GOLD} />} title="No saved reports yet" description="Save a cost report to start building history." />
           ) : (
@@ -211,7 +211,7 @@ export default function CostControlPage() {
           label="Variance"
           value={usd(r.varianceCents)}
           accent={r.varianceCents < 0 ? RED : GREEN}
-          sub={<span style={{ color: r.varianceCents < 0 ? RED : GREEN, fontWeight: 700 }}>{r.varianceCents < 0 ? 'OVER budget' : 'under budget'}</span>}
+          sub={<span style={{ color: r.varianceCents < 0 ? RED : GREEN, fontWeight: 700 }}>{r.varianceCents < 0 ? 'Over budget' : 'Under budget'}</span>}
           delay={0.18}
          href="/app/billing/cost-control"/>
       </div>
@@ -219,8 +219,8 @@ export default function CostControlPage() {
       {/* table */}
       <SectionCard title="Cost Breakdown" subtitle="Budget vs. committed vs. actual — per cost code" icon={<Table size={17} weight="duotone" color={GOLD} />} flush>
         <div style={{ overflow: 'auto' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: GRID, background: PANEL, padding: '10px 16px', fontSize: 10.5, color: DIM, fontWeight: 700, textTransform: 'uppercase', minWidth: 980, gap: 6 }}>
-            <span>Cost code / description</span><span style={{ textAlign: 'right' }}>Budget</span><span style={{ textAlign: 'right' }}>Changes</span><span style={{ textAlign: 'right' }}>Committed</span><span style={{ textAlign: 'right' }}>Actual</span><span style={{ textAlign: 'right' }}>Projected</span><span style={{ textAlign: 'right' }}>Variance</span><span />
+          <div style={{ display: 'grid', gridTemplateColumns: GRID, background: PANEL, padding: '10px 16px', fontSize: 10.5, color: DIM, fontWeight: 700, minWidth: 980, gap: 6 }}>
+            <span>Cost Code / Description</span><span style={{ textAlign: 'right' }}>Budget</span><span style={{ textAlign: 'right' }}>Changes</span><span style={{ textAlign: 'right' }}>Committed</span><span style={{ textAlign: 'right' }}>Actual</span><span style={{ textAlign: 'right' }}>Projected</span><span style={{ textAlign: 'right' }}>Variance</span><span />
           </div>
           {rows.length === 0 && !loading && (
             <PremiumEmpty compact icon={<Table size={30} weight="duotone" color={GOLD} />} title="No cost lines yet" description="This project has no budget lines, purchase orders, or invoices — or pick another project." />
@@ -230,7 +230,7 @@ export default function CostControlPage() {
             const ro = !!viewingId; // read-only when viewing a snapshot
             return (
               <div key={l.id} style={{ display: 'grid', gridTemplateColumns: GRID, padding: '7px 16px', borderTop: `1px solid ${LINE}`, gap: 6, alignItems: 'center', minWidth: 980 }}>
-                <input value={l.description} onChange={(e) => upd(l.id, { description: e.target.value })} placeholder="cost code" disabled={ro} style={{ ...inp, textAlign: 'left' }} />
+                <input value={l.description} onChange={(e) => upd(l.id, { description: e.target.value })} placeholder="Cost code" disabled={ro} style={{ ...inp, textAlign: 'left' }} />
                 <input value={l._b} onChange={(e) => upd(l.id, { _b: e.target.value })} disabled={ro} style={inp} />
                 <input value={l._ch} onChange={(e) => upd(l.id, { _ch: e.target.value })} disabled={ro} style={inp} />
                 {/* Committed — auto from POs, optional override */}
@@ -238,23 +238,23 @@ export default function CostControlPage() {
                   <input value={l.comOv !== null ? l.comOv : d(l.comAuto)} onChange={(e) => upd(l.id, { comOv: e.target.value })} disabled={ro}
                     style={{ ...inp, borderColor: l.comOv !== null ? GOLD : LINE }} />
                   {!ro && (l.comOv !== null
-                    ? <button onClick={() => upd(l.id, { comOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />override · auto {usd(l.comAuto)}</button>
-                    : <span style={{ fontSize: 10, color: DIM }}>auto · POs</span>)}
+                    ? <button onClick={() => upd(l.id, { comOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.comAuto)}</button>
+                    : <span style={{ fontSize: 10, color: DIM }}>Auto · POs</span>)}
                 </div>
                 {/* Actual — auto from invoices, optional override */}
                 <div>
                   <input value={l.actOv !== null ? l.actOv : d(l.actAuto)} onChange={(e) => upd(l.id, { actOv: e.target.value })} disabled={ro}
                     style={{ ...inp, borderColor: l.actOv !== null ? GOLD : LINE }} />
                   {!ro && (l.actOv !== null
-                    ? <button onClick={() => upd(l.id, { actOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />override · auto {usd(l.actAuto)}</button>
-                    : <span style={{ fontSize: 10, color: DIM }}>auto · invoices</span>)}
+                    ? <button onClick={() => upd(l.id, { actOv: null })} title="Reset to auto" style={{ background: 'none', border: 'none', color: GOLD, cursor: 'pointer', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 0' }}><ArrowUUpLeft size={11} weight="bold" />Override · auto {usd(l.actAuto)}</button>
+                    : <span style={{ fontSize: 10, color: DIM }}>Auto · invoices</span>)}
                 </div>
                 {cell(rr.projectedFinalCents)}{cell(rr.varianceCents, true)}
                 {ro ? <span /> : <button onClick={() => removeRow(l.id)} title="Remove line" style={{ background: 'none', border: 'none', color: DIM, cursor: 'pointer', display: 'inline-flex', justifyContent: 'center' }}><X size={13} weight="bold" /></button>}
               </div>
             );
           })}
-          {!viewingId && <div style={{ padding: '10px 16px' }}><button onClick={addRow} style={toolBtn} className="pmBtn"><Plus size={13} weight="bold" />Add cost code</button></div>}
+          {!viewingId && <div style={{ padding: '10px 16px' }}><button onClick={addRow} style={toolBtn} className="pmBtn"><Plus size={13} weight="bold" />Add Cost Code</button></div>}
         </div>
       </SectionCard>
 

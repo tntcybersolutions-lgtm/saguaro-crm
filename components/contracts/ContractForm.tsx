@@ -20,11 +20,11 @@ import type { ContractField, ContractKind } from '@/lib/document-templates/contr
  *      straight from a button to a finished document with no stop in between.
  */
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
-const CARD = '#0D1D2E';
+const CARD = 'var(--bg-surface)';
 const RAISED = 'rgba(255,255,255,0.04)';
 
 type Values = Record<string, unknown>;
@@ -151,7 +151,7 @@ export default function ContractForm({
 
       {sections.map((sec) => (
         <div key={sec.section} style={{ background: CARD, border: `1px solid ${BORDER}`, borderRadius: 12, padding: '16px 18px' }}>
-          <div style={{ color: GOLD, fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', marginBottom: 14 }}>
+          <div style={{ color: GOLD, fontSize: 11, fontWeight: 800, marginBottom: 14 }}>
             {sec.section}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
@@ -178,12 +178,12 @@ export default function ContractForm({
           disabled={busy || missing.length > 0}
           style={{
             minHeight: 44, padding: '0 26px', borderRadius: 9, border: 'none',
-            background: missing.length ? 'rgba(245,158,11,0.3)' : GOLD,
-            color: '#241500', fontWeight: 800, fontSize: 14,
+            background: missing.length ? 'var(--brand-primary-25)' : GOLD,
+            color: '#0A0A00', fontWeight: 800, fontSize: 14,
             cursor: busy || missing.length ? 'not-allowed' : 'pointer',
           }}
         >
-          {busy ? 'Generating…' : 'Preview & generate'}
+          {busy ? 'Generating…' : 'Preview & Generate'}
         </button>
         {onCancel && (
           <button onClick={onCancel} style={{ minHeight: 44, padding: '0 20px', borderRadius: 9, background: 'transparent', border: `1px solid ${BORDER}`, color: DIM, fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
@@ -282,13 +282,13 @@ function FieldControl({ field, value, onChange }: {
 const labelStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8,
   fontSize: 11, fontWeight: 700, color: DIM,
-  textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6,
+  marginBottom: 6,
 };
 
 const autoChip: React.CSSProperties = {
   fontSize: 9, fontWeight: 800, letterSpacing: '0.08em',
-  color: GOLD, background: 'rgba(245,158,11,0.14)',
-  border: '1px solid rgba(245,158,11,0.34)',
+  color: GOLD, background: 'var(--brand-primary-12)',
+  border: '1px solid var(--brand-primary-35)',
   borderRadius: 4, padding: '1px 5px',
 };
 

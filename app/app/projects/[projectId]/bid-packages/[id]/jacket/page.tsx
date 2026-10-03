@@ -23,7 +23,7 @@ import BidJacketView, { type Jacket } from '@/components/BidJacketView';
 import BidJacketAssembly, { type Drift, type Issued } from '@/components/BidJacketAssembly';
 
 const DIM = '#8BAAC8';
-const AMBER = '#F59E0B';
+const AMBER = 'var(--warning)';
 
 type Payload = Jacket & { issued: Issued; drift: Drift | null };
 
@@ -66,11 +66,11 @@ export default function BidJacketPage() {
         <SectionCard>
           <PremiumEmpty
             icon={<WarningCircle size={30} weight="duotone" color={AMBER} />}
-            title="This jacket could not be opened"
+            title="This Jacket Could Not Be Opened"
             description={error || 'The bid package was not found.'}
             action={
               <button onClick={() => router.push(`/app/projects/${projectId}/bid-packages`)} style={ghostButtonStyle}>
-                Back to bid packages
+                Back to Bid Packages
               </button>
             }
           />

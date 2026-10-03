@@ -234,7 +234,7 @@ export default function RFIsPage() {
    *  Optimistic: the row lands and the form closes instantly; returns true
    *  once the server confirms. */
   async function submitRFI(): Promise<boolean> {
-    if (!fSubject.trim()) { setError('Subject is required'); return false; }
+    if (!fSubject.trim()) { setError('Subject is required.'); return false; }
     // Optimistic create (house pattern: budget saveEdit) — the row lands in the
     // log and the form closes instantly; the network settles in the background.
     const assignedName = (fAssignedTo === '__other' ? fAssignedOther.trim() : fAssignedTo) || '';
@@ -398,7 +398,7 @@ export default function RFIsPage() {
     width: '100%', padding: '8px 12px', background: T.surface,
     border: `1px solid ${T.border}`, borderRadius: 8, color: T.white, fontSize: 13, outline: 'none',
   };
-  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 };
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: T.muted, marginBottom: 6 };
   const hint: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 5, lineHeight: 1.45 };
 
   // Disabled-aware CTA helper — keeps goldButtonStyle looking correct while a
@@ -419,7 +419,7 @@ export default function RFIsPage() {
         title="Requests for"
         accent="Information"
         subtitle="Questions, ball-in-court, and close-out."
-        note="get it in writing"
+        note="Get it in writing"
         actions={
           showForm ? (
             <button onClick={closeCreate} style={ghostButtonStyle} className="pmBtn">Cancel</button>
@@ -471,12 +471,12 @@ export default function RFIsPage() {
         <div style={{ marginBottom: 22 }}>
           {ctx && (
             <StatStrip items={[
-              {href: `/app/projects/${projectId}/rfis`,  label: 'Next RFI', value: `#${nextRfiNumber}`, sub: totalCount > 0 ? `follows ${totalCount} on this project` : 'first on this project' },
-              {href: `/app/projects/${projectId}/rfis`,  label: 'Ball in Court', value: architectName || 'Unassigned', sub: architectName ? 'architect of record' : 'pick a recipient below' },
-              {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(openCount), accent: overdueCount > 0 ? T.red : undefined, sub: overdueCount > 0 ? `${overdueCount} overdue` : oldestOpenDays > 0 ? `oldest ${oldestOpenDays}d` : 'all current' },
-              {href: `/app/projects/${projectId}/rfis`,  label: 'Response Due', value: '+7 days', sub: 'standard turnaround' },
-              {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(subs.length), sub: subs.length > 0 ? 'roster ready to assign' : 'none awarded yet' },
-              {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(ctx?.counts?.openSubmittals ?? 0), sub: 'linkable from an answer' },
+              {href: `/app/projects/${projectId}/rfis`,  label: 'Next RFI', value: `#${nextRfiNumber}`, sub: totalCount > 0 ? `Follows ${totalCount} on this project` : 'First on this project' },
+              {href: `/app/projects/${projectId}/rfis`,  label: 'Ball in Court', value: architectName || 'Unassigned', sub: architectName ? 'Architect of record' : 'Pick a recipient below' },
+              {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(openCount), accent: overdueCount > 0 ? T.red : undefined, sub: overdueCount > 0 ? `${overdueCount} overdue` : oldestOpenDays > 0 ? `Oldest ${oldestOpenDays}d` : 'All current' },
+              {href: `/app/projects/${projectId}/rfis`,  label: 'Response Due', value: '+7 days', sub: 'Standard turnaround' },
+              {href: `/app/projects/${projectId}/subs`,  label: 'Subs on Job', value: String(subs.length), sub: subs.length > 0 ? 'Roster ready to assign' : 'None awarded yet' },
+              {href: `/app/projects/${projectId}/submittals`,  label: 'Open Submittals', value: String(ctx?.counts?.openSubmittals ?? 0), sub: 'Linkable from an answer' },
             ]} />
           )}
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 330px', gap: 22, alignItems: 'start' }}>
@@ -527,7 +527,7 @@ export default function RFIsPage() {
                   <label style={lbl}>Urgency</label>
                   <div style={{ display: 'flex', gap: 8, maxWidth: 360 }}>
                     <button type="button" onClick={() => setFUrgent(false)} className="pmBtn"
-                      style={{ flex: 1, padding: '9px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', background: !fUrgent ? 'rgba(245,158,11,0.14)' : 'transparent', border: `1px solid ${!fUrgent ? 'rgba(245,158,11,0.5)' : T.border}`, color: !fUrgent ? T.gold : T.muted }}>
+                      style={{ flex: 1, padding: '9px 12px', borderRadius: 8, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', background: !fUrgent ? 'var(--brand-primary-12)' : 'transparent', border: `1px solid ${!fUrgent ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : T.border}`, color: !fUrgent ? T.gold : T.muted }}>
                       Standard
                     </button>
                     <button type="button" onClick={() => setFUrgent(true)} className="pmBtn"
@@ -539,12 +539,12 @@ export default function RFIsPage() {
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={lbl}>Question / Description</label>
-                  <textarea value={fQuestion} onChange={e => setFQuestion(e.target.value)} rows={4} placeholder="Describe the question in detail..." style={{ ...inp, resize: 'vertical' }} />
+                  <textarea value={fQuestion} onChange={e => setFQuestion(e.target.value)} rows={4} placeholder="Describe the question in detail…" style={{ ...inp, resize: 'vertical' }} />
                   <div style={hint}>Reference sheets and grid lines — precise questions come back answered, not re-asked.</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-                <button onClick={submitRFI} disabled={saving || !fSubject.trim()} className="pmBtn" style={disabledGold(saving || !fSubject.trim())}>{saving ? 'Submitting...' : 'Submit RFI'}</button>
+                <button onClick={submitRFI} disabled={saving || !fSubject.trim()} className="pmBtn" style={disabledGold(saving || !fSubject.trim())}>{saving ? 'Submitting…' : 'Submit RFI'}</button>
                 <button onClick={closeCreate} style={ghostButtonStyle} className="pmBtn">Cancel</button>
               </div>
             </SectionCard>
@@ -553,15 +553,15 @@ export default function RFIsPage() {
                 <InsightRow label="Project" value={ctx?.project?.name || '—'} />
                 <InsightRow label="Architect" value={architectName || 'Not on file'} />
                 <InsightRow label="Owner" value={ctx?.defaults?.ownerName || ctx?.project?.ownerName || '—'} />
-                <InsightRow label="Subs on roster" value={String(subs.length)} />
+                <InsightRow label="Subs on Roster" value={String(subs.length)} />
                 <InsightRow label="Open / Overdue" value={`${openCount} / ${overdueCount}`} accent={overdueCount > 0 ? T.red : undefined} strong />
               </SectionCard>
               <SectionCard flat title="After You Submit" icon={<CheckCircle size={17} weight="duotone" color={T.gold} />}>
                 <FlowSteps title="" steps={[
-                  { title: 'RFI logs and routes', desc: `Numbered #${nextRfiNumber} automatically — the ball-in-court gets the email and in-app notification.` },
-                  { title: 'The clock starts', desc: 'Days-open and overdue tracking run against the response-due date.' },
-                  { title: 'Answer lands on the record', desc: 'One click captures the response and the RFI closes out.' },
-                  { title: 'Impacts spawn follow-ups', desc: 'Cost or scope in the answer? Link a change order or submittal straight from this RFI.' },
+                  { title: 'RFI Logs and Routes', desc: `Numbered #${nextRfiNumber} automatically — the ball-in-court gets the email and in-app notification.` },
+                  { title: 'The Clock Starts', desc: 'Days-open and overdue tracking run against the response-due date.' },
+                  { title: 'Answer Lands on the Record', desc: 'One click captures the response and the RFI closes out.' },
+                  { title: 'Impacts Spawn Follow-Ups', desc: 'Cost or scope in the answer? Link a change order or submittal straight from this RFI.' },
                 ]} />
               </SectionCard>
             </div>
@@ -575,11 +575,11 @@ export default function RFIsPage() {
           module="rfis"
           search={search}
           onSearch={setSearch}
-          searchPlaceholder="Search RFIs by number, subject, or spec section..."
+          searchPlaceholder="Search RFIs by number, subject, or spec section…"
           filters={[
             {
               key: 'status', label: 'Status', value: statusFilter, onChange: setStatusFilter,
-              allLabel: 'All statuses',
+              allLabel: 'All Statuses',
               options: [
                 { value: 'open', label: 'Open' },
                 { value: 'answered', label: 'Answered' },
@@ -627,7 +627,7 @@ export default function RFIsPage() {
             icon={<Question size={32} weight="duotone" color={T.gold} />}
             title="No RFIs match these filters"
             description="Try clearing the status or ball-in-court filters to see more."
-            action={<button onClick={() => { setSearch(''); setStatusFilter('all'); setAssigneeFilter('all'); }} style={goldOutlineButtonStyle} className="pmBtn">Clear filters</button>}
+            action={<button onClick={() => { setSearch(''); setStatusFilter('all'); setAssigneeFilter('all'); }} style={goldOutlineButtonStyle} className="pmBtn">Clear Filters</button>}
           />
         ) : (
           <>
@@ -664,8 +664,8 @@ export default function RFIsPage() {
                         nothing ever displayed it. An open RFI is the only place
                         it still matters — once answered, urgency is history. */}
                     {(rfi.is_urgent || rfi.priority === 'high' || rfi.priority === 'critical')
-                      && rfi.status === 'open' && <Badge label="urgent" color="amber" />}
-                    {rfi.is_overdue && rfi.status !== 'overdue' && <Badge label="overdue" color="red" />}
+                      && rfi.status === 'open' && <Badge label="Urgent" color="amber" />}
+                    {rfi.is_overdue && rfi.status !== 'overdue' && <Badge label="Overdue" color="red" />}
                   </div>,
                   <span key="bic" style={{ color: bic ? T.white : T.faint, fontWeight: bic ? 600 : 400 }}>{bic || 'Unassigned'}</span>,
                   <span key="dd" style={{ color: rfi.is_overdue ? T.red : T.muted, fontWeight: rfi.is_overdue ? 700 : 400 }}>
@@ -704,7 +704,7 @@ export default function RFIsPage() {
                   </div>
                 )}
                 {evidenceSrc ? (
-                  <RadioEvidence source={evidenceSrc} title="Voice on the record" />
+                  <RadioEvidence source={evidenceSrc} title="Voice on the Record" />
                 ) : evidenceLoading ? (
                   <div style={{ fontSize: 12.5, color: T.faint }}>Loading the radio evidence…</div>
                 ) : !evidenceError ? (
@@ -720,7 +720,7 @@ export default function RFIsPage() {
               <div style={{ padding: '16px 20px', background: T.surface2, borderTop: `1px solid ${T.border}` }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 10 }}>
                   <div>
-                    <label style={lbl}>Ball in Court (assignee)</label>
+                    <label style={lbl}>Ball in Court (Assignee)</label>
                     <input value={assignName} onChange={e => setAssignName(e.target.value)} placeholder="e.g. Jane Architect / ACME Design" style={inp} />
                   </div>
                   <div>
@@ -730,7 +730,7 @@ export default function RFIsPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => submitAssign(assigningId)} disabled={savingAssign || (!assignName.trim() && !assignDue)} className="pmBtn" style={disabledGold(savingAssign || (!assignName.trim() && !assignDue))}>
-                    {savingAssign ? 'Saving...' : 'Save Assignment'}
+                    {savingAssign ? 'Saving…' : 'Save Assignment'}
                   </button>
                   <button onClick={() => { setAssigningId(null); setAssignName(''); setAssignDue(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
                 </div>
@@ -741,7 +741,7 @@ export default function RFIsPage() {
               <div style={{ padding: '16px 20px', background: T.surface2, borderTop: `1px solid ${T.border}` }}>
                 <div style={{ marginBottom: 10 }}>
                   <label style={lbl}>Answer / Response</label>
-                  <textarea value={answerText} onChange={e => setAnswerText(e.target.value)} rows={3} placeholder="Type your answer..." style={{ ...inp, resize: 'vertical' }} />
+                  <textarea value={answerText} onChange={e => setAnswerText(e.target.value)} rows={3} placeholder="Type your answer…" style={{ ...inp, resize: 'vertical' }} />
                 </div>
                 <div style={{ marginBottom: 10 }}>
                   <label style={lbl}>Answered By</label>
@@ -749,7 +749,7 @@ export default function RFIsPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => submitAnswer(answeringId)} disabled={submittingAnswer || !answerText.trim()} className="pmBtn" style={disabledGold(submittingAnswer || !answerText.trim())}>
-                    {submittingAnswer ? 'Saving...' : 'Submit Answer'}
+                    {submittingAnswer ? 'Saving…' : 'Submit Answer'}
                   </button>
                   <button onClick={() => { setAnsweringId(null); setAnswerText(''); setAnsweredBy(''); }} style={ghostButtonStyle} className="pmBtn">Cancel</button>
                 </div>

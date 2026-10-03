@@ -37,12 +37,12 @@ const fetcher = async (url: string) => {
 
 /* ── Module groups — key into items{}, accent key, deep-link fallback ──────── */
 const MODULE_GROUPS = [
-  { key: 'todos',   accent: 'todos',  label: 'To-Dos',       icon: ListChecks,       fallback: 'To-do',        href: (pid: string) => `/app/projects/${pid}/todos` },
-  { key: 'rfis',    accent: 'rfis',   label: 'RFIs',         icon: ChatCenteredText, fallback: 'RFI',          href: (pid: string) => `/app/projects/${pid}/rfis` },
-  { key: 'punch',   accent: 'punch',  label: 'Punch List',   icon: Hammer,           fallback: 'Punch item',   href: (pid: string) => `/app/projects/${pid}/punch-list` },
-  { key: 'issues',  accent: 'safety', label: 'Field Issues', icon: Warning,          fallback: 'Field issue',  href: (pid: string) => `/app/projects/${pid}/safety` },
-  { key: 'tm',      accent: 'tm',     label: 'T&M Awaiting Approval', icon: Receipt, fallback: 'T&M ticket',   href: (pid: string) => `/app/projects/${pid}/tm-tickets` },
-  { key: 'assists', accent: 'team',   label: 'Assists — Ball in Your Court', icon: Handshake, fallback: 'Assist', href: (pid: string) => `/app/projects/${pid}/rfis` },
+  { key: 'todos', accent: 'todos', label: 'To-Dos', icon: ListChecks, fallback: 'To-do', href: (pid: string) => `/app/projects/${pid}/todos` },
+  { key: 'rfis', accent: 'rfis', label: 'RFIs', icon: ChatCenteredText, fallback: 'RFI', href: (pid: string) => `/app/projects/${pid}/rfis` },
+  { key: 'punch', accent: 'punch', label: 'Punch List', icon: Hammer, fallback: 'Punch item', href: (pid: string) => `/app/projects/${pid}/punch-list` },
+  { key: 'issues', accent: 'safety', label: 'Field Issues', icon: Warning, fallback: 'Field issue', href: (pid: string) => `/app/projects/${pid}/safety` },
+  { key: 'tm', accent: 'tm', label: 'T&M Awaiting Approval', icon: Receipt, fallback: 'T&M ticket', href: (pid: string) => `/app/projects/${pid}/tm-tickets` },
+  { key: 'assists', accent: 'team', label: 'Assists — Ball in Your Court', icon: Handshake, fallback: 'Assist', href: (pid: string) => `/app/projects/${pid}/rfis` },
 ] as const;
 
 /* ── Tolerant item readers — the item payloads come from six different tables ── */
@@ -52,7 +52,7 @@ function itemTitle(it: any, fallback: string): string {
   return String(t || fallback);
 }
 function itemStatus(it: any): string {
-  return String(it?.status || '').replace(/_/g, ' ');
+  return String(it?.status || '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 function parseDue(it: any): Date | null {
   const raw = it?.due_date || it?.dueDate || it?.due || it?.needed_by || it?.date_needed || null;
@@ -98,7 +98,7 @@ function ItemRow({ it, group, pid, todayStart }: { it: any; group: (typeof MODUL
         {itemTitle(it, group.fallback)}
       </span>
       {status && (
-        <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase' as const, padding: '3px 9px', borderRadius: 999, background: 'rgba(148,163,184,0.12)', color: DIM, whiteSpace: 'nowrap' as const }}>
+        <span style={{ flexShrink: 0, fontSize: 9.5, fontWeight: 800, padding: '3px 9px', borderRadius: 999, background: 'rgba(148,163,184,0.12)', color: DIM, whiteSpace: 'nowrap' as const }}>
           {status}
         </span>
       )}
@@ -108,7 +108,7 @@ function ItemRow({ it, group, pid, todayStart }: { it: any; group: (typeof MODUL
         </span>
       )}
       {dueLabel && !overdue && (
-        <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: dueToday ? 800 : 600, color: dueToday ? '#FBBF24' : colors.textDim, whiteSpace: 'nowrap' as const, fontVariantNumeric: 'tabular-nums' as const }}>
+        <span style={{ flexShrink: 0, fontSize: 11.5, fontWeight: dueToday ? 800 : 600, color: dueToday ? 'var(--brand-primary-strong)' : colors.textDim, whiteSpace: 'nowrap' as const, fontVariantNumeric: 'tabular-nums' as const }}>
           {dueLabel}
         </span>
       )}
@@ -204,8 +204,8 @@ export default function MyWorkPage() {
       {!isLoading && !error && rows.length > 0 && (
         <StatStrip items={[
           {href: '/app/my-work',  label: 'Assigned Projects', value: String(rows.length), icon: <Briefcase size={11} weight="bold" /> },
-          {href: '/app/my-work',  label: 'Due Today', value: String(dueToday), accent: dueToday > 0 ? '#FBBF24' : undefined, icon: <CalendarCheck size={11} weight="bold" />, sub: dueToday > 0 ? 'needs attention today' : 'nothing lands today' },
-          {href: '/app/my-work',  label: 'Overdue', value: String(overdue), accent: overdue > 0 ? RED : undefined, icon: <ClockCountdown size={11} weight="bold" />, sub: overdue > 0 ? 'past their due date' : 'all caught up' },
+          {href: '/app/my-work', label: 'Due Today', value: String(dueToday), accent: dueToday > 0 ? 'var(--brand-primary-strong)' : undefined, icon: <CalendarCheck size={11} weight="bold" />, sub: dueToday > 0 ? 'Needs attention today' : 'Nothing lands today' },
+          {href: '/app/my-work', label: 'Overdue', value: String(overdue), accent: overdue > 0 ? RED : undefined, icon: <ClockCountdown size={11} weight="bold" />, sub: overdue > 0 ? 'Past their due date' : 'All caught up' },
           {href: '/app/my-work',  label: 'Awaiting My Approval', value: String(awaiting), accent: awaiting > 0 ? GOLD : undefined, icon: <Stamp size={11} weight="bold" />, sub: 'T&M tickets to sign off' },
         ]} />
       )}
@@ -255,12 +255,12 @@ export default function MyWorkPage() {
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
-              { list: fuOverdue,  label: 'Past due',       tone: RED },
-              { list: fuToday,    label: 'Today',          tone: '#FBBF24' },
-              { list: fuUpcoming, label: 'Next two weeks', tone: colors.textDim },
+              { list: fuOverdue, label: 'Past Due', tone: RED },
+              { list: fuToday, label: 'Today', tone: 'var(--brand-primary-strong)' },
+              { list: fuUpcoming, label: 'Next Two Weeks', tone: colors.textDim },
             ].filter((g) => g.list.length > 0).map((g) => (
               <div key={g.label}>
-                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: g.tone, marginBottom: 7 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: g.tone, marginBottom: 7 }}>
                   {g.label} · {g.list.length}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -310,8 +310,8 @@ export default function MyWorkPage() {
                     <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 9, background: acc.soft, border: `1px solid ${acc.ring}`, color: acc.hex, fontSize: 11, fontWeight: 900, letterSpacing: '0.03em' }}>
                       {projectMonogram(proj.name)}
                     </span>
-                    <span style={{ color: acc.hex }}>{proj.name || 'Untitled project'}</span>
-                    <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase' as const, padding: '3px 10px', borderRadius: 999, background: acc.soft, border: `1px solid ${acc.ring}`, color: acc.hex, whiteSpace: 'nowrap' as const }}>
+                    <span style={{ color: acc.hex }}>{proj.name || 'Untitled Project'}</span>
+                    <span style={{ fontSize: 9.5, fontWeight: 800, padding: '3px 10px', borderRadius: 999, background: acc.soft, border: `1px solid ${acc.ring}`, color: acc.hex, whiteSpace: 'nowrap' as const }}>
                       {roleLabel(p?.role)}
                     </span>
                     {projOverdue > 0 && (
@@ -324,14 +324,14 @@ export default function MyWorkPage() {
                 subtitle={`${(proj.status || 'active')}${p?.scope && p.scope !== 'full' ? ` · ${String(p.scope).replace(/_/g, ' ')} scope` : ''}${projDueToday > 0 ? ` · ${projDueToday} due today` : ''}`}
                 action={pid ? (
                   <Link href={`/app/projects/${pid}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: GOLD, textDecoration: 'none', whiteSpace: 'nowrap' as const }}>
-                    Open project <ArrowRight size={13} weight="bold" />
+                    Open Project <ArrowRight size={13} weight="bold" />
                   </Link>
                 ) : undefined}
               >
                 {groups.length === 0 ? (
                   countOpen > 0 ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 4px', color: 'rgba(255,255,255,0.55)', fontSize: 13 }}>
-                      <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 999, background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.35)' }}>
+                      <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: 999, background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-35)' }}>
                         <Briefcase size={14} weight="bold" color={GOLD} />
                       </span>
                       {countOpen} open item{countOpen === 1 ? '' : 's'} on this project — open it for the full list.
@@ -355,7 +355,7 @@ export default function MyWorkPage() {
                             <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, borderRadius: 6, background: gAcc.soft, border: `1px solid ${gAcc.ring}` }}>
                               <GIcon size={11} weight="bold" color={gAcc.hex} />
                             </span>
-                            <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.8, textTransform: 'uppercase' as const, color: DIM }}>{g.label}</span>
+                            <span style={{ fontSize: 10.5, fontWeight: 800, color: DIM }}>{g.label}</span>
                             <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 8px', borderRadius: 999, background: gAcc.soft, border: `1px solid ${gAcc.ring}`, color: gAcc.hex, fontVariantNumeric: 'tabular-nums' as const }}>{items.length}</span>
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>

@@ -31,7 +31,7 @@ const isLive = (href: string) => href.trim() !== '' && href.trim() !== '#';
 
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 
 /* Accurate brand glyphs (simple-icons paths), true brand colors on the dark ground. */
 function SocialGlyph({ name, size }: { name: string; size: number }) {
@@ -142,7 +142,7 @@ export default function MarketingFooter() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32, marginBottom: 32 }} className="mf-grid">
         {COLUMNS.map(col => (
           <div key={col.head}>
-            <h4 style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: 1, color: TEXT, marginBottom: 14 }}>{col.head}</h4>
+            <h4 style={{ fontSize: 12, fontWeight: 700, color: TEXT, marginBottom: 14 }}>{col.head}</h4>
             {col.links.map(({ l, h }) => (
               <div key={l}><Link href={h} style={{ color: DIM, textDecoration: 'none', fontSize: 13, lineHeight: 2 }}>{l}</Link></div>
             ))}

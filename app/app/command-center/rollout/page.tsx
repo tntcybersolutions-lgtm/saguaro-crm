@@ -88,7 +88,7 @@ export default function RolloutPipelinePage() {
                 const items = byStage[stage.id] || [];
                 const colValue = items.reduce((s, p) => s + (num(p.contract_value) || 0), 0);
                 return (
-                  <div key={stage.id} style={{ flex: '0 0 288px', width: 288, background: '#1c1c1e', border: `1px solid ${C.border}`, borderRadius: 14, padding: 10 }}>
+                  <div key={stage.id} style={{ flex: '0 0 288px', width: 288, background: 'var(--bg-surface-2)', border: `1px solid ${C.border}`, borderRadius: 14, padding: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px 4px' }}>
                       <span style={{ width: 10, height: 10, borderRadius: 3, background: stage.color }} />
                       <span style={{ fontSize: 13, fontWeight: 800 }}>{stage.label}</span>
@@ -115,7 +115,7 @@ export default function RolloutPipelinePage() {
                               {num(p.contract_value) ? ` · ${fmtMoneyShort(num(p.contract_value))}` : ''}
                             </div>
                             {/* progress */}
-                            <div style={{ height: 4, borderRadius: 2, background: '#1c1c1e', overflow: 'hidden', margin: '8px 0 9px' }}>
+                            <div style={{ height: 4, borderRadius: 2, background: 'var(--bg-surface-2)', overflow: 'hidden', margin: '8px 0 9px' }}>
                               <div style={{ height: '100%', width: `${Math.min(100, Math.max(0, num(p.percent_complete) || 0))}%`, background: stage.color }} />
                             </div>
                             {/* stage controls */}
@@ -145,7 +145,7 @@ export default function RolloutPipelinePage() {
 function arrowStyle(disabled: boolean): React.CSSProperties {
   return {
     flex: 1, padding: '5px 8px', borderRadius: 7, fontSize: 11, fontWeight: 700, cursor: disabled ? 'default' : 'pointer',
-    border: `1px solid ${C.border}`, background: disabled ? '#0a0a0a' : '#1c1c1e', color: disabled ? C.faint : C.text,
+    border: `1px solid ${C.border}`, background: disabled ? 'var(--bg-base)' : 'var(--bg-surface-2)', color: disabled ? C.faint : C.text,
   };
 }
 
@@ -155,14 +155,14 @@ function LaunchModal({ onClose }: { onClose: () => void }) {
   const [err, setErr] = useState('');
   const [done, setDone] = useState<any>(null);
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
-  const inp: React.CSSProperties = { padding: '9px 11px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', background: '#1c1c1e', color: C.text, width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = { padding: '9px 11px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', background: 'var(--bg-surface-2)', color: C.text, width: '100%' };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.name) { setErr('Site name is required.'); return; }
     setBusy(true); setErr('');
     try { const r = await launchSite(f); setDone(r); }
-    catch (e: any) { setErr(e?.message || 'Failed to launch'); }
+    catch (e: any) { setErr(e?.message || "Couldn't launch the site. Please try again."); }
     finally { setBusy(false); }
   }
 
@@ -182,7 +182,7 @@ function LaunchModal({ onClose }: { onClose: () => void }) {
               <div style={{ fontSize: 12, color: C.yellow, marginBottom: 12 }}>Note: {done.warnings.join('; ')}</div>
             )}
             <div style={{ display: 'flex', gap: 10 }}>
-              <Link href={`/app/projects/${done.project?.id}`} className="pmBtn" style={goldButtonStyle}>Open site</Link>
+              <Link href={`/app/projects/${done.project?.id}`} className="pmBtn" style={goldButtonStyle}>Open Site</Link>
               <GhostButton onClick={onClose}>Done</GhostButton>
             </div>
           </div>
@@ -193,15 +193,15 @@ function LaunchModal({ onClose }: { onClose: () => void }) {
               Spins up a new location and pre-loads the standardized golf-franchise playbook — phases, milestones, long-lead procurement, and the standard risk register.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Site name *</label><input style={inp} placeholder="e.g. Back Nine Tempe" value={f.name || ''} onChange={(e) => set('name', e.target.value)} /></div>
+              <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Site Name *</label><input style={inp} placeholder="e.g. Back Nine Tempe" value={f.name || ''} onChange={(e) => set('name', e.target.value)} /></div>
               <div><label style={lbl}>City</label><input style={inp} value={f.city || ''} onChange={(e) => set('city', e.target.value)} /></div>
               <div><label style={lbl}>State</label><input style={inp} value={f.state || ''} onChange={(e) => set('state', e.target.value)} /></div>
-              <div><label style={lbl}>Contract value</label><input type="number" style={inp} placeholder="e.g. 4200000" value={f.contract_value || ''} onChange={(e) => set('contract_value', e.target.value)} /></div>
-              <div><label style={lbl}>Target start date</label><SaguaroDatePicker style={inp} value={f.start_date || ''} onChange={(v) => set('start_date', v)} /></div>
+              <div><label style={lbl}>Contract Value</label><input type="number" style={inp} placeholder="e.g. 4200000" value={f.contract_value || ''} onChange={(e) => set('contract_value', e.target.value)} /></div>
+              <div><label style={lbl}>Target Start Date</label><SaguaroDatePicker style={inp} value={f.start_date || ''} onChange={(v) => set('start_date', v)} /></div>
             </div>
             {err && <div style={{ color: C.red, fontSize: 13, marginTop: 10 }}>{err}</div>}
             <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-              <GoldButton onClick={submit} disabled={busy}>{busy ? 'Launching…' : 'Launch site'}</GoldButton>
+              <GoldButton onClick={submit} disabled={busy}>{busy ? 'Launching…' : 'Launch Site'}</GoldButton>
               <GhostButton onClick={onClose}>Cancel</GhostButton>
             </div>
           </>

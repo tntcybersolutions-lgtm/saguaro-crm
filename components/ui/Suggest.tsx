@@ -18,11 +18,11 @@
 
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 
-const GOLD = '#F59E0B';
-const PANEL = '#0D1D2E';
-const BORDER = '#1E3A5F';
-const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
+const GOLD = 'var(--brand-primary)';
+const PANEL = 'rgba(22,24,29,0.94)'; // floating glass over the jet-black page
+const BORDER = 'rgba(255,255,255,0.12)';
+const TEXT = '#FFFFFF';
+const DIM = '#A9B4C4';
 
 export interface SuggestProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'list'> {
@@ -152,6 +152,8 @@ export default function Suggest({
             margin: 0, padding: 4, listStyle: 'none',
             maxHeight: 260, overflowY: 'auto',
             background: PANEL,
+            backdropFilter: 'blur(20px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(150%)',
             border: `1px solid ${BORDER}`,
             borderRadius: 10,
             boxShadow: '0 18px 40px -16px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.05)',
@@ -171,7 +173,7 @@ export default function Suggest({
                 borderRadius: 7,
                 cursor: 'pointer',
                 fontSize: 13.5,
-                color: i === active ? '#241500' : TEXT,
+                color: i === active ? 'var(--on-brand)' : TEXT,
                 background: i === active ? GOLD : 'transparent',
               }}
             >

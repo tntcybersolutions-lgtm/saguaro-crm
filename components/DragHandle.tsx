@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useRef } from 'react';
 
-const GOLD = '#F59E0B';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 

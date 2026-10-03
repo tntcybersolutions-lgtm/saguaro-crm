@@ -14,9 +14,9 @@ const isInstall = (desc: string) => /full-?swing|simulat|launch monitor|projecto
 
 const BUCKETS = [
   { key: 'delivered', label: 'Delivered', color: C.green },
-  { key: 'soon', label: 'Next 30 days', color: '#FF9500' },
-  { key: 'mid', label: '30–90 days', color: C.blue },
-  { key: 'later', label: 'Beyond 90 days', color: C.dim },
+  { key: 'soon', label: 'Next 30 Days', color: '#FF9500' },
+  { key: 'mid', label: '30–90 Days', color: C.blue },
+  { key: 'later', label: 'Beyond 90 Days', color: C.dim },
 ];
 
 export default function VendorsPage() {

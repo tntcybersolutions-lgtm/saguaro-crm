@@ -1,0 +1,143 @@
+'use client';
+/**
+ * Who owns this job — "Assigned to" (a signed-in team member) and the
+ * customer it belongs to. Saves through PATCH /api/projects/[projectId].
+ *
+ * Exists because there was no direct way to hand an existing job to a
+ * salesperson or PM: Work Assignments stayed locked until an emailed invite was
+ * accepted, Customers → Assign only worked for customer-linked jobs, and the
+ * Team page pointed at a "Project Settings" page that does not exist.
+ */
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Card, Field, Select, Button, FormGrid, Toast, useToast } from '@/components/ui/kit';
+import { getAuthHeaders } from '@/lib/supabase-browser';
+
+type TeamUser = { id: string; name: string; email: string };
+type Customer = { id: string; name: string; email: string };
+
+export type OwnershipProject = {
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
+  customer_id?: string | null;
+};
+
+export default function ProjectOwnershipCard({
+  projectId,
+  project,
+  onSaved,
+}: {
+  projectId: string;
+  project: OwnershipProject;
+  onSaved?: (project: Record<string, unknown>) => void;
+}) {
+  const [users, setUsers] = useState<TeamUser[] | null>(null);
+  const [customers, setCustomers] = useState<Customer[] | null>(null);
+  const [loadErr, setLoadErr] = useState('');
+  const [assignee, setAssignee] = useState(project.assigned_to ?? '');
+  const [customer, setCustomer] = useState(project.customer_id ?? '');
+  const [saving, setSaving] = useState<'assignee' | 'customer' | null>(null);
+  const { toast, show } = useToast();
+
+  useEffect(() => { setAssignee(project.assigned_to ?? ''); }, [project.assigned_to]);
+  useEffect(() => { setCustomer(project.customer_id ?? ''); }, [project.customer_id]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const auth = await getAuthHeaders();
+        const [u, c] = await Promise.all([
+          fetch('/api/team/users', { headers: auth }),
+          fetch('/api/customers/profiles?limit=500', { headers: auth }),
+        ]);
+        const uj = u.ok ? await u.json() : null;
+        const cj = c.ok ? await c.json() : null;
+        if (!alive) return;
+        setUsers(((uj?.users ?? []) as TeamUser[]).map((x) => ({ id: x.id, name: x.name, email: x.email })));
+        setCustomers(((cj?.customers ?? []) as Customer[]).map((x) => ({ id: x.id, name: x.name, email: x.email })));
+        if (!u.ok || !c.ok) setLoadErr("Couldn't load every option — refresh to try again.");
+      } catch (err) {
+        console.error('[ProjectOwnershipCard] load', err);
+        if (alive) { setUsers([]); setCustomers([]); setLoadErr("Couldn't load your team and customers — refresh to try again."); }
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  async function save(kind: 'assignee' | 'customer', value: string) {
+    setSaving(kind);
+    try {
+      const auth = await getAuthHeaders();
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...auth },
+        body: JSON.stringify(kind === 'assignee' ? { assignedTo: value || null } : { customerId: value || null }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || 'Could not save the change');
+      if (kind === 'assignee') {
+        show(value ? `Assigned to ${body.assigneeName || 'team member'} — they've been notified in the app.` : 'Assignment cleared.');
+      } else {
+        show(value ? 'Customer linked to this job.' : 'Customer unlinked.');
+      }
+      onSaved?.(body.project ?? {});
+    } catch (err) {
+      console.error('[ProjectOwnershipCard] save', err);
+      // Roll the select back to what is actually saved.
+      if (kind === 'assignee') setAssignee(project.assigned_to ?? '');
+      else setCustomer(project.customer_id ?? '');
+      show(err instanceof Error ? err.message : 'Could not save the change', 'bad');
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  const userOptions = (users ?? []).map((u) => ({ value: u.id, label: u.email && u.name !== u.email ? `${u.name} — ${u.email}` : u.name }));
+  // Keep a saved assignee visible even if they're no longer in the roster list.
+  if (project.assigned_to && users && !users.some((u) => u.id === project.assigned_to)) {
+    userOptions.unshift({ value: project.assigned_to, label: project.assigned_to_name || 'Former team member' });
+  }
+  const customerOptions = (customers ?? []).map((c) => ({ value: c.id, label: c.email ? `${c.name || 'Unnamed'} — ${c.email}` : (c.name || 'Unnamed') }));
+  if (project.customer_id && customers && !customers.some((c) => c.id === project.customer_id)) {
+    customerOptions.unshift({ value: project.customer_id, label: 'Linked Customer' });
+  }
+
+  return (
+    <Card title="Ownership" subtitle="Who runs this job, and whose job it is">
+      <FormGrid cols={2}>
+        <Field
+          label="Assigned To"
+          hint={users && users.length === 0 ? <>No team members yet — <Link href="/app/people?tab=access">invite your team</Link>.</> : 'Anyone who can sign in. They get it in My Work and a notification.'}
+        >
+          <Select
+            value={assignee}
+            disabled={users === null || saving === 'assignee'}
+            placeholder={users === null ? 'Loading team…' : 'Unassigned'}
+            options={userOptions}
+            onChange={(e) => { setAssignee(e.target.value); void save('assignee', e.target.value); }}
+          />
+        </Field>
+        <Field
+          label="Customer"
+          hint={customers && customers.length === 0 ? <>No customers yet — <Link href="/app/customers">add one</Link>.</> : project.customer_id ? 'Billing and the owner portal follow this customer.' : 'Link the customer this job is for.'}
+        >
+          <Select
+            value={customer}
+            disabled={customers === null || saving === 'customer'}
+            placeholder={customers === null ? 'Loading customers…' : 'No customer linked'}
+            options={customerOptions}
+            onChange={(e) => { setCustomer(e.target.value); void save('customer', e.target.value); }}
+          />
+        </Field>
+      </FormGrid>
+      {loadErr && <div className="k-hint" style={{ marginTop: 8 }}>{loadErr}</div>}
+      {project.customer_id && (
+        <div style={{ marginTop: 10 }}>
+          <Button size="sm" variant="ghost" href="/app/customers">Open Customers</Button>
+        </div>
+      )}
+      <Toast message={toast?.message ?? null} tone={toast?.tone} />
+    </Card>
+  );
+}

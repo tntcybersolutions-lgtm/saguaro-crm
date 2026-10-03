@@ -83,7 +83,9 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     name: 'Renovation / remodel',
     blurb: 'Work inside an occupied or existing building. Demolition first, unknowns expected, allowances matter.',
     example: 'A wing refurbishment, historic restoration or a home remodel.',
-    projectType: 'residential',
+    /* Not 'residential': a wing refurbishment or historic restoration is not a
+       house. 'remodel' is the projects.project_type category for this work. */
+    projectType: 'remodel',
     contractType: 'Cost Plus',
     retainagePct: 10,
     divisions: ['02', '03', '06', '07', '08', '09', '22', '23', '26'],
@@ -95,7 +97,10 @@ export const PROJECT_TEMPLATES: ProjectTemplate[] = [
     name: 'Service & small works',
     blurb: 'Short jobs billed on time and materials. No bid packages, no retainage, invoice on completion.',
     example: 'A callout, a repair, a small install under a maintenance agreement.',
-    projectType: 'service',
+    /* project_type is a category ("what kind of building"), and 'service' is
+       not one the wizard offers. Service calls default commercial; the GC can
+       still pick Residential in the Category field. */
+    projectType: 'commercial',
     contractType: 'Time & Materials',
     retainagePct: 0,
     divisions: ['22', '23', '26'],

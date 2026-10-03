@@ -23,7 +23,7 @@ export default function PortalsPage() {
   async function create() {
     if (!f.project_id) { setErr('Pick a site.'); return; }
     setBusy(true); setErr('');
-    try { await createPortal(f); setF({}); } catch (e: any) { setErr(e?.message || 'Failed'); } finally { setBusy(false); }
+    try { await createPortal(f); setF({}); } catch (e: any) { setErr(e?.message || "Couldn't create the portal link. Please try again."); } finally { setBusy(false); }
   }
   async function copy(url: string, id: string) {
     try { await navigator.clipboard.writeText(origin + url); setCopied(id); setTimeout(() => setCopied(''), 1800); } catch { /* noop */ }
@@ -39,8 +39,8 @@ export default function PortalsPage() {
   const viewed = list.filter((p) => p.last_accessed_at).length;
   const sites = new Set(list.map((p) => p.project_id)).size;
 
-  const inp: React.CSSProperties = { padding: '9px 11px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', background: '#1c1c1e', color: C.text, width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = { padding: '9px 11px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', background: 'var(--bg-surface-2)', color: C.text, width: '100%' };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   return (
     <PremiumSurface maxWidth={1000} pad="28px 24px 60px">
@@ -76,8 +76,8 @@ export default function PortalsPage() {
                 {(projects as any[]).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
-            <div style={{ flex: '1 1 160px' }}><label style={lbl}>Owner name</label><input style={inp} value={f.owner_name || ''} onChange={(e) => setF((p) => ({ ...p, owner_name: e.target.value }))} /></div>
-            <div style={{ flex: '1 1 160px' }}><label style={lbl}>Owner email</label><input style={inp} value={f.owner_email || ''} onChange={(e) => setF((p) => ({ ...p, owner_email: e.target.value }))} /></div>
+            <div style={{ flex: '1 1 160px' }}><label style={lbl}>Owner Name</label><input style={inp} value={f.owner_name || ''} onChange={(e) => setF((p) => ({ ...p, owner_name: e.target.value }))} /></div>
+            <div style={{ flex: '1 1 160px' }}><label style={lbl}>Owner Email</label><input style={inp} value={f.owner_email || ''} onChange={(e) => setF((p) => ({ ...p, owner_email: e.target.value }))} /></div>
             <GoldButton onClick={create} disabled={busy}>{busy ? 'Creating…' : 'Generate Link'}</GoldButton>
           </div>
           {err && <div style={{ color: C.red, fontSize: 13, marginTop: 10 }}>{err}</div>}
@@ -103,8 +103,8 @@ export default function PortalsPage() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 15, fontWeight: 800 }}>{p.project_name || 'Site'}</span>
                         {p.last_accessed_at
-                          ? <Pill tone="green" caps>Viewed {fmtDate(p.last_accessed_at)}</Pill>
-                          : <Pill tone="amber" caps>Not viewed yet</Pill>}
+                          ? <Pill tone="green">Viewed {fmtDate(p.last_accessed_at)}</Pill>
+                          : <Pill tone="amber">Not Viewed Yet</Pill>}
                       </div>
                       <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
                         {p.owner_name ? `${p.owner_name}${p.owner_email ? ` · ${p.owner_email}` : ''}` : 'No owner named'}

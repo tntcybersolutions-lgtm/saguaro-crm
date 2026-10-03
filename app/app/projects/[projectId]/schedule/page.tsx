@@ -14,8 +14,8 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
-const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='#F59E0B';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GREEN='#1a8a4a',RED='#c03030',ORANGE='#B85C2A',BLUE='var(--brand-primary)';
 
 const STATUSES=['not_started','in_progress','completed','delayed','on_hold'];
 const STATUS_LABELS:Record<string,string>={
@@ -29,7 +29,7 @@ const PHASES=['Pre-Construction','Foundation','Framing','MEP Rough','Insulation'
   'Drywall','Finishes','MEP Trim','Punch List','Closeout','Other'];
 
 const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'#1c1c1e',
+  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
   border:'1px solid rgba(255,255,255,0.12)',borderRadius:7,color:'#FFFFFF',
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
@@ -46,7 +46,7 @@ function Field({label,children}:{label:React.ReactNode;children:React.ReactNode}
   return(
     <div>
       <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
-        textTransform:'uppercase',letterSpacing:.5,marginBottom:5}}>{label}</label>
+        marginBottom:5}}>{label}</label>
       {children}
     </div>
   );
@@ -141,11 +141,11 @@ function GanttChart({tasks}:{tasks:any[]}){
             <div style={{flex:1,position:'relative',height:24}}>
               {/* Today line */}
               <div style={{position:'absolute',left:`${todayPct}%`,top:0,bottom:0,
-                width:1,background:'rgba(245, 158, 11,.5)',zIndex:1}}/>
+                width:1,background:'color-mix(in srgb, var(--brand-primary) 50%, transparent)',zIndex:1}}/>
               {/* Bar background */}
               <div style={{position:'absolute',left:`${left}%`,width:`${width}%`,
                 top:4,height:16,borderRadius:3,
-                background:`${color}33`,border:`1px solid ${color}66`}}>
+                background:`color-mix(in srgb, ${color} 20%, transparent)`,border:`1px solid color-mix(in srgb, ${color} 40%, transparent)`}}>
                 {/* Progress fill */}
                 <div style={{
                   height:'100%',borderRadius:2,
@@ -292,7 +292,7 @@ export default function SchedulePage(){
   }
 
   async function save(): Promise<boolean> {
-    if(!form.name.trim()){showToast('Task name is required','error');return false;}
+    if(!form.name.trim()){showToast('Task name is required.','error');return false;}
     // Optimistic save (house pattern: budget saveEdit) — tasks patch and the
     // panel closes instantly; the network settles in the background.
     const snapshot={...form,pct_complete:Number(form.pct_complete)||0};
@@ -304,7 +304,7 @@ export default function SchedulePage(){
         const tempId=`temp-${Date.now()}`;
         setTasks(prev=>[...prev,{id:tempId,...snapshot,project_id:projectId}]);
         closePanel();
-        showToast('Task added');
+        showToast('Task added.');
         const r=await fetch('/api/schedule/create',{
           method:'POST',
           headers:{...h,'Content-Type':'application/json'},
@@ -318,7 +318,7 @@ export default function SchedulePage(){
         const prevTask=selected;
         setTasks(prev=>prev.map((t:any)=>t.id===prevTask.id?{...t,...snapshot}:t));
         closePanel();
-        showToast('Task updated');
+        showToast('Task updated.');
         const r=await fetch(`/api/schedule/${prevTask.id}`,{
           method:'PUT',
           headers:{...h,'Content-Type':'application/json'},
@@ -344,14 +344,14 @@ export default function SchedulePage(){
     // rollback restores the exact list on failure.
     const prevTasks=tasks;
     setTasks(prev=>prev.filter((t:any)=>t.id!==task.id));
-    showToast('Task deleted');closePanel();
+    showToast('Task deleted.');closePanel();
     setDeleting(true);
     try{
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/schedule/${task.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
       revalidate();
-    }catch{setTasks(prevTasks);showToast('Delete failed','error');}
+    }catch{setTasks(prevTasks);showToast('Delete failed.','error');}
     finally{setDeleting(false);}
   }
 
@@ -419,9 +419,9 @@ export default function SchedulePage(){
               <div style={{display:'flex',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:12,overflow:'hidden'}}>
                 {(['gantt','list'] as const).map(v=>(
                   <button key={v} onClick={()=>setViewMode(v)} className="pmBtn"
-                    style={{padding:'9px 16px',background:viewMode===v?`rgba(245, 158, 11,.15)`:'transparent',
+                    style={{padding:'9px 16px',background:viewMode===v?'var(--brand-primary-12)':'transparent',
                       border:'none',color:viewMode===v?GOLD:DIM,fontSize:12,fontWeight:700,
-                      cursor:'pointer',textTransform:'uppercase',letterSpacing:.5}}>
+                      cursor:'pointer'}}>
                     {v==='gantt'?'Gantt':'List'}
                   </button>
                 ))}
@@ -438,20 +438,20 @@ export default function SchedulePage(){
               ? Array.from({length:4}).map((_,i)=><SkeletonKPI key={i}/>)
               : <>
                   <StatCard icon={<TrendUp size={19} weight="duotone" color={GREEN} />}
-                    label="% Complete" value={`${avgPct}%`} accent={GREEN} sub="avg completion" delay={0.02}  href={`/app/projects/${projectId}/schedule`}/>
+                    label="% Complete" value={`${avgPct}%`} accent={GREEN} sub="Average completion" delay={0.02}  href={`/app/projects/${projectId}/schedule`}/>
                   <StatCard icon={<Clock size={19} weight="duotone" color={moduleAccent('schedule').hex} />}
-                    label="Days Remaining" value={daysLeft?String(daysLeft):'—'} sub="to project end" delay={0.06}  href={`/app/projects/${projectId}/schedule`}/>
+                    label="Days Remaining" value={daysLeft?String(daysLeft):'—'} sub="To project end" delay={0.06}  href={`/app/projects/${projectId}/schedule`}/>
                   <StatCard icon={<CheckCircle size={19} weight="duotone" color={moduleAccent('schedule').hex} />}
-                    label="Tasks Complete" value={`${completedCount}/${tasks.length}`} accent={GOLD} sub="tasks finished" delay={0.10}  href={`/app/projects/${projectId}/schedule`}/>
+                    label="Tasks Complete" value={`${completedCount}/${tasks.length}`} accent={GOLD} sub="Tasks finished" delay={0.10}  href={`/app/projects/${projectId}/schedule`}/>
                   <StatCard icon={<WarningCircle size={19} weight="duotone" color={delayedCount?RED:DIM} />}
                     label="Delayed" value={String(delayedCount)} accent={delayedCount?RED:undefined}
-                    sub={delayedCount?'need attention':'on track'} delay={0.14}  href={`/app/projects/${projectId}/schedule`}/>
+                    sub={delayedCount?'Need attention':'On track'} delay={0.14}  href={`/app/projects/${projectId}/schedule`}/>
                 </>}
           </div>
 
           {/* Gantt view */}
           {viewMode==='gantt'&&!loading&&!loadError&&tasks.length>0&&(
-            <SectionCard flat title="Timeline" subtitle="Today marked with a gold line"
+            <SectionCard flat title="Timeline" subtitle="Today is marked with a yellow line."
               icon={<CalendarBlank size={17} weight="duotone" color={moduleAccent('schedule').hex} />}
               style={{marginBottom:20}} bodyStyle={{overflowX:'auto'}}>
               <GanttChart tasks={filtered.length?filtered:tasks}/>
@@ -515,12 +515,12 @@ export default function SchedulePage(){
               </div>
               {((ctx?.bidPackages||[]) as any[]).filter((b:any)=>b.trade).length>0&&(
                 <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:12}}>
-                  <span style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5}}>Seed from bid packages:</span>
+                  <span style={{fontSize:11,fontWeight:700,color:DIM}}>Seed from Bid Packages:</span>
                   {((ctx?.bidPackages||[]) as any[]).filter((b:any)=>b.trade).slice(0,5).map((b:any)=>(
                     <button key={b.id}
                       onClick={()=>{openCreate();setForm(f=>({...f,name:b.name||b.trade,trade:b.trade}));}}
                       className="pmBtn"
-                      style={{padding:'5px 12px',background:'rgba(245,158,11,.08)',border:'1px solid rgba(245,158,11,.3)',
+                      style={{padding:'5px 12px',background:'var(--brand-primary-08)',border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',
                         borderRadius:999,color:GOLD,fontSize:12,fontWeight:700,cursor:'pointer'}}>
                       {b.trade}
                     </button>
@@ -528,10 +528,10 @@ export default function SchedulePage(){
                 </div>
               )}
               <FlowStrip steps={[
-                {title:'Add the task',desc:'name is enough to save'},
-                {title:'Chain predecessors',desc:'start auto-sets to the day after'},
-                {title:'Gantt draws itself',desc:'today marked in gold'},
-                {title:'Progress rolls up',desc:'% complete feeds the KPIs'},
+                {title:'Add the Task',desc:'Name is enough to save'},
+                {title:'Chain Predecessors',desc:'Start auto-sets to the day after'},
+                {title:'Gantt Draws Itself',desc:'Today marked in yellow'},
+                {title:'Progress Rolls Up',desc:'% complete feeds the KPIs'},
               ]} />
             </SectionCard>
           )}
@@ -547,7 +547,7 @@ export default function SchedulePage(){
                   <tr style={{background:DARK}}>
                     {['Task','Phase','Start','End','Duration','Status','% Done','Assigned'].map(h=>(
                       <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,
-                        fontWeight:700,textTransform:'uppercase',letterSpacing:.5,
+                        fontWeight:700,
                         color:DIM,borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>
                         {h}
                       </th>
@@ -562,9 +562,9 @@ export default function SchedulePage(){
                       <tr key={task.id}
                         onClick={()=>viewTask(task)}
                         style={{borderBottom:`1px solid rgba(255,255,255,0.08)`,cursor:'pointer',
-                          background:selected?.id===task.id&&mode==='view'?'rgba(245, 158, 11,.05)':''}}
-                        onMouseEnter={e=>e.currentTarget.style.background='rgba(245, 158, 11,.04)'}
-                        onMouseLeave={e=>e.currentTarget.style.background=selected?.id===task.id&&mode==='view'?'rgba(245, 158, 11,.05)':''}>
+                          background:selected?.id===task.id&&mode==='view'?'color-mix(in srgb, var(--brand-primary) 5%, transparent)':''}}
+                        onMouseEnter={e=>e.currentTarget.style.background='color-mix(in srgb, var(--brand-primary) 4%, transparent)'}
+                        onMouseLeave={e=>e.currentTarget.style.background=selected?.id===task.id&&mode==='view'?'color-mix(in srgb, var(--brand-primary) 5%, transparent)':''}>
                         <td style={{padding:'11px 14px',fontWeight:700,color:TEXT}}>{task.name}</td>
                         <td style={{padding:'11px 14px',color:DIM}}>{task.phase||'—'}</td>
                         <td style={{padding:'11px 14px',color:DIM,whiteSpace:'nowrap'}}>{task.start_date||'—'}</td>
@@ -572,7 +572,7 @@ export default function SchedulePage(){
                         <td style={{padding:'11px 14px',color:DIM}}>{dur?`${dur}d`:'—'}</td>
                         <td style={{padding:'11px 14px'}}>
                           <span style={{fontSize:10,fontWeight:700,padding:'3px 8px',borderRadius:20,
-                            background:`${color}22`,color,textTransform:'uppercase',letterSpacing:.3}}>
+                            background:`color-mix(in srgb, ${color} 13%, transparent)`,color}}>
                             {STATUS_LABELS[task.status]||task.status}
                           </span>
                         </td>
@@ -610,9 +610,9 @@ export default function SchedulePage(){
               {mode==='view'&&selected&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'rgba(245,158,11,.1)',
-                      border:`1px solid ${BLUE}44`,borderRadius:6,
-                      color:'#FBBF24',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    style={{padding:'6px 14px',background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                      border:`1px solid color-mix(in srgb, ${BLUE} 27%, transparent)`,borderRadius:6,
+                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deleteTask(selected)} disabled={deleting}
@@ -637,8 +637,8 @@ export default function SchedulePage(){
                 {mode==='create'&&ctx&&(
                   <StatStrip items={[
                     {href: `/app/projects/${projectId}/schedule`, label:'Tasks',value:String(tasks.length),sub:`${completedCount} complete · ${delayedCount} delayed`},
-                    {href: `/app/projects/${projectId}/schedule`, label:'Critical Path',value:String(ctx.schedule?.criticalCount??0),accent:(ctx.schedule?.criticalCount??0)>0?GOLD:undefined,sub:'tasks drive the end date'},
-                    {href: `/app/projects/${projectId}/schedule`, label:'Next Milestone',value:ctx.schedule?.nextTasks?.[0]?.name||'—',sub:ctx.schedule?.nextTasks?.[0]?`starts ${fmtShort(ctx.schedule.nextTasks[0].startDate)}`:'nothing queued yet'},
+                    {href: `/app/projects/${projectId}/schedule`, label:'Critical Path',value:String(ctx.schedule?.criticalCount??0),accent:(ctx.schedule?.criticalCount??0)>0?GOLD:undefined,sub:'Tasks drive the end date'},
+                    {href: `/app/projects/${projectId}/schedule`, label:'Next Milestone',value:ctx.schedule?.nextTasks?.[0]?.name||'—',sub:ctx.schedule?.nextTasks?.[0]?`Starts ${fmtShort(ctx.schedule.nextTasks[0].startDate)}`:'Nothing queued yet'},
                   ]}/>
                 )}
                 <Field label="Task Name *">
@@ -747,10 +747,10 @@ export default function SchedulePage(){
 
                 {mode==='create'&&(
                   <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:'14px 16px'}}>
-                    <FlowSteps title="After you add" steps={[
-                      {title:'Task lands on the Gantt',desc:'Bar plots start to end against the gold today marker.'},
-                      {title:'Dependency is tracked',desc:form.predecessor_id?'Chained finish-to-start behind its predecessor.':'Pick a predecessor to chain it into the build sequence.'},
-                      {title:'Progress rolls up',desc:'Its % complete feeds the completion and delayed KPIs above.'},
+                    <FlowSteps title="After You Add" steps={[
+                      {title:'Task Lands on the Gantt',desc:'The bar plots start to end against the yellow today marker.'},
+                      {title:'Dependency Is Tracked',desc:form.predecessor_id?'Chained finish-to-start behind its predecessor.':'Pick a predecessor to chain it into the build sequence.'},
+                      {title:'Progress Rolls Up',desc:'Its % complete feeds the completion and delayed KPIs above.'},
                     ]}/>
                   </div>
                 )}
@@ -776,15 +776,13 @@ export default function SchedulePage(){
                   <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:12}}>
                     {selected.phase&&(
                       <span style={{fontSize:11,fontWeight:700,padding:'3px 9px',borderRadius:20,
-                        background:'rgba(245,158,11,.15)',color:'#FBBF24',
-                        textTransform:'uppercase',letterSpacing:.3}}>
+                        background:'var(--brand-primary-12)',color:'var(--brand-primary-strong)'}}>
                         {selected.phase}
                       </span>
                     )}
                     <span style={{fontSize:11,fontWeight:700,padding:'3px 9px',borderRadius:20,
-                      background:`${STATUS_COLORS[selected.status]||DIM}22`,
-                      color:STATUS_COLORS[selected.status]||DIM,
-                      textTransform:'uppercase',letterSpacing:.3}}>
+                      background:`color-mix(in srgb, ${STATUS_COLORS[selected.status]||DIM} 13%, transparent)`,
+                      color:STATUS_COLORS[selected.status]||DIM}}>
                       {STATUS_LABELS[selected.status]||selected.status}
                     </span>
                   </div>
@@ -806,8 +804,8 @@ export default function SchedulePage(){
                   <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
                     {[25,50,75,100].map(pct=>(
                       <button key={pct} onClick={()=>updatePct(selected,pct)}
-                        style={{flex:1,padding:'6px 0',background:'rgba(245, 158, 11,.1)',
-                          border:`1px solid rgba(245, 158, 11,.3)`,borderRadius:6,
+                        style={{flex:1,padding:'6px 0',background:'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
+                          border:`1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)`,borderRadius:6,
                           color:GOLD,fontSize:11,fontWeight:700,cursor:'pointer'}}>
                         {pct}%
                       </button>
@@ -825,19 +823,19 @@ export default function SchedulePage(){
                     {l:'Assigned To',v:selected.assigned_to},
                     {l:'Predecessor',v:tasks.find((t:any)=>t.id===selected.predecessor_id)?.name||selected.predecessor},
                   ].filter(x=>x.v).map(x=>(
-                    <div key={x.l} style={{background:'#141416',border:`1px solid ${BORDER}`,
+                    <div key={x.l} style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,
                       borderRadius:8,padding:'10px 12px'}}>
-                      <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',
-                        letterSpacing:.5,marginBottom:4}}>{x.l}</div>
+                      <div style={{fontSize:10,fontWeight:700,color:DIM,
+                        marginBottom:4}}>{x.l}</div>
                       <div style={{fontSize:13,color:TEXT}}>{x.v}</div>
                     </div>
                   ))}
                 </div>
 
                 {selected.notes&&(
-                  <div style={{background:'#141416',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',
-                      letterSpacing:.5,marginBottom:6}}>Notes</div>
+                  <div style={{background:'var(--bg-surface)',border:`1px solid ${BORDER}`,borderRadius:8,padding:'12px 14px'}}>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM,
+                      marginBottom:6}}>Notes</div>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
                   </div>
                 )}

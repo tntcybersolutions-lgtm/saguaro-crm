@@ -38,20 +38,20 @@ export default function SubPortalLanding() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ maxWidth: 440, width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ color: '#F59E0B', fontWeight: 800, fontSize: 24, letterSpacing: '0.12em', marginBottom: 8 }}>SAGUARO</div>
+          <div style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: 24, letterSpacing: '-0.01em', marginBottom: 8 }}>Saguaro</div>
           <h1 style={{ color: '#FFFFFF', fontSize: 28, fontWeight: 700, margin: '0 0 8px' }}>Subcontractor Portal</h1>
           <p style={{ color: '#CBD5E1', fontSize: 14, margin: 0 }}>Upload documents, track pay apps, view compliance status.</p>
         </div>
 
-        <div style={{ background: '#141416', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 16, padding: 32 }}>
           <div style={{ marginBottom: 24 }}>
-            <label style={{ color: '#CBD5E1', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Access with your email</label>
+            <label style={{ color: '#CBD5E1', fontSize: 12, display: 'block', marginBottom: 8 }}>Access With Your Email</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleEmailAccess()} placeholder="you@company.com" style={{ width: '100%', padding: '12px 16px', background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#FFFFFF', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-            <button onClick={handleEmailAccess} disabled={loading || !email.trim()} style={{ width: '100%', marginTop: 12, padding: '12px', background: 'linear-gradient(135deg, #F59E0B, #C8960F)', border: 'none', borderRadius: 10, color: '#000', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}>
-              {loading ? 'Checking...' : 'Access Portal'}
+            <button onClick={handleEmailAccess} disabled={loading || !email.trim()} style={{ width: '100%', marginTop: 12, padding: '12px', background: 'var(--brand-primary)', border: 'none', borderRadius: 10, color: '#0A0A00', fontWeight: 700, fontSize: 14, cursor: loading ? 'wait' : 'pointer', opacity: !email.trim() ? 0.5 : 1 }}>
+              {loading ? 'Checking…' : 'Access Portal'}
             </button>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '20px 0' }}>
@@ -60,7 +60,7 @@ export default function SubPortalLanding() {
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.12)' }} />
           </div>
           <div>
-            <label style={{ color: '#CBD5E1', fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.08em', display: 'block', marginBottom: 8 }}>Enter access token</label>
+            <label style={{ color: '#CBD5E1', fontSize: 12, display: 'block', marginBottom: 8 }}>Enter Access Token</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input type="text" value={token} onChange={(e) => setToken(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleTokenAccess()} placeholder="Paste your token" style={{ flex: 1, padding: '12px 16px', background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#FFFFFF', fontSize: 14, outline: 'none' }} />
               <button onClick={handleTokenAccess} disabled={!token.trim()} style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: '#FFFFFF', fontWeight: 600, fontSize: 14, cursor: 'pointer', opacity: !token.trim() ? 0.5 : 1 }}>Go</button>
@@ -68,7 +68,7 @@ export default function SubPortalLanding() {
           </div>
           {error && <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: '#EF4444', fontSize: 13 }}>{error}</div>}
         </div>
-        <div style={{ textAlign: 'center', marginTop: 24 }}><a href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>Back to Saguaro</a></div>
+        <div style={{ textAlign: 'center', marginTop: 24 }}><a href="/" style={{ color: '#CBD5E1', fontSize: 13, textDecoration: 'none' }}>← Back to Saguaro</a></div>
       </div>
     </div>
   );

@@ -87,10 +87,10 @@ export default function OacPage() {
       {/* Meeting pulse — logged meetings and the accountability they created */}
       {!loading && (
         <StatStrip items={[
-          {href: '/app/command-center/oac',  label: 'Meetings', value: String(summary.meetings), sub: 'logged across sites' },
-          {href: '/app/command-center/oac',  label: 'Open Actions', value: String(summary.open), accent: summary.open ? C.gold : C.green, sub: summary.open ? 'awaiting owners' : 'all closed out' },
-          {href: '/app/command-center/oac',  label: 'Overdue Actions', value: String(summary.overdue), accent: summary.overdue ? C.red : C.green, sub: summary.overdue ? 'past their due date' : 'none late' },
-          {href: '/app/command-center/oac',  label: 'Sites Covered', value: String(summary.sites), sub: 'with logged meetings' },
+          {href: '/app/command-center/oac',  label: 'Meetings', value: String(summary.meetings), sub: 'Logged across sites' },
+          {href: '/app/command-center/oac',  label: 'Open Actions', value: String(summary.open), accent: summary.open ? C.gold : C.green, sub: summary.open ? 'Awaiting owners' : 'All closed out' },
+          {href: '/app/command-center/oac',  label: 'Overdue Actions', value: String(summary.overdue), accent: summary.overdue ? C.red : C.green, sub: summary.overdue ? 'Past their due date' : 'None late' },
+          {href: '/app/command-center/oac',  label: 'Sites Covered', value: String(summary.sites), sub: 'With logged meetings' },
         ]} />
       )}
 
@@ -107,7 +107,7 @@ export default function OacPage() {
               const bg = current ? 'rgba(52,199,89,0.12)' : daysSince == null ? 'rgba(255,59,48,0.10)' : 'rgba(255,149,0,0.12)';
               const fg = current ? C.green : daysSince == null ? C.red : C.yellow;
               const bd = current ? 'rgba(52,199,89,0.3)' : daysSince == null ? 'rgba(255,59,48,0.25)' : 'rgba(255,149,0,0.3)';
-              const note = current ? null : daysSince == null ? 'never' : `${daysSince}d ago`;
+              const note = current ? null : daysSince == null ? 'Never' : `${daysSince}d ago`;
               return (
                 <span key={p.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, padding: '5px 11px', borderRadius: 999, background: bg, color: fg, border: `1px solid ${bd}` }}>
                   {current ? <CheckCircle size={13} weight="fill" color={fg} /> : <Warning size={13} weight="fill" color={fg} />} {p.name}{note ? ` · ${note}` : ''}
@@ -131,7 +131,7 @@ export default function OacPage() {
           <SectionCard>
             <PremiumEmpty icon={<CalendarBlank size={32} weight="duotone" color={C.gold} />} title="No meetings logged yet"
               description="Log OAC meetings across all your sites — capture attendees, decisions, and the action items that come out of them, each with an owner and a due date."
-              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setLogging(true)}>Log your first meeting</GoldButton>} />
+              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setLogging(true)}>Log Your First Meeting</GoldButton>} />
           </SectionCard>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14 }}>
@@ -145,7 +145,7 @@ export default function OacPage() {
                       {m.project_city ? ` · ${m.project_city}, ${m.project_state}` : ''} · {fmtDate(m.meeting_date)}
                     </div>
                   </div>
-                  <Pill tone="gold" caps>{(m.meeting_type || 'OAC').toUpperCase()}</Pill>
+                  <Pill tone="gold">{m.meeting_type || 'OAC'}</Pill>
                 </div>
                 <div style={{ display: 'flex', gap: 16, marginTop: 12, fontSize: 12, color: C.dim, flexWrap: 'wrap' }}>
                   {m.facilitator_name && <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><User size={13} color={C.dim} />{m.facilitator_name}</span>}
@@ -170,7 +170,7 @@ export default function OacPage() {
               const overdue = !done && d != null && d < 0;
               return (
                 <div key={a.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', background: C.card, border: `1px solid ${C.border}`, borderLeft: `3px solid ${done ? C.green : overdue ? C.red : C.blue}`, borderRadius: 12, padding: '12px 14px' }}>
-                  <button onClick={() => check(a)} aria-label="toggle" style={{ marginTop: 1, width: 20, height: 20, borderRadius: 6, border: `2px solid ${done ? C.green : C.border}`, background: done ? C.green : '#1c1c1e', color: '#fff', cursor: 'pointer', flexShrink: 0, fontSize: 12, fontWeight: 900, lineHeight: '16px' }}>{done ? <Check size={14} weight="bold" color="#fff" /> : ''}</button>
+                  <button onClick={() => check(a)} aria-label="Toggle action item" style={{ marginTop: 1, width: 20, height: 20, borderRadius: 6, border: `2px solid ${done ? C.green : C.border}`, background: done ? C.green : 'var(--bg-surface-2)', color: '#fff', cursor: 'pointer', flexShrink: 0, fontSize: 12, fontWeight: 900, lineHeight: '16px' }}>{done ? <Check size={14} weight="bold" color="#fff" /> : ''}</button>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 700, color: done ? C.dim : C.text, textDecoration: done ? 'line-through' : 'none' }}>{a.title || a.description}</div>
                     <div style={{ fontSize: 12, color: C.dim, marginTop: 3, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -201,16 +201,16 @@ function LogMeetingModal({ projects, onClose }: { projects: any[]; onClose: () =
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
-  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: '#1c1c1e', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
-    if (!f.project_id || !f.title || !f.meeting_date) { setErr('Site, title and date are required.'); return; }
+    if (!f.project_id || !f.title || !f.meeting_date) { setErr('Site, title, and date are required.'); return; }
     setBusy(true); setErr('');
     try {
       await createMeeting({ ...f, attendees: attendees.filter((a) => a.name), action_items: items.filter((i) => i.description) });
       onClose();
-    } catch (e: any) { setErr(e?.message || 'Failed'); }
+    } catch (e: any) { setErr(e?.message || "Couldn't save the meeting. Please try again."); }
     finally { setBusy(false); }
   }
 
@@ -219,13 +219,13 @@ function LogMeetingModal({ projects, onClose }: { projects: any[]; onClose: () =
       <div onClick={(e) => e.stopPropagation()} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, width: 'min(640px, 100%)', boxShadow: '0 24px 80px rgba(2,4,8,0.5), inset 0 1px 0 rgba(255,255,255,0.06)', fontFamily: font }}>
         <div style={{ fontSize: 19, fontWeight: 900, marginBottom: 14 }}>Log OAC Meeting</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Meeting title *</label><input style={inp} placeholder="e.g. Back Nine Buckeye — OAC #3" value={f.title || ''} onChange={(e) => set('title', e.target.value)} /></div>
+          <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Meeting Title *</label><input style={inp} placeholder="e.g. Back Nine Buckeye — OAC #3" value={f.title || ''} onChange={(e) => set('title', e.target.value)} /></div>
           <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select site…</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
           <div><label style={lbl}>Type</label><select style={inp} value={f.meeting_type} onChange={(e) => set('meeting_type', e.target.value)}>{['OAC', 'GC Weekly Call', 'Progress', 'Preconstruction', 'Design', 'Coordination', 'Closeout'].map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
           <div><label style={lbl}>Date *</label><SaguaroDatePicker style={inp} value={f.meeting_date} onChange={(v) => set('meeting_date', v)} /></div>
           <div><label style={lbl}>Facilitator</label><input style={inp} value={f.facilitator_name || ''} onChange={(e) => set('facilitator_name', e.target.value)} /></div>
           <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Location</label><input style={inp} value={f.location || ''} onChange={(e) => set('location', e.target.value)} /></div>
-          <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Agenda / notes</label><textarea style={{ ...inp, minHeight: 60, resize: 'vertical', fontFamily: font }} value={f.agenda || ''} onChange={(e) => set('agenda', e.target.value)} /></div>
+          <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Agenda / Notes</label><textarea style={{ ...inp, minHeight: 60, resize: 'vertical', fontFamily: font }} value={f.agenda || ''} onChange={(e) => set('agenda', e.target.value)} /></div>
         </div>
 
         {/* Attendees */}
@@ -262,7 +262,7 @@ function LogMeetingModal({ projects, onClose }: { projects: any[]; onClose: () =
 
         {err && <div style={{ color: C.red, fontSize: 13, marginTop: 12 }}>{err}</div>}
         <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-          <GoldButton onClick={submit} disabled={busy}>{busy ? 'Saving…' : 'Save meeting'}</GoldButton>
+          <GoldButton onClick={submit} disabled={busy}>{busy ? 'Saving…' : 'Save Meeting'}</GoldButton>
           <GhostButton onClick={onClose}>Cancel</GhostButton>
         </div>
       </div>
@@ -270,4 +270,4 @@ function LogMeetingModal({ projects, onClose }: { projects: any[]; onClose: () =
   );
 }
 
-const miniBtn: React.CSSProperties = { padding: '4px 10px', borderRadius: 7, border: `1px solid ${C.border}`, background: '#1c1c1e', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer' };
+const miniBtn: React.CSSProperties = { padding: '4px 10px', borderRadius: 7, border: `1px solid ${C.border}`, background: 'var(--bg-surface-2)', color: C.blue, fontSize: 12, fontWeight: 700, cursor: 'pointer' };

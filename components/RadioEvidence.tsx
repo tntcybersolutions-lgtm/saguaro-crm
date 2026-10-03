@@ -264,7 +264,6 @@ export function clipLength(secs: number | null | undefined): string | null {
 
 const label: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, color: T.faint,
-  textTransform: 'uppercase', letterSpacing: 0.5,
 };
 
 /**
@@ -330,7 +329,7 @@ interface PromoteGetResponse {
  */
 export default function RadioEvidence({
   source,
-  title = 'Radio evidence',
+  title = 'Radio Evidence',
   style,
 }: {
   source: RadioEvidenceSource;
@@ -511,7 +510,7 @@ export default function RadioEvidence({
                   color: T.muted, fontSize: 11.5, fontWeight: 700,
                 }}
               >
-                <ArrowClockwise size={12} weight="bold" color={T.muted} /> Reload the clip
+                <ArrowClockwise size={12} weight="bold" color={T.muted} /> Reload the Clip
               </button>
             </div>
           </div>

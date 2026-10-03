@@ -72,12 +72,12 @@ export default function BudgetPage() {
       {!loading && (
         <StatStrip items={[
           {href: '/app/command-center/budget',  label: 'Portfolio Original', value: fmtMoneyShort(Number(totals.original) || 0), accent: C.gold, sub: `${(budgets as any[]).length} site budget${(budgets as any[]).length === 1 ? '' : 's'}` },
-          {href: '/app/command-center/budget',  label: 'Committed', value: fmtMoneyShort(Number(totals.committed) || 0), sub: 'subcontracts + POs' },
-          {href: '/app/command-center/budget',  label: 'Actual to Date', value: fmtMoneyShort(Number(totals.actual) || 0), sub: 'billed against budgets' },
-          {href: '/app/command-center/budget',  label: 'Approved COs', value: '+' + fmtMoneyShort(Number(totals.approvedCO) || 0), accent: C.green, sub: 'in revised budgets' },
-          {href: '/app/command-center/budget',  label: 'Pending COs', value: fmtMoneyShort(Number(totals.pendingCO) || 0), accent: totals.pendingCO ? C.gold : undefined, sub: totals.pendingCO ? 'awaiting approval' : 'none in flight' },
-          {href: '/app/command-center/budget',  label: 'Revised Budget', value: fmtMoneyShort(Number(totals.revised) || 0), sub: 'original + approved COs' },
-          {href: '/app/command-center/budget',  label: 'Forecast Variance', value: (portfolioVar >= 0 ? '+' : '') + fmtMoneyShort(portfolioVar), accent: portfolioVar < 0 ? C.red : C.green, sub: portfolioVar < 0 ? 'over budget' : 'under budget' },
+          {href: '/app/command-center/budget',  label: 'Committed', value: fmtMoneyShort(Number(totals.committed) || 0), sub: 'Subcontracts + POs' },
+          {href: '/app/command-center/budget',  label: 'Actual to Date', value: fmtMoneyShort(Number(totals.actual) || 0), sub: 'Billed against budgets' },
+          {href: '/app/command-center/budget',  label: 'Approved COs', value: '+' + fmtMoneyShort(Number(totals.approvedCO) || 0), accent: C.green, sub: 'In revised budgets' },
+          {href: '/app/command-center/budget',  label: 'Pending COs', value: fmtMoneyShort(Number(totals.pendingCO) || 0), accent: totals.pendingCO ? C.gold : undefined, sub: totals.pendingCO ? 'Awaiting approval' : 'None in flight' },
+          {href: '/app/command-center/budget',  label: 'Revised Budget', value: fmtMoneyShort(Number(totals.revised) || 0), sub: 'Original + approved COs' },
+          {href: '/app/command-center/budget',  label: 'Forecast Variance', value: (portfolioVar >= 0 ? '+' : '') + fmtMoneyShort(portfolioVar), accent: portfolioVar < 0 ? C.red : C.green, sub: portfolioVar < 0 ? 'Over budget' : 'Under budget' },
         ]} />
       )}
 
@@ -94,7 +94,7 @@ export default function BudgetPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.4fr) minmax(250px,1fr)', gap: 14, alignItems: 'start' }}>
             <SectionCard
               icon={<CurrencyDollar size={17} weight="duotone" color={C.gold} />}
-              title="No site budgets yet — seed them per project"
+              title="No Site Budgets Yet — Seed Them per Project"
               subtitle="Original, committed, actual, and forecast variance per site."
             >
               <div style={{ fontSize: 12.5, color: C.dim, lineHeight: 1.6, marginBottom: 14 }}>
@@ -105,21 +105,21 @@ export default function BudgetPage() {
                   {((projects || []) as any[]).slice(0, 8).map((p: any) => (
                     <Link key={p.id} href={`/app/projects/${p.id}/budget`} className="pmHover" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '9px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', color: C.text, textDecoration: 'none', fontSize: 13, fontWeight: 700 }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</span>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: C.gold, fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>Open budget <ArrowRight size={13} color={C.gold} /></span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: C.gold, fontSize: 12, fontWeight: 800, whiteSpace: 'nowrap' }}>Open Budget <ArrowRight size={13} color={C.gold} /></span>
                     </Link>
                   ))}
-                  {((projects || []) as any[]).length > 8 && <div style={{ fontSize: 11.5, color: C.dim, paddingTop: 2 }}>+{((projects || []) as any[]).length - 8} more projects — open any project to reach its budget</div>}
+                  {((projects || []) as any[]).length > 8 && <div style={{ fontSize: 11.5, color: C.dim, paddingTop: 2 }}>+{((projects || []) as any[]).length - 8} more projects — open any project to reach its budget.</div>}
                 </div>
               ) : (
                 <div style={{ fontSize: 12.5, color: C.dim }}>Create a project first — its budget page is ready the moment the project exists.</div>
               )}
             </SectionCard>
             <SectionCard flat>
-              <FlowSteps title="How the roll-up builds" steps={[
-                { title: 'Seed lines by CSI division', desc: 'On each project: pick a division, or pull bid-package estimates in one tap.' },
-                { title: 'Committed books itself', desc: 'Awarded subcontracts and POs land on their coded lines.' },
-                { title: 'Actuals flow from bills', desc: 'Approved invoices hit the lines — nothing re-typed.' },
-                { title: 'Variance rolls up here', desc: 'Original, committed, actual, and forecast across every site.' },
+              <FlowSteps title="How the Roll-Up Builds" steps={[
+                { title: 'Seed Lines by CSI Division', desc: 'On each project: pick a division, or pull bid-package estimates in one tap.' },
+                { title: 'Committed Books Itself', desc: 'Awarded subcontracts and POs land on their coded lines.' },
+                { title: 'Actuals Flow from Bills', desc: 'Approved invoices hit the lines — nothing re-typed.' },
+                { title: 'Variance Rolls Up Here', desc: 'Original, committed, actual, and forecast across every site.' },
               ]} />
             </SectionCard>
           </div>
@@ -131,7 +131,7 @@ export default function BudgetPage() {
                 <Link href={`/app/projects/${b.project_id}`} style={{ fontSize: 15, fontWeight: 800, color: C.text, textDecoration: 'none' }}>{b.project_name}</Link>
                 <span style={{ fontSize: 13, fontWeight: 800, color: b.variance < 0 ? C.red : C.green }}>{b.variance < 0 ? '' : '+'}{fmtMoneyShort(b.variance)}</span>
               </div>
-              <div style={{ height: 6, borderRadius: 3, background: '#1c1c1e', overflow: 'hidden', margin: '10px 0 12px' }}>
+              <div style={{ height: 6, borderRadius: 3, background: 'var(--bg-surface-2)', overflow: 'hidden', margin: '10px 0 12px' }}>
                 <div style={{ height: '100%', width: `${Math.min(100, b.pctSpent)}%`, background: b.pctSpent > 100 ? C.red : C.gold }} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', fontSize: 13 }}>
@@ -152,7 +152,7 @@ export default function BudgetPage() {
           <SectionCard>
             <PremiumEmpty icon={<NotePencil size={32} weight="duotone" color={C.gold} />} title="No change orders"
               description="Every change routes the same way: Issued, GC Pricing, PM Review, Architect Review, Owner Approval, Executed, Schedule Updated, Budget Updated."
-              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>New change order</GoldButton>} />
+              action={<GoldButton icon={<Plus size={15} weight="bold" />} onClick={() => setAdding(true)}>New Change Order</GoldButton>} />
           </SectionCard>
         )
         : <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -170,7 +170,7 @@ export default function BudgetPage() {
                     <span style={{ fontSize: 11, fontWeight: 800, color: st.color, background: `${st.color}18`, padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{st.label}</span>
                     {!final && <>
                       <button onClick={() => act(co.id, 'advance')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: 'none', background: C.green, color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Advance <ArrowRight size={13} weight="regular" color="#fff" style={{ verticalAlign: 'middle' }} /></button>
-                      <button onClick={() => act(co.id, 'reject')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: `1px solid ${C.red}`, background: '#141416', color: C.red, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Reject</button>
+                      <button onClick={() => act(co.id, 'reject')} disabled={busy[co.id]} className="pmBtn" style={{ padding: '6px 11px', borderRadius: 8, border: `1px solid ${C.red}`, background: 'var(--bg-surface)', color: C.red, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>Reject</button>
                     </>}
                   </div>
                 </div>
@@ -196,26 +196,26 @@ function COForm({ projects, onDone }: { projects: any[]; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const set = (k: string, v: any) => setF((p) => ({ ...p, [k]: v }));
-  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: '#1c1c1e', width: '100%' };
-  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 4, display: 'block' };
+  const inp: React.CSSProperties = { padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: 'var(--bg-surface-2)', width: '100%' };
+  const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: C.dim, marginBottom: 4, display: 'block' };
 
   async function submit() {
     if (!f.project_id || !f.title) { setErr('Site and title are required.'); return; }
     setBusy(true); setErr('');
-    try { await createChangeOrder(f); onDone(); } catch (e: any) { setErr(e?.message || 'Failed'); } finally { setBusy(false); }
+    try { await createChangeOrder(f); onDone(); } catch (e: any) { setErr(e?.message || "Couldn't save the change order. Please try again."); } finally { setBusy(false); }
   }
   return (
-    <SectionCard title="New change order" subtitle="Routes through GC pricing, reviews, and owner approval automatically" icon={<NotePencil size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
+    <SectionCard title="New Change Order" subtitle="Routes through GC pricing, reviews, and owner approval automatically." icon={<NotePencil size={16} weight="duotone" color={C.gold} />} style={{ marginBottom: 18 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
         <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Title *</label><input style={inp} placeholder="e.g. Added rooftop screening" value={f.title || ''} onChange={(e) => set('title', e.target.value)} /></div>
         <div><label style={lbl}>Site *</label><select style={inp} value={f.project_id || ''} onChange={(e) => set('project_id', e.target.value)}><option value="">Select…</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
         <div><label style={lbl}>Amount</label><input type="number" style={inp} value={f.amount || ''} onChange={(e) => set('amount', e.target.value)} /></div>
-        <div><label style={lbl}>Schedule impact (days)</label><input type="number" style={inp} value={f.schedule_impact_days || ''} onChange={(e) => set('schedule_impact_days', e.target.value)} /></div>
-        <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Scope of change</label><textarea style={{ ...inp, minHeight: 52, resize: 'vertical', fontFamily: font }} value={f.description || ''} onChange={(e) => set('description', e.target.value)} /></div>
+        <div><label style={lbl}>Schedule Impact (Days)</label><input type="number" style={inp} value={f.schedule_impact_days || ''} onChange={(e) => set('schedule_impact_days', e.target.value)} /></div>
+        <div style={{ gridColumn: '1 / -1' }}><label style={lbl}>Scope of Change</label><textarea style={{ ...inp, minHeight: 52, resize: 'vertical', fontFamily: font }} value={f.description || ''} onChange={(e) => set('description', e.target.value)} /></div>
       </div>
       {err && <div style={{ color: C.red, fontSize: 13, marginTop: 10 }}>{err}</div>}
       <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
-        <GoldButton size="md" onClick={submit} disabled={busy}>{busy ? 'Saving…' : 'Issue change order'}</GoldButton>
+        <GoldButton size="md" onClick={submit} disabled={busy}>{busy ? 'Saving…' : 'Issue Change Order'}</GoldButton>
         <GhostButton size="md" onClick={onDone}>Cancel</GhostButton>
       </div>
     </SectionCard>

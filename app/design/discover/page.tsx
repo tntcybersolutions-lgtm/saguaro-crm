@@ -12,11 +12,11 @@ import {
 } from '@phosphor-icons/react';
 
 /* ─── Palette ─── */
-const BG = '#0a0a0a', CARD = '#141416', GOLD = '#F59E0B', GREEN = '#34C759';
-const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = '#0a0a0a';
+const BG = 'var(--bg-base)', CARD = 'var(--bg-surface)', GOLD = 'var(--brand-primary)', GREEN = '#34C759';
+const BORDER = 'rgba(255,255,255,0.12)', TEXT = '#FFFFFF', DIM = '#CBD5E1', DARK = 'var(--bg-base)';
 
 const glass: React.CSSProperties = {
-  background: `${CARD}CC`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+  background: `color-mix(in srgb, ${CARD} 80%, transparent)`, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
   border: `1px solid ${BORDER}`, borderRadius: 16,
 };
 
@@ -24,7 +24,7 @@ const glass: React.CSSProperties = {
 const SAGE_RESPONSES: Record<string, Record<string, string>> = {
   project_type: {
     new_build: "Starting from scratch? That's the best canvas! Let's design something extraordinary.",
-    remodel: "Smart move. Remodels deliver 70-80% ROI on average. Let's maximize yours.",
+    remodel: "Smart move. Remodels deliver 70–80% ROI on average. Let's maximize yours.",
     addition: "Expanding your space is exciting! An addition can add serious value to your home.",
     outdoor: "Outdoor living spaces are the #1 most-requested upgrade right now. Great pick!",
   },
@@ -36,7 +36,7 @@ const SAGE_RESPONSES: Record<string, Record<string, string>> = {
   },
   priorities: {
     energy_savings: "Love it! The average smart home saves $1,400/year on energy. That adds up fast.",
-    home_value: "Great strategy. Smart upgrades can increase home value by 5-15%.",
+    home_value: "Great strategy. Smart upgrades can increase home value by 5–15%.",
     comfort: "Comfort is king! Smart climate and lighting make your home feel like a resort.",
     security: "Peace of mind is priceless. Smart security reduces break-in risk by 300%.",
     aesthetics: "Beautiful spaces improve mood and productivity. Let's make it stunning.",
@@ -49,7 +49,7 @@ const SAGE_RESPONSES: Record<string, Record<string, string>> = {
   },
   outdoor_features: {
     pool: "Great choice! A pool adds $25K+ to home value in your area.",
-    outdoor_kitchen: "Outdoor kitchens are the hottest trend. Average ROI is 100-200%!",
+    outdoor_kitchen: "Outdoor kitchens are the hottest trend. Average ROI is 100–200%!",
     fire_pit: "Fire pits create that perfect gathering spot. Affordable luxury at its finest.",
     garden: "Smart irrigation can cut water usage by 50%. Green thumb meets tech!",
     none: "That's fine! We'll focus on maximizing your indoor living experience.",
@@ -61,7 +61,7 @@ const SAGE_RESPONSES: Record<string, Record<string, string>> = {
     planning: "Smart approach. Good planning is the foundation of every great build.",
   },
   climate: {
-    hot_dry: "In hot-dry climates, smart shading and insulation save 30-40% on cooling.",
+    hot_dry: "In hot-dry climates, smart shading and insulation save 30–40% on cooling.",
     hot_humid: "Dehumidification and smart HVAC are game-changers in your climate zone.",
     temperate: "Temperate climate? You'll get the best ROI from solar and smart lighting.",
     cold: "Cold climate upgrades focus on insulation and smart heating. Huge savings potential!",
@@ -105,8 +105,8 @@ const FALLBACK_QUESTIONS: DiscoveryQuestion[] = [
     question: "What's your ideal budget range?",
     options: [
       { value: 'under_25k', label: 'Under $25K', icon: CurrencyDollar },
-      { value: '25k_50k', label: '$25K - $50K', icon: Coins },
-      { value: '50k_100k', label: '$50K - $100K', icon: Diamond },
+      { value: '25k_50k', label: '$25K–$50K', icon: Coins },
+      { value: '50k_100k', label: '$50K–$100K', icon: Diamond },
       { value: '100k_plus', label: '$100K+', icon: Trophy },
     ],
   },
@@ -126,8 +126,8 @@ const FALLBACK_QUESTIONS: DiscoveryQuestion[] = [
     question: "How many vehicles do you have?",
     options: [
       { value: 'none', label: 'None', icon: PersonSimpleWalk },
-      { value: '1_2', label: '1-2', icon: Car },
-      { value: '3_4', label: '3-4', icon: Van },
+      { value: '1_2', label: '1–2', icon: Car },
+      { value: '3_4', label: '3–4', icon: Van },
       { value: '5_plus', label: '5+', icon: CarProfile },
     ],
   },
@@ -167,10 +167,10 @@ const FALLBACK_QUESTIONS: DiscoveryQuestion[] = [
     id: 'smart_interest', icon: Robot,
     question: "How smart-home savvy are you?",
     options: [
-      { value: 'beginner', label: "What's a smart home?", icon: Plant },
-      { value: 'intermediate', label: 'I have a few devices', icon: DeviceMobile },
-      { value: 'advanced', label: 'Pretty connected already', icon: Lightbulb },
-      { value: 'all_in', label: 'Full automation please!', icon: House },
+      { value: 'beginner', label: "What's a Smart Home?", icon: Plant },
+      { value: 'intermediate', label: 'I Have a Few Devices', icon: DeviceMobile },
+      { value: 'advanced', label: 'Pretty Connected Already', icon: Lightbulb },
+      { value: 'all_in', label: 'Full Automation, Please!', icon: House },
     ],
   },
   {
@@ -178,8 +178,8 @@ const FALLBACK_QUESTIONS: DiscoveryQuestion[] = [
     question: "How large is your home?",
     options: [
       { value: 'under_1500', label: 'Under 1,500 sq ft', icon: HouseLine },
-      { value: '1500_2500', label: '1,500 - 2,500 sq ft', icon: Buildings },
-      { value: '2500_4000', label: '2,500 - 4,000 sq ft', icon: CastleTurret },
+      { value: '1500_2500', label: '1,500–2,500 sq ft', icon: Buildings },
+      { value: '2500_4000', label: '2,500–4,000 sq ft', icon: CastleTurret },
       { value: '4000_plus', label: '4,000+ sq ft', icon: Bank },
     ],
   },
@@ -288,7 +288,7 @@ export default function DiscoverPage() {
       }}>
         <div style={{ fontSize: 64, marginBottom: 24 }}><Cactus size={64} weight="duotone" color={GREEN} /></div>
         <h2 style={{ fontSize: 24, fontWeight: 700, color: TEXT, marginBottom: 12 }}>
-          Sage is analyzing your profile...
+          Sage is analyzing your profile…
         </h2>
         <p style={{ color: DIM, fontSize: 16, marginBottom: 32 }}>
           Building personalized recommendations just for you
@@ -326,8 +326,8 @@ export default function DiscoverPage() {
               <button
                 onClick={() => { setShowResults(false); setRecError(false); generateRecommendations(answers); }}
                 style={{
-                  padding: '14px 28px', background: `linear-gradient(135deg, ${GOLD}, #B8860B)`,
-                  color: '#000', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer',
+                  padding: '14px 28px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
+                  color: '#0A0A00', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: 'pointer',
                 }}
               >
                 Try Again
@@ -356,7 +356,7 @@ export default function DiscoverPage() {
               Your Personalized <span style={{ color: GOLD }}>Recommendations</span>
             </h1>
             <p style={{ color: DIM }}>
-              Tap the checkmark to accept or X to skip each recommendation
+              Tap the checkmark to accept or X to skip each recommendation.
             </p>
           </div>
 
@@ -413,8 +413,8 @@ export default function DiscoverPage() {
           <div style={{ textAlign: 'center', marginTop: 32, display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/design/packages" style={{ textDecoration: 'none' }}>
               <button style={{
-                padding: '16px 36px', background: `linear-gradient(135deg, ${GOLD}, #B8860B)`,
-                color: '#000', border: 'none', borderRadius: 12, fontWeight: 700,
+                padding: '16px 36px', background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-hover))',
+                color: '#0A0A00', border: 'none', borderRadius: 12, fontWeight: 700,
                 fontSize: 16, cursor: 'pointer',
               }}>
                 See Your Smart Building Packages
@@ -444,7 +444,7 @@ export default function DiscoverPage() {
       {/* Progress bar */}
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-        background: `${DARK}E0`, backdropFilter: 'blur(8px)', padding: '12px 20px',
+        background: `color-mix(in srgb, ${DARK} 88%, transparent)`, backdropFilter: 'blur(8px)', padding: '12px 20px',
       }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>

@@ -4,7 +4,7 @@ import { apiError } from '@/lib/api-error';
 import { normalisePhase } from '@/lib/project-phase';
 import { onProjectCreated } from '@/lib/triggers';
 import { logActivity } from '@/lib/activity';
-import { createNotification } from '@/lib/notifications';
+import { assignProjectToUser } from '@/lib/project-assignment';
 import type { Database } from '@/lib/database.types';
 
 export const dynamic = 'force-dynamic';
@@ -170,129 +170,23 @@ export async function POST(req: NextRequest) {
     let assigneeName: string | null = null;
 
     if (assigneeUserId) {
-      // Assignee must be a real member of this tenant.
-      const { data: assignee, error: profErr } = await db
-        .from('profiles')
-        .select('id, full_name, email')
-        .eq('id', assigneeUserId)
-        .eq('tenant_id', tenantId)
-        .maybeSingle();
-      if (profErr) throw profErr;
-      if (!assignee) {
+      // Shared with PATCH /api/projects/[projectId] — see lib/project-assignment.
+      const res = await assignProjectToUser(db, {
+        tenantId,
+        projectId,
+        projectName: (project as { name: string }).name,
+        assigneeUserId,
+        actor: { id: user.id, email: user.email },
+      });
+      if (!res.ok) {
         return NextResponse.json(
           { error: 'Selected user is not a member of this workspace' },
           { status: 400 },
         );
       }
-      assigneeName = assignee.full_name || assignee.email || null;
-
-      // 1) Project's assignee of record.
-      const { error: updErr } = await anyDb
-        .from('projects')
-        .update({ assigned_to: assigneeUserId } as never)
-        .eq('id', projectId)
-        .eq('tenant_id', tenantId);
-      if (updErr) throw updErr;
-
-      // 2) work_assignments — surfaces the project in the assignee's My Work
-      //    hub. Honor UNIQUE (tenant_id, project_id, assignee_user_id, role):
-      //    reactivate an ended row rather than duplicate-key insert.
-      const ROLE = 'project_manager';
-      const { data: existingWa } = await anyDb
-        .from('work_assignments')
-        .select('id')
-        .eq('tenant_id', tenantId)
-        .eq('project_id', projectId)
-        .eq('assignee_user_id', assigneeUserId)
-        .eq('role', ROLE)
-        .maybeSingle();
-
-      if (existingWa) {
-        await anyDb
-          .from('work_assignments')
-          .update({
-            status: 'active',
-            ended_at: null,
-            scope: 'full',
-            assignee_name: assigneeName,
-            assigned_by: user.id,
-            assigned_by_name: user.email,
-          } as never)
-          .eq('id', (existingWa as { id: string }).id)
-          .eq('tenant_id', tenantId);
-      } else {
-        const { error: waErr } = await anyDb.from('work_assignments').insert({
-          tenant_id: tenantId,
-          project_id: projectId,
-          assignee_user_id: assigneeUserId,
-          assignee_name: assigneeName,
-          role: ROLE,
-          scope: 'full',
-          status: 'active',
-          assigned_by: user.id,
-          assigned_by_name: user.email,
-        } as never);
-        if (waErr) throw waErr;
-      }
-
-      // 3) user_role_assignments — the permission grant getEffectivePermissions
-      //    reads. A project-scoped "Project Manager" role gives the assignee
-      //    Documents = Full and Projects = Full on this job only. Best-effort:
-      //    if the tenant has no such role the project still shows in My Work.
-      const { data: pmRole } = await db
-        .from('role_definitions')
-        .select('id')
-        .eq('tenant_id', tenantId)
-        .eq('name', 'Project Manager')
-        .maybeSingle();
-
-      if (pmRole?.id) {
-        const { data: existingGrant } = await db
-          .from('user_role_assignments')
-          .select('id')
-          .eq('tenant_id', tenantId)
-          .eq('user_id', assigneeUserId)
-          .eq('project_id', projectId)
-          .eq('role_id', pmRole.id)
-          .maybeSingle();
-
-        if (!existingGrant) {
-          const { error: graErr } = await db.from('user_role_assignments').insert({
-            tenant_id: tenantId,
-            user_id: assigneeUserId,
-            project_id: projectId,
-            role_id: pmRole.id,
-            assigned_by: user.id,
-          } as never);
-          if (graErr) throw graErr;
-        }
-        documentsAccessGranted = true;
-      }
-
+      assigneeName = res.assigneeName;
+      documentsAccessGranted = res.documentsAccessGranted;
       assigned = true;
-
-      // Tell the assignee their queue changed — never block on it.
-      createNotification(
-        tenantId,
-        assigneeUserId,
-        'work_assigned',
-        'Project assigned to you',
-        `${(project as { name: string }).name} — Project Manager`,
-        '/app/my-work',
-        projectId,
-      ).catch(() => {});
-
-      void logActivity({
-        tenantId,
-        projectId,
-        userId: user.id,
-        userName: user.email,
-        action: 'assigned',
-        entityType: 'project',
-        entityId: projectId,
-        description: `Assigned ${assigneeName ?? 'a team member'} to ${(project as { name: string }).name}`,
-        metadata: { assigneeUserId },
-      });
     }
 
     /* ── Assign a subcontractor / vendor (optional) ─────────────────────── */

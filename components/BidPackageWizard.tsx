@@ -3,9 +3,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import SaguaroDatePicker from '@/components/SaguaroDatePicker';
 import { CSI_DIVISIONS as CSI_TAXONOMY } from '@/lib/construction-intelligence';
 
-const GOLD = '#F59E0B';
-const DARK = '#1c1c1e';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-surface-2)';
+const RAISED = 'var(--bg-surface)';
 const RAISED2 = '#1c1c1e';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
@@ -51,7 +51,7 @@ const CSI_DIVISIONS = Object.entries(CSI_TAXONOMY).map(([code, d]) => ({
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>
+    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: DIM, marginBottom: 5 }}>
       {children}
     </label>
   );
@@ -74,7 +74,7 @@ function PrimaryBtn({ onClick, disabled, loading, children }: {
       disabled={disabled || loading}
       style={{
         padding: '10px 24px',
-        background: disabled || loading ? '#1c1c1e' : `linear-gradient(135deg,${GOLD},#FBBF24)`,
+        background: disabled || loading ? '#1c1c1e' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
         border: 'none', borderRadius: 7, color: disabled || loading ? DIM : '#F2F2F7',
         fontSize: 13, fontWeight: 800, cursor: disabled || loading ? 'not-allowed' : 'pointer',
         transition: 'opacity 0.15s',
@@ -128,10 +128,10 @@ function ProgressBar({ step }: { step: number }) {
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 0 }}>
                 <div style={{
                   width: 30, height: 30, borderRadius: '50%',
-                  background: done ? GOLD : active ? 'rgba(245, 158, 11,0.15)' : 'rgba(255,255,255,0.12)',
+                  background: done ? GOLD : active ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.12)',
                   border: `2px solid ${color}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: done ? DARK : color, fontWeight: 800, fontSize: 13,
+                  color: done ? '#0A0A00' : color, fontWeight: 800, fontSize: 13,
                   transition: 'all 0.3s',
                 }}>
                   {done ? '✓' : i + 1}
@@ -201,9 +201,9 @@ function Step1({ data, onChange, onNext }: {
 
       <div style={{ marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <Label>Requirements</Label>
-        <CheckRow checked={data.prevailingWage} onChange={v => onChange({ prevailingWage: v })} label="Prevailing wage required" />
-        <CheckRow checked={data.bonding} onChange={v => onChange({ bonding: v })} label="Bonding required" />
-        <CheckRow checked={data.insurance} onChange={v => onChange({ insurance: v })} label="Insurance required" />
+        <CheckRow checked={data.prevailingWage} onChange={v => onChange({ prevailingWage: v })} label="Prevailing Wage Required" />
+        <CheckRow checked={data.bonding} onChange={v => onChange({ bonding: v })} label="Bonding Required" />
+        <CheckRow checked={data.insurance} onChange={v => onChange({ insurance: v })} label="Insurance Required" />
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -289,7 +289,7 @@ function Step2({ projectId, lineItems, onLineItemsChange, onNext, onBack }: {
 
   const thStyle: React.CSSProperties = {
     padding: '8px 10px', textAlign: 'left', fontSize: 10, fontWeight: 700,
-    textTransform: 'uppercase', letterSpacing: 0.5, color: DIM,
+    color: DIM,
     borderBottom: `1px solid ${BORDER}`,
   };
   const tdStyle: React.CSSProperties = { padding: '6px 6px' };
@@ -325,7 +325,7 @@ function Step2({ projectId, lineItems, onLineItemsChange, onNext, onBack }: {
           <div style={{ border: `1px solid ${BORDER}`, borderRadius: 8, overflow: 'hidden', marginBottom: 12 }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
               <thead>
-                <tr style={{ background: '#1c1c1e' }}>
+                <tr style={{ background: 'var(--bg-surface-2)' }}>
                   <th style={{ ...thStyle, width: 30 }}></th>
                   <th style={thStyle}>Description</th>
                   <th style={{ ...thStyle, width: 70 }}>Qty</th>
@@ -451,8 +451,8 @@ function Step3({ trade, projectId, selectedSubs, onSelectedSubsChange, manualEma
         <div key={sub.id} onClick={() => toggleSub(sub.id)} style={{
           display: 'flex', alignItems: 'center', gap: 14,
           padding: '12px 14px', borderRadius: 8, marginBottom: 8,
-          background: selectedSubs[sub.id] ? 'rgba(245, 158, 11,0.06)' : DARK,
-          border: `1px solid ${selectedSubs[sub.id] ? 'rgba(245, 158, 11,0.3)' : BORDER}`,
+          background: selectedSubs[sub.id] ? 'var(--brand-primary-08)' : DARK,
+          border: `1px solid ${selectedSubs[sub.id] ? 'var(--brand-primary-25)' : BORDER}`,
           cursor: 'pointer', transition: 'all 0.15s',
         }}>
           <input type="checkbox" checked={!!selectedSubs[sub.id]} onChange={() => toggleSub(sub.id)}
@@ -464,7 +464,7 @@ function Step3({ trade, projectId, selectedSubs, onSelectedSubsChange, manualEma
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4,
-              background: sub.winRate >= 75 ? 'rgba(61,214,140,0.12)' : 'rgba(245, 158, 11,0.12)',
+              background: sub.winRate >= 75 ? 'rgba(61,214,140,0.12)' : 'var(--brand-primary-12)',
               color: sub.winRate >= 75 ? GREEN : GOLD,
             }}>
               {sub.winRate}% Win
@@ -475,7 +475,7 @@ function Step3({ trade, projectId, selectedSubs, onSelectedSubsChange, manualEma
       ))}
 
       <div style={{ marginTop: 18, marginBottom: 18 }}>
-        <Label>Add by email (manual)</Label>
+        <Label>Add by Email (Manual)</Label>
         <input
           value={manualEmail}
           onChange={e => onManualEmailChange(e.target.value)}
@@ -536,8 +536,8 @@ function Step4({ trade, scope, lineItems, selectedSubCount, packageName, onPacka
       <p style={{ margin: '0 0 16px', color: DIM, fontSize: 13 }}>Confirm the details and create your bid package.</p>
 
       {/* Summary card */}
-      <div style={{ background: DARK, border: `1px solid rgba(245, 158, 11,0.25)`, borderRadius: 10, padding: '16px 20px', marginBottom: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Package Summary</div>
+      <div style={{ background: DARK, border: `1px solid var(--brand-primary-25)`, borderRadius: 10, padding: '16px 20px', marginBottom: 20 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: GOLD, marginBottom: 12 }}>Package Summary</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px 20px' }}>
           {summaryItems.map(item => (
             <div key={item.label}>
@@ -579,12 +579,12 @@ function Step4({ trade, scope, lineItems, selectedSubCount, packageName, onPacka
           disabled={submitting}
           style={{
             padding: '12px 32px',
-            background: submitting ? '#1c1c1e' : `linear-gradient(135deg,${GOLD},#FBBF24)`,
+            background: submitting ? '#1c1c1e' : `linear-gradient(135deg,${GOLD},var(--brand-primary-strong))`,
             border: 'none', borderRadius: 8,
             color: submitting ? DIM : '#F2F2F7',
             fontSize: 15, fontWeight: 800,
             cursor: submitting ? 'not-allowed' : 'pointer',
-            boxShadow: submitting ? 'none' : `0 4px 16px rgba(245, 158, 11,0.3)`,
+            boxShadow: submitting ? 'none' : `0 4px 16px var(--brand-primary-25)`,
           }}
         >
           {submitting ? '⏳ Creating…' : '🤖 Create Bid Package'}

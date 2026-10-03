@@ -20,12 +20,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretUpDown, MagnifyingGlass, Buildings, Check } from '@phosphor-icons/react';
 import { useProjects } from '@/lib/hooks/useProjects';
+import { useProjectContext } from '@/lib/hooks/useProjectContext';
 
-const GOLD = '#F59E0B';
-const TEXT = '#F0F4FF';
-const DIM = '#8BAAC8';
+const GOLD = 'var(--brand-primary)';
+const TEXT = '#FFFFFF';
+const DIM = '#A9B4C4';
 const BORDER = 'rgba(255,255,255,0.12)';
-const PANEL = '#12161C';
+const PANEL = 'rgba(22,24,29,0.94)'; // floating glass over the jet-black page
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -68,11 +69,11 @@ export default function HeaderProjectPicker() {
    * could open the sixteenth job and see the breadcrumb read "Project" — the
    * one crumb whose whole purpose is telling you where you are.
    */
+  const inList = list.some((p) => p.id === currentId);
   const [fetchedName, setFetchedName] = useState<string | null>(null);
   useEffect(() => {
     setFetchedName(null);
-    if (!currentId) return;
-    if (list.some((p) => p.id === currentId)) return;
+    if (!currentId || inList) return;
     let cancelled = false;
     fetch(`/api/projects/${currentId}?fields=id,name`)
       .then((r) => (r.ok ? r.json() : null))
@@ -81,12 +82,23 @@ export default function HeaderProjectPicker() {
         const p = d.project ?? d;
         if (p?.name || p?.project_name) setFetchedName(p.name || p.project_name);
       })
-      .catch(() => { /* the picker still works, it just reads "Select a job" */ });
+      .catch(() => { /* the project-context name below still covers it */ });
     return () => { cancelled = true; };
-  }, [currentId, list]);
+    /* inList, not list: the list's identity changes on every SWR refresh (and
+       on every render while it is still loading), which re-ran this effect,
+       nulled the name and cancelled the request before it landed — the
+       picker read "Choose a job" inside a job. */
+  }, [currentId, inList]);
+
+  /* The project snapshot every project screen (layout, rail, next-step bar)
+     already loads, on the same SWR key — so the name is available inside
+     /app/projects/<id>/* even when the job is outside the header's
+     fifteen-row list or the by-id fetch has not landed. */
+  const { ctx: currentCtx } = useProjectContext(currentId);
+  const ctxName = (currentCtx?.project?.name as string | undefined) || null;
 
   const current = list.find((p) => p.id === currentId);
-  const currentName = current ? nameOf(current) : fetchedName;
+  const currentName = current ? nameOf(current) : (ctxName ?? fetchedName);
 
   const matches = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -136,12 +148,12 @@ export default function HeaderProjectPicker() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        title={currentName ? `${currentName} — switch job` : 'Choose a job'}
+        title={currentName ? `${currentName} — switch job` : 'Choose a Job'}
         style={{
           display: 'flex', alignItems: 'center', gap: 8,
           height: 34, maxWidth: 260, padding: '0 10px',
-          background: currentName ? 'rgba(245,158,11,0.10)' : 'rgba(255,255,255,0.04)',
-          border: `1px solid ${currentName ? 'rgba(245,158,11,0.38)' : BORDER}`,
+          background: currentName ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.06)',
+          border: `1px solid ${currentName ? 'var(--brand-primary-35)' : BORDER}`,
           borderRadius: 9, cursor: 'pointer',
           color: currentName ? TEXT : DIM,
           fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
@@ -149,7 +161,7 @@ export default function HeaderProjectPicker() {
       >
         <Buildings size={15} weight="duotone" color={currentName ? GOLD : DIM} />
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
-          {currentName ?? 'Choose a job'}
+          {currentName ?? 'Choose a Job'}
         </span>
         <CaretUpDown size={13} weight="bold" color={DIM} />
       </button>
@@ -162,7 +174,8 @@ export default function HeaderProjectPicker() {
             width: 340, maxHeight: 420, overflow: 'hidden',
             display: 'flex', flexDirection: 'column',
             background: PANEL, border: `1px solid ${BORDER}`, borderRadius: 12,
-            boxShadow: '0 26px 60px -20px rgba(0,0,0,0.92)',
+            backdropFilter: 'blur(20px) saturate(150%)', WebkitBackdropFilter: 'blur(20px) saturate(150%)',
+            boxShadow: '0 26px 60px -20px rgba(0,0,0,0.92), inset 0 1px 0 rgba(255,255,255,0.06)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderBottom: `1px solid ${BORDER}` }}>
@@ -179,7 +192,7 @@ export default function HeaderProjectPicker() {
 
           {tail && (
             <div style={{ padding: '7px 12px', fontSize: 11, color: DIM, borderBottom: `1px solid ${BORDER}` }}>
-              Switching keeps you on this screen
+              Switching keeps you on this screen.
             </div>
           )}
 
@@ -201,7 +214,7 @@ export default function HeaderProjectPicker() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 9, width: '100%', textAlign: 'left',
                     padding: '9px 10px', borderRadius: 8, cursor: 'pointer', border: 'none',
-                    background: i === active ? 'rgba(245,158,11,0.12)' : 'transparent',
+                    background: i === active ? 'rgba(255,255,255,0.08)' : 'transparent',
                     color: TEXT, fontSize: 13.5, fontWeight: isCurrent ? 800 : 600,
                   }}
                 >
@@ -225,7 +238,7 @@ export default function HeaderProjectPicker() {
               fontWeight: 700, cursor: 'pointer',
             }}
           >
-            See all jobs →
+            See All Jobs →
           </button>
         </div>
       )}

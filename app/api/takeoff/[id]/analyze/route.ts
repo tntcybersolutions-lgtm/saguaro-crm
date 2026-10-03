@@ -14,6 +14,7 @@ import {
 } from '@/lib/blueprint-processor';
 import { costKeyForCsiLine } from '@/lib/takeoff';
 import { learnTenantRates } from '@/lib/takeoff-learn';
+import { applyQuantitySanity } from '@/lib/takeoff-quantity-sanity';
 import { hasFeature } from '@/lib/entitlements-server';
 import { must, tryWrite } from '@/lib/db-write';
 import { logActivity, money } from '@/lib/activity';
@@ -67,6 +68,12 @@ const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'imag
 const SYSTEM =
   'Return ONLY raw JSON. No markdown. No backticks. No explanation. Start with { end with }.';
 
+/* Wall geometry, stated once and used by every estimating prompt. The model once
+   priced tilt-up panels as "560 LF face, 3,136 SF/panel × 20 panels = 62,720 SF"
+   on a 400 LF × 28 ft building (11,200 SF) — 5× the concrete. The post-pass in
+   lib/takeoff-quantity-sanity catches that; this keeps it from being written. */
+const WALL_GEOMETRY_RULE = `WALL GEOMETRY RULE: exterior wall / tilt-up panel face SF = building perimeter LF × wall (panel) height ft. Do NOT also multiply by panel count — panels tile the perimeter. Wall/panel concrete CY = face SF × thickness (in) ÷ 12 ÷ 27. Use the same face SF for panel concrete, paint, sealer and insulation on those walls.`;
+
 // ─── Combined single-pass prompt (small sets / images) ────────────────────────
 const COMBINED_PROMPT = `You are a senior construction estimator with 25+ years of field experience.
 Analyze this blueprint and produce a COMPLETE material takeoff — every item visible in the drawings.
@@ -106,6 +113,7 @@ Return ONLY raw JSON. Start with { — no markdown, no code fences.
 Keys: cd=CSI code, nm=name, d=description with dimensions, q=qty, u=unit, r=unit rate $, tot=total $, h=labor hours.
 "sh" is the sheet register — one entry per drawing sheet you see: p=page number in this document, sn=sheet number, ti=title, disc=architectural|structural|civil|mechanical|electrical|plumbing|fire_protection|general.
 CRITICAL MATH RULE: tot MUST equal q multiplied by r. Example: q=100, r=5.50 → tot=550. Never return tot=0.
+${WALL_GEOMETRY_RULE}
 VALID ITEMS ONLY: Every item must have q > 0 and r > 0. Never include items with unknown quantities — estimate from the drawing scale if dimensions are unclear. A 2000 SF floor plan at minimum has: excavation, concrete, framing, roofing, electrical, plumbing, HVAC, drywall, flooring — include ALL of these.
 A complete commercial takeoff has 30-55 line items covering ALL trades visible in the drawings.`;
 
@@ -150,7 +158,8 @@ Return ONLY raw JSON, start with {:
   ]
 }
 Keys: cd=CSI code, nm=name, d=description with dimensions, q=qty, u=unit, r=unit rate $, tot=total $, h=labor hours.
-CRITICAL: tot MUST equal q multiplied by r. Every item must have q > 0 and r > 0. sf/fl only if this discipline shows overall building area/floor count.`;
+CRITICAL: tot MUST equal q multiplied by r. Every item must have q > 0 and r > 0. sf/fl only if this discipline shows overall building area/floor count.
+${WALL_GEOMETRY_RULE}`;
 }
 
 // ─── JSON repair & parse ──────────────────────────────────────────────────────
@@ -980,6 +989,17 @@ export async function GET(
           send('error', { message: 'No materials extracted from this blueprint. Try a clearer image or a PDF with visible dimensions.' });
           await tryWrite(supabase.from('takeoffs').update({ status: 'failed' }).eq('tenant_id', user.tenantId).eq('id', takeoffId), 'takeoffs update');
           return done();
+        }
+
+        // Geometry sanity on concrete wall / tilt-up panel CY lines — a line whose CY
+        // implies far more wall face than this takeoff's own perimeter × height is
+        // recomputed (or flagged) and tagged for review. See lib/takeoff-quantity-sanity.
+        {
+          const sanity = applyQuantitySanity(items);
+          items = sanity.lines;
+          if (sanity.adjusted || sanity.flagged) {
+            console.log(`[analyze] quantity sanity: ${sanity.adjusted} recomputed, ${sanity.flagged} flagged`);
+          }
         }
 
         // Derive real totals from validated line items — don't trust Claude's mc/lc/pc

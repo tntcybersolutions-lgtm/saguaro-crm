@@ -17,7 +17,7 @@ import {
   WifiHigh, Broadcast, Gear, Robot, ChartBar, Brain, CaretLeft, CaretRight, ArrowLeft, X,
 } from '@phosphor-icons/react';
 
-const GOLD = '#F59E0B'; const DARK = '#0a0a0a'; const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)'; const DARK = 'var(--bg-base)'; const RAISED = 'var(--bg-surface-2)';
 const BORDER = 'rgba(255,255,255,0.12)'; const DIM = '#CBD5E1'; const TEXT = '#FFFFFF';
 
 // ALL sidebar nav items — every module Buildertrend has + more.
@@ -27,7 +27,7 @@ const NAV_SECTIONS = [
   {
     /* Overview is the project's home, not a preconstruction tool, so it sits
        alone above the phases — the same place Procore puts Project Home. */
-    label: 'PROJECT',
+    label: 'Project',
     items: [
       { label: 'Overview',        href: '',                   icon: SquaresFour, badge: null },
     ],
@@ -37,7 +37,7 @@ const NAV_SECTIONS = [
        the job, before anyone is awarded anything — filing it under Execution
        put a preconstruction activity after contracts in a nav that otherwise
        reads as the order work happens. */
-    label: 'PRECONSTRUCTION',
+    label: 'Preconstruction',
     items: [
       { label: 'Takeoff',         href: '/takeoff',           icon: Ruler, badge: null, accent: 'takeoff' },
       { label: 'Estimate',        href: '/estimate',          icon: Calculator, badge: null, accent: 'estimates' },
@@ -46,7 +46,7 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: 'EXECUTION',
+    label: 'Execution',
     items: [
       { label: 'Schedule',              href: '/schedule',          icon: CalendarBlank, badge: null, accent: 'schedule' },
       { label: 'Selections & Allowances', href: '/selections',      icon: Palette, badge: null },
@@ -58,7 +58,7 @@ const NAV_SECTIONS = [
   {
     // FIELD before FINANCIAL — run the work, then bill from it. Mirrors
     // lib/project-nav.tsx (the desktop rail) so phone and desktop agree.
-    label: 'FIELD',
+    label: 'Field',
     items: [
       { label: 'Daily Logs',      href: '/daily-logs',        icon: ClipboardText, badge: null, accent: 'daily' },
       { label: 'T&M Tickets',     href: '/tm-tickets',        icon: Money, badge: null, accent: 'tm' },
@@ -72,7 +72,7 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: 'FINANCIAL',
+    label: 'Financial',
     items: [
       { label: 'Budget',          href: '/budget',            icon: Wallet, badge: null, accent: 'budget' },
       { label: 'Change Orders',   href: '/change-orders',     icon: ArrowsClockwise, accent: 'changeorders' },
@@ -86,7 +86,7 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: 'COMMUNICATION',
+    label: 'Communication',
     items: [
       { label: 'RFIs',            href: '/rfis',              icon: Question, accent: 'rfis' },
       { label: 'Submittals',      href: '/submittals',        icon: Export, badge: null },
@@ -94,7 +94,7 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: 'DOCUMENTS',
+    label: 'Documents',
     items: [
       { label: 'Files',           href: '/files',             icon: Folder, badge: null, accent: 'documents' },
       { label: 'Drawings',        href: '/drawings',          icon: Ruler, badge: null, accent: 'drawings' },
@@ -114,13 +114,13 @@ const NAV_SECTIONS = [
        two nav entries pointing at one page just makes "which one is
        highlighted" a question. The closeout screen links straight to the
        punch list, and to every other open item, from its readiness gate. */
-    label: 'CLOSEOUT',
+    label: 'Closeout',
     items: [
       { label: 'Closeout',        href: '/closeout',          icon: CheckCircle, badge: null },
     ],
   },
   {
-    label: 'TEAM',
+    label: 'Team',
     items: [
       { label: 'Directory',       href: '/directory',         icon: Users, badge: null, accent: 'team' },
       { label: 'Team',            href: '/team',              icon: Users, badge: null, accent: 'team' },
@@ -128,7 +128,7 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    label: 'LOW VOLTAGE / IT',
+    label: 'Low Voltage / IT',
     items: [
       { label: 'Network',          href: '/network',            icon: Globe, badge: null },
       { label: 'Devices',          href: '/network/devices',    icon: Laptop, badge: null },
@@ -252,7 +252,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             <div style={{ fontSize: 10, color: DIM, marginBottom: 8 }}>{projectNumber}</div>
             {/* Progress */}
             <div style={{ height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2, marginBottom: 3 }}>
-              <div style={{ height: '100%', width: `${pctComplete}%`, background: `linear-gradient(90deg,${GOLD},#FBBF24)`, borderRadius: 2 }} />
+              <div style={{ height: '100%', width: `${pctComplete}%`, background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, borderRadius: 2 }} />
             </div>
             {/* "billed", not "complete". This is money invoiced against the
                 contract sum — it says nothing about how much work is done or
@@ -274,7 +274,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
         return (
         <div key={section.label} style={{ padding: '8px 0' }}>
           {!isCollapsed && (
-            <div style={{ padding: '6px 12px 3px', fontSize: 10, fontWeight: 700, letterSpacing: 1.4, textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
+            <div style={{ padding: '6px 12px 3px', fontSize: 10, fontWeight: 700, color: 'var(--text-tertiary)' }}>
               {section.label}
             </div>
           )}
@@ -322,7 +322,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                 )}
                 {!isCollapsed && <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</span>}
                 {!isCollapsed && ((item as { badge?: string }).badge || railCounts[item.href]) && (
-                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#B85C2A', color: '#1C1C1E' }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, padding: '1px 5px', borderRadius: 8, background: active ? GOLD : '#B85C2A', color: active ? '#0A0A00' : '#1C1C1E' }}>
                     {(item as { badge?: string }).badge || railCounts[item.href]}
                   </span>
                 )}
@@ -347,7 +347,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
             onMouseLeave={e => { e.currentTarget.style.color = DIM; e.currentTarget.style.background = 'transparent'; }}
           >
-            <span>{showAllTools ? 'Show fewer tools' : 'All tools'}</span>
+            <span>{showAllTools ? 'Show Fewer Tools' : 'All Tools'}</span>
             {!showAllTools && <span style={{ opacity: 0.7 }}>+{hiddenCount}</span>}
           </button>
         </div>
@@ -391,7 +391,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           ever one rail on screen, so it was never the problem. */}
 
       {/* ── Page Content ─────────────────────────────────────────────── */}
-      <div style={{ flex: 1, minWidth: 0, background: '#0a0a0a' }}>
+      <div style={{ flex: 1, minWidth: 0, background: 'var(--bg-base)' }}>
 
         {/* Lifecycle phase bar — the left-to-right flow across the top of every
             project screen (win → build → bill → close), phase you're in lit. */}
@@ -403,7 +403,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           alignItems: 'center',
           gap: 10,
           padding: '8px 12px',
-          background: '#0a0a0a',
+          background: 'var(--bg-base)',
           borderBottom: `1px solid ${BORDER}`,
           position: 'sticky',
           top: 56,
@@ -448,7 +448,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
           {/* Backdrop */}
           <div
             onClick={() => setMobileOpen(false)}
-            style={{ position: 'fixed', inset: 0, background: '#0a0a0a', zIndex: 199 }}
+            style={{ position: 'fixed', inset: 0, background: 'var(--bg-base)', zIndex: 199 }}
           />
           {/* Panel */}
           <aside style={{
@@ -458,7 +458,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
             bottom: 0,
             width: 250,
             maxWidth: '82vw',
-            background: '#0a0a0a',
+            background: 'var(--bg-base)',
             borderRight: `1px solid ${BORDER}`,
             overflowY: 'auto',
             overflowX: 'hidden',

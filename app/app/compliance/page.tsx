@@ -7,12 +7,12 @@ import { moduleAccent } from '@/lib/module-identity';
 import NudgeRing from '@/components/intelligence/NudgeRing';
 import { ANCHOR_INSURANCE_EXPIRING } from '@/lib/suggestions';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#45B37D',RED='#E0644E',AMBER='#F0A63C';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#45B37D',RED='#E0644E',AMBER='var(--warning)';
 
 function ScoreBar({score}:{score:number}){
   const color = score>=80?GREEN:score>=50?AMBER:RED;
   return <div style={{display:'flex',alignItems:'center',gap:8}}>
-    <div style={{flex:1,height:6,background:'#1c1c1e',borderRadius:3,overflow:'hidden'}}>
+    <div style={{flex:1,height:6,background:'var(--bg-surface-2)',borderRadius:3,overflow:'hidden'}}>
       <div style={{height:'100%',background:color,width:score+'%',borderRadius:3}}/>
     </div>
     <span style={{fontSize:12,fontWeight:700,color,minWidth:30}}>{score}</span>
@@ -20,7 +20,7 @@ function ScoreBar({score}:{score:number}){
 }
 
 function Badge({label,color,bg}:{label:string,color:string,bg:string}){
-  return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color,textTransform:'uppercase',letterSpacing:.3}}>{label}</span>;
+  return <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:4,background:bg,color}}>{label}</span>;
 }
 
 function StatusDot({ok,warn,label}:{ok?:boolean,warn?:boolean,label:string}){
@@ -79,7 +79,7 @@ export default function CompliancePage(){
       title="Subcontractor"
       accent="Compliance"
       subtitle="W-9, insurance, and lien waiver scorecard across your subcontractors."
-      note="expired COI = your problem"
+      note="Expired COI = your problem"
     />
 
     {/* THE OTHER TWO COMPLIANCE SCREENS.
@@ -91,7 +91,7 @@ export default function CompliancePage(){
     <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:22}}>
       {[
         {href:'/app/compliance/lien-deadlines', icon:<Signature size={15} weight="duotone" color={GOLD} />,
-         title:'Lien Deadlines', sub:'statutory dates by state — miss one and the lien right is gone'},
+         title:'Lien Deadlines', sub:'Statutory dates by state — miss one and the lien right is gone'},
         {href:'/app/compliance/prevailing-wage', icon:<FileText size={15} weight="duotone" color={GOLD} />,
          title:'Prevailing Wage', sub:'Davis-Bacon rates and certified payroll status'},
       ].map(l=>(
@@ -112,9 +112,9 @@ export default function CompliancePage(){
 
     {/* Risk intelligence strip — the paperwork translated into dollars */}
     {!loading&&subs.length>0&&<StatStrip items={[
-      {href: '/app/compliance', label:'Subcontractors', value:subs.length, sub:`across ${tradeCount} trade${tradeCount===1?'':'s'}`},
-      {href: '/app/compliance', label:'Contract Exposure', value:fmtMoney(exposure), accent:exposure>0?RED:GREEN, sub:totalContract>0?`of ${fmtMoney(totalContract)} committed sits with non-compliant subs`:'held by non-compliant subs'},
-      {href: '/app/compliance', label:'W-9s Missing', value:w9Missing, accent:w9Missing>0?AMBER:GREEN, sub:w9Missing>0?'blocks 1099 filing at year end':'every sub is 1099-ready'},
+      {href: '/app/compliance', label:'Subcontractors', value:subs.length, sub:`Across ${tradeCount} trade${tradeCount===1?'':'s'}`},
+      {href: '/app/compliance', label:'Contract Exposure', value:fmtMoney(exposure), accent:exposure>0?RED:GREEN, sub:totalContract>0?`Of ${fmtMoney(totalContract)} committed sits with non-compliant subs`:'Held by non-compliant subs'},
+      {href: '/app/compliance', label:'W-9s Missing', value:w9Missing, accent:w9Missing>0?AMBER:GREEN, sub:w9Missing>0?'Blocks 1099 filing at year end':'Every sub is 1099-ready'},
       /* The sub-line branches on THIS stat's own value, like every other tile
          in the strip. It used to branch on certsExpiring, so a portfolio with
          four uninsured subs and nothing expiring printed "no uninsured subs on
@@ -125,8 +125,8 @@ export default function CompliancePage(){
          ? `${noInsurance} sub${noInsurance===1?'':'s'} with no current COI${certsExpiring>0?` · ${certsExpiring} more expiring in 30d`:''}`
          : certsExpiring>0
            ? `${certsExpiring} cert${certsExpiring===1?'':'s'} expiring in 30d`
-           : 'no uninsured subs on site'},
-      {href: '/app/compliance', label:'Waivers Pending', value:waiversPending, accent:waiversPending>0?AMBER:GREEN, sub:waiversPending>0?'unsigned — hold payment until released':'lien rights fully released'},
+           : 'No uninsured subs on site'},
+      {href: '/app/compliance', label:'Waivers Pending', value:waiversPending, accent:waiversPending>0?AMBER:GREEN, sub:waiversPending>0?'Unsigned — hold payment until released':'Lien rights fully released'},
     ]}/>}
 
     {/* Summary KPIs */}
@@ -135,22 +135,22 @@ export default function CompliancePage(){
         icon={<Gauge size={19} weight="duotone" color={GOLD} />}
         label="Avg Compliance Score" value={summary.avg_score+'%'}
         accent={summary.avg_score>=80?GREEN:summary.avg_score>=50?AMBER:RED}
-        sub="portfolio average" delay={0.02}
+        sub="Portfolio average" delay={0.02}
        href="/app/compliance"/>
       <StatCard
         icon={<CheckCircle size={19} weight="duotone" color={GREEN} />}
         label="Compliant" value={summary.compliant} accent={GREEN}
-        sub="fully compliant" delay={0.06}
+        sub="Fully compliant" delay={0.06}
        href="/app/compliance"/>
       <StatCard
         icon={<WarningCircle size={19} weight="duotone" color={AMBER} />}
         label="At Risk" value={summary.at_risk} accent={AMBER}
-        sub="needs attention" delay={0.10}
+        sub="Needs attention" delay={0.10}
        href="/app/compliance"/>
       <StatCard
         icon={<XCircle size={19} weight="duotone" color={RED} />}
         label="Non-Compliant" value={summary.non_compliant} accent={RED}
-        sub="action required" delay={0.14}
+        sub="Action required" delay={0.14}
        href="/app/compliance"/>
     </div>}
 
@@ -169,18 +169,18 @@ export default function CompliancePage(){
         <div style={{display:'flex',gap:10,alignItems:'center',flexWrap:'wrap',marginBottom:16}}>
           <div style={{position:'relative',flex:'0 0 auto'}}>
             <MagnifyingGlass size={15} weight="bold" color={DIM} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}} />
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search subcontractors..." style={{padding:'8px 14px 8px 34px',background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:9,color:TEXT,fontSize:13,outline:'none',width:240}}/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search subcontractors…" style={{padding:'8px 14px 8px 34px',background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:9,color:TEXT,fontSize:13,outline:'none',width:240}}/>
           </div>
           <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
             {(['all','compliant','at_risk','non_compliant'] as const).map(f=>(
-              <button key={f} onClick={()=>setFilter(f)} style={{padding:'6px 14px',background:filter===f?'rgba(245, 158, 11,.15)':'rgba(255,255,255,0.04)',border:`1px solid ${filter===f?'rgba(245, 158, 11,.4)':BORDER}`,borderRadius:9,color:filter===f?GOLD:DIM,fontSize:12,fontWeight:700,cursor:'pointer',textTransform:'capitalize'}}>
-                {f==='all'?'All':f.replace('_',' ')} ({countFor(f)})
+              <button key={f} onClick={()=>setFilter(f)} style={{padding:'6px 14px',background:filter===f?'color-mix(in srgb, var(--brand-primary) 15%, transparent)':'rgba(255,255,255,0.04)',border:`1px solid ${filter===f?'color-mix(in srgb, var(--brand-primary) 40%, transparent)':BORDER}`,borderRadius:9,color:filter===f?GOLD:DIM,fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                {f==='all'?'All':complianceLabel(f)} ({countFor(f)})
               </button>
             ))}
           </div>
         </div>
 
-        {loading?<div style={{textAlign:'center',padding:40,color:DIM}}>Loading compliance data...</div>
+        {loading?<div style={{textAlign:'center',padding:40,color:DIM}}>Loading compliance data…</div>
         :filtered.length===0?<PremiumEmpty
             icon={<ShieldCheck size={30} weight="duotone" color={GOLD} />}
             title={search||filter!=='all'?'No matching subcontractors':'No subcontractors found'}
@@ -189,16 +189,16 @@ export default function CompliancePage(){
           />
         :<div style={{border:`1px solid ${BORDER}`,borderRadius:12,overflow:'hidden',overflowX:'auto',WebkitOverflowScrolling:'touch' as const}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
-            <thead><tr style={{background:'#1c1c1e'}}>
+            <thead><tr style={{background:'var(--bg-surface-2)'}}>
               {['Subcontractor','Trade','Contract','Score','W-9','Insurance','Lien Waivers','Status',''].map(h=>(
-                <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:10.5,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:'var(--text-tertiary)',borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>{h}</th>
+                <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:10.5,fontWeight:700,color:'var(--text-tertiary)',borderBottom:`1px solid ${BORDER}`,whiteSpace:'nowrap'}}>{h}</th>
               ))}
             </tr></thead>
             <tbody>{filtered.map(sub=>(
-              <tr key={sub.id} onClick={()=>setSelected(selected?.id===sub.id?null:sub)} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`,cursor:'pointer',background:selected?.id===sub.id?'rgba(245, 158, 11,.06)':'transparent'}}>
+              <tr key={sub.id} onClick={()=>setSelected(selected?.id===sub.id?null:sub)} style={{borderBottom:`1px solid rgba(255,255,255,0.08)`,cursor:'pointer',background:selected?.id===sub.id?'var(--brand-primary-08)':'transparent'}}>
                 <td style={{padding:'11px 14px'}}>
                   <div style={{display:'flex',alignItems:'center',gap:8}}>
-                    <div style={{width:30,height:30,borderRadius:'50%',background:'rgba(245, 158, 11,.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:GOLD,flexShrink:0}}>{sub.name?.[0]||'?'}</div>
+                    <div style={{width:30,height:30,borderRadius:'50%',background:'color-mix(in srgb, var(--brand-primary) 15%, transparent)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:GOLD,flexShrink:0}}>{sub.name?.[0]||'?'}</div>
                     <div>
                       <div style={{fontWeight:600,color:TEXT}}>{sub.name}</div>
                       {sub.email&&<div style={{fontSize:11,color:DIM}}>{sub.email}</div>}
@@ -243,13 +243,13 @@ export default function CompliancePage(){
         action={<button onClick={()=>setSelected(null)} style={{background:'rgba(255,255,255,0.04)',border:`1px solid ${BORDER}`,borderRadius:8,color:DIM,fontSize:16,cursor:'pointer',lineHeight:1,width:28,height:28,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>×</button>}
       >
         <div style={{marginBottom:16}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1,color:DIM,marginBottom:6}}>Compliance Score</div>
+          <div style={{fontSize:10,fontWeight:700,color:DIM,marginBottom:6}}>Compliance Score</div>
           <ScoreBar score={selected.score}/>
           <div style={{marginTop:6}}><Badge label={complianceLabel(selected.compliance)} color={complianceColor(selected.compliance)} bg={complianceBg(selected.compliance)}/></div>
           <div style={{fontSize:11,color:DIM,marginTop:8,lineHeight:1.5}}>Score = W-9 (25 pts) + insurance (40 pts) + lien waivers (35 pts). 80+ is compliant; under 50 is non-compliant.</div>
           <div style={{marginTop:10}}>
-            <InsightRow label="Contract value" value={Number(selected.contract_amount)>0?fmtMoney(selected.contract_amount):'—'} accent={selected.compliance!=='compliant'&&Number(selected.contract_amount)>0?RED:undefined} strong/>
-            {totalContract>0&&Number(selected.contract_amount)>0&&<InsightRow label="Share of committed" value={`${Math.round((Number(selected.contract_amount)/totalContract)*100)}%`}/>}
+            <InsightRow label="Contract Value" value={Number(selected.contract_amount)>0?fmtMoney(selected.contract_amount):'—'} accent={selected.compliance!=='compliant'&&Number(selected.contract_amount)>0?RED:undefined} strong/>
+            {totalContract>0&&Number(selected.contract_amount)>0&&<InsightRow label="Share of Committed" value={`${Math.round((Number(selected.contract_amount)/totalContract)*100)}%`}/>}
           </div>
         </div>
         <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}>
@@ -282,7 +282,7 @@ export default function CompliancePage(){
           if(selected.insurance.expiring_certs>0) gaps.push({title:`Renew ${selected.insurance.expiring_certs} expiring cert${selected.insurance.expiring_certs===1?'':'s'}`, desc:'Inside the 30-day window — renew before coverage lapses.'});
           if(selected.lien_waivers.pending>0) gaps.push({title:`Chase ${selected.lien_waivers.pending} unsigned waiver${selected.lien_waivers.pending===1?'':'s'}`, desc:'Unreleased lien rights — hold payment until signed.'});
           return gaps.length>0
-            ? <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}><FlowSteps title="Fix next" steps={gaps}/></div>
+            ? <div style={{background:RAISED,border:`1px solid ${BORDER}`,borderRadius:10,padding:14,marginBottom:12}}><FlowSteps title="Fix Next" steps={gaps}/></div>
             : <div style={{background:'rgba(69,179,125,.08)',border:'1px solid rgba(69,179,125,.3)',borderRadius:10,padding:'10px 14px',marginBottom:12,fontSize:12.5,color:GREEN}}>Fully compliant — W-9 on file, insurance active, waivers signed.</div>;
         })()}
         <div style={{display:'flex',flexDirection:'column' as const,gap:8}}>

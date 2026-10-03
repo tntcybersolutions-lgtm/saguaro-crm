@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/premium';
 import { SkeletonRow } from '../../../components/ui/Skeleton';
 
-const GOLD = '#F59E0B', CARD = '#141416', BORDER = 'rgba(255,255,255,0.12)';
+const GOLD = 'var(--brand-primary)', CARD = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
 const TEXT = '#FFFFFF', DIM = '#CBD5E1', GREEN = '#34C759', RED = '#FF3B30', AMBER = '#FF9500';
 
 interface Sub {
@@ -74,7 +74,7 @@ function parseDay(iso: string | null): Date | null {
 /** Expiry read the way a GC reads it: gone, going, or fine. */
 function expiryState(iso: string | null): { label: string; tone: string } {
   const d = parseDay(iso);
-  if (!d) return { label: 'Not on file', tone: RED };
+  if (!d) return { label: 'Not on File', tone: RED };
   const days = Math.ceil((d.getTime() - Date.now()) / 86_400_000);
   if (days < 0) return { label: `Expired ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`, tone: RED };
   if (days <= 30) return { label: `${days}d left`, tone: AMBER };
@@ -140,10 +140,10 @@ export default function SubsAndVendorsPage() {
       />
 
       <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', marginBottom: 22 }}>
-        <StatCard label="On file" value={String(subs.length)} sub="companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
-        <StatCard label="Paperwork missing" value={String(missingPaper)} sub={missingPaper ? 'cannot be awarded without override' : 'everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? RED : GREEN} />}  href="/app/subs"/>
-        <StatCard label="Prequalified" value={String(prequalified)} sub="passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
-        <StatCard label="Trades covered" value={String(trades.length)} sub="distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
+        <StatCard label="On File" value={String(subs.length)} sub="Companies tenant-wide" icon={<Buildings size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
+        <StatCard label="Paperwork Missing" value={String(missingPaper)} sub={missingPaper ? 'Cannot be awarded without override' : 'Everyone is current'} icon={<WarningCircle size={17} weight="duotone" color={missingPaper ? RED : GREEN} />}  href="/app/subs"/>
+        <StatCard label="Prequalified" value={String(prequalified)} sub="Passed prequalification" icon={<SealCheck size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
+        <StatCard label="Trades Covered" value={String(trades.length)} sub="Distinct trades on file" icon={<Package size={17} weight="duotone" color={GOLD} />}  href="/app/subs"/>
       </div>
 
       <SectionCard
@@ -160,15 +160,15 @@ export default function SubsAndVendorsPage() {
               value={q}
               onChange={e => setQ(e.target.value)}
               placeholder="Search company, trade or contact"
-              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', background: '#0a0a0a', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none' }}
+              style={{ width: '100%', boxSizing: 'border-box', padding: '9px 12px 9px 32px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none' }}
             />
           </div>
           <select
             value={trade}
             onChange={e => setTrade(e.target.value)}
-            style={{ padding: '9px 12px', background: '#0a0a0a', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', minWidth: 170 }}
+            style={{ padding: '9px 12px', background: 'var(--bg-surface-2)', border: `1px solid ${BORDER}`, borderRadius: 8, color: TEXT, fontSize: 13, outline: 'none', minWidth: 170 }}
           >
-            <option value="">All trades ({trades.length})</option>
+            <option value="">All Trades ({trades.length})</option>
             {trades.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
@@ -181,21 +181,21 @@ export default function SubsAndVendorsPage() {
             title="Could not load your directory"
             description={error}
             tone="error"
-            action={<button onClick={load} style={goldButtonStyle}>Try again</button>}
+            action={<button onClick={load} style={goldButtonStyle}>Try Again</button>}
           />
         ) : subs.length === 0 ? (
           <PremiumEmpty
             icon={<UsersThree size={30} weight="duotone" color={GOLD} />}
             title="No subs or vendors on file yet"
             description="Subs are added from a job and stay on file for every job after it. Open a project, go to Subcontractors, and add the first one — it will appear here and in every bid package's invite list."
-            action={<Link href="/app/projects" style={{ ...goldButtonStyle, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }}>Open a project</Link>}
+            action={<Link href="/app/projects" style={{ ...goldButtonStyle, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7 }}>Open a Project</Link>}
           />
         ) : shown.length === 0 ? (
           <PremiumEmpty
             icon={<MagnifyingGlass size={30} weight="duotone" color={GOLD} />}
             title="Nothing matches that"
             description="No company on file matches your search or trade filter."
-            action={<button onClick={() => { setQ(''); setTrade(''); }} style={goldButtonStyle}>Clear filters</button>}
+            action={<button onClick={() => { setQ(''); setTrade(''); }} style={goldButtonStyle}>Clear Filters</button>}
           />
         ) : (
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' as const }}>
@@ -203,7 +203,7 @@ export default function SubsAndVendorsPage() {
               <thead>
                 <tr>
                   {['Company', 'Trade', 'Contact', 'License', 'Insurance', 'W-9'].map(h => (
-                    <th key={h} style={{ textAlign: 'left', padding: '11px 16px', color: DIM, fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
+                    <th key={h} style={{ textAlign: 'left', padding: '11px 16px', color: DIM, fontSize: 10.5, fontWeight: 800, borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -215,9 +215,9 @@ export default function SubsAndVendorsPage() {
                   return (
                     <tr key={s.id} style={{ borderBottom: `1px solid rgba(255,255,255,0.055)` }}>
                       <td style={{ padding: '12px 16px', color: TEXT, fontWeight: 700 }}>
-                        {s.company_name || 'Unnamed company'}
+                        {s.company_name || 'Unnamed Company'}
                         {s.blacklisted && (
-                          <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', color: RED, border: `1px solid rgba(255,59,48,0.3)` }}>DO NOT USE</span>
+                          <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 800, padding: '2px 7px', borderRadius: 999, background: 'rgba(255,59,48,0.14)', color: RED, border: `1px solid rgba(255,59,48,0.3)` }}>Do Not Use</span>
                         )}
                       </td>
                       <td style={{ padding: '12px 16px', color: DIM }}>{s.trade || '—'}</td>
@@ -232,12 +232,12 @@ export default function SubsAndVendorsPage() {
                       <td style={{ padding: '12px 16px', color: DIM, whiteSpace: 'nowrap' }}>
                         {s.license_number
                           ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><IdentificationCard size={13} weight="duotone" color={DIM} />{s.license_number}</span>
-                          : <span style={{ color: RED }}>Not on file</span>}
+                          : <span style={{ color: RED }}>Not on File</span>}
                       </td>
                       <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', color: ins.tone, fontWeight: 600 }}>{ins.label}</td>
                       <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
                         {s.w9_on_file === true
-                          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: GREEN, fontWeight: 700 }}><ShieldCheck size={13} weight="fill" color={GREEN} />On file</span>
+                          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, color: GREEN, fontWeight: 700 }}><ShieldCheck size={13} weight="fill" color={GREEN} />On File</span>
                           : <span style={{ color: RED, fontWeight: 700 }}>Missing</span>}
                       </td>
                     </tr>

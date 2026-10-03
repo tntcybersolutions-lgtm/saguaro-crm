@@ -1,35 +1,36 @@
 import React from 'react';
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
-// Apple light theme — matches the (light) mobile app:
-// iOS grouped page base, white raised surfaces, hairline borders, reserved gold.
+// Jet black + glass + neon yellow (docs/COPY-STYLE.md §6–§7). Status hues are
+// the one neon-on-black family from lib/status-colors.ts.
 export const T = {
-  bg: '#0a0a0a',
-  surface: '#0a0a0a',
-  surface2: '#141416',
-  elevated: '#141416',
+  bg: '#000000',
+  surface: 'rgba(255,255,255,0.045)',
+  surface2: 'rgba(255,255,255,0.045)',
+  elevated: 'rgba(255,255,255,0.07)',
   border: 'rgba(255,255,255,0.12)',
-  borderSubtle: 'rgba(0,0,0,0.08)',
-  borderStrong: 'rgba(0,0,0,0.14)',
-  borderGold: 'rgba(245, 158, 11,0.35)',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
-  goldDim: 'rgba(245, 158, 11,0.12)',
-  goldMid: 'rgba(245, 158, 11,0.22)',
+  borderSubtle: 'rgba(255,255,255,0.08)',
+  borderStrong: 'rgba(255,255,255,0.22)',
+  borderGold: 'rgba(255,230,0,0.35)',
+  gold: '#FFE600',
+  goldBright: '#FFF04A',
+  goldDim: 'rgba(255,230,0,0.12)',
+  goldMid: 'rgba(255,230,0,0.18)',
   white: '#FFFFFF',
-  muted: '#CBD5E1',
-  faint: '#8094B0',
-  green: '#34C759',
-  greenDim: 'rgba(52,199,89,0.12)',
-  red: '#FF3B30',
-  redDim: 'rgba(255,59,48,0.12)',
-  amber: '#FF9500',
-  amberDim: 'rgba(255,149,0,0.12)',
-  blue: '#F59E0B',
-  blueDim: 'rgba(245,158,11,0.12)',
-  shadowSm: '0 1px 2px rgba(0,0,0,0.06)',
-  shadowMd: '0 4px 14px rgba(0,0,0,0.08)',
-  shadowLg: '0 16px 44px rgba(0,0,0,0.10)',
+  muted: '#D7DEE8',
+  faint: '#A9B4C4',
+  green: '#2EE59D',
+  greenDim: 'rgba(46,229,157,0.16)',
+  red: '#FF4D5E',
+  redDim: 'rgba(255,77,94,0.16)',
+  amber: '#FFC53D',
+  amberDim: 'rgba(255,197,61,0.16)',
+  blue: '#3DA9FF',
+  blueDim: 'rgba(61,169,255,0.16)',
+  shadowSm: '0 1px 2px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+  shadowMd: '0 4px 14px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
+  shadowLg: '0 16px 44px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)',
+  glassBlur: 'blur(16px) saturate(140%)',
 } as const;
 
 // ─── PageWrap ─────────────────────────────────────────────────────────────────
@@ -56,6 +57,8 @@ export function Card({ children, style }: { children: React.ReactNode; style?: R
     <div
       style={{
         background: T.surface2,
+        backdropFilter: T.glassBlur, WebkitBackdropFilter: T.glassBlur,
+        border: `1px solid ${T.borderSubtle}`,
         borderRadius: 14,
         boxShadow: T.shadowMd,
         overflow: 'hidden',
@@ -97,12 +100,19 @@ type BadgeColor = 'gold' | 'green' | 'red' | 'amber' | 'blue' | 'muted';
 
 const badgeStyles: Record<BadgeColor, { bg: string; color: string; border: string }> = {
   gold:  { bg: T.goldDim,  color: T.gold,  border: T.borderGold },
-  green: { bg: T.greenDim, color: T.green, border: 'rgba(52,199,89,0.30)' },
-  red:   { bg: T.redDim,   color: T.red,   border: 'rgba(255,59,48,0.30)' },
-  amber: { bg: T.amberDim, color: T.amber, border: 'rgba(255,149,0,0.32)' },
-  blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(245,158,11,0.32)' },
-  muted: { bg: '#1c1c1e', color: T.muted, border: T.border },
+  green: { bg: T.greenDim, color: T.green, border: 'rgba(46,229,157,0.50)' },
+  red:   { bg: T.redDim,   color: T.red,   border: 'rgba(255,77,94,0.50)' },
+  amber: { bg: T.amberDim, color: T.amber, border: 'rgba(255,197,61,0.50)' },
+  blue:  { bg: T.blueDim,  color: T.blue,  border: 'rgba(61,169,255,0.50)' },
+  muted: { bg: 'rgba(163,172,187,0.16)', color: T.muted, border: 'rgba(163,172,187,0.45)' },
 };
+
+/** Title Case a raw lowercase/snake_case value for DISPLAY only ("in_progress"
+ *  → "In Progress"). Labels that already carry capitals are left as written. */
+function displayLabel(label: string): string {
+  if (label !== label.toLowerCase()) return label;
+  return label.replace(/_/g, ' ').replace(/\b([a-z])/g, (m) => m.toUpperCase());
+}
 
 export function Badge({ label, color = 'muted' }: { label: string; color?: BadgeColor }) {
   const s = badgeStyles[color];
@@ -113,17 +123,15 @@ export function Badge({ label, color = 'muted' }: { label: string; color?: Badge
         alignItems: 'center',
         padding: '2px 10px',
         borderRadius: 20,
-        fontSize: 11,
-        fontWeight: 600,
-        letterSpacing: '0.04em',
-        textTransform: 'uppercase',
+        fontSize: 12,
+        fontWeight: 700,
         background: s.bg,
         color: s.color,
         border: `1px solid ${s.border}`,
         whiteSpace: 'nowrap',
       }}
     >
-      {label}
+      {displayLabel(label)}
     </span>
   );
 }
@@ -134,7 +142,8 @@ export function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; l
     <div
       style={{
         background: T.surface2,
-        border: `1px solid ${T.border}`,
+        backdropFilter: T.glassBlur, WebkitBackdropFilter: T.glassBlur,
+        border: `1px solid ${T.borderSubtle}`,
         borderRadius: 14,
         boxShadow: T.shadowSm,
         padding: '16px 18px',
@@ -163,11 +172,9 @@ export function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; l
         </span>
         <span
           style={{
-            fontSize: 11,
+            fontSize: 12.5,
             color: T.muted,
             fontWeight: 600,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
           }}
         >
           {label}
@@ -220,9 +227,9 @@ const btnBase: React.CSSProperties = {
 };
 
 const btnVariants: Record<BtnVariant, React.CSSProperties> = {
-  primary: { background: T.gold, color: '#FFFFFF', boxShadow: T.shadowSm },
-  ghost: { background: T.elevated, color: T.white, border: `1px solid ${T.border}` },
-  danger: { background: T.redDim, color: T.red, border: `1px solid rgba(255,59,48,0.30)` },
+  primary: { background: T.gold, color: '#0A0A00', boxShadow: T.shadowSm },
+  ghost: { background: T.elevated, backdropFilter: T.glassBlur, WebkitBackdropFilter: T.glassBlur, color: T.white, border: `1px solid ${T.border}` },
+  danger: { background: T.redDim, color: T.red, border: `1px solid rgba(255,77,94,0.50)` },
 };
 
 const btnSizes: Record<BtnSize, React.CSSProperties> = {
@@ -279,7 +286,7 @@ export function ProgressBar({
       style={{
         width: '100%',
         height,
-        background: 'rgba(0,0,0,0.08)',
+        background: 'rgba(255,255,255,0.08)',
         borderRadius: 999,
         overflow: 'hidden',
       }}
@@ -312,9 +319,7 @@ export function Table({ headers, rows }: { headers: string[]; rows: React.ReactN
                   textAlign: 'left',
                   color: T.muted,
                   fontWeight: 600,
-                  fontSize: 11,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
+                  fontSize: 12,
                   borderBottom: `1px solid ${T.border}`,
                   whiteSpace: 'nowrap',
                 }}
@@ -350,7 +355,7 @@ export function Table({ headers, rows }: { headers: string[]; rows: React.ReactN
                 colSpan={headers.length}
                 style={{ padding: '40px 12px', textAlign: 'center', color: T.faint, fontSize: 13 }}
               >
-                No data available
+                No data yet.
               </td>
             </tr>
           )}

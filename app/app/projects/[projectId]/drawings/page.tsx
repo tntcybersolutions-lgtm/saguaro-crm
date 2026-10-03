@@ -14,7 +14,7 @@ import { useUnsavedGuard, useComposerDirty } from '@/lib/useUnsavedGuard';
 import UnsavedGuardModal from '@/components/UnsavedGuardModal';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',RAISED='#141416',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',RAISED='var(--bg-surface)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const GREEN='#1a8a4a',RED='#c03030';
 // Premium kit surface language (match components/ui/premium.tsx) --------------
 const PSURFACE='linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012))';
@@ -38,7 +38,7 @@ const STATUS_COLORS:Record<string,string>={
 
 const DISCIPLINE_COLORS:Record<string,string>={
   General:DIM,
-  Architectural:'#FBBF24',
+  Architectural:'var(--brand-primary-strong)',
   Sitework:'#10b981',
   Demolition:'#f43f5e',
   'Fire Protection':'#ef4444',
@@ -55,7 +55,7 @@ const DISCIPLINE_COLORS:Record<string,string>={
 };
 
 const inp:React.CSSProperties={
-  width:'100%',padding:'9px 12px',background:'#1c1c1e',
+  width:'100%',padding:'9px 12px',background:'var(--bg-surface-2)',
   border:`1px solid ${BORDER}`,borderRadius:7,color:TEXT,
   fontSize:13,outline:'none',boxSizing:'border-box',
 };
@@ -69,7 +69,7 @@ const EMPTY_FORM={
 function Pill({label,color}:{label:string;color:string}){
   return(
     <span style={{fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,
-      background:`${color}22`,color,textTransform:'uppercase',letterSpacing:.3,whiteSpace:'nowrap'}}>
+      background:`color-mix(in srgb, ${color} 13%, transparent)`,color,letterSpacing:.3,whiteSpace:'nowrap'}}>
       {label}
     </span>
   );
@@ -77,8 +77,7 @@ function Pill({label,color}:{label:string;color:string}){
 
 function FieldLabel({label,auto}:{label:string;auto?:boolean}){
   return(
-    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,
-      textTransform:'uppercase',letterSpacing:.5,marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
+    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM, marginBottom:5}}>{label}{auto&&<AutoChip/>}</label>
   );
 }
 
@@ -86,15 +85,32 @@ function InfoCard({label,value}:{label:string;value:string|undefined|null}){
   if(!value) return null;
   return(
     <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:10,padding:'10px 12px'}}>
-      <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:4}}>{label}</div>
+      <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:4}}>{label}</div>
       <div style={{fontSize:13,color:TEXT}}>{value}</div>
     </div>
   );
 }
 
+/* revision_date is a timestamptz, so the API hands back "2026-10-02T00:00:00+00:00".
+   Appending "T12:00:00" to that (the old code) built an unparseable string and
+   every sheet rendered "Invalid Date". Read the calendar day off the front of
+   whatever arrives, render it at local noon (so no timezone shifts it a day),
+   and never print "Invalid Date" for a value we cannot read. */
+function dayOf(s:string|null|undefined):string{
+  const m=String(s??'').match(/^(\d{4}-\d{2}-\d{2})/);
+  return m?m[1]:'';
+}
 function fmtDate(s:string|null|undefined){
-  if(!s) return '—';
-  return new Date(s+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const day=dayOf(s);
+  if(!day) return '—';
+  const d=new Date(day+'T12:00:00');
+  if(Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+/** Today's calendar day in the user's timezone, yyyy-mm-dd (toISOString() is UTC — tomorrow, every evening in Arizona). */
+function todayIso(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 export default function DrawingsPage(){
@@ -151,7 +167,7 @@ export default function DrawingsPage(){
   useEffect(()=>{load();},[load]);
 
   function openCreate(){
-    setForm({...EMPTY_FORM,revision_date:new Date().toISOString().slice(0,10)});
+    setForm({...EMPTY_FORM,revision_date:todayIso()});
     setAutoFields({date:true});
     setUploadFile(null);
     setMode('create');setSelected(null);
@@ -176,7 +192,7 @@ export default function DrawingsPage(){
       title:drawing.title||drawing.name||'',
       discipline:drawing.discipline||'Architectural',
       revision:drawing.revision??0,
-      revision_date:drawing.revision_date?drawing.revision_date.substring(0,10):'',
+      revision_date:dayOf(drawing.revision_date),
       status:drawing.status||'current',
       url:drawing.url||'',
       notes:drawing.notes||'',
@@ -188,7 +204,7 @@ export default function DrawingsPage(){
 
   async function save(): Promise<boolean> {
     if(!form.drawing_number.trim()||!form.title.trim()){
-      showToast('Drawing number and title are required','error');return false;
+      showToast('Drawing number and title are required.','error');return false;
     }
     setSaving(true);
     try{
@@ -208,19 +224,23 @@ export default function DrawingsPage(){
         fd.append('title',form.title);
         fd.append('discipline',form.discipline);
         if(form.notes) fd.append('notes',form.notes);
+        if(form.revision_date) fd.append('revision_date',form.revision_date);
         if(Number(form.revision)) fd.append('version',String(Number(form.revision)));
         const r=await fetch('/api/drawings/upload',{method:'POST',headers:h,body:fd});
         const d=await r.json();
         if(!r.ok||d.error) throw new Error(d.error||'Upload failed');
-        if(d.drawing?.id&&((form.status&&form.status!=='current')||form.revision_date)){
-          await fetch(`/api/drawings/${d.drawing.id}`,{
+        // The upload route takes the revision date itself; only a non-default
+        // status still needs the follow-up PUT.
+        if(d.drawing?.id&&form.status&&form.status!=='current'){
+          const st=await fetch(`/api/drawings/${d.drawing.id}`,{
             method:'PUT',
             headers:{...h,'Content-Type':'application/json'},
-            body:JSON.stringify({status:form.status,revision_date:form.revision_date||null}),
-          }).catch(()=>{});
+            body:JSON.stringify({status:form.status}),
+          }).catch((e:unknown)=>{console.error('[drawings] status follow-up failed',e);return null;});
+          if(!st||!st.ok) showToast('Sheet uploaded, but its status did not save — edit it to set the status.','error');
         }
         setUploadFile(null);
-        showToast('Sheet uploaded and filed');
+        showToast('Sheet uploaded and filed.');
       }else if(mode==='create'){
         const r=await fetch('/api/drawings/create',{
           method:'POST',
@@ -228,7 +248,7 @@ export default function DrawingsPage(){
           body:JSON.stringify({...payload,projectId}),
         });
         if(!r.ok) throw new Error(await r.text());
-        showToast('Drawing added');
+        showToast('Drawing added.');
       }else if(mode==='edit'&&selected){
         const r=await fetch(`/api/drawings/${selected.id}`,{
           method:'PUT',
@@ -236,7 +256,7 @@ export default function DrawingsPage(){
           body:JSON.stringify(payload),
         });
         if(!r.ok) throw new Error(await r.text());
-        showToast('Drawing updated');
+        showToast('Drawing updated.');
       }
       await load();closePanel();
       guard.clearDraft();
@@ -253,8 +273,8 @@ export default function DrawingsPage(){
       const h=await getAuthHeaders();
       const dr=await fetch(`/api/drawings/${drawing.id}`,{method:'DELETE',headers:h});
       if (!dr.ok) throw new Error('Delete failed');
-      showToast('Drawing deleted');closePanel();await load();
-    }catch{showToast('Delete failed','error');}
+      showToast('Drawing deleted.');closePanel();await load();
+    }catch{showToast('Delete failed. Please try again.','error');}
     finally{setDeleting(false);}
   }
 
@@ -293,7 +313,7 @@ export default function DrawingsPage(){
   }
 
   const groupOrder=[...DISCIPLINES.filter(d=>grouped[d]),...Object.keys(grouped).filter(d=>!DISCIPLINES.includes(d)).sort()];
-  const latestRev=drawings.filter(d=>d.revision_date).sort((a,b)=>String(b.revision_date).localeCompare(String(a.revision_date)))[0];
+  const latestRev=drawings.filter(d=>dayOf(d.revision_date)).sort((a,b)=>dayOf(b.revision_date).localeCompare(dayOf(a.revision_date)))[0];
   const counts=ctx?.counts;
 
   function DrawingRow({drawing}:{drawing:any}){
@@ -301,7 +321,7 @@ export default function DrawingsPage(){
     return(
       <tr
         onClick={()=>viewDrawing(drawing)}
-        style={{background:isSel?'rgba(245, 158, 11,.07)':'transparent',opacity:(drawing.status==='superseded'||drawing.status==='void')?0.55:1,
+        style={{background:isSel?'var(--brand-primary-08)':'transparent',opacity:(drawing.status==='superseded'||drawing.status==='void')?0.55:1,
           borderBottom:`1px solid rgba(255,255,255,0.06)`,cursor:'pointer',transition:'background .1s'}}
         onMouseEnter={e=>{if(!isSel)e.currentTarget.style.background='rgba(255,255,255,0.03)';}}
         onMouseLeave={e=>{if(!isSel)e.currentTarget.style.background='transparent';}}>
@@ -331,9 +351,9 @@ export default function DrawingsPage(){
           {drawing.url?(
             <a href={drawing.url} target="_blank" rel="noreferrer"
               onClick={e=>e.stopPropagation()}
-              style={{padding:'4px 10px',background:'rgba(245,158,11,.1)',
-                border:'1px solid rgba(245,158,11,.3)',borderRadius:6,
-                color:'#FBBF24',fontSize:11,fontWeight:700,textDecoration:'none',
+              style={{padding:'4px 10px',background:'var(--brand-primary-08)',
+                border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:6,
+                color:'var(--brand-primary-strong)',fontSize:11,fontWeight:700,textDecoration:'none',
                 whiteSpace:'nowrap'}}>
               View PDF
             </a>
@@ -349,8 +369,7 @@ export default function DrawingsPage(){
     <thead>
       <tr style={{background:'rgba(255,255,255,0.02)'}}>
         {['Drawing #','Title','Discipline','Rev','Rev Date','Status','Link'].map(h=>(
-          <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700,
-            textTransform:'uppercase',letterSpacing:.5,color:DIM,
+          <th key={h} style={{padding:'10px 14px',textAlign:'left',fontSize:11,fontWeight:700, color:DIM,
             borderBottom:`1px solid ${PBORDER}`,whiteSpace:'nowrap'}}>
             {h}
           </th>
@@ -389,21 +408,21 @@ export default function DrawingsPage(){
         {/* Project intelligence strip — what the system already knows */}
         {ctx&&(
           <StatStrip items={[
-            {href: `/app/projects/${projectId}/drawings`, label:'Project',value:ctx.project?.projectNumber||ctx.project?.name||'—',sub:ctx.project?.status?String(ctx.project.status).replace(/_/g,' '):'active'},
-            {href: `/app/projects/${projectId}/drawings`, label:'Current Set',value:String(current),sub:superseded>0?`${superseded} superseded on record`:'no superseded sheets'},
-            {href: `/app/projects/${projectId}/drawings`, label:'Latest Revision',value:latestRev?fmtDate(latestRev.revision_date):'—',sub:latestRev?`${sheetNo(latestRev)||latestRev.title||'sheet'} R${latestRev.revision??latestRev.version??0}`:'no revision dates yet'},
-            {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs',value:String(Number(counts?.openRfis)||0),accent:Number(counts?.openRfis)>0?GOLD:undefined,sub:'often resolve on these sheets'},
-            {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals',value:String(Number(counts?.openSubmittals)||0),sub:'checked against the set'},
-            {href: `/app/projects/${projectId}/subs`, label:'Subs on the Job',value:String((ctx.subs||[]).length),sub:'build from the current set'},
+            {href: `/app/projects/${projectId}/drawings`, label:'Project',value:ctx.project?.projectNumber||ctx.project?.name||'—',sub:ctx.project?.status?String(ctx.project.status).replace(/_/g,' ').replace(/\b\w/g,(c:string)=>c.toUpperCase()):'Active'},
+            {href: `/app/projects/${projectId}/drawings`, label:'Current Set',value:String(current),sub:superseded>0?`${superseded} superseded on record`:'No superseded sheets'},
+            {href: `/app/projects/${projectId}/drawings`, label:'Latest Revision',value:latestRev?fmtDate(latestRev.revision_date):'—',sub:latestRev?`${sheetNo(latestRev)||latestRev.title||'sheet'} R${latestRev.revision??latestRev.version??0}`:'No revision dates yet'},
+            {href: `/app/projects/${projectId}/rfis`, label:'Open RFIs',value:String(Number(counts?.openRfis)||0),accent:Number(counts?.openRfis)>0?GOLD:undefined,sub:'Often resolve on these sheets'},
+            {href: `/app/projects/${projectId}/submittals`, label:'Open Submittals',value:String(Number(counts?.openSubmittals)||0),sub:'Checked against the set'},
+            {href: `/app/projects/${projectId}/subs`, label:'Subs on the Job',value:String((ctx.subs||[]).length),sub:'Build from the current set'},
           ]}/>
         )}
 
         {/* KPIs */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:12,marginBottom:24}}>
-          <StatCard icon={<Stack size={19} weight="duotone" color={moduleAccent('drawings').hex}/>} label="Total Drawings" value={String(total)} accent="#FBBF24" sub="in register" delay={0.02} href={`/app/projects/${projectId}/drawings`}/>
-          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN}/>} label="Current" value={String(current)} accent={GREEN} sub={superseded>0?`vs ${superseded} superseded`:'active sheets'} delay={0.06} href={`/app/projects/${projectId}/drawings`}/>
-          <StatCard icon={<Eye size={19} weight="duotone" color={GOLD}/>} label="For Review" value={String(forReview)} accent={GOLD} sub="awaiting review" delay={0.10} href={`/app/projects/${projectId}/drawings`}/>
-          <StatCard icon={<SquaresFour size={19} weight="duotone" color="#a78bfa"/>} label="Disciplines" value={String(disciplineCount)} accent="#a78bfa" sub="represented" delay={0.14} href={`/app/projects/${projectId}/drawings`}/>
+          <StatCard icon={<Stack size={19} weight="duotone" color={moduleAccent('drawings').hex}/>} label="Total Drawings" value={String(total)} accent="var(--brand-primary-strong)" sub="In register" delay={0.02} href={`/app/projects/${projectId}/drawings`}/>
+          <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN}/>} label="Current" value={String(current)} accent={GREEN} sub={superseded>0?`vs ${superseded} superseded`:'Active sheets'} delay={0.06} href={`/app/projects/${projectId}/drawings`}/>
+          <StatCard icon={<Eye size={19} weight="duotone" color={GOLD}/>} label="For Review" value={String(forReview)} accent={GOLD} sub="Awaiting review" delay={0.10} href={`/app/projects/${projectId}/drawings`}/>
+          <StatCard icon={<SquaresFour size={19} weight="duotone" color="#a78bfa"/>} label="Disciplines" value={String(disciplineCount)} accent="#a78bfa" sub="Represented" delay={0.14} href={`/app/projects/${projectId}/drawings`}/>
         </div>
 
         {/* List toolbar — search + discipline/status filters; set + view toggles in extra */}
@@ -411,7 +430,7 @@ export default function DrawingsPage(){
           module="drawings"
           search={search}
           onSearch={setSearch}
-          searchPlaceholder="Search drawings..."
+          searchPlaceholder="Search drawings…"
           filters={[
             { key: 'discipline', label: 'Discipline', value: filterDiscipline, onChange: setFilterDiscipline, allLabel: 'All Disciplines', options: [...DISCIPLINES] },
             { key: 'status', label: 'Status', value: filterStatus, onChange: setFilterStatus, allLabel: 'All Statuses', options: STATUSES.map(s => ({ value: s, label: STATUS_LABELS[s] })) },
@@ -424,13 +443,13 @@ export default function DrawingsPage(){
               <button onClick={()=>setDrawingSet('current')}
                 style={{padding:'9px 15px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
                   background:drawingSet==='current'?GOLD:'transparent',
-                  color:drawingSet==='current'?DARK:DIM}}>
+                  color:drawingSet==='current'?'#0A0A00':DIM}}>
                 Current Set ({current})
               </button>
               <button onClick={()=>setDrawingSet('all')}
                 style={{padding:'9px 15px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
                   background:drawingSet==='all'?GOLD:'transparent',
-                  color:drawingSet==='all'?DARK:DIM}}>
+                  color:drawingSet==='all'?'#0A0A00':DIM}}>
                 All Revisions ({total})
               </button>
             </div>
@@ -439,13 +458,13 @@ export default function DrawingsPage(){
               <button onClick={()=>setGroupByDiscipline(true)}
                 style={{padding:'9px 15px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
                   background:groupByDiscipline?GOLD:'transparent',
-                  color:groupByDiscipline?DARK:DIM}}>
+                  color:groupByDiscipline?'#0A0A00':DIM}}>
                 By Discipline
               </button>
               <button onClick={()=>setGroupByDiscipline(false)}
                 style={{padding:'9px 15px',border:'none',cursor:'pointer',fontSize:12,fontWeight:700,
                   background:!groupByDiscipline?GOLD:'transparent',
-                  color:!groupByDiscipline?DARK:DIM}}>
+                  color:!groupByDiscipline?'#0A0A00':DIM}}>
                 Flat List
               </button>
             </div>
@@ -454,7 +473,7 @@ export default function DrawingsPage(){
 
         {loading&&(
           <SectionCard flat>
-            <div style={{padding:24,textAlign:'center',color:DIM}}>Loading drawings...</div>
+            <div style={{padding:24,textAlign:'center',color:DIM}}>Loading drawings…</div>
           </SectionCard>
         )}
 
@@ -468,7 +487,7 @@ export default function DrawingsPage(){
           <SectionCard>
             <PremiumEmpty
               icon={<Ruler size={30} weight="duotone" color={GOLD}/>}
-              title={drawings.length===0?'Start the drawing register':'No drawings match your filters'}
+              title={drawings.length===0?'Start the Drawing Register':'No Drawings Match Your Filters'}
               description={drawings.length===0
                 ?`Upload the issued-for-construction set — each sheet files itself under its discipline, sorted by sheet number, and superseded revisions stay on record so every RFI points at the sheet it was answered against.${(ctx?.subs||[]).length>0?` Your ${ctx.subs.length} sub${ctx.subs.length===1?'':'s'} ${ctx.subs.length===1?'builds':'build'} from whatever is marked current.`:''}`
                 :(drawingSet==='current'&&superseded>0
@@ -524,13 +543,13 @@ export default function DrawingsPage(){
       {/* Side Panel — premium slide-over */}
       {mode!==null&&(
         <div style={{position:'fixed',top:0,right:0,bottom:0,width:'min(460px,100%)',zIndex:600,
-          background:'#0b1119',borderLeft:`1px solid ${PBORDER}`,
+          background:'var(--bg-surface)',borderLeft:`1px solid ${PBORDER}`,
           boxShadow:'-28px 0 70px -24px rgba(0,0,0,.75)',
           overflow:'auto',display:'flex',flexDirection:'column',
           animation:'drawerIn .28s cubic-bezier(.2,.7,.3,1)'}}>
           <div style={{padding:'16px 20px',borderBottom:`1px solid ${PBORDER}`,
             display:'flex',alignItems:'center',justifyContent:'space-between',
-            position:'sticky',top:0,background:'#0b1119',zIndex:2}}>
+            position:'sticky',top:0,background:'var(--bg-surface)',zIndex:2}}>
             <div style={{fontWeight:800,fontSize:15,color:TEXT}}>
               {mode==='create'?'Add Drawing':mode==='edit'?'Edit Drawing':'Drawing Detail'}
             </div>
@@ -538,16 +557,16 @@ export default function DrawingsPage(){
               {mode==='view'&&selected&&(
                 <>
                   <button onClick={()=>openEdit(selected)}
-                    style={{padding:'6px 14px',background:'rgba(245,158,11,.12)',
-                      border:'1px solid rgba(245,158,11,.35)',borderRadius:8,
-                      color:'#FBBF24',fontSize:12,fontWeight:700,cursor:'pointer'}}>
+                    style={{padding:'6px 14px',background:'var(--brand-primary-12)',
+                      border:'1px solid var(--brand-primary-35)',borderRadius:8,
+                      color:'var(--brand-primary-strong)',fontSize:12,fontWeight:700,cursor:'pointer'}}>
                     Edit
                   </button>
                   <button onClick={()=>deleteDrawing(selected)} disabled={deleting}
                     style={{padding:'6px 14px',background:'rgba(192,48,48,.12)',
                       border:`1px solid ${RED}55`,borderRadius:8,
                       color:'#e88a8a',fontSize:12,fontWeight:700,cursor:'pointer'}}>
-                    {deleting?'...':'Delete'}
+                    {deleting?'…':'Delete'}
                   </button>
                 </>
               )}
@@ -563,12 +582,12 @@ export default function DrawingsPage(){
             {(mode==='create'||mode==='edit')?(
               <div style={{display:'flex',flexDirection:'column',gap:14}}>
                 {mode==='create'&&(
-                  <label style={{display:'block',cursor:'pointer',border:`1.5px dashed ${uploadFile?'rgba(52,199,89,0.5)':'rgba(245,158,11,0.4)'}`,borderRadius:12,padding:'16px 14px',textAlign:'center',background:uploadFile?'rgba(52,199,89,0.06)':'rgba(245,158,11,0.05)'}}>
+                  <label style={{display:'block',cursor:'pointer',border:`1.5px dashed ${uploadFile?'rgba(52,199,89,0.5)':'color-mix(in srgb, var(--brand-primary) 40%, transparent)'}`,borderRadius:12,padding:'16px 14px',textAlign:'center',background:uploadFile?'rgba(52,199,89,0.06)':'color-mix(in srgb, var(--brand-primary) 5%, transparent)'}}>
                     <input type="file" accept=".pdf,image/*" style={{display:'none'}}
                       onChange={e=>pickFile(e.target.files?.[0]||null)}/>
-                    <UploadSimple size={20} weight="bold" color={uploadFile?'#34C759':'#FBBF24'}/>
-                    <div style={{fontSize:13,fontWeight:800,color:uploadFile?'#34C759':'#FBBF24',marginTop:6}}>
-                      {uploadFile?uploadFile.name:'Upload the sheet PDF'}
+                    <UploadSimple size={20} weight="bold" color={uploadFile?'#34C759':'var(--brand-primary-strong)'}/>
+                    <div style={{fontSize:13,fontWeight:800,color:uploadFile?'#34C759':'var(--brand-primary-strong)',marginTop:6}}>
+                      {uploadFile?uploadFile.name:'Upload the Sheet PDF'}
                     </div>
                     <div style={{fontSize:11,color:DIM,marginTop:4,lineHeight:1.5}}>
                       {uploadFile?'Sheet number and title were read from the filename — adjust below.':'Drop in "A-101 Floor Plan.pdf" and the sheet number and title prefill from the filename. Or skip the file and link a URL below.'}
@@ -625,7 +644,7 @@ export default function DrawingsPage(){
                 <div>
                   <FieldLabel label="PDF / Drawing URL"/>
                   <input value={form.url} onChange={e=>setForm(f=>({...f,url:e.target.value}))}
-                    style={inp} placeholder="https://..."/>
+                    style={inp} placeholder="https://…"/>
                   <div style={hint}>{uploadFile&&mode==='create'?'Not needed — the uploaded file stores its own link.':'Optional — link an external PDF if you are not uploading the file.'}</div>
                 </div>
                 <div>
@@ -637,17 +656,17 @@ export default function DrawingsPage(){
                 </div>
                 {mode==='create'&&(
                   <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:12,padding:'14px 16px'}}>
-                    <FlowSteps title="What happens next" steps={[
-                      {title:'Sheet files itself',desc:'Lands under its discipline, sorted by sheet number.'},
-                      {title:'The team works the current set',desc:'Field crews and subs build from sheets marked current.'},
-                      {title:'Revisions supersede cleanly',desc:'When the next rev lands, mark this one superseded — it stays on record.'},
+                    <FlowSteps title="What Happens Next" steps={[
+                      {title:'Sheet Files Itself',desc:'Lands under its discipline, sorted by sheet number.'},
+                      {title:'The Team Works the Current Set',desc:'Field crews and subs build from sheets marked current.'},
+                      {title:'Revisions Supersede Cleanly',desc:'When the next rev lands, mark this one superseded — it stays on record.'},
                     ]}/>
                   </div>
                 )}
                 <div style={{display:'flex',gap:10,paddingTop:4}}>
                   <button onClick={save} disabled={saving} className="pmBtn"
                     style={{...goldButtonStyle,flex:1,opacity:saving?0.6:1,cursor:saving?'not-allowed':'pointer'}}>
-                    {saving?(uploadFile&&mode==='create'?'Uploading...':'Saving...'):mode==='create'?(uploadFile?'Upload Sheet':'Add Drawing'):'Save Changes'}
+                    {saving?(uploadFile&&mode==='create'?'Uploading…':'Saving…'):mode==='create'?(uploadFile?'Upload Sheet':'Add Drawing'):'Save Changes'}
                   </button>
                   <button onClick={closePanel} style={{...ghostButtonStyle}}>
                     Cancel
@@ -682,17 +701,17 @@ export default function DrawingsPage(){
 
                 {ctx&&(
                   <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:10,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6}}>On This Project</div>
-                    <InsightRow label="Current set" value={`${current} sheet${current===1?'':'s'}`}/>
-                    <InsightRow label={`${selected.discipline||'Other'} sheets current`} value={String(drawings.filter(d=>(d.discipline||'Other')===(selected.discipline||'Other')&&d.status==='current').length)}/>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:6}}>On This Project</div>
+                    <InsightRow label="Current Set" value={`${current} sheet${current===1?'':'s'}`}/>
+                    <InsightRow label={`${selected.discipline||'Other'} Sheets Current`} value={String(drawings.filter(d=>(d.discipline||'Other')===(selected.discipline||'Other')&&d.status==='current').length)}/>
                     <InsightRow label="Open RFIs" value={String(Number(ctx.counts?.openRfis)||0)} accent={Number(ctx.counts?.openRfis)>0?GOLD:undefined}/>
-                    <InsightRow label="Open submittals" value={String(Number(ctx.counts?.openSubmittals)||0)}/>
+                    <InsightRow label="Open Submittals" value={String(Number(ctx.counts?.openSubmittals)||0)}/>
                   </div>
                 )}
 
                 {selected.notes&&(
                   <div style={{background:PSURFACE,border:`1px solid ${PBORDER}`,borderRadius:10,padding:'12px 14px'}}>
-                    <div style={{fontSize:10,fontWeight:700,color:DIM,textTransform:'uppercase',letterSpacing:.5,marginBottom:6}}>Notes</div>
+                    <div style={{fontSize:10,fontWeight:700,color:DIM, marginBottom:6}}>Notes</div>
                     <div style={{fontSize:13,color:TEXT,lineHeight:1.6,whiteSpace:'pre-wrap'}}>{selected.notes}</div>
                   </div>
                 )}
@@ -701,9 +720,9 @@ export default function DrawingsPage(){
                   <button type="button"
                     onClick={()=>openPdf({url:selected.url!,title:`${selected.number||''} ${selected.title||'Drawing'}`.trim()})}
                     style={{display:'block',padding:'12px 14px',
-                      background:'rgba(245,158,11,.1)',
-                      border:'1px solid rgba(245,158,11,.3)',borderRadius:10,
-                      color:'#FBBF24',fontSize:13,fontWeight:700,textDecoration:'none',
+                      background:'var(--brand-primary-08)',
+                      border:'1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)',borderRadius:10,
+                      color:'var(--brand-primary-strong)',fontSize:13,fontWeight:700,textDecoration:'none',
                       textAlign:'center'}}>
                     View PDF / Drawing
                   </button>

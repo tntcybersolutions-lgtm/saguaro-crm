@@ -101,7 +101,7 @@ export default function SalesJourneyRail() {
   return (
     <div data-tour="sales-journey" style={{ marginBottom: 24 }}>
       <SectionCard
-        title="How a deal becomes a job"
+        title="How a Deal Becomes a Job"
         subtitle={next ? `Next up: ${next.title}` : 'Every stage in use — expand for the order'}
         icon={<Handshake size={17} weight="duotone" color={BLUE} />}
         flush={showCollapsed}
@@ -173,7 +173,7 @@ export default function SalesJourneyRail() {
                               padding: '1px 7px', borderRadius: 999, flexShrink: 0,
                               background: 'rgba(59,130,246,0.16)', border: '1px solid rgba(59,130,246,0.45)',
                               color: BLUE_HI, fontSize: 9, fontWeight: 900, letterSpacing: '0.08em',
-                            }}>YOU ARE HERE</span>
+                            }}>You Are Here</span>
                           )}
                         </div>
                         <div style={{ fontSize: 11.5, color: s.done ? FAINT : MUTED, lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>
@@ -191,7 +191,7 @@ export default function SalesJourneyRail() {
             </div>
 
             <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.07)', fontSize: 11.5, color: FAINT, lineHeight: 1.5 }}>
-              Once the job is open, <span style={{ color: MUTED, fontWeight: 700 }}>Your path to first payment</span> below picks it up — takeoff, budget, subs, schedule, the field and billing.
+              Once the job is open, <span style={{ color: MUTED, fontWeight: 700 }}>Your Path to First Payment</span> below picks it up — takeoff, budget, subs, schedule, the field and billing.
             </div>
           </>
         )}

@@ -28,8 +28,8 @@
 import React from 'react';
 import Link from 'next/link';
 
-const CARD = '#161b22';
-const GOLD = '#C8960F';
+const CARD = 'var(--bg-surface)';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 
@@ -83,7 +83,7 @@ export default function RouteError({
         <div
           style={{
             background: CARD,
-            border: '1px solid rgba(200,150,15,0.24)',
+            border: '1px solid var(--brand-primary-25)',
             borderRadius: 16,
             padding: 'clamp(22px, 4vw, 32px)',
           }}
@@ -92,13 +92,11 @@ export default function RouteError({
             style={{
               fontSize: 11,
               fontWeight: 800,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
               color: GOLD,
               marginBottom: 12,
             }}
           >
-            Something broke on this screen
+            Something Broke on This Screen
           </div>
 
           <h1 style={{ fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 700, lineHeight: 1.25, margin: '0 0 12px', letterSpacing: '-0.02em' }}>
@@ -119,8 +117,8 @@ export default function RouteError({
               marginBottom: 22,
             }}
           >
-            <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: DIM, marginBottom: 6 }}>
-              What went wrong
+            <div style={{ fontSize: 10.5, fontWeight: 700, color: DIM, marginBottom: 6 }}>
+              What Went Wrong
             </div>
             <code
               style={{
@@ -142,8 +140,8 @@ export default function RouteError({
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-            <button onClick={() => reset()} style={{ ...btn, background: GOLD, color: '#1A1205', border: `1px solid ${GOLD}` }}>
-              Try again
+            <button onClick={() => reset()} style={{ ...btn, background: GOLD, color: '#0A0A00', border: `1px solid ${GOLD}` }}>
+              Try Again
             </button>
             <Link href={homeHref} style={{ ...btn, background: 'transparent', color: TEXT }}>
               {homeLabel}

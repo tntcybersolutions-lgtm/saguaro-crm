@@ -31,12 +31,12 @@ import {
 import { SectionCard, PremiumEmpty, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 import { openPdf } from '@/components/PdfViewer';
 
-const GOLD = '#C8960F';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const HAIR = 'rgba(255,255,255,0.10)';
 const GREEN = '#22C55E';
-const AMBER = '#F59E0B';
+const AMBER = 'var(--warning)';
 
 export type Doc = { id: string; name: string; url: string | null; meta?: string; sub?: string; kind: string };
 export type Page = { id: string; title: string; body: string };
@@ -149,7 +149,7 @@ export default function BidJacketView({
           href={backHref ?? `/app/projects/${projectId}/bid-packages/${id}`}
           style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 16, textDecoration: 'none' }}
         >
-          <CaretLeft size={14} weight="bold" /> Back to package
+          <CaretLeft size={14} weight="bold" /> Back to Package
         </Link>
         )}
 
@@ -169,7 +169,7 @@ export default function BidJacketView({
         >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <div style={{ minWidth: 260, flex: '1 1 380px' }}>
-              <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.16em', textTransform: 'uppercase', color: GOLD, marginBottom: 8 }}>
+              <div style={{ fontSize: 10.5, fontWeight: 800, color: GOLD, marginBottom: 8 }}>
                 Bid Jacket{pkg.number ? ` · ${pkg.number}` : ''}{pkg.csiDivision ? ` · Div ${pkg.csiDivision}` : ''}
               </div>
               <h1 style={{ fontSize: 'clamp(23px, 3.2vw, 31px)', fontWeight: 700, letterSpacing: '-0.02em', margin: '0 0 8px', lineHeight: 1.2 }}>
@@ -185,7 +185,7 @@ export default function BidJacketView({
             {/* The two dates that decide whether a sub can bid at all. */}
             <div style={{ display: 'flex', gap: 26, flexWrap: 'wrap' }}>
               <Stat
-                label="Bids due"
+                label="Bids Due"
                 value={dateStr(pkg.dueDate) || 'Not set'}
                 note={days == null ? undefined : days < 0 ? 'Closed' : days === 0 ? 'Today' : `${days} day${days === 1 ? '' : 's'} left`}
                 tone={days == null ? 'dim' : days < 0 ? 'red' : days <= 3 ? 'amber' : 'green'}
@@ -246,7 +246,7 @@ export default function BidJacketView({
                 onClick={() => openPdf({ url: pkg.jacketPdfUrl!, title: `${pkg.trade || pkg.name} — Bid Jacket` })}
                 style={{ ...goldButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7 }}
               >
-                <ArrowSquareOut size={15} weight="bold" /> Printed jacket
+                <ArrowSquareOut size={15} weight="bold" /> Printed Jacket
               </button>
             )}
           </div>
@@ -278,7 +278,7 @@ export default function BidJacketView({
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 10,
                     padding: '11px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
-                    background: on ? 'rgba(200,150,15,0.14)' : 'transparent',
+                    background: on ? 'var(--brand-primary-12)' : 'transparent',
                     borderLeft: `3px solid ${on ? GOLD : 'transparent'}`,
                     color: on ? TEXT : empty ? DIM : 'rgba(240,244,255,0.86)',
                     fontSize: 13, fontWeight: on ? 700 : 500,
@@ -313,7 +313,7 @@ export default function BidJacketView({
                       <thead>
                         <tr>
                           {['Code', 'Description', 'Qty', 'Unit'].map((h) => (
-                            <th key={h} style={{ textAlign: 'left', padding: '9px 14px', fontSize: 10.5, letterSpacing: '0.08em', textTransform: 'uppercase', color: DIM, borderBottom: `1px solid ${HAIR}`, fontWeight: 700 }}>
+                            <th key={h} style={{ textAlign: 'left', padding: '9px 14px', fontSize: 10.5, color: DIM, borderBottom: `1px solid ${HAIR}`, fontWeight: 700 }}>
                               {h}
                             </th>
                           ))}
@@ -338,12 +338,12 @@ export default function BidJacketView({
             {active && active.key === 'requirements' && (
               <SectionCard flat title="Insurance & Bonding" icon={<ShieldCheck size={17} weight="duotone" color={GOLD} />}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12, marginBottom: active.pages.length ? 16 : 0 }}>
-                  <Req label="General liability" value={money(requirements.generalLiability)} />
-                  <Req label="Auto liability" value={money(requirements.autoLiability)} />
-                  <Req label="Workers' comp" value={money(requirements.workersComp)} />
-                  <Req label="Minimum coverage" value={money(requirements.insuranceAmount)} />
-                  <Req label="Payment & performance bond" value={requirements.bond ? 'Required' : 'Not required'} />
-                  <Req label="Prevailing wage" value={requirements.prevailingWage ? 'Required' : 'Not required'} />
+                  <Req label="General Liability" value={money(requirements.generalLiability)} />
+                  <Req label="Auto Liability" value={money(requirements.autoLiability)} />
+                  <Req label="Workers' Comp" value={money(requirements.workersComp)} />
+                  <Req label="Minimum Coverage" value={money(requirements.insuranceAmount)} />
+                  <Req label="Payment & Performance Bond" value={requirements.bond ? 'Required' : 'Not required'} />
+                  <Req label="Prevailing Wage" value={requirements.prevailingWage ? 'Required' : 'Not required'} />
                   {(requirements.additional ?? []).map((r) => (
                     <Req
                       key={r.id}
@@ -374,7 +374,7 @@ export default function BidJacketView({
                       disabled={!d.url}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
-                        padding: '12px 16px', border: 'none', background: '#161b22',
+                        padding: '12px 16px', border: 'none', background: 'var(--bg-surface)',
                         cursor: d.url ? 'pointer' : 'not-allowed', color: TEXT,
                       }}
                     >
@@ -425,7 +425,7 @@ function Stat({ label, value, note, tone }: { label: string; value: string; note
   const c = tone === 'green' ? GREEN : tone === 'amber' ? AMBER : tone === 'red' ? '#EF4444' : DIM;
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: DIM, marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {note && <div style={{ fontSize: 11.5, color: c, marginTop: 3, fontWeight: 600 }}>{note}</div>}
     </div>
@@ -436,7 +436,7 @@ function Req({ label, value }: { label: string; value: string | null }) {
   const missing = !value;
   return (
     <div style={{ border: `1px solid ${HAIR}`, borderRadius: 10, padding: '11px 13px' }}>
-      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: DIM, marginBottom: 5 }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 5 }}>{label}</div>
       <div style={{ fontSize: 14.5, fontWeight: 700, color: missing ? AMBER : TEXT, fontVariantNumeric: 'tabular-nums' }}>
         {value || 'Not set'}
       </div>
@@ -447,7 +447,7 @@ function Req({ label, value }: { label: string; value: string | null }) {
 function Written({ page }: { page: Page }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, marginBottom: 7 }}>
+      <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 7 }}>
         {page.title}
       </div>
       <div style={{ fontSize: 14, lineHeight: 1.7, color: 'rgba(240,244,255,0.88)', whiteSpace: 'pre-wrap', maxWidth: '68ch' }}>

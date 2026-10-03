@@ -47,7 +47,9 @@ export function BottomSheet({ open, onClose, title, children, height = 'auto' }:
         position: 'fixed',
         inset: 0,
         zIndex: 600,
-        background: '#0a0a0a',
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'center',
@@ -60,7 +62,9 @@ export function BottomSheet({ open, onClose, title, children, height = 'auto' }:
           maxWidth: 600,
           maxHeight: '90vh',
           height,
-          background: '#141416',
+          background: 'rgba(18,20,24,0.92)',
+          backdropFilter: 'blur(24px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(150%)',
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           border: '1px solid rgba(255,255,255,0.12)',
@@ -80,7 +84,7 @@ export function BottomSheet({ open, onClose, title, children, height = 'auto' }:
 
         {/* Drag handle */}
         <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px' }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: '#3a4f6a' }} />
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.22)' }} />
         </div>
 
         {/* Header */}

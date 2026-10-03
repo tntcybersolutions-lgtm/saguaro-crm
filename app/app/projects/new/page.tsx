@@ -15,7 +15,7 @@ import { Plus, Buildings, MapPin, CalendarBlank, UsersThree, Sparkle, CurrencyDo
 import { useProjects } from '@/lib/hooks/useProjects';
 import Suggest from '@/components/ui/Suggest';
 
-const GOLD='#F59E0B',DARK='#1c1c1e',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
+const GOLD='var(--brand-primary)',DARK='var(--bg-surface-2)',BORDER='rgba(255,255,255,0.12)',DIM='#CBD5E1',TEXT='#FFFFFF';
 const INPUT_STYLE = {width:'100%',padding:'10px 12px',background:DARK,border:`1px solid ${BORDER}`,borderRadius:8,color:TEXT,fontSize:13,outline:'none'};
 const SELECT_STYLE = {...INPUT_STYLE,cursor:'pointer'};
 const HINT:React.CSSProperties = {fontSize:11,color:'rgba(255,255,255,0.45)',marginTop:6,lineHeight:1.45};
@@ -59,7 +59,7 @@ const CATEGORY_BY_BUILDING_TYPE: Record<string,string> = {
 
 const FIELD = ({label,auto,hint,children}:{label:string,auto?:boolean,hint?:React.ReactNode,children:React.ReactNode}) => (
   <div style={{marginBottom:16}}>
-    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,marginBottom:6}}>{label}{auto && <AutoChip/>}</label>
+    <label style={{display:'block',fontSize:11,fontWeight:700,color:DIM, marginBottom:6}}>{label}{auto && <AutoChip/>}</label>
     {children}
     {hint && <div style={HINT}>{hint}</div>}
   </div>
@@ -78,7 +78,14 @@ export default function NewProjectPage() {
   const [name, setName] = useState('');
   const [projectNumber, setProjectNumber] = useState('');
   const [buildingType, setBuildingType] = useState('');
-  const [type, setType] = useState('residential');
+  /* Category follows the kind of job picked in Step 1 (ground-up / TI /
+     service -> commercial, renovation -> remodel) until the GC picks a building
+     type or sets the category by hand. It used to start at 'residential' while
+     "Ground-up construction" (a fire station, a medical plaza) was selected, so
+     the rail said Residential and the job was saved as residential. */
+  const templateCategory = (key: string) => templateByKey(key)?.projectType ?? 'commercial';
+  const [type, setType] = useState(() => templateCategory('ground-up'));
+  const [catTouched, setCatTouched] = useState(false);
   const [sector, setSector] = useState('');
 
   // Sector drives the whole identity block: filtered building types, derived
@@ -173,7 +180,7 @@ export default function NewProjectPage() {
   const [error, setError] = useState('');
 
   // Which fields the system filled in (AUTO chips) vs. what the GC typed.
-  const [auto, setAuto] = useState<{num?:boolean;cat?:boolean;ret?:boolean;start?:boolean;state?:boolean;ownerEmail?:boolean;archEmail?:boolean}>({ret:true,start:true,state:true});
+  const [auto, setAuto] = useState<{num?:boolean;cat?:boolean;ret?:boolean;start?:boolean;state?:boolean;ownerEmail?:boolean;archEmail?:boolean}>({cat:true,ret:true,start:true,state:true});
 
   // This page has no projectId, so /api/project-context does not apply. The
   // portfolio itself is the context: numbering sequence, owner/architect
@@ -240,7 +247,7 @@ export default function NewProjectPage() {
     contractType !== 'Lump Sum GMP' ||
     prevailingWage !== 'No' || publicProject !== 'No — Private' ||
     (!auto.num && !!projectNumber.trim()) || (!auto.ret && retainage !== '10') ||
-    !auto.state || !auto.start || (!auto.cat && type !== 'residential');
+    !auto.state || !auto.start || (catTouched && type !== templateCategory(templateKey));
   const draftData = {
     name, projectNumber, buildingType, type, sector, description,
     address, stateJurisdiction, budget, contractType, retainage,
@@ -332,12 +339,12 @@ export default function NewProjectPage() {
         router.push(`/app/projects/${d.projectId}/${nextRef.current === 'takeoff' ? 'takeoff' : 'overview'}`);
         return true;
       } else {
-        setError(d.error || 'Failed to create project');
+        setError(d.error || 'Failed to create project.');
         setSaving(false);
         return false;
       }
     } catch (err) {
-      setError('Network error — please try again');
+      setError('Network error — please try again.');
       setSaving(false);
       return false;
     }
@@ -380,10 +387,10 @@ export default function NewProjectPage() {
       {/* Portfolio snapshot — what the system already knows before you type */}
       {pf && (
         <StatStrip items={[
-          {href: '/app/projects/new', label:'Project Number', value: projectNumber || `${year}-001`, sub: pf.total>0 ? `next in your ${year} sequence` : `first in the ${year} sequence`},
+          {href: '/app/projects/new', label:'Project Number', value: projectNumber || `${year}-001`, sub: pf.total>0 ? `Next in your ${year} sequence` : `First in the ${year} sequence`},
           {href: '/app/projects/new', label:'This Contract', value: budgetNum>0 ? fmt(budgetNum) : '—', accent: budgetNum>0 ? '#3dd68c' : undefined, sub: contractType},
-          {href: '/app/projects/new', label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf.retMode && auto.ret ? 'your portfolio standard' : 'default — editable'},
-          {href: '/app/projects/new', label:'Jurisdiction', value: stateJurisdiction || '—', sub:'lien waiver + wage rules'},
+          {href: '/app/projects/new', label:'Retainage', value: `${Number(retainage)||10}%`, sub: pf.retMode && auto.ret ? 'Your portfolio standard' : 'Default — editable'},
+          {href: '/app/projects/new', label:'Jurisdiction', value: stateJurisdiction || '—', sub:'Lien waiver + wage rules'},
         ]}/>
       )}
 
@@ -391,9 +398,9 @@ export default function NewProjectPage() {
       <SetupStepper
         active={!templateKey ? 1 : !(name.trim() && address.trim()) ? 2 : 3}
         steps={[
-          { n: 1, title: 'Kind of job',   hint: tpl ? tpl.name : 'Sets retainage, folders and CSI spread', done: Boolean(templateKey) },
-          { n: 2, title: 'Name and place', hint: name.trim() && address.trim() ? `${name.trim()} · ${stateJurisdiction}` : 'The only two required fields', done: Boolean(name.trim() && address.trim()) },
-          { n: 3, title: 'Add drawings',  hint: 'Priced, budgeted and packaged for you', done: false },
+          { n: 1, title: 'Kind of Job', hint: tpl ? tpl.name : 'Sets retainage, folders and CSI spread', done: Boolean(templateKey) },
+          { n: 2, title: 'Name and Place', hint: name.trim() && address.trim() ? `${name.trim()} · ${stateJurisdiction}` : 'The only two required fields', done: Boolean(name.trim() && address.trim()) },
+          { n: 3, title: 'Add Drawings', hint: 'Priced, budgeted and packaged for you', done: false },
         ]}
       />
 
@@ -404,8 +411,8 @@ export default function NewProjectPage() {
           documents land in. Every one of them stays editable below; this is a
           starting point, not a lock. */}
       <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.09em', textTransform: 'uppercase', color: GOLD, marginBottom: 10 }}>
-          Step 1 · What kind of job is this?
+        <div style={{ fontSize: 11, fontWeight: 800, color: GOLD, marginBottom: 10 }}>
+          Step 1 · What Kind of Job Is This?
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: 12 }}>
           {PROJECT_TEMPLATES.map((t) => {
@@ -417,34 +424,35 @@ export default function NewProjectPage() {
                 data-tour={`job-type-${t.key}`}
                 onClick={() => {
                   setTemplateKey(t.key);
+                  if (!catTouched && !buildingType) { setType(t.projectType); setAuto(a=>({...a,cat:true})); }
                   setRetainage(String(t.retainagePct));
                   setContractType(t.contractType);
                 }}
                 aria-pressed={on}
                 style={{
                   textAlign: 'left', cursor: 'pointer', padding: '15px 16px', borderRadius: 14,
-                  background: on ? 'rgba(245,158,11,0.10)' : 'rgba(255,255,255,0.03)',
-                  border: on ? '1px solid rgba(245,158,11,0.65)' : '1px solid rgba(255,255,255,0.10)',
-                  boxShadow: on ? '0 0 0 3px rgba(245,158,11,0.10)' : 'none',
+                  background: on ? 'var(--brand-primary-08)' : 'rgba(255,255,255,0.03)',
+                  border: on ? '1px solid color-mix(in srgb, var(--brand-primary) 65%, transparent)' : '1px solid rgba(255,255,255,0.10)',
+                  boxShadow: on ? '0 0 0 3px var(--brand-primary-08)' : 'none',
                   transition: 'background .15s, border-color .15s, box-shadow .15s',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <span style={{
                     width: 15, height: 15, borderRadius: 999, flexShrink: 0,
-                    border: on ? '5px solid #F59E0B' : '1.5px solid rgba(255,255,255,0.30)',
+                    border: on ? '5px solid var(--brand-primary)' : '1.5px solid rgba(255,255,255,0.30)',
                     background: on ? '#1A1206' : 'transparent',
                   }} />
-                  <span style={{ fontSize: 14, fontWeight: 800, color: on ? '#F59E0B' : '#F0F4FF' }}>{t.name}</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: on ? 'var(--brand-primary)' : '#F0F4FF' }}>{t.name}</span>
                 </div>
                 <div style={{ fontSize: 12, lineHeight: 1.5, color: 'rgba(255,255,255,0.62)', marginBottom: 8 }}>{t.blurb}</div>
                 <div style={{ fontSize: 11.5, lineHeight: 1.45, color: 'rgba(255,255,255,0.38)', fontStyle: 'italic' }}>{t.example}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
                   {[
-                    `${t.retainagePct}% retainage`,
+                    `${t.retainagePct}% Retainage`,
                     t.contractType,
-                    `${t.divisions.length} CSI divisions`,
-                    `${t.folders.length} folders`,
+                    `${t.divisions.length} CSI Divisions`,
+                    `${t.folders.length} Folders`,
                   ].map((chip) => (
                     <span key={chip} style={{
                       fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 6,
@@ -470,7 +478,7 @@ export default function NewProjectPage() {
           <div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
               <div>
-                <SectionCard title="Step 2 · Name and location" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
+                <SectionCard title="Step 2 · Name and Location" icon={<Buildings size={17} weight="duotone" color={GOLD} />} style={{marginBottom:16}}>
                 {showDetails && (
                   <FIELD label="Sector" hint={sectorDef?.flags ? 'Public-sector work — prevailing wage and public-agency compliance pre-set below.' : 'Filters building types, derives the category, and pre-sets compliance for public work.'}>
                     <div style={{display:'flex',flexWrap:'wrap' as const,gap:5,background:'rgba(255,255,255,0.04)',borderRadius:10,padding:4,border:'1px solid rgba(255,255,255,0.08)'}}>
@@ -479,8 +487,8 @@ export default function NewProjectPage() {
                         return (
                           <button type="button" key={s.key} onClick={()=>pickSector(s.key)} className="pmBtn npSeg"
                             style={{padding:'6px 12px',borderRadius:7,border:'none',cursor:'pointer',fontWeight:800,fontSize:11.5,whiteSpace:'nowrap' as const,
-                              background:active?`linear-gradient(180deg,#FBBF24,${GOLD} 60%,#D97706)`:'transparent',color:active?'#1A1206':DIM,transition:'all .15s',
-                              boxShadow:active?'0 2px 10px rgba(245,158,11,0.28), inset 0 1px 0 rgba(255,255,255,0.35)':'none'}}>
+                              background:active?`linear-gradient(180deg,var(--brand-primary-strong),${GOLD} 60%,var(--brand-primary-hover))`:'transparent',color:active?'#0A0A00':DIM,transition:'all .15s',
+                              boxShadow:active?'0 2px 10px color-mix(in srgb, var(--brand-primary) 28%, transparent), inset 0 1px 0 rgba(255,255,255,0.35)':'none'}}>
                             {s.label}
                           </button>
                         );
@@ -494,7 +502,7 @@ export default function NewProjectPage() {
                       the journey rail taught one order (which assumed you had
                       already won) while the nav taught another. One question
                       resolves it. See lib/project-phase. */}
-                  <FIELD label="Where is this job?" hint="Decides which steps the project shows you first. You can switch it the day you win.">
+                  <FIELD label="Where Is This Job?" hint="Decides which steps the project shows you first. You can switch it the day you win.">
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
                       {PHASE_CHOICES.map((c) => {
                         const on = phase === c.value;
@@ -506,13 +514,13 @@ export default function NewProjectPage() {
                             aria-pressed={on}
                             style={{
                               textAlign: 'left', padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
-                              background: on ? 'rgba(245,158,11,0.12)' : 'rgba(255,255,255,0.03)',
-                              border: `1px solid ${on ? 'rgba(245,158,11,0.55)' : 'rgba(255,255,255,0.12)'}`,
-                              boxShadow: on ? '0 0 14px rgba(245,158,11,0.12)' : 'none',
+                              background: on ? 'var(--brand-primary-12)' : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${on ? 'color-mix(in srgb, var(--brand-primary) 55%, transparent)' : 'rgba(255,255,255,0.12)'}`,
+                              boxShadow: on ? '0 0 14px var(--brand-primary-12)' : 'none',
                               transition: 'background .15s, border-color .15s',
                             }}
                           >
-                            <div style={{ fontSize: 13.5, fontWeight: 800, color: on ? '#FBBF24' : '#FFFFFF', marginBottom: 3 }}>{c.title}</div>
+                            <div style={{ fontSize: 13.5, fontWeight: 800, color: on ? 'var(--brand-primary-strong)' : '#FFFFFF', marginBottom: 3 }}>{c.title}</div>
                             <div style={{ fontSize: 11.5, color: '#CBD5E1', lineHeight: 1.45 }}>{c.detail}</div>
                           </button>
                         );
@@ -532,12 +540,12 @@ export default function NewProjectPage() {
                       {sectorBts.map(t=><option key={t} value={t}>{t}</option>)}
                     </select>
                   </FIELD>
-                  <FIELD label="Category" auto={auto.cat} hint="Derived from building type — drives reporting and bid history matching.">
-                    <select value={type} onChange={e=>{setType(e.target.value);setAuto(a=>({...a,cat:false}));}} style={SELECT_STYLE}>
+                  <FIELD label="Category" auto={auto.cat} hint="Set by the kind of job, refined by building type — drives reporting and bid history matching.">
+                    <select value={type} onChange={e=>{setType(e.target.value);setCatTouched(true);setAuto(a=>({...a,cat:false}));}} style={SELECT_STYLE}>
                       {PROJECT_CATEGORIES.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   </FIELD>
-                  <FIELD label="Description"><textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} placeholder="Brief project description..." style={{...INPUT_STYLE,resize:'vertical' as const}}/></FIELD>
+                  <FIELD label="Description"><textarea value={description} onChange={e=>setDescription(e.target.value)} rows={3} placeholder="Brief project description…" style={{...INPUT_STYLE,resize:'vertical' as const}}/></FIELD>
                 </>)}
                 </SectionCard>
 
@@ -546,7 +554,7 @@ export default function NewProjectPage() {
                 {/* Defaults to the portfolio standard; only matters if it differs. */}
                 {showDetails && (
                   <FIELD label="State Jurisdiction" auto={auto.state} hint="Sets statutory lien-waiver forms, preliminary notice deadlines and wage rules.">
-                    <input value={stateJurisdiction} onChange={e=>{setJurisdictionTouched(true);setStateJurisdiction(e.target.value.toUpperCase());setAuto(a=>({...a,state:false}));}} maxLength={2} placeholder="AZ" style={{...INPUT_STYLE,width:90,textTransform:'uppercase' as const}}/>
+                    <input value={stateJurisdiction} onChange={e=>{setJurisdictionTouched(true);setStateJurisdiction(e.target.value.toUpperCase());setAuto(a=>({...a,state:false}));}} maxLength={2} placeholder="AZ" style={{...INPUT_STYLE,width:90}}/>
                   </FIELD>
                 )}
                 </SectionCard>
@@ -583,7 +591,7 @@ export default function NewProjectPage() {
                       <input type="number" value={retainage} onChange={e=>{setRetainage(e.target.value);setAuto(a=>({...a,ret:false}));}} min="0" max="20" style={INPUT_STYLE}/>
                     </FIELD>
                   </div>
-                  <div style={{fontSize:11,fontWeight:700,color:DIM,textTransform:'uppercase' as const,letterSpacing:.5,margin:'2px 0 10px',display:'flex',alignItems:'center',gap:6}}>
+                  <div style={{fontSize:11,fontWeight:700,color:DIM, margin:'2px 0 10px',display:'flex',alignItems:'center',gap:6}}>
                     <CalendarBlank size={14} weight="duotone" color={GOLD}/> Contract Milestones
                   </div>
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
@@ -616,8 +624,8 @@ export default function NewProjectPage() {
             </div>
 
             <div style={{marginTop:18,marginBottom:10}}>
-              <div style={{fontSize:11,fontWeight:800,letterSpacing:'0.09em',textTransform:'uppercase',color:GOLD,marginBottom:6}}>
-                Step 3 · Add your drawings
+              <div style={{fontSize:11,fontWeight:800, color:GOLD,marginBottom:6}}>
+                Step 3 · Add Your Drawings
               </div>
               <div style={{fontSize:12.5,color:'rgba(255,255,255,0.5)',lineHeight:1.5,maxWidth:560}}>
                 Drop the plan set on the next screen and Saguaro measures every trade, prices it, and writes
@@ -629,7 +637,7 @@ export default function NewProjectPage() {
               <button type="submit" data-tour="create-project-submit" onClick={() => { nextRef.current = 'takeoff'; }}
                 disabled={submitDisabled} className="pmBtn"
                 style={{...goldButtonStyle,padding:'13px 32px',fontSize:15,cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
-                {saving?'Creating…':'Create & add drawings →'}
+                {saving?'Creating…':'Create & Add Drawings →'}
               </button>
 
               <button type="submit" onClick={() => { nextRef.current = 'overview'; }}
@@ -637,14 +645,14 @@ export default function NewProjectPage() {
                 style={{padding:'13px 26px',background:'transparent',border:'1px solid rgba(255,255,255,0.18)',
                         borderRadius:10,color:'rgba(255,255,255,0.72)',fontWeight:700,fontSize:14,minHeight:44,
                         cursor:submitDisabled?'not-allowed':'pointer',opacity:submitDisabled?0.6:1}}>
-                {saving?'Creating…':'Create without drawings'}
+                {saving?'Creating…':'Create Without Drawings'}
               </button>
 
 
               <button type="button" onClick={() => setShowDetails(v => !v)}
                 style={{padding:'13px 20px',background:'transparent',border:'1px solid rgba(255,255,255,0.14)',
                         borderRadius:10,color:'rgba(255,255,255,0.7)',fontWeight:600,fontSize:13,minHeight:44,cursor:'pointer'}}>
-                {showDetails ? 'Hide contract details' : 'Add contract details'}
+                {showDetails ? 'Hide Contract Details' : 'Add Contract Details'}
               </button>
               <button type="button" onClick={()=>guard.requestClose(()=>router.back())} className="pmBtn" style={{...ghostButtonStyle,padding:'13px 20px'}}>
                 Cancel
@@ -670,25 +678,25 @@ export default function NewProjectPage() {
             />
             <SectionCard flat title="What Gets Created" icon={<Stack size={17} weight="duotone" color={GOLD} />} bodyStyle={{padding:'6px 20px 20px'}}>
               <FlowSteps title="" steps={[
-                {title:'Project workspace', desc:'Overview, directory, documents, daily logs and photo feed — live the moment you hit Create.'},
-                {title:'Budget & bid packages', desc:'CSI-coded budget lines and trade bid packages — sub awards commit dollars automatically.'},
-                {title:'Schedule & field tools', desc:'Baseline schedule plus RFIs, submittals, punch lists and safety checklists, wired to this project.'},
-                {title:'Billing — G702 pay apps', desc:'AIA G702/G703 applications with retainage math and automatic lien waivers for every sub.'},
+                {title:'Project Workspace', desc:'Overview, directory, documents, daily logs and photo feed — live the moment you hit Create.'},
+                {title:'Budget & Bid Packages', desc:'CSI-coded budget lines and trade bid packages — sub awards commit dollars automatically.'},
+                {title:'Schedule & Field Tools', desc:'Baseline schedule plus RFIs, submittals, punch lists and safety checklists, wired to this project.'},
+                {title:'Billing — G702 Pay Apps', desc:'AIA G702/G703 applications with retainage math and automatic lien waivers for every sub.'},
               ]}/>
             </SectionCard>
 
             <SectionCard flat title="Smart Defaults" icon={<Sparkle size={17} weight="duotone" color={GOLD} />}>
-              <InsightRow label="Project number" value={projectNumber||'—'} accent={GOLD} strong/>
+              <InsightRow label="Project Number" value={projectNumber||'—'} accent={GOLD} strong/>
               <InsightRow label="Category" value={PROJECT_CATEGORIES.find(c=>c.value===type)?.label||type}/>
               <InsightRow label="Retainage" value={`${Number(retainage)||10}%`}/>
-              <InsightRow label="Start date" value={fmtDate(startDate)}/>
+              <InsightRow label="Start Date" value={fmtDate(startDate)}/>
               <InsightRow label="Jurisdiction" value={stateJurisdiction||'—'}/>
               <div style={{fontSize:11.5,color:'rgba(255,255,255,0.45)',lineHeight:1.5,marginTop:10,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.08)'}}>
-                AUTO chips mark what Saguaro pre-filled. Every value stays editable — nothing locks until you create the project.
+                Auto chips mark what Saguaro pre-filled. Every value stays editable — nothing locks until you create the project.
               </div>
             </SectionCard>
 
-            <div style={{background:'rgba(245, 158, 11,.06)',border:'1px solid rgba(245, 158, 11,.2)',borderRadius:12,padding:'14px 18px',fontSize:13,color:DIM,display:'flex',gap:10,alignItems:'flex-start'}}>
+            <div style={{background:'var(--brand-primary-08)',border:'1px solid var(--brand-primary-18)',borderRadius:12,padding:'14px 18px',fontSize:13,color:DIM,display:'flex',gap:10,alignItems:'flex-start'}}>
               <Sparkle size={16} weight="fill" color={GOLD} style={{flexShrink:0,marginTop:2}}/>
               <div>
                 <strong style={{color:TEXT}}>AI Auto-Build on First Award:</strong> when the first bid is awarded, Saguaro automatically creates 24 schedule tasks, a CSI-coded budget, sub packages, a safety plan, QC checkpoints and the contact directory.

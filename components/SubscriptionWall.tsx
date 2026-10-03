@@ -23,9 +23,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 // ── Apple LIGHT tokens (match the mobile app + dashboard) ──────────────────────
-const GOLD   = '#F59E0B';
+const GOLD   = 'var(--brand-primary)';
 const PAGE   = '#0a0a0a';
-const CARD   = '#141416';
+const CARD   = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM    = '#CBD5E1';
 const TEXT   = '#FFFFFF';
@@ -161,10 +161,10 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
                 background: CARD,
                 border: `1.5px solid ${plan.popular ? GOLD : BORDER}`,
                 borderRadius: 16, padding: '20px 16px',
-                boxShadow: plan.popular ? '0 4px 14px rgba(245, 158, 11,.12)' : 'none',
+                boxShadow: plan.popular ? '0 4px 14px var(--brand-primary-12)' : 'none',
               }}>
                 {plan.popular && (
-                  <div style={{ fontSize: 9, fontWeight: 800, color: GOLD, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>Most Popular</div>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: GOLD, marginBottom: 8 }}>Most Popular</div>
                 )}
                 <div style={{ fontSize: 14, fontWeight: 700, color: TEXT, marginBottom: 4 }}>{plan.name}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color: plan.popular ? GOLD : TEXT, marginBottom: 4 }}>{plan.price}<span style={{ fontSize: 12, fontWeight: 400, color: DIM }}>/mo</span></div>
@@ -190,7 +190,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
             background: isPastDue ? RED : GOLD,
             borderRadius: 12, color: '#fff',
             fontWeight: 700, fontSize: 15, textDecoration: 'none',
-            boxShadow: isPastDue ? '0 4px 16px rgba(255,59,48,0.25)' : '0 4px 16px rgba(245, 158, 11,0.25)',
+            boxShadow: isPastDue ? '0 4px 16px rgba(255,59,48,0.25)' : '0 4px 16px var(--brand-primary-25)',
           }}>
             {isPastDue ? 'Update Payment Method' : 'Upgrade Now →'}
           </Link>
@@ -217,7 +217,7 @@ export default function SubscriptionWall({ children }: { children: React.ReactNo
         </div>
 
         {/* Data preservation note */}
-        <div style={{ marginTop: 24, padding: '14px 20px', background: 'rgba(245, 158, 11,0.06)', border: `1px solid rgba(245, 158, 11,0.15)`, borderRadius: 12, fontSize: 13, color: DIM }}>
+        <div style={{ marginTop: 24, padding: '14px 20px', background: 'var(--brand-primary-08)', border: `1px solid var(--brand-primary-12)`, borderRadius: 12, fontSize: 13, color: DIM }}>
           Your projects, documents, and data are preserved for <strong style={{ color: TEXT }}>30 days</strong>. Reactivate anytime to pick up right where you left off.
         </div>
 

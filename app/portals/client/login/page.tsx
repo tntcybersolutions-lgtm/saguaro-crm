@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -61,8 +61,8 @@ export default function ClientPortalLogin() {
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 40 }}>
         <img src="/logo-full.jpg" alt="Saguaro" style={{ height: 38, borderRadius: 4 }} />
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '0.1em', background: `linear-gradient(90deg,${GOLD},#FBBF24)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
-          <span style={{ fontSize: 8, color: DIM, letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
+          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
+          <span style={{ fontSize: 8, color: DIM, fontWeight: 600 }}>Control Systems</span>
         </span>
       </Link>
 
@@ -78,7 +78,7 @@ export default function ClientPortalLogin() {
       }}>
         {/* Icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: `rgba(245, 158, 11,0.12)`, border: `1.5px solid rgba(245, 158, 11,0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--brand-primary-12)', border: '1.5px solid var(--brand-primary-35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
               <polyline points="9 22 9 12 15 12 15 22"/>
@@ -102,7 +102,7 @@ export default function ClientPortalLogin() {
               </svg>
             </div>
             <div style={{ fontSize: 16, fontWeight: 700, color: TEXT, marginBottom: 8 }}>
-              Check your email
+              Check Your Email
             </div>
             <div style={{ fontSize: 13, color: DIM, lineHeight: 1.6 }}>
               If an active portal exists for <strong>{email}</strong>, we&apos;ve emailed your secure access link. It can take a minute to arrive.
@@ -113,7 +113,7 @@ export default function ClientPortalLogin() {
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 8 }}>
               Your Email Address
             </label>
             <input
@@ -152,10 +152,10 @@ export default function ClientPortalLogin() {
                 width: '100%',
                 marginTop: 16,
                 padding: '13px',
-                background: loading || !email.trim() ? 'rgba(245, 158, 11,0.4)' : `linear-gradient(135deg, ${GOLD}, #C8960F)`,
+                background: loading || !email.trim() ? 'color-mix(in srgb, var(--brand-primary) 40%, transparent)' : `linear-gradient(135deg, ${GOLD}, var(--brand-primary-hover))`,
                 border: 'none',
                 borderRadius: 8,
-                color: '#000',
+                color: '#0A0A00',
                 fontSize: 15,
                 fontWeight: 700,
                 cursor: loading || !email.trim() ? 'not-allowed' : 'pointer',
@@ -163,7 +163,7 @@ export default function ClientPortalLogin() {
                 letterSpacing: '0.02em',
               }}
             >
-              {loading ? 'Looking up access…' : 'Access My Portal →'}
+              {loading ? 'Looking Up Access…' : 'Access My Portal →'}
             </button>
 
             <div style={{ marginTop: 20, paddingTop: 20, borderTop: `1px solid ${BORDER}`, textAlign: 'center', fontSize: 12, color: DIM, lineHeight: 1.6 }}>
@@ -184,7 +184,7 @@ export default function ClientPortalLogin() {
         <Link href="/" style={{ color: DIM, textDecoration: 'none' }}
           onMouseEnter={e => e.currentTarget.style.color = TEXT}
           onMouseLeave={e => e.currentTarget.style.color = DIM}>
-          Back to Saguaro
+          ← Back to Saguaro
         </Link>
       </div>
     </div>

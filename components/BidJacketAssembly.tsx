@@ -28,12 +28,12 @@ import {
 } from '@phosphor-icons/react';
 import { SectionCard, ghostButtonStyle, goldButtonStyle } from '@/components/ui/premium';
 
-const GOLD = '#C8960F';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const HAIR = 'rgba(255,255,255,0.10)';
 const GREEN = '#22C55E';
-const AMBER = '#F59E0B';
+const AMBER = 'var(--warning)';
 
 export type Drift = {
   hasDrift: boolean;
@@ -173,7 +173,7 @@ export default function BidJacketAssembly({
   return (
     <SectionCard
       flat
-      title={issued ? 'Issued' : 'Ready to issue'}
+      title={issued ? 'Issued' : 'Ready to Issue'}
       icon={
         issued
           ? <CheckCircle size={17} weight="duotone" color={GREEN} />
@@ -201,8 +201,8 @@ export default function BidJacketAssembly({
       {issued && drift?.hasDrift && (
         <div
           style={{
-            border: `1px solid rgba(245,158,11,0.35)`, borderRadius: 12,
-            background: 'rgba(245,158,11,0.07)', padding: '13px 15px', marginBottom: 16,
+            border: `1px solid var(--brand-primary-35)`, borderRadius: 12,
+            background: 'var(--brand-primary-08)', padding: '13px 15px', marginBottom: 16,
           }}
         >
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
@@ -238,8 +238,8 @@ export default function BidJacketAssembly({
       {confirmIncomplete && missing.length > 0 && (
         <div
           style={{
-            border: `1px solid rgba(245,158,11,0.35)`, borderRadius: 12,
-            background: 'rgba(245,158,11,0.07)', padding: '13px 15px', marginBottom: 16,
+            border: `1px solid var(--brand-primary-35)`, borderRadius: 12,
+            background: 'var(--brand-primary-08)', padding: '13px 15px', marginBottom: 16,
             color: TEXT, fontSize: 13.5, lineHeight: 1.6,
           }}
         >
@@ -263,8 +263,8 @@ export default function BidJacketAssembly({
       {/* ── Addendum composer ─────────────────────────────────────────────── */}
       {addendumOpen && (
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: DIM, marginBottom: 6 }}>
-            What changed
+          <div style={{ fontSize: 10.5, fontWeight: 800, color: DIM, marginBottom: 6 }}>
+            What Changed
           </div>
           <textarea
             value={summary}
@@ -299,8 +299,8 @@ export default function BidJacketAssembly({
             {busy === 'issue'
               ? 'Issuing…'
               : confirmIncomplete
-                ? 'Issue anyway'
-                : `Issue to ${invited} bidder${invited === 1 ? '' : 's'}`}
+                ? 'Issue Anyway'
+                : `Issue to ${invited} Bidder${invited === 1 ? '' : 's'}`}
           </button>
         )}
 
@@ -312,7 +312,7 @@ export default function BidJacketAssembly({
               display: 'inline-flex', alignItems: 'center', gap: 7,
             }}
           >
-            <Plus size={15} weight="bold" /> Issue addendum
+            <Plus size={15} weight="bold" /> Issue Addendum
           </button>
         )}
 
@@ -324,7 +324,7 @@ export default function BidJacketAssembly({
               style={{ ...goldButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7, opacity: summary.trim() ? 1 : 0.5 }}
             >
               <PaperPlaneTilt size={15} weight="bold" />
-              {busy === 'addendum' ? 'Sending…' : 'Send to all bidders'}
+              {busy === 'addendum' ? 'Sending…' : 'Send to All Bidders'}
             </button>
             <button
               onClick={() => { setAddendumOpen(false); setSummary(''); }}
@@ -337,7 +337,7 @@ export default function BidJacketAssembly({
 
         {issued && !addendumOpen && (
           <button onClick={onChanged} style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7 }}>
-            <ArrowsClockwise size={15} weight="bold" /> Re-check for changes
+            <ArrowsClockwise size={15} weight="bold" /> Re-Check for Changes
           </button>
         )}
 
@@ -374,7 +374,7 @@ export default function BidJacketAssembly({
               style={{ ...ghostButtonStyle, display: 'inline-flex', alignItems: 'center', gap: 7 }}
             >
               <Paperclip size={15} weight="bold" />
-              {busy === 'attach' ? 'Adding…' : 'Add document'}
+              {busy === 'attach' ? 'Adding…' : 'Add Document'}
             </button>
           </>
         )}
@@ -402,7 +402,7 @@ export default function BidJacketAssembly({
 function Fact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: DIM, marginBottom: 4 }}>
+      <div style={{ fontSize: 10, fontWeight: 800, color: DIM, marginBottom: 4 }}>
         {label}
       </div>
       <div style={{ fontSize: 15.5, fontWeight: 700, color: TEXT, fontVariantNumeric: 'tabular-nums' }}>{value}</div>

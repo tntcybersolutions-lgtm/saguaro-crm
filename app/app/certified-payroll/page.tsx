@@ -6,7 +6,7 @@ import { Skeleton } from '../../../components/ui/Skeleton';
 import { WarningCircle, FileText, CaretRight, Buildings, ShieldCheck } from '@phosphor-icons/react';
 import { PremiumSurface, ModuleHero, SectionCard, PremiumEmpty, StatStrip, goldButtonStyle, goldOutlineButtonStyle } from '@/components/ui/premium';
 
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
@@ -25,7 +25,7 @@ const statusStyle = (s: string): { color: string; bg: string } => {
   const k = (s || '').toLowerCase();
   if (k.includes('active') || k.includes('progress')) return { color: '#3dd68c', bg: 'rgba(61,214,140,.12)' };
   if (k.includes('complete') || k.includes('closed')) return { color: '#4a9de8', bg: 'rgba(26,95,168,.12)' };
-  return { color: GOLD, bg: 'rgba(245,158,11,.12)' };
+  return { color: 'var(--warning)', bg: 'color-mix(in srgb, var(--warning) 12%, transparent)' };
 };
 
 export default function CertifiedPayrollPage() {
@@ -76,9 +76,9 @@ export default function CertifiedPayrollPage() {
       {!loading && (
         <StatStrip items={[
           {href: '/app/certified-payroll',  label: 'Projects', value: String(projects.length), sub: projects.filter(p => ((p.status || '').toLowerCase().includes('active') || (p.status || '').toLowerCase().includes('progress'))).length + ' active' },
-          {href: '/app/certified-payroll',  label: 'WH-347s Filed', value: String(records.length), sub: records.length > 0 ? 'across all projects' : 'none filed yet' },
-          {href: '/app/certified-payroll',  label: 'Gross Wages Certified', value: fmt0(grossFiled), accent: grossFiled > 0 ? '#3dd68c' : undefined, sub: 'total across filed payrolls' },
-          {href: '/app/certified-payroll',  label: 'Last Filed Week', value: lastFiled ? lastFiled.week_ending : '—', sub: lastFiled ? (Number(lastFiled.employee_count) || 0) + ' employees · ' + fmt0(Number(lastFiled.total_gross) || 0) : 'open a project to file' },
+          {href: '/app/certified-payroll',  label: 'WH-347s Filed', value: String(records.length), sub: records.length > 0 ? 'Across all projects' : 'None filed yet' },
+          {href: '/app/certified-payroll',  label: 'Gross Wages Certified', value: fmt0(grossFiled), accent: grossFiled > 0 ? '#3dd68c' : undefined, sub: 'Total across filed payrolls' },
+          {href: '/app/certified-payroll',  label: 'Last Filed Week', value: lastFiled ? lastFiled.week_ending : '—', sub: lastFiled ? (Number(lastFiled.employee_count) || 0) + ' employees · ' + fmt0(Number(lastFiled.total_gross) || 0) : 'Open a project to file' },
           {href: '/app/certified-payroll',  label: 'Certified', value: String(certifiedCount), sub: (records.length - certifiedCount) + ' submitted / draft' },
         ]} />
       )}
@@ -141,7 +141,7 @@ export default function CertifiedPayrollPage() {
                 }}
               >
                 <span style={{
-                  width: 38, height: 38, borderRadius: 8, background: 'rgba(245,158,11,.1)',
+                  width: 38, height: 38, borderRadius: 8, background: 'color-mix(in srgb, var(--brand-primary) 10%, transparent)',
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}>
                   <FileText size={18} weight="regular" color={GOLD} />
@@ -157,10 +157,10 @@ export default function CertifiedPayrollPage() {
                 {p.status && (
                   <span style={{
                     fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 4,
-                    background: st.bg, color: st.color, textTransform: 'uppercase', letterSpacing: 0.3, whiteSpace: 'nowrap',
+                    background: st.bg, color: st.color, textTransform: 'capitalize', whiteSpace: 'nowrap',
                   }}>{(p.status || '').replace(/_/g, ' ')}</span>
                 )}
-                <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, whiteSpace: 'nowrap' }}>Open payroll</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: GOLD, whiteSpace: 'nowrap' }}>Open Payroll</span>
                 <CaretRight size={16} weight="bold" color={DIM} />
               </Link>
             );

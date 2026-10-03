@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { LockKey, Lock, ShieldCheck, Wall, Globe, Flask, Prohibit, Package, Trash } from '@phosphor-icons/react/dist/ssr';
 import type { Icon } from '@phosphor-icons/react';
 
-const GOLD='#F59E0B',DARK='#0a0a0a',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
+const GOLD='var(--brand-primary)',DARK='var(--bg-base)',DIM='#CBD5E1',TEXT='#FFFFFF',GREEN='#22c55e',HAIRLINE='rgba(255,255,255,0.08)',CARD='rgba(255,255,255,0.02)';
 
 const NAV = (
   <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:200,height:64,background:'rgba(13,17,23,0.9)',borderBottom:`1px solid ${HAIRLINE}`,display:'flex',alignItems:'center',padding:'0 32px',backdropFilter:'blur(16px)',WebkitBackdropFilter:'blur(16px)'}}>
@@ -12,12 +12,12 @@ const NAV = (
     </Link>
     <div style={{flex:1}}/>
     <Link href="/login" style={{padding:'8px 16px',background:'transparent',border:`1px solid rgba(255,255,255,0.14)`,borderRadius:8,color:DIM,fontSize:13,fontWeight:500,textDecoration:'none'}}>Log In</Link>
-    <Link href="/signup" style={{marginLeft:10,padding:'8px 18px',background:GOLD,borderRadius:8,color:DARK,fontSize:13,fontWeight:600,textDecoration:'none'}}>Start Free</Link>
+    <Link href="/signup" style={{marginLeft:10,padding:'8px 18px',background:GOLD,borderRadius:8,color:'#0A0A00',fontSize:13,fontWeight:600,textDecoration:'none'}}>Start Free</Link>
   </nav>
 );
 
 const FEATURES: { icon: Icon; title: string; desc: string; color: string; border: string }[] = [
-  {icon:LockKey,title:'SOC 2 Type II',desc:'Audit in progress. We follow SOC 2 security, availability, and confidentiality trust principles. Expected certification Q3 2026.',color:'rgba(245, 158, 11,.15)',border:'rgba(245, 158, 11,.3)'},
+  {icon:LockKey,title:'SOC 2 Type II',desc:'Audit in progress. We follow SOC 2 security, availability, and confidentiality trust principles. Expected certification Q3 2026.',color:'var(--brand-primary-18)',border:'var(--brand-primary-35)'},
   {icon:Lock,title:'256-bit AES Encryption',desc:'All data at rest is encrypted using AES-256, the same standard used by banks and government agencies. Your data is unreadable without your credentials.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
   {icon:ShieldCheck,title:'TLS 1.3 in Transit',desc:'Every byte transferred between your browser and our servers is protected with TLS 1.3. We enforce HTTPS everywhere and reject older protocols.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
   {icon:Wall,title:'Row-Level Security',desc:'Powered by Supabase RLS policies. Each user can only access their own organization\'s data — enforced at the database layer, not just the application layer.',color:'rgba(34,197,94,.08)',border:'rgba(34,197,94,.25)'},
@@ -50,15 +50,15 @@ export default function SecurityPage() {
       <div style={{textAlign:'center',padding:'140px 24px 88px',maxWidth:640,margin:'0 auto'}}>
         <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 14px',background:'transparent',border:`1px solid rgba(255,255,255,0.14)`,borderRadius:999,fontSize:12,fontWeight:500,color:DIM,letterSpacing:0.3,marginBottom:28}}>
           <span style={{width:6,height:6,borderRadius:'50%',background:GOLD,display:'inline-block'}} />
-          Security & compliance
+          Security & Compliance
         </div>
-        <h1 style={{fontSize:'clamp(26px,4vw,30px)',fontWeight:600,margin:'0 0 18px',lineHeight:1.15,letterSpacing:-0.5}}>Enterprise-grade security</h1>
+        <h1 style={{fontSize:'clamp(26px,4vw,30px)',fontWeight:600,margin:'0 0 18px',lineHeight:1.15,letterSpacing:-0.5}}>Enterprise-Grade Security</h1>
         <p style={{fontSize:'clamp(15px,2vw,17px)',color:DIM,maxWidth:540,margin:'0 auto',lineHeight:1.65}}>Your construction data protected at every layer — from the database to your browser.</p>
       </div>
 
       {/* Feature Grid */}
       <div style={{maxWidth:1100,margin:'0 auto',padding:'0 24px 96px'}}>
-        <h2 style={{fontSize:22,fontWeight:600,marginBottom:40,textAlign:'center'}}>Security features</h2>
+        <h2 style={{fontSize:22,fontWeight:600,marginBottom:40,textAlign:'center'}}>Security Features</h2>
         <div className="sec-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:0}}>
           {FEATURES.map((f,i)=>(
             <div key={f.title} style={{padding:'28px',borderTop:`1px solid ${HAIRLINE}`,borderRight:i%3!==2?`1px solid ${HAIRLINE}`:'none'}}>
@@ -78,7 +78,7 @@ export default function SecurityPage() {
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:0,background:CARD,border:`1px solid ${HAIRLINE}`,borderRadius:14,overflow:'hidden'}}>
             {INFRA.map((row,i)=>(
               <div key={row.label} style={{padding:'18px 24px',borderBottom:`1px solid ${HAIRLINE}`,borderRight:i%2===0?`1px solid ${HAIRLINE}`:'none'}}>
-                <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:.5,color:DIM,marginBottom:4}}>{row.label}</div>
+                <div style={{fontSize:12,fontWeight:600,color:DIM,marginBottom:4}}>{row.label}</div>
                 <div style={{fontWeight:500,color:TEXT,fontSize:14}}>{row.value}</div>
               </div>
             ))}
@@ -88,7 +88,7 @@ export default function SecurityPage() {
 
       {/* Data Practices */}
       <div style={{maxWidth:1000,margin:'0 auto',padding:'96px 24px',borderTop:`1px solid ${HAIRLINE}`}}>
-        <h2 style={{fontSize:22,fontWeight:600,marginBottom:8,textAlign:'center'}}>Our data practices</h2>
+        <h2 style={{fontSize:22,fontWeight:600,marginBottom:8,textAlign:'center'}}>Our Data Practices</h2>
         <p style={{color:DIM,textAlign:'center',marginBottom:48,fontSize:15}}>We believe your data belongs to you. Full stop.</p>
         <div className="data-grid" style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:0}}>
           {DATA.map((d,i)=>(
@@ -104,7 +104,7 @@ export default function SecurityPage() {
       {/* Responsible Disclosure */}
       <div style={{maxWidth:720,margin:'0 auto',padding:'0 24px 96px'}}>
         <div style={{background:CARD,border:`1px solid ${HAIRLINE}`,borderRadius:14,padding:'28px 32px'}}>
-          <div style={{fontWeight:600,fontSize:16,color:TEXT,marginBottom:8}}>Responsible disclosure</div>
+          <div style={{fontWeight:600,fontSize:16,color:TEXT,marginBottom:8}}>Responsible Disclosure</div>
           <p style={{color:DIM,fontSize:14,lineHeight:1.7,margin:'0 0 12px'}}>
             Found a security vulnerability? We take all reports seriously. Please email us at{' '}
             <a href="mailto:security@saguarocontrol.net" style={{color:GOLD,textDecoration:'none',fontWeight:500}}>security@saguarocontrol.net</a>{' '}
@@ -120,9 +120,9 @@ export default function SecurityPage() {
 
       {/* CTA */}
       <div style={{textAlign:'center',padding:'112px 24px',borderTop:`1px solid ${HAIRLINE}`}}>
-        <h2 style={{fontSize:'clamp(22px,3vw,26px)',fontWeight:600,marginBottom:16,letterSpacing:-0.4}}>Questions about security?</h2>
+        <h2 style={{fontSize:'clamp(22px,3vw,26px)',fontWeight:600,marginBottom:16,letterSpacing:-0.4}}>Questions About Security?</h2>
         <p style={{color:DIM,fontSize:16,marginBottom:32,lineHeight:1.6}}>Our security team is here to help.</p>
-        <a href="mailto:security@saguarocontrol.net" style={{display:'inline-block',padding:'12px 28px',background:GOLD,borderRadius:8,color:DARK,fontWeight:600,fontSize:15,textDecoration:'none'}}>
+        <a href="mailto:security@saguarocontrol.net" style={{display:'inline-block',padding:'12px 28px',background:GOLD,borderRadius:8,color:'#0A0A00',fontWeight:600,fontSize:15,textDecoration:'none'}}>
           security@saguarocontrol.net
         </a>
         <div style={{marginTop:24,fontSize:13,color:DIM}}>

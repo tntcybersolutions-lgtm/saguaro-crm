@@ -22,10 +22,10 @@ function dayColor(v: number | null | undefined, target: number): string | undefi
 // One SLA target row: metric · target · current value · met/miss/no-data badge.
 function SLARow({ label, target, current, met }: { label: string; target: string; current: string; met: boolean | null }) {
   const col = met == null ? C.dim : met ? C.green : C.red;
-  const badge = met == null ? 'No data'
+  const badge = met == null ? 'No Data'
     : met
-    ? (<><CheckCircle size={12} weight="fill" style={{ verticalAlign: 'middle' }} /> On target</>)
-    : (<><XCircle size={12} weight="fill" style={{ verticalAlign: 'middle' }} /> Off target</>);
+    ? (<><CheckCircle size={12} weight="fill" style={{ verticalAlign: 'middle' }} /> On Target</>)
+    : (<><XCircle size={12} weight="fill" style={{ verticalAlign: 'middle' }} /> Off Target</>);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 2px', borderBottom: `1px solid ${C.border}` }}>
       <span style={{ flex: '1 1 200px', fontSize: 14, fontWeight: 700 }}>{label}</span>
@@ -148,17 +148,17 @@ export default function KpiDashboardPage() {
       {/* Headline KPIs — dense strip, zero dead space */}
       <StatStrip items={[
         {href: '/app/command-center/kpis',  label: 'Portfolio Value', value: fmtMoneyShort(k.portfolioValue), sub: `${k.sites} active site${k.sites === 1 ? '' : 's'}` },
-        {href: '/app/command-center/kpis',  label: 'Avg Complete', value: k.avgComplete == null ? '—' : `${k.avgComplete}%`, sub: 'across reporting sites' },
+        {href: '/app/command-center/kpis',  label: 'Avg Complete', value: k.avgComplete == null ? '—' : `${k.avgComplete}%`, sub: 'Across reporting sites' },
         {href: '/app/command-center/kpis',  label: 'Sites Needing Attn', value: String(k.sitesAttention), accent: k.sitesAttention > 0 ? C.yellow : C.green, sub: `of ${k.sites}` },
-        {href: '/app/command-center/long-lead',  label: 'Long-Lead At Risk', value: String(k.llAtRisk), accent: k.llAtRisk > 0 ? C.red : C.green, sub: `of ${k.llTotal} tracked` },
+        {href: '/app/command-center/long-lead',  label: 'Long-Lead at Risk', value: String(k.llAtRisk), accent: k.llAtRisk > 0 ? C.red : C.green, sub: `of ${k.llTotal} tracked` },
         {href: '/app/command-center/risks',  label: 'Critical Risks', value: String(k.openCritical), accent: k.openCritical > 0 ? C.red : C.green, sub: `${k.openRisks} open total` },
-        {href: '/app/command-center/escalations',  label: 'Escalations', value: String(k.openEsc), accent: k.openEsc > 0 ? C.red : C.green, sub: 'open now' },
+        {href: '/app/command-center/escalations',  label: 'Escalations', value: String(k.openEsc), accent: k.openEsc > 0 ? C.red : C.green, sub: 'Open now' },
         {href: '/app/command-center/milestones',  label: 'Milestones Slipping', value: String(k.slipping), accent: k.slipping > 0 ? C.yellow : C.green, sub: `of ${k.msTotal}` },
-        {href: '/app/command-center/kpis',  label: 'Overall Score', value: k.overall == null ? '—' : String(k.overall), accent: k.overall == null ? undefined : k.overall >= 80 ? C.green : k.overall >= 55 ? C.yellow : C.red, sub: 'site-health avg / 100' },
+        {href: '/app/command-center/kpis',  label: 'Overall Score', value: k.overall == null ? '—' : String(k.overall), accent: k.overall == null ? undefined : k.overall >= 80 ? C.green : k.overall >= 55 ? C.yellow : C.red, sub: 'Site-health avg / 100' },
       ]} />
 
       {/* Portfolio scorecard bars */}
-      <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: C.dim, margin: '4px 2px 10px' }}>Portfolio Scorecard</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: C.dim, margin: '4px 2px 10px' }}>Portfolio Scorecard</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 26 }}>
         <IndexBar label="On-Time Index" pct={k.onTimeIndex} hint={`${k.msTotal - k.slipping}/${k.msTotal} milestones on baseline`} />
         <IndexBar label="Procurement Health" pct={k.llIndex} hint={`${k.llTotal - k.llAtRisk}/${k.llTotal} long-lead items clear`} />
@@ -170,25 +170,25 @@ export default function KpiDashboardPage() {
       {/* Operational cycle-time KPIs — the "how fast do we turn work" metrics from the spec.
           Tiles with a spec target (RFI ≤5d, CO ≤5d, architect/submittal ≤3d) are colored
           against it: green = meets target, yellow = within 1.5×, red = over. */}
-      <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: C.dim, margin: '4px 2px 10px' }}>Operational Cycle Times</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: C.dim, margin: '4px 2px 10px' }}>Operational Cycle Times</div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 26 }}>
-        <Tile label="CO Approval" value={op.coApprovalDays != null ? `${op.coApprovalDays}d` : '—'} color={dayColor(op.coApprovalDays, 5)} sub={op.coApprovalN ? `avg · target ≤5d` : 'no data yet'} />
-        <Tile label="RFI Response" value={op.rfiResponseDays != null ? `${op.rfiResponseDays}d` : '—'} color={dayColor(op.rfiResponseDays, 5)} sub={op.rfiResponseN ? `avg · target ≤5d` : 'no data yet'} />
-        <Tile label="Architect Response" value={op.architectResponseDays != null ? `${op.architectResponseDays}d` : '—'} color={dayColor(op.architectResponseDays, 3)} sub={op.architectN ? `submittal review · ≤3d` : 'no data yet'} />
-        <Tile label="Permit Issue" value={op.permitIssueDays != null ? `${op.permitIssueDays}d` : '—'} sub={op.permitIssueN ? `avg · ${op.permitIssueN} permits` : 'no data yet'} />
-        <Tile label="Plan Review" value={op.planReviewDays != null ? `${op.planReviewDays}d` : '—'} sub={op.planReviewN ? `avg · ${op.planReviewN} reviews` : 'no data yet'} />
-        <Tile label="Punch Duration" value={op.punchDurationDays != null ? `${op.punchDurationDays}d` : '—'} sub={op.punchN ? `avg to close · ${op.punchN} items` : 'no data yet'} />
-        <Tile label="Days to Closeout" value={op.closeoutDays != null ? `${op.closeoutDays}d` : '—'} sub={op.closeoutN ? `start → C-of-O · ${op.closeoutN} sites` : 'no data yet'} />
+        <Tile label="CO Approval" value={op.coApprovalDays != null ? `${op.coApprovalDays}d` : '—'} color={dayColor(op.coApprovalDays, 5)} sub={op.coApprovalN ? `Avg · target ≤5d` : 'No data yet'} />
+        <Tile label="RFI Response" value={op.rfiResponseDays != null ? `${op.rfiResponseDays}d` : '—'} color={dayColor(op.rfiResponseDays, 5)} sub={op.rfiResponseN ? `Avg · target ≤5d` : 'No data yet'} />
+        <Tile label="Architect Response" value={op.architectResponseDays != null ? `${op.architectResponseDays}d` : '—'} color={dayColor(op.architectResponseDays, 3)} sub={op.architectN ? `Submittal review · ≤3d` : 'No data yet'} />
+        <Tile label="Permit Issue" value={op.permitIssueDays != null ? `${op.permitIssueDays}d` : '—'} sub={op.permitIssueN ? `Avg · ${op.permitIssueN} permits` : 'No data yet'} />
+        <Tile label="Plan Review" value={op.planReviewDays != null ? `${op.planReviewDays}d` : '—'} sub={op.planReviewN ? `Avg · ${op.planReviewN} reviews` : 'No data yet'} />
+        <Tile label="Punch Duration" value={op.punchDurationDays != null ? `${op.punchDurationDays}d` : '—'} sub={op.punchN ? `Avg to close · ${op.punchN} items` : 'No data yet'} />
+        <Tile label="Days to Closeout" value={op.closeoutDays != null ? `${op.closeoutDays}d` : '—'} sub={op.closeoutN ? `Start → C-of-O · ${op.closeoutN} sites` : 'No data yet'} />
         <Tile label="Inspection Pass Rate" value={op.inspectionPassRate != null ? `${op.inspectionPassRate}%` : '—'}
           color={op.inspectionPassRate == null ? undefined : op.inspectionPassRate >= 90 ? C.green : op.inspectionPassRate >= 70 ? C.yellow : C.red}
-          sub={op.inspectionN ? `${op.inspectionN} inspections` : 'no data yet'} />
+          sub={op.inspectionN ? `${op.inspectionN} inspections` : 'No data yet'} />
         <Tile label="GC Performance" value={op.gcPerformance != null ? `${op.gcPerformance}` : '—'}
           color={op.gcPerformance == null ? undefined : op.gcPerformance >= 85 ? C.green : op.gcPerformance >= 65 ? C.yellow : C.red}
-          sub={op.gcPerformanceN ? `/ 100 · ${op.gcPerformanceN}-factor` : 'no data yet'} />
+          sub={op.gcPerformanceN ? `/ 100 · ${op.gcPerformanceN}-factor` : 'No data yet'} />
       </div>
 
       {/* Daily-metric SLA targets — the spec's "Remote PM Daily Metrics" as met/miss gauges. */}
-      <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: C.dim, margin: '4px 2px 10px' }}>Daily Metric Targets (SLA)</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: C.dim, margin: '4px 2px 10px' }}>Daily Metric Targets (SLA)</div>
       <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: '6px 16px', marginBottom: 10 }}>
         <SLARow label="RFI Response" target="≤ 5 days" current={op.rfiResponseDays != null ? `${op.rfiResponseDays}d` : '—'} met={op.rfiResponseDays == null ? null : op.rfiResponseDays <= 5} />
         <SLARow label="Submittal Review (Architect)" target="≤ 3 days" current={op.architectResponseDays != null ? `${op.architectResponseDays}d` : '—'} met={op.architectResponseDays == null ? null : op.architectResponseDays <= 3} />
@@ -200,7 +200,7 @@ export default function KpiDashboardPage() {
         Two more daily targets are tracked on their own screens: <Link href="/app/command-center/daily-logs" style={{ color: C.blue, textDecoration: 'none', fontWeight: 700 }}>Field reports by 4 PM</Link> and <Link href="/app/command-center/oac" style={{ color: C.blue, textDecoration: 'none', fontWeight: 700 }}>Weekly OAC / GC call cadence</Link>.
       </div>
 
-      <div style={{ fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, color: C.dim, margin: '4px 2px 10px' }}>By Site — worst first</div>
+      <div style={{ fontSize: 12, fontWeight: 800, color: C.dim, margin: '4px 2px 10px' }}>By Site — Worst First</div>
       {pLoading ? (
         <div style={{ color: C.dim, padding: 40, textAlign: 'center' }}>Loading sites…</div>
       ) : k.bySite.length === 0 ? (

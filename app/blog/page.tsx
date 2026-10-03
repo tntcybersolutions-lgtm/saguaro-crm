@@ -2,16 +2,16 @@ import React from 'react';
 import Link from 'next/link';
 
 const C = {
-  dark: '#0B0B0F',
-  gold: '#F59E0B',
-  goldBright: '#FBBF24',
+  dark: 'var(--bg-base)',
+  gold: 'var(--brand-primary)',
+  goldBright: 'var(--brand-primary-strong)',
   text: '#F5F5F7',
   dim: '#A1A1AA',
   border: 'rgba(255,255,255,0.10)',
   hairline: 'rgba(255,255,255,0.08)',
   cardBg: 'rgba(255,255,255,0.02)',
-  raised: '#131318',
-  raisedAlt: '#1A1A21',
+  raised: 'var(--bg-surface)',
+  raisedAlt: 'var(--bg-surface-2)',
   green: '#22C55E',
   blue: '#6366F1',
   font: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
@@ -26,7 +26,7 @@ const NAV_LINKS = [
 
 const FEATURED = {
   category: 'AI in Construction',
-  title: 'How AI Takeoffs Cut Estimating Time From Days to Minutes',
+  title: 'How AI Takeoffs Cut Estimating Time from Days to Minutes',
   excerpt:
     'Manual quantity takeoffs are the single biggest bottleneck in preconstruction. We break down how Saguaro reads a PDF plan set, counts fixtures, measures linear footage, and calculates square footage automatically — and what that means for win rates when you can turn around three bids in the time it used to take to do one.',
   date: 'June 9, 2026',
@@ -60,7 +60,7 @@ const POSTS = [
   },
   {
     category: 'Estimating',
-    title: 'Bid Smarter: Turning Historical Data Into Sharper Numbers',
+    title: 'Bid Smarter: Turning Historical Data into Sharper Numbers',
     excerpt:
       'Every bid you submit teaches the system something. We explain how Saguaro\'s bid intelligence surfaces your real unit costs, builds a polished bid jacket in minutes, and helps you spot the scope gaps that quietly erode margin on fixed-price work.',
     date: 'May 19, 2026',
@@ -115,7 +115,7 @@ export default function BlogPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/login" style={{ padding: '8px 16px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 8, color: C.dim, fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Log In</Link>
-          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
+          <Link href="/signup" style={{ padding: '8px 18px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Free Trial</Link>
         </div>
       </nav>
 
@@ -125,12 +125,12 @@ export default function BlogPage() {
         <section style={{ textAlign: 'center', padding: '120px 24px 72px', background: 'transparent' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, fontSize: 12, fontWeight: 500, color: C.dim, letterSpacing: 0.3, marginBottom: 28 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.gold, display: 'inline-block' }} />
-            The Saguaro blog
+            The Saguaro Blog
           </div>
           <h1 style={{ fontWeight: 600, lineHeight: 1.15, margin: '0 0 18px', letterSpacing: -0.5 }}>
-            Building the future of{' '}
+            Building the Future of{' '}
             <span style={{ color: C.text }}>
-              construction tech
+              Construction Tech
             </span>
           </h1>
           <p style={{ fontSize: 'clamp(15px, 2vw, 17px)', color: C.dim, maxWidth: 600, margin: '0 auto', lineHeight: 1.65 }}>
@@ -147,7 +147,7 @@ export default function BlogPage() {
               borderRadius: 14, padding: '40px 44px', boxShadow: 'none',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: C.dim, letterSpacing: 1.5, textTransform: 'uppercase' }}>Featured</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: C.dim }}>Featured</span>
                 <span style={{ width: 4, height: 4, borderRadius: '50%', background: C.dim, display: 'inline-block' }} />
                 <span style={{ fontSize: 12, color: C.dim }}>{FEATURED.category}</span>
                 <span style={{ fontSize: 11, color: C.dim, background: 'transparent', border: `1px solid rgba(255,255,255,0.14)`, borderRadius: 999, padding: '2px 10px', fontWeight: 500 }}>{FEATURED.tag}</span>
@@ -165,7 +165,7 @@ export default function BlogPage() {
                   <span style={{ fontSize: 13, color: C.dim }}>{FEATURED.read}</span>
                 </div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, color: C.gold }}>
-                  Read article <ArrowIcon />
+                  Read Article <ArrowIcon />
                 </span>
               </div>
             </div>
@@ -175,7 +175,7 @@ export default function BlogPage() {
         {/* Post Grid */}
         <section style={{ padding: '0 24px 80px', maxWidth: 1100, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 8 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0, color: C.text }}>Latest articles</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, margin: 0, color: C.text }}>Latest Articles</h2>
             <span style={{ fontSize: 13, color: C.dim }}>Insights from the Saguaro Control Systems team</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 0 }}>
@@ -188,7 +188,7 @@ export default function BlogPage() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: post.accent, display: 'inline-block' }} />
-                    <span style={{ fontSize: 11, fontWeight: 500, color: C.dim, letterSpacing: 1, textTransform: 'uppercase' }}>{post.category}</span>
+                    <span style={{ fontSize: 11, fontWeight: 500, color: C.dim }}>{post.category}</span>
                   </div>
                   <h3 style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.35, margin: '0 0 12px', color: C.text, letterSpacing: -0.2 }}>
                     {post.title}
@@ -211,7 +211,7 @@ export default function BlogPage() {
 
           {/* More coming soon */}
           <div style={{ marginTop: 40, textAlign: 'center', padding: '40px 24px 0', borderTop: `1px solid ${C.hairline}` }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginBottom: 6 }}>More stories on the way</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginBottom: 6 }}>More Stories on the Way</div>
             <p style={{ fontSize: 14, color: C.dim, margin: 0, lineHeight: 1.6 }}>
               We publish new construction-tech deep dives every couple of weeks. Start a free trial and we will email you when the next one drops.
             </p>
@@ -228,7 +228,7 @@ export default function BlogPage() {
             <p style={{ fontSize: 16, color: C.dim, margin: '0 0 36px', lineHeight: 1.6 }}>
               AI takeoffs, the Sage assistant, pay apps, RFIs, and 50-state compliance — all in one platform. 30-day free trial, free migration, no credit card.
             </p>
-            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0B0B0F', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
+            <Link href="/signup" style={{ display: 'inline-block', padding: '12px 28px', background: C.gold, borderRadius: 8, color: '#0A0A00', fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>
               Start Free Trial — No Credit Card
             </Link>
           </div>

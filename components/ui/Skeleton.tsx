@@ -4,7 +4,7 @@ import { colors, radius, shadow } from '../../lib/design-tokens';
 
 // Shared skeleton system — raised surface base with a soft neutral shimmer
 // sweep. Tokens keep every loading state consistent with the design system.
-const SKEL_BASE = colors.raised;       // #1A1A21 — matches card/panel surface
+const SKEL_BASE = colors.raised;       // solid stand-in for the glass card surface
 const SKEL_SHEEN = 'rgba(255,255,255,0.06)';
 
 const keyframes = `

@@ -62,15 +62,16 @@ import { useEntitlements } from '../lib/hooks/useEntitlements';
 import { moduleAccent } from '../lib/module-identity';
 import { Pill } from './ui/premium';
 import { PROJECT_NAV_SECTIONS } from '@/lib/project-nav';
-import { useProjectContext } from '@/lib/hooks/useProjectContext';
+import { useProjectContext, refreshProjectContext } from '@/lib/hooks/useProjectContext';
 import { isToolVisible, hiddenToolCount, type ToolSignals } from '@/lib/project-tools';
 import { isCompanyToolVisible, hiddenCompanyToolCount, type CompanySignals } from '@/lib/company-tools';
 import { usePermissions } from '@/lib/hooks/usePermissions';
 import type { PermCategory } from '@/lib/permission-categories';
-import { normalisePhase, stepsForPhase, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
+import { normalisePhase, stepsForPhase, stepsDone, LEADING_SECTIONS, PHASE_LABEL } from '@/lib/project-phase';
 import { isClosedStatus } from '@/lib/project-lifecycle';
-import useSWR from 'swr';
+import useSWR, { mutate as swrMutate } from 'swr';
 import BrandMark from '@/components/BrandMark';
+import { STATUS_COLORS } from '@/lib/status-colors';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 interface NavItem {
@@ -97,6 +98,24 @@ interface NavSection {
      a project the rail renders PROJECT_NAV_SECTIONS, which is one job's worth
      of work and has no halves to separate. */
   zone?: 'sell' | 'build';
+}
+
+/* Section headers render in Title Case (docs/COPY-STYLE.md §1–§2). The
+   underlying titles are KEYS — the open/closed preference in localStorage,
+   LEADING_SECTIONS, SECTION_PERMISSION — so the data is never rewritten; only
+   what is drawn is. "MORE · LOW VOLTAGE / IT" -> "More · Low Voltage / IT". */
+const KEEP_UPPER = new Set(['IT', 'AI', 'RFI', 'RFIS', 'CO', 'COS', 'SOV', 'PO', 'POS', 'T&M', 'QC', 'OAC', 'KPI', 'KPIS', 'BIM', 'W-9']);
+const SMALL_WORDS = new Set(['a', 'an', 'the', 'and', 'but', 'or', 'nor', 'for', 'so', 'yet', 'as', 'at', 'by', 'in', 'of', 'off', 'on', 'per', 'to', 'up', 'via', 'vs', 'from', 'into', 'onto', 'over', 'with']);
+function displayTitle(raw: unknown): string {
+  const s = String(raw ?? '');
+  if (s !== s.toUpperCase()) return s; // already authored in mixed case
+  const words = s.split(' ');
+  return words.map((w, i) => {
+    if (KEEP_UPPER.has(w)) return w === 'RFIS' ? 'RFIs' : w === 'COS' ? 'COs' : w === 'POS' ? 'POs' : w === 'KPIS' ? 'KPIs' : w;
+    const lower = w.toLowerCase();
+    if (i > 0 && i < words.length - 1 && SMALL_WORDS.has(lower)) return lower;
+    return lower.replace(/(^|-)([a-z])/g, (_m, p: string, c: string) => p + c.toUpperCase());
+  }).join(' ');
 }
 
 /** "Acme General Contractors" -> "AG" (first letters of the first two words). */
@@ -146,7 +165,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
   // Plan pill — honest states only: nothing renders until billing answers.
   const planPill = (() => {
     if (!plan) return null;
-    if (plan.status === 'past_due') return <Pill tone="red" caps>Past due</Pill>;
+    if (plan.status === 'past_due') return <Pill tone="red" caps>Past Due</Pill>;
     if (plan.status === 'trialing') return <Pill tone="amber" caps>Trial</Pill>;
     if (plan.name) return <Pill tone="gold" caps>{plan.name}</Pill>;
     return null;
@@ -186,7 +205,7 @@ function BrandLockup({ collapsed }: { collapsed: boolean }) {
         borderRadius: Math.round(size * 0.27),
         background: 'linear-gradient(150deg, var(--brand-primary-strong), var(--brand-primary) 60%, var(--brand-primary-hover))',
         boxShadow: '0 4px 14px var(--brand-primary-25), inset 0 1px 0 rgba(255,255,255,0.35)',
-        color: '#241500', fontSize, fontWeight: 900, letterSpacing: '0.02em',
+        color: 'var(--on-brand)', fontSize, fontWeight: 900,
         userSelect: 'none',
       }}
     >
@@ -633,26 +652,19 @@ export default function AppSidebar({
      lib/project-phase, so the menu and the guidance cannot drift apart —
      which is exactly how users ended up asking where to start. */
   const projectPhase = normalisePhase((projectCtx as any)?.project?.phase);
+  const phaseTone = projectPhase === 'building' ? STATUS_COLORS.ongoing : STATUS_COLORS.lead;
   const phaseSteps = stepsForPhase(projectPhase);
 
   /* Which steps are already behind you. Same signals the journey rail on the
      overview uses, so a tick in the menu and a tick on the page agree. */
-  const phaseDone: Record<string, boolean> = React.useMemo(() => {
-    const c = projectCtx as any;
-    const money = c?.money;
-    return {
-      takeoff:        Boolean(c?.takeoff?.completed),
-      estimate:       (Number(c?.takeoff?.totalCost) || 0) > 0 || (c?.budget?.lineCount || 0) > 0,
-      'bid-packages': (c?.bidPackages || []).length > 0,
-      proposal:       (Number(money?.originalContract) || 0) > 0,
-      budget:         (Number(money?.originalContract) || 0) > 0 || (c?.budget?.lineCount || 0) > 0,
-      subs:           (c?.subs || []).length > 0,
-      schedule:       (c?.counts?.scheduleTasks || 0) > 0,
-      'daily-logs':   c?.recent?.lastDailyLogDate != null,
-      'pay-apps':     (money?.payAppCount || 0) > 0,
-      closeout:       isClosedStatus(c?.project?.status),
-    };
-  }, [projectCtx]);
+  /* lib/project-phase stepsDone is the ONE definition of "done". This used to
+     be a private copy of the map, and the copy is how the rail ticked "Bill
+     the owner" on an auto-created $0 draft while nothing else could be fixed
+     in one place. */
+  const phaseDone: Record<string, boolean> = React.useMemo(
+    () => stepsDone(projectCtx as any, (projectCtx as any)?.money, isClosedStatus),
+    [projectCtx],
+  );
   const [showAllTools, setShowAllTools] = useState(false);
   const toolSignals = (projectCtx ?? null) as ToolSignals | null;
 
@@ -789,11 +801,13 @@ export default function AppSidebar({
         left: 0,
         bottom: 0,
         width,
-        // machined rail: vertical gradient + a shadow cast INTO the content and a
-        // lit inset hairline — the shell reads as a surface, not a flat strip
-        background: `linear-gradient(180deg, ${colors.darkAlt}, #0c0d10)`,
-        borderRight: '1px solid rgba(0,0,0,0.55)',
-        boxShadow: '14px 0 34px rgba(0,0,0,0.35), inset -1px 0 0 rgba(255,255,255,0.05)',
+        // glass rail on jet black (COPY-STYLE §6): a faint white pane over the
+        // black page, one lit hairline on the content edge
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025)), #000000',
+        backdropFilter: 'blur(16px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(140%)',
+        borderRight: '1px solid rgba(255,255,255,0.09)',
+        boxShadow: '14px 0 34px rgba(0,0,0,0.5)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: z.sidebar,
@@ -830,14 +844,32 @@ export default function AppSidebar({
             move needs somewhere to live, and it belongs next to the phase it
             changes rather than buried in project settings. */}
         {inProject && !collapsed && (
-          <div style={{ padding: '0 16px 12px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              fontSize: 9.5, fontWeight: 900, letterSpacing: 0.9, textTransform: 'uppercase',
-              padding: '2px 8px', borderRadius: 999,
-              background: projectPhase === 'building' ? 'rgba(34,197,94,0.14)' : 'rgba(245,158,11,0.14)',
-              border: `1px solid ${projectPhase === 'building' ? 'rgba(34,197,94,0.32)' : 'rgba(245,158,11,0.3)'}`,
-              color: projectPhase === 'building' ? '#4ADE80' : '#FBBF24',
-            }}>{PHASE_LABEL[projectPhase]}</span>
+          <div style={{ padding: '0 16px 14px 20px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10 }}>
+            {/* Stacked, not side by side: the big pill and the button do not
+                both fit in the rail width and overlapped. */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0, maxWidth: '100%' }}>
+              {/* The phase pill reads the status palette: Bidding = Lead blue,
+                  Building = Ongoing green (COPY-STYLE §5). Title Case, big and
+                  bright — it is the one thing on the rail that says where the
+                  job is. */}
+              <span style={{
+                alignSelf: 'flex-start',
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                fontSize: 15, fontWeight: 800, letterSpacing: 'normal',
+                padding: '7px 15px', borderRadius: 999, lineHeight: 1,
+                background: phaseTone.bg,
+                border: `1.5px solid ${phaseTone.color}`,
+                color: phaseTone.color,
+                boxShadow: `0 0 0 3px ${phaseTone.bg}`,
+                whiteSpace: 'nowrap',
+              }}>
+                <span aria-hidden style={{ width: 8, height: 8, borderRadius: 999, background: phaseTone.color, flexShrink: 0 }} />
+                {PHASE_LABEL[projectPhase]}
+              </span>
+              <span style={{ fontSize: 11.5, fontWeight: 600, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {projectPhase === 'building' ? 'You won it — running the job' : 'Chasing this job — not won yet'}
+              </span>
+            </div>
             <button
               type="button"
               onClick={async () => {
@@ -848,16 +880,35 @@ export default function AppSidebar({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phase: next }),
                   });
-                  if (r.ok) window.location.reload();
-                } catch { /* leave the rail as it is; the pill still reads true */ }
+                  /* Refresh the shared snapshot in place instead of a full
+                     reload. The reload raced the 30s browser cache on
+                     /api/project-context and the rail kept the BIDDING
+                     checklist until a hard refresh. Every subscriber (rail,
+                     phase bar, next-step bar, overview journey) re-renders
+                     from the one fresh copy. */
+                  if (r.ok && projectId) {
+                    await refreshProjectContext(projectId);
+                    void swrMutate('/api/projects/list');
+                  }
+                } catch (e) {
+                  /* The PUT may have landed even if the refresh failed; a
+                     reload is the honest fallback so the pill never lies. */
+                  console.error('[AppSidebar] phase change refresh failed', e);
+                  window.location.reload();
+                }
               }}
+              title={projectPhase === 'building' ? 'Move this job back to the bidding phase' : 'Mark this job won and switch to the building phase'}
+              className="pmBtn"
               style={{
-                background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
-                fontSize: 10.5, fontWeight: 700, color: colors.textMuted, textDecoration: 'underline',
-                textUnderlineOffset: 2,
+                flexShrink: 0, cursor: 'pointer', whiteSpace: 'nowrap',
+                background: projectPhase === 'building' ? 'rgba(255,255,255,0.07)' : STATUS_COLORS.ongoing.bg,
+                border: `1px solid ${projectPhase === 'building' ? 'rgba(255,255,255,0.16)' : STATUS_COLORS.ongoing.border}`,
+                borderRadius: 8, padding: '6px 11px',
+                fontSize: 12, fontWeight: 800,
+                color: projectPhase === 'building' ? colors.text : STATUS_COLORS.ongoing.color,
               }}
             >
-              {projectPhase === 'building' ? 'Back to bidding' : 'We won it'}
+              {projectPhase === 'building' ? '← Back to Bidding' : 'We Won It →'}
             </button>
           </div>
         )}
@@ -888,7 +939,7 @@ export default function AppSidebar({
                     padding: '7px 10px', margin: '2px 0', borderRadius: 8,
                     textDecoration: 'none', fontSize: font.size.md,
                     fontWeight: on ? font.weight.semibold : font.weight.medium,
-                    color: on ? colors.gold : isDone ? colors.textMuted : '#DCE5F0',
+                    color: on ? colors.gold : isDone ? colors.textDim : colors.textMuted,
                     background: on ? colors.goldDim : 'transparent',
                   }}
                   onMouseEnter={(e) => { if (!on) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; }}
@@ -898,9 +949,9 @@ export default function AppSidebar({
                     flexShrink: 0, width: 18, height: 18, borderRadius: 5,
                     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 10, fontWeight: 900, fontVariantNumeric: 'tabular-nums',
-                    background: isDone ? 'rgba(34,197,94,0.16)' : on ? 'rgba(0,0,0,0.22)' : 'rgba(245,158,11,0.16)',
-                    border: `1px solid ${isDone ? 'rgba(34,197,94,0.34)' : on ? 'rgba(0,0,0,0.28)' : 'rgba(245,158,11,0.3)'}`,
-                    color: isDone ? '#4ADE80' : on ? colors.dark : '#FBBF24',
+                    background: isDone ? STATUS_COLORS.ongoing.bg : on ? 'var(--brand-primary)' : 'rgba(255,255,255,0.06)',
+                    border: `1px solid ${isDone ? STATUS_COLORS.ongoing.border : on ? 'var(--brand-primary)' : 'rgba(255,255,255,0.16)'}`,
+                    color: isDone ? STATUS_COLORS.ongoing.color : on ? 'var(--on-brand)' : colors.textMuted,
                   }}>
                     {isDone ? <Check size={10} weight="bold" /> : i + 1}
                   </span>
@@ -944,8 +995,9 @@ export default function AppSidebar({
              and its contents. It only says out loud where the boundary is. */
           const prevZone = sIdx > 0 ? renderSections[sIdx - 1]?.zone : undefined;
           const showZoneDivider = !inProject && !!section.zone && section.zone !== prevZone;
-          const zoneTone = section.zone === 'sell' ? '#3B82F6' : '#F59E0B';
-          const zoneLabel = section.zone === 'sell' ? 'Winning the work' : 'Running the work';
+          /* Same meaning as the phase pill: blue sells (Lead), green builds (Ongoing). */
+          const zoneTone = section.zone === 'sell' ? STATUS_COLORS.lead.color : STATUS_COLORS.ongoing.color;
+          const zoneLabel = section.zone === 'sell' ? 'Winning the Work' : 'Running the Work';
 
           return (
           <div key={section.title} style={{ marginBottom: sIdx === renderSections.length - 1 ? 4 : 14 }}>
@@ -953,12 +1005,12 @@ export default function AppSidebar({
               collapsed ? (
                 /* No room for words at 64px — the rule alone still marks the
                    boundary, and the color carries the same meaning it does on
-                   the journey rails: blue sells, gold builds. */
+                   the phase pill: blue sells, green builds. */
                 <div aria-hidden style={{ height: 2, borderRadius: 2, margin: '4px 10px 12px', background: `linear-gradient(90deg, ${zoneTone}, transparent)` }} />
               ) : (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '2px 0 10px', padding: '0 2px' }}>
                   <span style={{
-                    fontSize: 9.5, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+                    fontSize: 12, fontWeight: 800, letterSpacing: 'normal',
                     color: zoneTone, whiteSpace: 'nowrap',
                   }}>{zoneLabel}</span>
                   <span aria-hidden style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${zoneTone}55, transparent)` }} />
@@ -980,40 +1032,37 @@ export default function AppSidebar({
                   padding: '0 16px 6px 20px',
                   background: 'transparent',
                   border: 'none',
-                  /* Was textFaint (#5B677A) at 10px — dark slate on near-black,
-                     uppercase and tracked out. When a section is collapsed these
-                     headers are the ONLY nav text on screen, and at that size and
-                     color they read as disabled rather than as structure.
-                     Gold at 78% keeps them clearly subordinate to the item
-                     labels while actually being readable, and ties the rail to
-                     the brand instead of to a grey that means nothing. */
-                  fontSize: '10.5px',
+                  /* When a section is collapsed these headers are the ONLY nav
+                     text on screen, so they must read as structure, not as
+                     disabled. Title Case at 12px in the secondary text grey —
+                     clearly subordinate to the white item labels, clearly
+                     readable on black, and no longer brand-colored (neon yellow
+                     is reserved for the active item and the primary action). */
+                  fontSize: '12px',
                   fontWeight: font.weight.bold,
-                  color: 'rgba(245,158,11,0.78)',
-                  textTransform: 'uppercase',
-                  letterSpacing: 1.3,
+                  color: colors.textDim,
                   userSelect: 'none',
                   cursor: 'pointer',
                   textAlign: 'left',
                 }}
               >
-                <span>{section.title}</span>
+                <span>{displayTitle(section.title)}</span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                   {/* A closed section says how much is inside, so nothing feels
                       lost — you can see there are eleven tools in there. */}
                   {!isOpen && (
                     <span style={{
                       fontVariantNumeric: 'tabular-nums',
-                      background: 'rgba(245,158,11,0.14)',
-                      border: '1px solid rgba(245,158,11,0.28)',
-                      color: '#FBBF24',
-                      borderRadius: 999, padding: '1px 6px', fontSize: 9.5, lineHeight: 1.5,
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.16)',
+                      color: colors.textMuted,
+                      borderRadius: 999, padding: '1px 6px', fontSize: 10.5, lineHeight: 1.5,
                     }}>{visibleItems.length}</span>
                   )}
                   <CaretDown
                     size={10}
                     weight="bold"
-                    color="rgba(245,158,11,0.6)"
+                    color={colors.textDim}
                     style={{ transform: isOpen ? 'none' : 'rotate(-90deg)', transition: 'transform .15s' }}
                   />
                 </span>
@@ -1045,7 +1094,7 @@ export default function AppSidebar({
                     borderRadius: radius.lg,
                     fontSize: font.size.md,
                     fontWeight: active ? font.weight.semibold : font.weight.medium,
-                    color: active ? colors.gold : '#DCE5F0',
+                    color: active ? colors.gold : colors.textMuted,
                     background: active
                       ? 'linear-gradient(180deg, var(--brand-primary-18), var(--brand-primary-12))'
                       : 'transparent',
@@ -1114,7 +1163,7 @@ export default function AppSidebar({
                        * and it is a different animal:
                        *
                        *   hex    19-51% saturation   the muddy pastels
-                       *   vivid  71-96% saturation   #F59E0B, #3B82F6, #22C55E
+                       *   vivid  71-96% saturation   e.g. amber, blue, green
                        *
                        * Measured all 97 modules against this rail: every vivid
                        * clears 3:1, most sit between 5:1 and 9:1. So the color
@@ -1144,7 +1193,7 @@ export default function AppSidebar({
                         fontSize: font.size.xs,
                         fontWeight: font.weight.bold,
                         background: active ? colors.gold : accent ? accent.soft : colors.raisedAlt,
-                        color: active ? colors.dark : accent ? accent.hex : colors.textMuted,
+                        color: active ? 'var(--on-brand)' : accent ? accent.hex : colors.textMuted,
                         borderRadius: radius.full,
                         padding: '1px 7px',
                         minWidth: 18,
@@ -1184,11 +1233,11 @@ export default function AppSidebar({
                 fontWeight: font.weight.semibold, cursor: 'pointer',
               }}
             >
-              <span>{showAllTools ? 'Show fewer tools' : 'All tools'}</span>
+              <span>{showAllTools ? 'Show Fewer Tools' : 'All Tools'}</span>
               {!showAllTools && (
                 <span style={{
-                  fontVariantNumeric: 'tabular-nums', color: '#FBBF24', fontWeight: font.weight.bold,
-                  background: 'rgba(245,158,11,0.14)', border: '1px solid rgba(245,158,11,0.28)',
+                  fontVariantNumeric: 'tabular-nums', color: 'var(--brand-primary)', fontWeight: font.weight.bold,
+                  background: 'var(--brand-primary-12)', border: '1px solid var(--brand-primary-25)',
                   borderRadius: 999, padding: '1px 7px', fontSize: 10.5,
                 }}>+{hiddenTools}</span>
               )}
@@ -1220,7 +1269,7 @@ export default function AppSidebar({
                 borderRadius: radius.lg,
                 fontSize: font.size.md,
                 fontWeight: active ? font.weight.semibold : font.weight.medium,
-                color: active ? colors.gold : '#DCE5F0',
+                color: active ? colors.gold : colors.textMuted,
                 background: active ? colors.goldDim : 'transparent',
                 textDecoration: 'none',
                 transition: 'background .15s ease, color .15s ease',

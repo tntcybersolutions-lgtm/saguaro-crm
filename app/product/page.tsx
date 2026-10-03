@@ -43,12 +43,12 @@ const GET_PAID: Mod[] = [
 ];
 
 const RADIO_FEATURES = [
-  'Push-to-talk',
-  'EN ↔ ES live translation',
-  'Panic with live location',
-  'Dispatch map',
-  'Channel patching',
-  'Guest links for subs',
+  'Push-to-Talk',
+  'EN ↔ ES Live Translation',
+  'Panic with Live Location',
+  'Dispatch Map',
+  'Channel Patching',
+  'Guest Links for Subs',
 ];
 
 function IncludedTag() {
@@ -56,8 +56,8 @@ function IncludedTag() {
     <span style={{
       display: 'inline-flex', alignItems: 'center', padding: '2px 9px', borderRadius: 999,
       background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.30)',
-      color: '#22C55E', fontSize: 9.5, fontWeight: 800, letterSpacing: '0.08em',
-      textTransform: 'uppercase', whiteSpace: 'nowrap',
+      color: '#22C55E', fontSize: 11, fontWeight: 800,
+      whiteSpace: 'nowrap',
     }}>Included</span>
   );
 }
@@ -85,7 +85,7 @@ function ModCard({ mod }: { mod: Mod }) {
 function GroupHeader({ eyebrow, title, sub }: { eyebrow: string; title: string; sub: string }) {
   return (
     <div style={{ marginBottom: 28 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#F59E0B', marginBottom: 10 }}>{eyebrow}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-primary)', marginBottom: 10 }}>{eyebrow}</div>
       <h2 style={{ fontWeight: 600, letterSpacing: '-0.02em', color: '#FFFFFF', margin: '0 0 8px', lineHeight: 1.2 }}>{title}</h2>
       <p style={{ fontSize: 14.5, color: '#CBD5E1', lineHeight: 1.65, margin: 0, maxWidth: 560 }}>{sub}</p>
     </div>
@@ -100,7 +100,7 @@ export default function ProductPage() {
   const radioAccent = moduleAccent('radio');
 
   return (
-    <div style={{ background: '#0a0a0a', color: '#FFFFFF', minHeight: '100vh', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{ background: 'var(--bg-base)', color: '#FFFFFF', minHeight: '100vh', fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif" }}>
       <PremiumFX />
       <style>{`
         .prodGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -125,11 +125,11 @@ export default function ProductPage() {
 
       {/* ── HERO ── */}
       <section className="prodSection" style={{ paddingTop: 'clamp(48px, 7vh, 64px)', paddingBottom: 36, textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 100, padding: '6px 14px', marginBottom: 24, fontSize: 10.5, fontWeight: 500, color: '#CBD5E1', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
-          The full module lineup
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 100, padding: '6px 14px', marginBottom: 24, fontSize: 12, fontWeight: 500, color: '#CBD5E1' }}>
+          The Full Module Lineup
         </div>
         <h1 style={{ fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.12, margin: '0 0 16px' }}>
-          Every module. One platform.<br />Nothing sold in pieces.
+          Every Module. One Platform.<br />Nothing Sold in Pieces.
         </h1>
         <p style={{ fontSize: 15, color: '#CBD5E1', lineHeight: 1.7, maxWidth: 620, margin: '0 auto' }}>
           Grouped the way you actually think about the work: win it, run it, talk to the crew about it, and get paid for it. Every module below ships with the platform — no per-module add-on pricing.
@@ -138,7 +138,7 @@ export default function ProductPage() {
 
       {/* ── WIN WORK ── */}
       <section className="prodSection" style={{ paddingTop: 24 }}>
-        <GroupHeader eyebrow="Win Work" title="Price the work" sub="From plans on screen to a bid you can defend — measured, leveled, and packaged." />
+        <GroupHeader eyebrow="Win Work" title="Price the Work" sub="From plans on screen to a bid you can defend — measured, leveled, and packaged." />
         <div className="prodGrid">
           {WIN_WORK.map((m, i) => <ModCard key={`${m.name}-${i}`} mod={m} />)}
         </div>
@@ -147,7 +147,7 @@ export default function ProductPage() {
       {/* ── RUN WORK ── */}
       <section className="prodSection" style={{ paddingTop: 16, background: '#141416', borderTop: '1px solid rgba(255,255,255,0.12)', borderBottom: '1px solid rgba(255,255,255,0.12)', maxWidth: 'none' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <GroupHeader eyebrow="Run Work" title="Run the job" sub="The day-to-day of the jobsite, captured where it happens instead of reconstructed on Friday." />
+          <GroupHeader eyebrow="Run Work" title="Run the Job" sub="The day-to-day of the jobsite, captured where it happens instead of reconstructed on Friday." />
           <div className="prodGrid">
             {RUN_WORK.map((m, i) => <ModCard key={`${m.name}-${i}`} mod={m} />)}
           </div>
@@ -156,7 +156,7 @@ export default function ProductPage() {
 
       {/* ── TALK ── */}
       <section className="prodSection">
-        <GroupHeader eyebrow="Talk" title="Talk to the crew" sub="Saguaro Radio is the platform's comms flagship — a real radio for the jobsite, on the phones your crew already carries." />
+        <GroupHeader eyebrow="Talk" title="Talk to the Crew" sub="Saguaro Radio is the platform's comms flagship — a real radio for the jobsite, on the phones your crew already carries." />
         <div className="prodCard" style={{ padding: 28 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
             <span style={{
@@ -186,8 +186,8 @@ export default function ProductPage() {
 
       {/* ── RADIO DEMO ── */}
       <section id="radio-demo" className="prodSection" style={{ paddingTop: 0 }}>
-        <div style={{ border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.04)', borderRadius: 16, padding: 28 }}>
-          <h2 style={{ fontWeight: 600, letterSpacing: '-0.02em', margin: '0 0 8px' }}>Try the radio</h2>
+        <div style={{ border: '1px solid var(--brand-primary-25)', background: 'color-mix(in srgb, var(--brand-primary) 4%, transparent)', borderRadius: 16, padding: 28 }}>
+          <h2 style={{ fontWeight: 600, letterSpacing: '-0.02em', margin: '0 0 8px' }}>Try the Radio</h2>
           {demoRadioToken ? (
             <>
               <p style={{ fontSize: 14, color: '#CBD5E1', lineHeight: 1.65, margin: '0 0 18px', maxWidth: 620 }}>
@@ -197,10 +197,10 @@ export default function ProductPage() {
                 src={`/portals/radio/${demoRadioToken}`}
                 title="Saguaro Radio — live guest demo channel"
                 allow="microphone; autoplay"
-                style={{ width: '100%', height: 480, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, background: '#0a0a0a', display: 'block', marginBottom: 12 }}
+                style={{ width: '100%', height: 480, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, background: 'var(--bg-base)', display: 'block', marginBottom: 12 }}
               />
-              <a href={`/portals/radio/${demoRadioToken}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: '#F59E0B', textDecoration: 'underline', textUnderlineOffset: 3 }}>
-                Open the guest channel full screen
+              <a href={`/portals/radio/${demoRadioToken}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: 'var(--brand-primary)', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                Open the Guest Channel Full Screen →
               </a>
             </>
           ) : (
@@ -213,18 +213,18 @@ export default function ProductPage() {
 
       {/* ── GET PAID ── */}
       <section className="prodSection" style={{ paddingTop: 0 }}>
-        <GroupHeader eyebrow="Get Paid" title="From signed contract to money in the bank" sub="The paperwork that gets you paid, generated from the numbers you already entered." />
+        <GroupHeader eyebrow="Get Paid" title="From Signed Contract to Money in the Bank" sub="The paperwork that gets you paid, generated from the numbers you already entered." />
         <div className="prodGrid">
           {GET_PAID.map((m, i) => <ModCard key={`${m.name}-${i}`} mod={m} />)}
         </div>
       </section>
 
       {/* ── CTA ── */}
-      <section className="prodSection" style={{ textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.12)', maxWidth: 'none', background: '#141416' }}>
-        <h2 style={{ fontWeight: 600, letterSpacing: '-0.03em', margin: '0 0 24px' }}>All of it, in one login.</h2>
+      <section className="prodSection" style={{ textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.12)', maxWidth: 'none', background: 'var(--bg-surface)' }}>
+        <h2 style={{ fontWeight: 600, letterSpacing: '-0.03em', margin: '0 0 24px' }}>All of It, in One Login.</h2>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <GoldButton href="/signup">Start free trial</GoldButton>
-          <GhostButton href="/get-the-app">Get the iOS app</GhostButton>
+          <GoldButton href="/signup">Start Free Trial</GoldButton>
+          <GhostButton href="/get-the-app">Get the iOS App</GhostButton>
         </div>
         <p style={{ fontSize: 13, color: 'rgba(203,213,225,0.6)', marginTop: 20 }}>30-day trial. No credit card required.</p>
       </section>

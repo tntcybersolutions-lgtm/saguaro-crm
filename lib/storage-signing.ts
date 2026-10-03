@@ -29,6 +29,18 @@ function bucketAndPath(stored: string): { bucket: string; path: string } | null 
 }
 
 /**
+ * "<bucket>/<path>" for a stored public or signed storage URL, or null for
+ * anything else. Two rows that point at the same object produce the same key,
+ * which is how a merged listing (photos + files, files + drawings) tells a
+ * second record of one object from a second object.
+ */
+export function storageObjectKey(stored: string | null | undefined): string | null {
+  if (!stored) return null;
+  const parsed = bucketAndPath(stored);
+  return parsed ? `${parsed.bucket}/${parsed.path}` : null;
+}
+
+/**
  * No signing call may hang a request.
  *
  * Every read path that signs is on a page's critical load path, and

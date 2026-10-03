@@ -16,8 +16,8 @@ import { Check } from '@phosphor-icons/react';
  * active pip — depth without a canvas.
  */
 
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
 
 export interface SetupStep {
   n: number;
@@ -38,8 +38,8 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
         borderRadius: 16,
         padding: '18px 22px',
         marginBottom: 18,
-        background: 'linear-gradient(150deg, rgba(245,158,11,0.10), rgba(13,29,46,0.55) 42%, rgba(10,10,12,0.9))',
-        border: '1px solid rgba(245,158,11,0.22)',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--brand-primary-25)',
         boxShadow: '0 18px 40px -24px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
@@ -50,7 +50,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
           position: 'absolute',
           inset: 0,
           backgroundImage:
-            'linear-gradient(rgba(245,158,11,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.05) 1px, transparent 1px)',
+            'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
           backgroundSize: '22px 22px',
           maskImage: 'radial-gradient(circle at 18% 0%, #000, transparent 72%)',
           WebkitMaskImage: 'radial-gradient(circle at 18% 0%, #000, transparent 72%)',
@@ -82,17 +82,17 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                       state === 'done'
                         ? `linear-gradient(150deg, ${GOLD_HI}, ${GOLD})`
                         : state === 'active'
-                          ? 'rgba(245,158,11,0.16)'
+                          ? 'var(--brand-primary-18)'
                           : 'rgba(255,255,255,0.05)',
                     border:
                       state === 'todo'
                         ? '1px solid rgba(255,255,255,0.16)'
                         : `1px solid ${GOLD}`,
-                    color: state === 'done' ? '#241500' : state === 'active' ? GOLD_HI : 'rgba(255,255,255,0.45)',
-                    boxShadow: isActive ? `0 0 0 4px rgba(245,158,11,0.14)` : 'none',
+                    color: state === 'done' ? '#0A0A00' : state === 'active' ? GOLD_HI : 'rgba(255,255,255,0.45)',
+                    boxShadow: isActive ? `0 0 0 4px var(--brand-primary-12)` : 'none',
                   }}
                 >
-                  {s.done ? <Check size={15} weight="bold" color="#241500" /> : s.n}
+                  {s.done ? <Check size={15} weight="bold" color="#0A0A00" /> : s.n}
                 </span>
 
                 <span style={{ minWidth: 0 }}>
@@ -124,7 +124,7 @@ export default function SetupStepper({ steps, active }: { steps: SetupStep[]; ac
                     marginTop: -14,
                     borderRadius: 2,
                     background: s.done
-                      ? `linear-gradient(90deg, ${GOLD}, rgba(245,158,11,0.25))`
+                      ? `linear-gradient(90deg, ${GOLD}, var(--brand-primary-25))`
                       : 'rgba(255,255,255,0.10)',
                   }}
                 />

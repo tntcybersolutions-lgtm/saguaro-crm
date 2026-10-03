@@ -32,8 +32,10 @@ import { divColor } from '@/lib/takeoff/divisions';
 import { humanError } from '@/lib/errors';
 
 /* ── palette (Sonoran navy + gold) ──────────────────────────────────────── */
-const BG = '#0a0a0a', PANEL = '#161b22', LINE = 'rgba(255,255,255,0.09)', GOLD = '#F59E0B';
-const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', RED = '#f87171', CYAN = '#FBBF24';
+const BG = 'var(--bg-base)', PANEL = 'var(--bg-surface)', LINE = 'rgba(255,255,255,0.09)', GOLD = 'var(--brand-primary)';
+// Canvas 2D cannot resolve CSS custom properties — the drawing surface keeps literal brand hexes.
+const CANVAS_GOLD = '#F59E0B', CANVAS_CYAN = '#FBBF24';
+const TEXT = '#e6edf3', DIM = '#8b949e', GREEN = '#34D399', RED = '#f87171', CYAN = 'var(--brand-primary-strong)';
 const CANVAS_BG = '#0b0e13';
 const TRADE_PALETTE = ['#FBBF24', '#34D399', '#F59E0B', '#F472B6', '#A78BFA', '#FB7185', '#22D3EE', '#FACC15', '#4ADE80', '#FBBF24', '#F97316', '#2DD4BF'];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -137,15 +139,15 @@ function G({ g, s = 20, c = 'currentColor', w = 1.7 }: { g: Glyph; s?: number; c
 type TracerTool = MeasureToolKind | 'select' | 'pan' | 'scale' | 'countsim' | 'fillroom';
 type ToolDef = { t: TracerTool; g: Glyph; label: string; hint: string };
 const TOOLS: ToolDef[] = [
-  { t: 'select', g: 'select', label: 'Select / edit', hint: 'Click a shape to select; drag a vertex to move it; Del removes a vertex.' },
+  { t: 'select', g: 'select', label: 'Select / Edit', hint: 'Click a shape to select; drag a vertex to move it; Del removes a vertex.' },
   { t: 'pan', g: 'pan', label: 'Pan', hint: 'Drag to pan. (Hold Space with any tool to pan.)' },
-  { t: 'scale', g: 'scale', label: 'Set scale', hint: 'Click two points a known distance apart, then enter the distance.' },
+  { t: 'scale', g: 'scale', label: 'Set Scale', hint: 'Click two points a known distance apart, then enter the distance.' },
   { t: 'area', g: 'area', label: 'Area', hint: 'Click the corners; click the first point (or Enter) to close. Net of voids.' },
   { t: 'deduction', g: 'deduction', label: 'Void', hint: 'Draw a hole inside the active/selected area to deduct it.' },
   { t: 'linear', g: 'linear', label: 'Linear', hint: 'Click along the run; per-segment + total. Click start to close a loop.' },
   { t: 'count', g: 'count', label: 'Count', hint: 'Click each item to tally.' },
-  { t: 'countsim', g: 'findsim', label: 'Find similar (auto-count)', hint: 'Drag a tight box around ONE symbol — every matching instance is counted (deterministic template match).' },
-  { t: 'fillroom', g: 'fillroom', label: 'Fill room (auto-area)', hint: 'Click inside an enclosed room — the walls are traced and turned into a net-area condition.' },
+  { t: 'countsim', g: 'findsim', label: 'Find Similar (Auto-Count)', hint: 'Drag a tight box around one symbol — every matching instance is counted (deterministic template match).' },
+  { t: 'fillroom', g: 'fillroom', label: 'Fill Room (Auto-Area)', hint: 'Click inside an enclosed room — the walls are traced and turned into a net-area condition.' },
   { t: 'pitch', g: 'pitch', label: 'Pitch', hint: 'Trace the roof footprint; enter rise (x:12) for true sloped area + squares.' },
   { t: 'volume', g: 'volume', label: 'Volume', hint: 'Trace the footprint; enter depth (or use station areas) for CY.' },
   { t: 'arc', g: 'arc', label: 'Arc', hint: 'Click start, a point on the arc, then end (3-point).' },
@@ -930,7 +932,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
       }
       // vertices when selected — capped at 300 handles (an uncapped 3000-marker auto-count froze the paint;
       // above the cap the heat-dot layer above is the selection affordance and the vertex list paginates)
-      if (sel && pts.length <= 300) for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, 4.5, 0, 7); ctx.fillStyle = GOLD; ctx.fill(); ctx.strokeStyle = '#0b0e13'; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (sel && pts.length <= 300) for (const p of pts) { ctx.beginPath(); ctx.arc(p.x, p.y, 4.5, 0, 7); ctx.fillStyle = CANVAS_GOLD; ctx.fill(); ctx.strokeStyle = '#0b0e13'; ctx.lineWidth = 1.5; ctx.stroke(); }
       // per-segment length HUD on the selected linear run (the "feels like Bluebeam" lever)
       if (sel && !isArea && c.tool !== 'count' && c.tool !== 'arc' && ppf > 0 && c.points.length >= 2) {
         const segs = segmentLengthsLF(c.points, ppf);
@@ -952,12 +954,12 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
     const drawPts = draft.map(sc);
     if (drawPts.length) {
       const isArea = tool === 'area' || tool === 'pitch' || tool === 'volume';
-      ctx.strokeStyle = CYAN; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+      ctx.strokeStyle = CANVAS_CYAN; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
       if (tool === 'count') {
-        for (const p of drawPts) { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 7); ctx.fillStyle = CYAN; ctx.fill(); ctx.strokeStyle = '#0b0e13'; ctx.lineWidth = 1.4; ctx.stroke(); }
+        for (const p of drawPts) { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 7); ctx.fillStyle = CANVAS_CYAN; ctx.fill(); ctx.strokeStyle = '#0b0e13'; ctx.lineWidth = 1.4; ctx.stroke(); }
       } else if (tool === 'arc' && drawPts.length >= 3) {
-        drawArc(ctx, drawPts[0], drawPts[1], drawPts[2], CYAN, 2.2);
-        for (const p of drawPts) { ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fillStyle = CYAN; ctx.fill(); ctx.strokeStyle = '#0b0e13'; ctx.lineWidth = 1.2; ctx.stroke(); }
+        drawArc(ctx, drawPts[0], drawPts[1], drawPts[2], CANVAS_CYAN, 2.2);
+        for (const p of drawPts) { ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fillStyle = CANVAS_CYAN; ctx.fill(); ctx.strokeStyle = '#0b0e13'; ctx.lineWidth = 1.2; ctx.stroke(); }
       } else {
         ctx.beginPath(); ctx.moveTo(drawPts[0].x, drawPts[0].y);
         for (let i = 1; i < drawPts.length; i++) ctx.lineTo(drawPts[i].x, drawPts[i].y);
@@ -965,7 +967,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
         if (isArea && cursor) ctx.closePath();
         ctx.stroke();
         if (isArea && drawPts.length >= 2) { ctx.fillStyle = 'rgba(56,189,248,0.14)'; ctx.fill(); }
-        for (const p of drawPts) { ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fillStyle = CYAN; ctx.fill(); ctx.strokeStyle = '#0b0e13'; ctx.lineWidth = 1.2; ctx.stroke(); }
+        for (const p of drawPts) { ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fillStyle = CANVAS_CYAN; ctx.fill(); ctx.strokeStyle = '#0b0e13'; ctx.lineWidth = 1.2; ctx.stroke(); }
       }
     }
     // active void draft
@@ -973,18 +975,18 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
     if (hd.length) { ctx.strokeStyle = RED; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(hd[0].x, hd[0].y); for (let i = 1; i < hd.length; i++) ctx.lineTo(hd[i].x, hd[i].y); if (cursor) { const cp = sc(cursor); ctx.lineTo(cp.x, cp.y); } ctx.stroke(); for (const p of hd) { ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, 7); ctx.fillStyle = RED; ctx.fill(); } }
 
     // calibration
-    if (calib.length) { const cp = calib.map(sc); ctx.strokeStyle = GOLD; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cp[0].x, cp[0].y); for (let i = 1; i < cp.length; i++) ctx.lineTo(cp[i].x, cp[i].y); if (calib.length === 1 && cursor) { const c2 = sc(cursor); ctx.lineTo(c2.x, c2.y); } ctx.stroke(); for (const p of cp) { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 7); ctx.fillStyle = GOLD; ctx.fill(); } }
+    if (calib.length) { const cp = calib.map(sc); ctx.strokeStyle = CANVAS_GOLD; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cp[0].x, cp[0].y); for (let i = 1; i < cp.length; i++) ctx.lineTo(cp[i].x, cp[i].y); if (calib.length === 1 && cursor) { const c2 = sc(cursor); ctx.lineTo(c2.x, c2.y); } ctx.stroke(); for (const p of cp) { ctx.beginPath(); ctx.arc(p.x, p.y, 5, 0, 7); ctx.fillStyle = CANVAS_GOLD; ctx.fill(); } }
 
     // auto-count template box
     if (tool === 'countsim' && box) {
       const a = sc(box.a), b = sc(box.b);
-      ctx.save(); ctx.strokeStyle = GOLD; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.6;
+      ctx.save(); ctx.strokeStyle = CANVAS_GOLD; ctx.setLineDash([6, 4]); ctx.lineWidth = 1.6;
       ctx.strokeRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
       ctx.setLineDash([]); ctx.fillStyle = 'rgba(245,158,11,0.10)'; ctx.fillRect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y)); ctx.restore();
     }
 
     // snap indicator
-    if (cursor && snapHint) { const cp = sc(cursor); ctx.strokeStyle = snapHint === 'endpoint' ? GREEN : GOLD; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(cp.x, cp.y, 8, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cp.x - 11, cp.y); ctx.lineTo(cp.x + 11, cp.y); ctx.moveTo(cp.x, cp.y - 11); ctx.lineTo(cp.x, cp.y + 11); ctx.stroke(); }
+    if (cursor && snapHint) { const cp = sc(cursor); ctx.strokeStyle = snapHint === 'endpoint' ? GREEN : CANVAS_GOLD; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(cp.x, cp.y, 8, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cp.x - 11, cp.y); ctx.lineTo(cp.x + 11, cp.y); ctx.moveTo(cp.x, cp.y - 11); ctx.lineTo(cp.x, cp.y + 11); ctx.stroke(); }
   }, [view, cssSize, dims, sheetConds, draft, holes, holeDraft, cursor, snapHint, selId, tool, calib, box, gridOn, gridFt, ppf, imgReady]);
 
   drawRef.current = draw;
@@ -1005,7 +1007,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
 
   /* ── UI ────────────────────────────────────────────────────────────── */
   const inp: React.CSSProperties = { background: BG, border: `1px solid ${LINE}`, borderRadius: 7, color: TEXT, padding: '7px 9px', fontSize: 13, width: '100%' };
-  const iconBtn = (active: boolean): React.CSSProperties => ({ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 9, border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'rgba(245,158,11,0.16)' : 'transparent', color: active ? GOLD : TEXT, cursor: 'pointer' });
+  const iconBtn = (active: boolean): React.CSSProperties => ({ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 9, border: `1px solid ${active ? GOLD : LINE}`, background: active ? 'color-mix(in srgb, var(--brand-primary) 16%, transparent)' : 'transparent', color: active ? GOLD : TEXT, cursor: 'pointer' });
   const miniBtn: React.CSSProperties = { width: 38, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 7, border: `1px solid ${LINE}`, background: 'transparent', color: TEXT, cursor: 'pointer' };
   const activeHint = TOOLS.find((t) => t.t === tool)?.hint || '';
 
@@ -1017,15 +1019,15 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
         <button onClick={onClose} style={{ ...miniBtn, width: 'auto', padding: '0 12px', gap: 7 }}><G g="close" s={16} />Close</button>
         <b style={{ fontSize: 15 }}>Plan Tracer</b>
         <span style={{ fontSize: 12, color: ppf > 0 ? GREEN : DIM, border: `1px solid ${ppf > 0 ? 'rgba(52,211,153,0.4)' : LINE}`, borderRadius: 20, padding: '3px 10px' }}>
-          {ppf > 0 ? `Scale ${ppf.toFixed(2)} px/ft` : 'No scale — set it first'}{scaleBad ? ' · check!' : ''}
+          {ppf > 0 ? `Scale ${ppf.toFixed(2)} px/ft` : 'No Scale — Set It First'}{scaleBad ? ' · check!' : ''}
         </span>
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
           <button title="Undo (Ctrl+Z)" disabled={!past.length} onClick={undo} style={{ ...miniBtn, opacity: past.length ? 1 : 0.4 }}><G g="undo" s={17} /></button>
           <button title="Redo (Ctrl+Shift+Z)" disabled={!future.length} onClick={redo} style={{ ...miniBtn, opacity: future.length ? 1 : 0.4 }}><G g="redo" s={17} /></button>
           <span style={{ width: 1, height: 22, background: LINE, margin: '0 4px' }} />
-          <button title="Zoom out" onClick={() => zoomAt(1 / 1.2, cssSize.w / 2 + (containerRef.current?.getBoundingClientRect().left || 0), cssSize.h / 2 + (containerRef.current?.getBoundingClientRect().top || 0))} style={miniBtn}><G g="zoomOut" s={17} /></button>
+          <button title="Zoom Out" onClick={() => zoomAt(1 / 1.2, cssSize.w / 2 + (containerRef.current?.getBoundingClientRect().left || 0), cssSize.h / 2 + (containerRef.current?.getBoundingClientRect().top || 0))} style={miniBtn}><G g="zoomOut" s={17} /></button>
           <span style={{ fontSize: 12, color: DIM, width: 46, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>{Math.round(view.scale * 100)}%</span>
-          <button title="Zoom in" onClick={() => zoomAt(1.2, cssSize.w / 2 + (containerRef.current?.getBoundingClientRect().left || 0), cssSize.h / 2 + (containerRef.current?.getBoundingClientRect().top || 0))} style={miniBtn}><G g="zoomIn" s={17} /></button>
+          <button title="Zoom In" onClick={() => zoomAt(1.2, cssSize.w / 2 + (containerRef.current?.getBoundingClientRect().left || 0), cssSize.h / 2 + (containerRef.current?.getBoundingClientRect().top || 0))} style={miniBtn}><G g="zoomIn" s={17} /></button>
           <button title="Fit (F)" onClick={fit} style={{ ...miniBtn, width: 'auto', padding: '0 10px', gap: 6 }}><G g="fit" s={16} />Fit</button>
         </div>
       </div>
@@ -1033,12 +1035,12 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
       {/* drawing register — per-sheet scale, switch pages, add PDF/image sheets */}
       {sheets.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: `1px solid ${LINE}`, background: BG, overflowX: 'auto' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700, flexShrink: 0 }}><G g="sheet" s={15} c={DIM} />Sheets · {sheets.length}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: DIM, fontWeight: 700, flexShrink: 0 }}><G g="sheet" s={15} c={DIM} />Sheets · {sheets.length}</span>
           {sheets.map((s) => {
             const act = s.id === activeSheet;
             return (
               <button key={s.id} onClick={() => goSheet(s.id)} title={`${s.name}${s.ppf > 0 ? ` · ${s.ppf.toFixed(2)} px/ft` : ' · no scale'}`}
-                style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 7, padding: '5px 9px', borderRadius: 8, border: `1px solid ${act ? GOLD : LINE}`, background: act ? 'rgba(245,158,11,0.14)' : 'transparent', color: act ? GOLD : TEXT, cursor: 'pointer' }}>
+                style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 7, padding: '5px 9px', borderRadius: 8, border: `1px solid ${act ? GOLD : LINE}`, background: act ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', color: act ? GOLD : TEXT, cursor: 'pointer' }}>
                 {s.url
                   ? <img src={s.url} alt="" style={{ width: 30, height: 22, objectFit: 'cover', borderRadius: 3, border: `1px solid ${LINE}`, background: '#fff' }} />
                   : <span style={{ width: 30, height: 22, borderRadius: 3, border: `1px dashed ${LINE}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: DIM }}>{s.page}</span>}
@@ -1063,8 +1065,8 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
             <button key={td.t} title={td.label} onClick={() => { setTool(td.t); setSnapHint(null); if (td.t !== 'scale') setCalib([]); }} style={iconBtn(tool === td.t)}><G g={td.g} s={21} /></button>
           ))}
           <span style={{ height: 1, background: LINE, margin: '4px 2px' }} />
-          <button title="Endpoint snap" onClick={() => setSnapOn((v) => !v)} style={iconBtn(snapOn)}><G g="magnet" s={20} /></button>
-          <button title="Grid snap" onClick={() => setGridOn((v) => !v)} style={iconBtn(gridOn)}><G g="grid" s={20} /></button>
+          <button title="Endpoint Snap" onClick={() => setSnapOn((v) => !v)} style={iconBtn(snapOn)}><G g="magnet" s={20} /></button>
+          <button title="Grid Snap" onClick={() => setGridOn((v) => !v)} style={iconBtn(gridOn)}><G g="grid" s={20} /></button>
         </div>
 
         {/* canvas */}
@@ -1072,8 +1074,8 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
           {!planUrl ? (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24 }}>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 9, background: GOLD, color: '#0a0a0a', fontWeight: 700, borderRadius: 9, padding: '12px 20px', cursor: 'pointer' }}>
-                  <G g="pdf" s={18} c="#0a0a0a" />Open PDF plan set
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 9, background: GOLD, color: '#0A0A00', fontWeight: 700, borderRadius: 9, padding: '12px 20px', cursor: 'pointer' }}>
+                  <G g="pdf" s={18} c="#0A0A00" />Open PDF plan set
                   <input type="file" accept="application/pdf,.pdf" style={{ display: 'none' }} onChange={(e) => { onAddFile(e.target.files?.[0]); (e.target as HTMLInputElement).value = ''; }} />
                 </label>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: 9, background: 'transparent', color: TEXT, border: `1px solid ${LINE}`, fontWeight: 700, borderRadius: 9, padding: '12px 20px', cursor: 'pointer' }}>
@@ -1107,9 +1109,9 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
             </div>
             {tool === 'scale' && calib.length === 2 && (
               <div style={{ pointerEvents: 'auto', background: 'rgba(13,17,23,0.95)', border: `1px solid ${GOLD}`, borderRadius: 9, padding: 10, display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 12.5, color: TEXT }}>Known distance</span>
+                <span style={{ fontSize: 12.5, color: TEXT }}>Known Distance</span>
                 <input autoFocus value={knownFt} onChange={(e) => setKnownFt(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && applyScale()} placeholder="ft" style={{ ...inp, width: 80 }} />
-                <button onClick={applyScale} style={{ background: GOLD, color: '#0a0a0a', fontWeight: 700, border: 'none', borderRadius: 7, padding: '8px 12px', cursor: 'pointer' }}>Set</button>
+                <button onClick={applyScale} style={{ background: GOLD, color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 7, padding: '8px 12px', cursor: 'pointer' }}>Set</button>
               </div>
             )}
           </div>
@@ -1121,7 +1123,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
             {/* live measurement / finish form */}
             {engineKind && (
               <div style={{ border: `1px solid rgba(56,189,248,0.4)`, borderRadius: 12, padding: 12, background: 'rgba(56,189,248,0.05)' }}>
-                <div style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>{TOOLS.find((t) => t.t === tool)?.label} — measuring</div>
+                <div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>{TOOLS.find((t) => t.t === tool)?.label} — measuring</div>
                 <div style={{ fontSize: 30, fontWeight: 800, color: CYAN, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{live ? live.value.toLocaleString() : '0'} <span style={{ fontSize: 15, color: DIM }}>{live?.unit}</span></div>
                 {live?.extra ? <div style={{ fontSize: 11.5, color: DIM, marginTop: 2 }}>{live.extra}</div> : null}
 
@@ -1145,7 +1147,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                     {tool === 'volume' && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         <div style={{ display: 'flex', gap: 6 }}>
-                          {(['depth', 'stations'] as const).map((m) => <button key={m} onClick={() => setVolMode(m)} style={{ flex: 1, padding: '6px', borderRadius: 7, border: `1px solid ${volMode === m ? GOLD : LINE}`, background: volMode === m ? 'rgba(245,158,11,0.14)' : 'transparent', color: volMode === m ? GOLD : TEXT, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>{m === 'depth' ? 'Uniform depth' : 'Stations'}</button>)}
+                          {(['depth', 'stations'] as const).map((m) => <button key={m} onClick={() => setVolMode(m)} style={{ flex: 1, padding: '6px', borderRadius: 7, border: `1px solid ${volMode === m ? GOLD : LINE}`, background: volMode === m ? 'color-mix(in srgb, var(--brand-primary) 14%, transparent)' : 'transparent', color: volMode === m ? GOLD : TEXT, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>{m === 'depth' ? 'Uniform Depth' : 'Stations'}</button>)}
                         </div>
                         {volMode === 'depth'
                           ? <input placeholder="Depth in" value={depthIn} onChange={(e) => setDepthIn(e.target.value)} style={inp} />
@@ -1156,21 +1158,21 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                                   <input placeholder="area SF" value={r.a} onChange={(e) => setStations((ss) => ss.map((x, j) => j === i ? { ...x, a: e.target.value } : x))} style={inp} />
                                 </div>
                               ))}
-                              <button onClick={() => setStations((ss) => [...ss, { s: '', a: '' }])} style={{ ...miniBtn, width: '100%', height: 30, fontSize: 12 }}>+ station</button>
+                              <button onClick={() => setStations((ss) => [...ss, { s: '', a: '' }])} style={{ ...miniBtn, width: '100%', height: 30, fontSize: 12 }}>+ Station</button>
                             </div>}
                       </div>
                     )}
-                    <button onClick={finishDraft} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: GOLD, color: '#0a0a0a', fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontSize: 13.5 }}><G g="check" s={17} c="#0a0a0a" />{targetConditionId ? 'Set measured value' : 'Add condition'}</button>
+                    <button onClick={finishDraft} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: GOLD, color: '#0A0A00', fontWeight: 700, border: 'none', borderRadius: 8, padding: '10px', cursor: 'pointer', fontSize: 13.5 }}><G g="check" s={17} c="#0A0A00" />{targetConditionId ? 'Set Measured Value' : 'Add Condition'}</button>
                   </div>
                 )}
                 {tool === 'deduction' && <div style={{ fontSize: 12, color: DIM, marginTop: 8 }}>Draw a hole inside the active area (or select an area shape first). Double-click to finish the void.</div>}
               </div>
             )}
             {(tool === 'countsim' || tool === 'fillroom') && (
-              <div style={{ border: `1px solid rgba(245,158,11,0.4)`, borderRadius: 12, padding: 12, background: 'rgba(245,158,11,0.05)' }}>
-                <div style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>{tool === 'countsim' ? 'Find similar — auto-count' : 'Fill room — auto-area'}</div>
+              <div style={{ border: `1px solid var(--brand-primary-35)`, borderRadius: 12, padding: 12, background: 'color-mix(in srgb, var(--brand-primary) 5%, transparent)' }}>
+                <div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>{tool === 'countsim' ? 'Find Similar — Auto-Count' : 'Fill Room — Auto-Area'}</div>
                 <div style={{ fontSize: 12.5, color: DIM, marginTop: 6, lineHeight: 1.45 }}>{tool === 'countsim'
-                  ? 'Drag a tight box around ONE symbol on the plan. Every matching instance is counted and dropped as a marker — deterministic template match, no AI round-trip.'
+                  ? 'Drag a tight box around one symbol on the plan. Every matching instance is counted and dropped as a marker — deterministic template match, no AI round-trip.'
                   : 'Click inside an enclosed room. The walls are traced into a net-area condition. Needs a scale set on this sheet.'}</div>
                 {tool === 'countsim' ? (
                   <label style={{ display: 'block', marginTop: 10, fontSize: 12, color: DIM }}>Match sensitivity · {cntThresh.toFixed(2)}
@@ -1188,7 +1190,7 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
             )}
             {tool === 'select' && selected && (
               <div style={{ border: `1px solid ${LINE}`, borderRadius: 12, padding: 12 }}>
-                <div style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700, marginBottom: 6 }}>Selected · {measuredLabel(selected)}</div>
+                <div style={{ fontSize: 11, color: DIM, fontWeight: 700, marginBottom: 6 }}>Selected · {measuredLabel(selected)}</div>
                 <input value={selected.name} onChange={(e) => setConditions((cs) => cs.map((c) => c.id === selected.id ? { ...c, name: e.target.value } : c))} style={{ ...inp, marginBottom: 6 }} />
                 <select value={selected.assemblyId} onChange={(e) => setConditions((cs) => cs.map((c) => c.id === selected.id ? { ...c, assemblyId: e.target.value, color: divColor(csiOfAsm(e.target.value)) } : c))} style={{ ...inp, marginBottom: 8 }}>
                   {asmList(selected.kind).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -1222,27 +1224,27 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
                     </>
                   );
                 })()}
-                <button onClick={() => { commit(() => setConditions((cs) => cs.filter((c) => c.id !== selected.id))); setSelId(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', marginTop: 8, border: `1px solid rgba(248,113,113,0.4)`, background: 'rgba(248,113,113,0.08)', color: RED, borderRadius: 8, padding: '8px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><G g="trash" s={15} c={RED} />Delete condition</button>
+                <button onClick={() => { commit(() => setConditions((cs) => cs.filter((c) => c.id !== selected.id))); setSelId(null); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, width: '100%', marginTop: 8, border: `1px solid rgba(248,113,113,0.4)`, background: 'rgba(248,113,113,0.08)', color: RED, borderRadius: 8, padding: '8px', cursor: 'pointer', fontWeight: 600, fontSize: 13 }}><G g="trash" s={15} c={RED} />Delete Condition</button>
               </div>
             )}
 
             {/* running totals */}
             <div style={{ border: `1px solid ${LINE}`, borderRadius: 12, padding: 12 }}>
-              <div style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700, marginBottom: 8 }}>Running totals · {conditions.length} conditions</div>
+              <div style={{ fontSize: 11, color: DIM, fontWeight: 700, marginBottom: 8 }}>Running totals · {conditions.length} conditions</div>
               <div style={{ display: 'flex', gap: 10 }}>
                 {[['Area', `${totals.sf.toLocaleString()} SF`], ['Linear', `${totals.lf.toLocaleString()} LF`], ['Count', `${totals.ea} EA`]].map(([k, v]) => (
-                  <div key={k} style={{ flex: 1 }}><div style={{ fontSize: 10, color: DIM, textTransform: 'uppercase', fontWeight: 700 }}>{k}</div><div style={{ fontSize: 14, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{v}</div></div>
+                  <div key={k} style={{ flex: 1 }}><div style={{ fontSize: 10, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 14, fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>{v}</div></div>
                 ))}
               </div>
             </div>
 
             {/* priced rollup */}
-            <div style={{ border: `1px solid rgba(245,158,11,0.3)`, background: 'rgba(245,158,11,0.06)', borderRadius: 12, padding: 12 }}>
-              <div style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700 }}>Priced live · sell</div>
+            <div style={{ border: `1px solid var(--brand-primary-25)`, background: 'color-mix(in srgb, var(--brand-primary) 6%, transparent)', borderRadius: 12, padding: 12 }}>
+              <div style={{ fontSize: 11, color: DIM, fontWeight: 700 }}>Priced Live · Sell</div>
               <div style={{ fontSize: 30, fontWeight: 800, color: GOLD, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>{usd(result.sellCents)}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 4 }}>
                 {[['Material', usd(result.materialCents)], ['Labor', `${usd(result.laborCents)} · ${result.laborHrs}h`], ['Items', `${result.lines.length}`]].map(([k, v]) => (
-                  <div key={k}><div style={{ fontSize: 10, color: DIM, textTransform: 'uppercase', fontWeight: 700 }}>{k}</div><div style={{ fontSize: 13, fontWeight: 800 }}>{v}</div></div>
+                  <div key={k}><div style={{ fontSize: 10, color: DIM, fontWeight: 700 }}>{k}</div><div style={{ fontSize: 13, fontWeight: 800 }}>{v}</div></div>
                 ))}
               </div>
               {result.byDivision.length > 0 && (
@@ -1254,10 +1256,10 @@ export default function PlanTracer({ planUrl, dims, ppf, setPpf, setPlan, condit
 
             {/* coverage list */}
             <div>
-              <div style={{ fontSize: 11, letterSpacing: 1, textTransform: 'uppercase', color: DIM, fontWeight: 700, marginBottom: 8 }}>Coverage — every measured condition</div>
+              <div style={{ fontSize: 11, color: DIM, fontWeight: 700, marginBottom: 8 }}>Coverage — Every Measured Condition</div>
               {conditions.length === 0 && <div style={{ fontSize: 12.5, color: DIM }}>Nothing measured yet. Pick a tool and trace on the plan.</div>}
               {conditions.map((c) => (
-                <div key={c.id} onClick={() => { if (c.sheetId && c.sheetId !== activeSheet) goSheet(c.sheetId); setSelId(c.id); zoomToCondition(c); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 8px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${c.id === selId ? GOLD : LINE}`, marginBottom: 5, background: c.id === selId ? 'rgba(245,158,11,0.08)' : 'transparent' }}>
+                <div key={c.id} onClick={() => { if (c.sheetId && c.sheetId !== activeSheet) goSheet(c.sheetId); setSelId(c.id); zoomToCondition(c); }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 8px', borderRadius: 8, cursor: 'pointer', border: `1px solid ${c.id === selId ? GOLD : LINE}`, marginBottom: 5, background: c.id === selId ? 'var(--brand-primary-08)' : 'transparent' }}>
                   <span style={{ width: 10, height: 10, borderRadius: 3, background: condColor(c), flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div><div style={{ fontSize: 11.5, color: DIM }}>{measuredLabel(c)}{c.tool ? ` · ${c.tool}` : ''}</div></div>
                   <button onClick={(e) => { e.stopPropagation(); commit(() => setConditions((cs) => cs.filter((x) => x.id !== c.id))); if (selId === c.id) setSelId(null); }} style={{ ...miniBtn, width: 26, height: 24 }}><G g="trash" s={13} c={RED} /></button>

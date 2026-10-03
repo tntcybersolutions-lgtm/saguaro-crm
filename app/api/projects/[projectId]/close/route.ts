@@ -19,6 +19,20 @@ import {
   ACTIVE_STATUS,
   isClosedStatus,
 } from '@/lib/project-lifecycle';
+import { contractSum } from '@/lib/closeout-doc-data';
+import { normalisePhase } from '@/lib/project-phase';
+
+/** projects.phase written on close. lib/project-phase has only two working
+ *  phases (bidding | building) and normalises 'closeout' to 'building', so
+ *  every reader keeps working; the journey rail and next-step bar read the
+ *  closed STATUS and stop showing the building checklist. */
+const CLOSED_PHASE = 'closeout';
+/** What a reopened job goes back to. */
+const REOPENED_PHASE = 'building';
+
+/** Bid package statuses that are already final. Anything else on a closed
+ *  job is still being advertised on the company Bid Board as open. */
+const BID_PACKAGE_TERMINAL = ['awarded', 'closed', 'cancelled', 'canceled'];
 
 /** YYYY-MM-DD in the server's local date, never `new Date().toISOString()`
  *  which shifts the day for anyone west of UTC. */
@@ -48,7 +62,12 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
     if (error) throw error;
     if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const { blockers, unchecked } = await closeoutBlockers(db, g.user.tenantId, params.projectId);
+    const [{ blockers, unchecked, placeholderWaivers }, contract] = await Promise.all([
+      closeoutBlockers(db, g.user.tenantId, params.projectId),
+      // The closeout money strip read only original_contract_amount /
+      // contract_amount and showed "$0 — fully billed" on a $2.4M job.
+      contractSum(db, g.user.tenantId, params.projectId),
+    ]);
     return NextResponse.json({
       project,
       closed: isClosedStatus(project.status),
@@ -56,6 +75,10 @@ export async function GET(req: NextRequest, { params }: { params: { projectId: s
       // Named so the UI can say "could not be checked" instead of showing a
       // clean gate it has no evidence for.
       unchecked,
+      // Auto-filed "[Award pending]" waivers with no claimant. Not blockers;
+      // reported so the checklist can say why they do not count.
+      placeholderWaivers,
+      contract,
     });
   } catch (e) {
     return apiError('projects/close', e, 'Could not check closeout readiness');
@@ -71,7 +94,7 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
 
     const { data: project, error: readErr } = await db
       .from('projects')
-      .select('id, name, status')
+      .select('id, name, status, phase')
       .eq('id', params.projectId)
       .eq('tenant_id', g.user.tenantId)
       .single();
@@ -108,6 +131,9 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       percent_complete: 100,
       updated_at: new Date().toISOString(),
     };
+    // Left at 'building', the rail kept walking a finished job through
+    // "Set contract & budget". A bid that is closed (lost) keeps 'bidding'.
+    if (normalisePhase(project.phase) === 'building') patch.phase = CLOSED_PHASE;
     const sub = asDate(body.substantial_completion);
     const fin = asDate(body.final_completion);
     if (sub) patch.substantial_completion_date = sub;
@@ -122,8 +148,22 @@ export async function POST(req: NextRequest, { params }: { params: { projectId: 
       .single();
     if (error) throw error;
 
+    /* A closed job is not taking bids. Its packages stayed 'open' and the
+       company Bid Board kept counting them as live. Awarded packages are
+       history and are left exactly as they are. */
+    const { data: closedPackages, error: pkgErr } = await db
+      .from('bid_packages')
+      .update({ status: 'closed', updated_at: new Date().toISOString() })
+      .eq('tenant_id', g.user.tenantId)
+      .eq('project_id', params.projectId)
+      .not('status', 'in', `(${BID_PACKAGE_TERMINAL.join(',')})`)
+      .is('awarded_to', null)
+      .select('id');
+    if (pkgErr) throw pkgErr;
+
     return NextResponse.json({
       project: data,
+      bidPackagesClosed: (closedPackages || []).length,
       // Echoed back so the UI can say what was overridden, and so the
       // response is a record of it rather than a bare success.
       closedOverOpenItems: body.force ? blockers : [],
@@ -138,14 +178,25 @@ export async function DELETE(req: NextRequest, { params }: { params: { projectId
   if (!g.ok) return g.res;
   try {
     const db = createServerClient();
+    const { data: current, error: readErr } = await db
+      .from('projects')
+      .select('id, phase')
+      .eq('id', params.projectId)
+      .eq('tenant_id', g.user.tenantId)
+      .maybeSingle();
+    if (readErr) throw readErr;
+    if (!current) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    const reopen: Record<string, unknown> = {
+      status: ACTIVE_STATUS,
+      closeout_date: null,
+      actual_end_date: null,
+      updated_at: new Date().toISOString(),
+    };
+    // Undo only what Close wrote; a bidding job stays bidding.
+    if (String(current.phase || '').toLowerCase() === CLOSED_PHASE) reopen.phase = REOPENED_PHASE;
     const { data, error } = await db
       .from('projects')
-      .update({
-        status: ACTIVE_STATUS,
-        closeout_date: null,
-        actual_end_date: null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(reopen)
       .eq('id', params.projectId)
       .eq('tenant_id', g.user.tenantId)
       .select('id, name, status')

@@ -2,15 +2,15 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
-const GOLD = '#F59E0B';
-const DARK = '#0a0a0a';
-const RAISED = '#141416';
+const GOLD = 'var(--brand-primary)';
+const DARK = 'var(--bg-base)';
+const RAISED = 'var(--bg-surface)';
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM = '#CBD5E1';
 const TEXT = '#FFFFFF';
 const GREEN = '#22c55e';
 const RED = '#ef4444';
-const BLUE = '#F59E0B';
+const BLUE = 'var(--brand-primary)';
 
 export default function SubPortalLogin() {
   const [email, setEmail] = useState('');
@@ -63,8 +63,8 @@ export default function SubPortalLogin() {
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 40 }}>
         <img src="/logo-full.jpg" alt="Saguaro" style={{ height: 38, borderRadius: 4 }} />
         <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '0.1em', background: `linear-gradient(90deg,${GOLD},#FBBF24)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SAGUARO</span>
-          <span style={{ fontSize: 8, color: DIM, letterSpacing: '0.25em', fontWeight: 600, textTransform: 'uppercase' }}>Control Systems</span>
+          <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: '-0.01em', background: `linear-gradient(90deg,${GOLD},var(--brand-primary-strong))`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Saguaro</span>
+          <span style={{ fontSize: 8, color: DIM, letterSpacing: '-0.01em', fontWeight: 600 }}>Control Systems</span>
         </span>
       </Link>
 
@@ -80,7 +80,7 @@ export default function SubPortalLogin() {
       }}>
         {/* Icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: `rgba(245,158,11,0.12)`, border: `1.5px solid rgba(245,158,11,0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--brand-primary-12)', border: '1.5px solid var(--brand-primary-35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg viewBox="0 0 24 24" fill="none" stroke={BLUE} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
@@ -117,12 +117,12 @@ export default function SubPortalLogin() {
             </div>
             <style>{`@keyframes progress { from { width: 0% } to { width: 100% } }`}</style>
             <Link href={`/portals/sub/${found.token}`} style={{ display: 'inline-block', marginTop: 12, fontSize: 12, color: BLUE, textDecoration: 'none' }}>
-              Click here if not redirected →
+              Click Here If Not Redirected →
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DIM, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DIM, marginBottom: 8 }}>
               Your Company Email
             </label>
             <input
@@ -161,10 +161,10 @@ export default function SubPortalLogin() {
                 width: '100%',
                 marginTop: 16,
                 padding: '13px',
-                background: loading || !email.trim() ? 'rgba(245,158,11,0.3)' : BLUE,
+                background: loading || !email.trim() ? 'var(--brand-primary-35)' : BLUE,
                 border: 'none',
                 borderRadius: 8,
-                color: '#fff',
+                color: '#0A0A00',
                 fontSize: 15,
                 fontWeight: 700,
                 cursor: loading || !email.trim() ? 'not-allowed' : 'pointer',
@@ -177,7 +177,7 @@ export default function SubPortalLogin() {
 
             {/* Have a direct link */}
             <div style={{ marginTop: 16, padding: '12px 14px', background: '#1c1c1e', border: `1px solid ${BORDER}`, borderRadius: 8 }}>
-              <div style={{ fontSize: 11, color: DIM, marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Have a direct portal link?</div>
+              <div style={{ fontSize: 11, color: DIM, marginBottom: 6, fontWeight: 600 }}>Have a Direct Portal Link?</div>
               <div style={{ fontSize: 12, color: DIM, lineHeight: 1.5 }}>
                 If your GC sent you a direct URL, click the link in that email instead of entering your email here.
               </div>
@@ -201,7 +201,7 @@ export default function SubPortalLogin() {
         <Link href="/" style={{ color: DIM, textDecoration: 'none' }}
           onMouseEnter={e => e.currentTarget.style.color = TEXT}
           onMouseLeave={e => e.currentTarget.style.color = DIM}>
-          Back to Saguaro
+          ← Back to Saguaro
         </Link>
       </div>
     </div>

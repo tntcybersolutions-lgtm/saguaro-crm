@@ -30,14 +30,14 @@ import { MapPin, MapTrifold } from '@phosphor-icons/react';
 import { PremiumEmpty } from './premium';
 import { Skeleton } from './Skeleton';
 
-/* ── Palette (dark shell: white/gold alphas) ─────────────────────────────── */
+/* ── Palette (jet black + glass + neon yellow; canvas needs literal colors) ── */
 const WHITE = '#FFFFFF';
-const MUTED = 'rgba(255,255,255,0.62)';
-const FAINT = 'rgba(255,255,255,0.42)';
-const BORDER = 'rgba(255,255,255,0.08)';
-const GOLD_HI = '#FBBF24';
-const RED = '#EF4444';
-const NEST = 'rgba(20,20,22,0.55)';
+const MUTED = '#D7DEE8';
+const FAINT = '#A9B4C4';
+const BORDER = 'rgba(255,255,255,0.09)';
+const GOLD_HI = '#FFE600';
+const RED = '#FF4D5E';
+const NEST = 'rgba(255,255,255,0.03)';
 
 /* ── Server shapes (GET /api/radio/location) ─────────────────────────────── */
 export interface CrewPin {
@@ -74,7 +74,7 @@ const LOW_BATTERY = 20;
 /* Deterministic trade color — hash of the trade name into a fixed palette, so
  * any trade (canonical or custom) gets a stable, distinguishable pin color
  * without hardcoding the taxonomy here. Red is reserved for panic. */
-const PIN_PALETTE = ['#FBBF24', '#60A5FA', '#34D399', '#F472B6', '#A78BFA', '#FB923C', '#2DD4BF', '#E879F9', '#A3E635', '#38BDF8'];
+const PIN_PALETTE = ['#FFE600', '#60A5FA', '#34D399', '#F472B6', '#A78BFA', '#FB923C', '#2DD4BF', '#E879F9', '#A3E635', '#38BDF8'];
 function tradeColor(trade: string | null | undefined): string {
   if (!trade) return '#94A3B8';
   let h = 0;
@@ -101,11 +101,11 @@ function minutesAgo(iso: string): number {
   return isNaN(t) ? 0 : Math.max(0, Math.round((Date.now() - t) / 60000));
 }
 
-/* Gold (245,158,11) -> red (239,68,68) ramp for heat intensity t in 0..1. */
+/* Brand yellow (255,230,0) -> status red (255,77,94) ramp for heat intensity t in 0..1. */
 function heatRGB(t: number): string {
-  const r = Math.round(245 + (239 - 245) * t);
-  const g = Math.round(158 + (68 - 158) * t);
-  const b = Math.round(11 + (68 - 11) * t);
+  const r = 255;
+  const g = Math.round(230 + (77 - 230) * t);
+  const b = Math.round(0 + (94 - 0) * t);
   return `${r},${g},${b}`;
 }
 
@@ -248,7 +248,7 @@ export function CrewMap({
     bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     /* Blueprint grid. */
-    bctx.strokeStyle = 'rgba(245,158,11,0.05)';
+    bctx.strokeStyle = 'rgba(255,255,255,0.04)';
     bctx.lineWidth = 1;
     for (let gx = 0.5; gx < W; gx += 44) {
       bctx.beginPath(); bctx.moveTo(gx, 0); bctx.lineTo(gx, H); bctx.stroke();
@@ -316,7 +316,7 @@ export function CrewMap({
       bctx.font = '900 9px ui-sans-serif, system-ui, sans-serif';
       bctx.textAlign = 'center';
       bctx.textBaseline = 'middle';
-      bctx.fillStyle = '#141416';
+      bctx.fillStyle = '#0A0A00';
       bctx.fillText(initialsOf(c.name), x, y + 0.5);
 
       drawLabel(bctx, shortName(c.name), x, y + 24, stale ? MUTED : 'rgba(255,255,255,0.82)');
@@ -357,7 +357,7 @@ export function CrewMap({
         const { x, y } = proj(p.lat, p.lng);
         ctx.beginPath();
         ctx.arc(x, y, 10 + phase * 16, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(239,68,68,${(0.55 * (1 - phase)).toFixed(3)})`;
+        ctx.strokeStyle = `rgba(255,77,94,${(0.55 * (1 - phase)).toFixed(3)})`;
         ctx.lineWidth = 2.5;
         ctx.stroke();
         ctx.beginPath();
@@ -367,8 +367,8 @@ export function CrewMap({
         ctx.lineWidth = 1.5;
         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
         ctx.stroke();
-        drawLabel(ctx, 'PANIC', x, y + 21, '#FCA5A5');
-        if (p.name) drawLabel(ctx, shortName(p.name), x, y + 33, '#FCA5A5');
+        drawLabel(ctx, 'Panic', x, y + 21, '#FF7A87');
+        if (p.name) drawLabel(ctx, shortName(p.name), x, y + 33, '#FF7A87');
       }
     };
 
@@ -402,8 +402,8 @@ export function CrewMap({
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
           <MapTrifold size={26} color={GOLD_HI} weight="fill" />
         </div>
-        <div style={{ fontSize: 15, fontWeight: 800, color: '#F4F4F5', marginBottom: 4 }}>Pick a project to map</div>
-        <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.55)', maxWidth: 460, margin: '0 auto 14px' }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: '#FFFFFF', marginBottom: 4 }}>Pick a Project to Map</div>
+        <div style={{ fontSize: 12.5, color: MUTED, maxWidth: 460, margin: '0 auto 14px' }}>
           The site map plots that crew’s live pins and shift heat.
         </div>
         {projects.length > 0 && onPickProject ? (
@@ -415,9 +415,9 @@ export function CrewMap({
                 className="pmBtn"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 15px',
-                  borderRadius: 999, border: '1px solid rgba(245,158,11,0.35)',
-                  background: 'linear-gradient(180deg, rgba(245,158,11,0.14), rgba(245,158,11,0.05))',
-                  color: '#F5B84D', fontSize: 12.5, fontWeight: 800, cursor: 'pointer',
+                  borderRadius: 999, border: '1px solid rgba(255,255,255,0.14)',
+                  background: 'rgba(255,255,255,0.07)',
+                  color: '#FFFFFF', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
                 }}
               >
                 <MapTrifold size={14} weight="fill" />{p.name}
@@ -425,7 +425,7 @@ export function CrewMap({
             ))}
           </div>
         ) : (
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
+          <div style={{ fontSize: 12, color: FAINT }}>
             No projects with radio channels yet — open a project to spin up its All Hands talkgroup.
           </div>
         )}
@@ -436,7 +436,7 @@ export function CrewMap({
   const windowLabel = WINDOWS.find((w) => w.h === hours)?.label || `${hours}h`;
   const legendItem = (label: string, value: React.ReactNode, accent?: string) => (
     <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6, whiteSpace: 'nowrap' }}>
-      <span style={{ fontSize: 9.5, fontWeight: 900, letterSpacing: '0.1em', color: FAINT }}>{label}</span>
+      <span style={{ fontSize: 11.5, fontWeight: 700, color: FAINT }}>{label}</span>
       <span style={{ fontSize: 12.5, fontWeight: 800, color: accent || WHITE, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </span>
   );
@@ -453,8 +453,8 @@ export function CrewMap({
               title={`Heatmap window — last ${w.h} hours`}
               style={{
                 padding: '7px 13px', border: 'none', cursor: 'pointer',
-                fontSize: 11.5, fontWeight: 800, letterSpacing: '0.04em', whiteSpace: 'nowrap',
-                background: hours === w.h ? 'linear-gradient(180deg, rgba(245,158,11,0.30), rgba(245,158,11,0.14))' : 'rgba(255,255,255,0.04)',
+                fontSize: 11.5, fontWeight: 700, whiteSpace: 'nowrap',
+                background: hours === w.h ? 'rgba(255,230,0,0.16)' : 'rgba(255,255,255,0.04)',
                 color: hours === w.h ? GOLD_HI : MUTED,
               }}
             >
@@ -463,10 +463,10 @@ export function CrewMap({
           ))}
         </div>
         <div style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}>
-          {validPanics.length > 0 && legendItem('PANIC', validPanics.length, RED)}
-          {legendItem('CREW', validCrew.length)}
-          {legendItem('SAMPLES', samples)}
-          {legendItem('WINDOW', windowLabel, GOLD_HI)}
+          {validPanics.length > 0 && legendItem('Panic', validPanics.length, RED)}
+          {legendItem('Crew', validCrew.length)}
+          {legendItem('Samples', samples)}
+          {legendItem('Window', windowLabel, GOLD_HI)}
         </div>
       </div>
 

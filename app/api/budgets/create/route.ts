@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
          up the whole insert on 23505 and no budget was ever created. A takeoff
          of 168 lines across 14 divisions is 14 budget rows, which is also what
          "CSI-coded budget" means to a GC. */
-      const byDivision = new Map<string, { division: string; costCode: string; total: number; names: string[] }>();
+      const byDivision = new Map<string, { division: string; costCode: string; total: number; names: string[]; category: string }>();
       for (const item of lineItems as Record<string, unknown>[]) {
         const division = String(item.csiDivision || item.costCode || '').slice(0, 2) || '00';
         const amount = Number(item.originalAmount) || 0;
@@ -93,6 +93,9 @@ export async function POST(req: NextRequest) {
             costCode: String(item.costCode || division),
             total: amount,
             names: [String(item.description || '')],
+            /* The takeoff now sends material + labor per line ('material_labor').
+               Labelling that row 'material' would misstate what the number holds. */
+            category: typeof item.category === 'string' && item.category.trim() ? item.category.trim().slice(0, 40) : 'material',
           });
         }
       }
@@ -166,7 +169,7 @@ export async function POST(req: NextRequest) {
           division: d.division,
           // NOT NULL on this table, and the only field that is.
           description: (CSI_DIVISIONS[d.division]?.name || d.names[0] || `Division ${d.division}`).slice(0, 200),
-          category: 'material',
+          category: d.category,
           original_budget: d.total,
           revised_budget: d.total,
           committed: 0,

@@ -34,9 +34,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/components/Toast';
 
 /* ─── Tokens (mirror app/app/page.tsx — dark navy premium) ───────────── */
-const GOLD   = '#F59E0B';
-const DARK   = '#1c1c1e'; // input / inset surface
-const RAISED = '#141416'; // modal card
+const GOLD   = 'var(--brand-primary)';
+const DARK   = 'var(--bg-surface-2)'; // input / inset surface
+const RAISED = 'var(--bg-surface)'; // modal card
 const BORDER = 'rgba(255,255,255,0.12)';
 const DIM    = '#CBD5E1';
 const TEXT   = '#FFFFFF';
@@ -74,7 +74,7 @@ function parseDollars(s: string): number | null {
 
 const labelStyle: React.CSSProperties = {
   display: 'block', fontSize: 11, fontWeight: 700, color: DIM,
-  textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5,
+  marginBottom: 5,
 };
 const inputStyle: React.CSSProperties = {
   width: '100%', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 7,
@@ -231,7 +231,7 @@ function MarkOutcomeModal({
 
           {/* Your bid */}
           <div style={{ marginBottom: 14 }}>
-            <label style={labelStyle}>Your bid ($)</label>
+            <label style={labelStyle}>Your Bid ($)</label>
             <input
               value={ourBid} onChange={e => setOurBid(e.target.value)} inputMode="decimal"
               placeholder="e.g. 2,500,000" style={inputStyle}
@@ -243,7 +243,7 @@ function MarkOutcomeModal({
           {/* Winning bid — only meaningful when Lost */}
           {isLost && (
             <div style={{ marginBottom: 14 }}>
-              <label style={labelStyle}>Winning bid ($)</label>
+              <label style={labelStyle}>Winning Bid ($)</label>
               <input
                 value={winningBid} onChange={e => setWinningBid(e.target.value)} inputMode="decimal"
                 placeholder="Optional — the amount that won" style={inputStyle}
@@ -266,7 +266,7 @@ function MarkOutcomeModal({
                         key={r} type="button" onClick={() => setReason(active ? '' : r)}
                         style={{
                           padding: '7px 14px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                          background: active ? 'rgba(245,158,11,0.15)' : DARK,
+                          background: active ? 'var(--brand-primary-12)' : DARK,
                           border: `1px solid ${active ? GOLD : BORDER}`,
                           color: active ? GOLD : DIM,
                           transition: 'all .15s',
@@ -279,7 +279,7 @@ function MarkOutcomeModal({
                 </div>
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={labelStyle}>Awarded to</label>
+                <label style={labelStyle}>Awarded To</label>
                 <input
                   value={awardedTo} onChange={e => setAwardedTo(e.target.value)}
                   placeholder="Competitor or firm (optional)" style={inputStyle}
@@ -340,7 +340,7 @@ function MarkOutcomeModal({
                   type="button" onClick={addRow}
                   style={{ marginTop: 4, background: 'transparent', border: `1px dashed ${BORDER}`, borderRadius: 7, color: DIM, cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: '7px 12px', width: '100%' }}
                 >
-                  + Add trade
+                  + Add Trade
                 </button>
               </div>
             )}
@@ -361,7 +361,7 @@ function MarkOutcomeModal({
             </button>
             <button
               type="submit" disabled={pending}
-              style={{ flex: 1, padding: '11px', background: pending ? 'rgba(245,158,11,0.4)' : GOLD, border: 'none', borderRadius: 8, color: '#FFFFFF', fontWeight: 800, fontSize: 14, cursor: pending ? 'not-allowed' : 'pointer' }}
+              style={{ flex: 1, padding: '11px', background: pending ? 'var(--brand-primary-35)' : GOLD, border: 'none', borderRadius: 8, color: '#FFFFFF', fontWeight: 800, fontSize: 14, cursor: pending ? 'not-allowed' : 'pointer' }}
             >
               {pending ? 'Recording…' : outcome === 'won' ? 'Record Win' : 'Record Loss'}
             </button>

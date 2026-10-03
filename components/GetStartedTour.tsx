@@ -18,13 +18,13 @@ import { ScribbleNote, ScribbleArrow } from './Scribble';
  * the tour waits for the viewer to press a step.
  */
 
-const GOLD = '#F59E0B';
-const GOLD_SOFT = 'rgba(245,158,11,0.12)';
+const GOLD = 'var(--brand-primary)';
+const GOLD_SOFT = 'var(--brand-primary-12)';
 const GREEN = '#34C759';
 const TEXT = '#FFFFFF';
 const DIM = '#CBD5E1';
 const MUTED = 'rgba(203,213,225,0.55)';
-const CARD = '#141416';
+const CARD = 'var(--bg-surface)';
 const LINE = 'rgba(255,255,255,0.12)';
 
 type Field = { label: string; value: string; half?: boolean };
@@ -45,45 +45,45 @@ type Step = {
 const STEPS: Step[] = [
   {
     n: 1,
-    nav: 'Sign up',
-    title: 'Create your account',
+    nav: 'Sign Up',
+    title: 'Create Your Account',
     plain:
       'Name, email, company. That is the whole form — about thirty seconds, and no credit card anywhere in it.',
     screen: 'saguarocontrol.net/signup',
     fields: [
-      { label: 'Your full name', value: 'John Smith' },
-      { label: 'Work email', value: 'john@acmeconstruction.com' },
+      { label: 'Your Full Name', value: 'John Smith' },
+      { label: 'Work Email', value: 'john@acmeconstruction.com' },
       { label: 'Password', value: '••••••••••' },
-      { label: 'Company name', value: 'Acme Construction LLC' },
+      { label: 'Company Name', value: 'Acme Construction LLC' },
       { label: 'State', value: 'Arizona', half: true },
-      { label: 'Team size', value: '11–50', half: true },
+      { label: 'Team Size', value: '11–50', half: true },
     ],
-    cta: 'Start free trial',
+    cta: 'Start Free Trial',
     note: 'No credit card',
   },
   {
     n: 2,
     nav: 'Company',
-    title: 'Set up your company',
+    title: 'Set Up Your Company',
     plain:
       'Your license number goes here once. After that it prints itself on every pay application, lien waiver and certified payroll report the platform generates.',
     screen: 'Step 2 of 4 — Set Up Your Company',
     fields: [
-      { label: 'Company name', value: 'Acme Construction LLC' },
-      { label: 'License number', value: 'ROC 123456' },
+      { label: 'Company Name', value: 'Acme Construction LLC' },
+      { label: 'License Number', value: 'ROC 123456' },
     ],
     cta: 'Continue',
     note: 'Type it once',
   },
   {
     n: 3,
-    nav: 'First project',
-    title: 'Add your first project',
+    nav: 'First Project',
+    title: 'Add Your First Project',
     plain:
       'A name and an address is enough to start. Everything else — budget, schedule, drawings, crews — hangs off this and can be filled in whenever you get to it.',
     screen: 'Step 3 of 4 — Add Your First Project',
     fields: [
-      { label: 'Project name', value: 'Mesa Library Expansion' },
+      { label: 'Project Name', value: 'Mesa Library Expansion' },
       { label: 'Address', value: '123 Main St, Mesa AZ 85201' },
     ],
     cta: 'Continue',
@@ -91,8 +91,8 @@ const STEPS: Step[] = [
   },
   {
     n: 4,
-    nav: 'Your crew',
-    title: 'Invite your team',
+    nav: 'Your Crew',
+    title: 'Invite Your Team',
     plain:
       'Add everyone — project managers, estimators, the whole field crew. Users are unlimited and nobody costs extra, so there is no reason to leave anyone out.',
     screen: 'Step 4 of 4 — Invite Your Team',
@@ -101,13 +101,13 @@ const STEPS: Step[] = [
       { label: 'Teammate', value: 'dave@acmeconstruction.com' },
       { label: 'Teammate', value: 'foreman@acmeconstruction.com' },
     ],
-    cta: 'Send invites',
+    cta: 'Send Invites',
     note: 'Unlimited users',
   },
   {
     n: 5,
-    nav: 'Run the job',
-    title: "You're running",
+    nav: 'Run the Job',
+    title: "You're Running",
     plain:
       'That is the setup done. Upload a blueprint and the takeoff prices the job; open the radio and talk to the crew. Everything after this is the actual work.',
     screen: 'app.saguaro.build',
@@ -119,8 +119,8 @@ const STEPS: Step[] = [
       'Saguaro Radio',
       'Crew Map',
     ],
-    cta: 'Open the platform',
-    done: "You're all set!",
+    cta: 'Open the Platform',
+    done: "You're All Set",
   },
 ];
 
@@ -194,7 +194,7 @@ export default function GetStartedTour() {
     <section
       id="get-started"
       aria-labelledby="get-started-h"
-      style={{ padding: '84px max(24px, 4vw)', background: '#0a0a0a' }}
+      style={{ padding: '84px max(24px, 4vw)', background: 'var(--bg-base)' }}
     >
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         {/* ── heading ─────────────────────────────────────────────── */}
@@ -202,11 +202,10 @@ export default function GetStartedTour() {
           <span
             style={{
               display: 'inline-block', fontSize: 11, fontWeight: 700, color: GOLD,
-              letterSpacing: 1.4, textTransform: 'uppercase',
               background: GOLD_SOFT, padding: '5px 14px', borderRadius: 20,
             }}
           >
-            Getting started
+            Getting Started
           </span>
         </div>
         <h2
@@ -226,8 +225,8 @@ export default function GetStartedTour() {
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 34 }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <ScribbleNote color="#FBBF24" size={15} rotate={-4}>no sales call</ScribbleNote>
-            <ScribbleArrow direction="right" width={40} color="#FBBF24" style={{ transform: 'rotate(5deg)' }} />
+            <ScribbleNote color="var(--brand-primary-strong)" size={15} rotate={-4}>No sales call</ScribbleNote>
+            <ScribbleArrow direction="right" width={40} color="var(--brand-primary-strong)" style={{ transform: 'rotate(5deg)' }} />
           </span>
         </div>
 
@@ -245,8 +244,8 @@ export default function GetStartedTour() {
                     style={{
                       display: 'flex', alignItems: 'flex-start', gap: 12, width: '100%',
                       minHeight: 44, textAlign: 'left', cursor: 'pointer',
-                      background: on ? 'rgba(245,158,11,0.07)' : 'transparent',
-                      border: '1px solid ' + (on ? 'rgba(245,158,11,0.34)' : 'transparent'),
+                      background: on ? 'var(--brand-primary-08)' : 'transparent',
+                      border: '1px solid ' + (on ? 'var(--brand-primary-35)' : 'transparent'),
                       borderRadius: 12, padding: '12px 14px',
                       transition: 'background .2s, border-color .2s',
                     }}
@@ -257,7 +256,7 @@ export default function GetStartedTour() {
                         flex: '0 0 auto', width: 26, height: 26, borderRadius: 999,
                         display: 'grid', placeItems: 'center', fontSize: 12, fontWeight: 700,
                         background: on ? GOLD : 'rgba(255,255,255,0.07)',
-                        color: on ? '#241500' : MUTED,
+                        color: on ? '#0A0A00' : MUTED,
                         border: '1px solid ' + (on ? GOLD : LINE),
                       }}
                     >
@@ -312,7 +311,7 @@ export default function GetStartedTour() {
 
               {/* body */}
               <div style={{ padding: '26px 26px 30px', minHeight: 318 }}>
-                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: GOLD, letterSpacing: 1.2, textTransform: 'uppercase' }}>
+                <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: GOLD }}>
                   Step {step.n} of {STEPS.length}
                 </p>
                 <h3 style={{ margin: '0 0 20px', fontSize: 22, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>
@@ -327,14 +326,14 @@ export default function GetStartedTour() {
                       const filled = p >= 1;
                       return (
                         <div key={f.label + i} style={{ flex: f.half ? '1 1 44%' : '1 1 100%', minWidth: 0 }}>
-                          <label style={{ display: 'block', fontSize: 10.5, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6 }}>
+                          <label style={{ display: 'block', fontSize: 10.5, fontWeight: 700, color: MUTED, marginBottom: 6 }}>
                             {f.label}
                           </label>
                           <div
                             style={{
                               display: 'flex', alignItems: 'center', gap: 8,
                               background: 'rgba(255,255,255,0.03)',
-                              border: '1px solid ' + (filled ? 'rgba(52,199,89,0.4)' : p > 0 ? 'rgba(245,158,11,0.5)' : LINE),
+                              border: '1px solid ' + (filled ? 'rgba(52,199,89,0.4)' : p > 0 ? 'color-mix(in srgb, var(--brand-primary) 50%, transparent)' : LINE),
                               borderRadius: 9, padding: '10px 12px', minHeight: 40,
                               transition: 'border-color .25s',
                             }}
@@ -366,7 +365,7 @@ export default function GetStartedTour() {
                           key={c}
                           style={{
                             fontSize: 13, fontWeight: 600, padding: '9px 14px', borderRadius: 999,
-                            border: '1px solid ' + (on ? 'rgba(245,158,11,0.4)' : LINE),
+                            border: '1px solid ' + (on ? 'var(--brand-primary-35)' : LINE),
                             background: on ? GOLD_SOFT : 'transparent',
                             color: on ? GOLD : MUTED,
                             opacity: on ? 1 : 0.45,
@@ -387,15 +386,15 @@ export default function GetStartedTour() {
                     style={{
                       display: 'inline-flex', alignItems: 'center', minHeight: 40, padding: '0 20px',
                       borderRadius: 9, fontSize: 13.5, fontWeight: 700,
-                      background: progress >= 1 ? GOLD : 'rgba(245,158,11,0.28)',
-                      color: progress >= 1 ? '#241500' : 'rgba(36,21,0,0.7)',
+                      background: progress >= 1 ? GOLD : 'var(--brand-primary-25)',
+                      color: progress >= 1 ? '#0A0A00' : 'rgba(10,10,0,0.7)',
                       transition: 'background .3s, color .3s',
                     }}
                   >
                     {step.cta}
                   </span>
                   {step.note && (
-                    <ScribbleNote color="#FBBF24" size={14} rotate={-5} style={{ opacity: progress >= 1 ? 0.95 : 0 , transition: 'opacity .4s' }}>
+                    <ScribbleNote color="var(--brand-primary-strong)" size={14} rotate={-5} style={{ opacity: progress >= 1 ? 0.95 : 0 , transition: 'opacity .4s' }}>
                       {step.note}
                     </ScribbleNote>
                   )}
@@ -419,7 +418,7 @@ export default function GetStartedTour() {
                 className="btn-gold"
                 style={{ textDecoration: 'none', fontSize: 14, padding: '11px 24px', minHeight: 44, display: 'inline-flex', alignItems: 'center' }}
               >
-                Start free trial
+                Start Free Trial
               </Link>
               <Link
                 href="/how-to-get-started"
@@ -429,7 +428,7 @@ export default function GetStartedTour() {
                   fontWeight: 600, textDecoration: 'none',
                 }}
               >
-                Read the full guide
+                Read the Full Guide
               </Link>
             </div>
           </div>

@@ -44,7 +44,7 @@ export default function QCPage() {
           accent="by Trade"
           subtitle="The same 14-trade checklist on every site, before inspection."
           actions={
-            <select value={activeSite} onChange={(e) => setSite(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: '#1c1c1e', color: C.text, fontWeight: 600 }}>
+            <select value={activeSite} onChange={(e) => setSite(e.target.value)} style={{ padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, background: 'var(--bg-surface-2)', color: C.text, fontWeight: 600 }}>
               {(projects as any[]).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           }
@@ -70,14 +70,14 @@ export default function QCPage() {
             <SectionCard
               icon={<MagnifyingGlass size={16} weight="duotone" color={C.gold} />}
               title="Trade Checklist"
-              subtitle="Tap a trade to mark it passed — it syncs across the whole team"
+              subtitle="Tap a trade to mark it passed — it syncs across the whole team."
               bodyStyle={{ padding: '10px 20px 12px' }}
             >
               {trades.list.map((it) => {
                 const d = isDone(it);
                 return (
                   <button key={it.id} onClick={() => toggle(it)} className="pmBtn" style={{ display: 'flex', gap: 12, alignItems: 'center', width: '100%', textAlign: 'left', background: 'none', border: 'none', borderBottom: `1px solid rgba(255,255,255,0.07)`, cursor: 'pointer', padding: '11px 4px' }}>
-                    <span style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${d ? C.green : C.border}`, background: d ? C.green : '#1c1c1e', color: '#fff', flexShrink: 0, fontSize: 12, fontWeight: 900, lineHeight: '17px', textAlign: 'center' }}>{d ? <Check size={13} weight="bold" color="#fff" style={{ verticalAlign: 'middle' }} /> : ''}</span>
+                    <span style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${d ? C.green : C.border}`, background: d ? C.green : 'var(--bg-surface-2)', color: '#fff', flexShrink: 0, fontSize: 12, fontWeight: 900, lineHeight: '17px', textAlign: 'center' }}>{d ? <Check size={13} weight="bold" color="#fff" style={{ verticalAlign: 'middle' }} /> : ''}</span>
                     <span style={{ fontSize: 15, fontWeight: 600, color: d ? C.faint : C.text, textDecoration: d ? 'line-through' : 'none', flex: 1 }}>{it.title}</span>
                     {d && <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>Passed</span>}
                   </button>

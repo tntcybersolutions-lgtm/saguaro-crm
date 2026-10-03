@@ -40,18 +40,18 @@ interface TimeEntry {
 type WeekFilter = 'current' | 'last' | 'all';
 
 // Cinematic-kit accent palette (matches the dashboard) ------------------------
-const GOLD = '#F59E0B';
+const GOLD = 'var(--brand-primary)';
 const GREEN = '#45B37D';
-const ORANGE = '#F0A63C';
+const ORANGE = 'var(--warning)';
 
 const inp: React.CSSProperties = { width: '100%', padding: '9px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 10, color: '#FFFFFF', fontSize: 13, outline: 'none', boxSizing: 'border-box' };
-const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.62)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 };
+const lbl: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.62)', marginBottom: 6 };
 
 // Compact button + filter-chip presets derived from the kit --------------------
 const goldBtnSm: React.CSSProperties = { ...goldButtonStyle, padding: '6px 14px', fontSize: 12, borderRadius: 9 };
 const dangerBtnSm: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '6px 14px', borderRadius: 9, cursor: 'pointer', background: 'rgba(239,68,68,0.12)', color: '#F87171', border: '1px solid rgba(239,68,68,0.35)', fontWeight: 700, fontSize: 12 };
 const chipBase: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '7px 16px', borderRadius: 999, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', border: '1px solid', transition: 'all .16s ease' };
-const chipActive: React.CSSProperties = { ...chipBase, background: `linear-gradient(135deg, ${GOLD}, #FBBF24)`, color: '#1A1206', borderColor: 'transparent', boxShadow: '0 8px 20px -10px rgba(245,158,11,0.6)' };
+const chipActive: React.CSSProperties = { ...chipBase, background: 'linear-gradient(135deg, var(--brand-primary), var(--brand-primary-strong))', color: '#0A0A00', borderColor: 'transparent', boxShadow: '0 8px 20px -10px color-mix(in srgb, var(--brand-primary) 60%, transparent)' };
 const chipInactive: React.CSSProperties = { ...chipBase, background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.72)', borderColor: 'rgba(255,255,255,0.10)' };
 
 function getWeekStart(date: Date): string {
@@ -206,11 +206,11 @@ export default function TimesheetsPage() {
     <PremiumSurface maxWidth={2200}>
       {/* Header */}
       <ModuleHero
-        eyebrow="LABOR TRACKING"
+        eyebrow="Labor Tracking"
         eyebrowIcon={<Clock size={13} weight="fill" color={moduleAccent('time').hex} />}
         title="Crew"
         accent="Timesheets"
-        subtitle="Weekly crew timesheets and labor tracking"
+        subtitle="Weekly crew timesheets and labor tracking."
         actions={
           <button style={goldButtonStyle} className="pmBtn" onClick={() => setShowForm(p => !p)}>
             <Plus size={15} weight="bold" /> Add Entry
@@ -221,21 +221,21 @@ export default function TimesheetsPage() {
       {/* What the system already knows about this job */}
       {ctx && (
         <StatStrip items={[
-          {href: `/app/projects/${projectId}/crews`,  label: 'Crew Roster', value: String(roster.length), sub: roster.length ? 'names on file — type-ahead below' : 'builds as you log time' },
-          {href: `/app/projects/${projectId}/budget`,  label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'approved labor posts here' },
-          {href: `/app/projects/${projectId}/timesheets`,  label: 'Cost Codes', value: String(ctx.costCodes?.length || Object.keys(CSI_DIVISIONS).length), sub: ctx.costCodes?.length ? 'from the project budget' : 'CSI divisions (no budget yet)' },
-          {href: `/app/projects/${projectId}/schedule`,  label: 'Schedule Tasks', value: String(ctx.counts?.scheduleTasks ?? 0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'on the schedule' },
-          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(ctx.counts?.openRfis ?? 0), accent: (Number(ctx.counts?.openRfis) || 0) > 0 ? '#FBBF24' : undefined, sub: 'awaiting answers' },
-          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(ctx.counts?.openPunch ?? 0), accent: (Number(ctx.counts?.openPunch) || 0) > 0 ? '#F87171' : undefined, sub: 'items to close' },
+          {href: `/app/projects/${projectId}/crews`,  label: 'Crew Roster', value: String(roster.length), sub: roster.length ? 'Names on file — type-ahead below' : 'Builds as you log time' },
+          {href: `/app/projects/${projectId}/budget`,  label: 'Budget Actuals', value: fmt(Number(ctx.budget?.actual) || 0), sub: 'Approved labor posts here' },
+          {href: `/app/projects/${projectId}/timesheets`,  label: 'Cost Codes', value: String(ctx.costCodes?.length || Object.keys(CSI_DIVISIONS).length), sub: ctx.costCodes?.length ? 'From the project budget' : 'CSI divisions (no budget yet)' },
+          {href: `/app/projects/${projectId}/schedule`,  label: 'Schedule Tasks', value: String(ctx.counts?.scheduleTasks ?? 0), sub: ctx.schedule?.criticalCount ? `${ctx.schedule.criticalCount} critical open` : 'On the schedule' },
+          {href: `/app/projects/${projectId}/rfis`,  label: 'Open RFIs', value: String(ctx.counts?.openRfis ?? 0), accent: (Number(ctx.counts?.openRfis) || 0) > 0 ? 'var(--warning)' : undefined, sub: 'Awaiting answers' },
+          {href: `/app/projects/${projectId}/punch-list`,  label: 'Open Punch', value: String(ctx.counts?.openPunch ?? 0), accent: (Number(ctx.counts?.openPunch) || 0) > 0 ? '#F87171' : undefined, sub: 'Items to close' },
         ]} />
       )}
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 16, marginBottom: 28 }}>
-        <StatCard icon={<FileText size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Entries" value={String(totalEntries)} accent={GOLD} sub="logged this period" delay={0.02}  href={`/app/projects/${projectId}/timesheets`}/>
-        <StatCard icon={<Clock size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Hours" value={`${totalHours.toFixed(1)}h`} accent={GOLD} sub="regular + overtime" delay={0.06}  href={`/app/projects/${projectId}/timesheets`}/>
-        <StatCard icon={<Hourglass size={19} weight="duotone" color={ORANGE} />} label="Pending Approval" value={String(pendingCount)} accent={pendingCount > 0 ? ORANGE : undefined} sub="awaiting review" delay={0.10}  href={`/app/projects/${projectId}/timesheets`}/>
-        <StatCard icon={<CheckCircle size={19} weight="duotone" color={GREEN} />} label="Approved" value={String(approvedCount)} accent={approvedCount > 0 ? GREEN : undefined} sub="this period" delay={0.14}  href={`/app/projects/${projectId}/timesheets`}/>
+        <StatCard icon={<FileText size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Entries" value={String(totalEntries)} accent={GOLD} sub="Logged this period" delay={0.02}  href={`/app/projects/${projectId}/timesheets`}/>
+        <StatCard icon={<Clock size={19} weight="duotone" color={moduleAccent('time').hex} />} label="Total Hours" value={`${totalHours.toFixed(1)}h`} accent={GOLD} sub="Regular + overtime" delay={0.06}  href={`/app/projects/${projectId}/timesheets`}/>
+        <StatCard icon={<Hourglass size={19} weight="duotone" style={{ color: ORANGE }} />} label="Pending Approval" value={String(pendingCount)} accent={pendingCount > 0 ? ORANGE : undefined} sub="Awaiting review" delay={0.10}  href={`/app/projects/${projectId}/timesheets`}/>
+        <StatCard icon={<CheckCircle size={19} weight="duotone" style={{ color: GREEN }} />} label="Approved" value={String(approvedCount)} accent={approvedCount > 0 ? GREEN : undefined} sub="This period" delay={0.14}  href={`/app/projects/${projectId}/timesheets`}/>
       </div>
 
       {/* Week filter */}
@@ -254,7 +254,7 @@ export default function TimesheetsPage() {
       {/* Create Form */}
       {showForm && (
         <div style={{ marginBottom: 24 }}>
-          <SectionCard title="Add Timesheet Entry" icon={<Plus size={17} weight="bold" color={GOLD} />}>
+          <SectionCard title="Add Timesheet Entry" icon={<Plus size={17} weight="bold" style={{ color: GOLD }} />}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 280px', gap: 22, alignItems: 'start' }}>
             <div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
@@ -297,21 +297,21 @@ export default function TimesheetsPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-              <button style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} className="pmBtn" onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'Save Entry'}</button>
+              <button style={{ ...goldButtonStyle, opacity: saving ? 0.6 : 1, cursor: saving ? 'not-allowed' : 'pointer' }} className="pmBtn" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save Entry'}</button>
               <button style={ghostButtonStyle} className="pmBtn" onClick={() => setShowForm(false)}>Cancel</button>
             </div>
             </div>
             {/* Context rail — the downstream automation this entry triggers */}
             <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: 20 }}>
-              <FlowSteps title="After you save" steps={[
-                { title: 'Entry lands as pending', desc: 'It appears in the table below for review — nothing posts yet.' },
-                { title: 'Approve in one click', desc: 'Approval stamps who approved and when on the entry.' },
-                { title: 'Labor posts to job cost', desc: 'Approved labor becomes a cost entry and rolls into the budget line actuals for its division — automatically.' },
+              <FlowSteps title="After You Save" steps={[
+                { title: 'Entry Lands as Pending', desc: 'It appears in the table below for review — nothing posts yet.' },
+                { title: 'Approve in One Click', desc: 'Approval stamps who approved and when on the entry.' },
+                { title: 'Labor Posts to Job Cost', desc: 'Approved labor becomes a cost entry and rolls into the budget line actuals for its division — automatically.' },
               ]} />
               {ctx && (
                 <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                  <InsightRow label="Budget actuals" value={fmt(Number(ctx.budget?.actual) || 0)} />
-                  <InsightRow label="Pending entries" value={String(pendingCount)} accent={pendingCount > 0 ? ORANGE : undefined} />
+                  <InsightRow label="Budget Actuals" value={fmt(Number(ctx.budget?.actual) || 0)} />
+                  <InsightRow label="Pending Entries" value={String(pendingCount)} accent={pendingCount > 0 ? ORANGE : undefined} />
                   <InsightRow label="Approved" value={String(approvedCount)} accent={approvedCount > 0 ? GREEN : undefined} />
                 </div>
               )}
@@ -324,12 +324,12 @@ export default function TimesheetsPage() {
       {/* Table */}
       <SectionCard title="Time Entries" icon={<Clock size={17} weight="duotone" color={moduleAccent('time').hex} />} flush>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 44, color: 'rgba(255,255,255,0.62)', fontSize: 13 }}>Loading…</div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
               <div style={{ fontSize: 13.5, fontWeight: 800, color: '#FFFFFF' }}>
-                <Clock size={16} weight="duotone" color={GOLD} style={{ marginRight: 7, verticalAlign: 'text-bottom' }} />
+                <Clock size={16} weight="duotone" style={{ color: GOLD, marginRight: 7, verticalAlign: 'text-bottom' }} />
                 {entries.length === 0 ? 'No time entries yet' : 'No entries in this period'}
                 <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.62)' }}>
                   {entries.length === 0
@@ -342,10 +342,10 @@ export default function TimesheetsPage() {
               )}
             </div>
             <FlowStrip steps={[
-              { title: 'Log hours', desc: 'name, hours, cost code' },
-              { title: 'Pending review', desc: 'lands in this table' },
-              { title: 'Approve in one click' },
-              { title: 'Labor posts to job cost', desc: 'budget actuals update' },
+              { title: 'Log Hours', desc: 'Name, hours, cost code' },
+              { title: 'Pending Review', desc: 'Lands in this table' },
+              { title: 'Approve in One Click' },
+              { title: 'Labor Posts to Job Cost', desc: 'Budget actuals update' },
             ]} />
           </div>
         ) : (

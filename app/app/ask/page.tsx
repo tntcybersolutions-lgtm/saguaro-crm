@@ -12,8 +12,8 @@ import { Sparkle, PaperPlaneRight, FileText, CaretRight, Question, GearSix } fro
 import { Aurora, PremiumFX, ModuleHero, SectionCard, StatStrip, goldButtonStyle } from '@/components/ui/premium';
 import SageSettings from '@/components/SageSettings';
 
-const GOLD = '#F59E0B', DARK = '#0a0a0a', RAISED = '#141416', BORDER = 'rgba(255,255,255,0.12)';
-const DIM = '#CBD5E1', TEXT = '#FFFFFF', BLUE = '#FBBF24';
+const GOLD = 'var(--brand-primary)', DARK = 'var(--bg-base)', RAISED = 'var(--bg-surface)', BORDER = 'rgba(255,255,255,0.12)';
+const DIM = '#CBD5E1', TEXT = '#FFFFFF', BLUE = 'var(--brand-primary-strong)';
 const TYPE_LABEL: Record<string, string> = { rfi: 'RFI', change_order: 'Change Order', daily_log: 'Daily Log', inspection: 'Inspection', safety: 'Safety', punch: 'Punch List', submittal: 'Submittal', meeting: 'Meeting', correspondence: 'Correspondence', observation: 'Observation', tm: 'T&M Ticket', field_issue: 'Field Issue' };
 const EXAMPLES = ['What tile is specified in the lobby?', 'Any open RFIs about the footing rebar?', 'What did the latest daily log say about weather?', 'Were there any safety incidents this month?', 'What change orders affect the schedule?'];
 
@@ -37,7 +37,7 @@ export default function AskDocsPage() {
   const ask = async (question?: string) => {
     const query = (question ?? q).trim();
     if (!query) return;
-    if (!projectId) { setErr('Pick a project first'); return; }
+    if (!projectId) { setErr('Pick a project first.'); return; }
     setErr(''); setBusy(true); setQ('');
     try {
       const r = await fetch('/api/sage/ask-docs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, question: query }) });
@@ -60,7 +60,7 @@ export default function AskDocsPage() {
         <ModuleHero
           eyebrow="Sage Intelligence"
           eyebrowIcon={<Sparkle size={13} weight="fill" color={GOLD} />}
-          title="Ask your"
+          title="Ask Your"
           accent="Project Docs"
           subtitle="Answers from this project's records, with every source cited."
           style={{ marginBottom: 16 }}
@@ -72,9 +72,9 @@ export default function AskDocsPage() {
               <button
                 onClick={() => setShowSettings(true)}
                 title="Sage settings — style profile, automation rules, activity trail, bid brain"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, color: GOLD, padding: '9px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--brand-primary-08)', border: '1px solid color-mix(in srgb, var(--brand-primary) 30%, transparent)', borderRadius: 10, color: GOLD, padding: '9px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
               >
-                <GearSix size={15} weight="bold" /> Sage settings
+                <GearSix size={15} weight="bold" /> Sage Settings
               </button>
             </div>
           }
@@ -84,22 +84,22 @@ export default function AskDocsPage() {
         {/* Live session intelligence — what Sage can reach and what it has done */}
         {projects.length > 0 && (
           <StatStrip items={[
-            {href: '/app/ask',  label: 'Projects', value: String(projects.length), sub: 'searchable right now' },
+            {href: '/app/ask',  label: 'Projects', value: String(projects.length), sub: 'Searchable right now' },
             {href: '/app/ask',  label: 'Doc Types', value: String(Object.keys(TYPE_LABEL).length), sub: 'RFIs to T&M tickets' },
-            {href: '/app/ask',  label: 'Questions Asked', value: String(turns.length), sub: 'this session' },
-            {href: '/app/ask',  label: 'Records Searched', value: String(turns.reduce((s, t) => s + t.searched, 0)), sub: 'across your questions' },
-            {href: '/app/ask',  label: 'Sources Cited', value: String(turns.reduce((s, t) => s + t.citations.length, 0)), accent: turns.some((t) => t.citations.length > 0) ? GOLD : undefined, sub: 'every answer grounded' },
+            {href: '/app/ask',  label: 'Questions Asked', value: String(turns.length), sub: 'This session' },
+            {href: '/app/ask',  label: 'Records Searched', value: String(turns.reduce((s, t) => s + t.searched, 0)), sub: 'Across your questions' },
+            {href: '/app/ask',  label: 'Sources Cited', value: String(turns.reduce((s, t) => s + t.citations.length, 0)), accent: turns.some((t) => t.citations.length > 0) ? GOLD : undefined, sub: 'Every answer grounded' },
           ]} />
         )}
 
         <div style={{ flex: 1, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {turns.length === 0 && !busy && (
-            <SectionCard title="Try asking" subtitle="One tap runs the question against this project's records" icon={<Question size={17} weight="duotone" color={GOLD} />}>
+            <SectionCard title="Try Asking" subtitle="One tap runs the question against this project's records" icon={<Question size={17} weight="duotone" color={GOLD} />}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>{EXAMPLES.map((ex) => <button key={ex} onClick={() => ask(ex)} className="pmBtn" style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', background: DARK, border: `1px solid ${BORDER}`, borderRadius: 10, padding: '10px 12px', color: TEXT, cursor: 'pointer', fontSize: 14 }}><Question size={16} color={GOLD} />{ex}</button>)}</div>
               <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8 }}>Sage reads</div>
+                <div style={{ fontSize: 10.5, color: 'var(--text-tertiary)', fontWeight: 700, marginBottom: 8 }}>Sage Reads</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {Object.values(TYPE_LABEL).map((t) => <span key={t} style={{ padding: '3px 10px', borderRadius: 999, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: DIM, fontSize: 11.5 }}>{t}</span>)}
+                  {Object.values(TYPE_LABEL).map((t) => <span key={t} style={{ padding: '3px 10px', borderRadius: 999, background: 'var(--brand-primary-08)', border: '1px solid var(--brand-primary-25)', color: DIM, fontSize: 11.5 }}>{t}</span>)}
                 </div>
                 <div style={{ color: DIM, fontSize: 11.5, marginTop: 10, lineHeight: 1.5 }}>Answers cite the exact records they came from — click a citation to open it. If the records do not contain the answer, Sage says so instead of guessing.</div>
               </div>
@@ -107,9 +107,9 @@ export default function AskDocsPage() {
           )}
           {turns.map((t, i) => (
             <div key={i}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}><div style={{ background: 'rgba(245,158,11,0.14)', color: TEXT, borderRadius: '14px 14px 4px 14px', padding: '10px 14px', maxWidth: '80%', fontSize: 15 }}>{t.q}</div></div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}><div style={{ background: 'var(--brand-primary-12)', color: TEXT, borderRadius: '14px 14px 4px 14px', padding: '10px 14px', maxWidth: '80%', fontSize: 15 }}>{t.q}</div></div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(245,158,11,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={16} weight="fill" color={GOLD} /></div>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--brand-primary-12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Sparkle size={16} weight="fill" color={GOLD} /></div>
                 <div style={{ flex: 1 }}>
                   <div style={{ background: RAISED, border: `1px solid ${BORDER}`, borderRadius: '14px 14px 14px 4px', padding: '12px 14px', fontSize: 15, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{t.answer}</div>
                   {t.citations.length > 0 && (
@@ -122,7 +122,7 @@ export default function AskDocsPage() {
               </div>
             </div>
           ))}
-          {busy && <div style={{ display: 'flex', gap: 10, alignItems: 'center', color: DIM, fontSize: 14 }}><div style={{ width: 30, height: 30, borderRadius: 9, background: 'rgba(245,158,11,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkle size={16} weight="fill" color={GOLD} /></div>Reading the project records…</div>}
+          {busy && <div style={{ display: 'flex', gap: 10, alignItems: 'center', color: DIM, fontSize: 14 }}><div style={{ width: 30, height: 30, borderRadius: 9, background: 'var(--brand-primary-12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkle size={16} weight="fill" color={GOLD} /></div>Reading the project records…</div>}
           <div ref={endRef} />
         </div>
 

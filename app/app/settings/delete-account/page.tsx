@@ -20,12 +20,12 @@ import Link from 'next/link';
 import { Warning, ArrowLeft } from '@phosphor-icons/react';
 import { PremiumSurface, SectionCard, DangerButton } from '@/components/ui/premium';
 
-const GOLD = '#C8960F';
+const GOLD = 'var(--brand-primary)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const RED = '#EF4444';
 const BORDER = '#1E3A5F';
-const CARD = '#0D1D2E';
+const CARD = 'var(--bg-surface-2)';
 
 type Preview = {
   email: string;
@@ -97,7 +97,7 @@ export default function DeleteAccountPage() {
           <ArrowLeft size={14} weight="bold" /> Settings
         </Link>
 
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: TEXT, margin: '0 0 20px' }}>Delete account</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: TEXT, margin: '0 0 20px' }}>Delete Account</h1>
 
         {loadErr ? (
           <SectionCard><div style={{ color: DIM, fontSize: 14 }}>{loadErr}</div></SectionCard>
@@ -113,17 +113,17 @@ export default function DeleteAccountPage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', marginBottom: 20,
                 borderRadius: 12,
-                border: `1px solid ${workspace ? 'rgba(239,68,68,0.45)' : 'rgba(200,150,15,0.40)'}`,
-                background: workspace ? 'rgba(239,68,68,0.10)' : 'rgba(200,150,15,0.08)',
+                border: `1px solid ${workspace ? 'rgba(239,68,68,0.45)' : 'color-mix(in srgb, var(--warning) 35%, transparent)'}`,
+                background: workspace ? 'rgba(239,68,68,0.10)' : 'color-mix(in srgb, var(--warning) 8%, transparent)',
               }}
             >
-              <Warning size={22} weight="fill" color={workspace ? RED : GOLD} />
-              <div style={{ fontSize: 14, fontWeight: 800, color: workspace ? RED : GOLD }}>
+              <Warning size={22} weight="fill" color={workspace ? RED : 'var(--warning)'} />
+              <div style={{ fontSize: 14, fontWeight: 800, color: workspace ? RED : 'var(--warning)' }}>
                 {workspace ? 'This deletes the whole company account' : 'This cannot be undone'}
               </div>
             </div>
 
-            <SectionCard title="What happens">
+            <SectionCard title="What Happens">
               <div style={{ fontSize: 14, lineHeight: 1.75, color: DIM }}>{preview.summary}</div>
             </SectionCard>
 
@@ -149,10 +149,10 @@ export default function DeleteAccountPage() {
               {err ? <div style={{ marginTop: 10, fontSize: 13, color: RED }}>{err}</div> : null}
               <div style={{ marginTop: 18, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <DangerButton size="md" disabled={!matches || busy} onClick={onDelete}>
-                  {busy ? 'Deleting…' : 'Delete my account'}
+                  {busy ? 'Deleting…' : 'Delete My Account'}
                 </DangerButton>
                 <Link href="/app/settings" style={{ color: GOLD, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
-                  Keep my account
+                  Keep My Account
                 </Link>
               </div>
             </SectionCard>

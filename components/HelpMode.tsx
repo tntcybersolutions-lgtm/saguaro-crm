@@ -31,12 +31,20 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Lifebuoy, X, CaretRight, MagicWand } from '@phosphor-icons/react';
 import { TOURS, CATEGORY_ORDER, tourById, routeMatches, type Tour, type TourStep } from '@/lib/help-tours';
 
-const GOLD = '#F59E0B';
-const GOLD_HI = '#FBBF24';
+/* Tour categories are compared values ("Build it", "Get paid"), so they stay
+   as stored; headings show them in Title Case (docs/COPY-STYLE.md §1). */
+const SMALL_WORDS = new Set(['a','an','the','and','but','or','nor','for','so','yet','as','at','by','in','of','off','on','per','to','up','via','vs','from','into','onto','over','with']);
+function titleCase(s: string): string {
+  const words = s.split(' ');
+  return words.map((w, i) => (i > 0 && i < words.length - 1 && SMALL_WORDS.has(w.toLowerCase()) ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+}
+
+const GOLD = 'var(--brand-primary)';
+const GOLD_HI = 'var(--brand-primary-strong)';
 const TEXT = '#F0F4FF';
 const DIM = '#8BAAC8';
 const BORDER = '#1E3A5F';
-const CARD = '#0D1D2E';
+const CARD = 'var(--bg-surface)';
 
 /**
  * Above everything, and not by a margin that another component can close.
@@ -440,7 +448,7 @@ export default function HelpMode() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 6 }}>
             <Lifebuoy size={22} weight="duotone" color={GOLD} />
             <h2 style={{ margin: 0, fontSize: 21, fontWeight: 900, color: TEXT, letterSpacing: '-0.01em' }}>
-              Show me how
+              Show Me How
             </h2>
             <button
               onClick={() => setOn(false)}
@@ -464,8 +472,8 @@ export default function HelpMode() {
             if (!inCat.length) return null;
             return (
               <div key={cat} style={{ marginBottom: 22 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, marginBottom: 9 }}>
-                  {cat}
+                <div style={{ fontSize: 10.5, fontWeight: 900, color: GOLD, marginBottom: 9 }}>
+                  {titleCase(cat)}
                 </div>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {inCat.map((t) => (
@@ -482,7 +490,7 @@ export default function HelpMode() {
                         background: CARD, border: `1px solid ${BORDER}`, color: TEXT,
                         transition: 'border-color .15s, background .15s',
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.background = 'rgba(245,158,11,0.07)'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = GOLD; e.currentTarget.style.background = 'var(--brand-primary-08)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.background = CARD; }}
                     >
                       <div style={{ minWidth: 0, flex: 1 }}>
@@ -688,7 +696,7 @@ export default function HelpMode() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: '0.09em', textTransform: 'uppercase', color: GOLD }}>
+            <span style={{ fontSize: 10, fontWeight: 900, color: GOLD }}>
               Step {stepNo} of {total}
             </span>
             <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
@@ -719,10 +727,10 @@ export default function HelpMode() {
               onClick={() => router.push((step.route as string).replace(/\/$/, ''))}
               style={{
                 marginTop: 12, minHeight: 38, width: '100%', borderRadius: 9, cursor: 'pointer',
-                background: GOLD, border: 'none', color: '#241500', fontSize: 13, fontWeight: 800,
+                background: GOLD, border: 'none', color: '#0A0A00', fontSize: 13, fontWeight: 800,
               }}
             >
-              {step.route.endsWith('/') ? 'Open a project first' : 'Take me to that screen'}
+              {step.route.endsWith('/') ? 'Open a Project First' : 'Take Me to That Screen'}
             </button>
           )}
 
@@ -755,10 +763,10 @@ export default function HelpMode() {
               onClick={advance}
               style={{
                 minHeight: 38, padding: '0 18px', borderRadius: 9, cursor: 'pointer',
-                background: GOLD, border: 'none', color: '#241500', fontSize: 13, fontWeight: 800,
+                background: GOLD, border: 'none', color: '#0A0A00', fontSize: 13, fontWeight: 800,
               }}
             >
-              {stepNo === total ? 'Done' : step?.advance === 'read' ? 'Got it' : 'Next'}
+              {stepNo === total ? 'Done' : step?.advance === 'read' ? 'Got It' : 'Next'}
             </button>
             {step?.advance !== 'read' && (
               <span style={{ fontSize: 11.5, color: DIM, fontWeight: 600, lineHeight: 1.35 }}>
@@ -792,7 +800,7 @@ export default function HelpMode() {
             boxShadow: '0 10px 30px -12px rgba(0,0,0,0.9)',
           }}
         >
-          <X size={13} weight="bold" /> Turn help off
+          <X size={13} weight="bold" /> Turn Help Off
         </button>
       </div>
     </>,
@@ -827,17 +835,17 @@ export function HelpModeButton() {
       title="Show me how — arrows that point at the next button"
       style={{
         display: 'flex', alignItems: 'center', gap: 7, height: 36, padding: '0 13px',
-        background: on ? GOLD : 'rgba(245,158,11,0.10)',
-        border: `1px solid ${on ? GOLD : 'rgba(245,158,11,0.38)'}`,
+        background: on ? GOLD : 'var(--brand-primary-12)',
+        border: `1px solid ${on ? GOLD : 'var(--brand-primary-35)'}`,
         borderRadius: 999,
-        color: on ? '#241500' : GOLD_HI,
+        color: on ? '#0A0A00' : GOLD_HI,
         fontSize: 13, fontWeight: 800, letterSpacing: '0.01em', cursor: 'pointer',
         transition: 'background .15s, color .15s, border-color .15s',
         whiteSpace: 'nowrap',
       }}
     >
       <MagicWand size={15} weight={on ? 'fill' : 'duotone'} />
-      Help me
+      Help Me
     </button>
   );
 }
