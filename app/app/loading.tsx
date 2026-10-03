@@ -29,7 +29,7 @@ export default function AppLoading() {
           50% { opacity: .3; }
         }
       `}</style>
-      <div style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ padding: '24px 28px', maxWidth: 2200, margin: '0 auto' }}>
         {/* Header skeleton */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
           <div>

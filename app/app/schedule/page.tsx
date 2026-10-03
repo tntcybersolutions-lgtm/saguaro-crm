@@ -381,7 +381,7 @@ export default function SchedulePage() {
   const formProjectTasks = tasks.filter(t => t.project_id === form.projectId);
 
   return (
-    <div className="pmRoot" style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
+    <div className="pmRoot" style={{ padding: '24px 28px', maxWidth: 2200, margin: '0 auto' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .8s linear infinite}`}</style>
 
       {/* Header — standard module hero anatomy */}

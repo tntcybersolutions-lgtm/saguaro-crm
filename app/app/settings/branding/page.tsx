@@ -127,7 +127,7 @@ export default function BrandingPage() {
 
   return (
     <main style={{ background: 'var(--bg-base)', minHeight: '100%', padding: '24px max(20px, 3vw) 80px' }}>
-      <div style={{ maxWidth: 1080 }}>
+      <div style={{ maxWidth: 2200 }}>
         <ModuleHero
           eyebrow="Branding"
           eyebrowIcon={<Palette size={13} weight="fill" color={GOLD} />}

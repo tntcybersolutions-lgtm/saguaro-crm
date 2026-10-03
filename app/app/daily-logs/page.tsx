@@ -353,7 +353,7 @@ export default function DailyLogsPage() {
   const labelStyle: React.CSSProperties = { fontSize: font.size.sm, fontWeight: font.weight.semibold, color: colors.textMuted, marginBottom: 4, display: 'block' };
 
   return (
-    <div className="pmRoot" style={{ padding: '24px 28px', maxWidth: 1400, margin: '0 auto' }}>
+    <div className="pmRoot" style={{ padding: '24px 28px', maxWidth: 2200, margin: '0 auto' }}>
       {/* Header — standard module hero anatomy, accented by the daily module color */}
       <PremiumFX />
       <ModuleHero

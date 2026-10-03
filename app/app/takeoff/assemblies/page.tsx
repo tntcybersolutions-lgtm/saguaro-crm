@@ -852,7 +852,7 @@ function AssemblyLibraryLoading() {
         animation: 'shimmer 1.5s infinite',
       }} />
       <style>{`@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }`}</style>
-      <div style={{ padding: '40px 28px', maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ padding: '40px 28px', maxWidth: 2200, margin: '0 auto' }}>
         <div style={{ height: 44, width: 280, background: SURFACE, borderRadius: 8, marginBottom: 10 }} />
         <div style={{ height: 16, width: 320, background: SURFACE, borderRadius: 4, marginBottom: 24 }} />
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>

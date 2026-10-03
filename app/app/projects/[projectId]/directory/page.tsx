@@ -102,7 +102,7 @@ export default function ProjectDirectory() {
 
   return (
     <main style={{ background: BASE, minHeight: '100%', padding: '24px max(20px, 3vw) 64px' }}>
-      <div style={{ maxWidth: 1000 }}>
+      <div style={{ maxWidth: 2200 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
           <UsersThree size={20} weight="duotone" color={GOLD} />
           <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: TEXT, letterSpacing: '-0.01em' }}>Directory</h1>

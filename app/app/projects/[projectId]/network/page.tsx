@@ -185,7 +185,7 @@ export default function NetworkDashboard() {
           subtitle="Design, document, and certify this building's network."
         />
         {ctx && (
-          <div style={{ maxWidth: 1020 }}>
+          <div style={{ maxWidth: 2200 }}>
             <StatStrip items={[
               {href: `/app/projects/${projectId}/network`,  label: 'Project', value: ctx.project?.name || '—', sub: ctx.project?.projectNumber ? `#${ctx.project.projectNumber}` : (ctx.project?.status || 'active') },
               {href: `/app/projects/${projectId}/network`,  label: 'Site Address', value: ctx.project?.address || '—', sub: 'The network documents against this site' },
@@ -195,7 +195,7 @@ export default function NetworkDashboard() {
             ]} />
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 22, alignItems: 'start', maxWidth: 1020 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 360px', gap: 22, alignItems: 'start', maxWidth: 2200 }}>
           <SectionCard
             icon={<Globe size={18} weight="duotone" color={GOLD} />}
             title="Set Up Network Module"
